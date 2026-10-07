@@ -341,8 +341,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Current': 'נוכחי',
   'Current database': 'מסד הנתונים הנוכחי',
   'Current session states from pg_stat_activity.': 'מצבי הסשנים הנוכחיים מתוך pg_stat_activity.',
-  'Upgrade from serverless to a dedicated tier to reserve CPU, memory, and connection limits. Migrating applies with a brief read-only window during cutover.':
-    'שדרגו מ-Serverless לרמה ייעודית כדי לשריין CPU, זיכרון ומגבלות חיבורים. המיגרציה כוללת חלון קצר לקריאה בלבד בזמן המעבר.',
+  'Upgrade from serverless to a dedicated tier to reserve CPU, memory, and connection limits.':
+    'שדרגו מ-Serverless לרמה ייעודית כדי לשריין CPU, זיכרון ומגבלות חיבורים.',
   'Migration to dedicated compute started': 'מיגרציה למחשוב ייעודי התחילה',
   'Compute and connection limits for this database.':
     'מגבלות מחשוב וחיבורים עבור מסד הנתונים הזה.',
@@ -1649,6 +1649,29 @@ export const heDatabasesDictionary: Record<string, string> = {
     'שדרוג מסד נתונים בתהליך. חלק מהפעולות עשויות להיות זמנית לא זמינות.',
   'A database migration is in progress. Some operations may be temporarily unavailable.':
     'מיגרציית מסד נתונים בתהליך. חלק מהפעולות עשויות להיות זמנית לא זמינות.',
+  'Starting dedicated migration': 'מתחילים מיגרציה ל-compute ייעודי',
+  'Dedicated compute provisioned': 'Compute ייעודי הוקצה',
+  'Capturing live changes': 'לוכדים שינויים בזמן אמת',
+  'Copying data to dedicated compute': 'מעתיקים נתונים ל-compute ייעודי',
+  'Catching up on changes': 'מסנכרנים שינויים',
+  'Verifying migrated data': 'מאמתים נתונים לאחר המיגרציה',
+  'Ready to cut over': 'מוכן ל-cutover',
+  'Cutting over to dedicated compute': 'מבצעים cutover ל-compute ייעודי',
+  'Finishing migration': 'מסיימים מיגרציה',
+  'Migration completed': 'המיגרציה הושלמה',
+  'Migration failed': 'המיגרציה נכשלה',
+  'Migration rolled back': 'המיגרציה בוטלה',
+  'Migrating to dedicated compute': 'מעבירים ל-compute ייעודי',
+  'Your database stays available while data is copied. During cutover, writes pause briefly while routing switches and replay automatically.':
+    'מסד הנתונים נשאר זמין בזמן העתקת הנתונים. ב-cutover כתיבות מושהות לרגע בזמן החלפת הניתוב ומופעלות מחדש אוטומטית.',
+  'rows pending replication': 'שורות ממתינות לשכפול',
+  'Abort migration': 'ביטול מיגרציה',
+  'Migration aborted': 'המיגרציה בוטלה',
+  'Failed to abort migration': 'ביטול המיגרציה נכשל',
+  'This migration did not finish. Abort it to try upgrading again.':
+    'המיגרציה לא הושלמה. בטלו אותה כדי לנסות שדרוג מחדש.',
+  'A migration is in progress past cutover and cannot be aborted from the Console. Contact support if it is stuck.':
+    'מיגרציה שעברה cutover בתהליך ולא ניתן לבטל אותה מה-Console. פנו לתמיכה אם היא תקועה.',
   'This database is being paused. Some operations may be temporarily unavailable.':
     'מסד הנתונים מושהה. חלק מהפעולות עשויות להיות זמנית לא זמינות.',
   'This database is resuming. Some operations may be temporarily unavailable.':
@@ -2164,4 +2187,46 @@ export const heDatabasesDictionary: Record<string, string> = {
     'הזמן הזה מוקדם מנקודת השחזור המוקדמת ביותר.',
   'This time is after the latest recovery point.':
     'הזמן הזה מאוחר מנקודת השחזור המאוחרת ביותר.',
+  'Create your first database': 'יצירת מסד הנתונים הראשון שלכם',
+  'Store, query, and sync your app data with tables, columns, and indexes built into Appwrite.':
+    'אחסנו, שלפו וסנכרנו את נתוני האפליקציה שלכם עם טבלאות, עמודות ואינדקסים שמובנים ב-Appwrite.',
+  'Start with TablesDB, a managed database built into Appwrite.':
+    'התחילו עם TablesDB, מסד נתונים מנוהל שמובנה ב-Appwrite.',
+  'Define your schema': 'הגדרת הסכמה',
+  'Add tables, columns, and indexes, then set permissions for each table.':
+    'הוסיפו טבלאות, עמודות ואינדקסים, ואז הגדירו הרשאות לכל טבלה.',
+  'Query from your app': 'שליפת נתונים מהאפליקציה',
+  'Read and write rows with the Appwrite SDKs and subscribe to changes in realtime.':
+    'קראו וכתבו שורות עם ה-SDK של Appwrite והירשמו לשינויים בזמן אמת.',
+  'Available on paid plans': 'זמין בתוכניות בתשלום',
+  'Available on paid plans, with monthly database credits.':
+    'זמין בתוכניות בתשלום, עם קרדיטים חודשיים למסדי נתונים.',
+  'Store, query, and sync your app data with Appwrite. Not sure which type to pick? Start with TablesDB.':
+    'אחסנו, שלפו וסנכרנו את נתוני האפליקציה שלכם עם Appwrite. לא בטוחים באיזה סוג לבחור? התחילו עם TablesDB.',
+  'Fully managed and built into Appwrite. Read and write from your app with the SDKs.':
+    'מנוהל במלואו ומובנה ב-Appwrite. קראו וכתבו מהאפליקציה שלכם עם ה-SDK.',
+  'Your own PostgreSQL or MySQL server, run by Appwrite. Connect with any SQL client or ORM.':
+    'שרת PostgreSQL או MySQL משלכם, שמופעל על ידי Appwrite. התחברו עם כל לקוח SQL או ORM.',
+  'Rows and columns with a defined schema. A good fit for most apps: users, orders, posts.':
+    'שורות ועמודות עם סכמה מוגדרת. מתאים לרוב האפליקציות: משתמשים, הזמנות, פוסטים.',
+  'JSON documents that can each have a different shape. Good for content and fast-changing data.':
+    'מסמכי JSON שלכל אחד מהם יכול להיות מבנה שונה. מתאים לתוכן ולנתונים שמשתנים מהר.',
+  'Stores embeddings and finds similar items. Good for AI search and recommendations.':
+    'שומר הטמעות ומוצא פריטים דומים. מתאים לחיפוש AI ולהמלצות.',
+  'A dedicated PostgreSQL server with full SQL. Good if you already use Postgres tools.':
+    'שרת PostgreSQL ייעודי עם SQL מלא. מתאים אם אתם כבר משתמשים בכלי Postgres.',
+  'A dedicated MySQL server with full SQL. Good for moving an existing MySQL app.':
+    'שרת MySQL ייעודי עם SQL מלא. מתאים להעברת אפליקציית MySQL קיימת.',
+  'Schedule a policy': 'תזמון מדיניות',
+  'Pick how often to back up and how long to keep each copy. Appwrite runs it for you from then on.':
+    'בחרו באיזו תדירות לגבות וכמה זמן לשמור כל עותק. מכאן והלאה Appwrite מריץ את זה בשבילכם.',
+  'Back up on demand': 'גיבוי לפי דרישה',
+  'Take a manual backup before a risky migration or a big import, alongside your scheduled ones.':
+    'צרו גיבוי ידני לפני מיגרציה מסוכנת או ייבוא גדול, בנוסף לגיבויים המתוזמנים.',
+  'Restore in a few clicks': 'שחזור בכמה קליקים',
+  'Bring any backup back as a new database, so you can check the data before you switch over.':
+    'שחזרו כל גיבוי כמסד נתונים חדש, כדי שתוכלו לבדוק את הנתונים לפני המעבר.',
+  'Keep this database safe': 'שמרו על מסד הנתונים הזה',
+  'Back up on a schedule, keep copies for as long as you need, and restore any of them when something goes wrong.':
+    'גבו לפי לוח זמנים, שמרו עותקים כמה זמן שצריך, ושחזרו כל אחד מהם כשמשהו משתבש.',
 }

@@ -9,6 +9,7 @@ author: atharva
 category: startups
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "Why is building a custom backend risky for early-stage startups?"
     answer: "A custom backend forces a small team to spend weeks or months on authentication, database design, file storage, and deployment before writing product code. Each of those areas carries security and maintenance risk, and time spent on plumbing is time not spent validating the product or talking to users. For startups with tight runway, that trade-off is rarely worth it."

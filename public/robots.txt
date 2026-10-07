@@ -20,5 +20,24 @@ Disallow: /comps
 Disallow: /blocks
 Disallow: /cache
 
+# Retrieval crawlers that answer live queries (not training-only bots)
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
 Sitemap: https://appwrite.io/sitemap.xml
 Sitemap: https://appwrite.io/sitemap/news.xml

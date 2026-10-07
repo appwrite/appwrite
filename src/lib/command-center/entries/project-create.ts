@@ -21,7 +21,10 @@ import {
   canCreateSite,
   canCreateTeam,
   canCreateUser,
+  canCreateVideo,
+  canSeeProjectNavItem,
 } from '@/lib/console-access-checks'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { registerCommands } from '../registry'
 import type { CommandEntry, CommandContext } from '../types'
 import type { CreateResourceType } from '@/components/global/shared/CommandCenter.types'
@@ -36,6 +39,7 @@ function makeCreate(opts: {
   permission: (ctx: CommandContext) => boolean
   permissionMessage: string
   keywords?: string[]
+  available?: (ctx: CommandContext) => boolean
 }): CommandEntry {
   return {
     id: opts.id,
@@ -46,6 +50,7 @@ function makeCreate(opts: {
     shortcut: opts.shortcut,
     keywords: ['new', 'add', 'create', ...(opts.keywords ?? [])],
     description: `Create a new ${opts.label.replace(/^Create\s+/i, '').toLowerCase()}`,
+    available: opts.available,
     disabled: (ctx) => !opts.permission(ctx),
     disabledReason: (ctx) =>
       opts.permission(ctx) ? undefined : opts.permissionMessage,
@@ -127,6 +132,20 @@ const PROJECT_CREATE: CommandEntry[] = [
     permission: (ctx) => canCreateTeam(ctx.access, ctx.features),
     permissionMessage: "You don't have permission to create teams.",
     keywords: ['group', 'organization'],
+  }),
+  makeCreate({
+    id: 'project.create.video',
+    label: 'Create video',
+    icon: VIDEOS_PRODUCT_ICON,
+    shortcut: 'C V',
+    resourceType: 'video',
+    fallbackPath: (id) => `/projects/${id}/videos`,
+    permission: (ctx) => canCreateVideo(ctx.access, ctx.features),
+    permissionMessage: "You don't have permission to create videos.",
+    keywords: ['streaming', 'upload', 'hls', 'dash'],
+    available: (ctx) =>
+      Boolean(ctx.features.videos) &&
+      canSeeProjectNavItem(ctx.access, ctx.features, 'videos'),
   }),
 ]
 

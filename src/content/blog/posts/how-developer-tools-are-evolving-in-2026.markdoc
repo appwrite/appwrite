@@ -9,6 +9,7 @@ author: aishwari
 category: products
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What is the biggest shift in developer tools in 2026?"
     answer: "The shift is architectural. Teams are moving away from assembling collections of specialized tools and toward cohesive systems with strong defaults. The winning developer tools are not the ones with the most features, they are the ones that provide coherent primitives designed to work together, so teams spend less time on integration and more time shipping."

@@ -20,7 +20,6 @@ import { useAnalytics } from '@/hooks/use-analytics'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
 import {
-  addToStudentMailingList,
   connectGithubForStudentProgram,
   hasGithubIdentity,
   joinGithubStudentProgram,
@@ -41,7 +40,7 @@ import { GitHubIcon } from '@/lib/vcs/providers'
 type EnrollmentError = {
   title: string
   description: string
-  recovery?: 'connect' | 'retry'
+  recovery?: 'connect' | 'retry' | 'upgrade'
 }
 
 export function View() {
@@ -79,7 +78,6 @@ export function View() {
       // navigation must never turn it into a failed enrollment or a second POST.
       setIsOpeningOrganization(true)
       track('Resource Created', { resource: 'education-membership' })
-      addToStudentMailingList(account)
       // Seed the returned organization, as in the organization creation wizard,
       // so the destination loader does not wait for a redundant list refresh.
       const organizationOptions: ReturnType<typeof organizationQueryOptions> = {
@@ -237,6 +235,10 @@ export function View() {
                     <GitHubIcon className="size-4 shrink-0" />
                     {t('Connect GitHub')}
                   </Button>
+                ) : error?.recovery === 'upgrade' ? (
+                  <Button asChild variant="brandCta" className="w-full">
+                    <Link to="/upgrade">{t('Choose a plan')}</Link>
+                  </Button>
                 ) : error?.recovery === 'retry' || identitiesQuery.isError ? (
                   <Button
                     variant="brandCta"
@@ -333,8 +335,10 @@ export function View() {
 
 /**
  * The verification endpoint answers 403 for "not in the pack" and 409 for an
- * Education organization this account already belongs to. Everything else is
- * unexpected, so it keeps the API's own message.
+ * Education organization this account already belongs to. A
+ * `program_already_used` 409 means the account used the program before and may
+ * no longer have that organization. Everything else is unexpected, so it keeps
+ * the API's own message.
  */
 function toEnrollmentError(
   error: unknown,
@@ -349,6 +353,19 @@ function toEnrollmentError(
       ),
       description: t('You can still use Appwrite without an Education plan.'),
       recovery: 'connect',
+    }
+  }
+
+  if (
+    error instanceof AppwriteException &&
+    error.type === 'program_already_used'
+  ) {
+    return {
+      title: t("You've already used the Education program."),
+      description: t(
+        'Each account can join once. Choose a plan to keep building with Appwrite.',
+      ),
+      recovery: 'upgrade',
     }
   }
 

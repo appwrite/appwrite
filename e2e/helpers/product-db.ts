@@ -1,4 +1,9 @@
-import { expect, type Page } from '@playwright/test'
+import {
+  expect,
+  type Page,
+  type Request,
+  type Response,
+} from '@playwright/test'
 import { enableDatabaseFeatureFlags } from './feature-flags'
 import { acceptCookieBannerIfPresent } from './cookie-banner'
 import { waitForFullscreenLoaderHidden } from './fullscreen-loader'
@@ -415,6 +420,21 @@ async function waitForProductSchemaAvailable(
     .toBe(true)
 }
 
+async function responseWithin(
+  request: Request,
+  timeoutMs: number,
+): Promise<Response | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), timeoutMs)
+  })
+  try {
+    return await Promise.race([request.response(), timeout])
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 function isSchemaNotReadyIndexError(status: number, body: string): boolean {
   return (
     status === 400 &&
@@ -425,32 +445,51 @@ function isSchemaNotReadyIndexError(status: number, body: string): boolean {
 }
 
 async function submitCreateIndexForm(page: Page): Promise<void> {
-  const submit = page
-    .getByRole('dialog', { name: 'Create Index', exact: true })
-    .getByRole('button', { name: 'Create Index', exact: true })
+  const dialog = page.getByRole('dialog', { name: 'Create Index', exact: true })
+  const submit = dialog.getByRole('button', {
+    name: 'Create Index',
+    exact: true,
+  })
   await expect(submit).toBeEnabled({ timeout: 15_000 })
   const deadline = Date.now() + 60_000
   let lastError = 'Create index did not reach the API'
 
   while (Date.now() < deadline) {
-    const createResponsePromise = page.waitForResponse(
-      (response) => {
+    const createRequestPromise = page.waitForRequest(
+      (request) => {
         try {
-          const url = new URL(response.url())
+          const url = new URL(request.url())
           return (
-            response.request().method() === 'POST' &&
-            url.pathname.includes('/indexes')
+            request.method() === 'POST' && url.pathname.includes('/indexes')
           )
         } catch {
           return false
         }
       },
-      { timeout: 30_000 },
+      { timeout: 15_000 },
     )
     await submit.click()
-    const createResponse = await createResponsePromise.catch(() => null)
+    const createRequest = await createRequestPromise.catch(() => null)
+    if (!createRequest) {
+      // The drawer validates before sending; report what it rejected.
+      const validation = await dialog
+        .locator('p.text-destructive')
+        .allTextContents()
+        .catch(() => [])
+      throw new Error(
+        validation.length
+          ? `${lastError}: ${validation.join('; ')}`
+          : lastError,
+      )
+    }
+    // A slow answer is not a missing request: wait for this request's own
+    // response instead of one window that starts before the click.
+    const createResponse = await responseWithin(
+      createRequest,
+      Math.max(deadline - Date.now(), 15_000),
+    )
     if (!createResponse) {
-      throw new Error(lastError)
+      throw new Error('Create index request got no response')
     }
     if (createResponse.ok()) {
       await expectToast(page, 'Index created successfully')
@@ -543,7 +582,13 @@ export async function addTablesDbRelationshipColumnViaUi(
 
   const relatedTrigger = page.locator('#related-table')
   await expect(relatedTrigger).toBeVisible({ timeout: 15_000 })
-  await openSelectAndChoose(page, relatedTrigger, options.relatedTableName)
+  await chooseCommandItem(
+    page,
+    relatedTrigger,
+    'Search tables...',
+    options.relatedTableName,
+    new RegExp(`^${escapeRegExp(options.relatedTableName)}$`),
+  )
 
   const keyInput = page.locator('#column-key-relationship')
   await expect(keyInput).toBeVisible({ timeout: 10_000 })
@@ -611,13 +656,23 @@ export async function addCollectionIndexViaUi(
   const customAttribute = page.getByRole('button', { name: 'Custom attribute' })
   await expect(customAttribute).toBeVisible({ timeout: 10_000 })
 
+  // The list gains keys from sample documents while it is open, so a click can
+  // land on a re-rendered item. Confirm the form holds the attribute: an empty
+  // one fails client validation and the drawer never sends the request.
+  const dialog = page.getByRole('dialog', { name: 'Create Index', exact: true })
   if (await existingAttribute.isVisible().catch(() => false)) {
     await existingAttribute.click()
+    await expect(
+      dialog.getByRole('combobox').filter({
+        hasText: new RegExp(`^${escapeRegExp(options.attribute)}`),
+      }),
+    ).toBeVisible()
   } else {
     await customAttribute.click()
     const nameInput = page.getByPlaceholder('e.g. email, score, tags')
     await expect(nameInput).toBeVisible({ timeout: 10_000 })
     await nameInput.fill(options.attribute)
+    await expect(nameInput).toHaveValue(options.attribute)
   }
 
   const keyInput = page.locator('#index-key')

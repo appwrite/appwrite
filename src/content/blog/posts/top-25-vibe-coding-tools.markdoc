@@ -10,17 +10,18 @@ category: tutorials
 featured: false
 callToAction: true
 unlisted: true
+removed: true
 faqs:
   - question: "What is vibe coding?"
     answer: "Vibe coding is a style of programming where developers rely on AI models to generate and debug code. You describe what you want in plain English and the AI scaffolds the implementation, while you focus on guiding the system, validating outputs, and refining the result through iteration."
   - question: "What features should I look for in a vibe coding tool?"
-    answer: "Look for natural language input, AI-generated code, iterative refinement, code explanation, bug detection, and support for the [Model Context Protocol](/docs/tooling/mcp). A clean, fast user interface and integration with your existing editor or IDE also make a big difference day to day."
+    answer: "Look for natural language input, AI-generated code, iterative refinement, code explanation, bug detection, and support for the [Model Context Protocol](/docs/tooling/ai/mcp-servers). A clean, fast user interface and integration with your existing editor or IDE also make a big difference day to day."
   - question: "Does vibe coding replace traditional programming skills?"
     answer: "No. AI assistants speed up scaffolding and repetitive work, but you still need to understand architecture, debugging, and trade-offs. Developers who treat AI as a collaborator and review its output carefully tend to ship better code than those who copy and paste blindly."
   - question: "What is the Model Context Protocol (MCP) and why does it matter?"
     answer: "MCP is an open standard that lets editors and AI tools talk to external services through a common interface. Tools that support MCP can pull richer project context and even drive backends like Appwrite directly, which leads to smarter suggestions across files and sessions."
   - question: "Can vibe coding tools work with backend platforms like Appwrite?"
-    answer: "Yes. Appwrite has an [MCP server](/docs/tooling/mcp) that lets AI editors create projects, configure [Auth](/docs/products/auth), set up [Databases](/docs/products/databases), and manage [Functions](/docs/products/functions) using natural language. You can pair a vibe coding editor with Appwrite to spin up a full stack quickly."
+    answer: "Yes. Appwrite has an [MCP server](/docs/tooling/ai/mcp-servers) that lets AI editors create projects, configure [Auth](/docs/products/auth), set up [Databases](/docs/products/databases), and manage [Functions](/docs/products/functions) using natural language. You can pair a vibe coding editor with Appwrite to spin up a full stack quickly."
   - question: "How much time can AI coding tools actually save?"
     answer: "Surveys like JetBrains' Developer Ecosystem report typically show 1 to 2 hours saved per week as a common answer, but the real value depends on your workload. Repetitive tasks, boilerplate, and simple refactors are where AI gives the biggest immediate wins."
 ---
@@ -63,7 +64,7 @@ So here are some key features that you should look for:
 - Iterative refinement: Great output is all about iterations. Select a tool that allows you to refine the code, give feedback and request changes.
 - Code explanation: Some tools can simplify complex code by breaking it down into human-readable summaries. Super useful for learning, debugging, or collaborating.
 - Bug detection and code fixes: A tool that can scan for bugs could be of great help and can save your time and efforts.
-- Support for Model Context Protocol (MCP): Tools that support the [Model Context Protocol](/docs/tooling/mcp) can retain deeper project context, enabling smarter, more relevant suggestions across files and sessions.
+- Support for Model Context Protocol (MCP): Tools that support the [Model Context Protocol](/docs/tooling/ai/mcp-servers) can retain deeper project context, enabling smarter, more relevant suggestions across files and sessions.
 
 Lastly, pay attention to user interface design. A well-designed, intuitive interface improves user experience. It ensures that you spend more time coding and less time navigating the tool. 
 

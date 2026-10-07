@@ -340,8 +340,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Current': '現在',
   'Current database': '現在のデータベース',
   'Current session states from pg_stat_activity.': 'pg_stat_activity からの現在のセッション状態。',
-  'Upgrade from serverless to a dedicated tier to reserve CPU, memory, and connection limits. Migrating applies with a brief read-only window during cutover.':
-    'Serverless から専用ティアにアップグレードすると、CPU・メモリ・接続数の上限を確保できます。移行時は切り替えのあいだ、短時間の読み取り専用ウィンドウがあります。',
+  'Upgrade from serverless to a dedicated tier to reserve CPU, memory, and connection limits.':
+    'Serverless から専用ティアにアップグレードすると、CPU・メモリ・接続数の上限を確保できます。',
   'Migration to dedicated compute started': '専用コンピュートへの移行を開始しました',
   'Compute and connection limits for this database.':
     'このデータベースのコンピュートと接続数の上限です。',
@@ -1516,6 +1516,29 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'データベースのアップグレード進行中です。一部の操作は一時的に利用できない場合があります。',
   'A database migration is in progress. Some operations may be temporarily unavailable.':
     'データベースの移行進行中です。一部の操作は一時的に利用できない場合があります。',
+  'Starting dedicated migration': '専用コンピュートへの移行を開始しています',
+  'Dedicated compute provisioned': '専用コンピュートをプロビジョニングしました',
+  'Capturing live changes': 'ライブ変更をキャプチャしています',
+  'Copying data to dedicated compute': '専用コンピュートへデータをコピーしています',
+  'Catching up on changes': '変更の追いつき中',
+  'Verifying migrated data': '移行データを検証しています',
+  'Ready to cut over': 'カットオーバー準備完了',
+  'Cutting over to dedicated compute': '専用コンピュートへカットオーバー中',
+  'Finishing migration': '移行を完了しています',
+  'Migration completed': '移行が完了しました',
+  'Migration failed': '移行に失敗しました',
+  'Migration rolled back': '移行がロールバックされました',
+  'Migrating to dedicated compute': '専用コンピュートへ移行中',
+  'Your database stays available while data is copied. During cutover, writes pause briefly while routing switches and replay automatically.':
+    'データのコピー中もデータベースは利用できます。カットオーバー時はルーティング切り替えの間だけ書き込みが一時停止し、自動的に再実行されます。',
+  'rows pending replication': '行がレプリケーション待ち',
+  'Abort migration': '移行を中止',
+  'Migration aborted': '移行を中止しました',
+  'Failed to abort migration': '移行の中止に失敗しました',
+  'This migration did not finish. Abort it to try upgrading again.':
+    '移行が完了していません。中止してから再度アップグレードしてください。',
+  'A migration is in progress past cutover and cannot be aborted from the Console. Contact support if it is stuck.':
+    'カットオーバー後の移行は Console から中止できません。停止している場合はサポートにお問い合わせください。',
   'This database is being paused. Some operations may be temporarily unavailable.':
     'このデータベースは一時停止処理中です。一部の操作は一時的に利用できない場合があります。',
   'This database is resuming. Some operations may be temporarily unavailable.':
@@ -2099,4 +2122,46 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'この時刻は最も早いリカバリポイントより前です。',
   'This time is after the latest recovery point.':
     'この時刻は最も遅いリカバリポイントより後です。',
+  'Create your first database': '最初のデータベースを作成',
+  'Store, query, and sync your app data with tables, columns, and indexes built into Appwrite.':
+    'Appwrite に組み込まれたテーブル、カラム、インデックスで、アプリのデータを保存、クエリ、同期できます。',
+  'Start with TablesDB, a managed database built into Appwrite.':
+    'Appwrite に組み込まれたマネージドデータベース、TablesDB から始めましょう。',
+  'Define your schema': 'スキーマを定義',
+  'Add tables, columns, and indexes, then set permissions for each table.':
+    'テーブル、カラム、インデックスを追加し、テーブルごとに権限を設定します。',
+  'Query from your app': 'アプリからクエリ',
+  'Read and write rows with the Appwrite SDKs and subscribe to changes in realtime.':
+    'Appwrite SDK で行を読み書きし、変更をリアルタイムで購読できます。',
+  'Available on paid plans': '有料プランで利用可能',
+  'Available on paid plans, with monthly database credits.':
+    '有料プランで利用可能。毎月のデータベースクレジット付き。',
+  'Store, query, and sync your app data with Appwrite. Not sure which type to pick? Start with TablesDB.':
+    'Appwrite でアプリデータを保存、クエリ、同期できます。どれを選べばよいか迷ったら、TablesDB から始めましょう。',
+  'Fully managed and built into Appwrite. Read and write from your app with the SDKs.':
+    'Appwrite に組み込まれたフルマネージドのデータベース。SDK でアプリから読み書きできます。',
+  'Your own PostgreSQL or MySQL server, run by Appwrite. Connect with any SQL client or ORM.':
+    'Appwrite が運用する専用の PostgreSQL または MySQL サーバー。任意の SQL クライアントや ORM で接続できます。',
+  'Rows and columns with a defined schema. A good fit for most apps: users, orders, posts.':
+    'スキーマを定義した行と列。ユーザー、注文、投稿など、ほとんどのアプリに適しています。',
+  'JSON documents that can each have a different shape. Good for content and fast-changing data.':
+    'ドキュメントごとに異なる構造を持てる JSON ドキュメント。コンテンツや頻繁に変わるデータに適しています。',
+  'Stores embeddings and finds similar items. Good for AI search and recommendations.':
+    '埋め込みを保存し、類似アイテムを検索します。AI 検索やレコメンドに適しています。',
+  'A dedicated PostgreSQL server with full SQL. Good if you already use Postgres tools.':
+    'フル SQL に対応した専用 PostgreSQL サーバー。Postgres のツールをすでに使っている場合に適しています。',
+  'A dedicated MySQL server with full SQL. Good for moving an existing MySQL app.':
+    'フル SQL に対応した専用 MySQL サーバー。既存の MySQL アプリの移行に適しています。',
+  'Schedule a policy': 'ポリシーをスケジュールする',
+  'Pick how often to back up and how long to keep each copy. Appwrite runs it for you from then on.':
+    'バックアップの頻度と各コピーの保持期間を選びます。以降は Appwrite が自動で実行します。',
+  'Back up on demand': '必要なときにバックアップする',
+  'Take a manual backup before a risky migration or a big import, alongside your scheduled ones.':
+    'リスクのあるマイグレーションや大規模なインポートの前に、スケジュールされたバックアップとは別に手動バックアップを作成できます。',
+  'Restore in a few clicks': '数クリックで復元する',
+  'Bring any backup back as a new database, so you can check the data before you switch over.':
+    '任意のバックアップを新しいデータベースとして復元できるため、切り替える前にデータを確認できます。',
+  'Keep this database safe': 'このデータベースを安全に保つ',
+  'Back up on a schedule, keep copies for as long as you need, and restore any of them when something goes wrong.':
+    'スケジュールに沿ってバックアップし、必要な期間だけコピーを保持して、問題が起きたときにはいつでも復元できます。',
 }

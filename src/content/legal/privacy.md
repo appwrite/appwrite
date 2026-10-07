@@ -204,6 +204,7 @@ We use log files. We use such information to analyze trends, administer the Webs
 
 - **Sentry** - Sentry is a monitoring software and a performance monitoring software. Sentry helps diagnose, fix, and optimize the performance of the Website. Sentry's ability to use and share information collected by Sentry is regulated by their terms of service, available at [Sentry Terms of Service](https://sentry.io/terms/), and their Privacy Policy available at [Sentry Privacy Policy](https://sentry.io/privacy/).
 - **Mixpanel** - Mixpanel is a website that collects information about use of our console. It collects information such as how often users visit this console, what pages they visit when they do so, but not PII. We use the information we get from Mixpanel to maintain and improve the Website and our products. Mixpanel’s ability to use and share information about your visits is restricted by the Terms of Service, available at [Mixpanel Terms of Use](https://mixpanel.com/legal/terms-of-use) and the Mixpanel Privacy Policy, available at [Mixpanel Privacy Policy](https://mixpanel.com/legal/privacy-policy).
+- **OpenAI Ads** - We use the OpenAI Ads pixel to measure advertising campaigns and conversions. OpenAI's ability to use and share information collected by the pixel is regulated by their Privacy Policy, available at [OpenAI Privacy Policy](https://openai.com/policies/privacy-policy/).
 
 We reserve the right to remove or add new analytic tools.
 

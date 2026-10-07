@@ -72,6 +72,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Text Embeddings',
             href: '/docs/advanced/billing/embeddings',
           },
+          {
+            label: 'Premium Geo DB',
+            href: '/docs/advanced/billing/premium-geo-db',
+          },
         ],
       },
       {
@@ -321,6 +325,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'SMS delivery',
             href: '/docs/advanced/self-hosting/configuration/sms',
+          },
+          {
+            label: 'Breached passwords',
+            href: '/docs/advanced/self-hosting/configuration/breached-passwords',
           },
           {
             label: 'Functions',
@@ -1473,7 +1481,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Retool',
             href: '/docs/products/databases/mysql/integrations/retool',
-          }
+          },
         ],
       },
     ],
@@ -1667,7 +1675,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Retool',
             href: '/docs/products/databases/postgresql/integrations/retool',
-          }
+          },
         ],
       },
     ],
@@ -2540,6 +2548,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/tooling/ai/agents/claude-code',
           },
           {
+            label: 'ChatGPT',
+            href: '/docs/tooling/ai/agents/chatgpt',
+          },
+          {
             label: 'Codex',
             href: '/docs/tooling/ai/agents/codex',
           },
@@ -2597,6 +2609,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
       {
         label: 'Guides',
         items: [
+          {
+            label: 'Backend for coding agents',
+            href: '/docs/tooling/ai/backend-for-agents',
+          },
           {
             label: 'AI in Functions',
             href: '/docs/tooling/ai/ai-in-functions',

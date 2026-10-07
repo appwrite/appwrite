@@ -44,11 +44,14 @@ export function MessagingCreateControls({
   activeTab,
   disabled,
   disabledTooltip,
+  layout = 'toolbar',
 }: {
   projectId: string | undefined
   activeTab: ActiveTab
   disabled?: boolean
   disabledTooltip?: string
+  /** `inline` always shows the label instead of following the header width. */
+  layout?: 'toolbar' | 'inline'
 }) {
   const t = useT()
   const navigate = useNavigate()
@@ -167,6 +170,12 @@ export function MessagingCreateControls({
 
   if (!projectId) return null
 
+  const iconOnlyButton =
+    layout === 'inline' ? 'h-9 gap-1.5 px-4' : serviceHeaderIconOnlyButton
+  const showLabel = layout === 'inline' ? undefined : serviceHeaderShowLabel
+  const srOnlyLabel =
+    layout === 'inline' ? 'hidden' : 'sr-only @[640px]:hidden'
+
   const label =
     activeTab === 'messages'
       ? t('Create message')
@@ -182,7 +191,7 @@ export function MessagingCreateControls({
             <span
               className={cn(
                 buttonVariants({ variant: 'brandCta' }),
-                serviceHeaderIconOnlyButton,
+                iconOnlyButton,
                 'inline-flex cursor-not-allowed items-center justify-center text-[13px] font-medium opacity-50 pointer-events-none',
               )}
               {...analyticsAttrs(
@@ -193,9 +202,9 @@ export function MessagingCreateControls({
                     : 'create-provider',
               )}
             >
-              <Plus className="h-4 w-4 shrink-0" />
-              <span className={serviceHeaderShowLabel}>{label}</span>
-              <span className="sr-only @[640px]:hidden">{label}</span>
+              {layout === 'toolbar' ? <Plus className="h-4 w-4 shrink-0" /> : null}
+              <span className={showLabel}>{label}</span>
+              <span className={srOnlyLabel}>{label}</span>
             </span>
           </TooltipTrigger>
           <TooltipContent side="bottom">
@@ -211,14 +220,14 @@ export function MessagingCreateControls({
       <>
         <Button
           variant="brandCta"
-          className={cn(serviceHeaderIconOnlyButton, 'text-[13px] font-medium')}
+          className={cn(iconOnlyButton, 'text-[13px] font-medium')}
           onClick={() => setTopicDialogOpen(true)}
           aria-label={t('Create topic')}
           {...analyticsAttrs('create-topic')}
         >
-          <Plus className="h-4 w-4 shrink-0" />
-          <span className={serviceHeaderShowLabel}>{t('Create topic')}</span>
-          <span className="sr-only @[640px]:hidden">{t('Create topic')}</span>
+          {layout === 'toolbar' ? <Plus className="h-4 w-4 shrink-0" /> : null}
+          <span className={showLabel}>{t('Create topic')}</span>
+          <span className={srOnlyLabel}>{t('Create topic')}</span>
         </Button>
         <Dialog open={topicDialogOpen} onOpenChange={setTopicDialogOpen}>
           <DialogContent
@@ -275,7 +284,7 @@ export function MessagingCreateControls({
     return (
       <Button
         variant="brandCta"
-        className={cn(serviceHeaderIconOnlyButton, 'text-[13px] font-medium')}
+        className={cn(iconOnlyButton, 'text-[13px] font-medium')}
         onClick={() =>
           navigate({
             to: '/projects/$projectId/messaging/providers/create',
@@ -285,9 +294,9 @@ export function MessagingCreateControls({
         aria-label={t('Create provider')}
         {...analyticsAttrs('create-provider')}
       >
-        <Plus className="h-4 w-4 shrink-0" />
-        <span className={serviceHeaderShowLabel}>{t('Create provider')}</span>
-        <span className="sr-only @[640px]:hidden">{t('Create provider')}</span>
+        {layout === 'toolbar' ? <Plus className="h-4 w-4 shrink-0" /> : null}
+        <span className={showLabel}>{t('Create provider')}</span>
+        <span className={srOnlyLabel}>{t('Create provider')}</span>
       </Button>
     )
   }
@@ -298,16 +307,17 @@ export function MessagingCreateControls({
         <Button
           variant="brandCta"
           className={cn(
-            serviceHeaderIconOnlyButton,
-            'text-[13px] font-medium @[640px]:gap-1.5',
+            iconOnlyButton,
+            'text-[13px] font-medium',
+            layout === 'toolbar' && '@[640px]:gap-1.5',
           )}
           disabled={busy}
           aria-label={t('Create message')}
           {...analyticsAttrs('create-message')}
         >
-          <Plus className="h-4 w-4 shrink-0" />
-          <span className={serviceHeaderShowLabel}>{t('Create message')}</span>
-          <span className="sr-only @[640px]:hidden">{t('Create message')}</span>
+          {layout === 'toolbar' ? <Plus className="h-4 w-4 shrink-0" /> : null}
+          <span className={showLabel}>{t('Create message')}</span>
+          <span className={srOnlyLabel}>{t('Create message')}</span>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" />
         </Button>
       </DropdownMenuTrigger>

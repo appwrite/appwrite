@@ -34,6 +34,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   useProjectDatabase,
+  useResolvedProductDatabaseLifecycleStatus,
   useProjectTables,
   useProjectTableColumns,
   useProjectTable,
@@ -78,7 +79,6 @@ import {
   DatabaseMonitorHeaderActions,
 } from '../_components/DatabaseMonitorHeaderActions'
 import { DatabaseMonitorMobileNav } from '../_components/DatabaseMonitorMobileNav'
-import type { DateRange } from 'react-day-picker'
 import { useDatabaseMonitorChartFilters } from '@/hooks/use-database-monitor-chart-filters'
 import { ImportCsv } from '../_components/ImportCsv'
 import { ExportCsv } from '../_components/ExportCsv'
@@ -116,7 +116,6 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 
 import {
-  DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
@@ -154,7 +153,6 @@ import { TableRowsEditSessionProvider } from './_components/TableRowsEditSession
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
@@ -223,9 +221,12 @@ export function Workspace({
     databaseId,
     DB_KIND,
   )
-  const provisioning = isDedicatedDatabaseProvisioning(
-    (database as { status?: string | null } | null)?.status,
+  const lifecycleStatus = useResolvedProductDatabaseLifecycleStatus(
+    projectId,
+    databaseId,
+    DB_KIND,
   )
+  const provisioning = isDedicatedDatabaseProvisioning(lifecycleStatus)
   const provisioningDisabledSections = provisioning
     ? {
         monitor: DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE,

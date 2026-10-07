@@ -52,7 +52,7 @@ Until recently, connecting AI-powered editors like Cursor to backend services re
 MCP is an open standard that allows editors, agents, and other developer tools to securely communicate with external services. Appwrite’s MCP server enables direct interaction with your backend right inside Cursor.
 
 > "The Appwrite MCP server allows you to connect LLMs and tools like Claude Desktop, Cursor, Windsurf etc. to your Appwrite project and interact with the API using natural language."  
-> - [Appwrite MCP Documentation](https://appwrite.io/docs/tooling/mcp/cursor)
+> - [Appwrite MCP Documentation](https://appwrite.io/docs/tooling/ai/agents/cursor)
 
 This means you can use plain English in your editor to create or modify backend resources:
 - “Create a new Appwrite project.”
@@ -91,4 +91,4 @@ We're witnessing a fundamental shift in how software gets built. Tools like Curs
 
 This isn't just about faster development; it's about removing friction between thinking and building. Developers can experiment more freely, iterate faster, and focus on what matters: solving real problems for real users.
 
-Ready to experience this workflow yourself? [Set up the Appwrite MCP server in Cursor](https://appwrite.io/docs/tooling/mcp/cursor) and start building your next project with AI-powered backend automation.
+Ready to experience this workflow yourself? [Set up the Appwrite MCP server in Cursor](https://appwrite.io/docs/tooling/ai/agents/cursor) and start building your next project with AI-powered backend automation.

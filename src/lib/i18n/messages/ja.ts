@@ -25,6 +25,7 @@ export const jaCatalog: EnCatalog = {
         openWebsiteNavigation: 'サイトナビゲーションを開く',
         create: '作成',
         connect: '接続',
+        docs: 'ドキュメント',
         assistant: 'Agent',
         upgrade: 'アップグレード',
         signIn: 'サインイン',
@@ -197,6 +198,10 @@ export const jaCatalog: EnCatalog = {
           vsNetlify: 'Appwrite vs. Netlify', // pragma: allowlist secret
           vsCloudinary: 'Appwrite vs. Cloudinary', // pragma: allowlist secret
           vsAuth0: 'Appwrite vs. Auth0', // pragma: allowlist secret
+          vsConvex: 'Appwrite vs. Convex', // pragma: allowlist secret
+          vsClerk: 'Appwrite vs. Clerk', // pragma: allowlist secret
+          vsAmplify: 'Appwrite vs. AWS Amplify', // pragma: allowlist secret
+          vsPlanetScale: 'Appwrite vs. PlanetScale', // pragma: allowlist secret
           nextjsHosting: 'Next.js ホスティング',
           reactHosting: 'React ホスティング',
           vueHosting: 'Vue.js ホスティング',
@@ -218,6 +223,7 @@ export const jaCatalog: EnCatalog = {
         ...enCatalog.app.sidebar.items,
         overview: '概要',
         apps: 'アプリ',
+        agents: 'Agents',
         apiKeys: 'API キー',
         explorer: 'Explorer',
         auth: '認証',
@@ -225,6 +231,7 @@ export const jaCatalog: EnCatalog = {
         storage: 'ストレージ',
         functions: 'Functions',
         messaging: 'メッセージング',
+        videos: '動画',
         sites: 'サイト',
         distribution: 'Distribution',
         activity: 'アクティビティ',
@@ -396,6 +403,7 @@ export const jaCatalog: EnCatalog = {
           ...enCatalog.website.products.navigation.items,
           authTagline: 'メール、OAuth、SMS、MFA、チーム、セッション。',
           databasesTagline: 'マネージド PostgreSQL、TablesDB、DocumentsDB、VectorsDB、MySQL。',
+          postgresTagline: 'プーリング、レプリカ、PITR に対応したマネージド PostgreSQL。',
           storageTagline: 'CDN でファイルをアップロード、変換、配信。',
           functionsTagline: '大規模な API、Cron ジョブ、イベントハンドラー。',
           messagingTagline: 'トピックとターゲットでメール、SMS、プッシュ。',
@@ -431,7 +439,7 @@ export const jaCatalog: EnCatalog = {
           'ライブイベントを購読し、変更が起きた瞬間に反応できます。',
         mcpTitle: 'MCP',
         mcpDescription:
-          'MCP サーバー経由で AI エージェントを Appwrite プロジェクト、API、ドキュメントに接続。', // pragma: allowlist secret
+          '1つのリモート MCP サーバー経由で AI エージェントを Appwrite プロジェクト、API、ドキュメントに接続。', // pragma: allowlist secret
         terraformTitle: 'Terraform',
         terraformDescription:
           '公式プロバイダーで Appwrite インフラストラクチャをコードとして管理。', // pragma: allowlist secret

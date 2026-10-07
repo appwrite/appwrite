@@ -595,6 +595,10 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Timeout must be between 1 and 900 seconds':
     'ה-Timeout חייב להיות בין 1 ל-900 שניות',
   'Timeout updated successfully': 'ה-Timeout עודכן בהצלחה',
+  'Enterprise runtime options': 'אפשרויות runtime ב-Enterprise',
+  'The Enterprise plan includes always-on functions to minimize cold starts, as well as higher CPU and memory configurations for more demanding workloads.':
+    'תוכנית Enterprise כוללת פונקציות Always-on לצמצום cold starts, וגם תצורות CPU וזיכרון גבוהות יותר לעומסים תובעניים.',
+  'Contact us to learn more.': 'צרו קשר לפרטים נוספים.',
   'to make it available to end users.': 'כדי להפוך אותה לזמינה למשתמשי קצה.',
   'to unlock additional specifications.': 'כדי לפתוח מפרטים נוספים.',
   'Total size': 'גודל כולל',
@@ -682,4 +686,16 @@ export const heFunctionsDictionary: Record<string, string> = {
   // pragma: allowlist secret
   "Body data is not captured by Appwrite for your user's security and privacy. To display body data in the Logs tab, use":
     'נתוני ה-Body אינם נשמרים על ידי Appwrite לשם אבטחת המשתמשים שלכם ופרטיותם. כדי להציג נתוני Body בלשונית הלוגים, השתמשו ב', // pragma: allowlist secret
+  'Create your first function': 'יצירת הפונקציה הראשונה שלכם',
+  'Run backend code without managing servers. Respond to HTTP requests, events in your project, and schedules.':
+    'הריצו קוד Backend בלי לנהל שרתים. הגיבו לבקשות HTTP, לאירועים בפרויקט ולתזמונים.',
+  'Start from a template': 'התחלה מתבנית',
+  'Use a ready-made function, or pick a runtime like Node.js, Python, Dart, or Go.':
+    'השתמשו בפונקציה מוכנה, או בחרו Runtime כמו Node.js,‏ Python,‏ Dart או Go.',
+  'Deploy your code': 'פריסת הקוד שלכם',
+  'Connect a Git repository to deploy on every push, or upload your code manually.':
+    'חברו מאגר Git כדי לפרוס בכל Push, או העלו את הקוד ידנית.',
+  'Trigger it': 'הפעלת הפונקציה',
+  'Run it over HTTP, on events in your project, or on a schedule.':
+    'הריצו אותה דרך HTTP, בתגובה לאירועים בפרויקט או לפי תזמון.',
 }

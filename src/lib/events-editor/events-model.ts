@@ -127,6 +127,20 @@ export const EVENT_SERVICES: EventService[] = [
     name: 'messages',
     actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
   },
+  {
+    name: 'videos',
+    resources: [
+      {
+        name: 'renditions',
+        actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
+      },
+      {
+        name: 'subtitles',
+        actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
+      },
+    ],
+    actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
+  },
 ]
 
 export type EventBuilderSelection = {
@@ -143,6 +157,7 @@ export type EventBuilderSelection = {
   userId?: string | '*'
   topicId?: string | '*'
   providerId?: string | '*'
+  videoId?: string | '*'
   /** Resource instance IDs (file in bucket, row in table, column, index) */
   fileId?: string | '*'
   rowId?: string | '*'
@@ -168,6 +183,8 @@ export function buildEventString(sel: EventBuilderSelection): string {
     parts.push(sel.topicId)
   } else if (sel.service === 'providers' && sel.providerId) {
     parts.push(sel.providerId)
+  } else if (sel.service === 'videos' && sel.videoId) {
+    parts.push(sel.videoId)
   } else {
     parts.push('*')
   }
@@ -233,6 +250,7 @@ export function parseEventString(str: string): EventBuilderSelection | null {
     else if (svc.name === 'users') sel.userId = parts[i]
     else if (svc.name === 'topics') sel.topicId = parts[i]
     else if (svc.name === 'providers') sel.providerId = parts[i]
+    else if (svc.name === 'videos') sel.videoId = parts[i]
     i++
   }
 

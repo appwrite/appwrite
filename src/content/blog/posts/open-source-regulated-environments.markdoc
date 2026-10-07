@@ -9,6 +9,7 @@ author: aditya-oberai
 category: security
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "Is open-source software safe to use in regulated industries?"
     answer: "Yes, when evaluated correctly. Open source is not inherently less secure than proprietary software, and widely used projects are often more rigorously reviewed. The concerns to address are accountability, maintenance cadence, vendor support, and how quickly known vulnerabilities get patched, all of which are evaluable rather than blocking."

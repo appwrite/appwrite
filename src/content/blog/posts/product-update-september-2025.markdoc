@@ -69,7 +69,7 @@ That means, AI assistants can now:
 - Generate code snippets using the latest APIs
 - Provide contextual help for Appwrite features
 
-[Visit docs](/docs/tooling/mcp/docs)
+[Visit docs](/docs/tooling/ai/mcp-servers)
 
 # API for Spatial columns
 
@@ -96,8 +96,6 @@ With these new capabilities, it’s simple to model and query location-based dat
 Appwrite Sites now supports Next.js applications built with Turbopack, with faster builds and better compatibility for your deployments.
 
 With native support, your builds run without modification, deploy faster, and stay consistent between local and production. This update strengthens compatibility between Appwrite Sites and the modern Next.js toolchain.
-
-[Read the announcement to learn more](/blog/post/turbopack-support-appwrite-sites)
 
 # Performance improvements for Functions and static sites
 

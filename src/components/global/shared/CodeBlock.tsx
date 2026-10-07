@@ -1,7 +1,5 @@
 'use client'
 
-/// <reference path="../../../prismjs-components.d.ts" />
-
 /**
  * Reusable code block with syntax highlighting for all Appwrite SDK and runtime languages.
  * Supports: JavaScript, TypeScript, Node/Deno/Bun, Python, PHP, Ruby, Dart, Swift, Kotlin, Java,
@@ -13,7 +11,7 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Copy, Check, Maximize2 } from 'lucide-react'
-import { Highlight, Prism } from 'prism-react-renderer'
+import { Highlight } from 'prism-react-renderer'
 import {
   buildCodeBlockPrismTheme,
   CODE_BLOCK_PRISM_SURFACE_CLASS,
@@ -26,24 +24,7 @@ import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
-
-// Expose Prism so prismjs language components can register themselves
-if (typeof globalThis !== 'undefined') {
-  ;(globalThis as unknown as { Prism: typeof Prism }).Prism = Prism
-}
-
-// Register .env / dotenv syntax (KEY=value, # comments, quoted values)
-if (typeof Prism !== 'undefined' && !Prism.languages.env) {
-  Prism.languages.env = {
-    comment: /#.*/,
-    'attr-name': /^[A-Za-z_][A-Za-z0-9_]*/m,
-    operator: /=/,
-    string: [
-      { pattern: /"(?:[^"\\]|\\.)*"/, greedy: true },
-      { pattern: /'(?:[^'\\]|\\.)*'/, greedy: true },
-    ],
-  }
-}
+import { isPrismLanguageReady, loadPrismLanguage } from '@/lib/prism-languages'
 
 /**
  * Languages we support for syntax highlighting.
@@ -144,90 +125,9 @@ export function getCodeLanguageLabel(lang: CodeBlockLanguage): string {
   return labels[lang] ?? lang
 }
 
-const EXTRA_LANGUAGES: string[] = [
-  'json',
-  'dart',
-  'swift',
-  'kotlin',
-  'java',
-  'bash',
-  'powershell',
-  'php',
-  'python',
-  'ruby',
-  'go',
-  'csharp',
-  'markup',
-  'hcl',
-  'rust',
-  'graphql',
-  'sql',
-  'http',
-  'groovy',
-  'docker',
-  'css',
-  'yaml',
-  'toml',
-  'cpp',
-  'markdown',
-  'diff',
-]
-
-const PRISM_LOADERS: Record<string, () => Promise<unknown>> = {
-  json: () => import('prismjs/components/prism-json'),
-  dart: () => import('prismjs/components/prism-dart'),
-  swift: () => import('prismjs/components/prism-swift'),
-  kotlin: () => import('prismjs/components/prism-kotlin'),
-  java: () => import('prismjs/components/prism-java'),
-  bash: () => import('prismjs/components/prism-bash'),
-  powershell: () => import('prismjs/components/prism-powershell'),
-  markup: () => import('prismjs/components/prism-markup'),
-  'markup-templating': () =>
-    loadLanguage('markup').then(
-      () => import('prismjs/components/prism-markup-templating'),
-    ),
-  php: () =>
-    loadLanguage('markup-templating').then(
-      () => import('prismjs/components/prism-php'),
-    ),
-  python: () => import('prismjs/components/prism-python'),
-  ruby: () => import('prismjs/components/prism-ruby'),
-  go: () => import('prismjs/components/prism-go'),
-  csharp: () => import('prismjs/components/prism-csharp'),
-  hcl: () => import('prismjs/components/prism-hcl'),
-  rust: () => import('prismjs/components/prism-rust'),
-  graphql: () => import('prismjs/components/prism-graphql'),
-  sql: () => import('prismjs/components/prism-sql'),
-  http: () => import('prismjs/components/prism-http'),
-  groovy: () => import('prismjs/components/prism-groovy'),
-  docker: () => import('prismjs/components/prism-docker'),
-  css: () => import('prismjs/components/prism-css'),
-  yaml: () => import('prismjs/components/prism-yaml'),
-  toml: () => import('prismjs/components/prism-toml'),
-  c: () => import('prismjs/components/prism-c'),
-  cpp: () =>
-    loadLanguage('c').then(() => import('prismjs/components/prism-cpp')),
-  markdown: () =>
-    loadLanguage('markup').then(
-      () => import('prismjs/components/prism-markdown'),
-    ),
-  diff: () => import('prismjs/components/prism-diff'),
-}
-
-const loadedLanguages = new Set<string>()
-
-function loadLanguage(lang: string): Promise<void> {
-  if (loadedLanguages.has(lang)) return Promise.resolve()
-  const loader = PRISM_LOADERS[lang]
-  if (!loader) return Promise.resolve()
-  return loader().then(() => {
-    loadedLanguages.add(lang)
-  })
-}
-
 /** Docs and API reference pages use JSON heavily; preload to avoid plaintext flash. */
 if (typeof window !== 'undefined') {
-  void loadLanguage('json')
+  void loadPrismLanguage('json')
 }
 
 export type CodeBlockVariant = 'default' | 'headless'
@@ -311,13 +211,7 @@ export function CodeBlock({
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false)
   const preRef = useRef<HTMLPreElement>(null)
   const prismLanguage = getPrismLanguage(language)
-  const needsExtra = EXTRA_LANGUAGES.includes(prismLanguage)
-  // Prefer Prism's live registry (built-ins like json ship with prism-react-renderer)
-  // so we don't fall back to plaintext while a redundant dynamic import is in flight.
-  const languageIsRegistered =
-    !needsExtra ||
-    loadedLanguages.has(prismLanguage) ||
-    Boolean(Prism.languages[prismLanguage])
+  const languageIsRegistered = isPrismLanguageReady(prismLanguage)
   // Bump when async Prism grammars finish loading so Highlight re-tokenizes.
   const [, setLoadGeneration] = useState(0)
 
@@ -351,7 +245,7 @@ export function CodeBlock({
   useEffect(() => {
     if (languageIsRegistered) return
     let cancelled = false
-    loadLanguage(prismLanguage).then(() => {
+    loadPrismLanguage(prismLanguage).then(() => {
       if (!cancelled) setLoadGeneration((n) => n + 1)
     })
     return () => {

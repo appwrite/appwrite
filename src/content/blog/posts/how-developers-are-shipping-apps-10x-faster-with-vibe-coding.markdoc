@@ -9,6 +9,7 @@ author: aishwari
 category: ai
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: What is vibe coding?
     answer: Vibe coding is a development style where developers describe what they want in natural language and use an AI coding assistant to generate, review, and iterate on the implementation. The developer still guides the work, reviews the output, and decides what should actually ship.
@@ -118,7 +119,7 @@ Appwrite is the platform developers reach for when their vibe coded frontend nee
 
 One platform covers the parts of the stack you should not be generating from scratch. Authentication, databases, storage, serverless functions, messaging, and realtime, with SDKs that feel native in whatever framework you and your AI assistant are using. [Appwrite Sites](https://appwrite.io/products/sites) handles frontend deployment on the same platform, with Git push deploys, custom domains, automatic SSL, and a global CDN.
 
-And if you are already coding with Claude or Codex, the [Appwrite plugin for Claude Code](https://appwrite.io/integrations) and the [Appwrite plugin for Codex](https://appwrite.io/blog/post/announcing-appwrite-codex-plugin) drop our [MCP servers](https://appwrite.io/docs/tooling/mcp) and [SDK skills](https://appwrite.io/docs/tooling/skills) straight into your editor, so your assistant can talk to Appwrite directly instead of guessing at it. You can also generate an [AGENTS.md](https://appwrite.io/docs/tooling/ai/agents-md) for your project so any agent picks up the right conventions from the start.
+And if you are already coding with Claude or Codex, the [Appwrite plugin for Claude Code](https://appwrite.io/integrations) and the [Appwrite plugin for Codex](https://appwrite.io/blog/post/announcing-appwrite-codex-plugin) drop our [MCP servers](https://appwrite.io/docs/tooling/ai/mcp-servers) and [SDK skills](https://appwrite.io/docs/tooling/skills) straight into your editor, so your assistant can talk to Appwrite directly instead of guessing at it. You can also generate an [AGENTS.md](https://appwrite.io/docs/tooling/ai/agents-md) for your project so any agent picks up the right conventions from the start.
 
 We post weekly roundups of product announcements, AI updates, and developer insights on [dev.to](https://dev.to/appwrite/weekly-roundup-product-announcements-ai-updates-and-developer-insights-4m3k) and [Medium](https://medium.com/appwrite-io/weekly-roundup-product-announcements-ai-updates-and-developer-insights-ef104b3301fe), so pick whichever reader you already live in. Recent releases have added [MongoDB support, Appwrite 1.90, realtime upgrades, and new AI tooling](https://dev.to/appwrite/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling-1eg6), with more landing every few weeks.
 

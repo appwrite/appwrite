@@ -7,6 +7,7 @@ date: 2025-09-03
 timeToRead: 10
 author: laura-du-ry
 unlisted: true
+removed: true
 category: startups
 faqs:
   - question: "What is prompt engineering?"
@@ -18,11 +19,11 @@ faqs:
   - question: "What tools help with prompt engineering?"
     answer: "Popular tools include LangChain, PromptAppGPT, OpenPrompt, and various playgrounds offered by model providers. They help you build chains, manage variations, and evaluate responses. Picking the right tool depends on whether you are doing exploration, building production pipelines, or testing variations at scale."
   - question: "How can I build AI features into my Appwrite app?"
-    answer: "Use [Appwrite Functions](/docs/products/functions) to call LLM APIs from a secure backend, and store inputs or outputs in [Appwrite Databases](/docs/products/databases). For agents that need to interact with your project resources, the [Appwrite MCP server](/docs/tooling/mcp) connects models like Claude directly to your data. This keeps secrets server side and lets you scope what the model can access."
+    answer: "Use [Appwrite Functions](/docs/products/functions) to call LLM APIs from a secure backend, and store inputs or outputs in [Appwrite Databases](/docs/products/databases). For agents that need to interact with your project resources, the [Appwrite MCP server](/docs/tooling/ai/mcp-servers) connects models like Claude directly to your data. This keeps secrets server side and lets you scope what the model can access."
   - question: "How do I get started with prompt engineering as a beginner?"
     answer: "Start by reading the prompting guides from major model providers (Anthropic, OpenAI). Practice on real tasks like summarization, classification, or code generation, and compare how small wording changes affect output. Joining AI communities and reviewing prompts shared by others speeds up the learning curve."
 ---
-Prompt engineering is changing how we [build with AI](/docs/tooling/mcp). It's no longer just about the model, it’s also about the inputs given to the AI models.
+Prompt engineering is changing how we [build with AI](/docs/tooling/ai/mcp-servers). It's no longer just about the model, it’s also about the inputs given to the AI models.
 
 As AI-driven development takes off, prompt engineering becomes the bridge between human intent and machine execution. It’s how you get AI to do what you want. If you’re building with AI, this isn’t optional. Understanding prompts means understanding how to steer AI. It’s a must-have skill for the next generation of developers.
 

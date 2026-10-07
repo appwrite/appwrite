@@ -176,6 +176,7 @@ export const CHANGELOG_RESOURCE_LINK_GROUP_CLASSES = [
   '[&_.changelog-resource-link]:mt-8',
   '[&_.changelog-resource-link]:overflow-hidden',
   '[&_.changelog-resource-link]:bg-card/50',
+  '[&_.changelog-resource-link:last-of-type]:mb-8',
   // Single link
   '[&_.changelog-resource-link:not(:has(+_.changelog-resource-link)):not(.changelog-resource-link+_.changelog-resource-link)]:rounded-xl',
   '[&_.changelog-resource-link:not(:has(+_.changelog-resource-link)):not(.changelog-resource-link+_.changelog-resource-link)]:border',
@@ -211,7 +212,7 @@ export function ChangelogArrowLink({
       <ChangelogLink
         href={href}
         className={cn(
-          'relative block w-full rounded-none px-4 py-4 pe-10 text-start transition-colors duration-150 hover:bg-muted/40',
+          'relative block w-full rounded-none px-4 py-5 pe-10 text-start transition-colors duration-150 hover:bg-muted/40',
           textClassName ??
             'text-[13px] font-medium leading-5 text-foreground',
         )}
@@ -225,7 +226,7 @@ export function ChangelogArrowLink({
           {children}
         </span>
         <ArrowUpRight
-          className="absolute top-4 end-4 size-3.5 shrink-0 text-muted-foreground"
+          className="absolute top-5 end-4 size-3.5 shrink-0 text-muted-foreground"
           aria-hidden
         />
       </ChangelogLink>

@@ -10,6 +10,7 @@ author: aishwari
 category: ai
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What is Claude's extended thinking mode?"
     answer: "Extended thinking lets Claude pause and reason step by step before responding, instead of producing a quick pattern-matched answer. The reasoning chain is visible in the response, so you can follow how it broke the problem apart, checked assumptions, and caught edge cases. It is most useful for debugging logic errors, designing system architecture, or working through tricky algorithm problems."
@@ -65,7 +66,7 @@ It's worth trying for tasks that would normally take you an afternoon of focused
 
 The **Model Context Protocol (MCP)** gives Claude the ability to connect to external systems, your database, your APIs, your services, and actually interact with them. Not just describe what it would do, but do it.
 
-With the [Appwrite MCP server](/docs/tooling/mcp), for example, Claude can create users, query tables, manage storage, and trigger functions directly inside your Appwrite project. You describe what you need in plain language, and Claude handles the operation. No copy-pasting API responses. No switching tabs to check the console.
+With the [Appwrite MCP server](/docs/tooling/ai/mcp-servers), for example, Claude can create users, query tables, manage storage, and trigger functions directly inside your Appwrite project. You describe what you need in plain language, and Claude handles the operation. No copy-pasting API responses. No switching tabs to check the console.
 
 This is what [agentic AI](/blog/post/agentic-ai-vs-generative-ai) actually looks like in practice: the model connected to real systems, taking real actions. If you've only ever used Claude in a chat window, adding MCP changes the category of work it can handle.
 
@@ -89,10 +90,10 @@ This works best when you treat Claude like a collaborator, not a tool. Share the
 
 Most of these capabilities are available out of the box, but the one that changes the day-to-day the most for developers is the MCP connection to a real backend. Once Claude can actually read and write to your project, it stops being an assistant and starts being an active part of your workflow.
 
-If you're using Appwrite, the [Appwrite MCP server](/docs/tooling/mcp) is the fastest way to get there. It connects Claude directly to your project so you can manage data, run operations, and prototype features without leaving your editor. The [Appwrite AI integrations](/integrations#ai) page has more on how to wire up AI tools to your stack.
+If you're using Appwrite, the [Appwrite MCP server](/docs/tooling/ai/mcp-servers) is the fastest way to get there. It connects Claude directly to your project so you can manage data, run operations, and prototype features without leaving your editor. The [Appwrite AI integrations](/integrations#ai) page has more on how to wire up AI tools to your stack.
 
 # More resources
 
-- [Appwrite MCP server documentation](/docs/tooling/mcp)
+- [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
 - [Agentic AI vs Generative AI: what's actually different](/blog/post/agentic-ai-vs-generative-ai)
 - [10 best MCP servers for developers](/blog/post/10-best-mcp-server-client)

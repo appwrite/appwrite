@@ -28,7 +28,7 @@ import {
   useProject,
   useOrganizationPlan,
   useOrganizationScopes,
-  databasesQueryOptions,
+  consoleDatabasesQueryOptions,
   createProjectDatabase,
   createProjectTable,
 } from '@/lib/react-query/hooks'
@@ -278,9 +278,10 @@ export function View() {
     })
   }
 
-  // Get total count (no search/filters) for plan limit check - uses same query as route loader prefetch to avoid layout shift when showing PlanLimitWarning
+  // Unfiltered unified list total (console.listDatabases). Must include native
+  // Postgres/MySQL or a project with only those DBs hides the toolbar.
   const { data: totalDatabasesData } = useQuery(
-    databasesQueryOptions(
+    consoleDatabasesQueryOptions(
       projectId,
       0,
       ROWS_DEFAULT_PAGE_SIZE,
@@ -295,6 +296,7 @@ export function View() {
 
   // Total count of all databases (without search) - for limit checking
   const totalDatabasesCount = totalDatabasesData?.total || 0
+  const hasNoDatabases = totalDatabasesData?.total === 0
 
   // Check if create button should be disabled (plan limit or missing write scope)
   const noCreateDbPermission = !canCreateDatabase(access, features)
@@ -302,6 +304,20 @@ export function View() {
   const isCreateDisabled =
     noCreateDbPermission ||
     (databasesLimit > 0 && totalDatabasesCount >= databasesLimit)
+  const createDisabledTooltip = noCreateDbPermission
+    ? t("You don't have permission to create databases.")
+    : undefined
+
+  const handleCreate = () => {
+    if (useCreateDatabaseWizard) {
+      navigate({
+        to: '/projects/$projectId/databases/create',
+        params: { projectId: projectId! },
+      })
+      return
+    }
+    setCreateDatabaseDialogOpen(true)
+  }
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value)
@@ -479,67 +495,59 @@ export function View() {
     <div className="flex flex-col">
       <ServiceHeader
         title={t('Databases')}
+        hideToolbar={hasNoDatabases && !urlSearch && filterMap.size === 0}
         searchPlaceholder={t('Search databases...')}
         searchValue={searchInput}
-        onSearchChange={handleSearchChange}
-        createLabel={t('Create database')}
+        onSearchChange={hasNoDatabases ? undefined : handleSearchChange}
+        createLabel={hasNoDatabases ? undefined : t('Create database')}
         createAnalyticsAction="create-database"
-        onCreate={() =>
-          useCreateDatabaseWizard
-            ? navigate({
-                to: '/projects/$projectId/databases/create',
-                params: { projectId: projectId! },
-              })
-            : setCreateDatabaseDialogOpen(true)
-        }
+        onCreate={handleCreate}
         createDisabled={isCreateDisabled}
-        createDisabledTooltip={
-          noCreateDbPermission
-            ? t("You don't have permission to create databases.")
-            : undefined
-        }
-        showFilters={true}
+        createDisabledTooltip={createDisabledTooltip}
+        showFilters={!hasNoDatabases}
         filterTrigger={
-          <div className="flex shrink-0 items-center gap-2">
-            <FiltersPopover
-              open={filtersOpen}
-              onOpenChange={setFiltersOpen}
-              columns={databasesFilterColumns}
-              filterMap={filterMap}
-              onRemoveFilter={removeFilter}
-              onClearAll={clearAllFilters}
-              onApplyFilter={applyFilter}
-              resourceLabel="databases"
-              filterScope="databases"
-              onApplyQuery={(queryParam) => {
-                navigate({
-                  to: '/projects/$projectId/databases/',
-                  params: { projectId: projectId! },
-                  search: (prev: Record<string, unknown>) => ({
-                    ...prev,
-                    ...buildListSearchParams({
-                      search: urlSearch,
-                      query: queryParam ?? undefined,
-                      page: 1,
-                      limit: urlLimit,
+          hasNoDatabases ? undefined : (
+            <div className="flex shrink-0 items-center gap-2">
+              <FiltersPopover
+                open={filtersOpen}
+                onOpenChange={setFiltersOpen}
+                columns={databasesFilterColumns}
+                filterMap={filterMap}
+                onRemoveFilter={removeFilter}
+                onClearAll={clearAllFilters}
+                onApplyFilter={applyFilter}
+                resourceLabel="databases"
+                filterScope="databases"
+                onApplyQuery={(queryParam) => {
+                  navigate({
+                    to: '/projects/$projectId/databases/',
+                    params: { projectId: projectId! },
+                    search: (prev: Record<string, unknown>) => ({
+                      ...prev,
+                      ...buildListSearchParams({
+                        search: urlSearch,
+                        query: queryParam ?? undefined,
+                        page: 1,
+                        limit: urlLimit,
+                      }),
                     }),
-                  }),
-                  replace: true,
-                })
-              }}
-              teamId={project?.teamId}
-            />
-            {useCreateDatabaseWizard ? (
-              <DatabaseTypeFilterDropdown
-                options={databaseTypeFilterOptions}
-                selectedTypes={selectedDatabaseTypes}
-                onSelectedTypesChange={applyDatabaseTypesFilter}
+                    replace: true,
+                  })
+                }}
+                teamId={project?.teamId}
               />
-            ) : null}
-          </div>
+              {useCreateDatabaseWizard ? (
+                <DatabaseTypeFilterDropdown
+                  options={databaseTypeFilterOptions}
+                  selectedTypes={selectedDatabaseTypes}
+                  onSelectedTypesChange={applyDatabaseTypesFilter}
+                />
+              ) : null}
+            </div>
+          )
         }
         fullWidthBorder
-        rightContent={<ViewToggle />}
+        rightContent={hasNoDatabases ? undefined : <ViewToggle />}
         contentAfterBorder={
           // Data is prefetched in route loader, only render if data exists
           // PlanLimitWarning handles its own visibility logic
@@ -572,6 +580,9 @@ export function View() {
             limit={urlLimit}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
+            onCreate={handleCreate}
+            createDisabled={isCreateDisabled}
+            createDisabledTooltip={createDisabledTooltip}
           />
         ) : null}
 

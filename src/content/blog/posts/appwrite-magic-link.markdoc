@@ -9,6 +9,7 @@ author: aditya-oberai
 category: products, tutorials, security
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What is Magic Link authentication in Appwrite?"
     answer: "Magic Link is a passwordless auth method where the user enters their email, receives a short-lived link, and clicks it to log in. Appwrite generates a token, sends it embedded in a URL you control, and your app exchanges the token for a session when the user lands on the verification page. There is no password to choose, remember, or reset."

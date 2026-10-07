@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/threads/View'
 import { getThreads } from '@/lib/threads/content'
-import { getThreadsIndexRouteMetaTags } from '@/lib/threads/route-meta'
+import { getThreadsIndexRouteHead } from '@/lib/threads/route-meta'
 import { getThreadsIndexPageSchema } from '@/lib/threads/seo'
 import { parseThreadsTags, threadsSearchSchema } from '@/lib/threads/search'
 import {
@@ -34,7 +34,7 @@ export const Route = createFileRoute('/_marketing/threads/')({
     }
   },
   head: () => ({
-    meta: getThreadsIndexRouteMetaTags(),
+    ...getThreadsIndexRouteHead(),
     scripts: [
       {
         type: 'application/ld+json',

@@ -9,6 +9,7 @@ timeToRead: 8
 author: dennis-ivy
 category: tutorials
 featured: false
+removed: true
 faqs:
   - question: "What is the difference between Teams and Labels in Appwrite?"
     answer: "Teams group users together for shared access and support roles within the group, so you can assign permissions to specific roles like admin or moderator. Labels are custom tags attached to individual users and act as a lightweight way to grant permissions based on user attributes. Teams are best for collaborative spaces, while Labels suit per user access like paywalled content."

@@ -75,13 +75,13 @@ The choice of backend matters more for a vibe coding team than it used to. A bac
 
 [Appwrite Cloud](https://cloud.appwrite.io) gives you that shape. [Auth](/docs/products/auth) covers OAuth, sessions, MFA, and Teams. [Databases](/docs/products/databases) cover tables, typed columns, rows, relationships, and queries. [Storage](/docs/products/storage) covers files with permissions, antivirus, and encryption. [Functions](/docs/products/functions) cover server-side logic. [Sites](/docs/products/sites) covers hosting with custom domains and rollbacks. The [API MCP server](/docs/tooling/ai/mcp-servers) and [Docs MCP server](/docs/tooling/ai/mcp-servers) keep the agent on current APIs, and [Agent Skills](/docs/tooling/ai/skills) give it SDK context. A junior reviewing this code does not have to debug whether the agent invented an SDK method that does not exist.
 
-For teams that pair junior developers with vibe coding tools, the same checklist that applies to any production launch applies twice as hard. The [backend checklist for vibe-coded apps before launch](/blog/post/backend-checklist-vibe-coded-apps) is a good place to anchor your team's pre-launch review.
+For teams that pair junior developers with vibe coding tools, the same checklist that applies to any production launch applies twice as hard.
 
 # Hiring and training juniors in the vibe coding era
 
 Vibe coding does not replace junior developers. It replaces a specific slice of what juniors used to do, and it raises the value of everything else. Teams that hire well, mentor well, and put juniors on backends shaped for agents end up with engineers who ramp faster than any previous cohort. Teams that try to skip the role end up with no pipeline.
 
-If you are building a team that ships with vibe coding tools, start by giving your juniors a backend they can reason about. [Sign up for Appwrite Cloud](https://cloud.appwrite.io), install the [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) plugin, and let the agent handle the syntax while your junior owns the judgment.
+If you are building a team that ships with vibe coding tools, start by giving your juniors a backend they can reason about. [Sign up for Appwrite Cloud](https://cloud.appwrite.io), install the [Claude Code](/docs/tooling/ai/agents/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) plugin, and let the agent handle the syntax while your junior owns the judgment.
 
 - [Appwrite AI tooling](/docs/tooling/ai)
 - [Appwrite API MCP server](/docs/tooling/ai/mcp-servers)

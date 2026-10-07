@@ -28,6 +28,20 @@ const WEBSITE_PAGES: Array<{ name: string; path: string; url?: RegExp }> = [
   { name: 'product functions', path: '/products/functions' },
   { name: 'product messaging', path: '/products/messaging' },
   { name: 'product sites', path: '/products/sites' },
+  { name: 'alternative to supabase', path: '/alternative-to/supabase' },
+  { name: 'alternative to firebase', path: '/alternative-to/firebase' },
+  { name: 'alternative to vercel', path: '/alternative-to/vercel' },
+  { name: 'alternative to netlify', path: '/alternative-to/netlify' },
+  { name: 'alternative to neon', path: '/alternative-to/neon' },
+  { name: 'alternative to auth0', path: '/alternative-to/auth0' },
+  { name: 'alternative to convex', path: '/alternative-to/convex' },
+  { name: 'alternative to cloudinary', path: '/alternative-to/cloudinary' },
+  { name: 'alternative to clerk', path: '/alternative-to/clerk' },
+  { name: 'alternative to amplify', path: '/alternative-to/amplify' },
+  { name: 'alternative to planetscale', path: '/alternative-to/planetscale' },
+  { name: 'secret campaign supabase and firebase', path: '/secret/supabase-and-firebase' },
+  { name: 'secret campaign supabase', path: '/secret/supabase' },
+  { name: 'secret campaign firebase', path: '/secret/firebase' },
 ]
 
 test.describe('website smoke (read-only)', () => {

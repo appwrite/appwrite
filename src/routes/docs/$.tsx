@@ -7,10 +7,11 @@ import { getDocsRedirectTarget } from '@/lib/docs/redirects'
 import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
 import { generateDocsLlmsTxt } from '@/lib/seo/llms-content'
 import { trackServerPageview } from '@/lib/server-analytics'
-import { getDocsMetaTags } from '@/lib/docs/route-meta'
+import { getDocsRouteHead } from '@/lib/docs/route-meta'
 import {
   getDocsArticleSchema,
   getDocsBreadcrumbSchema,
+  getDocsFaqSchema,
 } from '@/lib/docs/seo'
 import { stringifyJsonLd } from '@/lib/seo/json-ld'
 
@@ -38,7 +39,12 @@ export const Route = createFileRoute('/docs/$')({
         }
 
         const slug = splat.slice(0, -3)
-        if (isFeatureGatedDocsSlugHidden(slug)) {
+        // Match the HTML route: partners docs stay available on the server
+        // until the client can apply a local override. A hard 404 here made
+        // `/docs/partners/...md` fail while the page itself rendered.
+        if (
+          isFeatureGatedDocsSlugHidden(slug, { deferPartnersOnServer: true })
+        ) {
           return new Response('Not found', { status: 404 })
         }
 
@@ -101,17 +107,21 @@ export const Route = createFileRoute('/docs/$')({
   head: ({ loaderData }) => {
     if (!loaderData?.page) return {}
     const { meta, slug } = { meta: loaderData.page.meta, slug: loaderData.page.meta.slug }
+    const seo = getDocsRouteHead({ ...meta, slug })
     return {
-      meta: getDocsMetaTags({ ...meta, slug }),
-      links: slug
-        ? [
-            {
-              rel: 'alternate',
-              type: 'text/markdown',
-              href: `/docs/${slug}.md`,
-            },
-          ]
-        : [],
+      ...seo,
+      links: [
+        ...seo.links,
+        ...(slug
+          ? [
+              {
+                rel: 'alternate',
+                type: 'text/markdown',
+                href: `/docs/${slug}.md`,
+              },
+            ]
+          : []),
+      ],
       scripts: [
         {
           type: 'application/ld+json',
@@ -121,6 +131,14 @@ export const Route = createFileRoute('/docs/$')({
           type: 'application/ld+json',
           children: stringifyJsonLd(getDocsArticleSchema(meta, slug)),
         },
+        ...(meta.faqs?.length
+          ? [
+              {
+                type: 'application/ld+json' as const,
+                children: stringifyJsonLd(getDocsFaqSchema(meta.faqs)),
+              },
+            ]
+          : []),
       ],
     }
   },

@@ -3,6 +3,7 @@ import { Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { DomainsTldScatter } from '@/components/pages/domains/_components/DomainsTldScatter'
 import { DomainSuggestionCard } from '@/components/pages/organizations/$orgId/domains/_components/DomainSuggestionCard'
 import {
   type DomainSelectionQuote,
@@ -14,6 +15,8 @@ import { useT } from '@/lib/i18n/translate'
 
 const DOMAIN_SEARCH_FIELD_CLASS =
   'h-11 ps-10 font-mono text-[14px] tracking-tight bg-muted/30 border-border/80 focus:bg-background'
+const DOMAIN_SEARCH_FOCUS_FIELD_CLASS =
+  'h-14 rounded-xl ps-12 font-mono text-[15px] md:text-[16px] tracking-tight bg-background/90 border-foreground/15 shadow-[0_18px_50px_-24px_rgb(253_54_110/0.5)] backdrop-blur-sm focus-visible:border-[var(--brand-cta)]/50 focus-visible:ring-[var(--brand-cta)]/20 dark:bg-card/80'
 const DOMAIN_SEARCH_HELPER_CLASS = 'text-[12px] leading-5 text-muted-foreground'
 const FOCUS_MARKETING_CONTENT_WIDTH = 'max-w-2xl'
 
@@ -31,6 +34,12 @@ type DomainSearchResultsProps = {
   title?: string
   description?: string
   footer?: ReactNode
+  /** Focus variant only: shown above the title before a search starts. */
+  eyebrow?: ReactNode
+  /** Focus variant only: shown below the search field before a search starts. */
+  emptyState?: ReactNode
+  /** Focus variant only: `compact` suits pages that already have an h1, like wizards. */
+  heroSize?: 'marketing' | 'compact'
 }
 
 function getSelectionQuote(suggestion: DomainSuggestion): DomainSelectionQuote {
@@ -51,6 +60,7 @@ function DomainSearchField({
   limitMessage,
   footer,
   className,
+  prominent = false,
 }: {
   inputId: string
   searchValue: string
@@ -59,17 +69,23 @@ function DomainSearchField({
   limitMessage?: ReactNode
   footer?: ReactNode
   className?: string
+  prominent?: boolean
 }) {
   const t = useT()
   const showFooterSlot = footer != null
 
   return (
     <div className={cn('w-full max-w-md space-y-2 text-start', className)}>
-      <Label htmlFor={inputId} className="text-[13px]">
+      <Label htmlFor={inputId} className={cn('text-[13px]', prominent && 'sr-only')}>
         {t('Domain name')}
       </Label>
       <div className="relative">
-        <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search
+          className={cn(
+            'absolute top-1/2 -translate-y-1/2 text-muted-foreground',
+            prominent ? 'start-4 z-[1] size-[18px]' : 'start-3 h-4 w-4',
+          )}
+        />
         <Input
           id={inputId}
           value={searchValue}
@@ -81,13 +97,13 @@ function DomainSearchField({
             }
           }}
           placeholder={t('e.g. mycompany or mycompany.com')}
-          className={DOMAIN_SEARCH_FIELD_CLASS}
+          className={prominent ? DOMAIN_SEARCH_FOCUS_FIELD_CLASS : DOMAIN_SEARCH_FIELD_CLASS}
           autoFocus
         />
       </div>
       {limitMessage}
       {showFooterSlot ? (
-        <div className={DOMAIN_SEARCH_HELPER_CLASS}>{footer}</div>
+        <div className={cn(DOMAIN_SEARCH_HELPER_CLASS, prominent && 'pt-1 text-center')}>{footer}</div>
       ) : null}
     </div>
   )
@@ -107,9 +123,14 @@ export function DomainSearchResults({
   title,
   description,
   footer,
+  eyebrow,
+  emptyState,
+  heroSize = 'marketing',
 }: DomainSearchResultsProps) {
   const t = useT()
   const isFocus = variant === 'focus'
+  const isCompactHero = heroSize === 'compact'
+  const HeroHeading = isCompactHero ? 'h2' : 'h1'
   const {
     searchValue,
     setSearchValue,
@@ -132,57 +153,80 @@ export function DomainSearchResults({
       limitMessage={limitMessage}
       footer={!hasContent ? footer : undefined}
       className={isFocus ? 'max-w-none' : undefined}
+      prominent={isFocus}
     />
   )
 
   return (
     <div
       className={cn(
-        'flex min-h-0 flex-col',
-        isFocus && 'min-h-[calc(100dvh-3.5rem)]',
+        'relative flex min-h-0 flex-col',
+        isFocus && 'min-h-[calc(100dvh-3.5rem)] overflow-x-clip',
         className,
       )}
     >
+      {isFocus && !hasContent ? <DomainsTldScatter /> : null}
       <div
         className={cn(
-          'transition-[min-height,padding] duration-300 ease-out',
+          'relative z-[2] transition-[min-height,padding] duration-300 ease-out',
           hasContent
             ? cn(
                 'min-h-0',
                 isFocus && 'mx-auto w-full max-w-7xl px-4 pt-8 sm:px-6',
               )
             : isFocus
-              ? 'flex flex-1 flex-col items-center justify-center px-4 pb-10 pt-6 sm:px-6 sm:pt-8'
+              ? cn(
+                  'flex flex-1 flex-col items-center justify-center px-4 sm:px-6',
+                  isCompactHero
+                    ? 'pb-10 pt-8 sm:pt-10'
+                    : 'pb-16 pt-12 sm:pt-16',
+                )
               : compactEmptyState
                 ? 'min-h-0'
                 : 'flex min-h-[24dvh] flex-1 items-center justify-center sm:min-h-[32dvh]',
         )}
       >
         {isFocus ? (
-          <div
-            className={cn(
-              'mx-auto w-full',
-              FOCUS_MARKETING_CONTENT_WIDTH,
-              !hasContent && '-translate-y-6 sm:-translate-y-8',
-            )}
-          >
-            {!hasContent && (title || description) ? (
-              <div className="mb-8 space-y-3 text-center">
-                {title ? (
-                  <h1 className="font-aeonik-pro whitespace-nowrap text-[clamp(1.125rem,2.5vw+0.75rem,2.25rem)] font-normal leading-none tracking-tight text-foreground">
-                    {title}
-                    <span className="text-[var(--brand-cta)]">_</span>
-                  </h1>
-                ) : null}
-                {description ? (
-                  <p className="text-[13px] leading-6 text-muted-foreground">
-                    {description}
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
-            {searchField}
-          </div>
+          <>
+            <div className={cn('mx-auto w-full', FOCUS_MARKETING_CONTENT_WIDTH)}>
+              {!hasContent && (eyebrow || title || description) ? (
+                <div className={cn('text-center', isCompactHero ? 'mb-6' : 'mb-9')}>
+                  {eyebrow ? (
+                    <div className={cn('flex justify-center', isCompactHero ? 'mb-4' : 'mb-6')}>
+                      {eyebrow}
+                    </div>
+                  ) : null}
+                  {title ? (
+                    <HeroHeading
+                      className={cn(
+                        'font-aeonik-pro text-balance font-normal leading-[1.05] tracking-tight text-foreground',
+                        isCompactHero
+                          ? 'text-[30px] sm:text-[40px]'
+                          : 'text-[34px] sm:text-[48px] lg:text-[56px]',
+                      )}
+                    >
+                      {title}
+                      <span className="text-[var(--brand-cta)]">_</span>
+                    </HeroHeading>
+                  ) : null}
+                  {description ? (
+                    <p
+                      className={cn(
+                        'mx-auto max-w-xl text-muted-foreground',
+                        isCompactHero
+                          ? 'mt-3.5 text-[14px] leading-6 sm:text-[15px] sm:leading-7'
+                          : 'mt-5 text-[15px] leading-7 sm:text-[16px]',
+                      )}
+                    >
+                      {description}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+              {searchField}
+            </div>
+            {!hasContent && emptyState ? <div className="w-full">{emptyState}</div> : null}
+          </>
         ) : (
           searchField
         )}

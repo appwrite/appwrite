@@ -72,6 +72,5 @@ curl -X POST http://DEPLOYED_FUNCTION_DOMAIN \
 If you would like to learn more about Open AI, visit these resources:
 
 - [Create an OpenAI developer account](https://platform.openai.com/docs/quickstart)
-- [Build an intelligent chatbot with ChatGPT and Appwrite Functions](https://appwrite.io/blog/post/function-template-prompt-chatgpt)
 - [Integrating OpenAI - Appwrite Docs](https://appwrite.io/docs/products/ai/integrations/openai)
 - [Appwrite Functions docs](https://appwrite.io/docs/products/functions)

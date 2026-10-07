@@ -8,6 +8,7 @@ timeToRead: 5
 author: atharva
 category: tutorials
 featured: false
+removed: true
 callToAction: true
 faqs:
   - question: "Why should I store screenshots instead of generating them on demand?"

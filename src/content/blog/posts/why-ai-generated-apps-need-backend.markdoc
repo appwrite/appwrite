@@ -7,6 +7,7 @@ cover: /images/blog/why-ai-generated-apps-need-backend/cover.avif
 timeToRead: 8
 author: atharva
 unlisted: true
+removed: true
 category: ai
 faqs:
   - question: "Do AI-generated apps still need a real backend?"
@@ -113,7 +114,7 @@ This is not an argument against AI app builders. The fastest path to a working p
 
 It is an argument about where the boundary sits. The agent owns the generated UI and the glue that connects it to your backend APIs. The backend owns data, identity, permissions, files, server-side work, deployment, and observability. When the boundary is clear, regenerating a screen does not wipe out the schema, and changing the schema does not force a full UI rewrite.
 
-Appwrite's [AI tooling](/docs/tooling/ai) supports this split from the agent side. The [Appwrite API MCP server](/docs/tooling/ai/mcp-servers) lets agents inspect and act on your backend through a small, documented tool surface. The [Lovable integration](/docs/tooling/ai/ai-dev-tools/lovable) and similar bridges for [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) and [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) give those agents docs-grounded context so the generated code calls your backend correctly instead of inventing a new shape each time.
+Appwrite's [AI tooling](/docs/tooling/ai) supports this split from the agent side. The [Appwrite API MCP server](/docs/tooling/ai/mcp-servers) lets agents inspect and act on your backend through a small, documented tool surface. The [Lovable integration](/docs/tooling/ai/ai-dev-tools/lovable) and similar bridges for [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) and [Claude Code](/docs/tooling/ai/agents/claude-code) give those agents docs-grounded context so the generated code calls your backend correctly instead of inventing a new shape each time.
 
 # What to check before shipping an AI-generated app
 

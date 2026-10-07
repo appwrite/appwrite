@@ -45,7 +45,7 @@ Both modes produce a wide range of output. The averages are not far apart for ro
 
 The honest difference is at the edges. Traditional code is written by someone who held the constraints in their head while they typed. They remembered that the input is user-supplied and added validation. They remembered that the table is per-user and narrowed the query. They remembered that the API key is sensitive and put it on the server.
 
-Agents forget those things unless you tell them, every time, in the prompt. The fix is not better models. It is a review habit. A vibe-coded function reviewed against a clear checklist is competitive with hand-written code. A vibe-coded function shipped without review is not. The [backend checklist for vibe-coded apps before launch](/blog/post/backend-checklist-vibe-coded-apps) is the version of that checklist most teams converge on.
+Agents forget those things unless you tell them, every time, in the prompt. The fix is not better models. It is a review habit. A vibe-coded function reviewed against a clear checklist is competitive with hand-written code. A vibe-coded function shipped without review is not.
 
 # Debugging
 
@@ -81,7 +81,7 @@ The implication for hiring is that the interview should change. Show a candidate
 
 Stack choice mattered under traditional development too, but the cost of a clumsy choice was a longer onboarding and slower velocity. Under vibe coding, the cost compounds. An agent has to learn the stack before it can be useful, and a stack that is hard for an agent to reason about produces worse code on every prompt.
 
-This is the case for backends with clear primitives and an MCP surface. [Appwrite Cloud](https://cloud.appwrite.io) ships [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Sites](/docs/products/sites), and [Realtime](/docs/apis/realtime) under one model, plus the [API MCP server](/docs/tooling/ai/mcp-servers), the [Docs MCP server](/docs/tooling/ai/mcp-servers), and [Agent Skills](/docs/tooling/ai/skills) for SDK context. An agent in [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) can act on a real Appwrite project on the first prompt, which is the difference between a working prototype in an hour and a working prototype in a weekend. The full comparison across backends lives in [Best backend for vibe coding apps in 2026](/blog/post/best-backend-for-vibe-coding-apps).
+This is the case for backends with clear primitives and an MCP surface. [Appwrite Cloud](https://cloud.appwrite.io) ships [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Sites](/docs/products/sites), and [Realtime](/docs/apis/realtime) under one model, plus the [API MCP server](/docs/tooling/ai/mcp-servers), the [Docs MCP server](/docs/tooling/ai/mcp-servers), and [Agent Skills](/docs/tooling/ai/skills) for SDK context. An agent in [Claude Code](/docs/tooling/ai/agents/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) can act on a real Appwrite project on the first prompt, which is the difference between a working prototype in an hour and a working prototype in a weekend. The full comparison across backends lives in [Best backend for vibe coding apps in 2026](/blog/post/best-backend-for-vibe-coding-apps).
 
 # When traditional development still wins
 
@@ -99,9 +99,8 @@ For everything else, including much of the application code that fills a startup
 
 The honest answer is both. Use traditional development where the work demands it. Use vibe coding everywhere else. Hire and train for the review habits that turn generated code into shipped product. Pick a backend the agent can reason about so the leverage compounds.
 
-[Appwrite Cloud](https://cloud.appwrite.io) gives you the primitives, the MCP surface, and the production story you need to make vibe coding work past the prototype. Start the next project there, install the [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) plugin, and run the pre-launch checklist before the first user signs up.
+[Appwrite Cloud](https://cloud.appwrite.io) gives you the primitives, the MCP surface, and the production story you need to make vibe coding work past the prototype. Start the next project there, install the [Claude Code](/docs/tooling/ai/agents/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) plugin, and run the pre-launch checklist before the first user signs up.
 
 - [Appwrite AI tooling](/docs/tooling/ai)
-- [Backend checklist for vibe-coded apps before launch](/blog/post/backend-checklist-vibe-coded-apps)
 - [Best vibe coding tools in 2026](/blog/post/comparing-vibe-coding-tools)
 - [Sign up for Appwrite Cloud](https://cloud.appwrite.io)

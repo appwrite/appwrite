@@ -8,6 +8,7 @@ timeToRead: 9
 author: aditya-oberai
 category: ai
 unlisted: true
+removed: true
 faqs:
   - question: "How does vibe coding change agency economics?"
     answer: "Agencies bill by the hour, the project, or the sprint. Vibe coding compresses the hours that go into the predictable parts of a build: auth, CRUD, file handling, integrations, and frontend scaffolding. Margins on fixed-fee projects improve, time-to-pitch shortens, and the same team can run more projects in parallel. The catch is that the review and hardening work does not compress, so the win only lands for agencies that keep both halves of the workflow in shape."
@@ -71,7 +72,7 @@ The first project that uses the playbook costs the agency the playbook. Every pr
 
 The other piece of leverage is agent context. Most agencies start over on every engagement: a new repo, a new prompt history, a new set of constraints the engineer has to re-explain to the agent on day one. The agent has to learn the agency's conventions five times a year.
 
-The fix is to keep the conventions outside any single project. An `AGENTS.md` or `CLAUDE.md` file in every starter repo. A shared set of [Agent Skills](/docs/tooling/ai/skills) for the backend the agency standardizes on. Editor plugins like the [Claude Code plugin](/docs/tooling/ai/ai-dev-tools/claude-code) or [Cursor plugin](/docs/tooling/ai/ai-dev-tools/cursor) install the [API MCP server](/docs/tooling/ai/mcp-servers), the [Docs MCP server](/docs/tooling/ai/mcp-servers), and the SDK skills in one command, so every developer on every project is on the same baseline.
+The fix is to keep the conventions outside any single project. An `AGENTS.md` or `CLAUDE.md` file in every starter repo. A shared set of [Agent Skills](/docs/tooling/ai/skills) for the backend the agency standardizes on. Editor plugins like the [Claude Code plugin](/docs/tooling/ai/agents/claude-code) or [Cursor plugin](/docs/tooling/ai/ai-dev-tools/cursor) install the [API MCP server](/docs/tooling/ai/mcp-servers), the [Docs MCP server](/docs/tooling/ai/mcp-servers), and the SDK skills in one command, so every developer on every project is on the same baseline.
 
 # Estimating fixed-fee work in the vibe coding era
 
@@ -107,7 +108,7 @@ Done well, the client picks up where the agency left off, with their own agent i
 
 The simplest path for an agency starting on vibe coding is to pick one backend, one IDE agent, and one prototype builder, then encode the choices in a playbook.
 
-[Appwrite Cloud](https://cloud.appwrite.io) covers Auth, Databases, Storage, Functions, and Sites under one platform, with per-project isolation, scoped API keys, and a self-host option for clients with stricter requirements. The [API MCP server](/docs/tooling/ai/mcp-servers), the [Docs MCP server](/docs/tooling/ai/mcp-servers), and [Agent Skills](/docs/tooling/ai/skills) install in one step through the [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) plugins.
+[Appwrite Cloud](https://cloud.appwrite.io) covers Auth, Databases, Storage, Functions, and Sites under one platform, with per-project isolation, scoped API keys, and a self-host option for clients with stricter requirements. The [API MCP server](/docs/tooling/ai/mcp-servers), the [Docs MCP server](/docs/tooling/ai/mcp-servers), and [Agent Skills](/docs/tooling/ai/skills) install in one step through the [Claude Code](/docs/tooling/ai/agents/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) plugins.
 
 For the broader agency tooling stack, [30 dev tools for agencies](/blog/post/30-dev-tools-for-agencies) covers the surface beyond the backend and the agent.
 
@@ -115,7 +116,7 @@ For the broader agency tooling stack, [30 dev tools for agencies](/blog/post/30-
 
 The agencies that turn vibe coding into a long-term advantage do it the same way they turn any tool into one: standardize, document, and review. The first project that uses the playbook costs the agency time. Every project after that is the win.
 
-If you are building one of these workflows, start with one backend, one IDE agent, one builder, and a written handoff package. [Sign up for Appwrite Cloud](https://cloud.appwrite.io), install the [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) plugin, and the next client engagement starts from the same baseline as the last one.
+If you are building one of these workflows, start with one backend, one IDE agent, one builder, and a written handoff package. [Sign up for Appwrite Cloud](https://cloud.appwrite.io), install the [Claude Code](/docs/tooling/ai/agents/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) plugin, and the next client engagement starts from the same baseline as the last one.
 
 - [Sign up for Appwrite Cloud](https://cloud.appwrite.io)
 - [How agencies standardize backend stacks across clients](/blog/post/agency-backend-standardization)

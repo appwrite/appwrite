@@ -119,7 +119,6 @@ import {
   deleteProjectTableColumn,
   patchProjectTableColumnsCache,
   refetchProjectTableRelatedQueries,
-  useProjectTables as useTablesForColumns,
   useProjectTable,
   updateProjectTable,
   deleteProjectTable,
@@ -3568,16 +3567,6 @@ export function RowsSpreadsheet({
     [apiColumns],
   )
 
-  // Fetch tables for relationship columns (needed for column creation)
-  const { tables: availableTablesForColumns } = useTablesForColumns(
-    projectId,
-    databaseId,
-    DB_KIND,
-    0,
-    100,
-    undefined,
-  )
-
   // Check if table has relationship columns
   const hasRelationshipColumns = apiColumns.some(
     (col: unknown) => (col as { type?: string }).type === 'relationship',
@@ -4997,13 +4986,9 @@ export function RowsSpreadsheet({
           onOpenChange={setColumnDialogOpen}
           onSubmit={handleColumnSubmit}
           column={selectedColumn}
+          projectId={projectId}
+          databaseId={databaseId}
           currentTableId={tableId}
-          availableTables={
-            availableTablesForColumns?.map((t: unknown) => ({
-              $id: t.$id,
-              name: t.name,
-            })) || []
-          }
           existingColumns={apiColumns.map((c: unknown) => ({
             key: c.key || c.name || c.$id,
           }))}
@@ -6032,13 +6017,9 @@ export function RowsSpreadsheet({
         onOpenChange={setColumnDialogOpen}
         onSubmit={handleColumnSubmit}
         column={selectedColumn}
+        projectId={projectId}
+        databaseId={databaseId}
         currentTableId={tableId}
-        availableTables={
-          availableTablesForColumns?.map((t: unknown) => ({
-            $id: t.$id,
-            name: t.name,
-          })) || []
-        }
         existingColumns={apiColumns.map((c: unknown) => ({
           key: c.key || c.name || c.$id,
         }))}
@@ -6183,16 +6164,6 @@ export function ColumnsSpreadsheet({
     databaseId,
     DB_KIND,
     tableId,
-  )
-
-  // Fetch tables for relationship columns
-  const { tables: availableTables } = useTablesForColumns(
-    projectId,
-    databaseId,
-    DB_KIND,
-    0,
-    100,
-    undefined,
   )
 
   // Create column mutation
@@ -7039,11 +7010,9 @@ export function ColumnsSpreadsheet({
         }}
         onSubmit={handleColumnSubmit}
         column={selectedColumn}
+        projectId={projectId}
+        databaseId={databaseId}
         currentTableId={tableId}
-        availableTables={availableTables.map((t) => ({
-          $id: t.$id,
-          name: t.name,
-        }))}
         existingColumns={apiColumns.map((c: unknown) => ({
           key:
             (c as { key?: string }).key ||
@@ -7639,6 +7608,10 @@ export function TableSettings({
           resourceId: '-',
         }),
         replace: true,
+      })
+      // Drop its cached details, or reopening its URL renders the deleted table.
+      queryClient.removeQueries({
+        queryKey: ['table', 'project', projectId, databaseId, tableId],
       })
     },
     onError: (error: Error) => {

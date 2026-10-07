@@ -69,6 +69,6 @@ Database AI Suggestions is now live on Appwrite Cloud. Create a new table and en
 # More resources
 
 - [Read the documentation](/docs/products/databases/ai-suggestions)
-- [Appwrite MCP server](/docs/tooling/mcp)
+- [Appwrite MCP server](/docs/tooling/ai/mcp-servers)
 - [Make the best use of Appwrite’s MCP server](/blog/post/make-best-use-appwrite-mcp)
 - [Announcing an improved Appwrite Databases experience. A completely new look and feel](/blog/post/announcing-appwrite-databases-new-ui)

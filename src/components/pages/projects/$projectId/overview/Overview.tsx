@@ -105,6 +105,8 @@ import {
 } from '@/components/ui/dialog'
 import type { Models } from '@appwrite.io/console'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { ConnectAgentCta } from '@/components/global/shared/ConnectAgentCta'
+import { PremiumGeoOverviewBanner } from './_components/PremiumGeoOverviewBanner'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
@@ -192,6 +194,8 @@ export interface OverviewInitialData {
   apiKeysRaw?: { keys?: unknown[] } | null
   /** Prefetched platforms from listPlatforms; avoids empty-state flash in Apps section */
   platforms?: ProjectPlatform[]
+  /** Prefetched MCP coding-agent connection; hides the connect CTA without a flash */
+  mcpAgentConnected?: boolean
 }
 
 interface ViewProps {
@@ -1075,12 +1079,18 @@ export function View({ projectId, initialData }: ViewProps) {
           </div>
         </div>
 
-        {/* Border separator */}
         <div className="border-b border-border" />
       </div>
 
+      <PremiumGeoOverviewBanner projectId={projectId} />
+
       {/* Content area */}
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+        <ConnectAgentCta
+          projectId={projectId}
+          className="mb-6"
+          initialConnected={initialData?.mcpAgentConnected}
+        />
         {/* Charts card - usage stats (cloud only) */}
         {visibleOverviewChartTabs.length > 0 && (
           <div className="@container overflow-hidden rounded-xl border border-border bg-card/50">

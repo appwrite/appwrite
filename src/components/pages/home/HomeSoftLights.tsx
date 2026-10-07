@@ -1,3 +1,4 @@
+import type { PointerEvent } from 'react'
 import { cn } from '@/lib/utils'
 
 /**
@@ -324,6 +325,30 @@ export function ProductPageBrandLight() {
       <div className="absolute -end-[22%] bottom-[2%] h-[96%] w-[144%] bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.11)_0%,rgba(124,103,254,0.034)_42%,transparent_76%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.075)_0%,rgba(124,103,254,0.022)_42%,transparent_76%)]" />
       <div className="absolute left-1/2 top-1/2 h-[88%] w-[72%] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--brand-cta)_10%,transparent)_0%,transparent_68%)] dark:bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--brand-cta)_7%,transparent)_0%,transparent_68%)]" />
     </div>
+  )
+}
+
+/** Writes the pointer position onto the hovered bento tile for `ProductBentoSpotlight`. */
+export function handleProductBentoPointerMove(event: PointerEvent<HTMLElement>) {
+  if (event.pointerType !== 'mouse') return
+  const tile = (event.target as HTMLElement).closest<HTMLElement>('[data-bento-tile]')
+  if (!tile) return
+  const rect = tile.getBoundingClientRect()
+  tile.style.setProperty('--spot-x', `${event.clientX - rect.left}px`)
+  tile.style.setProperty('--spot-y', `${event.clientY - rect.top}px`)
+}
+
+/** Cursor-following light inside a product bento tile; sits below the tile content. */
+export function ProductBentoSpotlight() {
+  return (
+    <div
+      className={cn(
+        'pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100',
+        'bg-[radial-gradient(520px_circle_at_var(--spot-x,50%)_var(--spot-y,0%),rgba(133,219,216,0.14)_0%,rgba(133,219,216,0.05)_35%,transparent_65%)]',
+        'dark:bg-[radial-gradient(520px_circle_at_var(--spot-x,50%)_var(--spot-y,0%),rgba(133,219,216,0.06)_0%,rgba(133,219,216,0.02)_35%,transparent_65%)]',
+      )}
+      aria-hidden
+    />
   )
 }
 

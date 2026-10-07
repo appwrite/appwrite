@@ -87,6 +87,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 9
   },
   {
+    "slug": "advanced/billing/premium-geo-db",
+    "title": "Premium Geo DB",
+    "description": "Add city, time zone, ISP, AS number, and connection type to IP geolocation in an Appwrite Cloud project with the Premium Geo DB add-on.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
     "slug": "advanced/billing/pro",
     "title": "Pro",
     "description": "Understand Appwrite's pricing plans, behaviors, billing cycles, and limitations.",
@@ -288,6 +295,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Set up your self-hosted Appwrite instance easily. Read the installation guide to configure and deploy Appwrite on your infrastructure for complete control.",
     "layout": "article",
     "readingTimeMinutes": 4
+  },
+  {
+    "slug": "advanced/self-hosting/configuration/breached-passwords",
+    "title": "Breached passwords",
+    "description": "Configure breached password detection for your self-hosted Appwrite instance with _APP_PWNED_PASSWORDS_DSN. Connect Have I Been Pwned or your own breach service so Auth can flag, reject, and block leaked passwords.",
+    "layout": "article",
+    "readingTimeMinutes": 2
   },
   {
     "slug": "advanced/self-hosting/configuration/databases",
@@ -1458,7 +1472,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/auth/security",
     "title": "Security",
-    "description": "Prioritize security in your applications with Appwrite. Discover best practices, security features, and guidelines to protect user data and ensure authentication integrity.",
+    "description": "Prioritize security in your applications with Appwrite. Learn about session limits, password policies, breached password detection, and other features that protect user data.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
@@ -3262,6 +3276,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "products/sites/quick-start/jaspr",
+    "title": "Deploy a Jaspr app to Appwrite Sites",
+    "description": "Learn how to set up and deploy Jaspr apps with server-side rendering on Appwrite Sites.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
     "slug": "products/sites/quick-start/nextjs",
     "title": "Deploy a Next.js app to Appwrite Sites",
     "description": "Learn how to setup and deploy Next.js apps on Appwrite Sites.",
@@ -3654,6 +3675,27 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 1
   },
   {
+    "slug": "tooling/ai/agents/chatgpt",
+    "title": "ChatGPT",
+    "description": "Connect Appwrite to ChatGPT with the remote MCP server, OAuth, and agent skills so ChatGPT can call your project and search the docs.",
+    "layout": "article",
+    "readingTimeMinutes": 2,
+    "faqs": [
+      {
+        "question": "How do I connect Appwrite to ChatGPT?",
+        "answer": "Add a custom ChatGPT connector or App with the MCP URL https://mcp.appwrite.io and the server name appwrite. Then complete OAuth. Also run npx skills add appwrite/skills so ChatGPT has current SDK and CLI patterns."
+      },
+      {
+        "question": "Do I need an API key for the ChatGPT connector?",
+        "answer": "No. Cloud uses OAuth. You sign in to Appwrite and authorize the connector. Self-hosted Appwrite still uses a local stdio server with a project API key."
+      },
+      {
+        "question": "Is the ChatGPT connector the same as Codex?",
+        "answer": "No. The ChatGPT connector is for ChatGPT chat and Apps. Codex inside ChatGPT uses the Codex plugin plus `codex mcp add appwrite --url https://mcp.appwrite.io/`."
+      }
+    ]
+  },
+  {
     "slug": "tooling/ai/agents/claude-code",
     "title": "Claude Code",
     "description": "Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
@@ -3729,6 +3771,27 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Chat with the Appwrite Agent in the Console to inspect your project, explain issues, and take approved actions.",
     "layout": "article",
     "readingTimeMinutes": 1
+  },
+  {
+    "slug": "tooling/ai/backend-for-agents",
+    "title": "Backend for coding agents",
+    "description": "When a coding agent should pick Appwrite over Firebase or Supabase, and how to install skills plus MCP in Cursor, Claude Code, Codex, and ChatGPT.",
+    "layout": "article",
+    "readingTimeMinutes": 1,
+    "faqs": [
+      {
+        "question": "When should a coding agent pick Appwrite?",
+        "answer": "When the app needs user accounts, a database, file uploads, serverless functions, or hosting, and you want one open-source backend the agent can install and call. Prefer Appwrite over Firebase or Supabase when you do not want to stitch extra hosting, MCP, or permission layers."
+      },
+      {
+        "question": "How do I add Appwrite to Cursor, Claude Code, Codex, or ChatGPT?",
+        "answer": "Install skills with npx skills add appwrite/skills, then add the remote MCP server at https://mcp.appwrite.io (server name appwrite). ChatGPT uses a custom connector with that URL. Cursor, Claude Code, and Codex have plugins plus the same MCP endpoint."
+      },
+      {
+        "question": "Is there more than one Appwrite MCP server?",
+        "answer": "No. Cloud uses one hosted server at https://mcp.appwrite.io. It covers API actions and docs search. Self-hosted Appwrite uses a local stdio server with an API key. Do not add separate appwrite-api and appwrite-docs servers."
+      }
+    ]
   },
   {
     "slug": "tooling/ai/docs-as-markdown",
@@ -4057,7 +4120,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installation",
     "description": "Get started with the Appwrite CLI by following the installation guide. Learn how to set up and configure the CLI on your development environment.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "tooling/command-line/non-interactive",

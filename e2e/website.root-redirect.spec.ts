@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-// A session cookie on `/` stays on `/`; a 401 there sends guests to `/home`.
+// A session cookie on `/` renders client-only; a 401 there shows the homepage on `/`.
 test('expired session reaches the homepage from the root', async ({
   context,
   page,
@@ -21,6 +21,6 @@ test('expired session reaches the homepage from the root', async ({
     }),
   )
   await page.goto('/')
-  await expect(page).toHaveURL(/\/home$/)
-  await expect(page).toHaveTitle(/Home/)
+  await expect(page).toHaveURL(new URL('/', baseURL).href)
+  await expect(page).toHaveTitle(/open-source cloud for developers and agents/)
 })

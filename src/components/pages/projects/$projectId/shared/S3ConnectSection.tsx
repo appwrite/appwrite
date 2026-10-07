@@ -196,7 +196,7 @@ export function S3ConnectSection({
   return (
     <>
       <div className="grid grid-cols-[0.9fr_1.4fr] gap-5 pt-3 min-h-0 flex-1">
-        <div className="space-y-3 min-w-0 min-h-0">
+        <div className="space-y-3 min-w-0 min-h-0 overflow-y-auto">
           <div className="space-y-2">
             <h4 className="text-[13px] font-semibold text-foreground">
               {t('S3-compatible access')}

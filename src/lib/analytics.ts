@@ -1,7 +1,9 @@
 import {
   getAnalyticsArea,
   getAnalyticsSurface,
+  type AnalyticsSurface,
 } from '@/lib/analytics-route'
+import { getAttributionSearchForPlausible } from '@/lib/marketing/utm'
 import { getActiveLanguage, type SupportedLanguage } from '@/lib/i18n/active-language'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 import {
@@ -188,6 +190,22 @@ export function getAnalyticsRouteUrl(routePath: string) {
   return `${window.location.origin}${routePath}`
 }
 
+function surfaceIncludesAttributionQuery(surface: AnalyticsSurface): boolean {
+  return surface === 'marketing' || surface === 'docs'
+}
+
+/** Plausible pageview URL; includes attribution query on marketing/docs only. */
+export function getAnalyticsPageviewUrl(routePath: string) {
+  if (typeof window === 'undefined') return routePath
+
+  const surface = getAnalyticsSurface(routePath)
+  const attributionSearch = surfaceIncludesAttributionQuery(surface)
+    ? getAttributionSearchForPlausible(window.location.search)
+    : ''
+
+  return `${window.location.origin}${routePath}${attributionSearch}`
+}
+
 function getGlobalAnalyticsProps(routePath?: string): AnalyticsProps {
   const session = getAnalyticsSessionProps()
   return {
@@ -215,7 +233,7 @@ function sendPageView(routePath: string) {
   if (!window.plausible) return false
 
   window.plausible('pageview', {
-    url: getAnalyticsRouteUrl(routePath),
+    url: getAnalyticsPageviewUrl(routePath),
     props: normalizeAnalyticsProps({
       route: routePath,
       area: getAnalyticsArea(routePath),

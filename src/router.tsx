@@ -22,13 +22,36 @@ import {
 // single loader. Showing a router pending UI here caused a dual-loader flash on
 // static build (text "Loading data for you" then logo).
 
-// Create a new router instance
-export async function getRouter() {
+type RouteTreeModule = typeof import('./routeTree.gen')
+
+// Deduplicate concurrent routeTree.gen loads during Vite SSR program reload.
+// Without this, overlapping imports can resolve before exports are ready and
+// createRouter gets routeTree=undefined, which skips buildRouteTree() and
+// leaves flatRoutes unset ("flatRoutes is not iterable" on the first request).
+let routeTreeModulePromise: Promise<RouteTreeModule> | null = null
+let routerPromise: ReturnType<typeof buildRouter> | null = null
+
+function loadRouteTreeModule() {
+  if (!routeTreeModulePromise) {
+    routeTreeModulePromise = import('./routeTree.gen').then((mod) => {
+      if (!mod.routeTree) {
+        routeTreeModulePromise = null
+        throw new Error(
+          'routeTree.gen did not export routeTree. Restart the dev server if this persists.',
+        )
+      }
+      return mod
+    })
+  }
+  return routeTreeModulePromise
+}
+
+async function buildRouter() {
   const rqContext = TanstackQuery.getContext()
 
   // Dynamic import breaks routeTree.gen ↔ router circular dependency (Register
   // augmentation type-imports this module; static import can TDZ under SSR).
-  const { routeTree } = await import('./routeTree.gen')
+  const { routeTree } = await loadRouteTreeModule()
 
   const router = createRouter({
     routeTree,
@@ -110,4 +133,21 @@ export async function getRouter() {
   }
 
   return router
+}
+
+export async function getRouter() {
+  if (!routerPromise) {
+    routerPromise = buildRouter().catch((error) => {
+      routerPromise = null
+      throw error
+    })
+  }
+  return routerPromise
+}
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    routeTreeModulePromise = null
+    routerPromise = null
+  })
 }

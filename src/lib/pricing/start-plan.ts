@@ -47,6 +47,19 @@ export function isStartPlanRef(
   return (plan?.name ?? '').trim().toLowerCase() === 'start'
 }
 
+/**
+ * English label for Pro's badge in a plan picker. Next to Start, Pro is the
+ * better deal rather than the pick, matching the pricing page's four-plan grid.
+ */
+export function getProPlanBadgeLabelForPlans(
+  plans: Iterable<[string, PlanIdentity | null | undefined]>,
+): 'Best value' | 'Recommended' {
+  for (const [planId, plan] of plans) {
+    if (isStartPlanRef(planId, plan)) return 'Best value'
+  }
+  return 'Recommended'
+}
+
 type LocationGatedPlan = PlanIdentity & {
   eligibleCountries?: string[]
 }
@@ -85,7 +98,9 @@ export function filterBillingPlansByLocation(
     const isCurrent =
       key === currentId ||
       plan.$id === currentId ||
-      (currentId.length > 0 && isStartPlanRef(currentId, plan) && isStartPlanRef(key, plan))
+      (currentId.length > 0 &&
+        isStartPlanRef(currentId) &&
+        isStartPlanRef(key, plan))
 
     if (!countries || isCurrent) {
       filtered[key] = plan
@@ -110,14 +125,17 @@ export const startPricingPlan: PricingPlan = {
     'For developers who need production-ready included resources at an accessible price.',
   featuresIntro: 'Dedicated resources per project:',
   features: [
+    '10 databases, 10 buckets, and 10 functions per project',
+    'Daily backups',
+    'No project pausing',
+    '3 members',
     '80GB bandwidth',
     '40GB storage',
     '1.5M executions',
     '100K monthly active users',
-    'Email support',
-    'Daily backups stored for 7 days',
-    '10 databases, 10 buckets, and 10 functions per project',
     '25-minute builds',
+    'Pay as you go',
+    'Email support',
   ],
   cta: 'Start project',
   ctaVariant: 'outline',

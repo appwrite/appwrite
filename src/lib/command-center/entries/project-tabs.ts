@@ -32,6 +32,7 @@ import {
   canShowAuthSecuritySettings,
   canShowProjectOAuth2Server,
   canShowProjectSettings,
+  canSeeProjectNavItem,
 } from '@/lib/console-access-checks'
 import { registerCommands } from '../registry'
 import type { CommandEntry } from '../types'
@@ -259,6 +260,29 @@ const PROJECT_TABS: CommandEntry[] = [
     icon: Bell,
     keywords: ['providers', 'twilio', 'sendgrid', 'fcm', 'apns', 'mailgun', 'ses', 'amazon'],
     to: (ctx) => `/projects/${ctx.projectId}/messaging/providers`,
+  },
+
+  // ── Videos ──────────────────────────────────────────────────────────────
+  {
+    id: 'project.tab.videos.profiles',
+    scopes: ['project'],
+    kind: 'tab',
+    group: 'Videos',
+    label: 'Videos · Encoding profiles',
+    description: 'Resolution and bitrate targets for renditions',
+    icon: Layers,
+    keywords: [
+      'profiles',
+      'encoding',
+      'bitrate',
+      'resolution',
+      'ladder',
+      'codec',
+    ],
+    available: (ctx) =>
+      Boolean(ctx.features.videos) &&
+      canSeeProjectNavItem(ctx.access, ctx.features, 'videos'),
+    to: (ctx) => `/projects/${ctx.projectId}/videos/profiles`,
   },
 
   // ── Settings ────────────────────────────────────────────────────────────

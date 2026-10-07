@@ -29,9 +29,9 @@ export function TargetBar({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Target</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">Look up</h3>
         <p className="mt-1 text-[13px] text-muted-foreground">
-          Enter a project ID to load its blocks.
+          Load active blocks for a project. Creating a block uses its own project ID.
         </p>
       </div>
       <div className="border-t border-border" />

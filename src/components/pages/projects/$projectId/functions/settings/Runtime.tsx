@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { useParams } from '@tanstack/react-router'
 import {
-  useProject,
   useProjectFunction,
   useFunctionSpecifications,
   buildFunctionUpdateParams,
@@ -11,15 +10,12 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
-import {
-  hasUnavailableSpecifications,
-  SpecificationType,
-} from '@/lib/specifications'
-import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
+import { SpecificationType } from '@/lib/specifications'
 import { SpecificationTableCard } from '../../shared/SpecificationTableCard'
 import { FunctionImageCard } from './FunctionImageCard'
 import { FunctionTimeoutCard } from './FunctionTimeoutCard'
 import { FunctionLoggingCard } from './FunctionLoggingCard'
+import { FunctionRuntimeEnterpriseOfferingNote } from './_components/FunctionAlwaysOnEnterpriseNote'
 import {
   SettingsCardsList,
   type SettingsCardItem,
@@ -31,8 +27,6 @@ export function View() {
   const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
-  const { project } = useProject(projectId)
-
   const { data: func, isLoading: funcLoading } = useProjectFunction(
     projectId,
     functionId,
@@ -139,7 +133,17 @@ export function View() {
               title: 'Specification',
               description:
                 'CPU and memory available to each function execution at runtime.',
-              keywords: ['vcpu', 'memory', 'cpu', 'resources'],
+              keywords: [
+                'vcpu',
+                'memory',
+                'cpu',
+                'resources',
+                'cold start',
+                'always-on',
+                'latency',
+                'warm',
+                'enterprise',
+              ],
             },
             node: (
               <SpecificationTableCard
@@ -154,14 +158,7 @@ export function View() {
                 hasChanges={specDirty}
                 isSaving={updateFunctionMutation.isPending}
                 onSave={handleSaveSpecification}
-                footerNote={
-                  hasUnavailableSpecifications(specifications) ? (
-                    <SpecificationsUpgradeNote
-                      orgId={project?.teamId}
-                      showContactSales
-                    />
-                  ) : undefined
-                }
+                footerNote={<FunctionRuntimeEnterpriseOfferingNote />}
               />
             ),
           } satisfies SettingsCardItem,

@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { View } from '@/components/pages/blog/View'
 import { getBlogPostsPage } from '@/lib/blog/content'
-import { getBlogIndexRouteMetaTags } from '@/lib/blog/route-meta'
+import { getBlogIndexRouteHead } from '@/lib/blog/route-meta'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
@@ -29,17 +29,21 @@ export const Route = createFileRoute('/_marketing/blog/')({
       category: search.category,
     })
   },
-  head: () => ({
-    meta: getBlogIndexRouteMetaTags({ siteOrigin: getRequestSiteOrigin() }),
-    links: [
-      {
-        rel: 'alternate',
-        type: 'application/rss+xml',
-        title: 'Appwrite Blog',
-        href: BLOG_RSS_PATH,
-      },
-    ],
-  }),
+  head: () => {
+    const seo = getBlogIndexRouteHead({ siteOrigin: getRequestSiteOrigin() })
+    return {
+      ...seo,
+      links: [
+        ...seo.links,
+        {
+          rel: 'alternate',
+          type: 'application/rss+xml',
+          title: 'Appwrite Blog',
+          href: BLOG_RSS_PATH,
+        },
+      ],
+    }
+  },
   component: BlogIndexPage,
 })
 

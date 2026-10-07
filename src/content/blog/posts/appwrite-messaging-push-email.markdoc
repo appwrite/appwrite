@@ -9,6 +9,7 @@ author: aditya-oberai
 category: products, tutorials
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What channels does Appwrite Messaging support?"
     answer: "Appwrite Messaging handles push notifications, email, and SMS from a single API. You configure providers once, attach targets to users, and send or schedule messages to individuals, groups, or topics, without integrating a separate SDK for each channel."

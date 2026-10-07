@@ -56,11 +56,6 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Console fingerprint HMAC key',
   },
   {
-    key: 'VITE_GROWTH_ENDPOINT',
-    group: 'Runtime',
-    description: 'Growth / feedback / support API',
-  },
-  {
     key: 'VITE_STRIPE_PUBLISHABLE_KEY',
     group: 'Runtime',
     description: 'Stripe publishable key',
@@ -119,7 +114,8 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
   {
     key: 'VITE_CONSTRUCTION',
     group: 'Other',
-    description: 'Vite DEV header construction bar (false/0/off to hide; unset = on)',
+    description:
+      'Vite DEV header construction bar (false/0/off to hide; unset = on)',
   },
   {
     key: 'VITE_THREADS_APPWRITE_ENDPOINT',
@@ -177,9 +173,9 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Company name override',
   },
   {
-    key: 'VITE_LEGAL_EMAIL',
+    key: 'VITE_PRIVACY_EMAIL',
     group: 'Other',
-    description: 'Legal contact email override',
+    description: 'Privacy contact email override',
   },
   {
     key: 'VITE_APPWRITE_MCP_URL',
@@ -228,7 +224,7 @@ function readBuildTimePresence(): Record<string, boolean> {
     ),
     VITE_CONTACT_SALES_URL: isNonEmpty(import.meta.env.VITE_CONTACT_SALES_URL),
     VITE_COMPANY_NAME: isNonEmpty(import.meta.env.VITE_COMPANY_NAME),
-    VITE_LEGAL_EMAIL: isNonEmpty(import.meta.env.VITE_LEGAL_EMAIL),
+    VITE_PRIVACY_EMAIL: isNonEmpty(import.meta.env.VITE_PRIVACY_EMAIL),
     VITE_APPWRITE_MCP_URL: isNonEmpty(import.meta.env.VITE_APPWRITE_MCP_URL),
     VITE_APPWRITE_AGENT_OAUTH_CLIENT_ID: isNonEmpty(
       import.meta.env.VITE_APPWRITE_AGENT_OAUTH_CLIENT_ID,
@@ -244,7 +240,6 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_APPWRITE_ENDPOINT: isNonEmpty(config.appwriteEndpoint),
     VITE_CONSOLE_PROFILE: isNonEmpty(config.consoleProfile),
     VITE_CONSOLE_FINGERPRINT_KEY: isNonEmpty(config.fingerprintKey),
-    VITE_GROWTH_ENDPOINT: isNonEmpty(config.growthEndpoint),
     VITE_STRIPE_PUBLISHABLE_KEY: isNonEmpty(config.stripePublishableKey),
     VITE_SENTRY_DSN: isNonEmpty(config.sentryDsn),
     VITE_PLAUSIBLE_SCRIPT_SRC: isNonEmpty(config.plausibleScriptSrc),

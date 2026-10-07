@@ -16,7 +16,7 @@ faqs:
   - question: "Are MCP startup ideas viable in 2026?"
     answer: "Yes, MCP adoption is growing fast across AI tools, and many useful agent based products require access to external systems. Anything that requires an AI to act on live business data (incident response, founder assistants, dev onboarding) is a strong candidate. Smaller teams can ship MCP based products quickly because the protocol handles the wiring."
   - question: "Does Appwrite have an MCP server?"
-    answer: "Yes, Appwrite provides an official MCP server that lets AI agents interact with your Appwrite projects. You can connect tools like Claude Desktop or Cursor and have them query databases, create resources, or run actions in your project. See the [Appwrite MCP docs](/docs/tooling/mcp) for setup instructions."
+    answer: "Yes, Appwrite provides an official MCP server that lets AI agents interact with your Appwrite projects. You can connect tools like Claude Desktop or Cursor and have them query databases, create resources, or run actions in your project. See the [Appwrite MCP docs](/docs/tooling/ai/mcp-servers) for setup instructions."
   - question: "Do I need to be an AI expert to build an MCP product?"
     answer: "No, you mostly need product sense and competence with APIs and backend services. The AI client (Claude, Cursor, etc.) handles the model side, while your MCP server exposes the actions and data. Most of the engineering work looks like building a typical API server, not training models."
   - question: "What backend should I use for an MCP based startup?"
@@ -81,6 +81,6 @@ MCP changes everything. Before, AI agents were isolated. Now, they connect, coll
 The Appwrite's Startups Program can help you do that with the tools and support you need to create these AI-driven products. [Apply today](appwrite.io/startups) and start building.
 
 # Further reading
-- [Appwrite MCP documentation](https://appwrite.io/docs/tooling/mcp?doFollow=true)
+- [Appwrite MCP documentation](https://appwrite.io/docs/tooling/ai/mcp-servers?doFollow=true)
 - [What exactly is MCP, and why is it trending?](https://appwrite.io/blog/post/what-is-mcp)
 - [Anthropic MCP documentation](https://docs.anthropic.com/en/docs/agents-and-tools/mcp)

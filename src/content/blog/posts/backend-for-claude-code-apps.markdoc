@@ -11,9 +11,9 @@ featured: false
 callToAction: true
 faqs:
   - question: "How do I add a backend to apps I build with Claude Code?"
-    answer: "Install the Appwrite plugin for Claude Code, then point it at an Appwrite project using an API key. From there, Claude Code can create auth flows, database schemas, storage buckets, and functions for you via the Appwrite MCP server."
+    answer: "Install the Appwrite plugin for Claude Code, then connect the remote MCP server at https://mcp.appwrite.io. From there, Claude Code can create auth flows, database schemas, storage buckets, and functions for you."
   - question: "What does the Appwrite plugin for Claude Code include?"
-    answer: "It bundles the Appwrite API MCP server, the Appwrite Docs MCP server, and eleven agent skills covering the Appwrite CLI and all major SDKs. The skills load on demand whenever Claude Code is writing Appwrite-related code."
+    answer: "It bundles agent skills covering the Appwrite CLI and all major SDKs. Add the remote Appwrite MCP server at https://mcp.appwrite.io so Claude Code can call APIs and search docs. The skills load on demand whenever Claude Code is writing Appwrite-related code."
   - question: "What scopes should I give my Appwrite API key for Claude Code?"
     answer: "Grant only the scopes Claude Code needs for the immediate task: auth scopes when setting up authentication, database scopes when building a schema, and so on. Avoid selecting all scopes, and set a short expiration so a leaked key doesn't stay dangerous forever."
   - question: "Do I need to self-host Appwrite to use it with Claude Code?"
@@ -39,11 +39,10 @@ Appwrite is an open-source, all-in-one development platform that gives your app 
 By the end of this guide, your Claude Code session will be connected to:
 
 - **An Appwrite project** that holds your users, data, and files.
-- **The Appwrite API MCP server**, which lets Claude Code create and manage resources in that project directly from a prompt.
-- **The Appwrite Docs MCP server**, which gives the agent live access to Appwrite's current documentation instead of whatever it was trained on.
+- **The Appwrite MCP server**, which lets Claude Code create and manage resources in that project and search current docs from a prompt.
 - **Eleven agent skills** covering the Appwrite CLI and every major SDK, loaded on demand when Claude Code is writing backend code.
 
-The Claude Code plugin bundles all of the above into a single install. The detailed install reference lives in the [Claude Code plugin docs](/docs/tooling/ai/ai-dev-tools/claude-code); this post is the end-to-end walkthrough.
+The Claude Code plugin bundles all of the above into a single install. The detailed install reference lives in the [Claude Code plugin docs](/docs/tooling/ai/agents/claude-code); this post is the end-to-end walkthrough.
 
 # Prerequisites
 
@@ -64,7 +63,7 @@ Keep that tab open. The next step happens in the same project.
 
 # Step 2: Create an API key for the MCP server
 
-The Appwrite API MCP server authenticates to your project with a server-side API key. This is the credential that lets Claude Code read, write, and manage resources on your behalf, so it is worth setting up carefully.
+The Appwrite MCP server authenticates to your project with a server-side API key when you use the Claude Code plugin. This is the credential that lets Claude Code read, write, and manage resources on your behalf, so it is worth setting up carefully.
 
 In the Console, go to **Overview → Integrations → API keys** and click **Create API key**.
 
@@ -84,7 +83,7 @@ You now have the three values the MCP server needs: endpoint, project ID, and AP
 
 # Step 3: Install the Appwrite plugin for Claude Code
 
-The plugin ships the Appwrite API MCP server, the Appwrite Docs MCP server, and the agent skills as one install. Run these two commands in your terminal:
+The plugin ships the Appwrite MCP server and the agent skills as one install. Cloud can also use the hosted server at `https://mcp.appwrite.io` (server name: `appwrite`) with OAuth. Run these two commands in your terminal:
 
 ```bash
 claude plugins marketplace add appwrite/claude-plugin
@@ -100,11 +99,11 @@ Then start Claude Code and configure the plugin from inside the session:
 5. Enter the endpoint, project ID, and API key you collected in the previous step.
 6. Run `/reload-plugins` to apply the configuration to the current session.
 
-After the reload, run `/mcp` to confirm that `appwrite-api` and `appwrite-docs` are both listed. If either is missing, the [plugin docs](/docs/tooling/ai/ai-dev-tools/claude-code) cover the manual MCP setup as a fallback.
+After the reload, run `/mcp` to confirm that `appwrite` is listed. If it is missing, add the remote server at `https://mcp.appwrite.io` (server name: `appwrite`). The [plugin docs](/docs/tooling/ai/agents/claude-code) cover the setup as a fallback.
 
 # What your agent can build now
 
-With the MCP servers and skills loaded, Claude Code has enough context to set up the common backend building blocks for you. The rest of this post walks through the ones most apps need.
+With MCP and skills loaded, Claude Code has enough context to set up the common backend building blocks for you. The rest of this post walks through the ones most apps need.
 
 ## Set up authentication
 
@@ -119,13 +118,13 @@ page, and a protected /dashboard route that redirects to sign-in when
 there is no active session.
 ```
 
-Claude Code will pull the relevant skill (TypeScript in this case), use the Docs MCP server to check the latest SDK patterns, and write the wiring directly into your project. If you also want OAuth, name the provider in the prompt like `Add Google OAuth sign-in` and the agent will walk through the provider setup in the Console for you.
+Claude Code will pull the relevant skill (TypeScript in this case), use the MCP server to check the latest SDK patterns, and write the wiring directly into your project. If you also want OAuth, name the provider in the prompt like `Add Google OAuth sign-in` and the agent will walk through the provider setup in the Console for you.
 
-For admin-side operations (listing users, creating users from a seed script, disabling accounts), the API MCP server lets the agent call the Users API directly without your writing a single cURL command. A prompt like `Create a test user with email test@demo.test` will create the user in your project in place.
+For admin-side operations (listing users, creating users from a seed script, disabling accounts), the MCP server lets the agent call the Users API directly without your writing a single cURL command. A prompt like `Create a test user with email test@demo.test` will create the user in your project in place.
 
 ## Create and query databases
 
-The TablesDB service is where the rest of the app's state lives. You describe the shape of the data you want, and Claude Code can use the API MCP server to create the database, tables, and columns in your project without you touching the Console.
+The TablesDB service is where the rest of the app's state lives. You describe the shape of the data you want, and Claude Code can use the MCP server to create the database, tables, and columns in your project without you touching the Console.
 
 A prompt like:
 
@@ -136,14 +135,14 @@ color (text, optional), and userId (text, required). Enable row
 security so each note is scoped to its owner.
 ```
 
-Results in the agent calling the API MCP server to:
+Results in the agent calling the MCP server to:
 
 1. Create the database.
 2. Create the `notes` table.
 3. Add each column with the correct type.
 4. Turn on row-level security on the table.
 
-Once the schema exists, you can keep going in the same session: `Write a function on the dashboard page that lists the current user's notes and lets them create a new one.` The agent will pick the right SDK skill, use the Docs MCP server to confirm the current query syntax, and add the client code.
+Once the schema exists, you can keep going in the same session: `Write a function on the dashboard page that lists the current user's notes and lets them create a new one.` The agent will pick the right SDK skill, use the MCP server to confirm the current query syntax, and add the client code.
 
 ## Upload and serve files
 
@@ -156,7 +155,7 @@ Then update the profile page to upload the selected file to that
 bucket and display it.
 ```
 
-The API MCP server handles the bucket creation; the TypeScript skill handles the client-side upload code.
+The MCP server handles the bucket creation; the TypeScript skill handles the client-side upload code.
 
 ## Run serverless functions
 
@@ -176,13 +175,13 @@ The CLI skill knows the current `appwrite.json` layout and the `appwrite push fu
 
 The pattern that works best once the setup is done is to stop thinking about the backend as a separate project. You describe behavior like `users can save notes`, `admins can impersonate users`, or `uploads are scoped to the owner`, and the agent makes the changes in both places: Appwrite for the data and auth, your codebase for the UI and glue.
 
-The MCP servers keep the two in sync. The skills keep the SDK code current. The API key keeps the agent scoped to exactly the project you pointed it at.
+The MCP server keeps the two in sync. The skills keep the SDK code current. The API key keeps the agent scoped to exactly the project you pointed it at.
 
 # Resources
 
-- [Appwrite plugin for Claude Code (docs)](/docs/tooling/ai/ai-dev-tools/claude-code)
-- [Appwrite API MCP server](/docs/tooling/mcp/api)
-- [Appwrite Docs MCP server](/docs/tooling/mcp/docs)
+- [Appwrite plugin for Claude Code (docs)](/docs/tooling/ai/agents/claude-code)
+- [Appwrite MCP server](/docs/tooling/ai/mcp-servers)
 - [Appwrite agent skills](/docs/tooling/ai/skills)
+- [For coding agents](/for-agents)
 - [Plugin source on GitHub](https://github.com/appwrite/claude-plugin)
 - [Appwrite Discord](https://appwrite.io/discord)

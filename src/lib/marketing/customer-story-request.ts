@@ -1,9 +1,4 @@
-import {
-  isGrowthFormsConfigured,
-  submitEnterpriseApplication,
-} from '@/lib/marketing/growth-forms'
-
-export { isGrowthFormsConfigured }
+import { submitEnterpriseApplication } from '@/lib/marketing/growth-forms'
 
 export type CustomerStoryInterviewPayload = {
   firstName: string
@@ -15,17 +10,22 @@ export type CustomerStoryInterviewPayload = {
   cloudEmail?: string
 }
 
-/** Growth `/conversations/enterprises` requires these strings; not collected in the feedback popover. */
+/** Enterprise conversations require these; not collected in the feedback popover. */
 const CONSOLE_CUSTOMER_STORY_ENTERPRISE_DEFAULTS = {
   companySize: 'Not specified (console customer story)',
   preferredDeployment: 'Appwrite Cloud',
   timeline: 'Just researching',
 } as const
 
-/** Growth sales conversation API (same as `/sales` wizard). */
+/**
+ * Files the request as an enterprise conversation (same as the `/sales`
+ * wizard), identified by the console session.
+ *
+ * @throws GrowthError when the server rejects the request.
+ */
 export async function submitCustomerStoryInterviewRequest(
   payload: CustomerStoryInterviewPayload,
-): Promise<boolean> {
+): Promise<void> {
   const useCase = [
     'Customer story interview request (console feedback)',
     '',
@@ -35,7 +35,8 @@ export async function submitCustomerStoryInterviewRequest(
   const firstName = payload.firstName.trim() || 'Unknown'
   const lastName = payload.lastName.trim() || firstName
 
-  return submitEnterpriseApplication({
+  await submitEnterpriseApplication({
+    session: true,
     firstName,
     lastName,
     email: payload.email.trim(),

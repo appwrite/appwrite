@@ -46,7 +46,6 @@ const KEPT_PROFILES = ['embedding']
 // topology or database option it belongs to.
 const KNOWN_PROFILES = [SEPARATE_TOPOLOGY_PROFILE, ...KEPT_PROFILES]
 const DATABASE_SERVICES = ['postgresql', 'mariadb', 'mongodb']
-const ASSISTANT_SERVICE = 'appwrite-assistant'
 const AUTOGRAVITY_SERVICE = 'appwrite-autogravity'
 
 // The appwrite repo's .env is a development file. These keys are dropped from the
@@ -56,8 +55,11 @@ const AUTOGRAVITY_SERVICE = 'appwrite-autogravity'
 //     such as "embedding" adds it to their own .env.
 //   - The DocumentsDB and VectorsDB keys point at engines a self-hosted install
 //     does not deploy. Both products ship disabled, so the keys have no effect.
+//   - VITE_GROWTH_ENDPOINT pointed the console at the retired growth server.
+//     The console now sends support and feedback to Appwrite Cloud directly.
 const OMITTED_ENV_KEYS = [
   'COMPOSE_PROFILES',
+  'VITE_GROWTH_ENDPOINT',
   '_APP_DOCUMENTSDB',
   '_APP_VECTORSDB',
   '_APP_DB_ADAPTER_DOCUMENTSDB',
@@ -77,16 +79,16 @@ const OMITTED_ENV_KEYS = [
 ]
 
 /**
- * Removes the OMITTED_ENV_KEYS pass-through entries from a service's
- * `environment:` list. Compose passes an unset key through as unset, and both
- * products default to disabled, so dropping the entries changes no behaviour.
+ * Removes the OMITTED_ENV_KEYS entries, pass-through or with a value, from a
+ * service's `environment:` list. Compose passes an unset key through as unset,
+ * and nothing reads the omitted keys, so dropping them changes no behaviour.
  */
 function stripOmittedServiceEnv(block: string): string {
   const omitted = new Set(OMITTED_ENV_KEYS)
   return block
     .split('\n')
     .filter((line) => {
-      const match = line.match(/^      - ([A-Z0-9_]+)$/)
+      const match = line.match(/^      - ([A-Z0-9_]+)(=.*)?$/)
       return match === null || !omitted.has(match[1])
     })
     .join('\n')
@@ -357,7 +359,6 @@ async function main() {
   const expected = [
     ...DATABASE_SERVICES,
     ...TOPOLOGY_SERVICES.combined,
-    ASSISTANT_SERVICE,
     AUTOGRAVITY_SERVICE,
   ]
   for (const name of expected) {
@@ -376,8 +377,6 @@ export const APPWRITE_VERSION = ${JSON.stringify(version)}
 export const DATABASE_SERVICES = ${JSON.stringify(DATABASE_SERVICES)} as const
 
 export const TOPOLOGY_SERVICES = ${JSON.stringify(TOPOLOGY_SERVICES, null, 2)}
-
-export const ASSISTANT_SERVICE = ${JSON.stringify(ASSISTANT_SERVICE)}
 
 export const AUTOGRAVITY_SERVICE = ${JSON.stringify(AUTOGRAVITY_SERVICE)}
 

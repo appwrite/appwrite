@@ -8,6 +8,7 @@ date: 2025-10-31
 author: veeresh-mulge
 callToAction: true
 unlisted: true
+removed: true
 category: tutorials
 faqs:
   - question: "What is context engineering in simple terms?"

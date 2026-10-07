@@ -9,6 +9,7 @@ author: aditya-oberai
 category: architectures
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: Is Redis a database or a cache?
     answer: Both. Redis is an in-memory data store that can act as a database, a cache, and a message broker. It's most commonly used as a cache, but it's flexible enough to fill all three roles.

@@ -10,15 +10,16 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { Loader2, ArrowRightLeft } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
+import { Loader2 } from 'lucide-react'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import { EmptyState } from '@/components/global/shared/EmptyState'
 import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import { MigrationDetailsDrawer } from './migrations/MigrationDetailsDrawer'
 import { MigrationContextMenu } from './migrations/MigrationContextMenu'
+import { MigrationsEmptyState } from './_components/MigrationsEmptyState'
 import {
   getMigrationProgress,
   getMigrationCounts,
@@ -33,10 +34,20 @@ interface MigrationsProps {
   projectId: string
   /** Prefetched data from route loader; used for first paint to avoid loading spinner */
   initialData?: MigrationsInitialData
+  onFirstRunEmptyChange?: (empty: boolean) => void
+  createDisabled?: boolean
+  createDisabledTooltip?: string
 }
 
-export function Migrations({ projectId, initialData }: MigrationsProps) {
+export function Migrations({
+  projectId,
+  initialData,
+  onFirstRunEmptyChange,
+  createDisabled = false,
+  createDisabledTooltip,
+}: MigrationsProps) {
   const t = useT()
+  const navigate = useNavigate()
   const { project } = useProject(projectId)
   const region = project?.region
 
@@ -56,6 +67,12 @@ export function Migrations({ projectId, initialData }: MigrationsProps) {
   const selectedMigration =
     effectiveMigrations.find((m) => m.$id === selectedMigrationId) ?? null
   const showLoading = isLoading && !initialData
+  const showsFirstRunEmptyState =
+    !showLoading && effectiveMigrations.length === 0
+  useEffect(() => {
+    onFirstRunEmptyChange?.(showsFirstRunEmptyState)
+    return () => onFirstRunEmptyChange?.(false)
+  }, [onFirstRunEmptyChange, showsFirstRunEmptyState])
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<
@@ -118,13 +135,16 @@ export function Migrations({ projectId, initialData }: MigrationsProps) {
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
-      ) : effectiveMigrations.length === 0 ? (
-        <EmptyState
-          icon={ArrowRightLeft}
-          title={t('No migrations yet')}
-          description={t('Import data from another platform or export your project data')}
-          isEmpty={true}
-          variant="card"
+      ) : showsFirstRunEmptyState ? (
+        <MigrationsEmptyState
+          onImport={() =>
+            navigate({
+              to: '/projects/$projectId/settings/migrations/import',
+              params: { projectId },
+            })
+          }
+          importDisabled={createDisabled}
+          importDisabledTooltip={createDisabledTooltip}
         />
       ) : (
         <div className="rounded-lg border border-border bg-card">

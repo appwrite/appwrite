@@ -18,6 +18,7 @@ import { PlatformIcon } from '@/components/global/shared/Icon'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
 import { MarketingSectionHeading } from '@/components/pages/marketing/MarketingSections'
+import { ProductToneBackdrop } from '@/components/pages/products/_components/ProductTone'
 import {
   getProductToolsContent,
   PRODUCT_TOOLS_LINKS,
@@ -25,6 +26,9 @@ import {
   PRODUCT_TOOLS_TOTAL_SDK_COUNT,
 } from '@/lib/products/tools-section'
 import type { ProductId } from '@/lib/products/types'
+import { analyticsAttrs, type AnalyticsActionId } from '@/lib/analytics-actions'
+import { MCP_SERVER_NAME, MCP_SERVER_URL } from '@/lib/config/mcp'
+import { APPWRITE_AGENT_SKILLS_INSTALL } from '@/lib/seo/agent-discovery'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 
@@ -36,10 +40,12 @@ function ToolsTileLink({
   href,
   children,
   className,
+  analyticsAction,
 }: {
   href: string
   children: ReactNode
   className?: string
+  analyticsAction?: AnalyticsActionId
 }) {
   return (
     <a
@@ -48,6 +54,7 @@ function ToolsTileLink({
         'group block h-full p-4 transition-colors hover:bg-accent/15 sm:p-5',
         className,
       )}
+      {...(analyticsAction ? analyticsAttrs(analyticsAction) : {})}
     >
       {children}
     </a>
@@ -62,9 +69,9 @@ function ToolsTileIcon({
   children?: ReactNode
 }) {
   return (
-    <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
+    <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40 text-muted-foreground transition-colors duration-300 group-hover:border-[rgb(var(--tone-rgb)/0.45)] group-hover:bg-[rgb(var(--tone-rgb)/0.1)] group-hover:text-[var(--tone-ink)] [&_svg]:text-current">
       {Icon ? (
-        <Icon className="size-3.5 text-muted-foreground" aria-hidden />
+        <Icon className="size-3.5" aria-hidden />
       ) : (
         children
       )}
@@ -130,17 +137,18 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
   const { codeExample, realtime, terraform } = toolsContent
 
   return (
-    <section className="border-b border-border py-16 sm:py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+    <section className="relative isolate border-b border-border py-16 sm:py-24">
+      <ProductToneBackdrop variant="cta" className="opacity-60" />
+      <div className="relative z-[1] mx-auto max-w-7xl px-4 sm:px-6">
         <MarketingSectionHeading
           title={toolsCopy.headingTitle}
           description={toolsCopy.headingDescription}
           size="md"
         />
 
-        <div className="mt-10 grid overflow-hidden rounded-xl border border-border bg-card/45 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="h-full min-h-[280px] border-b border-border sm:col-span-2 lg:col-span-2 lg:row-span-2 lg:col-start-1 lg:row-start-1 lg:border-b lg:border-e">
-            <div className="flex h-full min-h-[280px] flex-col lg:min-h-0">
+        <div className="mt-10 grid grid-cols-1 overflow-hidden rounded-xl border border-border bg-card/45 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="min-h-[280px] border-b border-border sm:col-span-2 lg:col-span-2 lg:row-span-2 lg:col-start-1 lg:row-start-1 lg:border-b lg:border-e">
+            <div className="flex min-h-[280px] flex-col">
               <div className="shrink-0 border-b border-border bg-muted/15 px-4 py-2.5">
                 <p className="text-[13px] font-semibold text-foreground">
                   {toolsCopy.developerExperienceTitle}
@@ -152,8 +160,7 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
               <ConnectCodeExample
                 code={codeExample.code}
                 language={codeExample.language}
-                className="min-h-0 flex-1 rounded-none border-0"
-                fixedHeight="100%"
+                className="rounded-none border-0"
               />
             </div>
           </div>
@@ -204,6 +211,7 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
 
           <ToolsTileLink
             href={PRODUCT_TOOLS_LINKS.mcp}
+            analyticsAction="mcp-connect"
             className="border-b border-border lg:col-start-4 lg:row-start-2 lg:border-b"
           >
             <ToolsTileIcon>
@@ -211,7 +219,7 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
             </ToolsTileIcon>
             <ToolsTileTitle>{toolsCopy.mcpTitle}</ToolsTileTitle>
             <ToolsTileDescription>{toolsCopy.mcpDescription}</ToolsTileDescription>
-            <ToolsTileSnippet>{`appwrite-docs\nappwrite-api`}</ToolsTileSnippet>
+            <ToolsTileSnippet>{`${MCP_SERVER_NAME}\n${MCP_SERVER_URL}`}</ToolsTileSnippet>
           </ToolsTileLink>
 
           <ToolsTileLink
@@ -228,12 +236,13 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
 
           <ToolsTileLink
             href={PRODUCT_TOOLS_LINKS.skills}
+            analyticsAction="skills-install"
             className="border-b border-border sm:border-e lg:col-start-2 lg:row-start-3 lg:border-b-0 lg:border-e"
           >
             <ToolsTileIcon icon={Sparkles} />
             <ToolsTileTitle>{toolsCopy.agentSkillsTitle}</ToolsTileTitle>
             <ToolsTileDescription>{toolsCopy.agentSkillsDescription}</ToolsTileDescription>
-            <ToolsTileSnippet>npx skills add appwrite/skills</ToolsTileSnippet>
+            <ToolsTileSnippet>{APPWRITE_AGENT_SKILLS_INSTALL}</ToolsTileSnippet>
           </ToolsTileLink>
 
           <ToolsTileLink

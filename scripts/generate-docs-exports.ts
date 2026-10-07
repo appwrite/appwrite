@@ -8,7 +8,7 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { parseBlogFrontmatter } from '../src/lib/blog/frontmatter'
+import { isRemovedBlogPost, parseBlogFrontmatter } from '../src/lib/blog/frontmatter'
 import { parseChangelogFrontmatter } from '../src/lib/changelog/frontmatter'
 import { DOCS_PAGES } from '../src/lib/docs/generated/manifest'
 import {
@@ -18,7 +18,15 @@ import {
   serializeDiscoveryJson,
 } from '../src/lib/seo/agent-discovery'
 import {
+  ALTERNATIVE_IDS,
+} from '../src/lib/alternatives/registry'
+import {
+  buildAlternativeMarkdownExport,
+  getAllAlternativeLlmsMeta,
+} from '../src/lib/alternatives/markdown-export'
+import {
   buildAppwriteLlmsTxt,
+  buildAlternativesMarkdownIndex,
   buildBlogMarkdownIndex,
   buildChangelogMarkdownIndex,
   buildDocsLlmsTxt,
@@ -26,8 +34,10 @@ import {
   buildIntegrationsMarkdownIndex,
 } from '../src/lib/seo/llms'
 import type { LlmsContentMeta } from '../src/lib/seo/llms'
+import { buildForAgentsMarkdown } from '../src/lib/for-agents/content'
 import { getProductionRobotsTxt } from '../src/lib/seo/robots'
 import { markdocToMarkdown } from '../src/lib/seo/markdoc-to-markdown'
+import { generateAgentSetupMarkdown } from '../src/lib/seo/agent-setup'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = join(__dirname, '..')
@@ -80,13 +90,17 @@ async function readMarkdocFiles(
   )
 }
 
-/** Public blog posts (drafts and unlisted excluded), newest first. */
+/** Public blog posts (drafts, unlisted, and removed excluded), newest first. */
 async function collectBlogMeta(): Promise<(LlmsContentMeta & { date: string })[]> {
   const postsBySlug = new Map<string, LlmsContentMeta & { date: string }>()
 
   for (const { slug, raw } of await readMarkdocFiles(BLOG_POSTS_DIR)) {
     const { frontmatter } = parseBlogFrontmatter(raw)
-    if (parseBoolean(frontmatter.draft) || parseBoolean(frontmatter.unlisted)) {
+    if (
+      parseBoolean(frontmatter.draft) ||
+      parseBoolean(frontmatter.unlisted) ||
+      isRemovedBlogPost(frontmatter)
+    ) {
       postsBySlug.delete(slug)
       continue
     }
@@ -222,7 +236,13 @@ type ExportFile = { relativePath: string; contents: string }
 
 async function buildExportFiles(): Promise<ExportFile[]> {
   const { blog, changelog, integrations } = await collectContentMeta()
+  const alternatives = getAllAlternativeLlmsMeta()
   const llmsFullTxt = await generateLlmsFullTxt()
+
+  const alternativeMarkdownExports: ExportFile[] = ALTERNATIVE_IDS.map((id) => ({
+    relativePath: `alternative-to/${id}.md`,
+    contents: buildAlternativeMarkdownExport(id, SITE_ORIGIN),
+  }))
 
   return [
     {
@@ -237,6 +257,7 @@ async function buildExportFiles(): Promise<ExportFile[]> {
           integrations,
           blog,
           changelog,
+          alternatives,
         },
         SITE_ORIGIN,
       ),
@@ -254,6 +275,10 @@ async function buildExportFiles(): Promise<ExportFile[]> {
       contents: buildDocsMarkdownIndex(DOCS_PAGES, SITE_ORIGIN),
     },
     {
+      relativePath: 'setup.md',
+      contents: generateAgentSetupMarkdown(),
+    },
+    {
       relativePath: 'blog.md',
       contents: buildBlogMarkdownIndex(blog, SITE_ORIGIN),
     },
@@ -266,6 +291,11 @@ async function buildExportFiles(): Promise<ExportFile[]> {
       contents: buildIntegrationsMarkdownIndex(integrations, SITE_ORIGIN),
     },
     {
+      relativePath: 'alternative-to.md',
+      contents: buildAlternativesMarkdownIndex(alternatives, SITE_ORIGIN),
+    },
+    ...alternativeMarkdownExports,
+    {
       relativePath: '.well-known/mcp/server-card.json',
       contents: serializeDiscoveryJson(buildMcpServerCard(SITE_ORIGIN)),
     },
@@ -276,6 +306,10 @@ async function buildExportFiles(): Promise<ExportFile[]> {
     {
       relativePath: '.well-known/agent-skills/index.json',
       contents: serializeDiscoveryJson(buildAgentSkillsDiscoveryDocument()),
+    },
+    {
+      relativePath: 'for-agents.md',
+      contents: buildForAgentsMarkdown(SITE_ORIGIN),
     },
     {
       relativePath: 'robots.txt',

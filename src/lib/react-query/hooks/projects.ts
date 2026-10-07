@@ -621,6 +621,29 @@ export function projectsForTeamInfiniteQueryKey(
   ]
 }
 
+/**
+ * Query options for the org's active project count (plan limits, create gating).
+ * Uses the list API `total` with pinned projects included (no exclude list).
+ */
+export function activeProjectsTotalQueryOptions(
+  orgId: string | null | undefined,
+  restrictToProjectIds?: string[] | null,
+) {
+  const restrictKey = projectRestrictionKey(restrictToProjectIds)
+  return queryOptions({
+    queryKey: ['projects', 'active', 'total', orgId, restrictKey],
+    queryFn: () =>
+      fetchActiveProjects(orgId!, 0, 1, '', undefined, restrictToProjectIds),
+    enabled: !!orgId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: orgId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 export function activeProjectsQueryOptions(
   orgId: string | null | undefined,
   page: number = 0,

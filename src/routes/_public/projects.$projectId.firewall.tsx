@@ -23,7 +23,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
   beforeLoad: ({ params }) => {
     if (!isCloudProfile()) {
       throw redirect({
-        to: '/projects/$projectId',
+        to: '/projects/$projectId/overview',
         params: { projectId: params.projectId },
         replace: true,
       })

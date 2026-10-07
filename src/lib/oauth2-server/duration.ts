@@ -1,5 +1,11 @@
 export type OAuth2ServerTimeUnit = 'seconds' | 'minutes' | 'hours' | 'days'
 
+/** A duration as entered in the UI: a number plus the unit picked next to it. */
+export type OAuth2ServerDurationInput = {
+  value: number | null
+  unit: OAuth2ServerTimeUnit
+}
+
 const MULTIPLIERS: Record<OAuth2ServerTimeUnit, number> = {
   seconds: 1,
   minutes: 60,
@@ -20,7 +26,7 @@ export const OAUTH2_SERVER_TIME_UNIT_OPTIONS: {
 export function oauth2DurationFromSeconds(
   seconds: number | null | undefined,
   defaultUnit: OAuth2ServerTimeUnit = 'hours',
-): { value: number | null; unit: OAuth2ServerTimeUnit } {
+): OAuth2ServerDurationInput {
   if (seconds == null) return { value: null, unit: defaultUnit }
   if (seconds % 86400 === 0) return { value: seconds / 86400, unit: 'days' }
   if (seconds % 3600 === 0) return { value: seconds / 3600, unit: 'hours' }
@@ -33,4 +39,22 @@ export function oauth2DurationToSeconds(
   unit: OAuth2ServerTimeUnit,
 ): number | null {
   return value != null ? value * MULTIPLIERS[unit] : null
+}
+
+export function oauth2DurationInputToSeconds(
+  input: OAuth2ServerDurationInput,
+): number | null {
+  return oauth2DurationToSeconds(input.value, input.unit)
+}
+
+/** Empty durations fall back to the server default, so they always pass. */
+export function isOAuth2DurationWithin(
+  seconds: number | null,
+  min: number,
+  max: number,
+): boolean {
+  return (
+    seconds == null ||
+    (Number.isFinite(seconds) && seconds >= min && seconds <= max)
+  )
 }

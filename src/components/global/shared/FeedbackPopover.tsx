@@ -24,7 +24,6 @@ export function FeedbackPopover({
   source = 'n/a',
   orgId = '',
   projectId = '',
-  billingPlanId,
 }: FeedbackPopoverContext = {}) {
   const t = useT()
   const [isOpen, setIsOpen] = useState(false)
@@ -73,7 +72,6 @@ export function FeedbackPopover({
           source={source}
           orgId={orgId}
           projectId={projectId}
-          billingPlanId={billingPlanId}
           onSubmitted={handleSubmitted}
         />
       </PopoverContent>

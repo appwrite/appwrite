@@ -46,6 +46,7 @@ import {
   organizationScopesQueryOptions,
   organizationProjectScopeQueryOptions,
   activeProjectsQueryOptions,
+  activeProjectsTotalQueryOptions,
   projectsByIdsQueryOptions,
   deleteOrganization,
   organizationMembershipsQueryOptions,
@@ -109,6 +110,7 @@ import {
   canSwitchOrganizations} from '@/lib/console-access-checks'
 import { OrgMemberContextMenu } from './_components/OrgMemberContextMenu'
 import { ProjectContextMenu } from './_components/ProjectContextMenu'
+import { ProjectsEmptyState } from './_components/ProjectsEmptyState'
 import {
   ProjectListCardFooter,
   ProjectListCardMain} from './_components/ProjectListCardContent'
@@ -1293,8 +1295,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   // Pins live in org-level team prefs and are shared by every member, so a
   // project-scoped member would otherwise see pinned cards for projects they
-  // cannot open. Filtering here also keeps them out of the exclude list and
-  // the project count.
+  // cannot open. Filtering here also keeps them out of the exclude list.
   const pinnedIds = useMemo(() => {
     if (!restrictToProjectIds) return allPinnedIds
     const allowed = new Set(restrictToProjectIds)
@@ -1310,6 +1311,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const { data: pinnedProjectsData } = useQuery({
     ...pinnedProjectsQueryOptions(orgTeamId, pinnedIds),
     placeholderData: keepPreviousData})
+
+  const { data: activeProjectsTotalData } = useQuery(
+    activeProjectsTotalQueryOptions(orgTeamId, restrictToProjectIds),
+  )
 
   // Sync page state from URL when it changes (e.g. browser back or initial load)
   useEffect(() => {
@@ -1635,18 +1640,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Pagination info (from search results)
   const activeProjectsTotal = activeProjectsData?.total || 0
 
-  // Total count of all projects (without search) - for plan-limit checks.
-  // The active-projects listing excludes pinned ids, so when no search is
-  // active the unconditional total is just `listing total + pinned count`.
-  // We cache the last value seen while the search box was empty so the
-  // limit check stays accurate when the user starts typing a query (the
-  // listing's total is filtered by the search and would otherwise drift).
+  // Total active projects in the org (API `total`, pinned included) for plan limits.
+  // Cache the last unfiltered total while searching so the limit check does not drift.
   const lastUnfilteredTotalRef = useRef(0)
-  if (!searchQuery && activeProjectsData?.total != null) {
-    lastUnfilteredTotalRef.current = activeProjectsData.total + pinnedIds.length
+  if (!searchQuery && activeProjectsTotalData?.total != null) {
+    lastUnfilteredTotalRef.current = activeProjectsTotalData.total
   }
   const totalProjectsCount = !searchQuery
-    ? (activeProjectsData?.total ?? 0) + pinnedIds.length
+    ? (activeProjectsTotalData?.total ?? 0)
     : lastUnfilteredTotalRef.current
 
   // Fetch organization plan to check if additional members are supported
@@ -1894,6 +1895,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     requestedPage !== displayedPage
       ? projectsByTeam
       : filteredProjectsByTeam
+  const showsFirstRunProjectsEmptyState =
+    !projectsSearchActive &&
+    !showProjectsLoading &&
+    pinnedProjects.length === 0 &&
+    displayedProjectsByTeam.length === 0
 
   const showProjectUsageCharts =
     features.usageStats ||
@@ -2035,6 +2041,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             GRID_DEFAULT_PAGE_SIZE,
             '',
           ),
+        ),
+        queryClient.ensureQueryData(
+          activeProjectsTotalQueryOptions(nextOrgId, nextProjectScope),
         ),
         ...projectPages.map((page) =>
           queryClient.ensureQueryData(
@@ -2780,6 +2789,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                     {!activeProjectsError && (
                       <>
                         {/* Toolbar: Search + Filters + Create */}
+                        {!showsFirstRunProjectsEmptyState && (
                         <div className="mb-4 flex items-center gap-3">
                           <div className="relative min-w-0 flex-1 @[640px]:max-w-xs">
                             <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -2895,6 +2905,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           })()}
                           </div>
                         </div>
+                        )}
 
                         {/* Loading placeholder - same layout as grid to prevent shift */}
                         {showProjectsLoading ? (
@@ -3343,20 +3354,26 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             </div>
 
                             {/* Empty State: no pinned and no other projects (not shown while search is fetching) */}
-                            {(projectsSearchActive ||
-                              pinnedProjects.length === 0) &&
+                            {showsFirstRunProjectsEmptyState ? (
+                              <ProjectsEmptyState
+                                onCreate={() =>
+                                  setCreateProjectDialogOpen(true)
+                                }
+                                createDisabled={!canManageProjects}
+                                createDisabledTooltip={t(
+                                  "You don't have permission to create projects.",
+                                )}
+                              />
+                            ) : (
+                              projectsSearchActive &&
                               displayedProjectsByTeam.length === 0 && (
                                 <EmptyState
                                   icon={Folder}
-                                  title={t('No projects yet')}
-                                  description={t(
-                                    'Create your first project to get started',
-                                  )}
-                                  isEmpty={!searchQuery}
-                                  hasFilters={!!searchQuery}
+                                  hasFilters
                                   variant="card"
                                 />
-                              )}
+                              )
+                            )}
 
                             {/* Pagination for Active Projects */}
                             {activeProjectsTotal > urlProjectsLimit && (

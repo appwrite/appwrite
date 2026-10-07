@@ -23,7 +23,7 @@ type PlanUsageEntry = {
 
 type PlanUsageMap = Record<string, PlanUsageEntry | undefined>
 
-export const DEFAULT_HA_REPLICA_RATE = 0.5
+export const DEFAULT_HA_REPLICA_RATE = 1
 export const DEFAULT_PITR_RATE = 0.2
 
 /** Resolve HA replica and PITR pricing multipliers from org plan (preferred) or API spec pricing. */

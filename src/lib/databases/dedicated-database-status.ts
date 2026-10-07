@@ -71,6 +71,40 @@ export function isDedicatedDatabaseReady(
   return coerceTrimmedString(status).toLowerCase() === 'ready'
 }
 
+const LIFECYCLE_STABLE_STATUSES = new Set(['ready', 'paused'])
+
+/**
+ * Prefer dedicated compute lifecycle when the product API still reports a stable
+ * health status (e.g. serverless TablesDB stays `ready` during migration).
+ */
+export function resolveDatabaseLifecycleStatus(
+  productStatus: string | null | undefined,
+  dedicatedStatus: string | null | undefined,
+): string | null {
+  const product = coerceTrimmedString(productStatus)
+  const dedicated = coerceTrimmedString(dedicatedStatus)
+  const productStable =
+    !product || LIFECYCLE_STABLE_STATUSES.has(product.toLowerCase())
+  const dedicatedStable =
+    !dedicated || LIFECYCLE_STABLE_STATUSES.has(dedicated.toLowerCase())
+
+  if (!dedicatedStable && productStable) return dedicated
+  if (!productStable && dedicatedStable) return product
+  if (dedicated && !dedicatedStable) return dedicated
+  if (product && !productStable) return product
+  return product || dedicated || null
+}
+
+export function shouldPollDatabaseLifecycleStatus(
+  status: string | null | undefined,
+): boolean {
+  const normalized = coerceTrimmedString(status).toLowerCase()
+  if (!normalized) return false
+  if (LIFECYCLE_STABLE_STATUSES.has(normalized)) return false
+  if (normalized === 'failed' || normalized === 'deleted') return false
+  return true
+}
+
 /** Initial create/start only. Do not treat paused/failed/scaling as provisioning. */
 export function isDedicatedDatabaseProvisioning(
   status: string | null | undefined,

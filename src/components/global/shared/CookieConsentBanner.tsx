@@ -228,11 +228,11 @@ export function CookieConsentBanner({
                   htmlFor="cookie-consent-analytics"
                   className="text-[13px] font-medium text-foreground"
                 >
-                  {t('Error reporting')}
+                  {t('Diagnostics and advertising')}
                 </Label>
                 <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
                   {t(
-                    'Crash and performance diagnostics to help us fix issues in Appwrite.',
+                    'Crash diagnostics and advertising measurement to help us improve Appwrite and measure campaigns.',
                   )}
                 </p>
               </div>

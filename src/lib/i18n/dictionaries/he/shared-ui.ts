@@ -5,9 +5,9 @@
 export const heSharedUiDictionary: Record<string, string> = {
   // Error formatting (toast titles and static messages) // pragma: allowlist secret
   Error: 'שגיאה',
-  'Error reporting': 'דיווח שגיאות',
-  'Crash and performance diagnostics to help us fix issues in Appwrite.':
-    'שולחים נתוני קריסות וביצועים כדי שנוכל לתקן תקלות ב-Appwrite.',
+  'Diagnostics and advertising': 'אבחון ופרסום',
+  'Crash diagnostics and advertising measurement to help us improve Appwrite and measure campaigns.':
+    'שולחים נתוני קריסות ומדידת פרסום כדי לשפר את Appwrite ולמדוד קמפיינים.',
   'Not Found': 'לא נמצא',
   'Access Denied': 'הגישה נדחתה',
   Forbidden: 'אין הרשאה',
@@ -257,8 +257,6 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   False: 'False',
   Feedback: 'משוב',
-  'Feedback is not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
-    'משוב אינו מוגדר. הגדירו VITE_GROWTH_ENDPOINT בקובץ ‎.env כדי לאפשר שליחה.',
   File: 'קובץ',
   'File uploaded': 'הקובץ הועלה',
   'Filter name': 'שם הסינון',
@@ -537,6 +535,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Search projects...': 'חיפוש פרויקטים…',
   'Search providers...': 'חיפוש ספקים…',
   'Search providers by name or ID...': 'חיפוש ספקים לפי שם או מזהה…',
+  'Search videos by name or ID...': 'חיפוש סרטונים לפי שם או מזהה…',
   'Search rows by ID...': 'חיפוש שורות לפי מזהה…',
   'Search sites...': 'חיפוש אתרים…',
   'Search sites by name or ID...': 'חיפוש אתרים לפי שם או מזהה…',
@@ -612,8 +611,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Product, results, and how Appwrite fits your stack':
     'המוצר, התוצאות, ואיך Appwrite משתלב בסטק שלכם',
   'Request customer story interview': 'בקשה לראיון לסיפור לקוח',
-  'Story requests are not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
-    'בקשות לסיפורים אינן מוגדרות. הגדירו VITE_GROWTH_ENDPOINT בקובץ ‎.env כדי לאפשר שליחה.',
   'Failed to submit story request': 'שליחת בקשת הסיפור נכשלה',
   'Too many requests. Try again in a few minutes.':
     'יותר מדי בקשות. נסו שוב בעוד כמה דקות.',
@@ -1013,6 +1010,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Push notifications, email and SMS messages':
     'התראות פוש, הודעות אימייל ו-SMS', // pragma: allowlist secret
   'Deployed websites and hosting': 'אתרים פרוסים ואירוח אתרים',
+  'Adaptive video streaming, renditions and subtitles': 'סטרימינג וידאו אדפטיבי, גרסאות קידוד וכתוביות',
   'Audit log of project events': 'יומן ביקורת של אירועי הפרויקט',
   'Realtime channels and live messages': 'ערוצי זמן אמת והודעות חיות', // pragma: allowlist secret
   'Usage statistics and quotas': 'נתוני שימוש ומכסות',
@@ -1065,6 +1063,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Subscriber topics for fan-out messaging':
     'נושאי מנויים לשליחת הודעות בתפוצה רחבה',
   'Messaging · Providers': 'הודעות · ספקים',
+  'Videos · Encoding profiles': 'סרטונים · פרופילי קידוד',
+  'Resolution and bitrate targets for renditions': 'יעדי רזולוציה ו-Bitrate לגרסאות קידוד',
   'Email, SMS and push providers': 'ספקי אימייל, SMS ופוש',
   'Settings · Overview': 'הגדרות · סקירה',
   'Project ID, name, region, API endpoint':
@@ -1130,6 +1130,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Create a new bucket': 'יצירת באקט חדש',
   'Create a new function': 'יצירת פונקציה חדשה',
   'Create a new site': 'יצירת אתר חדש',
+  'Create a new video': 'יצירת סרטון חדש',
   'Create a new team': 'יצירת צוות חדש',
   'Create a new user': 'יצירת משתמש חדש',
 
@@ -1147,6 +1148,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Search messages': 'חיפוש הודעות',
   'Search topics': 'חיפוש נושאים',
   'Search providers': 'חיפוש ספקים',
+  'Search videos': 'חיפוש סרטונים',
   'Search projects': 'חיפוש פרויקטים',
   'Find a database by name or ID': 'חיפוש מסד נתונים לפי שם או מזהה',
   'Find a user by name, email or ID': 'חיפוש משתמש לפי שם, אימייל או מזהה',
@@ -1157,6 +1159,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Find a message by content or ID': 'חיפוש הודעה לפי תוכן או מזהה',
   'Find a topic by name or ID': 'חיפוש נושא לפי שם או מזהה',
   'Find a provider by name or ID': 'חיפוש ספק לפי שם או מזהה',
+  'Find a video by name or ID': 'חיפוש סרטון לפי שם או מזהה',
   'Find a project in this organization': 'חיפוש פרויקט בארגון הזה',
 
   // Command center: local actions and groups
@@ -1238,6 +1241,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'User (optional)': 'משתמש (אופציונלי)',
   'Topic (optional)': 'נושא (אופציונלי)',
   'Provider (optional)': 'ספק (אופציונלי)',
+  'Video (optional)': 'סרטון (אופציונלי)',
   'Resource (optional)': 'משאב (אופציונלי)',
   'Table (optional)': 'טבלה (אופציונלי)',
   'File (optional)': 'קובץ (אופציונלי)',
@@ -1328,4 +1332,42 @@ export const heSharedUiDictionary: Record<string, string> = {
     'Appwrite 2.0 מושק היום ב-Product Hunt',
   'Appwrite 2.0 on Product Hunt': 'Appwrite 2.0 ב-Product Hunt',
   'Share your take': 'שתפו את דעתכם',
+  'Created by': 'נוצר על ידי',
+  'Authorized resources': 'משאבים מורשים',
+  'No scopes granted': 'לא הוענקו הרשאות גישה',
+  Installations: 'התקנות',
+  'Installations appear here once a team installs this app.':
+    'התקנות יופיעו כאן ברגע שצוות יתקין את האפליקציה.',
+  'No installations': 'אין התקנות',
+  'Remove installation': 'הסרת התקנה',
+  'Installation removed': 'ההתקנה הוסרה',
+  'Failed to remove installation': 'הסרת ההתקנה נכשלה',
+  'Teams that installed this app and the scopes they granted. Removing an installation revokes its access tokens.':
+    'צוותים שהתקינו את האפליקציה והרשאות הגישה שהעניקו. הסרת התקנה מבטלת את טוקני הגישה שלה.',
+  'The app loses access to this team immediately and its installation tokens stop working. The team can install the app again later.':
+    'האפליקציה מאבדת מיד את הגישה לצוות הזה וטוקני ההתקנה שלה מפסיקים לעבוד. הצוות יוכל להתקין את האפליקציה שוב מאוחר יותר.',
+  'App keys': 'מפתחות אפליקציה',
+  'App key created': 'מפתח האפליקציה נוצר',
+  'App key deleted': 'מפתח האפליקציה נמחק',
+  'Create key': 'יצירת מפתח',
+  'Delete app key': 'מחיקת מפתח אפליקציה',
+  'Failed to create app key': 'יצירת מפתח האפליקציה נכשלה',
+  'Failed to delete app key': 'מחיקת מפתח האפליקציה נכשלה',
+  'Key value': 'ערך המפתח',
+  'No app keys': 'אין מפתחות אפליקציה',
+  'Create a key when your app needs to authenticate as itself, such as when it mints installation tokens.':
+    'צרו מפתח כשהאפליקציה צריכה להזדהות בשם עצמה, למשל כדי להנפיק טוקני התקנה.',
+  'Copy the key into your server environment. You can copy it again later from the keys list.':
+    'העתיקו את המפתח לסביבת השרת שלכם. אפשר להעתיק אותו שוב מאוחר יותר מרשימת המפתחות.',
+  'Never ship app keys in mobile apps, SPAs, or public repositories. Store them in a secrets manager.':
+    'לעולם אל תכללו מפתחות אפליקציה באפליקציות מובייל, ב-SPA או במאגרים ציבוריים. שמרו אותם במנהל סודות.',
+  'Requests signed with this key stop working immediately. This cannot be undone.':
+    'בקשות שנחתמו עם המפתח הזה יפסיקו לעבוד מיד. לא ניתן לבטל פעולה זו.',
+  'Your app signs a JWT with an app key to authenticate as itself, for example to mint installation access tokens. Delete a key to revoke it.':
+    'האפליקציה שלכם חותמת JWT עם מפתח אפליקציה כדי להזדהות בשם עצמה, למשל כדי להנפיק טוקני גישה להתקנה. מחקו מפתח כדי לבטל אותו.',
+  'Self-registered': 'נרשמה עצמאית',
+  'Suggested app': 'אפליקציה מומלצת',
+  'App key copied': 'מפתח האפליקציה הועתק',
+  'Load more': 'טעינת עוד',
+  'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
 }

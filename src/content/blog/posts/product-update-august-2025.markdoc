@@ -46,7 +46,7 @@ After more than 26 months of Appwrite Cloud, we removed the beta tag. Appwrite i
 
 With Appwrite Cloud now powering over 300,000 projects, we’re proud and excited to announce that we have transitioned to General Availability.
 
-[Read the announcement](https://appwrite.io/cloud-ga)
+[Read the announcement](/changelog/entry/2025-08-06)
 
 # Appwrite Sites Hackathon
 
@@ -143,11 +143,9 @@ If you'd like to participate in next month's Community Recognitions, [join our D
 
 **Read**
 
-- [Exploring AI and vibe coding: Insights from the Appwrite developer community](/blog/post/ai-vibe-coding-insights)
 - [Simplifying social media management with automation and AI with StoreAlert and Appwrite](/blog/post/customer-story-socialaize)
 - [Announcing an improved Appwrite Databases. A completely new look, feel, and experience](/blog/post/announcing-appwrite-databases-new-ui)
 - [Announcing Opt-in relationship loading: Granular control for smarter data fetching](/blog/post/announcing-opt-in-relationship-loading)
-- [Deploy a Next.js app to Appwrite Sites](/blog/post/deploy-nextjs-app-to-appwrite-sites)
 
 **Watch**
 

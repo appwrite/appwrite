@@ -9,6 +9,7 @@ timeToRead: 5
 author: aditya-oberai
 category: open-source
 featured: false
+removed: true
 faqs:
   - question: "What was new in Appwrite 1.5?"
     answer: "Appwrite 1.5 introduced [Appwrite Messaging](/docs/products/messaging), Two-Factor Authentication, Server-Side Rendering support in the SDKs, Enums for cleaner SDK usage, and new Bun and Dart function runtimes on Appwrite Cloud. It was a community-driven release with contributions from more than 20 external developers."

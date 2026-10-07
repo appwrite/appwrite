@@ -9,12 +9,19 @@ import { jaSharedUiDictionary } from './shared-ui'
 import { jaMarketingDictionary } from './marketing'
 import { jaProductPagesDictionary } from './product-pages'
 import { jaPricingDictionary } from './pricing'
+import { jaVideosDictionary } from './videos'
+import { jaAlternativesDictionary } from './alternatives'
+import { jaEnterpriseDictionary } from './enterprise'
+import { jaCampaignsDictionary } from './campaigns'
 
 /**
  * Merged Japanese dictionary keyed by English source strings.
  * Later entries override earlier ones on key collisions.
  */
 export const jaDictionary: Record<string, string> = {
+  ...jaCampaignsDictionary,
+  ...jaEnterpriseDictionary,
+  ...jaAlternativesDictionary,
   ...jaMarketingDictionary,
   ...jaProductPagesDictionary,
   ...jaPricingDictionary,
@@ -26,4 +33,5 @@ export const jaDictionary: Record<string, string> = {
   ...jaFunctionsDictionary,
   ...jaSitesDictionary,
   ...jaDatabasesDictionary,
+  ...jaVideosDictionary,
 }

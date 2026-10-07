@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useParams, useLocation } from '@tanstack/react-router'
 import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
 import {
@@ -29,6 +29,26 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
   const projectId = params.projectId as string
 
   const [searchValue, setSearchValue] = useState('')
+  const [firstRunEmptyTab, setFirstRunEmptyTab] = useState<string | null>(null)
+  const reportFirstRunEmpty = useCallback(
+    (tab: string) => (empty: boolean) =>
+      setFirstRunEmptyTab((current) =>
+        empty ? tab : current === tab ? null : current,
+      ),
+    [],
+  )
+  const onDomainsFirstRunEmpty = useMemo(
+    () => reportFirstRunEmpty('domains'),
+    [reportFirstRunEmpty],
+  )
+  const onWebhooksFirstRunEmpty = useMemo(
+    () => reportFirstRunEmpty('webhooks'),
+    [reportFirstRunEmpty],
+  )
+  const onMigrationsFirstRunEmpty = useMemo(
+    () => reportFirstRunEmpty('migrations'),
+    [reportFirstRunEmpty],
+  )
 
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
@@ -168,6 +188,7 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         activeTab={activeTab}
         showFilters={false}
         fullWidthBorder
+        hideToolbar={firstRunEmptyTab === activeTab}
         searchPlaceholder={searchPlaceholder}
         searchValue={hasSearch ? searchValue : undefined}
         onSearchChange={hasSearch ? setSearchValue : undefined}
@@ -193,15 +214,30 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
           <ProjectSettingsOverview projectId={projectId} />
         )}
         {activeTab === 'domains' && (
-          <Domains projectId={projectId} searchValue={searchValue} />
+          <Domains
+            projectId={projectId}
+            searchValue={searchValue}
+            onFirstRunEmptyChange={onDomainsFirstRunEmpty}
+            createDisabled={noDomainsPermission}
+            createDisabledTooltip={createDisabledTooltip}
+          />
         )}
         {activeTab === 'webhooks' && (
-          <Webhooks projectId={projectId} searchValue={searchValue} />
+          <Webhooks
+            projectId={projectId}
+            searchValue={searchValue}
+            onFirstRunEmptyChange={onWebhooksFirstRunEmpty}
+            createDisabled={noWebhooksPermission}
+            createDisabledTooltip={createDisabledTooltip}
+          />
         )}
         {activeTab === 'migrations' && (
           <Migrations
             projectId={projectId}
             initialData={initialMigrationsData}
+            onFirstRunEmptyChange={onMigrationsFirstRunEmpty}
+            createDisabled={noMigrationsPermission}
+            createDisabledTooltip={createDisabledTooltip}
           />
         )}
         {activeTab === 'smtp' && <SMTP projectId={projectId} />}

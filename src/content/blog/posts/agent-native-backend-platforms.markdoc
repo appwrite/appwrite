@@ -7,6 +7,7 @@ cover: /images/blog/agent-native-backend-platforms/cover.avif
 timeToRead: 9
 author: aishwari
 unlisted: true
+removed: true
 category: ai
 faqs:
   - question: "What does agent-native mean for a backend platform?"
@@ -61,7 +62,7 @@ On the knowledge side, the [Docs MCP server](/docs/tooling/ai/mcp-servers) gives
 Appwrite's agent surface goes further than MCP alone.
 
 - [Agent Skills](/docs/tooling/ai/skills) are open-source Markdown files that give AI agents language-specific SDK context. Skills cover the Appwrite CLI and every major SDK including TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, Rust, and Swift, and work across Claude Code, Cursor, Windsurf, and other compatible tools.
-- [Editor plugins](/docs/tooling/ai/ai-dev-tools/claude-code) for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) bundle the API MCP server, the Docs MCP server, and the agent skills into a single install, so an agent is set up to build with Appwrite in two commands.
+- [Editor plugins](/docs/tooling/ai/agents/claude-code) for [Claude Code](/docs/tooling/ai/agents/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) bundle the API MCP server, the Docs MCP server, and the agent skills into a single install, so an agent is set up to build with Appwrite in two commands.
 - [Appwrite Assistant](/docs/tooling/ai/assistant) is an AI helper inside the Appwrite Console, reachable through the Command Center under the `Ask the AI` tab. It is grounded in Appwrite documentation and helps with inline troubleshooting and code snippet generation.
 - [Appwrite Arena](/docs/tooling/ai/arena) is an open-source benchmark that scores how well AI models understand Appwrite, with and without Agent Skills.
 
@@ -121,7 +122,7 @@ Second, treat MCP, skills, and docs quality as product choices, not marketing. A
 
 The rise of agent-native backend platforms is not a rebrand. It is an admission that two audiences now read your product: the human who decides and the agent who writes the code. Platforms that take that seriously are the ones both audiences will reach for.
 
-To see what this looks like in practice, start with the [Appwrite AI tooling hub](/docs/tooling/ai), install the [API MCP server](/docs/tooling/ai/mcp-servers) and the [Docs MCP server](/docs/tooling/ai/mcp-servers), add [Agent Skills](/docs/tooling/ai/skills) for your SDK, or grab the editor plugin for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) to install everything in one step.
+To see what this looks like in practice, start with the [Appwrite AI tooling hub](/docs/tooling/ai), install the [API MCP server](/docs/tooling/ai/mcp-servers) and the [Docs MCP server](/docs/tooling/ai/mcp-servers), add [Agent Skills](/docs/tooling/ai/skills) for your SDK, or grab the editor plugin for [Claude Code](/docs/tooling/ai/agents/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) to install everything in one step.
 
 - [Appwrite AI tooling](/docs/tooling/ai)
 - [API MCP server](/docs/tooling/ai/mcp-servers)

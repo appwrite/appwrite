@@ -1,6 +1,6 @@
 /**
  * Searchable ID selector for event builder.
- * Lets users choose specific database, table, bucket, file, row, function, site, team, user, topic, or provider instead of *.
+ * Lets users choose specific database, table, bucket, file, row, function, site, team, user, topic, provider, or video instead of *.
  */
 import { useState, useEffect, useMemo } from 'react'
 import {
@@ -56,6 +56,8 @@ import {
   topicsQueryOptions,
   providersQueryOptions,
 } from '@/lib/react-query/hooks/messaging'
+import { videosQueryOptions } from '@/lib/react-query/hooks/videos'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -74,6 +76,7 @@ export type ResourceIdType =
   | 'user'
   | 'topic'
   | 'provider'
+  | 'video'
 
 export interface EventResourceIdSelectorProps {
   projectId: string | null | undefined
@@ -104,6 +107,7 @@ const ICONS = {
   user: User,
   topic: MessageSquare,
   provider: Mail,
+  video: VIDEOS_PRODUCT_ICON,
 }
 
 const SEARCH_PLACEHOLDERS: Record<ResourceIdType, string> = {
@@ -120,6 +124,7 @@ const SEARCH_PLACEHOLDERS: Record<ResourceIdType, string> = {
   user: 'Search users by name, email, or ID...',
   topic: 'Search topics by name or ID...',
   provider: 'Search providers by name or ID...',
+  video: 'Search videos by name or ID...',
 }
 
 export function EventResourceIdSelector({
@@ -296,6 +301,12 @@ export function EventResourceIdSelector({
     placeholderData: keepPreviousData,
   })
 
+  const videoQuery = useQuery({
+    ...videosQueryOptions(projectId, 0, 20, debouncedSearch || undefined),
+    enabled: !!projectId && open && type === 'video',
+    placeholderData: keepPreviousData,
+  })
+
   const items = useMemo(() => {
     const baseItems =
       type === 'database'
@@ -324,7 +335,9 @@ export function EventResourceIdSelector({
                               ? (topicQuery.data?.topics ?? [])
                               : type === 'provider'
                                 ? (providerQuery.data?.providers ?? [])
-                                : []
+                                : type === 'video'
+                                  ? (videoQuery.data?.videos ?? [])
+                                  : []
 
     if ((type === 'column' || type === 'index') && debouncedSearch.trim()) {
       const q = debouncedSearch.trim().toLowerCase()
@@ -356,6 +369,7 @@ export function EventResourceIdSelector({
     userQuery.data,
     topicQuery.data,
     providerQuery.data,
+    videoQuery.data,
   ])
 
   const isFetching =
@@ -383,7 +397,9 @@ export function EventResourceIdSelector({
                           ? userQuery.isFetching
                           : type === 'topic'
                             ? topicQuery.isFetching
-                            : providerQuery.isFetching
+                            : type === 'video'
+                              ? videoQuery.isFetching
+                              : providerQuery.isFetching
 
   const getItemId = (x: {
     $id?: string

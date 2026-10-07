@@ -47,6 +47,14 @@ export const IDE_CONFIGS: IDEConfig[] = [
     aiChatDeeplink: 'https://claude.ai/new?q={prompt}',
   },
   {
+    id: 'chatgpt',
+    name: 'ChatGPT',
+    iconPath: '/icons/chatgpt.svg',
+    supportsAIChat: true,
+    aiChatDeeplink: 'https://chatgpt.com/?prompt={prompt}',
+    mcpDocsUrl: '/docs/tooling/ai/agents/chatgpt',
+  },
+  {
     id: 'codex',
     name: 'Codex',
     iconPath: '/icons/codex.svg',
@@ -62,8 +70,8 @@ export const IDE_CONFIGS: IDEConfig[] = [
     iconPath: '/icons/cursor-ai.svg',
     supportsAIChat: true,
     aiChatDeeplink: 'cursor://anysphere.cursor-deeplink/prompt?text={prompt}',
-    pluginDocsUrl: '/docs/tooling/ai/ai-dev-tools/cursor',
-    mcpDocsUrl: '/docs/tooling/mcp/cursor',
+    pluginDocsUrl: '/docs/tooling/ai/agents/cursor',
+    mcpDocsUrl: '/docs/tooling/ai/agents/cursor',
   },
   {
     id: 'windsurf',
@@ -71,7 +79,7 @@ export const IDE_CONFIGS: IDEConfig[] = [
     iconPath: '/icons/windsurf.svg',
     supportsAIChat: true,
     aiChatDeeplink: 'windsurf://new-chat?prompt={prompt}',
-    mcpDocsUrl: '/docs/tooling/mcp/windsurf',
+    mcpDocsUrl: '/docs/tooling/ai/agents/windsurf',
   },
   {
     id: 'vscode',
@@ -79,7 +87,7 @@ export const IDE_CONFIGS: IDEConfig[] = [
     iconPath: '/icons/vscode.svg',
     supportsAIChat: true,
     aiChatDeeplink: 'vscode://GitHub.copilot-chat/chat?prompt={prompt}',
-    mcpDocsUrl: '/docs/tooling/mcp/vscode',
+    mcpDocsUrl: '/docs/tooling/ai/agents/vscode',
   },
   // MCP-only tools (no AI chat deeplink)
   {
@@ -87,15 +95,15 @@ export const IDE_CONFIGS: IDEConfig[] = [
     name: 'Claude Code',
     iconPath: '/icons/claude.svg',
     supportsAIChat: false,
-    pluginDocsUrl: '/docs/tooling/ai/ai-dev-tools/claude-code',
-    mcpDocsUrl: '/docs/tooling/mcp/claude',
+    pluginDocsUrl: '/docs/tooling/ai/agents/claude-code',
+    mcpDocsUrl: '/docs/tooling/ai/agents/claude-code',
   },
   {
     id: 'google-antigravity',
     name: 'Antigravity',
     iconPath: '/icons/google-antigravity.svg',
     supportsAIChat: false,
-    mcpDocsUrl: '/docs/tooling/mcp/antigravity',
+    mcpDocsUrl: '/docs/tooling/ai/agents/antigravity',
   },
   {
     id: 'grok-build',
@@ -109,7 +117,7 @@ export const IDE_CONFIGS: IDEConfig[] = [
     name: 'OpenCode',
     iconPath: '/icons/opencode.svg',
     supportsAIChat: false,
-    mcpDocsUrl: '/docs/tooling/mcp/opencode',
+    mcpDocsUrl: '/docs/tooling/ai/agents/opencode',
   },
 ]
 

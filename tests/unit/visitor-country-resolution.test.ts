@@ -4,70 +4,116 @@ import {
   isVisitorCountryResolutionComplete,
   mergeVisitorCountryCode,
   shouldShowStartPlan,
+  type VisitorCountryQueryState,
 } from '@/lib/pricing/visitor-country-resolution'
 
+const pending: VisitorCountryQueryState = {
+  visitorFetched: false,
+  visitorError: false,
+  visitorFetching: false,
+  localeSuccess: false,
+  localeError: false,
+  localeFetching: false,
+}
+
 describe('mergeVisitorCountryCode', () => {
-  it('prefers SSR/cookie request geo over async query data', () => {
+  it('prefers the locale.get() country over request geo and the visitor query', () => {
     expect(
       mergeVisitorCountryCode({
-        requestCountry: 'IN',
+        requestCountry: 'US',
+        visitorQueryCountry: 'US',
+        localeCountry: 'IN',
+      }),
+    ).toBe('IN')
+  })
+
+  it('prefers the debug mock country over every other source', () => {
+    expect(
+      mergeVisitorCountryCode({
+        mockCountry: 'IN',
+        requestCountry: 'US',
         visitorQueryCountry: 'US',
         localeCountry: 'US',
       }),
     ).toBe('IN')
   })
 
-  it('falls back to locale query when request geo is missing', () => {
+  it('falls back to request geo when the async queries have no country', () => {
     expect(
       mergeVisitorCountryCode({
-        requestCountry: null,
+        requestCountry: 'IN',
         visitorQueryCountry: null,
-        localeCountry: 'IN',
+        localeCountry: null,
       }),
     ).toBe('IN')
   })
 })
 
 describe('isVisitorCountryResolutionComplete', () => {
-  const pending = {
-    visitorFetched: false,
-    visitorError: false,
-    localeFetched: false,
-    localeError: false,
-  }
-
-  it('stays incomplete when only the locale query has settled without a country', () => {
+  it('stays incomplete while locale.get() has not succeeded or failed', () => {
+    expect(isVisitorCountryResolutionComplete(null, null, pending)).toBe(false)
     expect(
       isVisitorCountryResolutionComplete(null, null, {
         ...pending,
-        localeFetched: true,
+        localeFetching: true,
       }),
     ).toBe(false)
   })
 
-  it('completes once both async sources have settled without a country', () => {
+  it('does not complete from request geo alone', () => {
+    expect(isVisitorCountryResolutionComplete('IN', 'IN', pending)).toBe(false)
+  })
+
+  it('completes once locale.get() succeeds', () => {
     expect(
       isVisitorCountryResolutionComplete(null, null, {
-        visitorFetched: true,
-        visitorError: false,
-        localeFetched: true,
-        localeError: false,
+        ...pending,
+        localeSuccess: true,
       }),
     ).toBe(true)
   })
 
-  it('completes immediately when request geo is present', () => {
+  it('completes immediately when a debug mock country is set', () => {
     expect(
-      isVisitorCountryResolutionComplete(null, 'IN', pending),
+      isVisitorCountryResolutionComplete(null, null, {
+        ...pending,
+        mockCountry: 'IN',
+      }),
+    ).toBe(true)
+  })
+
+  it('waits for the visitor query to settle after locale.get() fails', () => {
+    const localeFailed = { ...pending, localeError: true }
+    expect(isVisitorCountryResolutionComplete(null, null, localeFailed)).toBe(
+      false,
+    )
+    expect(
+      isVisitorCountryResolutionComplete(null, null, {
+        ...localeFailed,
+        visitorFetching: true,
+      }),
+    ).toBe(false)
+    expect(
+      isVisitorCountryResolutionComplete(null, null, {
+        ...localeFailed,
+        visitorFetched: true,
+      }),
+    ).toBe(true)
+    expect(
+      isVisitorCountryResolutionComplete(null, null, {
+        ...localeFailed,
+        visitorError: true,
+      }),
     ).toBe(true)
   })
 })
 
 describe('pricing plan grid readiness', () => {
-  it('keeps the shell until country is known or all sources finish', () => {
+  it('keeps the shell until resolution completes, even with a known country', () => {
     expect(isPricingPlanGridReady(null, false)).toBe(false)
-    expect(isPricingPlanGridReady('IN', false)).toBe(true)
+    expect(isPricingPlanGridReady('IN', false)).toBe(false)
     expect(isPricingPlanGridReady(null, true)).toBe(true)
+    expect(isPricingPlanGridReady('IN', true)).toBe(true)
   })
 
   it('shows Start only for eligible countries after ready', () => {
@@ -76,21 +122,16 @@ describe('pricing plan grid readiness', () => {
     expect(shouldShowStartPlan(false, 'IN')).toBe(false)
   })
 
-  it('never treats a partial locale fetch as the final 3-plan grid for IN visitors', () => {
+  it('never paints the grid from request geo before locale.get() settles', () => {
     const countryCode = mergeVisitorCountryCode({
-      requestCountry: null,
+      requestCountry: 'US',
       visitorQueryCountry: null,
       localeCountry: null,
     })
     const resolutionComplete = isVisitorCountryResolutionComplete(
       countryCode,
-      null,
-      {
-        visitorFetched: false,
-        visitorError: false,
-        localeFetched: true,
-        localeError: false,
-      },
+      'US',
+      { ...pending, visitorFetched: true },
     )
     const ready = isPricingPlanGridReady(countryCode, resolutionComplete)
 

@@ -73,9 +73,20 @@ test.describe('markdown exports (read-only)', () => {
     expect(body).toContain('## Skills')
     expect(body).toContain('## Documentation')
     expect(body).toContain('/docs/llms.txt')
+    expect(body).toContain('/setup.md')
     expect(body).toContain('/blog.md')
     // Hub stays curated; it must not dump every docs page.
     expect(body.length).toBeLessThan(100_000)
+  })
+
+  test('setup.md serves MCP install instructions', async ({ request }) => {
+    const response = await request.get('/setup.md')
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
+    const body = await response.text()
+    expect(body).toMatch(/^# Set yourself up to work with Appwrite\n/)
+    expect(body).toContain('https://mcp.appwrite.io')
+    expect(body).toContain('/setup.md')
   })
 
   test('docs/llms.txt serves nested docs index', async ({ request }) => {
@@ -151,8 +162,36 @@ test.describe('markdown exports (read-only)', () => {
     expect(reliability.status()).toBe(404)
   })
 
-  test('robots.txt serves plain text with a tracked route', async ({ request }) => {
+  test('well-known security.txt lists the security contact', async ({
+    request,
+  }) => {
+    const response = await request.get('/.well-known/security.txt')
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toMatch(/text\/plain/)
+    const body = await response.text()
+    expect(body).toContain('Contact: mailto:security@appwrite.io')
+    expect(body).toMatch(/^Expires: /m)
+  })
+
+  test('robots.txt blocks indexing on non-production hosts', async ({
+    request,
+  }) => {
     const response = await request.get('/robots.txt')
+
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toMatch(/text\/plain/)
+    const body = await response.text()
+    expect(body).toContain('User-agent:')
+    expect(body).toContain('Disallow: /')
+    expect(body).not.toContain('Sitemap:')
+  })
+
+  test('robots.txt serves production policy on the canonical host', async ({
+    request,
+  }) => {
+    const response = await request.get('/robots.txt', {
+      headers: { Host: 'appwrite.io' },
+    })
 
     expect(response.status()).toBe(200)
     expect(response.headers()['content-type']).toMatch(/text\/plain/)
@@ -192,6 +231,8 @@ test.describe('markdown exports (read-only)', () => {
     const body = await response.text()
     expect(body).toContain('xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"')
     expect(body).toContain('<urlset')
+    expect(body).toContain('<url>')
+    expect(body).toContain('<loc>')
     expect(body).toContain('</urlset>')
   })
 

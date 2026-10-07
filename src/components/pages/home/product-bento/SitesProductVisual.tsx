@@ -253,7 +253,7 @@ export function SitesProductVisual() {
   return (
     <div ref={rootRef} className="absolute inset-0 flex flex-col overflow-hidden">
       <div className="flex h-full min-h-0 w-full flex-col justify-end space-y-3.5 pt-3 transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0">
-        <div className="mx-auto w-full max-w-[18.5rem] space-y-3.5">
+        <div className="mx-auto w-full max-w-[18.5rem] shrink-0 space-y-3.5">
           <div
             className={cn(
               'flex items-center gap-2.5 px-3.5 py-3 transition-colors duration-300',
@@ -327,10 +327,7 @@ export function SitesProductVisual() {
           </PipelineRow>
         </div>
 
-        <PipelineRow
-          revealDelayMs={1650}
-          className="w-full px-2.5 sm:px-3.5 group-hover:max-h-56 sm:group-hover:max-h-64 motion-reduce:group-hover:max-h-56 sm:motion-reduce:group-hover:max-h-64"
-        >
+        <PipelineRow className="min-h-0 w-full shrink overflow-hidden px-2.5 opacity-45 grayscale transition-[opacity,filter] duration-700 group-hover:opacity-100 group-hover:grayscale-0 group-hover:delay-1000 sm:px-3.5 motion-reduce:transition-none">
           <div className={cn('w-full overflow-hidden', productBentoContainer.shell)}>
             <div className="flex items-center gap-2 border-b border-border bg-muted/15 px-3 py-1.5">
               <span className="size-1.5 rounded-full bg-muted-foreground/25" aria-hidden />

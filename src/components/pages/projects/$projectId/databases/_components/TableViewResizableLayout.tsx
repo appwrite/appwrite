@@ -21,6 +21,7 @@ import {
 import {
   parseDatabasesSidebarWidthPx,
   parseStorageSidebarWidthPx,
+  parseVideosSidebarWidthPx,
 } from '@/lib/user-prefs-keys'
 import {
   clampTableViewSidebarWidthPx,
@@ -28,9 +29,8 @@ import {
   effectivePanelGroupWidthPx,
   syncPanelGroupFirstPanePx,
   TABLE_VIEW_MAIN_MIN_WIDTH_PX,
-  TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX,
-  TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
-  TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX,
+  TABLE_VIEW_SIDEBAR_BOUNDS,
+  VIDEOS_SIDEBAR_BOUNDS,
 } from '@/lib/resizable-layout'
 import { verticalPanelResizeHandleClass } from '@/lib/layout/horizontal-resize'
 import { cn } from '@/lib/utils'
@@ -73,14 +73,20 @@ export function TableViewResizableLayout({
   const parsePersistedSidebarPx =
     sidebarWidthScope === 'storage'
       ? parseStorageSidebarWidthPx
-      : parseDatabasesSidebarWidthPx
+      : sidebarWidthScope === 'videos'
+        ? parseVideosSidebarWidthPx
+        : parseDatabasesSidebarWidthPx
+  const bounds =
+    sidebarWidthScope === 'videos'
+      ? VIDEOS_SIDEBAR_BOUNDS
+      : TABLE_VIEW_SIDEBAR_BOUNDS
   const sidebarWidthPx = useMemo(
     () =>
       clampTableViewSidebarWidthPx(
-        parsePersistedSidebarPx(accountPrefs?.prefs) ??
-          TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX,
+        parsePersistedSidebarPx(accountPrefs?.prefs) ?? bounds.defaultPx,
+        bounds,
       ),
-    [accountPrefs?.prefs, parsePersistedSidebarPx],
+    [accountPrefs?.prefs, parsePersistedSidebarPx, bounds],
   )
 
   /**
@@ -116,11 +122,11 @@ export function TableViewResizableLayout({
       computeTwoPanelHorizontalLayout({
         containerWidth: effectivePanelGroupWidthPx(containerWidth),
         firstPx: mountedSidebarPx,
-        firstMinPx: TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX,
-        firstMaxPx: TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
+        firstMinPx: bounds.minPx,
+        firstMaxPx: bounds.maxPx,
         secondMinPx: TABLE_VIEW_MAIN_MIN_WIDTH_PX,
       }),
-    [containerWidth, mountedSidebarPx],
+    [containerWidth, mountedSidebarPx, bounds],
   )
 
   useLayoutEffect(() => {
@@ -137,15 +143,15 @@ export function TableViewResizableLayout({
       containerWidth,
       mountedSidebarPx,
       {
-        firstMinPx: TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX,
-        firstMaxPx: TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
+        firstMinPx: bounds.minPx,
+        firstMaxPx: bounds.maxPx,
         secondMinPx: TABLE_VIEW_MAIN_MIN_WIDTH_PX,
       },
     )
     if (nextPx !== mountedSidebarPx) {
       setMountedSidebarPx(nextPx)
     }
-  }, [containerWidth, mountedSidebarPx])
+  }, [containerWidth, mountedSidebarPx, bounds])
 
   const latestSidebarPxRef = useRef(sidebarWidthPx)
 
@@ -163,13 +169,13 @@ export function TableViewResizableLayout({
       const layout = computeTwoPanelHorizontalLayout({
         containerWidth: width,
         firstPx: (percent / 100) * width,
-        firstMinPx: TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX,
-        firstMaxPx: TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
+        firstMinPx: bounds.minPx,
+        firstMaxPx: bounds.maxPx,
         secondMinPx: TABLE_VIEW_MAIN_MIN_WIDTH_PX,
       })
       latestSidebarPxRef.current = layout.firstPx
     },
-    [containerWidth],
+    [containerWidth, bounds],
   )
 
   const handleSidebarDragging = useCallback(

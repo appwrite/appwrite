@@ -13,16 +13,19 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as PublicRouteImport } from './routes/_public'
+import { Route as AlternativeToDotmdRouteImport } from './routes/alternative-to[.]md'
 import { Route as BlogDotmdRouteImport } from './routes/blog[.]md'
 import { Route as ChangelogDotmdRouteImport } from './routes/changelog[.]md'
 import { Route as DiscordRouteImport } from './routes/discord'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DocsDotmdRouteImport } from './routes/docs[.]md'
+import { Route as ForAgentsDotmdRouteImport } from './routes/for-agents[.]md'
 import { Route as GeneratorRouteImport } from './routes/generator'
 import { Route as IntegrationsDotmdRouteImport } from './routes/integrations[.]md'
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SetupDotmdRouteImport } from './routes/setup[.]md'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as AuthJoinRouteImport } from './routes/_auth/join'
@@ -32,6 +35,7 @@ import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
 import { Route as AuthSignOutRouteImport } from './routes/_auth/sign-out'
 import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
+import { Route as MarketingIndexRouteImport } from './routes/_marketing/index'
 import { Route as MarketingAffiliatesRouteImport } from './routes/_marketing/affiliates'
 import { Route as MarketingAssetsRouteImport } from './routes/_marketing/assets'
 import { Route as MarketingBaaRouteImport } from './routes/_marketing/baa'
@@ -41,6 +45,7 @@ import { Route as MarketingCookiesRouteImport } from './routes/_marketing/cookie
 import { Route as MarketingDomainsRouteImport } from './routes/_marketing/domains'
 import { Route as MarketingEducationRouteImport } from './routes/_marketing/education'
 import { Route as MarketingEnterpriseRouteImport } from './routes/_marketing/enterprise'
+import { Route as MarketingForAgentsRouteImport } from './routes/_marketing/for-agents'
 import { Route as MarketingHomeRouteImport } from './routes/_marketing/home'
 import { Route as MarketingPartnersRouteImport } from './routes/_marketing/partners'
 import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricing'
@@ -48,7 +53,6 @@ import { Route as MarketingPrivacyRouteImport } from './routes/_marketing/privac
 import { Route as MarketingStartupsRouteImport } from './routes/_marketing/startups'
 import { Route as MarketingTermsRouteImport } from './routes/_marketing/terms'
 import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_protected/example-protected-route'
-import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
 import { Route as PublicAgentRouteImport } from './routes/_public/agent'
 import { Route as PublicAppRouteImport } from './routes/_public/app'
@@ -90,6 +94,7 @@ import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-
 import { Route as AuthEducationJoinRouteImport } from './routes/_auth/education.join'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
 import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
+import { Route as MarketingAlternativeToCompetitorRouteImport } from './routes/_marketing/alternative-to.$competitor'
 import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog.index'
 import { Route as MarketingBlogPageRouteImport } from './routes/_marketing/blog.$page'
 import { Route as MarketingChangelogIndexRouteImport } from './routes/_marketing/changelog.index'
@@ -97,6 +102,7 @@ import { Route as MarketingInitTicketIdRouteImport } from './routes/_marketing/i
 import { Route as MarketingIntegrationsIndexRouteImport } from './routes/_marketing/integrations.index'
 import { Route as MarketingIntegrationsSlugRouteImport } from './routes/_marketing/integrations.$slug'
 import { Route as MarketingProductsProductIdRouteImport } from './routes/_marketing/products.$productId'
+import { Route as MarketingSecretVariantRouteImport } from './routes/_marketing/secret.$variant'
 import { Route as MarketingThreadsIndexRouteImport } from './routes/_marketing/threads.index'
 import { Route as MarketingThreadsThreadIdRouteImport } from './routes/_marketing/threads.$threadId'
 import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
@@ -117,6 +123,7 @@ import { Route as PublicDebugAuthorizeContributorPreviewRouteImport } from './ro
 import { Route as PublicDebugCodeEditorPreviewRouteImport } from './routes/_public/debug.code-editor-preview'
 import { Route as PublicDebugCommunityShareExamplesRouteImport } from './routes/_public/debug.community-share-examples'
 import { Route as PublicDebugEducationJoinPreviewRouteImport } from './routes/_public/debug.education-join-preview'
+import { Route as PublicDebugEducationPlanPreviewRouteImport } from './routes/_public/debug.education-plan-preview'
 import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
 import { Route as PublicDebugImpersonatePreviewRouteImport } from './routes/_public/debug.impersonate-preview'
 import { Route as PublicDebugJoinInvitePreviewRouteImport } from './routes/_public/debug.join-invite-preview'
@@ -174,6 +181,7 @@ import { Route as PublicOrganizationsOrgIdSupportRouteImport } from './routes/_p
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
 import { Route as PublicProjectsProjectIdActivityRouteImport } from './routes/_public/projects.$projectId.activity'
 import { Route as PublicProjectsProjectIdAdvisorRouteImport } from './routes/_public/projects.$projectId.advisor'
+import { Route as PublicProjectsProjectIdAgentsRouteImport } from './routes/_public/projects.$projectId.agents'
 import { Route as PublicProjectsProjectIdAnalyticsRouteImport } from './routes/_public/projects.$projectId.analytics'
 import { Route as PublicProjectsProjectIdApiKeysRouteImport } from './routes/_public/projects.$projectId.api-keys'
 import { Route as PublicProjectsProjectIdAppsRouteImport } from './routes/_public/projects.$projectId.apps'
@@ -185,11 +193,13 @@ import { Route as PublicProjectsProjectIdFunctionsRouteImport } from './routes/_
 import { Route as PublicProjectsProjectIdImagineRouteImport } from './routes/_public/projects.$projectId.imagine'
 import { Route as PublicProjectsProjectIdMessagingRouteImport } from './routes/_public/projects.$projectId.messaging'
 import { Route as PublicProjectsProjectIdOnboardingRouteImport } from './routes/_public/projects.$projectId.onboarding'
+import { Route as PublicProjectsProjectIdOverviewRouteImport } from './routes/_public/projects.$projectId.overview'
 import { Route as PublicProjectsProjectIdRealtimeRouteImport } from './routes/_public/projects.$projectId.realtime'
 import { Route as PublicProjectsProjectIdSettingsRouteImport } from './routes/_public/projects.$projectId.settings'
 import { Route as PublicProjectsProjectIdStorageRouteImport } from './routes/_public/projects.$projectId.storage'
 import { Route as PublicProjectsProjectIdStoresRouteImport } from './routes/_public/projects.$projectId.stores'
 import { Route as PublicProjectsProjectIdUsageRouteImport } from './routes/_public/projects.$projectId.usage'
+import { Route as PublicProjectsProjectIdVideosRouteImport } from './routes/_public/projects.$projectId.videos'
 import { Route as PublicOrganizationsOrgIdAgentIndexRouteImport } from './routes/_public/organizations.$orgId.agent.index'
 import { Route as PublicOrganizationsOrgIdAgentAgentIdRouteImport } from './routes/_public/organizations.$orgId.agent.$agentId'
 import { Route as PublicOrganizationsOrgIdAgentAutomationsRouteImport } from './routes/_public/organizations.$orgId.agent.automations'
@@ -247,6 +257,9 @@ import { Route as PublicProjectsProjectIdStorageBucketIdRouteImport } from './ro
 import { Route as PublicProjectsProjectIdStoresIndexRouteImport } from './routes/_public/projects.$projectId.stores.index'
 import { Route as PublicProjectsProjectIdUsageIndexRouteImport } from './routes/_public/projects.$projectId.usage.index'
 import { Route as PublicProjectsProjectIdUsageCategoryIdRouteImport } from './routes/_public/projects.$projectId.usage.$categoryId'
+import { Route as PublicProjectsProjectIdVideosIndexRouteImport } from './routes/_public/projects.$projectId.videos.index'
+import { Route as PublicProjectsProjectIdVideosVideoIdRouteImport } from './routes/_public/projects.$projectId.videos.$videoId'
+import { Route as PublicProjectsProjectIdVideosProfilesRouteImport } from './routes/_public/projects.$projectId.videos.profiles'
 import { Route as DocsReferencesVersionPlatformServiceRouteImport } from './routes/docs/references.$version.$platform.$service'
 import { Route as DocsReferencesVersionModelsModelRouteImport } from './routes/docs/references.$version.models.$model'
 import { Route as PublicOrganizationsOrgIdAgentAutomationsIndexRouteImport } from './routes/_public/organizations.$orgId.agent.automations.index'
@@ -259,6 +272,8 @@ import { Route as PublicOrganizationsOrgIdAgentSettingsModelsRouteImport } from 
 import { Route as PublicOrganizationsOrgIdAgentSettingsUsageRouteImport } from './routes/_public/organizations.$orgId.agent.settings.usage'
 import { Route as PublicOrganizationsOrgIdAppsAppIdIndexRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.index'
 import { Route as PublicOrganizationsOrgIdAppsAppIdBrandingRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.branding'
+import { Route as PublicOrganizationsOrgIdAppsAppIdInstallationsRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.installations'
+import { Route as PublicOrganizationsOrgIdAppsAppIdKeysRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.keys'
 import { Route as PublicOrganizationsOrgIdAppsAppIdLegalRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.legal'
 import { Route as PublicOrganizationsOrgIdAppsAppIdOauthRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.oauth'
 import { Route as PublicOrganizationsOrgIdAppsAppIdSecretsRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.secrets'
@@ -316,6 +331,13 @@ import { Route as PublicProjectsProjectIdStorageBucketIdSecurityRouteImport } fr
 import { Route as PublicProjectsProjectIdStorageBucketIdSettingsRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.settings'
 import { Route as PublicProjectsProjectIdStoresAppIdIndexRouteImport } from './routes/_public/projects.$projectId.stores.$appId.index'
 import { Route as PublicProjectsProjectIdUsageCategoryIdMetricIdRouteImport } from './routes/_public/projects.$projectId.usage.$categoryId.$metricId'
+import { Route as PublicProjectsProjectIdVideosVideoIdIndexRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.index'
+import { Route as PublicProjectsProjectIdVideosVideoIdInstallRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.install'
+import { Route as PublicProjectsProjectIdVideosVideoIdRenditionsRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.renditions'
+import { Route as PublicProjectsProjectIdVideosVideoIdSettingsRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.settings'
+import { Route as PublicProjectsProjectIdVideosVideoIdStreamingRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.streaming'
+import { Route as PublicProjectsProjectIdVideosVideoIdSubtitlesRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.subtitles'
+import { Route as PublicProjectsProjectIdVideosVideoIdTimelineRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.timeline'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdActivityRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId.activity'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdMembersRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId.members'
 import { Route as PublicProjectsProjectIdAuthUsersUserIdActivityRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.activity'
@@ -461,6 +483,11 @@ const PublicRoute = PublicRouteImport.update({
   id: '/_public',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AlternativeToDotmdRoute = AlternativeToDotmdRouteImport.update({
+  id: '/alternative-to.md',
+  path: '/alternative-to.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BlogDotmdRoute = BlogDotmdRouteImport.update({
   id: '/blog.md',
   path: '/blog.md',
@@ -486,6 +513,11 @@ const DocsDotmdRoute = DocsDotmdRouteImport.update({
   path: '/docs.md',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForAgentsDotmdRoute = ForAgentsDotmdRouteImport.update({
+  id: '/for-agents.md',
+  path: '/for-agents.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GeneratorRoute = GeneratorRouteImport.update({
   id: '/generator',
   path: '/generator',
@@ -509,6 +541,11 @@ const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupDotmdRoute = SetupDotmdRouteImport.update({
+  id: '/setup.md',
+  path: '/setup.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -556,6 +593,11 @@ const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => AuthRoute,
 } as any)
+const MarketingIndexRoute = MarketingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MarketingRoute,
+} as any)
 const MarketingAffiliatesRoute = MarketingAffiliatesRouteImport.update({
   id: '/affiliates',
   path: '/affiliates',
@@ -601,6 +643,11 @@ const MarketingEnterpriseRoute = MarketingEnterpriseRouteImport.update({
   path: '/enterprise',
   getParentRoute: () => MarketingRoute,
 } as any)
+const MarketingForAgentsRoute = MarketingForAgentsRouteImport.update({
+  id: '/for-agents',
+  path: '/for-agents',
+  getParentRoute: () => MarketingRoute,
+} as any)
 const MarketingHomeRoute = MarketingHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -637,11 +684,6 @@ const ProtectedExampleProtectedRouteRoute =
     path: '/example-protected-route',
     getParentRoute: () => ProtectedRoute,
   } as any)
-const PublicIndexRoute = PublicIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => PublicRoute,
-} as any)
 const PublicAccountRoute = PublicAccountRouteImport.update({
   id: '/account',
   path: '/account',
@@ -849,6 +891,12 @@ const AuthOauth2DeviceRoute = AuthOauth2DeviceRouteImport.update({
   path: '/oauth2/device',
   getParentRoute: () => AuthRoute,
 } as any)
+const MarketingAlternativeToCompetitorRoute =
+  MarketingAlternativeToCompetitorRouteImport.update({
+    id: '/alternative-to/$competitor',
+    path: '/alternative-to/$competitor',
+    getParentRoute: () => MarketingRoute,
+  } as any)
 const MarketingBlogIndexRoute = MarketingBlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
@@ -887,6 +935,11 @@ const MarketingProductsProductIdRoute =
     path: '/products/$productId',
     getParentRoute: () => MarketingRoute,
   } as any)
+const MarketingSecretVariantRoute = MarketingSecretVariantRouteImport.update({
+  id: '/secret/$variant',
+  path: '/secret/$variant',
+  getParentRoute: () => MarketingRoute,
+} as any)
 const MarketingThreadsIndexRoute = MarketingThreadsIndexRouteImport.update({
   id: '/threads/',
   path: '/threads/',
@@ -994,6 +1047,12 @@ const PublicDebugEducationJoinPreviewRoute =
   PublicDebugEducationJoinPreviewRouteImport.update({
     id: '/debug/education-join-preview',
     path: '/debug/education-join-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugEducationPlanPreviewRoute =
+  PublicDebugEducationPlanPreviewRouteImport.update({
+    id: '/debug/education-plan-preview',
+    path: '/debug/education-plan-preview',
     getParentRoute: () => PublicRoute,
   } as any)
 const PublicDebugErrorPreviewRoute = PublicDebugErrorPreviewRouteImport.update({
@@ -1321,6 +1380,12 @@ const PublicProjectsProjectIdAdvisorRoute =
     path: '/advisor',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
+const PublicProjectsProjectIdAgentsRoute =
+  PublicProjectsProjectIdAgentsRouteImport.update({
+    id: '/agents',
+    path: '/agents',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
 const PublicProjectsProjectIdAnalyticsRoute =
   PublicProjectsProjectIdAnalyticsRouteImport.update({
     id: '/analytics',
@@ -1387,6 +1452,12 @@ const PublicProjectsProjectIdOnboardingRoute =
     path: '/onboarding',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
+const PublicProjectsProjectIdOverviewRoute =
+  PublicProjectsProjectIdOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
 const PublicProjectsProjectIdRealtimeRoute =
   PublicProjectsProjectIdRealtimeRouteImport.update({
     id: '/realtime',
@@ -1415,6 +1486,12 @@ const PublicProjectsProjectIdUsageRoute =
   PublicProjectsProjectIdUsageRouteImport.update({
     id: '/usage',
     path: '/usage',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdVideosRoute =
+  PublicProjectsProjectIdVideosRouteImport.update({
+    id: '/videos',
+    path: '/videos',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
 const PublicOrganizationsOrgIdAgentIndexRoute =
@@ -1759,6 +1836,24 @@ const PublicProjectsProjectIdUsageCategoryIdRoute =
     path: '/$categoryId',
     getParentRoute: () => PublicProjectsProjectIdUsageRoute,
   } as any)
+const PublicProjectsProjectIdVideosIndexRoute =
+  PublicProjectsProjectIdVideosIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdVideosRoute,
+  } as any)
+const PublicProjectsProjectIdVideosVideoIdRoute =
+  PublicProjectsProjectIdVideosVideoIdRouteImport.update({
+    id: '/$videoId',
+    path: '/$videoId',
+    getParentRoute: () => PublicProjectsProjectIdVideosRoute,
+  } as any)
+const PublicProjectsProjectIdVideosProfilesRoute =
+  PublicProjectsProjectIdVideosProfilesRouteImport.update({
+    id: '/profiles',
+    path: '/profiles',
+    getParentRoute: () => PublicProjectsProjectIdVideosRoute,
+  } as any)
 const DocsReferencesVersionPlatformServiceRoute =
   DocsReferencesVersionPlatformServiceRouteImport.update({
     id: '/references/$version/$platform/$service',
@@ -1829,6 +1924,18 @@ const PublicOrganizationsOrgIdAppsAppIdBrandingRoute =
   PublicOrganizationsOrgIdAppsAppIdBrandingRouteImport.update({
     id: '/branding',
     path: '/branding',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdInstallationsRoute =
+  PublicOrganizationsOrgIdAppsAppIdInstallationsRouteImport.update({
+    id: '/installations',
+    path: '/installations',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdKeysRoute =
+  PublicOrganizationsOrgIdAppsAppIdKeysRouteImport.update({
+    id: '/keys',
+    path: '/keys',
     getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
   } as any)
 const PublicOrganizationsOrgIdAppsAppIdLegalRoute =
@@ -2172,6 +2279,48 @@ const PublicProjectsProjectIdUsageCategoryIdMetricIdRoute =
     id: '/$metricId',
     path: '/$metricId',
     getParentRoute: () => PublicProjectsProjectIdUsageCategoryIdRoute,
+  } as any)
+const PublicProjectsProjectIdVideosVideoIdIndexRoute =
+  PublicProjectsProjectIdVideosVideoIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdVideosVideoIdRoute,
+  } as any)
+const PublicProjectsProjectIdVideosVideoIdInstallRoute =
+  PublicProjectsProjectIdVideosVideoIdInstallRouteImport.update({
+    id: '/install',
+    path: '/install',
+    getParentRoute: () => PublicProjectsProjectIdVideosVideoIdRoute,
+  } as any)
+const PublicProjectsProjectIdVideosVideoIdRenditionsRoute =
+  PublicProjectsProjectIdVideosVideoIdRenditionsRouteImport.update({
+    id: '/renditions',
+    path: '/renditions',
+    getParentRoute: () => PublicProjectsProjectIdVideosVideoIdRoute,
+  } as any)
+const PublicProjectsProjectIdVideosVideoIdSettingsRoute =
+  PublicProjectsProjectIdVideosVideoIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicProjectsProjectIdVideosVideoIdRoute,
+  } as any)
+const PublicProjectsProjectIdVideosVideoIdStreamingRoute =
+  PublicProjectsProjectIdVideosVideoIdStreamingRouteImport.update({
+    id: '/streaming',
+    path: '/streaming',
+    getParentRoute: () => PublicProjectsProjectIdVideosVideoIdRoute,
+  } as any)
+const PublicProjectsProjectIdVideosVideoIdSubtitlesRoute =
+  PublicProjectsProjectIdVideosVideoIdSubtitlesRouteImport.update({
+    id: '/subtitles',
+    path: '/subtitles',
+    getParentRoute: () => PublicProjectsProjectIdVideosVideoIdRoute,
+  } as any)
+const PublicProjectsProjectIdVideosVideoIdTimelineRoute =
+  PublicProjectsProjectIdVideosVideoIdTimelineRouteImport.update({
+    id: '/timeline',
+    path: '/timeline',
+    getParentRoute: () => PublicProjectsProjectIdVideosVideoIdRoute,
   } as any)
 const PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute =
   PublicProjectsProjectIdAuthTeamsTeamIdActivityRouteImport.update({
@@ -3172,17 +3321,20 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRou
   )
 
 export interface FileRoutesByFullPath {
-  '/': typeof PublicIndexRoute
+  '/': typeof MarketingIndexRoute
+  '/alternative-to.md': typeof AlternativeToDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
@@ -3201,6 +3353,7 @@ export interface FileRoutesByFullPath {
   '/domains': typeof MarketingDomainsRoute
   '/education': typeof MarketingEducationRoute
   '/enterprise': typeof MarketingEnterpriseRoute
+  '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -3249,10 +3402,12 @@ export interface FileRoutesByFullPath {
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/alternative-to/$competitor': typeof MarketingAlternativeToCompetitorRoute
   '/blog/$page': typeof MarketingBlogPageRoute
   '/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
   '/products/$productId': typeof MarketingProductsProductIdRoute
+  '/secret/$variant': typeof MarketingSecretVariantRoute
   '/threads/$threadId': typeof MarketingThreadsThreadIdRoute
   '/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/account/applications': typeof PublicAccountApplicationsRoute
@@ -3270,6 +3425,7 @@ export interface FileRoutesByFullPath {
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
   '/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
   '/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
+  '/debug/education-plan-preview': typeof PublicDebugEducationPlanPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
   '/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
@@ -3329,6 +3485,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
+  '/projects/$projectId/agents': typeof PublicProjectsProjectIdAgentsRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -3340,11 +3497,13 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
   '/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresRouteWithChildren
   '/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRouteWithChildren
+  '/projects/$projectId/videos': typeof PublicProjectsProjectIdVideosRouteWithChildren
   '/agent/automations/': typeof PublicAgentAutomationsIndexRoute
   '/agent/settings/': typeof PublicAgentSettingsIndexRoute
   '/organizations/$orgId/': typeof PublicOrganizationsOrgIdIndexRoute
@@ -3391,6 +3550,8 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/create': typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
   '/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
   '/projects/$projectId/usage/$categoryId': typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
+  '/projects/$projectId/videos/$videoId': typeof PublicProjectsProjectIdVideosVideoIdRouteWithChildren
+  '/projects/$projectId/videos/profiles': typeof PublicProjectsProjectIdVideosProfilesRoute
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
   '/docs/references/$version/models/$model': typeof DocsReferencesVersionModelsModelRoute
   '/organizations/$orgId/agent/': typeof PublicOrganizationsOrgIdAgentIndexRoute
@@ -3408,6 +3569,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/storage/': typeof PublicProjectsProjectIdStorageIndexRoute
   '/projects/$projectId/stores/': typeof PublicProjectsProjectIdStoresIndexRoute
   '/projects/$projectId/usage/': typeof PublicProjectsProjectIdUsageIndexRoute
+  '/projects/$projectId/videos/': typeof PublicProjectsProjectIdVideosIndexRoute
   '/organizations/$orgId/agent/automations/$automationId': typeof PublicOrganizationsOrgIdAgentAutomationsAutomationIdRoute
   '/organizations/$orgId/agent/automations/create': typeof PublicOrganizationsOrgIdAgentAutomationsCreateRoute
   '/organizations/$orgId/agent/settings/mcp': typeof PublicOrganizationsOrgIdAgentSettingsMcpRoute
@@ -3415,6 +3577,8 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/agent/settings/models': typeof PublicOrganizationsOrgIdAgentSettingsModelsRoute
   '/organizations/$orgId/agent/settings/usage': typeof PublicOrganizationsOrgIdAgentSettingsUsageRoute
   '/organizations/$orgId/apps/$appId/branding': typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
+  '/organizations/$orgId/apps/$appId/installations': typeof PublicOrganizationsOrgIdAppsAppIdInstallationsRoute
+  '/organizations/$orgId/apps/$appId/keys': typeof PublicOrganizationsOrgIdAppsAppIdKeysRoute
   '/organizations/$orgId/apps/$appId/legal': typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
   '/organizations/$orgId/apps/$appId/oauth': typeof PublicOrganizationsOrgIdAppsAppIdOauthRoute
   '/organizations/$orgId/apps/$appId/secrets': typeof PublicOrganizationsOrgIdAppsAppIdSecretsRoute
@@ -3459,6 +3623,12 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/storage/$bucketId/security': typeof PublicProjectsProjectIdStorageBucketIdSecurityRoute
   '/projects/$projectId/storage/$bucketId/settings': typeof PublicProjectsProjectIdStorageBucketIdSettingsRoute
   '/projects/$projectId/usage/$categoryId/$metricId': typeof PublicProjectsProjectIdUsageCategoryIdMetricIdRoute
+  '/projects/$projectId/videos/$videoId/install': typeof PublicProjectsProjectIdVideosVideoIdInstallRoute
+  '/projects/$projectId/videos/$videoId/renditions': typeof PublicProjectsProjectIdVideosVideoIdRenditionsRoute
+  '/projects/$projectId/videos/$videoId/settings': typeof PublicProjectsProjectIdVideosVideoIdSettingsRoute
+  '/projects/$projectId/videos/$videoId/streaming': typeof PublicProjectsProjectIdVideosVideoIdStreamingRoute
+  '/projects/$projectId/videos/$videoId/subtitles': typeof PublicProjectsProjectIdVideosVideoIdSubtitlesRoute
+  '/projects/$projectId/videos/$videoId/timeline': typeof PublicProjectsProjectIdVideosVideoIdTimelineRoute
   '/organizations/$orgId/agent/automations/': typeof PublicOrganizationsOrgIdAgentAutomationsIndexRoute
   '/organizations/$orgId/agent/settings/': typeof PublicOrganizationsOrgIdAgentSettingsIndexRoute
   '/organizations/$orgId/apps/$appId/': typeof PublicOrganizationsOrgIdAppsAppIdIndexRoute
@@ -3475,6 +3645,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/create/': typeof PublicProjectsProjectIdSitesCreateIndexRoute
   '/projects/$projectId/storage/$bucketId/': typeof PublicProjectsProjectIdStorageBucketIdIndexRoute
   '/projects/$projectId/stores/$appId/': typeof PublicProjectsProjectIdStoresAppIdIndexRoute
+  '/projects/$projectId/videos/$videoId/': typeof PublicProjectsProjectIdVideosVideoIdIndexRoute
   '/projects/$projectId/auth/teams/$teamId/activity': typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   '/projects/$projectId/auth/teams/$teamId/members': typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
   '/projects/$projectId/auth/users/$userId/activity': typeof PublicProjectsProjectIdAuthUsersUserIdActivityRoute
@@ -3605,15 +3776,18 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof PublicIndexRoute
+  '/': typeof MarketingIndexRoute
+  '/alternative-to.md': typeof AlternativeToDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
@@ -3632,6 +3806,7 @@ export interface FileRoutesByTo {
   '/domains': typeof MarketingDomainsRoute
   '/education': typeof MarketingEducationRoute
   '/enterprise': typeof MarketingEnterpriseRoute
+  '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -3678,10 +3853,12 @@ export interface FileRoutesByTo {
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/alternative-to/$competitor': typeof MarketingAlternativeToCompetitorRoute
   '/blog/$page': typeof MarketingBlogPageRoute
   '/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
   '/products/$productId': typeof MarketingProductsProductIdRoute
+  '/secret/$variant': typeof MarketingSecretVariantRoute
   '/threads/$threadId': typeof MarketingThreadsThreadIdRoute
   '/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/account/applications': typeof PublicAccountApplicationsRoute
@@ -3697,6 +3874,7 @@ export interface FileRoutesByTo {
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
   '/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
   '/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
+  '/debug/education-plan-preview': typeof PublicDebugEducationPlanPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
   '/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
@@ -3750,12 +3928,14 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
+  '/projects/$projectId/agents': typeof PublicProjectsProjectIdAgentsRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
   '/projects/$projectId/explorer': typeof PublicProjectsProjectIdExplorerRoute
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/agent/automations': typeof PublicAgentAutomationsIndexRoute
   '/agent/settings': typeof PublicAgentSettingsIndexRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdIndexRoute
@@ -3790,6 +3970,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
   '/projects/$projectId/usage/$categoryId': typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
+  '/projects/$projectId/videos/profiles': typeof PublicProjectsProjectIdVideosProfilesRoute
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
   '/docs/references/$version/models/$model': typeof DocsReferencesVersionModelsModelRoute
   '/organizations/$orgId/agent': typeof PublicOrganizationsOrgIdAgentIndexRoute
@@ -3807,6 +3988,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageIndexRoute
   '/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresIndexRoute
   '/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageIndexRoute
+  '/projects/$projectId/videos': typeof PublicProjectsProjectIdVideosIndexRoute
   '/organizations/$orgId/agent/automations/$automationId': typeof PublicOrganizationsOrgIdAgentAutomationsAutomationIdRoute
   '/organizations/$orgId/agent/automations/create': typeof PublicOrganizationsOrgIdAgentAutomationsCreateRoute
   '/organizations/$orgId/agent/settings/mcp': typeof PublicOrganizationsOrgIdAgentSettingsMcpRoute
@@ -3814,6 +3996,8 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/agent/settings/models': typeof PublicOrganizationsOrgIdAgentSettingsModelsRoute
   '/organizations/$orgId/agent/settings/usage': typeof PublicOrganizationsOrgIdAgentSettingsUsageRoute
   '/organizations/$orgId/apps/$appId/branding': typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
+  '/organizations/$orgId/apps/$appId/installations': typeof PublicOrganizationsOrgIdAppsAppIdInstallationsRoute
+  '/organizations/$orgId/apps/$appId/keys': typeof PublicOrganizationsOrgIdAppsAppIdKeysRoute
   '/organizations/$orgId/apps/$appId/legal': typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
   '/organizations/$orgId/apps/$appId/oauth': typeof PublicOrganizationsOrgIdAppsAppIdOauthRoute
   '/organizations/$orgId/apps/$appId/secrets': typeof PublicOrganizationsOrgIdAppsAppIdSecretsRoute
@@ -3848,6 +4032,12 @@ export interface FileRoutesByTo {
   '/projects/$projectId/storage/$bucketId/security': typeof PublicProjectsProjectIdStorageBucketIdSecurityRoute
   '/projects/$projectId/storage/$bucketId/settings': typeof PublicProjectsProjectIdStorageBucketIdSettingsRoute
   '/projects/$projectId/usage/$categoryId/$metricId': typeof PublicProjectsProjectIdUsageCategoryIdMetricIdRoute
+  '/projects/$projectId/videos/$videoId/install': typeof PublicProjectsProjectIdVideosVideoIdInstallRoute
+  '/projects/$projectId/videos/$videoId/renditions': typeof PublicProjectsProjectIdVideosVideoIdRenditionsRoute
+  '/projects/$projectId/videos/$videoId/settings': typeof PublicProjectsProjectIdVideosVideoIdSettingsRoute
+  '/projects/$projectId/videos/$videoId/streaming': typeof PublicProjectsProjectIdVideosVideoIdStreamingRoute
+  '/projects/$projectId/videos/$videoId/subtitles': typeof PublicProjectsProjectIdVideosVideoIdSubtitlesRoute
+  '/projects/$projectId/videos/$videoId/timeline': typeof PublicProjectsProjectIdVideosVideoIdTimelineRoute
   '/organizations/$orgId/agent/automations': typeof PublicOrganizationsOrgIdAgentAutomationsIndexRoute
   '/organizations/$orgId/agent/settings': typeof PublicOrganizationsOrgIdAgentSettingsIndexRoute
   '/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdIndexRoute
@@ -3864,6 +4054,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/create': typeof PublicProjectsProjectIdSitesCreateIndexRoute
   '/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdIndexRoute
   '/projects/$projectId/stores/$appId': typeof PublicProjectsProjectIdStoresAppIdIndexRoute
+  '/projects/$projectId/videos/$videoId': typeof PublicProjectsProjectIdVideosVideoIdIndexRoute
   '/projects/$projectId/auth/teams/$teamId/activity': typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   '/projects/$projectId/auth/teams/$teamId/members': typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
   '/projects/$projectId/auth/users/$userId/activity': typeof PublicProjectsProjectIdAuthUsersUserIdActivityRoute
@@ -3993,16 +4184,19 @@ export interface FileRoutesById {
   '/_marketing': typeof MarketingRouteWithChildren
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/alternative-to.md': typeof AlternativeToDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_auth/join': typeof AuthJoinRoute
@@ -4021,6 +4215,7 @@ export interface FileRoutesById {
   '/_marketing/domains': typeof MarketingDomainsRoute
   '/_marketing/education': typeof MarketingEducationRoute
   '/_marketing/enterprise': typeof MarketingEnterpriseRoute
+  '/_marketing/for-agents': typeof MarketingForAgentsRoute
   '/_marketing/home': typeof MarketingHomeRoute
   '/_marketing/partners': typeof MarketingPartnersRoute
   '/_marketing/pricing': typeof MarketingPricingRoute
@@ -4049,7 +4244,7 @@ export interface FileRoutesById {
   '/i/$linkId': typeof ILinkIdRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
-  '/_public/': typeof PublicIndexRoute
+  '/_marketing/': typeof MarketingIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
   '/_api/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
@@ -4070,10 +4265,12 @@ export interface FileRoutesById {
   '/_auth/education/join': typeof AuthEducationJoinRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/_marketing/alternative-to/$competitor': typeof MarketingAlternativeToCompetitorRoute
   '/_marketing/blog/$page': typeof MarketingBlogPageRoute
   '/_marketing/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/_marketing/integrations/$slug': typeof MarketingIntegrationsSlugRoute
   '/_marketing/products/$productId': typeof MarketingProductsProductIdRoute
+  '/_marketing/secret/$variant': typeof MarketingSecretVariantRoute
   '/_marketing/threads/$threadId': typeof MarketingThreadsThreadIdRoute
   '/_public/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/_public/account/applications': typeof PublicAccountApplicationsRoute
@@ -4091,6 +4288,7 @@ export interface FileRoutesById {
   '/_public/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
   '/_public/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
   '/_public/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
+  '/_public/debug/education-plan-preview': typeof PublicDebugEducationPlanPreviewRoute
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/_public/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
   '/_public/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
@@ -4150,6 +4348,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/_public/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/_public/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
+  '/_public/projects/$projectId/agents': typeof PublicProjectsProjectIdAgentsRoute
   '/_public/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/_public/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/_public/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -4161,11 +4360,13 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/_public/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/_public/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/_public/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/_public/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/_public/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/_public/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
   '/_public/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresRouteWithChildren
   '/_public/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRouteWithChildren
+  '/_public/projects/$projectId/videos': typeof PublicProjectsProjectIdVideosRouteWithChildren
   '/_public/agent/automations/': typeof PublicAgentAutomationsIndexRoute
   '/_public/agent/settings/': typeof PublicAgentSettingsIndexRoute
   '/_public/organizations/$orgId/': typeof PublicOrganizationsOrgIdIndexRoute
@@ -4212,6 +4413,8 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/create': typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
   '/_public/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
   '/_public/projects/$projectId/usage/$categoryId': typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
+  '/_public/projects/$projectId/videos/$videoId': typeof PublicProjectsProjectIdVideosVideoIdRouteWithChildren
+  '/_public/projects/$projectId/videos/profiles': typeof PublicProjectsProjectIdVideosProfilesRoute
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
   '/docs/references/$version/models/$model': typeof DocsReferencesVersionModelsModelRoute
   '/_public/organizations/$orgId/agent/': typeof PublicOrganizationsOrgIdAgentIndexRoute
@@ -4229,6 +4432,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/storage/': typeof PublicProjectsProjectIdStorageIndexRoute
   '/_public/projects/$projectId/stores/': typeof PublicProjectsProjectIdStoresIndexRoute
   '/_public/projects/$projectId/usage/': typeof PublicProjectsProjectIdUsageIndexRoute
+  '/_public/projects/$projectId/videos/': typeof PublicProjectsProjectIdVideosIndexRoute
   '/_public/organizations/$orgId/agent/automations/$automationId': typeof PublicOrganizationsOrgIdAgentAutomationsAutomationIdRoute
   '/_public/organizations/$orgId/agent/automations/create': typeof PublicOrganizationsOrgIdAgentAutomationsCreateRoute
   '/_public/organizations/$orgId/agent/settings/mcp': typeof PublicOrganizationsOrgIdAgentSettingsMcpRoute
@@ -4236,6 +4440,8 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/agent/settings/models': typeof PublicOrganizationsOrgIdAgentSettingsModelsRoute
   '/_public/organizations/$orgId/agent/settings/usage': typeof PublicOrganizationsOrgIdAgentSettingsUsageRoute
   '/_public/organizations/$orgId/apps/$appId/branding': typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
+  '/_public/organizations/$orgId/apps/$appId/installations': typeof PublicOrganizationsOrgIdAppsAppIdInstallationsRoute
+  '/_public/organizations/$orgId/apps/$appId/keys': typeof PublicOrganizationsOrgIdAppsAppIdKeysRoute
   '/_public/organizations/$orgId/apps/$appId/legal': typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
   '/_public/organizations/$orgId/apps/$appId/oauth': typeof PublicOrganizationsOrgIdAppsAppIdOauthRoute
   '/_public/organizations/$orgId/apps/$appId/secrets': typeof PublicOrganizationsOrgIdAppsAppIdSecretsRoute
@@ -4280,6 +4486,12 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/storage/$bucketId/security': typeof PublicProjectsProjectIdStorageBucketIdSecurityRoute
   '/_public/projects/$projectId/storage/$bucketId/settings': typeof PublicProjectsProjectIdStorageBucketIdSettingsRoute
   '/_public/projects/$projectId/usage/$categoryId/$metricId': typeof PublicProjectsProjectIdUsageCategoryIdMetricIdRoute
+  '/_public/projects/$projectId/videos/$videoId/install': typeof PublicProjectsProjectIdVideosVideoIdInstallRoute
+  '/_public/projects/$projectId/videos/$videoId/renditions': typeof PublicProjectsProjectIdVideosVideoIdRenditionsRoute
+  '/_public/projects/$projectId/videos/$videoId/settings': typeof PublicProjectsProjectIdVideosVideoIdSettingsRoute
+  '/_public/projects/$projectId/videos/$videoId/streaming': typeof PublicProjectsProjectIdVideosVideoIdStreamingRoute
+  '/_public/projects/$projectId/videos/$videoId/subtitles': typeof PublicProjectsProjectIdVideosVideoIdSubtitlesRoute
+  '/_public/projects/$projectId/videos/$videoId/timeline': typeof PublicProjectsProjectIdVideosVideoIdTimelineRoute
   '/_public/organizations/$orgId/agent/automations/': typeof PublicOrganizationsOrgIdAgentAutomationsIndexRoute
   '/_public/organizations/$orgId/agent/settings/': typeof PublicOrganizationsOrgIdAgentSettingsIndexRoute
   '/_public/organizations/$orgId/apps/$appId/': typeof PublicOrganizationsOrgIdAppsAppIdIndexRoute
@@ -4296,6 +4508,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/create/': typeof PublicProjectsProjectIdSitesCreateIndexRoute
   '/_public/projects/$projectId/storage/$bucketId/': typeof PublicProjectsProjectIdStorageBucketIdIndexRoute
   '/_public/projects/$projectId/stores/$appId/': typeof PublicProjectsProjectIdStoresAppIdIndexRoute
+  '/_public/projects/$projectId/videos/$videoId/': typeof PublicProjectsProjectIdVideosVideoIdIndexRoute
   '/_public/projects/$projectId/auth/teams/$teamId/activity': typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   '/_public/projects/$projectId/auth/teams/$teamId/members': typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
   '/_public/projects/$projectId/auth/users/$userId/activity': typeof PublicProjectsProjectIdAuthUsersUserIdActivityRoute
@@ -4429,16 +4642,19 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/alternative-to.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
     | '/docs'
     | '/docs.md'
+    | '/for-agents.md'
     | '/generator'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/setup.md'
     | '/sitemap.xml'
     | '/hello'
     | '/join'
@@ -4457,6 +4673,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
+    | '/for-agents'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -4505,10 +4722,12 @@ export interface FileRouteTypes {
     | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
+    | '/alternative-to/$competitor'
     | '/blog/$page'
     | '/init/$ticketId'
     | '/integrations/$slug'
     | '/products/$productId'
+    | '/secret/$variant'
     | '/threads/$threadId'
     | '/account/affiliates'
     | '/account/applications'
@@ -4526,6 +4745,7 @@ export interface FileRouteTypes {
     | '/debug/code-editor-preview'
     | '/debug/community-share-examples'
     | '/debug/education-join-preview'
+    | '/debug/education-plan-preview'
     | '/debug/error-preview'
     | '/debug/impersonate-preview'
     | '/debug/join-invite-preview'
@@ -4585,6 +4805,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/support'
     | '/projects/$projectId/activity'
     | '/projects/$projectId/advisor'
+    | '/projects/$projectId/agents'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
     | '/projects/$projectId/apps'
@@ -4596,11 +4817,13 @@ export interface FileRouteTypes {
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/messaging'
     | '/projects/$projectId/onboarding'
+    | '/projects/$projectId/overview'
     | '/projects/$projectId/realtime'
     | '/projects/$projectId/settings'
     | '/projects/$projectId/storage'
     | '/projects/$projectId/stores'
     | '/projects/$projectId/usage'
+    | '/projects/$projectId/videos'
     | '/agent/automations/'
     | '/agent/settings/'
     | '/organizations/$orgId/'
@@ -4647,6 +4870,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/create'
     | '/projects/$projectId/storage/$bucketId'
     | '/projects/$projectId/usage/$categoryId'
+    | '/projects/$projectId/videos/$videoId'
+    | '/projects/$projectId/videos/profiles'
     | '/docs/references/$version/$platform/$service'
     | '/docs/references/$version/models/$model'
     | '/organizations/$orgId/agent/'
@@ -4664,6 +4889,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/storage/'
     | '/projects/$projectId/stores/'
     | '/projects/$projectId/usage/'
+    | '/projects/$projectId/videos/'
     | '/organizations/$orgId/agent/automations/$automationId'
     | '/organizations/$orgId/agent/automations/create'
     | '/organizations/$orgId/agent/settings/mcp'
@@ -4671,6 +4897,8 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/agent/settings/models'
     | '/organizations/$orgId/agent/settings/usage'
     | '/organizations/$orgId/apps/$appId/branding'
+    | '/organizations/$orgId/apps/$appId/installations'
+    | '/organizations/$orgId/apps/$appId/keys'
     | '/organizations/$orgId/apps/$appId/legal'
     | '/organizations/$orgId/apps/$appId/oauth'
     | '/organizations/$orgId/apps/$appId/secrets'
@@ -4715,6 +4943,12 @@ export interface FileRouteTypes {
     | '/projects/$projectId/storage/$bucketId/security'
     | '/projects/$projectId/storage/$bucketId/settings'
     | '/projects/$projectId/usage/$categoryId/$metricId'
+    | '/projects/$projectId/videos/$videoId/install'
+    | '/projects/$projectId/videos/$videoId/renditions'
+    | '/projects/$projectId/videos/$videoId/settings'
+    | '/projects/$projectId/videos/$videoId/streaming'
+    | '/projects/$projectId/videos/$videoId/subtitles'
+    | '/projects/$projectId/videos/$videoId/timeline'
     | '/organizations/$orgId/agent/automations/'
     | '/organizations/$orgId/agent/settings/'
     | '/organizations/$orgId/apps/$appId/'
@@ -4731,6 +4965,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/create/'
     | '/projects/$projectId/storage/$bucketId/'
     | '/projects/$projectId/stores/$appId/'
+    | '/projects/$projectId/videos/$videoId/'
     | '/projects/$projectId/auth/teams/$teamId/activity'
     | '/projects/$projectId/auth/teams/$teamId/members'
     | '/projects/$projectId/auth/users/$userId/activity'
@@ -4862,14 +5097,17 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/alternative-to.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
     | '/docs.md'
+    | '/for-agents.md'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/setup.md'
     | '/sitemap.xml'
     | '/hello'
     | '/join'
@@ -4888,6 +5126,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
+    | '/for-agents'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -4934,10 +5173,12 @@ export interface FileRouteTypes {
     | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
+    | '/alternative-to/$competitor'
     | '/blog/$page'
     | '/init/$ticketId'
     | '/integrations/$slug'
     | '/products/$productId'
+    | '/secret/$variant'
     | '/threads/$threadId'
     | '/account/affiliates'
     | '/account/applications'
@@ -4953,6 +5194,7 @@ export interface FileRouteTypes {
     | '/debug/code-editor-preview'
     | '/debug/community-share-examples'
     | '/debug/education-join-preview'
+    | '/debug/education-plan-preview'
     | '/debug/error-preview'
     | '/debug/impersonate-preview'
     | '/debug/join-invite-preview'
@@ -5006,12 +5248,14 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/support'
     | '/projects/$projectId/activity'
     | '/projects/$projectId/advisor'
+    | '/projects/$projectId/agents'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
     | '/projects/$projectId/apps'
     | '/projects/$projectId/explorer'
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/onboarding'
+    | '/projects/$projectId/overview'
     | '/agent/automations'
     | '/agent/settings'
     | '/organizations/$orgId'
@@ -5046,6 +5290,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/settings/variables'
     | '/projects/$projectId/settings/webhooks'
     | '/projects/$projectId/usage/$categoryId'
+    | '/projects/$projectId/videos/profiles'
     | '/docs/references/$version/$platform/$service'
     | '/docs/references/$version/models/$model'
     | '/organizations/$orgId/agent'
@@ -5063,6 +5308,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/storage'
     | '/projects/$projectId/stores'
     | '/projects/$projectId/usage'
+    | '/projects/$projectId/videos'
     | '/organizations/$orgId/agent/automations/$automationId'
     | '/organizations/$orgId/agent/automations/create'
     | '/organizations/$orgId/agent/settings/mcp'
@@ -5070,6 +5316,8 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/agent/settings/models'
     | '/organizations/$orgId/agent/settings/usage'
     | '/organizations/$orgId/apps/$appId/branding'
+    | '/organizations/$orgId/apps/$appId/installations'
+    | '/organizations/$orgId/apps/$appId/keys'
     | '/organizations/$orgId/apps/$appId/legal'
     | '/organizations/$orgId/apps/$appId/oauth'
     | '/organizations/$orgId/apps/$appId/secrets'
@@ -5104,6 +5352,12 @@ export interface FileRouteTypes {
     | '/projects/$projectId/storage/$bucketId/security'
     | '/projects/$projectId/storage/$bucketId/settings'
     | '/projects/$projectId/usage/$categoryId/$metricId'
+    | '/projects/$projectId/videos/$videoId/install'
+    | '/projects/$projectId/videos/$videoId/renditions'
+    | '/projects/$projectId/videos/$videoId/settings'
+    | '/projects/$projectId/videos/$videoId/streaming'
+    | '/projects/$projectId/videos/$videoId/subtitles'
+    | '/projects/$projectId/videos/$videoId/timeline'
     | '/organizations/$orgId/agent/automations'
     | '/organizations/$orgId/agent/settings'
     | '/organizations/$orgId/apps/$appId'
@@ -5120,6 +5374,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/create'
     | '/projects/$projectId/storage/$bucketId'
     | '/projects/$projectId/stores/$appId'
+    | '/projects/$projectId/videos/$videoId'
     | '/projects/$projectId/auth/teams/$teamId/activity'
     | '/projects/$projectId/auth/teams/$teamId/members'
     | '/projects/$projectId/auth/users/$userId/activity'
@@ -5248,16 +5503,19 @@ export interface FileRouteTypes {
     | '/_marketing'
     | '/_protected'
     | '/_public'
+    | '/alternative-to.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
     | '/docs'
     | '/docs.md'
+    | '/for-agents.md'
     | '/generator'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/setup.md'
     | '/sitemap.xml'
     | '/_api/hello'
     | '/_auth/join'
@@ -5276,6 +5534,7 @@ export interface FileRouteTypes {
     | '/_marketing/domains'
     | '/_marketing/education'
     | '/_marketing/enterprise'
+    | '/_marketing/for-agents'
     | '/_marketing/home'
     | '/_marketing/partners'
     | '/_marketing/pricing'
@@ -5304,7 +5563,7 @@ export interface FileRouteTypes {
     | '/i/$linkId'
     | '/llms-full/txt'
     | '/llms/txt'
-    | '/_public/'
+    | '/_marketing/'
     | '/docs/'
     | '/generator/'
     | '/_api/blog/rss.xml'
@@ -5325,10 +5584,12 @@ export interface FileRouteTypes {
     | '/_auth/education/join'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
+    | '/_marketing/alternative-to/$competitor'
     | '/_marketing/blog/$page'
     | '/_marketing/init/$ticketId'
     | '/_marketing/integrations/$slug'
     | '/_marketing/products/$productId'
+    | '/_marketing/secret/$variant'
     | '/_marketing/threads/$threadId'
     | '/_public/account/affiliates'
     | '/_public/account/applications'
@@ -5346,6 +5607,7 @@ export interface FileRouteTypes {
     | '/_public/debug/code-editor-preview'
     | '/_public/debug/community-share-examples'
     | '/_public/debug/education-join-preview'
+    | '/_public/debug/education-plan-preview'
     | '/_public/debug/error-preview'
     | '/_public/debug/impersonate-preview'
     | '/_public/debug/join-invite-preview'
@@ -5405,6 +5667,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/support'
     | '/_public/projects/$projectId/activity'
     | '/_public/projects/$projectId/advisor'
+    | '/_public/projects/$projectId/agents'
     | '/_public/projects/$projectId/analytics'
     | '/_public/projects/$projectId/api-keys'
     | '/_public/projects/$projectId/apps'
@@ -5416,11 +5679,13 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/imagine'
     | '/_public/projects/$projectId/messaging'
     | '/_public/projects/$projectId/onboarding'
+    | '/_public/projects/$projectId/overview'
     | '/_public/projects/$projectId/realtime'
     | '/_public/projects/$projectId/settings'
     | '/_public/projects/$projectId/storage'
     | '/_public/projects/$projectId/stores'
     | '/_public/projects/$projectId/usage'
+    | '/_public/projects/$projectId/videos'
     | '/_public/agent/automations/'
     | '/_public/agent/settings/'
     | '/_public/organizations/$orgId/'
@@ -5467,6 +5732,8 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/create'
     | '/_public/projects/$projectId/storage/$bucketId'
     | '/_public/projects/$projectId/usage/$categoryId'
+    | '/_public/projects/$projectId/videos/$videoId'
+    | '/_public/projects/$projectId/videos/profiles'
     | '/docs/references/$version/$platform/$service'
     | '/docs/references/$version/models/$model'
     | '/_public/organizations/$orgId/agent/'
@@ -5484,6 +5751,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/storage/'
     | '/_public/projects/$projectId/stores/'
     | '/_public/projects/$projectId/usage/'
+    | '/_public/projects/$projectId/videos/'
     | '/_public/organizations/$orgId/agent/automations/$automationId'
     | '/_public/organizations/$orgId/agent/automations/create'
     | '/_public/organizations/$orgId/agent/settings/mcp'
@@ -5491,6 +5759,8 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/agent/settings/models'
     | '/_public/organizations/$orgId/agent/settings/usage'
     | '/_public/organizations/$orgId/apps/$appId/branding'
+    | '/_public/organizations/$orgId/apps/$appId/installations'
+    | '/_public/organizations/$orgId/apps/$appId/keys'
     | '/_public/organizations/$orgId/apps/$appId/legal'
     | '/_public/organizations/$orgId/apps/$appId/oauth'
     | '/_public/organizations/$orgId/apps/$appId/secrets'
@@ -5535,6 +5805,12 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/storage/$bucketId/security'
     | '/_public/projects/$projectId/storage/$bucketId/settings'
     | '/_public/projects/$projectId/usage/$categoryId/$metricId'
+    | '/_public/projects/$projectId/videos/$videoId/install'
+    | '/_public/projects/$projectId/videos/$videoId/renditions'
+    | '/_public/projects/$projectId/videos/$videoId/settings'
+    | '/_public/projects/$projectId/videos/$videoId/streaming'
+    | '/_public/projects/$projectId/videos/$videoId/subtitles'
+    | '/_public/projects/$projectId/videos/$videoId/timeline'
     | '/_public/organizations/$orgId/agent/automations/'
     | '/_public/organizations/$orgId/agent/settings/'
     | '/_public/organizations/$orgId/apps/$appId/'
@@ -5551,6 +5827,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/create/'
     | '/_public/projects/$projectId/storage/$bucketId/'
     | '/_public/projects/$projectId/stores/$appId/'
+    | '/_public/projects/$projectId/videos/$videoId/'
     | '/_public/projects/$projectId/auth/teams/$teamId/activity'
     | '/_public/projects/$projectId/auth/teams/$teamId/members'
     | '/_public/projects/$projectId/auth/users/$userId/activity'
@@ -5686,16 +5963,19 @@ export interface RootRouteChildren {
   MarketingRoute: typeof MarketingRouteWithChildren
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
+  AlternativeToDotmdRoute: typeof AlternativeToDotmdRoute
   BlogDotmdRoute: typeof BlogDotmdRoute
   ChangelogDotmdRoute: typeof ChangelogDotmdRoute
   DiscordRoute: typeof DiscordRoute
   DocsRoute: typeof DocsRouteWithChildren
   DocsDotmdRoute: typeof DocsDotmdRoute
+  ForAgentsDotmdRoute: typeof ForAgentsDotmdRoute
   GeneratorRoute: typeof GeneratorRouteWithChildren
   IntegrationsDotmdRoute: typeof IntegrationsDotmdRoute
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SetupDotmdRoute: typeof SetupDotmdRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiHelloRoute: typeof ApiHelloRoute
   CliInstallDotps1Route: typeof CliInstallDotps1Route
@@ -5753,6 +6033,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/alternative-to.md': {
+      id: '/alternative-to.md'
+      path: '/alternative-to.md'
+      fullPath: '/alternative-to.md'
+      preLoaderRoute: typeof AlternativeToDotmdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/blog.md': {
       id: '/blog.md'
       path: '/blog.md'
@@ -5788,6 +6075,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/for-agents.md': {
+      id: '/for-agents.md'
+      path: '/for-agents.md'
+      fullPath: '/for-agents.md'
+      preLoaderRoute: typeof ForAgentsDotmdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/generator': {
       id: '/generator'
       path: '/generator'
@@ -5821,6 +6115,13 @@ declare module '@tanstack/react-router' {
       path: '/robots.txt'
       fullPath: '/robots.txt'
       preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup.md': {
+      id: '/setup.md'
+      path: '/setup.md'
+      fullPath: '/setup.md'
+      preLoaderRoute: typeof SetupDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -5886,6 +6187,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthVerifyEmailRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_marketing/': {
+      id: '/_marketing/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof MarketingIndexRouteImport
+      parentRoute: typeof MarketingRoute
+    }
     '/_marketing/affiliates': {
       id: '/_marketing/affiliates'
       path: '/affiliates'
@@ -5949,6 +6257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingEnterpriseRouteImport
       parentRoute: typeof MarketingRoute
     }
+    '/_marketing/for-agents': {
+      id: '/_marketing/for-agents'
+      path: '/for-agents'
+      fullPath: '/for-agents'
+      preLoaderRoute: typeof MarketingForAgentsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
     '/_marketing/home': {
       id: '/_marketing/home'
       path: '/home'
@@ -5997,13 +6312,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/example-protected-route'
       preLoaderRoute: typeof ProtectedExampleProtectedRouteRouteImport
       parentRoute: typeof ProtectedRoute
-    }
-    '/_public/': {
-      id: '/_public/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof PublicIndexRouteImport
-      parentRoute: typeof PublicRoute
     }
     '/_public/account': {
       id: '/_public/account'
@@ -6292,6 +6600,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthOauth2DeviceRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_marketing/alternative-to/$competitor': {
+      id: '/_marketing/alternative-to/$competitor'
+      path: '/alternative-to/$competitor'
+      fullPath: '/alternative-to/$competitor'
+      preLoaderRoute: typeof MarketingAlternativeToCompetitorRouteImport
+      parentRoute: typeof MarketingRoute
+    }
     '/_marketing/blog/': {
       id: '/_marketing/blog/'
       path: '/blog'
@@ -6339,6 +6654,13 @@ declare module '@tanstack/react-router' {
       path: '/products/$productId'
       fullPath: '/products/$productId'
       preLoaderRoute: typeof MarketingProductsProductIdRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/secret/$variant': {
+      id: '/_marketing/secret/$variant'
+      path: '/secret/$variant'
+      fullPath: '/secret/$variant'
+      preLoaderRoute: typeof MarketingSecretVariantRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_marketing/threads/': {
@@ -6479,6 +6801,13 @@ declare module '@tanstack/react-router' {
       path: '/debug/education-join-preview'
       fullPath: '/debug/education-join-preview'
       preLoaderRoute: typeof PublicDebugEducationJoinPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/education-plan-preview': {
+      id: '/_public/debug/education-plan-preview'
+      path: '/debug/education-plan-preview'
+      fullPath: '/debug/education-plan-preview'
+      preLoaderRoute: typeof PublicDebugEducationPlanPreviewRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/debug/error-preview': {
@@ -6880,6 +7209,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdAdvisorRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
+    '/_public/projects/$projectId/agents': {
+      id: '/_public/projects/$projectId/agents'
+      path: '/agents'
+      fullPath: '/projects/$projectId/agents'
+      preLoaderRoute: typeof PublicProjectsProjectIdAgentsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
     '/_public/projects/$projectId/analytics': {
       id: '/_public/projects/$projectId/analytics'
       path: '/analytics'
@@ -6957,6 +7293,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdOnboardingRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
+    '/_public/projects/$projectId/overview': {
+      id: '/_public/projects/$projectId/overview'
+      path: '/overview'
+      fullPath: '/projects/$projectId/overview'
+      preLoaderRoute: typeof PublicProjectsProjectIdOverviewRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
     '/_public/projects/$projectId/realtime': {
       id: '/_public/projects/$projectId/realtime'
       path: '/realtime'
@@ -6990,6 +7333,13 @@ declare module '@tanstack/react-router' {
       path: '/usage'
       fullPath: '/projects/$projectId/usage'
       preLoaderRoute: typeof PublicProjectsProjectIdUsageRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/videos': {
+      id: '/_public/projects/$projectId/videos'
+      path: '/videos'
+      fullPath: '/projects/$projectId/videos'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
     '/_public/organizations/$orgId/agent/': {
@@ -7391,6 +7741,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdUsageCategoryIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdUsageRoute
     }
+    '/_public/projects/$projectId/videos/': {
+      id: '/_public/projects/$projectId/videos/'
+      path: '/'
+      fullPath: '/projects/$projectId/videos/'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdVideosRoute
+    }
+    '/_public/projects/$projectId/videos/$videoId': {
+      id: '/_public/projects/$projectId/videos/$videoId'
+      path: '/$videoId'
+      fullPath: '/projects/$projectId/videos/$videoId'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdVideosRoute
+    }
+    '/_public/projects/$projectId/videos/profiles': {
+      id: '/_public/projects/$projectId/videos/profiles'
+      path: '/profiles'
+      fullPath: '/projects/$projectId/videos/profiles'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosProfilesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdVideosRoute
+    }
     '/docs/references/$version/$platform/$service': {
       id: '/docs/references/$version/$platform/$service'
       path: '/references/$version/$platform/$service'
@@ -7473,6 +7844,20 @@ declare module '@tanstack/react-router' {
       path: '/branding'
       fullPath: '/organizations/$orgId/apps/$appId/branding'
       preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdBrandingRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/installations': {
+      id: '/_public/organizations/$orgId/apps/$appId/installations'
+      path: '/installations'
+      fullPath: '/organizations/$orgId/apps/$appId/installations'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdInstallationsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/keys': {
+      id: '/_public/organizations/$orgId/apps/$appId/keys'
+      path: '/keys'
+      fullPath: '/organizations/$orgId/apps/$appId/keys'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdKeysRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
     }
     '/_public/organizations/$orgId/apps/$appId/legal': {
@@ -7873,6 +8258,55 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/usage/$categoryId/$metricId'
       preLoaderRoute: typeof PublicProjectsProjectIdUsageCategoryIdMetricIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdUsageCategoryIdRoute
+    }
+    '/_public/projects/$projectId/videos/$videoId/': {
+      id: '/_public/projects/$projectId/videos/$videoId/'
+      path: '/'
+      fullPath: '/projects/$projectId/videos/$videoId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdVideosVideoIdRoute
+    }
+    '/_public/projects/$projectId/videos/$videoId/install': {
+      id: '/_public/projects/$projectId/videos/$videoId/install'
+      path: '/install'
+      fullPath: '/projects/$projectId/videos/$videoId/install'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdInstallRouteImport
+      parentRoute: typeof PublicProjectsProjectIdVideosVideoIdRoute
+    }
+    '/_public/projects/$projectId/videos/$videoId/renditions': {
+      id: '/_public/projects/$projectId/videos/$videoId/renditions'
+      path: '/renditions'
+      fullPath: '/projects/$projectId/videos/$videoId/renditions'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdRenditionsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdVideosVideoIdRoute
+    }
+    '/_public/projects/$projectId/videos/$videoId/settings': {
+      id: '/_public/projects/$projectId/videos/$videoId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/videos/$videoId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdVideosVideoIdRoute
+    }
+    '/_public/projects/$projectId/videos/$videoId/streaming': {
+      id: '/_public/projects/$projectId/videos/$videoId/streaming'
+      path: '/streaming'
+      fullPath: '/projects/$projectId/videos/$videoId/streaming'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdStreamingRouteImport
+      parentRoute: typeof PublicProjectsProjectIdVideosVideoIdRoute
+    }
+    '/_public/projects/$projectId/videos/$videoId/subtitles': {
+      id: '/_public/projects/$projectId/videos/$videoId/subtitles'
+      path: '/subtitles'
+      fullPath: '/projects/$projectId/videos/$videoId/subtitles'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdSubtitlesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdVideosVideoIdRoute
+    }
+    '/_public/projects/$projectId/videos/$videoId/timeline': {
+      id: '/_public/projects/$projectId/videos/$videoId/timeline'
+      path: '/timeline'
+      fullPath: '/projects/$projectId/videos/$videoId/timeline'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdTimelineRouteImport
+      parentRoute: typeof PublicProjectsProjectIdVideosVideoIdRoute
     }
     '/_public/projects/$projectId/auth/teams/$teamId/activity': {
       id: '/_public/projects/$projectId/auth/teams/$teamId/activity'
@@ -8821,16 +9255,20 @@ interface MarketingRouteChildren {
   MarketingDomainsRoute: typeof MarketingDomainsRoute
   MarketingEducationRoute: typeof MarketingEducationRoute
   MarketingEnterpriseRoute: typeof MarketingEnterpriseRoute
+  MarketingForAgentsRoute: typeof MarketingForAgentsRoute
   MarketingHomeRoute: typeof MarketingHomeRoute
   MarketingPartnersRoute: typeof MarketingPartnersRoute
   MarketingPricingRoute: typeof MarketingPricingRoute
   MarketingPrivacyRoute: typeof MarketingPrivacyRoute
   MarketingStartupsRoute: typeof MarketingStartupsRoute
   MarketingTermsRoute: typeof MarketingTermsRoute
+  MarketingIndexRoute: typeof MarketingIndexRoute
+  MarketingAlternativeToCompetitorRoute: typeof MarketingAlternativeToCompetitorRoute
   MarketingBlogPageRoute: typeof MarketingBlogPageRoute
   MarketingInitTicketIdRoute: typeof MarketingInitTicketIdRoute
   MarketingIntegrationsSlugRoute: typeof MarketingIntegrationsSlugRoute
   MarketingProductsProductIdRoute: typeof MarketingProductsProductIdRoute
+  MarketingSecretVariantRoute: typeof MarketingSecretVariantRoute
   MarketingThreadsThreadIdRoute: typeof MarketingThreadsThreadIdRoute
   MarketingBlogIndexRoute: typeof MarketingBlogIndexRoute
   MarketingChangelogIndexRoute: typeof MarketingChangelogIndexRoute
@@ -8853,16 +9291,20 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingDomainsRoute: MarketingDomainsRoute,
   MarketingEducationRoute: MarketingEducationRoute,
   MarketingEnterpriseRoute: MarketingEnterpriseRoute,
+  MarketingForAgentsRoute: MarketingForAgentsRoute,
   MarketingHomeRoute: MarketingHomeRoute,
   MarketingPartnersRoute: MarketingPartnersRoute,
   MarketingPricingRoute: MarketingPricingRoute,
   MarketingPrivacyRoute: MarketingPrivacyRoute,
   MarketingStartupsRoute: MarketingStartupsRoute,
   MarketingTermsRoute: MarketingTermsRoute,
+  MarketingIndexRoute: MarketingIndexRoute,
+  MarketingAlternativeToCompetitorRoute: MarketingAlternativeToCompetitorRoute,
   MarketingBlogPageRoute: MarketingBlogPageRoute,
   MarketingInitTicketIdRoute: MarketingInitTicketIdRoute,
   MarketingIntegrationsSlugRoute: MarketingIntegrationsSlugRoute,
   MarketingProductsProductIdRoute: MarketingProductsProductIdRoute,
+  MarketingSecretVariantRoute: MarketingSecretVariantRoute,
   MarketingThreadsThreadIdRoute: MarketingThreadsThreadIdRoute,
   MarketingBlogIndexRoute: MarketingBlogIndexRoute,
   MarketingChangelogIndexRoute: MarketingChangelogIndexRoute,
@@ -9049,6 +9491,8 @@ const PublicOrganizationsOrgIdAgentRouteWithChildren =
 
 interface PublicOrganizationsOrgIdAppsAppIdRouteChildren {
   PublicOrganizationsOrgIdAppsAppIdBrandingRoute: typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
+  PublicOrganizationsOrgIdAppsAppIdInstallationsRoute: typeof PublicOrganizationsOrgIdAppsAppIdInstallationsRoute
+  PublicOrganizationsOrgIdAppsAppIdKeysRoute: typeof PublicOrganizationsOrgIdAppsAppIdKeysRoute
   PublicOrganizationsOrgIdAppsAppIdLegalRoute: typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
   PublicOrganizationsOrgIdAppsAppIdOauthRoute: typeof PublicOrganizationsOrgIdAppsAppIdOauthRoute
   PublicOrganizationsOrgIdAppsAppIdSecretsRoute: typeof PublicOrganizationsOrgIdAppsAppIdSecretsRoute
@@ -9061,6 +9505,10 @@ const PublicOrganizationsOrgIdAppsAppIdRouteChildren: PublicOrganizationsOrgIdAp
   {
     PublicOrganizationsOrgIdAppsAppIdBrandingRoute:
       PublicOrganizationsOrgIdAppsAppIdBrandingRoute,
+    PublicOrganizationsOrgIdAppsAppIdInstallationsRoute:
+      PublicOrganizationsOrgIdAppsAppIdInstallationsRoute,
+    PublicOrganizationsOrgIdAppsAppIdKeysRoute:
+      PublicOrganizationsOrgIdAppsAppIdKeysRoute,
     PublicOrganizationsOrgIdAppsAppIdLegalRoute:
       PublicOrganizationsOrgIdAppsAppIdLegalRoute,
     PublicOrganizationsOrgIdAppsAppIdOauthRoute:
@@ -10275,6 +10723,60 @@ const PublicProjectsProjectIdUsageRouteWithChildren =
     PublicProjectsProjectIdUsageRouteChildren,
   )
 
+interface PublicProjectsProjectIdVideosVideoIdRouteChildren {
+  PublicProjectsProjectIdVideosVideoIdInstallRoute: typeof PublicProjectsProjectIdVideosVideoIdInstallRoute
+  PublicProjectsProjectIdVideosVideoIdRenditionsRoute: typeof PublicProjectsProjectIdVideosVideoIdRenditionsRoute
+  PublicProjectsProjectIdVideosVideoIdSettingsRoute: typeof PublicProjectsProjectIdVideosVideoIdSettingsRoute
+  PublicProjectsProjectIdVideosVideoIdStreamingRoute: typeof PublicProjectsProjectIdVideosVideoIdStreamingRoute
+  PublicProjectsProjectIdVideosVideoIdSubtitlesRoute: typeof PublicProjectsProjectIdVideosVideoIdSubtitlesRoute
+  PublicProjectsProjectIdVideosVideoIdTimelineRoute: typeof PublicProjectsProjectIdVideosVideoIdTimelineRoute
+  PublicProjectsProjectIdVideosVideoIdIndexRoute: typeof PublicProjectsProjectIdVideosVideoIdIndexRoute
+}
+
+const PublicProjectsProjectIdVideosVideoIdRouteChildren: PublicProjectsProjectIdVideosVideoIdRouteChildren =
+  {
+    PublicProjectsProjectIdVideosVideoIdInstallRoute:
+      PublicProjectsProjectIdVideosVideoIdInstallRoute,
+    PublicProjectsProjectIdVideosVideoIdRenditionsRoute:
+      PublicProjectsProjectIdVideosVideoIdRenditionsRoute,
+    PublicProjectsProjectIdVideosVideoIdSettingsRoute:
+      PublicProjectsProjectIdVideosVideoIdSettingsRoute,
+    PublicProjectsProjectIdVideosVideoIdStreamingRoute:
+      PublicProjectsProjectIdVideosVideoIdStreamingRoute,
+    PublicProjectsProjectIdVideosVideoIdSubtitlesRoute:
+      PublicProjectsProjectIdVideosVideoIdSubtitlesRoute,
+    PublicProjectsProjectIdVideosVideoIdTimelineRoute:
+      PublicProjectsProjectIdVideosVideoIdTimelineRoute,
+    PublicProjectsProjectIdVideosVideoIdIndexRoute:
+      PublicProjectsProjectIdVideosVideoIdIndexRoute,
+  }
+
+const PublicProjectsProjectIdVideosVideoIdRouteWithChildren =
+  PublicProjectsProjectIdVideosVideoIdRoute._addFileChildren(
+    PublicProjectsProjectIdVideosVideoIdRouteChildren,
+  )
+
+interface PublicProjectsProjectIdVideosRouteChildren {
+  PublicProjectsProjectIdVideosVideoIdRoute: typeof PublicProjectsProjectIdVideosVideoIdRouteWithChildren
+  PublicProjectsProjectIdVideosProfilesRoute: typeof PublicProjectsProjectIdVideosProfilesRoute
+  PublicProjectsProjectIdVideosIndexRoute: typeof PublicProjectsProjectIdVideosIndexRoute
+}
+
+const PublicProjectsProjectIdVideosRouteChildren: PublicProjectsProjectIdVideosRouteChildren =
+  {
+    PublicProjectsProjectIdVideosVideoIdRoute:
+      PublicProjectsProjectIdVideosVideoIdRouteWithChildren,
+    PublicProjectsProjectIdVideosProfilesRoute:
+      PublicProjectsProjectIdVideosProfilesRoute,
+    PublicProjectsProjectIdVideosIndexRoute:
+      PublicProjectsProjectIdVideosIndexRoute,
+  }
+
+const PublicProjectsProjectIdVideosRouteWithChildren =
+  PublicProjectsProjectIdVideosRoute._addFileChildren(
+    PublicProjectsProjectIdVideosRouteChildren,
+  )
+
 interface PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdRouteChildren {
   PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRoute
 }
@@ -10419,6 +10921,7 @@ const PublicProjectsProjectIdSitesCreateRouteWithChildren =
 interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdActivityRoute: typeof PublicProjectsProjectIdActivityRoute
   PublicProjectsProjectIdAdvisorRoute: typeof PublicProjectsProjectIdAdvisorRoute
+  PublicProjectsProjectIdAgentsRoute: typeof PublicProjectsProjectIdAgentsRoute
   PublicProjectsProjectIdAnalyticsRoute: typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   PublicProjectsProjectIdApiKeysRoute: typeof PublicProjectsProjectIdApiKeysRoute
   PublicProjectsProjectIdAppsRoute: typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -10430,11 +10933,13 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdImagineRoute: typeof PublicProjectsProjectIdImagineRoute
   PublicProjectsProjectIdMessagingRoute: typeof PublicProjectsProjectIdMessagingRouteWithChildren
   PublicProjectsProjectIdOnboardingRoute: typeof PublicProjectsProjectIdOnboardingRoute
+  PublicProjectsProjectIdOverviewRoute: typeof PublicProjectsProjectIdOverviewRoute
   PublicProjectsProjectIdRealtimeRoute: typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   PublicProjectsProjectIdSettingsRoute: typeof PublicProjectsProjectIdSettingsRouteWithChildren
   PublicProjectsProjectIdStorageRoute: typeof PublicProjectsProjectIdStorageRouteWithChildren
   PublicProjectsProjectIdStoresRoute: typeof PublicProjectsProjectIdStoresRouteWithChildren
   PublicProjectsProjectIdUsageRoute: typeof PublicProjectsProjectIdUsageRouteWithChildren
+  PublicProjectsProjectIdVideosRoute: typeof PublicProjectsProjectIdVideosRouteWithChildren
   PublicProjectsProjectIdIndexRoute: typeof PublicProjectsProjectIdIndexRoute
   PublicProjectsProjectIdSitesSiteIdRoute: typeof PublicProjectsProjectIdSitesSiteIdRouteWithChildren
   PublicProjectsProjectIdSitesCreateRoute: typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
@@ -10445,6 +10950,7 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
   {
     PublicProjectsProjectIdActivityRoute: PublicProjectsProjectIdActivityRoute,
     PublicProjectsProjectIdAdvisorRoute: PublicProjectsProjectIdAdvisorRoute,
+    PublicProjectsProjectIdAgentsRoute: PublicProjectsProjectIdAgentsRoute,
     PublicProjectsProjectIdAnalyticsRoute:
       PublicProjectsProjectIdAnalyticsRouteWithChildren,
     PublicProjectsProjectIdApiKeysRoute: PublicProjectsProjectIdApiKeysRoute,
@@ -10464,6 +10970,7 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
       PublicProjectsProjectIdMessagingRouteWithChildren,
     PublicProjectsProjectIdOnboardingRoute:
       PublicProjectsProjectIdOnboardingRoute,
+    PublicProjectsProjectIdOverviewRoute: PublicProjectsProjectIdOverviewRoute,
     PublicProjectsProjectIdRealtimeRoute:
       PublicProjectsProjectIdRealtimeRouteWithChildren,
     PublicProjectsProjectIdSettingsRoute:
@@ -10474,6 +10981,8 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
       PublicProjectsProjectIdStoresRouteWithChildren,
     PublicProjectsProjectIdUsageRoute:
       PublicProjectsProjectIdUsageRouteWithChildren,
+    PublicProjectsProjectIdVideosRoute:
+      PublicProjectsProjectIdVideosRouteWithChildren,
     PublicProjectsProjectIdIndexRoute: PublicProjectsProjectIdIndexRoute,
     PublicProjectsProjectIdSitesSiteIdRoute:
       PublicProjectsProjectIdSitesSiteIdRouteWithChildren,
@@ -10500,12 +11009,12 @@ interface PublicRouteChildren {
   PublicResetRoute: typeof PublicResetRoute
   PublicSalesRoute: typeof PublicSalesRoute
   PublicUpgradeRoute: typeof PublicUpgradeRoute
-  PublicIndexRoute: typeof PublicIndexRoute
   PublicAuthPreviewRoute: typeof PublicAuthPreviewRoute
   PublicDebugAuthorizeContributorPreviewRoute: typeof PublicDebugAuthorizeContributorPreviewRoute
   PublicDebugCodeEditorPreviewRoute: typeof PublicDebugCodeEditorPreviewRoute
   PublicDebugCommunityShareExamplesRoute: typeof PublicDebugCommunityShareExamplesRoute
   PublicDebugEducationJoinPreviewRoute: typeof PublicDebugEducationJoinPreviewRoute
+  PublicDebugEducationPlanPreviewRoute: typeof PublicDebugEducationPlanPreviewRoute
   PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
   PublicDebugImpersonatePreviewRoute: typeof PublicDebugImpersonatePreviewRoute
   PublicDebugJoinInvitePreviewRoute: typeof PublicDebugJoinInvitePreviewRoute
@@ -10540,7 +11049,6 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicResetRoute: PublicResetRoute,
   PublicSalesRoute: PublicSalesRoute,
   PublicUpgradeRoute: PublicUpgradeRoute,
-  PublicIndexRoute: PublicIndexRoute,
   PublicAuthPreviewRoute: PublicAuthPreviewRoute,
   PublicDebugAuthorizeContributorPreviewRoute:
     PublicDebugAuthorizeContributorPreviewRoute,
@@ -10548,6 +11056,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicDebugCommunityShareExamplesRoute:
     PublicDebugCommunityShareExamplesRoute,
   PublicDebugEducationJoinPreviewRoute: PublicDebugEducationJoinPreviewRoute,
+  PublicDebugEducationPlanPreviewRoute: PublicDebugEducationPlanPreviewRoute,
   PublicDebugErrorPreviewRoute: PublicDebugErrorPreviewRoute,
   PublicDebugImpersonatePreviewRoute: PublicDebugImpersonatePreviewRoute,
   PublicDebugJoinInvitePreviewRoute: PublicDebugJoinInvitePreviewRoute,
@@ -10641,16 +11150,19 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingRoute: MarketingRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
+  AlternativeToDotmdRoute: AlternativeToDotmdRoute,
   BlogDotmdRoute: BlogDotmdRoute,
   ChangelogDotmdRoute: ChangelogDotmdRoute,
   DiscordRoute: DiscordRoute,
   DocsRoute: DocsRouteWithChildren,
   DocsDotmdRoute: DocsDotmdRoute,
+  ForAgentsDotmdRoute: ForAgentsDotmdRoute,
   GeneratorRoute: GeneratorRouteWithChildren,
   IntegrationsDotmdRoute: IntegrationsDotmdRoute,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  SetupDotmdRoute: SetupDotmdRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiHelloRoute: ApiHelloRoute,
   CliInstallDotps1Route: CliInstallDotps1Route,

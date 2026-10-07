@@ -25,6 +25,7 @@ export const heCatalog: EnCatalog = {
         openWebsiteNavigation: 'פתח ניווט אתר',
         create: 'יצירה',
         connect: 'חיבור',
+        docs: 'דוקומנטציה',
         assistant: 'Agent',
         upgrade: 'שדרוג',
         signIn: 'התחברו',
@@ -196,6 +197,10 @@ export const heCatalog: EnCatalog = {
           vsNetlify: 'Appwrite מול Netlify', // pragma: allowlist secret
           vsCloudinary: 'Appwrite מול Cloudinary', // pragma: allowlist secret
           vsAuth0: 'Appwrite מול Auth0', // pragma: allowlist secret
+          vsConvex: 'Appwrite מול Convex', // pragma: allowlist secret
+          vsClerk: 'Appwrite מול Clerk', // pragma: allowlist secret
+          vsAmplify: 'Appwrite מול AWS Amplify', // pragma: allowlist secret
+          vsPlanetScale: 'Appwrite מול PlanetScale', // pragma: allowlist secret
           nextjsHosting: 'אירוח Next.js',
           reactHosting: 'אירוח React',
           vueHosting: 'אירוח Vue.js',
@@ -217,6 +222,7 @@ export const heCatalog: EnCatalog = {
         ...enCatalog.app.sidebar.items,
         overview: 'לוח בקרה',
         apps: 'אפליקציות',
+        agents: 'Agents',
         apiKeys: 'מפתחות API',
         explorer: 'אקספלורר',
         auth: 'אימות',
@@ -224,6 +230,7 @@ export const heCatalog: EnCatalog = {
         storage: 'אחסון',
         functions: 'פונקציות',
         messaging: 'הודעות',
+        videos: 'סרטונים',
         sites: 'אתרים',
         distribution: 'הפצה',
         activity: 'פעילות',
@@ -395,6 +402,7 @@ export const heCatalog: EnCatalog = {
           ...enCatalog.website.products.navigation.items,
           authTagline: 'אימייל, OAuth, SMS, אימות דו-שלבי, צוותים וסשנים.',
           databasesTagline: 'PostgreSQL מנוהל, TablesDB, DocumentsDB, VectorsDB, MySQL.',
+          postgresTagline: 'PostgreSQL מנוהל עם pooling, רפליקות ו-PITR.',
           storageTagline: 'העלאה, עיבוד והגשה של קבצים דרך CDN.',
           functionsTagline: 'APIs, משימות Cron ומטפלי אירועים בקנה מידה רחב.',
           messagingTagline: 'אימייל, SMS ו-Push עם נושאים ויעדים.',
@@ -430,7 +438,7 @@ export const heCatalog: EnCatalog = {
           'הרשמה לאירועים חיים ותגובה לשינויים בזמן שהם קורים.',
         mcpTitle: 'MCP',
         mcpDescription:
-          'חיבור סוכני AI לפרויקט, ל-APIs ולדוקומנטציה של Appwrite דרך שרתי MCP.', // pragma: allowlist secret
+          'חיבור סוכני AI לפרויקט, ל-APIs ולדוקומנטציה של Appwrite דרך שרת MCP מרוחק אחד.', // pragma: allowlist secret
         terraformTitle: 'Terraform',
         terraformDescription:
           'ניהול תשתיות Appwrite כקוד עם הספק הרשמי.', // pragma: allowlist secret

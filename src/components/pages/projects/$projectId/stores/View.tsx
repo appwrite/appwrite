@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { Package } from 'lucide-react'
 import {
@@ -24,6 +24,7 @@ import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useDistributionApps } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { AppsEmptyState } from './_components/AppsEmptyState'
 import { CreateApp } from './_components/CreateApp'
 import { PlatformIcons, frameworkLabel } from './_components/platform'
 
@@ -62,23 +63,8 @@ export function View() {
   )
 
   const showLoading = isLoading && apps.length === 0
-  const hasFilters = !!(search && search.length > 0)
-
-  const emptyState = useMemo(
-    () => (
-      <EmptyState
-        icon={Package}
-        title={t('No distribution apps yet')}
-        description={t(
-          'Create an app to build and submit to Google Play, the App Store, and the Microsoft Store.',
-        )}
-        isEmpty={!hasFilters}
-        hasFilters={hasFilters}
-        variant="card"
-      />
-    ),
-    [hasFilters, t],
-  )
+  const showsFirstRunEmptyState =
+    !showLoading && !search && !searchInput.trim() && apps.length === 0
 
   return (
     <div className="flex flex-col">
@@ -93,6 +79,7 @@ export function View() {
         createLabel={t('Create app')}
         onCreate={() => setCreateOpen(true)}
         fullWidthBorder
+        hideToolbar={showsFirstRunEmptyState}
         rightContent={
           <ServiceListViewToggle
             viewMode={viewMode}
@@ -108,8 +95,10 @@ export function View() {
               {t('Loading apps...')}
             </p>
           </div>
+        ) : showsFirstRunEmptyState ? (
+          <AppsEmptyState onCreate={() => setCreateOpen(true)} />
         ) : apps.length === 0 ? (
-          emptyState
+          <EmptyState icon={Package} hasFilters variant="card" />
         ) : viewMode === 'list' ? (
           <>
             <div className="rounded-lg border border-border bg-card overflow-hidden">

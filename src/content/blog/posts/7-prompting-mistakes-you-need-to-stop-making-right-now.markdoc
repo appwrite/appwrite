@@ -10,6 +10,7 @@ author: aishwari
 category: ai
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What is the most common prompting mistake developers make?"
     answer: "Writing vague, context-free prompts is the most common mistake. Asking an AI to fix a bug or write a function without specifying the language, framework, constraints, naming conventions, or expected behavior forces the model to fill gaps with assumptions, which are usually wrong. Including the stack, the goal, and the failure mode gives the model real direction."
@@ -105,10 +106,10 @@ The second prompt gives the model a language, a framework, specific libraries, e
 
 The developers getting the most out of AI tools aren't the ones who use it the most. They're the ones who've learned to communicate precisely. Prompting is a communication skill. The better you get at it, the more leverage you get from every AI tool in your workflow.
 
-If you're building applications with AI features and want a backend that keeps up, [Appwrite](https://appwrite.io) gives you auth, databases, storage, and serverless functions in one platform. Appwrite also works with the [Model Context Protocol](/docs/tooling/mcp), so your AI assistant can interact directly with your backend, creating tables, querying data, and managing functions through natural language. It's a practical way to pair better prompting with better tooling.
+If you're building applications with AI features and want a backend that keeps up, [Appwrite](https://appwrite.io) gives you auth, databases, storage, and serverless functions in one platform. Appwrite also works with the [Model Context Protocol](/docs/tooling/ai/mcp-servers), so your AI assistant can interact directly with your backend, creating tables, querying data, and managing functions through natural language. It's a practical way to pair better prompting with better tooling.
 
 # More resources
-- [Appwrite MCP server](/docs/tooling/mcp)
+- [Appwrite MCP server](/docs/tooling/ai/mcp-servers)
 - [Build AI-powered applications with Appwrite](/docs/products/ai)
 - [How to vibe code? 8 real-world workflow tips for faster builds](/blog/post/best-vibe-coding-tips)
 - [Best vibe coding tools in 2026: comparison and tradeoffs](/blog/post/comparing-vibe-coding-tools)

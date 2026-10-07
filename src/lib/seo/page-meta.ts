@@ -53,8 +53,5 @@ export function getPageMetaTags(options: PageSeoOptions) {
       ? [{ name: 'twitter:description', content: options.description }]
       : []),
     { name: 'twitter:image', content: ogImage },
-    ...(options.canonical
-      ? [{ tag: 'link', rel: 'canonical', href: options.canonical }]
-      : []),
   ] as const
 }

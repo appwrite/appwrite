@@ -1,5 +1,3 @@
-import { isCloudProfile } from '@/lib/console-profiles'
-
 export function isDomainsDocsSlug(slug: string): boolean {
   return (
     slug === 'products/domains' ||
@@ -29,6 +27,7 @@ export function isDomainsDocsHref(href: string): boolean {
   )
 }
 
+/** Public /docs routes are always published; console profile gates the product UI. */
 export function isDomainsDocsEnabled(): boolean {
-  return isCloudProfile()
+  return true
 }

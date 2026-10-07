@@ -51,7 +51,7 @@ The product also includes miscellaneous features such as an AI assistant to get 
 
 # How UNDO was built
 
-After discovering the product-market fit, Jonas rapidly started developing the solution. For the app client, he built micro-frontends using Svelte; however, as the solo developer on the product, he chose to use a [Backend-as-a-Service platform](/blog/post/leveraging-baas-tools-to-scale-faster). Jonas was already aware of Firebase, but the lack of self-hosting support prevented him from adopting it. At this point, he came across other options, such as Supabase; however, he picked [Appwrite](http://appwrite.io) for the following reasons:
+After discovering the product-market fit, Jonas rapidly started developing the solution. For the app client, he built micro-frontends using Svelte; however, as the solo developer on the product, he chose to use a Backend-as-a-Service platform. Jonas was already aware of Firebase, but the lack of self-hosting support prevented him from adopting it. At this point, he came across other options, such as Supabase; however, he picked [Appwrite](http://appwrite.io) for the following reasons:
 
 - Active developer community on [Discord](https://appwrite.io/discord)
 - Quality learning content on the [Appwrite YouTube channel](https://www.youtube.com/@Appwrite)

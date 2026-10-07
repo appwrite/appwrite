@@ -10,6 +10,7 @@ author: aditya-oberai
 category: security
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What does compliance-by-design mean in practice?"
     answer: "Compliance-by-design means data classification, access control, encryption, audit logging, and data residency are decided as part of the initial architecture rather than retrofitted later. The result is lower total cost, faster audits, fewer surprise blockers from enterprise customers, and a credible compliance story when selling into regulated industries."

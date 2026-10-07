@@ -4,7 +4,7 @@ import { Users, Loader2 } from 'lucide-react'
 import { AppwriteException, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
@@ -281,7 +281,8 @@ export function ImpersonateConsoleUserDialog({
                       onSelect={() => void handleSelectUser(recent)}
                       className="cursor-pointer gap-2 px-3 py-2.5 aria-disabled:opacity-50"
                     >
-                      <InitialsAvatar
+                      <PhotoAvatar
+                        userId={recent.$id}
                         name={label}
                         size="sm"
                         className="shrink-0"
@@ -366,7 +367,8 @@ export function ImpersonateConsoleUserDialog({
                     onSelect={() => void handleSelectUser(user)}
                     className="cursor-pointer gap-2 px-3 py-2.5 aria-disabled:opacity-50"
                   >
-                    <InitialsAvatar
+                    <PhotoAvatar
+                      userId={user.$id}
                       name={label}
                       size="sm"
                       className="shrink-0"

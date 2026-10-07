@@ -1,3 +1,4 @@
+import type { Flag } from '@appwrite.io/console'
 import { useState, useMemo, useEffect } from 'react'
 import {
   useParams,
@@ -9,7 +10,6 @@ import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { formatIpForDisplay } from '@/lib/format-ip'
 import { formatPrefValue, formatPrefsForEditor } from '@/lib/prefs-value'
-import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import {
   ArrowLeft,
   CheckCircle2,
@@ -46,7 +46,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { decodeIdTokenClaims } from '@/lib/oauth2/id-token'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { Button } from '@/components/ui/button'
@@ -737,7 +737,13 @@ function UserStatusCard({
       <div className="border-t border-border" />
       <div className="px-6 py-4">
         <div className="flex items-start gap-4 flex-wrap">
-          <InitialsAvatar name={displayName} size="lg" className="shrink-0" />
+          <PhotoAvatar
+            projectId={projectId}
+            userId={userId}
+            name={displayName}
+            size="lg"
+            className="shrink-0"
+          />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <p className="text-[15px] font-medium text-foreground truncate">
@@ -876,7 +882,10 @@ function UserImpersonationCapabilityCard({
           {t(
             "When enabled, this user may use the Appwrite client SDK's impersonation support in your app: you designate which other project user a session should run as, and the SDK applies that context on outgoing requests so the API treats each call like it came from the impersonated user - permissions, data access, and limits follow that identity.", // pragma: allowlist secret
           )}{' '}
-          <DocsRouteLink className="link-neutral inline-flex items-center gap-1" href="/docs/products/auth/impersonation">
+          <DocsRouteLink
+            className="link-neutral inline-flex items-center gap-1"
+            href="/docs/products/auth/impersonation"
+          >
             {t('Documentation')}
             <ExternalLink className="h-3 w-3 shrink-0" />
           </DocsRouteLink>
@@ -1737,7 +1746,10 @@ function UpdateMFASection({
             {t(
               "Enhance the user's account security by requiring a second sign-in method.",
             )}{' '}
-            <DocsRouteLink className="link-neutral inline-flex items-center gap-1" href="/docs/products/auth/mfa">
+            <DocsRouteLink
+              className="link-neutral inline-flex items-center gap-1"
+              href="/docs/products/auth/mfa"
+            >
               {t('Documentation')}
               <ExternalLink className="h-3 w-3 shrink-0" />
             </DocsRouteLink>
@@ -1947,7 +1959,12 @@ function DeleteUserSection({
 
           {/* User Info Summary */}
           <div className="flex items-center gap-3 mt-4">
-            <InitialsAvatar name={displayName} size="md" />
+            <PhotoAvatar
+              projectId={projectId}
+              userId={userId}
+              name={displayName}
+              size="md"
+            />
             <div className="flex-1 min-w-0">
               <p className="text-[14px] font-medium text-foreground truncate">
                 {displayName}
@@ -1960,7 +1977,8 @@ function DeleteUserSection({
                   if (lastActivity) {
                     parts.push(
                       <>
-                        {t('Last activity:')} <DateTooltip date={lastActivity} />
+                        {t('Last activity:')}{' '}
+                        <DateTooltip date={lastActivity} />
                       </>,
                     )
                   }
@@ -2410,7 +2428,10 @@ function CreateUserMembershipDialog({
                 <Info className="h-4 w-4" />
                 <AlertDescription className="text-[12px]">
                   {t('Roles are used to manage access permissions.')}{' '}
-                  <DocsRouteLink className="link-neutral" href="/docs/advanced/platform/permissions">
+                  <DocsRouteLink
+                    className="link-neutral"
+                    href="/docs/advanced/platform/permissions"
+                  >
                     {t('Learn more about permissions')}
                   </DocsRouteLink>
                 </AlertDescription>
@@ -2427,10 +2448,7 @@ function CreateUserMembershipDialog({
           >
             {t('Cancel')}
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!teamId || isLoading}
-          >
+          <Button onClick={handleSubmit} disabled={!teamId || isLoading}>
             {t('Create')}
           </Button>
         </div>
@@ -2994,7 +3012,8 @@ function CreateTargetDialog({
               <>
                 <div className="space-y-2">
                   <Label htmlFor="provider-id" className="text-[12px]">
-                    {t('Provider ID')} <span className="text-destructive">*</span>
+                    {t('Provider ID')}{' '}
+                    <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="provider-id"
@@ -3197,7 +3216,12 @@ function SessionsTab({
 
   const getCountryFlagUrl = (countryCode?: string) => {
     if (!countryCode) return null
-    return `${getBaseEndpoint()}/avatars/flags/${countryCode.toLowerCase()}?width=20&height=20&quality=100&project=console`
+    return sdk.forConsole.avatars.getFlag({
+      code: countryCode.toLowerCase() as Flag,
+      width: 20,
+      height: 20,
+      quality: 100,
+    })
   }
 
   if (isLoading) {
@@ -3350,7 +3374,7 @@ function SessionsTab({
                       </code>
                     ) : (
                       <span className="text-[12px] text-muted-foreground/50">
-                         - 
+                        -
                       </span>
                     )}
                   </TableCell>

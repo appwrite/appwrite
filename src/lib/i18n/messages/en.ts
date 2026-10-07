@@ -18,6 +18,7 @@ export const enCatalog = {
         openWebsiteNavigation: 'Open website navigation',
         create: 'Create',
         connect: 'Connect',
+        docs: 'Docs',
         assistant: 'Agent',
         upgrade: 'Upgrade',
         signIn: 'Sign in',
@@ -176,6 +177,10 @@ export const enCatalog = {
           vsNetlify: 'Appwrite vs. Netlify', // pragma: allowlist secret
           vsCloudinary: 'Appwrite vs. Cloudinary', // pragma: allowlist secret
           vsAuth0: 'Appwrite vs. Auth0', // pragma: allowlist secret
+          vsConvex: 'Appwrite vs. Convex', // pragma: allowlist secret
+          vsClerk: 'Appwrite vs. Clerk', // pragma: allowlist secret
+          vsAmplify: 'Appwrite vs. AWS Amplify', // pragma: allowlist secret
+          vsPlanetScale: 'Appwrite vs. PlanetScale', // pragma: allowlist secret
           nextjsHosting: 'Next.js hosting',
           reactHosting: 'React hosting',
           vueHosting: 'Vue.js hosting',
@@ -194,6 +199,7 @@ export const enCatalog = {
       items: {
         overview: 'Overview',
         apps: 'Apps',
+        agents: 'Agents',
         apiKeys: 'API Keys',
         explorer: 'Explorer',
         auth: 'Auth',
@@ -201,6 +207,7 @@ export const enCatalog = {
         storage: 'Storage',
         functions: 'Functions',
         messaging: 'Messaging',
+        videos: 'Videos',
         sites: 'Sites',
         distribution: 'Distribution',
         activity: 'Activity',
@@ -363,9 +370,11 @@ export const enCatalog = {
       productNames: {
         auth: 'Auth',
         databases: 'Databases',
+        postgres: 'PostgreSQL',
         storage: 'Storage',
         functions: 'Functions',
         messaging: 'Messaging',
+        realtime: 'Realtime',
         sites: 'Sites',
         firewall: 'Firewall',
       },
@@ -387,6 +396,7 @@ export const enCatalog = {
         items: {
           authTagline: 'Email, OAuth, SMS, MFA, teams, and sessions.',
           databasesTagline: 'Managed PostgreSQL, TablesDB, DocumentsDB, VectorsDB, MySQL.',
+          postgresTagline: 'Managed PostgreSQL with pooling, replicas, and PITR.',
           storageTagline: 'Upload, transform, and deliver files on CDN.',
           functionsTagline: 'APIs, cron jobs, and event handlers at scale.',
           messagingTagline: 'Email, SMS, and push with topics and targets.',
@@ -421,7 +431,7 @@ export const enCatalog = {
           'Subscribe to live events and react to changes as they happen.',
         mcpTitle: 'MCP',
         mcpDescription:
-          'Connect AI agents to your Appwrite project, APIs, and docs through MCP servers.', // pragma: allowlist secret
+          'Connect AI agents to your Appwrite project, APIs, and docs through one remote MCP server.', // pragma: allowlist secret
         terraformTitle: 'Terraform',
         terraformDescription:
           'Manage Appwrite infrastructure as code with the official provider.', // pragma: allowlist secret

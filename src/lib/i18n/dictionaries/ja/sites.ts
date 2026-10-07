@@ -239,15 +239,14 @@ export const jaSitesDictionary: Record<string, string> = {
   'Upload your website manually': 'Web サイトを手動でアップロード',
   // Create wizard: manual upload
   'Only .tar.gz files are supported': '.tar.gz ファイルのみサポートしています',
-  'File size must be less than 100MB':
-    'ファイルサイズは 100MB 未満である必要があります',
   'Please enter a valid domain': '有効なドメインを入力してください',
   'Failed to create site': 'サイトの作成に失敗しました',
   'Other options': 'その他のオプション',
   'Import from Git': 'Git からインポート',
   'Browse templates': 'テンプレートを閲覧',
   'Upload file': 'ファイルのアップロード',
-  'Only .tar.gz files up to 100MB': '.tar.gz ファイルのみ、最大 100MB',
+  'Only .tar.gz files up to': '.tar.gz ファイルのみ、最大',
+  'File is too large. Maximum size:': 'ファイルが大きすぎます。最大サイズ:',
   'Site name': 'サイト名',
   'Site ID': 'サイト ID',
   'My awesome site': 'すばらしいサイト',
@@ -533,4 +532,16 @@ export const jaSitesDictionary: Record<string, string> = {
   "Couldn't open preview": 'プレビューを開けませんでした',
   'Something went wrong while checking your access to this preview. Try again in a moment.':
     'このプレビューへのアクセス権の確認中に問題が発生しました。しばらくしてからもう一度お試しください。',
+  'Create your first site': '最初のサイトを作成',
+  'Deploy web apps from Git or a template. Every push gets a build, a preview URL, and fast global delivery.':
+    'Git またはテンプレートから Web アプリをデプロイします。プッシュごとにビルド、プレビュー URL、高速なグローバル配信が提供されます。',
+  'Connect a repository': 'リポジトリを接続',
+  'Deploy on every push to your production branch, with a preview URL for every other branch.':
+    '本番ブランチへのプッシュごとにデプロイし、その他のブランチにはそれぞれプレビュー URL が付きます。',
+  'Pick a framework': 'フレームワークを選択',
+  'Appwrite detects TanStack Start, Next.js, Nuxt, SvelteKit, and more, and sets up the build for you.':
+    'Appwrite は TanStack Start、Next.js、Nuxt、SvelteKit などを検出し、ビルドを自動で設定します。',
+  'Go live': '公開する',
+  'Get an appwrite.network URL right away, then add your own domain.':
+    'すぐに appwrite.network の URL が発行されます。その後、独自ドメインを追加できます。',
 }

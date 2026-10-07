@@ -12,6 +12,10 @@
  * Loaded raw by Bun from `server.ts` (not Vite-bundled). Must stay free of
  * Vite-only constructs (`import.meta.env`, `?url` imports, path aliases).
  */
+import {
+  classifyAgentUserAgent,
+  classifyAiReferrer,
+} from './agent-user-agent.ts'
 import { getAnalyticsArea, getAnalyticsSurface } from './analytics-route.ts'
 import { getClientIpFromRequest } from './client-ip.ts'
 import { readRuntimeConfigFromEnv } from './runtime-config-shared.ts'
@@ -70,10 +74,14 @@ export function trackServerPageview(
     const origin = url.origin
     const pathname = url.pathname || '/'
     const format = options.format ?? inferServerPageviewFormat(pathname)
+    const userAgent = request.headers.get('user-agent') || 'Unknown'
+    const referrer = request.headers.get('referer') || null
+    const classified = classifyAgentUserAgent(userAgent)
+    const aiReferrer = classifyAiReferrer(referrer)
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'User-Agent': request.headers.get('user-agent') || 'Unknown',
+      'User-Agent': userAgent,
       'X-Forwarded-For': clientIp,
     }
 
@@ -81,12 +89,15 @@ export function trackServerPageview(
       name: 'pageview',
       url: `${origin}${pathname}`,
       domain: url.hostname,
-      referrer: request.headers.get('referer') || null,
+      referrer,
       props: {
         route: pathname,
         area: getAnalyticsArea(pathname),
         surface: getAnalyticsSurface(pathname),
         format,
+        agent: classified.agent,
+        bot: classified.kind,
+        aiReferrer,
       },
     })
 

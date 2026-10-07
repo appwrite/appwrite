@@ -21,7 +21,7 @@ import { getLocalePrefetchScript } from '@/lib/locale/prefetch-locale'
 
 import type { QueryClient } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider, useTheme } from 'next-themes'
 import {
@@ -46,6 +46,7 @@ import { DebugMenuMount } from '@/components/global/providers/DebugMenuMount'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { CookieConsentProvider } from '@/components/global/providers/CookieConsent'
 import { CommunitySupportPromptProvider } from '@/components/global/providers/CommunitySupportPromptProvider'
+import { PasswordBreachCurtain } from '@/components/global/shared/PasswordBreachCurtain'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
 import { ScreenshotModeProvider } from '@/components/global/providers/ScreenshotMode'
 import { AnalyticsSessionPropsSync } from '@/components/global/providers/AnalyticsSessionPropsSync'
@@ -55,12 +56,14 @@ import { NavigationHistoryProvider } from '@/components/global/providers/Navigat
 import { ErrorComponent } from '@/components/error/Component'
 import { RecentResourcesProvider } from '@/components/global/providers/RecentResourcesProvider'
 import {
+  FULLSCREEN_LOADER_HIDE_MS,
   FullscreenLoader,
 } from '@/components/ui/loader'
 import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { PreLaunchRedirect } from '@/components/global/auth/PreLaunchRedirect'
+import { SelfHostedRouteRedirect } from '@/components/global/auth/SelfHostedRouteRedirect'
 import {
   isPreLaunchAllowedPath,
   isPreLaunchModeEnabled,
@@ -94,7 +97,11 @@ import { I18nProvider } from '@/lib/i18n'
 import { isMarketingPage } from '@/lib/marketing/is-marketing-page'
 import { MarketingSiteLayoutGate } from '@/lib/marketing/MarketingSiteLayoutGate'
 import { DevConstructionStripe } from '@/components/global/layout/DevConstructionStripe'
-import { isConsoleRedirectHopPath } from '@/lib/root-guest-redirect'
+import {
+  isConsoleRedirectHopPath,
+  isRootHomeMatch,
+} from '@/lib/root-guest-redirect'
+import { cn } from '@/lib/utils'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -404,13 +411,16 @@ function isProjectRoute(pathname: string) {
 
 /** Full-viewport shell: construction stripe spans main column + right pane. */
 function RootAppShell({ children }: { children: React.ReactNode }) {
-  // Use the rendered location, not the pending one. During `/` → `/home`
-  // (or `/` → org) the desired path can already be the destination while the
-  // outlet is still the blank hop; wrapping that hop would flash the footer.
+  // Use the rendered location, not the pending one. During `/` → org the
+  // desired path can already be the destination while the outlet is still
+  // the blank hop; wrapping that hop would flash the footer.
   const renderedPathname = useRouterState({
     select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
   })
-  if (isConsoleRedirectHopPath(renderedPathname)) {
+  const rootHome = useRouterState({
+    select: (s) => isRootHomeMatch(s.matches),
+  })
+  if (isConsoleRedirectHopPath(renderedPathname) && !rootHome) {
     return <>{children}</>
   }
 
@@ -432,9 +442,13 @@ function RootAppShell({ children }: { children: React.ReactNode }) {
   )
 }
 
-const STATUS_PAGE_URL = 'https://status.appwrite.online'
+const STATUS_PAGE_URL = 'https://appwrite.online'
 
-function RootFullscreenLoader() {
+function RootInitialLoadCoordinator({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const { isLoading, skipStaticLoader } = useInitialLoader()
   const [clientMounted, setClientMounted] = useState(false)
   const { isCloud, features } = useConsoleProfile()
@@ -449,11 +463,53 @@ function RootFullscreenLoader() {
     readScreenshotModeOpen(),
   )
 
+  const loaderVisible =
+    showFullscreenLoader || (!skipStaticLoader && isLoading)
+  const shellRef = useRef<HTMLDivElement>(null)
+  const shellRevealedRef = useRef(!loaderVisible)
+  const [shellRevealed, setShellRevealed] = useState(() => !loaderVisible)
+
   useEffect(() => {
     setClientMounted(true)
   }, [])
 
   useEffect(() => subscribeScreenshotMode(setScreenshotModeOpen), [])
+
+  useEffect(() => {
+    if (loaderVisible) {
+      shellRevealedRef.current = false
+      setShellRevealed(false)
+      return
+    }
+
+    if (shellRevealedRef.current) return
+
+    const el = shellRef.current
+    const reduceMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+    if (reduceMotion || !el) {
+      shellRevealedRef.current = true
+      setShellRevealed(true)
+      return
+    }
+
+    let cancelled = false
+    const animation = el.animate([{ opacity: 0 }, { opacity: 1 }], {
+      duration: FULLSCREEN_LOADER_HIDE_MS,
+      easing: 'ease-in-out',
+      fill: 'forwards',
+    })
+    animation.onfinish = () => {
+      if (cancelled) return
+      shellRevealedRef.current = true
+      setShellRevealed(true)
+    }
+    return () => {
+      cancelled = true
+      animation.cancel()
+    }
+  }, [loaderVisible])
 
   const isLoaderVisible = isLoading || showFullscreenLoader
   const statusBanner =
@@ -477,12 +533,21 @@ function RootFullscreenLoader() {
       : undefined
 
   return (
-    <FullscreenLoader
-      isVisible={showFullscreenLoader || (!skipStaticLoader && isLoading)}
-      statusBanner={
-        clientMounted && isLoaderVisible ? statusBanner : undefined
-      }
-    />
+    <>
+      <FullscreenLoader
+        isVisible={loaderVisible}
+        statusBanner={
+          clientMounted && isLoaderVisible ? statusBanner : undefined
+        }
+      />
+      <div
+        ref={shellRef}
+        className={cn(!shellRevealed && 'pointer-events-none')}
+        style={{ opacity: shellRevealed ? 1 : 0 }}
+      >
+        {children}
+      </div>
+    </>
   )
 }
 
@@ -576,12 +641,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             ThemeProvider attaches after client mount (that remount reset the 1.5s spinner). */}
         <I18nProvider>
           {/* Isolated so auth / query / loader updates do not re-render the page. */}
-          <RootFullscreenLoader />
-          <RootBrowserApi />
-          <RootAnalyticsTracker />
-          <RootConsoleScopesPrefetch />
-          <ClientThemeProvider>
+          <RootInitialLoadCoordinator>
+            <RootBrowserApi />
+            <RootAnalyticsTracker />
+            <RootConsoleScopesPrefetch />
+            <ClientThemeProvider>
               <PreLaunchRedirect />
+              <SelfHostedRouteRedirect />
               <AnalyticsSessionPropsSync />
               <PageDirectionProvider>
                 <CookieConsentProvider>
@@ -592,10 +658,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                           <DebugModeProvider>
                             <ScreenshotModeProvider>
                               <ConsoleRightPaneProvider>
-                              <RootAppProviders>{children}</RootAppProviders>
-                              <ClientOnly>
-                                <CommunitySupportPromptProvider />
-                              </ClientOnly>
+                                <RootAppProviders>{children}</RootAppProviders>
+                                <ClientOnly>
+                                  <CommunitySupportPromptProvider />
+                                </ClientOnly>
+                                <ClientOnly>
+                                  <PasswordBreachCurtain />
+                                </ClientOnly>
                               </ConsoleRightPaneProvider>
                             </ScreenshotModeProvider>
                           </DebugModeProvider>
@@ -614,7 +683,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                   </NavigationHistoryProvider>
                 </CookieConsentProvider>
               </PageDirectionProvider>
-          </ClientThemeProvider>
+            </ClientThemeProvider>
+          </RootInitialLoadCoordinator>
         </I18nProvider>
         <Scripts />
       </body>

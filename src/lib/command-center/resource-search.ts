@@ -23,6 +23,7 @@ export type ProjectResourceKind =
   | 'message'
   | 'topic'
   | 'provider'
+  | 'video'
 
 export const PROJECT_RESOURCE_KIND_LABELS: Record<ProjectResourceKind, string> =
   {
@@ -35,6 +36,7 @@ export const PROJECT_RESOURCE_KIND_LABELS: Record<ProjectResourceKind, string> =
     message: 'Message',
     topic: 'Topic',
     provider: 'Provider',
+    video: 'Video',
   }
 
 /** Navigation section passed to `onNavigateToResource` or used to build hrefs. */
@@ -48,6 +50,7 @@ export type ProjectResourceSection =
   | 'messaging/messages'
   | 'messaging/topics'
   | 'messaging/providers'
+  | 'videos'
 
 export interface ProjectResourceHit {
   id: string
@@ -286,6 +289,24 @@ export function buildProviderHits(
       description: `${provider.type} · ${provider.$id}`,
       section: 'messaging/providers' as const,
       resourceId: provider.$id,
+    })),
+    PREFILTERED,
+  )
+}
+
+export function buildVideoHits(
+  query: string,
+  videos: Array<{ $id: string; name: string }>,
+): ProjectResourceHit[] {
+  return rankResourceHits(
+    query,
+    videos.map((video) => ({
+      id: `video-${video.$id}`,
+      kind: 'video' as const,
+      label: video.name || video.$id,
+      description: video.$id,
+      section: 'videos' as const,
+      resourceId: video.$id,
     })),
     PREFILTERED,
   )

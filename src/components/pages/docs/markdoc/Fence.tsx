@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
 import { resolveFenceCodeLanguage } from '@/lib/code-language'
 import { useMultiCodeContext } from './MultiCode'
-import { useTabsContext } from './Tabs'
+import { useTabsContext } from './tabs-context'
 
 type FenceProps = {
   content: string

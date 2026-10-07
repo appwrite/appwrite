@@ -48,6 +48,14 @@ export function canShowConnectSection(
   return whenOrgRoles(access, features, access.isOwner || access.isDeveloper)
 }
 
+/** Persistent MCP install CTA: same audience as Connect (owners and developers). */
+export function canShowAgentMcpConnectCta(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return canShowConnectSection(access, features)
+}
+
 /** Built-in project CLI terminal: owners and developers only. */
 export function canShowProjectTerminal(
   access: ConsoleAccess,
@@ -120,6 +128,21 @@ export function canCreateSite(
   features: AccessCheckFeatures,
 ): boolean {
   return whenOrgRoles(access, features, access.canWriteSites)
+}
+
+/** Create videos, renditions, subtitles, timelines, and profiles (`videos.write`). */
+export function canCreateVideo(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteVideos)
+}
+
+export function canShowVideoSettings(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteVideos)
 }
 
 export function canCreateUser(
@@ -263,6 +286,7 @@ export function canSeeProjectNavItem(
     case 'apps':
     case 'api-keys':
     case 'explorer':
+    case 'agents':
       return (access.isOwner || access.isDeveloper) && access.canSeeProjects
     case 'databases':
       return access.canSeeDatabases
@@ -274,6 +298,8 @@ export function canSeeProjectNavItem(
       return access.canSeeMessages
     case 'sites':
       return access.canWriteSites
+    case 'videos':
+      return access.canSeeVideos
     case 'usage':
     case 'realtime':
     case 'analytics':

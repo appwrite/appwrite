@@ -1,7 +1,6 @@
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import { resolveInitHref, type ResolvedInitHref } from '@/lib/init/links'
+import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
 
 export function useInitHref(href: string | undefined): ResolvedInitHref | null {
-  const { preLaunch } = useDebugOverrides()
-  return resolveInitHref(href, preLaunch)
+  return resolveInitHref(href, isPreLaunchModeEnabled())
 }
