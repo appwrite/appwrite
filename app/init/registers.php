@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Database\Adapter\Postgres;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
@@ -12,6 +11,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
+use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\SQL;
 use Utopia\Database\PDO;
 use Utopia\Domains\Validator\PublicDomain;
