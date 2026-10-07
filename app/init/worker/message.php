@@ -171,6 +171,10 @@ return function (Container $container): void {
         return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId()));
     }, ['project', 'telemetry']);
 
+    $container->set('deviceForVideos', function (Document $project, Telemetry $telemetry) {
+        return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_VIDEOS . '/app-' . $project->getId()));
+    }, ['project', 'telemetry']);
+
     // Only the Builds worker uses this, handing template-into-repo pushes to
     // the jobs-service.
     $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform) {

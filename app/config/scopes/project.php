@@ -71,6 +71,16 @@ return [
             "Access to update project\'s policies",
         "category" => "Project",
     ],
+    "project.profiles.read" => [
+        "description" =>
+            "Access to read the project\'s video encode profiles",
+        "category" => "Project",
+    ],
+    "project.profiles.write" => [
+        "description" =>
+            "Access to create, update, and delete the project\'s video encode profiles",
+        "category" => "Project",
+    ],
     "project.oauth2.read" => [
         "description" =>
             "Access to read project\'s OAuth2 configuration.",
@@ -474,5 +484,15 @@ return [
     'presences.write' => [
         'description' => 'Access to create, update, and delete your project\'s presences',
         'category' => 'Presences',
+    ],
+
+    // Videos
+    'videos.read' => [
+        'description' => 'Access to read your project\'s video content',
+        'category' => 'Videos',
+    ],
+    'videos.write' => [
+        'description' => 'Access to create, update, and delete your project\'s video content',
+        'category' => 'Videos',
     ],
 ];

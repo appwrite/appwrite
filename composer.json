@@ -170,7 +170,9 @@
         "psr/http-client": "^1.0",
         "psr/http-message": "^2.0",
         "psr/container": "^2.0",
-        "appwrite/appwrite": "^27.1"
+        "appwrite/appwrite": "^27.1",
+        "utopia-php/video": "0.0.1",
+        "captioning/captioning": "^3.0"
     },
     "require-dev": {
         "ext-fileinfo": "*",
@@ -192,6 +194,9 @@
         "platform": {},
         "audit": {
             "abandoned": "report"
+        },
+        "preferred-install": {
+            "*": "dist"
         },
         "allow-plugins": {
             "php-http/discovery": true,

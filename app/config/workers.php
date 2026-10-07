@@ -88,4 +88,9 @@ return [
         'queueEnv' => '_APP_MIGRATIONS_QUEUE_NAME',
         'coroutines' => 1,
     ],
+    'videos' => [
+        'queue' => Event::VIDEOS_QUEUE_NAME,
+        'queueEnv' => '_APP_VIDEOS_QUEUE_NAME',
+        'maxCoroutines' => 4,
+    ],
 ];

@@ -692,4 +692,65 @@ return [
             ],
         ],
     ],
+    'videos' => [
+        '$model' => Response::MODEL_VIDEO,
+        '$resource' => true,
+        '$description' => 'This event triggers on any videos event.',
+        'renditions' => [
+            '$model' => Response::MODEL_VIDEO_RENDITION,
+            '$resource' => true,
+            '$description' => 'This event triggers on any renditions event.',
+            'create' => [
+                '$description' => 'This event triggers when a rendition is created.',
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a rendition is updated.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a rendition is deleted.',
+            ],
+        ],
+        'captions' => [
+            '$model' => Response::MODEL_VIDEO_CAPTION,
+            '$resource' => true,
+            '$description' => 'This event triggers on any captions event.',
+            'create' => [
+                '$description' => 'This event triggers when a caption is created.',
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a caption is updated.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a caption is deleted.',
+            ],
+        ],
+        'create' => [
+            '$description' => 'This event triggers when a video is created.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a video is updated.',
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a video is deleted.',
+        ],
+    ],
+    'projects' => [
+        '$model' => Response::MODEL_PROJECT,
+        '$resource' => true,
+        '$description' => 'This event triggers on any project event.',
+        'profiles' => [
+            '$model' => Response::MODEL_VIDEO_PROFILE,
+            '$resource' => true,
+            '$description' => 'This event triggers on any project video profile event.',
+            'create' => [
+                '$description' => 'This event triggers when a video profile is created.',
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a video profile is updated.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a video profile is deleted.',
+            ],
+        ],
+    ],
 ];
