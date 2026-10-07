@@ -18,6 +18,7 @@ class Indexes extends Validator
         Database::INDEX_FULLTEXT,
         Database::INDEX_UNIQUE,
         Database::INDEX_SPATIAL,
+        Database::INDEX_TRIGRAM,
     ];
 
     /**
