@@ -1,12 +1,18 @@
 import { getCoverBrandThemeForSvgExport } from '@/lib/cover-generator/brand-theme'
+import {
+  COVER_CONTENT_X,
+  getCoverSimpleTitleMinTextTop,
+  isCoverBrandWordmarkTitle,
+  prepareCoverLogotypeDataUri,
+  renderCoverLogotypeSvg,
+  COVER_SIMPLE_TITLE_LOGOTYPE_HEIGHT,
+} from '@/lib/cover-generator/cover-logotype'
 import { COVER_HEIGHT, COVER_WIDTH } from '@/lib/cover-generator/constants'
 import { getCoverContentLayoutTransform } from '@/lib/cover-generator/cover-layout-scale'
 import { coverSvgTextBaseline } from '@/lib/cover-generator/cover-svg-text'
 import { COVER_EYEBROW_LETTER_SPACING, escapeXml, formatCoverEyebrow, stripCoverTitleSuffix, wrapTextLines } from '@/lib/cover-generator/text-utils'
 import type { CoverRenderData } from '@/lib/cover-generator/types'
 import type { CoverTheme } from '@/lib/cover-generator/constants'
-
-const COVER_CONTENT_X = 40
 const COVER_EYEBROW_FONT_SIZE = 22
 const COVER_EYEBROW_TITLE_GAP = 20
 const COVER_TITLE_MAX_CHARS_PER_LINE = 18
@@ -109,17 +115,20 @@ function renderCtaPill(label: string, brandCta: string, pillTop: number): string
   `
 }
 
-export function renderSimpleTitleTemplateSvg(
+export async function renderSimpleTitleTemplateSvg(
   data: Extract<CoverRenderData, { template: 'simple-title' }>,
   theme: CoverTheme,
-): string {
+): Promise<string> {
   const brand = getCoverBrandThemeForSvgExport(theme)
   const bottomPadding = getSimpleTitleBottomPadding(data.width, data.height)
-  const titleLines = wrapTextLines(
-    stripCoverTitleSuffix(data.title),
-    COVER_TITLE_MAX_CHARS_PER_LINE,
-    COVER_TITLE_MAX_LINES,
-  )
+  const skipBrandTitle = isCoverBrandWordmarkTitle(data.title)
+  const titleLines = skipBrandTitle
+    ? []
+    : wrapTextLines(
+        stripCoverTitleSuffix(data.title),
+        COVER_TITLE_MAX_CHARS_PER_LINE,
+        COVER_TITLE_MAX_LINES,
+      )
   const titleFontSize = getSimpleTitleFontSize(titleLines)
   const lineStep = titleFontSize + 6
   const eyebrowText = formatCoverEyebrow(data.eyebrow)
@@ -153,11 +162,24 @@ export function renderSimpleTitleTemplateSvg(
     cursorBottom = subtitleLayoutY - COVER_TITLE_SUBTITLE_GAP
   }
 
-  const startY =
+  const minTextTop = getCoverSimpleTitleMinTextTop()
+  let startY =
     cursorBottom - textBlockHeight(titleLines.length, titleFontSize, lineStep)
+  if (titleLines.length > 0 && startY < minTextTop) {
+    startY = minTextTop
+  }
   const eyebrowLayoutY = eyebrowText
-    ? startY - COVER_EYEBROW_TITLE_GAP - COVER_EYEBROW_FONT_SIZE
+    ? Math.max(
+        minTextTop - COVER_EYEBROW_FONT_SIZE,
+        startY - COVER_EYEBROW_TITLE_GAP - COVER_EYEBROW_FONT_SIZE,
+      )
     : 0
+
+  const logotype = await prepareCoverLogotypeDataUri(
+    theme,
+    COVER_SIMPLE_TITLE_LOGOTYPE_HEIGHT,
+  )
+  const logotypeSvg = logotype ? renderCoverLogotypeSvg(logotype) : ''
 
   const firstBaseline = coverSvgTextBaseline(startY, titleFontSize)
   const titleSvg = titleLines.length
@@ -165,6 +187,7 @@ export function renderSimpleTitleTemplateSvg(
     : ''
 
   return `
+    ${logotypeSvg}
     ${
       eyebrowText
         ? `<text class="cover-eyebrow" fill="${brand.mutedForeground}" font-size="${COVER_EYEBROW_FONT_SIZE}" font-weight="600" letter-spacing="${COVER_EYEBROW_LETTER_SPACING}" x="${COVER_CONTENT_X}" y="${coverSvgTextBaseline(eyebrowLayoutY, COVER_EYEBROW_FONT_SIZE)}">${escapeXml(eyebrowText)}<tspan fill="${brand.brandCta}">_</tspan></text>`

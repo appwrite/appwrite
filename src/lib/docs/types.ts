@@ -28,6 +28,8 @@ export type DocsNavLink = {
 export type DocsNavGroup = {
   label?: string
   items: DocsNavLink[]
+  /** Smaller link rendered below the group's main items (e.g. Tooling → All tools). */
+  footerLink?: DocsNavLink
   collapsible?: boolean
   initiallyCollapsed?: boolean
 }

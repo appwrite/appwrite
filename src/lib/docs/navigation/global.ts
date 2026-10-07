@@ -4,6 +4,12 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
   {
     items: [
       { label: 'Home', href: '/docs', icon: 'home' },
+      {
+        label: 'MCP server',
+        href: '/docs/tooling/ai/mcp-servers',
+        icon: 'mcp',
+        isParent: true,
+      },
       { label: 'Quick start', href: '/docs/quick-starts', icon: 'play' },
       { label: 'Tutorials', href: '/docs/tutorials', icon: 'book-open' },
       { label: 'SDKs', href: '/docs/sdks', icon: 'cog' },
@@ -123,11 +129,6 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
     label: 'Tooling',
     items: [
       {
-        label: 'Overview',
-        href: '/docs/tooling',
-        icon: 'layout-grid',
-      },
-      {
         label: 'MCP server',
         href: '/docs/tooling/ai/mcp-servers',
         icon: 'mcp',
@@ -152,6 +153,7 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
       },
       { label: 'The Appwriter', href: '/docs/tooling/appwriter', icon: 'text' },
     ],
+    footerLink: { label: 'All tools', href: '/docs/tooling' },
   },
   {
     label: 'Advanced',
