@@ -265,7 +265,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertSame([
             'PLAIN' => 'value',
             'QUOTED' => 'keeps # inside quotes',
-            'UNSET' => '',
+            'UNSET' => 'null',
         ], $variables);
     }
 

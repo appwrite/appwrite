@@ -295,7 +295,8 @@ class Create extends Action
                     try {
                         $envObject = $configAdapter->parse($envFile);
                         foreach ($envObject as $envName => $envValue) {
-                            $envs[$envName] = $envValue ?? '';
+                            // The parser maps a literal null to null; suggest it as the text the file holds
+                            $envs[$envName] = $envValue ?? 'null';
                         }
                     } catch (Parse $err) {
                         // Silence error, so rest of endpoint can return
