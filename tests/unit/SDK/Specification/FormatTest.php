@@ -5,6 +5,7 @@ namespace Tests\Unit\SDK\Specification;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Language\PHP as SdkLanguage;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Parameter;
@@ -1154,7 +1155,21 @@ final class FormatTest extends TestCase
                     'schema' => ['type' => 'string', 'format' => 'uri'],
                 ],
             ],
+            'content' => [
+                'text/html' => [
+                    'schema' => [
+                        'type' => 'string',
+                        'format' => 'binary',
+                    ],
+                ],
+            ],
         ], $openApi['paths']['/tests/redirect']['get']['responses'][(string) $code]);
+
+        $document = Parser::parse($openApi);
+        $this->assertSame('webAuth', (new SdkLanguage())->getMethodType(
+            $document->paths['/tests/redirect']->operations['get'],
+            $document,
+        ));
     }
 
     public static function binaryResponseTypes(): \Iterator
