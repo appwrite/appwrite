@@ -1486,14 +1486,67 @@ class Postgres extends SQL
                 throw new DatabaseException('Unknown spatial query method: ' . $query->getMethod());
         }
 
+        $within = $query->getMethod() === Query::TYPE_DISTANCE_LESS_THAN;
+
         if ($meters) {
             $attr = "({$alias}.{$attribute}::geography)";
             $geom = "ST_SetSRID(" . $this->getSpatialGeomFromText(":{$placeholder}_0", null) . ", " . Database::DEFAULT_SRID . ")::geography";
-            return "ST_Distance({$attr}, {$geom}) {$operator} :{$placeholder}_1";
+            $distance = "ST_Distance({$attr}, {$geom}) {$operator} :{$placeholder}_1";
+
+            // The GIST index is on geometry, so only a degree box around the point can narrow a geography distance
+            $degrees = $within && $query->getAttributeType() === Database::VAR_POINT
+                ? $this->getDegreesWithinMeters($distanceParams[0], (float) $distanceParams[1])
+                : null;
+
+            if ($degrees === null) {
+                return $distance;
+            }
+
+            $binds[":{$placeholder}_2"] = $degrees[0];
+            $binds[":{$placeholder}_3"] = $degrees[1];
+
+            return "{$alias}.{$attribute} && ST_Expand(" . $this->getSpatialGeomFromText(":{$placeholder}_0") . ", :{$placeholder}_2, :{$placeholder}_3) AND {$distance}";
         }
 
         // Without meters, use the original SRID (e.g., 4326)
-        return "ST_Distance({$alias}.{$attribute}, " . $this->getSpatialGeomFromText(":{$placeholder}_0") . ") {$operator} :{$placeholder}_1";
+        $distance = "ST_Distance({$alias}.{$attribute}, " . $this->getSpatialGeomFromText(":{$placeholder}_0") . ") {$operator} :{$placeholder}_1";
+
+        // ST_DWithin can use the GIST index; ST_Distance keeps the boundary exclusive
+        if ($within) {
+            return "ST_DWithin({$alias}.{$attribute}, " . $this->getSpatialGeomFromText(":{$placeholder}_0") . ", :{$placeholder}_1) AND {$distance}";
+        }
+
+        return $distance;
+    }
+
+    /**
+     * Longitude and latitude degrees that hold every point within $meters of $point on the WGS84 spheroid.
+     *
+     * Null for lines and polygons, whose geodesic edges leave any degree box, and when the box would reach a pole or the antimeridian.
+     *
+     * @return array{0: float, 1: float}|null
+     */
+    protected function getDegreesWithinMeters(mixed $point, float $meters): ?array
+    {
+        if (!\is_array($point) || \count($point) !== 2 || !\is_numeric($point[0] ?? null) || !\is_numeric($point[1] ?? null)) {
+            return null;
+        }
+
+        $longitude = (float) $point[0];
+        $latitude = (float) $point[1];
+
+        // A degree of latitude spans at least 110,574 m, and a degree of longitude at least 111,319 m × cos(latitude)
+        $latitudeDegrees = $meters / 110574;
+        if (\abs($latitude) + $latitudeDegrees >= 90) {
+            return null;
+        }
+
+        $longitudeDegrees = $meters / (111319 * \cos(\deg2rad(\abs($latitude) + $latitudeDegrees)));
+        if ($longitude - $longitudeDegrees <= -180 || $longitude + $longitudeDegrees >= 180) {
+            return null;
+        }
+
+        return [$longitudeDegrees, $latitudeDegrees];
     }
 
 
