@@ -44,3 +44,17 @@ $session = $authorization->skip(fn () => $dbForProject->find('sessions', []));
 // Generated / variable table name.
 // ok: php.appwrite.skip-ungated-load
 $resource = $authorization->skip(fn () => $dbForProject->getDocument($collection, $resourceId));
+
+// ruleid: php.appwrite.skip-ungated-load
+$transaction = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $transactionId) {
+    return $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
+}));
+
+// ok: php.appwrite.skip-ungated-load
+$transaction = ($isAPIKey || $isPrivilegedUser)
+    ? $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $transactionId) {
+        return $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
+    }))
+    : $dbForProject->withTransaction(function () use ($dbForProject, $transactionId) {
+        return $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
+    });

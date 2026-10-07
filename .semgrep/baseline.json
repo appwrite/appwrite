@@ -10,28 +10,28 @@
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "app/controllers/api/account.php",
-            "line": 1522,
+            "line": 1530,
             "text": "Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')"
         },
         {
             "rule": "secret-compare-timing",
             "severity": "WARNING",
             "path": "app/controllers/shared/api.php",
-            "line": 1153,
+            "line": 1150,
             "text": "$signature !== $cacheLog->getAttribute('signature')) {"
         },
         {
             "rule": "weak-secret-env-default",
             "severity": "WARNING",
             "path": "app/init/resources.php",
-            "line": 194,
+            "line": 238,
             "text": "System::getEnv('_APP_USAGE_PASS', 'appwrite'))"
         },
         {
             "rule": "weak-secret-env-default",
             "severity": "WARNING",
             "path": "app/init/resources.php",
-            "line": 220,
+            "line": 264,
             "text": "System::getEnv('_APP_USAGE_PASS', 'appwrite'))"
         },
         {
@@ -66,14 +66,14 @@
             "rule": "permissive-write-permission",
             "severity": "WARNING",
             "path": "src/Appwrite/Deployment/Deployments.php",
-            "line": 804,
+            "line": 817,
             "text": "Permission::update(Role::any()),"
         },
         {
             "rule": "permissive-write-permission",
             "severity": "WARNING",
             "path": "src/Appwrite/Deployment/Deployments.php",
-            "line": 805,
+            "line": 818,
             "text": "Permission::delete(Role::any()),"
         },
         {
@@ -103,13 +103,6 @@
             "path": "src/Appwrite/Platform/Modules/Compute/Base.php",
             "line": 273,
             "text": "Permission::delete(Role::any()),"
-        },
-        {
-            "rule": "outbound-follow-redirects",
-            "severity": "WARNING",
-            "path": "src/Appwrite/Platform/Modules/Console/Http/Assistant/Create.php",
-            "line": 67,
-            "text": "curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);"
         },
         {
             "rule": "guest-write-without-abuse-limit",

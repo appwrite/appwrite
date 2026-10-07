@@ -188,7 +188,7 @@ class Update extends Action
 
             $dbForDatabases = $getDatabasesDB($databaseDoc);
 
-            $transaction = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $transactionId) {
+            $claim = function () use ($dbForProject, $transactionId) {
                 // Re-read under a lock, a concurrent commit of the same transaction must not apply its operations twice
                 $current = $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
 
@@ -197,7 +197,11 @@ class Update extends Action
                 }
 
                 return $dbForProject->updateDocument('transactions', $transactionId, new Document(['status' => 'committing']));
-            }));
+            };
+
+            $transaction = ($isAPIKey || $isPrivilegedUser)
+                ? $authorization->skip(fn () => $dbForProject->withTransaction($claim))
+                : $dbForProject->withTransaction($claim);
 
             if ($transaction->isEmpty()) {
                 throw new Exception(Exception::TRANSACTION_NOT_READY);
