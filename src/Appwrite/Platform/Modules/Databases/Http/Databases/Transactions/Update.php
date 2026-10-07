@@ -17,6 +17,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Operators;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -285,18 +286,22 @@ class Update extends Action
                                 $this->handleCreateOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'update':
+                                $this->prepareOperators($dbForDatabases, $collection, $collectionId, $documentId, $data, $state, false);
                                 $this->handleUpdateOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'upsert':
+                                $this->prepareOperators($dbForDatabases, $collection, $collectionId, $documentId, $data, $state, true);
                                 $this->handleUpsertOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'delete':
                                 $this->handleDeleteOperation($dbForDatabases, $collectionId, $documentId, $createdAt, $state);
                                 break;
                             case 'increment':
+                                $this->tightenNumeric($dbForDatabases, $collection, $collectionId, $documentId, $data, $state, true);
                                 $this->handleIncrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'decrement':
+                                $this->tightenNumeric($dbForDatabases, $collection, $collectionId, $documentId, $data, $state, false);
                                 $this->handleDecrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'bulkCreate':
@@ -815,6 +820,82 @@ class Update extends Action
         }
 
         return '';
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @param array<string, array<string, Document>> $state
+     * @throws StructureException
+     */
+    private function prepareOperators(
+        Database $dbForDatabases,
+        Document $collection,
+        string $collectionId,
+        ?string $documentId,
+        array &$data,
+        array $state,
+        bool $creating,
+    ): void {
+        if (!Operators::has($data)) {
+            return;
+        }
+
+        $row = null;
+        if ($documentId !== null && isset($state[$collectionId][$documentId]) && $state[$collectionId][$documentId] instanceof Document) {
+            $row = $state[$collectionId][$documentId];
+        } elseif ($documentId !== null) {
+            $row = $dbForDatabases->getDocument($collectionId, $documentId);
+        }
+
+        if (!$row instanceof Document || $row->isEmpty()) {
+            if (!$creating) {
+                return;
+            }
+            $row = new Document([]);
+        }
+
+        Operators::prepare($collection, $row, $data);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @param array<string, array<string, Document>> $state
+     * @throws StructureException
+     */
+    private function tightenNumeric(
+        Database $dbForDatabases,
+        Document $collection,
+        string $collectionId,
+        string $documentId,
+        array &$data,
+        array $state,
+        bool $increase,
+    ): void {
+        $name = $this->getAttributeNameFromData($data);
+        if ($name === '') {
+            return;
+        }
+
+        $value = $data['value'] ?? 1;
+        if (\is_string($value) && \is_numeric($value)) {
+            $value += 0;
+        }
+        if (!\is_int($value) && !\is_float($value)) {
+            return;
+        }
+
+        $row = null;
+        if (isset($state[$collectionId][$documentId]) && $state[$collectionId][$documentId] instanceof Document) {
+            $row = $state[$collectionId][$documentId];
+        } else {
+            $row = $dbForDatabases->getDocument($collectionId, $documentId);
+        }
+        if ($row->isEmpty()) {
+            return;
+        }
+
+        $edge = $increase ? 'max' : 'min';
+        $data[$edge] = Operators::limit($collection, $row, $name, $value, $data[$edge] ?? null, $increase);
     }
 
     /**

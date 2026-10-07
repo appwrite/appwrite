@@ -12,6 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Operators;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -187,6 +188,15 @@ class Upsert extends Action
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }
+            }
+        }
+
+        if ($transactionId === null && Operators::has($data)) {
+            $existing = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
+            try {
+                Operators::prepare($collection, $existing->isEmpty() ? new Document([]) : $existing, $data);
+            } catch (StructureException $e) {
+                throw new Exception($this->getStructureException(), $e->getMessage());
             }
         }
 

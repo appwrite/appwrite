@@ -11,10 +11,12 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Operators;
 use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -165,6 +167,10 @@ class Create extends Action
                 if ($document->isEmpty() && !$isDependant && $operation['action'] !== 'upsert') {
                     throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$documentId]);
                 }
+
+                if (\in_array($operation['action'], ['increment', 'decrement'], true) && !$document->isEmpty()) {
+                    $this->guardNumericOperation($collection, $document, $operation);
+                }
             }
 
             // Bulk operations skip permission validation entirely (API key/admin only, already checked above)
@@ -268,6 +274,50 @@ class Create extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
+    }
+
+    /**
+     * @param array<string, mixed> $operation
+     * @throws Exception
+     */
+    private function guardNumericOperation(Document $collection, Document $document, array $operation): void
+    {
+        $data = \is_array($operation['data'] ?? null) ? $operation['data'] : [];
+        $name = '';
+        foreach ([$this->getAttributeKey(), 'attribute', 'column'] as $candidate) {
+            if (isset($data[$candidate]) && \is_string($data[$candidate]) && $data[$candidate] !== '') {
+                $name = $data[$candidate];
+                break;
+            }
+        }
+
+        $value = $data['value'] ?? 1;
+        if (\is_string($value) && \is_numeric($value)) {
+            $value += 0;
+        }
+        if ($name === '' || (!\is_int($value) && !\is_float($value))) {
+            return;
+        }
+
+        $increase = $operation['action'] === 'increment';
+        $clamp = $increase ? ($data['max'] ?? null) : ($data['min'] ?? null);
+        if (\is_string($clamp) && \is_numeric($clamp)) {
+            $clamp += 0;
+        }
+        if (!\is_int($clamp) && !\is_float($clamp)) {
+            $clamp = null;
+        }
+
+        try {
+            Operators::limit($collection, $document, $name, $value, $clamp, $increase);
+        } catch (StructureException $e) {
+            throw new Exception(
+                $this->isCollectionsAPI()
+                    ? Exception::DOCUMENT_INVALID_STRUCTURE
+                    : Exception::ROW_INVALID_STRUCTURE,
+                $e->getMessage(),
+            );
+        }
     }
 
     /**

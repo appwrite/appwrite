@@ -12,6 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Operators;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use InvalidArgumentException;
 use Utopia\Database\Database;
@@ -132,6 +133,19 @@ class Decrement extends Action
                 );
             }
 
+            $dbForDatabases = $getDatabasesDB($database);
+            $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+            if (
+                $dbForDatabases->getAdapter()->getSupportForAttributes()
+                && Operators::find($collection, $attribute) === null
+            ) {
+                throw new Exception($this->getStructureNotFoundException(), params: [$attribute]);
+            }
+            $existingRow = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
+            if (!$existingRow->isEmpty()) {
+                $min = $this->applyColumnLimit($collection, $existingRow, $attribute, $value, $min, false);
+            }
+
             // Stage the operation in transaction logs
             $staged = new Document([
                 '$id' => ID::unique(),
@@ -174,9 +188,26 @@ class Decrement extends Action
         }
 
         $dbForDatabases = $getDatabasesDB($database);
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+        if (
+            $dbForDatabases->getAdapter()->getSupportForAttributes()
+            && Operators::find($collection, $attribute) === null
+        ) {
+            throw new Exception($this->getStructureNotFoundException(), params: [$attribute]);
+        }
+
+        $existingRow = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
+        if ($existingRow->isEmpty()) {
+            throw new Exception($this->getNotFoundException(), params: [$documentId]);
+        }
+
+        $column = Operators::find($collection, $attribute);
+        $wasNull = $column !== null && $existingRow->getAttribute($attribute) === null;
+        $min = $this->applyColumnLimit($collection, $existingRow, $attribute, $value, $min, false);
+
         try {
             $document = $dbForDatabases->decreaseDocumentAttribute(
-                collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                collection: $collectionTableId,
                 id: $documentId,
                 attribute: $attribute,
                 value: $value,
@@ -184,10 +215,16 @@ class Decrement extends Action
             );
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
+            if ($wasNull) {
+                $document->setAttribute($attribute, null);
+            }
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
-        } catch (NotFoundException) {
-            throw new Exception($this->getStructureNotFoundException());
+        } catch (NotFoundException $e) {
+            if ($e->getMessage() === 'Document not found') {
+                throw new Exception($this->getNotFoundException(), params: [$documentId]);
+            }
+            throw new Exception($this->getStructureNotFoundException(), params: [$attribute]);
         } catch (LimitException) {
             throw new Exception($this->getLimitException(), $this->getSDKNamespace() . ' "' . $attribute . '" has reached the minimum value of ' . $min);
         } catch (TypeException) {

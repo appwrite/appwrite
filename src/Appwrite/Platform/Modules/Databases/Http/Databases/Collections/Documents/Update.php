@@ -12,6 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Operators;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -173,6 +174,14 @@ class Update extends Action
 
         if (\is_null($permissions)) {
             $permissions = $document->getPermissions() ?? [];
+        }
+
+        if ($transactionId === null) {
+            try {
+                Operators::prepare($collection, $document, $data);
+            } catch (StructureException $e) {
+                throw new Exception($this->getStructureException(), $e->getMessage());
+            }
         }
 
         $data['$id'] = $documentId;

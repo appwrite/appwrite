@@ -4257,6 +4257,89 @@ trait TransactionsBase
         $this->assertEquals(0, $doc['body']['score']);
     }
 
+    public function testStagedIncrementRespectsColumnBounds(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'StagedBounds',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Bounds',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'integer', null), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'key' => 'sm',
+            'required' => false,
+            'min' => 0,
+            'max' => 100,
+        ]);
+        $this->waitForAttribute($databaseId, $collectionId, 'sm');
+
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $row = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['sm' => 99],
+        ]);
+        $this->assertEquals(201, $row['headers']['status-code']);
+        $rowId = $row['body']['$id'];
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', array_merge($headers, [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'operations' => [[
+                'action' => 'increment',
+                'databaseId' => $databaseId,
+                $this->getContainerIdParam() => $collectionId,
+                $this->getRecordIdParam() => $rowId,
+                'data' => [
+                    $this->getSchemaParam() => 'sm',
+                    'value' => 500,
+                ],
+            ]],
+        ]);
+        $this->assertEquals(400, $staged['headers']['status-code']);
+        $this->assertStringContainsString('between 0 and 100', $staged['body']['message']);
+
+        $stored = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $rowId), $headers);
+        $this->assertEquals(99, $stored['body']['sm']);
+    }
+
     /**
      * Test individual increment/decrement endpoints with transactions for Legacy Collections API
      * This test ensures that:
