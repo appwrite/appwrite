@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { differenceInHours } from 'date-fns'
-import { BarChart3, Download } from 'lucide-react'
+import { AlertTriangle, BarChart3, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { InstallTrackingDialog } from '../_components/InstallTrackingDialog'
 import {
@@ -28,6 +28,8 @@ import {
   useAnalyticsEvents,
   useAnalyticsProperty,
   useAnalyticsLinkedSite,
+  useAnalyticsStats,
+  getLast24HoursAnalyticsRange,
   useOrganizationScopes,
   useRefreshAnalyticsProperty,
   useProject,
@@ -126,6 +128,12 @@ export function View({
   const t = useT()
   const [activeTab, setActiveTab] = useState('analytics')
   const [installOpen, setInstallOpen] = useState(false)
+
+  // Install nudge: unfiltered events in the last 24 hours, independent of
+  // the selected range and filters. Shown only once that's known to be zero
+  // (never while loading), and not for disabled properties.
+  const last24h = useMemo(() => getLast24HoursAnalyticsRange(), [])
+  const { stats: last24hStats } = useAnalyticsStats(projectId, propertyId, last24h)
   const isAnalyticsTab = activeTab === 'analytics'
   const [filtersOpen, setFiltersOpen] = useState(false)
 
@@ -351,6 +359,11 @@ export function View({
   const { property: propertyFromHook, isLoading: propertyLoading } =
     useAnalyticsProperty(projectId, propertyId)
   const property = propertyFromHook ?? initialData?.property
+  const showNoRecentEventsBanner =
+    !!property &&
+    property.enabled !== false &&
+    last24hStats !== undefined &&
+    last24hStats.events === 0
 
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -458,25 +471,11 @@ export function View({
           </div>
         }
         titleRightContent={
-          <div className="flex items-center gap-2">
-            <LiveVisitors
-              projectId={projectId}
-              propertyId={propertyId}
-              enabled={property?.enabled !== false}
-            />
-            {/* Install instructions, on both tabs (also in Settings). */}
-            {property ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 gap-1.5 text-[12px]"
-                onClick={() => setInstallOpen(true)}
-              >
-                <Download className="h-3.5 w-3.5" />
-                {t('Install')}
-              </Button>
-            ) : null}
-          </div>
+          <LiveVisitors
+            projectId={projectId}
+            propertyId={propertyId}
+            enabled={property?.enabled !== false}
+          />
         }
         tabs={tabs}
         activeTab={activeTab}
@@ -553,6 +552,35 @@ export function View({
 
       {activeTab === 'analytics' && (
         <div className="flex-1">
+          {/* No events in the last 24 hours: tracking is probably not (or no
+              longer) installed. The install CTA lives here, not in the header. */}
+          {showNoRecentEventsBanner ? (
+            <div className="flex flex-wrap items-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 sm:px-6">
+              <AlertTriangle
+                className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400"
+                aria-hidden
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-medium text-amber-900 dark:text-amber-200">
+                  {t('No events in the last 24 hours')}
+                </p>
+                <p className="text-[12px] text-amber-900/80 dark:text-amber-200/80">
+                  {t(
+                    'Tracking may not be installed yet, or it stopped sending. Add the snippet to your app and load a page.',
+                  )}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 shrink-0 gap-1.5 border-amber-500/40 bg-background/60 text-[12px] hover:bg-background"
+                onClick={() => setInstallOpen(true)}
+              >
+                <Download className="h-3.5 w-3.5" />
+                {t('Install tracking')}
+              </Button>
+            </div>
+          ) : null}
           {/* Full-width traffic overview, same layout as Firewall. */}
           <AnalyticsOverview
             projectId={projectId}

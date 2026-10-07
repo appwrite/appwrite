@@ -27,6 +27,7 @@ import { isKnownBreakdownValue } from '@/lib/analytics/breakdown-values'
 import { equalFilterEntry } from '@/lib/analytics/analytics-filters'
 import { mapToQueryParam } from '@/lib/table-filters'
 import {
+  getLast24HoursAnalyticsRange,
   getPreviousAnalyticsRange,
   useAnalyticsBreakdown,
   useAnalyticsEventMetrics,
@@ -34,7 +35,6 @@ import {
   useAnalyticsStats,
   useOrganizationScopes,
   useProject,
-  type AnalyticsRange,
 } from '@/lib/react-query/hooks'
 import {
   analyticsChangePercent,
@@ -89,17 +89,6 @@ export function findPropertyForSite(
   return properties.find((property) =>
     hosts.has(normalizeSiteHost(property.domain)),
   )
-}
-
-/** From the start of the hour 23 hours ago until the end of the current hour. */
-function last24HoursRange(): AnalyticsRange {
-  const now = new Date()
-  const end = new Date(now)
-  end.setMinutes(59, 59, 999)
-  const start = new Date(now)
-  start.setMinutes(0, 0, 0)
-  start.setHours(start.getHours() - 23)
-  return { startAt: start.toISOString(), endAt: end.toISOString() }
 }
 
 /**
@@ -283,7 +272,7 @@ export function SiteAnalyticsCard({
 
   // 24 whole hours ending with the current one, fixed per mount so the query
   // keys stay stable.
-  const range = useMemo(() => last24HoursRange(), [])
+  const range = useMemo(() => getLast24HoursAnalyticsRange(), [])
   const previousRange = useMemo(() => getPreviousAnalyticsRange(range), [range])
   const { stats } = useAnalyticsStats(projectId, property?.$id, range)
   const { stats: previousStats } = useAnalyticsStats(

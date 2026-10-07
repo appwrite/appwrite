@@ -698,6 +698,17 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Pick where you are tracking from.': 'どこから計測するかを選択します。',
   'Name and domain for the site or app.': 'サイトまたはアプリの名前とドメイン。',
   'Install tracking': '計測を導入',
+  'No events in the last 24 hours': '過去24時間にイベントがありません',
+  'Tracking may not be installed yet, or it stopped sending. Add the snippet to your app and load a page.':
+    '計測がまだ導入されていないか、送信が止まっています。スニペットをアプリに追加してページを読み込んでください。',
+  'Tracking is live': '計測は稼働中です',
+  'Listening for events': 'イベントを待っています',
+  'Latest event': '最新のイベント',
+  'Events are reaching Appwrite.': 'イベントが Appwrite に届いています。',
+  'Install the code and load a page. Checks every few seconds.':
+    'コードを導入してページを読み込んでください。数秒ごとに確認します。',
+  'Prompt copied': 'プロンプトをコピーしました',
+  'Could not copy to clipboard': 'クリップボードにコピーできませんでした',
   'Add the snippet, then wait for the first event.':
     'スニペットを追加し、最初のイベントを待ちます。',
   'Daily boundaries use your current timezone. You can change every value later in settings.':

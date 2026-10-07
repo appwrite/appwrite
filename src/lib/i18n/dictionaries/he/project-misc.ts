@@ -1060,6 +1060,17 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Pick where you are tracking from.': 'בחרו מהיכן אתם עוקבים.',
   'Name and domain for the site or app.': 'שם ודומיין עבור האתר או האפליקציה.',
   'Install tracking': 'התקנת מעקב',
+  'No events in the last 24 hours': 'אין אירועים ב-24 השעות האחרונות',
+  'Tracking may not be installed yet, or it stopped sending. Add the snippet to your app and load a page.':
+    'ייתכן שהמעקב עדיין לא הותקן, או שהוא הפסיק לשלוח. הוסיפו את הסניפט לאפליקציה וטענו דף.',
+  'Tracking is live': 'המעקב פעיל',
+  'Listening for events': 'מאזינים לאירועים',
+  'Latest event': 'האירוע האחרון',
+  'Events are reaching Appwrite.': 'אירועים מגיעים ל-Appwrite.',
+  'Install the code and load a page. Checks every few seconds.':
+    'התקינו את הקוד וטענו דף. הבדיקה מתבצעת כל כמה שניות.',
+  'Prompt copied': 'הנחיה הועתקה',
+  'Could not copy to clipboard': 'לא ניתן היה להעתיק ללוח',
   'Add the snippet, then wait for the first event.':
     'הוסיפו את הסניפט, ואז המתינו לאירוע הראשון.',
   'Daily boundaries use your current timezone. You can change every value later in settings.':

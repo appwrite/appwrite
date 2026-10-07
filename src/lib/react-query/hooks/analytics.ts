@@ -209,6 +209,19 @@ function keepPreviousAcrossRange<T>(
   }
 }
 
+/**
+ * The last 24 whole hours: from the start of the hour 23 hours ago to the end
+ * of the current hour. Hour-aligned, so the query key only changes hourly.
+ */
+export function getLast24HoursAnalyticsRange(now: Date = new Date()): AnalyticsRange {
+  const end = new Date(now)
+  end.setMinutes(59, 59, 999)
+  const start = new Date(now)
+  start.setMinutes(0, 0, 0)
+  start.setHours(start.getHours() - 23)
+  return { startAt: start.toISOString(), endAt: end.toISOString() }
+}
+
 /** Stable serialization of a range, used as a query-key segment. */
 export function analyticsRangeKey(range: AnalyticsRange): string {
   return `${range.startAt}..${range.endAt}`
