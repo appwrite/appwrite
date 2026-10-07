@@ -17,7 +17,8 @@
 
 ### Breaking
 
-- Bumped `utopia-php/query` from `0.1.*` to `0.6.*`.
+- Bumped `utopia-php/query` from `0.1.*` to `0.6.*`, then to `^0.7`. Array
+  and object cursors are unchanged.
   `Query::getMethod()` now returns the `Utopia\Query\Method` enum
   instead of a string, and the `Query::TYPE_*` /
   `UsageQuery::TYPE_GROUP_BY_INTERVAL` / `UsageQuery::TYPE_GROUP_BY`

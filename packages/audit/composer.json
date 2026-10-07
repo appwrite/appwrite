@@ -32,7 +32,7 @@
         "utopia-php/client": "^0.5",
         "utopia-php/database": "^7.0.0",
         "utopia-php/psr7": "^0.2.1",
-        "utopia-php/query": "0.6.*",
+        "utopia-php/query": "^0.7",
         "utopia-php/validators": "^1.0"
     },
     "config": {
