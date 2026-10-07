@@ -10,6 +10,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Schedule\Clock\Test as TestClock;
 use Utopia\Schedule\Scheduler;
+use Utopia\Schedule\Source\Entry;
 
 final class DatabaseTest extends TestCase
 {
@@ -61,7 +62,7 @@ final class DatabaseTest extends TestCase
         $database->documents['projects']['project'] = new Document(['$id' => 'project']);
         $entry = $source->make($row);
 
-        $this->assertNotNull($entry);
+        $this->assertInstanceOf(Entry::class, $entry);
         $this->assertSame('project', $entry->payload['project']->getId());
         $this->assertFalse($database->getDocument('schedules', 'schedule')->isEmpty());
     }
@@ -98,7 +99,7 @@ final class DatabaseTest extends TestCase
         $database->documents['schedules']['schedule'] = $row->data;
         $entry = $source->make($row);
 
-        $this->assertNotNull($entry);
+        $this->assertInstanceOf(Entry::class, $entry);
         $this->assertSame('project', $entry->payload['project']->getId());
         $this->assertFalse($database->getDocument('schedules', 'schedule')->isEmpty());
     }
