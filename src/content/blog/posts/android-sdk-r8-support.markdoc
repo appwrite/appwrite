@@ -1,10 +1,10 @@
 ---
 layout: post
 title: "R8 code shrinking now works with the Appwrite Android SDK"
-description: Appwrite Android SDK 29.0.0 works with R8 full mode and lifts R8 obfuscation and optimization scores ahead of Google Play's February 2027 DEX requirement.
+description: Appwrite Android SDK 29.0.0 works with R8 full mode, fixing queries, Realtime, and saved sessions in release builds ahead of Google Play's 2027 DEX rule.
 date: 2026-10-07
 cover: /images/blog/android-sdk-r8-support/cover.avif
-timeToRead: 8
+timeToRead: 7
 author: chirag-aggarwal
 category: products, announcements
 featured: false
@@ -27,7 +27,7 @@ Turn on R8 in a release build with an older version of the Appwrite Android SDK 
 
 Until now, the workaround was to leave R8 off or write your own keep rules for the SDK. That stops being an option in February 2027, when Google Play starts requiring a minimum level of code optimization for apps with more than 10 MB of DEX code.
 
-**Appwrite Android SDK 29.0.0 works with R8 full mode.** Queries, operators, Realtime, and saved sessions behave the same in a shrunk release build as they do in debug. The SDK ships the R8 rules it needs, and those rules are narrow enough to leave R8 room to optimize. Here's what broke, why, and what to change in your own app.
+**Appwrite Android SDK 29.0.0 works with R8 full mode.** Queries, operators, Realtime, and saved sessions behave the same in a shrunk release build as they do in debug. Here's what broke, why, and what to change in your own app.
 
 # What changed in Android SDK 29.0.0
 
@@ -36,10 +36,9 @@ Version 29.0.0 of the [Android SDK](/docs/quick-starts/android) makes these R8 c
 - **Queries and operators** serialize to correct JSON under R8 instead of `{}`.
 - **Realtime** delivers events in shrunk builds, and Realtime errors keep their message and code.
 - **Session cookies** are saved with fixed key names, so a new build of your app can still read them.
-- **Narrower keep rules** for the bundled MQTT client lift a minimal R8 app's obfuscation score from 67.4% to 89.3% and its optimization score from 65.8% to 87.8%.
-- **R8 coverage in CI**: the SDK's end-to-end test suite now runs against R8-shrunk code.
+- **The end-to-end test suite** now also runs against R8-shrunk code.
 
-The SDK ships consumer R8 rules, and the only code you might need to touch is your own model classes, covered later in this post. 
+The SDK ships consumer R8 rules, and the only code you might need to touch is your own model classes, covered later in this post.
 
 # Google Play's DEX optimization requirement
 
@@ -52,7 +51,7 @@ Two details make this a library problem as well as an app problem:
 - **Play reads the scores from your bundle.** For apps built with AGP 8.10 or later, the percentages come from the `r8.json` file R8 embeds in the app bundle. They describe the final build, every dependency included.
 - **Library keep rules become your keep rules.** Consumer rules shipped inside a library's AAR merge into your app's R8 configuration. A broad keep rule in a dependency stops R8 from renaming or optimizing that code, and the cost shows up in your app's scores.
 
-An SDK that breaks under R8 pushes you to turn R8 off. An SDK with blanket keep rules lowers your scores even with R8 on. Version 29.0.0 addresses both.
+An SDK that breaks under R8 leaves you two workarounds, and both cost you. Turn R8 off and you miss the threshold outright. Keep the whole SDK with a blanket rule and none of its code gets renamed or optimized, which drags your scores down.
 
 # Why R8 full mode broke the Android SDK
 
@@ -78,62 +77,13 @@ The Android SDK persists session cookies in `SharedPreferences` so users stay si
 
 Obfuscated names aren't stable across builds. When you shipped a new version and the mapping changed, the new build couldn't read the cookies the old one had saved, and users lost their session on update. This is the hardest of the three to catch, because it only shows up when one release build reads data written by another.
 
-## How the SDK fixes it: explicit maps instead of reflection
+## How 29.0.0 fixes it
 
-The fix is the same in all three places. Instead of letting Gson reflect over SDK classes, the SDK now converts them to and from plain maps with keys written in code. R8 can rename fields as much as it likes, because the JSON keys are string literals.
+The SDK no longer lets Gson reflect over its own classes. It converts queries, operators, Realtime messages, and session cookies to and from plain maps whose keys are string literals in the code. R8 can rename the fields, and the JSON stays the same.
 
-Here's the new serialization path for `Query`:
+The cookie keys match what earlier SDK versions wrote in builds without R8, so sessions saved by those builds still load after you upgrade. `Query` and `Operator` also expose the conversion as public `toMap()` and `toJson()` methods, which you can use to log a query.
 
-```kotlin
-fun toMap(): Map<String, Any?> = mapOf(
-    "method" to method,
-    "attribute" to attribute,
-    "values" to values,
-).filterValues { it != null }
-
-fun toJson(): String = toMap().toJson()
-```
-
-Realtime builds `RealtimeResponse`, `RealtimeResponseEvent`, and `AppwriteException` from the parsed map the same way. The cookie store reads and writes cookies with explicit keys that match the format earlier SDK versions wrote without R8, so sessions saved by those builds still load after you upgrade.
-
-`toMap()` and `toJson()` are public on both `Query` and `Operator`, which helps when you want to log or inspect a query. Query keys also serialize in a fixed order now (`method`, `attribute`, `values`), where before the order depended on the runtime.
-
-# Narrower keep rules and higher R8 scores
-
-Version 29.0.0 also adds a `Push` service that receives push messages over MQTT without Firebase Cloud Messaging. It's built on the [HiveMQ MQTT client](https://github.com/hivemq/hivemq-mqtt-client), which uses Netty for networking. Netty reaches some of its own fields by name through atomic field updaters and `Unsafe` offsets, so it needs keep rules under R8.
-
-The rules HiveMQ suggests for Android keep the name of every Netty member:
-
-```
--keepclassmembernames class io.netty.** { *; }
--keepclassmembers class org.jctools.** { *; }
-```
-
-Those rules are safe, but they stop R8 from renaming any method in a large dependency. Shipped as consumer rules, they would have applied to every app using the SDK. Before release, the SDK team narrowed them to what Netty actually looks up by name: its fields, plus three methods its leak detector finds by name when its classes load (`toLeakAwareBuffer`, `recordLeakNonRefCountingOperation`, and `touch`).
-
-```
--keepclassmembernames class com.hivemq.client.internal.shaded.io.netty.** { <fields>; }
--keepclassmembers class com.hivemq.client.internal.shaded.org.jctools.** { <fields>; }
-```
-
-The team measured the difference on a minimal app that depends on the SDK, built with R8 full mode (`proguard-android-optimize.txt`, AGP 9.4), with scores read from the same `r8.json` that Play uses:
-
-| Metric | Blanket Netty rules | 29.0.0 rules |
-| --- | --- | --- |
-| Obfuscation score | 67.4% | 89.3% |
-| Optimization score | 65.8% | 87.8% |
-| Shrinking score | 95.0% | 95.1% |
-| DEX size | 2.57 MB | 2.44 MB |
-
-These numbers come from a minimal app, so your own scores depend on your code and your other dependencies. What the table shows is that the Appwrite SDK isn't the thing holding them down.
-
-The SDK also depends on the shaded `hivemq-mqtt-client-shaded` artifact, which relocates Netty and JCTools into a single jar. The unshaded client pulls Netty in as several jars that each carry their own `META-INF/INDEX.LIST`, and Android's packager rejects the duplicates unless the app adds packaging excludes. With the shaded jar, your app needs no excludes for the SDK.
-
-# R8 coverage in the SDK's test suite
-
-Until this release, the SDK's end-to-end tests only ran against unshrunk code, which is how these bugs went unnoticed. The SDK now has an R8 test harness. It shrinks the SDK, its dependencies, and the test code with an app's R8 configuration, then runs the full end-to-end suite on the output. A second job keeps covering the unshrunk build.
-
-Run against the SDK code from before the fix, the harness fails the same way apps did: queries emit `{}` and Realtime receives nothing. On 29.0.0, all 225 assertions pass, including push over MQTT. Every change to the Android SDK goes through both runs, so R8 regressions surface in CI instead of in your crash reports.
+These bugs went unnoticed because the SDK's end-to-end tests only ran against unshrunk code. The suite now also runs against an R8-shrunk build of the SDK. Pointed at the old code, it fails the same way apps did, so a regression like this one now fails CI before it ships.
 
 # How to use the Appwrite Android SDK with R8
 
@@ -145,12 +95,7 @@ Update the dependency in your app-level `build.gradle.kts`:
 implementation("io.appwrite:sdk-for-android:29.0.0")
 ```
 
-Check two things before you upgrade:
-
-- **The minimum SDK is now 24** (Android 7.0), up from 23.
-- **The Push service merges manifest entries** into your app: Push permissions, a foreground service, and a boot receiver.
-
-The [29.0.0 release notes](https://github.com/appwrite/sdk-for-android/releases/tag/29.0.0) list every other change, including new services and fixes for Android 7.x.
+Version 29.0.0 raises the minimum SDK from 23 to 24 (Android 7.0). If your app still supports Android 6.0, raise `minSdk` before you upgrade. The [29.0.0 release notes](https://github.com/appwrite/sdk-for-android/releases/tag/29.0.0) list every other change, including fixes for Android 7.x.
 
 ## Turn on R8 in your release build
 
@@ -229,9 +174,9 @@ Then test the release build itself, not only debug. Sign in, install a second re
 
 # Getting started with R8 and the Appwrite Android SDK
 
-R8 is moving from optional to expected on Google Play, and your dependencies decide how much of your app R8 can actually optimize. With 29.0.0, the Appwrite Android SDK works in R8 full mode and stays out of the way of your scores, so you can turn R8 on without writing rules for it.
+R8 is moving from optional to expected on Google Play. With 29.0.0, the Appwrite Android SDK works in R8 full mode, so you can turn R8 on without writing any rules for it.
 
-Create a project on [Appwrite Cloud](https://cloud.appwrite.io), add the SDK, and ship your next release with R8 on. Self-hosted Appwrite works the same way.
+Create a project on [Appwrite Cloud](https://appwrite.io), add the SDK, and ship your next release with R8 on. Self-hosted Appwrite works the same way.
 
 - [Start with Android (Kotlin)](/docs/quick-starts/android)
 - [Realtime API](/docs/apis/realtime)
