@@ -6,6 +6,7 @@ use Appwrite\Messaging\Adapter\Mqtt;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Operator;
 use Utopia\Database\Query;
@@ -178,7 +179,9 @@ class Appwrite extends PushAdapter
         return (int) $authorization->skip(
             fn () => $this->dbForProject->withTransaction(function () use ($topic, $payload, $authorization): int {
                 // Lock the topic row so a concurrent attempt for the same message waits here.
-                $this->dbForProject->getDocument('topics', $topic, forUpdate: true);
+                if ($this->dbForProject->getDocument('topics', $topic, forUpdate: true)->isEmpty()) {
+                    throw new NotFound("Topic {$topic} does not exist");
+                }
 
                 // Re-check under the lock: a racing attempt may have persisted it already.
                 $existing = $this->findLedger($authorization, $topic);
