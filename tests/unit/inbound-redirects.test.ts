@@ -115,7 +115,7 @@ describe('inbound 404 redirects', () => {
     expect(target('/init/tickets/pezzin')).toBe('/init/pezzin')
     expect(target('/oauth/success')).toBe('/auth/oauth2/success')
     expect(target('/database/events/create')).toBe('/docs/apis/events')
-    expect(target('/oss-fund-announcement')).toBe('/blog/post/oss-journey-blog')
+    expect(target('/oss-fund-announcement')).toBe('/blog/post/announcing-the-appwrite-oss-program')
     expect(target('/images/blog-local/hyperloop-b/cover.avif')).toBe(
       '/images/blog/hyperloop-b/cover.avif',
     )
