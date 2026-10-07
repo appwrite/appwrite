@@ -43,7 +43,15 @@ final class ScriptedSmtpServer
         $port = fgets($this->pipes[1]);
 
         if ($port === false || (int) $port <= 0) {
-            throw new \RuntimeException('The SMTP server did not start: ' . stream_get_contents($this->pipes[2]));
+            $error = (string) stream_get_contents($this->pipes[2]);
+            // The destructor never runs for an object whose constructor threw.
+            foreach ($this->pipes as $pipe) {
+                fclose($pipe);
+            }
+            proc_terminate($this->process);
+            proc_close($this->process);
+
+            throw new \RuntimeException('The SMTP server did not start: ' . $error);
         }
 
         $this->port = (int) $port;
