@@ -243,8 +243,7 @@ Http::init()
                     }
                 }
 
-                // Audit stores the actor id, name, email and type. Cloning the user
-                // copies every session, membership and token on the cached document.
+                // Audit reads id, sequence, name, email and type. A clone copies every session.
                 $actorId = $user->getId();
                 $actorSequence = $user->getSequence();
                 if ($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_ORGANIZATION) {
@@ -704,9 +703,7 @@ Http::init()
 
         /* If a session exists, use the target user (impersonated target or actor) for audit */
         if (! $targetUser->isEmpty()) {
-            // Audit stores the actor id, name, email and type. Cloning the user
-            // copies every session, membership and token on the cached document.
-            // Setting `type` on $targetUser itself leaks into later user reads.
+            // Audit reads id, sequence, name, email and type. A clone copies every session.
             $type = $targetUser->getAttribute('type');
             if (empty($type)) {
                 $type = $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER;
@@ -1045,9 +1042,7 @@ Http::shutdown()
         }
 
         if (! $targetUser->isEmpty()) {
-            // Audit stores the actor id, name, email and type. Cloning the user
-            // copies every session, membership and token on the cached document.
-            // Setting `type` on $targetUser itself leaks into later user reads.
+            // Audit reads id, sequence, name, email and type. A clone copies every session.
             $type = $targetUser->getAttribute('type');
             if (empty($type)) {
                 $type = $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER;

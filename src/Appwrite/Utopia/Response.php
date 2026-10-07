@@ -479,8 +479,7 @@ class Response extends SwooleResponse
             $document->setAttribute('impersonatorUserId', $this->impersonatorUser->getId());
         }
 
-        // output() copies what the model renders. Filters receive their own copy
-        // only when one is registered, so an unfiltered response is not cloned twice.
+        // output() copies the document. Filters get a separate copy only when one is set.
         $output = $this->output($document, $model);
         if ($this->hasFilters()) {
             $output = $this->applyFilters($output, $model, raw: $this->copyForOutput($document, $this->getModel($model)));
@@ -624,8 +623,9 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Relationship lists stored on the cached user document. Response models do
-     * not render them, but a deep clone still copies every nested document.
+     * Relationship lists stored on the user. Omitted from a response copy when
+     * the model has no rule for that key. `sessions` is also a usage series and
+     * a password-policy flag; `tokens` and `memberships` are list keys.
      *
      * @var array<int, string>
      */
@@ -635,15 +635,11 @@ class Response extends SwooleResponse
         'challenges',
         'memberships',
         'authenticators',
-        'identities',
     ];
 
     /**
-     * Copy a document for response rendering.
-     *
-     * Model filters mutate the document they receive, so the caller keeps the
-     * original. User relationship lists the model does not render are detached
-     * for the clone and put back before this returns.
+     * Copy for rendering. Filters mutate this copy. Relationship lists the model
+     * does not render are left off so they are not deep-cloned. The caller is unchanged.
      */
     private function copyForOutput(Document $document, Model $model): Document
     {
@@ -652,23 +648,40 @@ class Response extends SwooleResponse
         }
 
         $rules = $model->getRules();
-        $removed = [];
+        $skip = [];
         foreach (self::USER_RELATIONS as $key) {
-            if (isset($rules[$key]) || !$document->isSet($key)) {
+            if (!isset($rules[$key]) && $document->isSet($key)) {
+                $skip[$key] = true;
+            }
+        }
+
+        if ($skip === []) {
+            return clone $document;
+        }
+
+        $copy = new Document();
+        foreach ($document as $key => $value) {
+            if (isset($skip[$key])) {
                 continue;
             }
 
-            $removed[$key] = $document->getAttribute($key);
-            $document->removeAttribute($key);
+            if ($value instanceof Document) {
+                $copy->setAttribute($key, clone $value);
+                continue;
+            }
+
+            if (\is_array($value)) {
+                $copy->setAttribute($key, \array_map(
+                    fn ($item) => $item instanceof Document ? clone $item : $item,
+                    $value
+                ));
+                continue;
+            }
+
+            $copy->setAttribute($key, $value);
         }
 
-        try {
-            return clone $document;
-        } finally {
-            foreach ($removed as $key => $value) {
-                $document->setAttribute($key, $value);
-            }
-        }
+        return $copy;
     }
 
     /**

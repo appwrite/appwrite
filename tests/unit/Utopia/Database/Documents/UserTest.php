@@ -136,10 +136,10 @@ final class UserTest extends TestCase
         $hash->hashes = 0;
 
         $this->assertSame('current', $user->sessionVerify($secret, $proof));
-        $this->assertSame('current', $user->sessionVerify($secret, $proof));
         $this->assertSame(1, $hash->hashes);
 
-        $this->assertFalse($user->sessionVerify('missing', $proof));
+        $sessions[41]->setAttribute('expire', DateTime::addSeconds(new \DateTime(), -3600));
+        $this->assertFalse($user->sessionVerify($secret, $proof));
         $this->assertSame(2, $hash->hashes);
     }
 

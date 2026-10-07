@@ -27,6 +27,7 @@ final class ResponseTest extends TestCase
         $this->response->setModel(new Single());
         $this->response->setModel(new Lists());
         $this->response->setModel(new Nested());
+        $this->response->setModel(new WithSessions());
     }
 
     public function testFilters(): void
@@ -336,6 +337,27 @@ final class ResponseTest extends TestCase
         $this->assertSame('secret', $nested->getAttribute('hidden'));
         $this->assertSame('lorem ipsum', $output['singles'][0]['string']);
         $this->assertArrayNotHasKey('hidden', $output['singles'][0]);
+    }
+
+    public function testOutputKeepsSessionsWhenTheModelRendersThem(): void
+    {
+        CountingDocument::$clones = 0;
+        $session = new CountingDocument([
+            'string' => 'lorem ipsum',
+            'integer' => 123,
+            'boolean' => true,
+        ]);
+        $document = new Document([
+            'sessions' => [$session],
+        ]);
+
+        $output = $this->response->output($document, 'withSessions');
+
+        $this->assertGreaterThan(0, CountingDocument::$clones);
+        $this->assertSame($session, $document->getAttribute('sessions')[0]);
+        $this->assertSame('lorem ipsum', $session->getAttribute('string'));
+        $this->assertCount(1, $output['sessions']);
+        $this->assertSame('lorem ipsum', $output['sessions'][0]['string']);
     }
 }
 
