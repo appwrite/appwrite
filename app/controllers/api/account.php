@@ -13,6 +13,8 @@ use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Bus\Events\SessionCreated;
+use Appwrite\Deletes\Identities as DeleteIdentities;
+use Appwrite\Deletes\Targets as DeleteTargets;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -568,6 +570,10 @@ Http::delete('/v1/account')
         }
 
         $dbForProject->deleteDocument('users', $targetUser->getId());
+        $authorization->skip(function () use ($dbForProject, $targetUser) {
+            DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
+            DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
+        });
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,
