@@ -2443,9 +2443,6 @@ trait WebhooksBase
     // Helpers
 
     /**
-     * @param array<string>|null $queries
-     */
-    /**
      * Every request the webhook request catcher received from one webhook.
      *
      * @return list<array<string, mixed>>
@@ -2465,11 +2462,14 @@ trait WebhooksBase
      */
     protected function retryFailedWebhooks(): void
     {
-        // Without --limit the task retries nothing: it reads the missing limit as 0.
-        \exec('queue-retry --name=' . \escapeshellarg(Event::WEBHOOK_QUEUE_NAME) . ' --limit=1000 2>&1', $output, $exitCode);
+        // The way an operator runs it: no --limit, which must retry every failed job.
+        \exec('queue-retry --name=' . \escapeshellarg(Event::WEBHOOK_QUEUE_NAME) . ' 2>&1', $output, $exitCode);
         $this->assertSame(0, $exitCode, \implode("\n", $output));
     }
 
+    /**
+     * @param array<string>|null $queries
+     */
     protected function listWebhooks(?array $queries, ?bool $total): mixed
     {
         $webhooks = $this->client->call(Client::METHOD_GET, '/webhooks', array_merge([
