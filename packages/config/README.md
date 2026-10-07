@@ -48,7 +48,7 @@ class DatabaseConfig
 
     #[Key('db.password', new Text(length: 1024), required: true)]
     public string $password;
-    
+
     #[Key('db.name', new Nullable(new Text(length: 1024)), required: true)]
     public ?string $name;
 
@@ -148,7 +148,7 @@ class FirewallConfig
      */
     #[Key('ALLOW_IPS', new ArrayList(new Text(length: 100), length: 100), required: true)]
     public array $allowIps;
-    
+
     #[Key('CAPTCHA', new Whitelist(['enabled', 'disabled']), required: true)]
     public string $captcha;
 }
@@ -157,7 +157,7 @@ class CredentialsConfig
 {
     #[Key('DATABASE_PASSWORD', new Text(length: 1024), required: true)]
     public string $dbPass;
-    
+
     #[Key('CACHE_PASSWORD', new Text(length: 1024), required: true)]
     public string $cachePass;
 }
@@ -166,19 +166,19 @@ class EnvironmentConfig
 {
     #[Key('RATE_LIMIT_HITS', new Integer(loose: true), required: true)]
     public int $abuseHits;
-    
+
     #[Key('RATE_LIMIT_SECONDS', new Integer(loose: true), required: true)]
-    public int $abuseTime;   
+    public int $abuseTime;
 }
 
 class AppConfig
 {
     #[ConfigKey]
     public FirewallConfig $firewall;
-    
+
     #[ConfigKey]
     public CredentialsConfig $credentials;
-    
+
     #[ConfigKey]
     public EnvironmentConfig $environment;
 }
@@ -212,7 +212,7 @@ class CredentialsConfig
 {
     #[Key('DATABASE_PASSWORD', new Text(length: 1024), required: true)]
     public string $dbPass;
-    
+
     #[Key('CACHE_PASSWORD', new Text(length: 1024), required: true)]
     public string $cachePass;
 }
