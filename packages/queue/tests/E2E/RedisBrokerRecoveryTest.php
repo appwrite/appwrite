@@ -299,6 +299,43 @@ final class RedisBrokerRecoveryTest extends RedisTestCase
         $this->assertSame(1, $broker->getQueueSize($this->queue), 'the message is back on the queue');
     }
 
+    public function testMaintainParksClaimsOlderThanTheMaxAge(): void
+    {
+        $broker = new Redis($this->connection, $this->connection, reapAfter: 0, reapMaxAge: 3600);
+        $broker->publish($this->queue, ['n' => 1]);
+        $broker->publish($this->queue, ['n' => 2]);
+        [$stale] = $broker->receive($this->queue, 0, 2);
+        $this->backdate($stale->getPid(), 7200);
+        $this->expire('.claims.*');
+
+        $broker->maintain();
+
+        $this->assertSame(0, $this->processingSize());
+        $this->assertSame(1, $this->deadSize(), 'the stale claim is parked, not replayed');
+        $retried = $broker->receive($this->queue, 0)[0] ?? null;
+        $this->assertInstanceOf(\Utopia\Queue\Message::class, $retried);
+        $this->assertSame(['n' => 2], $retried->getPayload(), 'the claim within the max age is still recovered');
+    }
+
+    public function testMaintainParksClaimsAtTheMaxAttempts(): void
+    {
+        $broker = new Redis($this->connection, $this->connection, reapAfter: 0, reapMaxAttempts: 1);
+        $broker->publish($this->queue, ['n' => 1]);
+        $broker->receive($this->queue, 0);
+        $this->expire('.claims.*');
+
+        $broker->maintain();
+        $this->assertCount(1, $broker->receive($this->queue, 0), 'the first stranding is recovered');
+        $this->expire('.claims.*');
+        $this->expire('.reap-lock.*');
+
+        $broker->maintain();
+
+        $this->assertSame(0, $this->processingSize());
+        $this->assertSame(1, $this->deadSize(), 'the exhausted claim is parked, not looped');
+        $this->assertSame(0, $broker->getQueueSize($this->queue));
+    }
+
     public function testTheReapLockAdmitsOneSweepPerInterval(): void
     {
         $broker = new Redis($this->connection, $this->connection, reapAfter: 0);
