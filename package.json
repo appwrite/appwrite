@@ -127,7 +127,7 @@
     "input-otp": "^1.4.2",
     "js-yaml": "^4.2.0",
     "lucide-react": "^0.544.0",
-    "maplibre-gl": "^4.7.1",
+    "maplibre-gl": "^6.13.0",
     "mediabunny": "^1.55.3",
     "monaco-editor": "^0.55.1",
     "motion": "^12.23.22",
