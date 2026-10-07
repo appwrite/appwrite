@@ -45,6 +45,9 @@
         "swoole/ide-helper": "5.1.3",
         "utopia-php/cli": "^0.24.4"
     },
+    "suggest": {
+        "ext-swoole": "Connection::hasError() detects lost connections with the Swoole library"
+    },
     "suggests": {
         "ext-redis": "Needed to support Redis Cache Adapter",
         "ext-pdo": "Needed to support MariaDB, MySQL or SQLite Database Adapter",
