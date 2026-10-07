@@ -22,6 +22,7 @@ use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Timeout as TimeoutException;
 use Utopia\Database\Exception\Type as TypeException;
+use Utopia\Database\Exception\Unique as UniqueException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -4830,6 +4831,9 @@ class Database
                 if (!$created) {
                     throw new DatabaseException('Failed to create index');
                 }
+            } catch (UniqueException $e) {
+                // Existing rows violate the unique constraint, so no index was built.
+                throw $e;
             } catch (DuplicateException) {
                 // Metadata check (lines above) already verified index is absent
                 // from metadata. A DuplicateException from the adapter means the

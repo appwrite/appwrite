@@ -1005,10 +1005,8 @@ class Memory extends Adapter
         $hashTable = [];
         if ($type === Database::INDEX_UNIQUE && ! empty($attributes)) {
             // MariaDB rejects CREATE UNIQUE INDEX with errno 1062 when existing
-            // rows contain duplicates; Database::createIndex catches the resulting
-            // DuplicateException and treats it as an "orphan index" (the metadata
-            // is registered but the physical index is absent). Mirror that contract:
-            // throw DuplicateException so callers see identical end-state behavior.
+            // rows contain duplicates, which surfaces as UniqueException. Mirror
+            // that contract so Database::createIndex fails the same way.
             // Build the hash table while we scan so we can reuse it for fast
             // probes after the index lands — no second pass over the rows.
             foreach ($this->data[$key]['documents'] as $docKey => $row) {
@@ -1026,7 +1024,8 @@ class Memory extends Adapter
                 }
                 $hash = \serialize($signature);
                 if (isset($hashTable[$hash])) {
-                    throw new DuplicateException('Cannot create unique index: existing rows already contain duplicate values');
+                    // Under shared tables the duplicates may be another tenant's rows
+                    throw new UniqueException('Unique index violation');
                 }
                 $hashTable[$hash] = $docKey;
             }

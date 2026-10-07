@@ -925,6 +925,12 @@ class Postgres extends SQL
         try {
             return $this->getPDO()->prepare($sql)->execute();
         } catch (PDOException $e) {
+            // Existing rows violate the new unique index. Classified here because an
+            // expression key (nested object path) has no columns for processException() to parse.
+            if ($e->getCode() === '23505' && isset($e->errorInfo[1]) && $e->errorInfo[1] === 7) {
+                throw new UniqueException('Unique index violation', $e->getCode(), $e);
+            }
+
             throw $this->processException($e);
         }
     }
@@ -2196,6 +2202,11 @@ class Postgres extends SQL
         // Datetime field overflow
         if ($e->getCode() === '22008' && isset($e->errorInfo[1]) && $e->errorInfo[1] === 7) {
             return new LimitException('Datetime field overflow', $e->getCode(), $e);
+        }
+
+        // Index row too large
+        if ($e->getCode() === '54000' && isset($e->errorInfo[1]) && $e->errorInfo[1] === 7 && \str_contains($e->getMessage(), 'index row')) {
+            return new LimitException('Index row size exceeds the maximum', $e->getCode(), $e);
         }
 
         // Unknown table

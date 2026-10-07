@@ -9,6 +9,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Character as CharacterException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Operator as OperatorException;
@@ -779,6 +780,12 @@ class MariaDB extends SQL
                 ->prepare($sql)
                 ->execute();
         } catch (PDOException $e) {
+            // Existing rows violate the new unique index. Classified here because
+            // processException() can't parse the key from a localized message.
+            if ($e->getCode() === '23000' && isset($e->errorInfo[1]) && $e->errorInfo[1] === 1062) {
+                throw new UniqueException('Unique index violation', $e->getCode(), $e);
+            }
+
             throw $this->processException($e);
         }
     }
@@ -1891,6 +1898,11 @@ class MariaDB extends SQL
         // Duplicate index
         if ($e->getCode() === '42000' && isset($e->errorInfo[1]) && $e->errorInfo[1] === 1061) {
             return new DuplicateException('Index already exists', $e->getCode(), $e);
+        }
+
+        // Index key too long
+        if ($e->getCode() === '42000' && isset($e->errorInfo[1]) && $e->errorInfo[1] === 1071) {
+            return new IndexException('Index key length exceeds the maximum', $e->getCode(), $e);
         }
 
         // Duplicate row

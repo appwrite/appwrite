@@ -616,7 +616,7 @@ class Mongo extends Adapter
                     $partialFilter = [];
                     foreach ($attributes as $attr) {
                         // Find the matching attribute in collectionAttributes to get its type
-                        $attrType = 'string'; // Default fallback
+                        $attrType = $this->getMongoTypeCode(null);
                         foreach ($collectionAttributes as $collectionAttr) {
                             if ($collectionAttr->getId() === $attr) {
                                 $attrType = $this->getMongoTypeCode($collectionAttr->getAttribute('type'));
@@ -1027,6 +1027,9 @@ class Mongo extends Adapter
             $indexes['key']['_tenant'] = $this->getOrder(Database::ORDER_ASC);
         }
 
+        // Types are keyed by attribute name, which the loop below replaces with the internal key
+        $bsonTypes = \array_map(fn (string $attribute) => $this->getMongoTypeCode($indexAttributeTypes[$attribute] ?? null), $attributes);
+
         foreach ($attributes as $i => $attribute) {
 
             if (isset($indexAttributeTypes[$attribute]) && \str_contains($attribute, '.') && $indexAttributeTypes[$attribute] === Database::VAR_OBJECT) {
@@ -1088,9 +1091,7 @@ class Mongo extends Adapter
         if (in_array($type, [Database::INDEX_UNIQUE, Database::INDEX_KEY])) {
             $partialFilter = [];
             foreach ($attributes as $i => $attr) {
-                $attrType = $indexAttributeTypes[$i] ?? Database::VAR_STRING; // Default to string if type not provided
-                $attrType = $this->getMongoTypeCode($attrType);
-                $partialFilter[$attr] = ['$exists' => true, '$type' => $attrType];
+                $partialFilter[$attr] = ['$exists' => true, '$type' => $bsonTypes[$i]];
             }
             if (!empty($partialFilter)) {
                 $indexes['partialFilterExpression'] = $partialFilter;
@@ -1146,6 +1147,11 @@ class Mongo extends Adapter
 
             return $result;
         } catch (\Exception $e) {
+            // Existing documents violate the new unique index, whatever index the message names
+            if ($e->getCode() === 11000 || $e->getCode() === 11001) {
+                throw new UniqueException('Unique index violation', $e->getCode(), $e);
+            }
+
             throw $this->processException($e);
         }
     }
@@ -2670,10 +2676,15 @@ class Mongo extends Adapter
     /**
      * Converts Appwrite database type to MongoDB BSON type code.
      *
-     * @param string $appwriteType
-     * @return string
+     * Numbers use the 'number' alias: an integer is stored as int32 or int64
+     * depending on its value, and a float attribute can hold an integer.
+     * An unknown type (schemaless, internal attributes) matches every stored
+     * value type except null.
+     *
+     * @param string|null $appwriteType
+     * @return string|array<string>
      */
-    private function getMongoTypeCode(string $appwriteType): string
+    private function getMongoTypeCode(?string $appwriteType): string|array
     {
         return match ($appwriteType) {
             Database::VAR_STRING => 'string',
@@ -2681,13 +2692,14 @@ class Mongo extends Adapter
             Database::VAR_TEXT => 'string',
             Database::VAR_MEDIUMTEXT => 'string',
             Database::VAR_LONGTEXT => 'string',
-            Database::VAR_INTEGER => 'int',
-            Database::VAR_BIGINT => 'long',
-            Database::VAR_FLOAT => 'double',
+            Database::VAR_INTEGER => 'number',
+            Database::VAR_BIGINT => 'number',
+            Database::VAR_FLOAT => 'number',
             Database::VAR_BOOLEAN => 'bool',
             Database::VAR_DATETIME => 'date',
             Database::VAR_ID => 'string',
             Database::VAR_UUID7 => 'string',
+            null => ['string', 'number', 'bool', 'date', 'object'],
             default => 'string'
         };
     }
