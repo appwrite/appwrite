@@ -176,7 +176,8 @@
         "psr/http-message": "^2.0",
         "psr/container": "^2.0",
         "ramsey/uuid": "4.9.*",
-        "appwrite/appwrite": "^27.1"
+        "appwrite/appwrite": "^27.1",
+        "web-auth/webauthn-lib": "^5.3"
     },
     "require-dev": {
         "ext-fileinfo": "*",
