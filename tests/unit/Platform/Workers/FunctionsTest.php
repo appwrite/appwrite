@@ -6,6 +6,7 @@ namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Platform\Workers\Functions;
+use Appwrite\Schedule\Execution as ScheduledExecution;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
@@ -193,7 +194,11 @@ final class TestFunctions extends Functions
 
     public function schedule(Database $dbForPlatform, Document $project, Document $execution, string $functionId, callable $enqueue): bool
     {
-        return $this->enqueueScheduledExecution($dbForPlatform, $project, $execution, $functionId, $enqueue);
+        $schedules = new ScheduledExecution(static function (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed {
+            return $callback();
+        });
+
+        return $this->enqueueScheduledExecution($dbForPlatform, $project, $execution, $functionId, $enqueue, $schedules);
     }
 
     protected function updateProjectAccess(Document $project, Database $dbForPlatform): void

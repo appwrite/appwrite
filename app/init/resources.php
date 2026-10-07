@@ -26,6 +26,7 @@ use Appwrite\Messaging\Provider as MessagingProvider;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Schedule\Execution as ScheduledExecution;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Vcs\Factory as VcsFactory;
@@ -350,6 +351,8 @@ $container->set('locks', fn (Group $pools) => fn (string $key, int $ttl, callabl
         return $lock->withLock(fn () => $callback($lock), timeout: $timeout);
     }
 ), ['pools']);
+
+$container->set('scheduleForExecutions', fn (Closure $locks): ScheduledExecution => new ScheduledExecution($locks), ['locks']);
 
 // The lease spans the callback; throwing from it makes the pool reconnect the socket.
 $container->set('timelimit', fn (Group $pools) => fn (string $key, int $limit, int $seconds, callable $callback): mixed => $pools->get('abuse')->use(
