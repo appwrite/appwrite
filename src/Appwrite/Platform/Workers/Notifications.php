@@ -100,7 +100,14 @@ class Notifications extends Action
             } catch (Throwable $error) {
                 Span::add('channel', $channel);
                 Span::add('channel.error', $error->getMessage());
-                $failure ??= $error;
+
+                // A retryable failure outranks a permanent one: ending the whole
+                // message would abandon a recipient the next attempt can still
+                // reach, while the dedup above keeps the retry from repeating the
+                // recipients already delivered.
+                if ($failure === null || ($failure instanceof PermanentFailure && !$error instanceof PermanentFailure)) {
+                    $failure = $error;
+                }
             }
         }
 

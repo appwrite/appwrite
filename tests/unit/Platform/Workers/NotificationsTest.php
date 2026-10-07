@@ -21,6 +21,7 @@ use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\Span\Storage\Memory as SpanMemory;
@@ -548,6 +549,39 @@ final class NotificationsTest extends TestCase
             Query::equal('messageId', [$messageId]),
         ]);
         $this->assertCount(2, $rows, 'retry must complete the missing recipient without duplicating console');
+    }
+
+    /**
+     * One recipient's server refused for good, another's failed for now: the
+     * message has to stay retryable, or the second recipient is abandoned with it.
+     */
+    public function testARetryableFailureOutranksAPermanentOneInTheSameFanout(): void
+    {
+        $worker = new SpyNotifications();
+        $worker->throwOn[NOTIFICATION_TYPE_EMAIL] = new PermanentFailure('Error sending notification: 550 5.7.1 sender not allowed', 401);
+        $worker->throwOn[NOTIFICATION_TYPE_WEBHOOK] = new \RuntimeException('webhook down');
+
+        $payload = [
+            'project' => ['$id' => 'project-x'],
+            'recipients' => [
+                $this->userRecipient('jane@example.test', NOTIFICATION_TYPE_EMAIL, 'user-1'),
+                $this->userRecipient('https://hooks.example.test/in', NOTIFICATION_TYPE_WEBHOOK, 'user-1'),
+            ],
+            'subject' => 'Sub',
+            'body' => 'B',
+            'deduplicationKey' => 'mixed-failures',
+        ];
+
+        try {
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform);
+            $this->fail('expected the fan-out failure to propagate');
+        } catch (PermanentFailure) {
+            $this->fail('a permanent refusal must not end a message another recipient can still receive');
+        } catch (\RuntimeException $error) {
+            $this->assertSame('webhook down', $error->getMessage());
+        }
+
+        $this->assertCount(2, $worker->dispatched, 'both recipients are attempted before the verdict');
     }
 
     public function testConsoleChannelSkipsPersistAlert(): void
