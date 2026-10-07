@@ -5702,6 +5702,127 @@ trait DatabasesBase
         $this->assertEquals(2025, $upserted['body']['releaseYear']);
     }
 
+    public function testOperatorEnvelope(): void
+    {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Database for Operator Envelope'
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Operator Envelope Tests',
+            $this->getSecurityParam() => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'title',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'releaseYear',
+            'required' => true,
+        ]);
+
+        $this->waitForAllAttributes($databaseId, $collectionId);
+
+        $permissions = [
+            Permission::read(Role::user($this->getUser()['$id'])),
+            Permission::update(Role::user($this->getUser()['$id'])),
+            Permission::delete(Role::user($this->getUser()['$id'])),
+        ];
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'title' => 'Envelope Test',
+                'releaseYear' => 2020,
+            ],
+            'permissions' => $permissions,
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'releaseYear' => ['$operator' => Operator::increment(5)->toArray()],
+            ],
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals(2025, $updated['body']['releaseYear']);
+
+        /**
+         * Test for FAILURE
+         */
+        $invalid = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'releaseYear' => ['$operator' => ['method' => 'notAnOperator']],
+            ],
+        ]);
+
+        $this->assertEquals(400, $invalid['headers']['status-code']);
+
+        $invalid = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'title' => 'Envelope Test',
+                'releaseYear' => ['$operator' => 'increment'],
+            ],
+            'permissions' => $permissions,
+        ]);
+
+        $this->assertEquals(400, $invalid['headers']['status-code']);
+    }
+
     public function testBulkOperators(): void
     {
         if (!$this->getSupportForOperators()) {

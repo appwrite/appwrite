@@ -79,7 +79,7 @@ class Action extends AppwriteAction
     /**
      * Parse operator strings in data array and convert them to Operator objects.
      *
-     * @param array $data The data array that may contain operator JSON strings or arrays
+     * @param array $data The data array that may contain `$operator` envelopes, operator JSON strings or arrays
      * @param Document $collection The collection document to check for relationship attributes
      * @return array The data array with operators converted to Operator objects
      * @throws Exception If an operator string is invalid
@@ -109,8 +109,26 @@ class Action extends AppwriteAction
                 continue;
             }
 
-            // Handle operator as JSON string (from API requests)
-            if (\is_string($value)) {
+            // Handle operator wrapped in $operator envelope
+            if (\is_array($value) && isset($value['$operator'])) {
+                $operatorData = $value['$operator'];
+                if (
+                    \is_array($operatorData) &&
+                    isset($operatorData['method']) &&
+                    \is_string($operatorData['method']) &&
+                    Operator::isMethod($operatorData['method'])
+                ) {
+                    try {
+                        $data[$key] = Operator::parseOperator($operatorData);
+                    } catch (\Exception $e) {
+                        throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": ' . $e->getMessage());
+                    }
+                } else {
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator format for attribute "' . $key . '"');
+                }
+            }
+            // Handle operator as JSON string (from API requests) - DEPRECATED
+            elseif (\is_string($value)) {
                 $decoded = \json_decode($value, true);
 
                 if (
@@ -126,7 +144,7 @@ class Action extends AppwriteAction
                     }
                 }
             }
-            // Handle operator as array (from transaction logs after serialization)
+            // Handle operator as array (from transaction logs after serialization) - DEPRECATED
             elseif (
                 \is_array($value) &&
                 isset($value['method']) &&

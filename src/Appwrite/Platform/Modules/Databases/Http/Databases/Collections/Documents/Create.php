@@ -227,6 +227,17 @@ class Create extends Action
 
         $dbForDatabases = $getDatabasesDB($database);
 
+        // Parse operators in document data (for non-transaction operations)
+        if ($transactionId === null) {
+            if ($isBulk) {
+                foreach ($documents as $key => $document) {
+                    $documents[$key] = $this->parseOperators($document, $collection);
+                }
+            } else {
+                $documents[0] = $this->parseOperators($documents[0], $collection);
+            }
+        }
+
         $hasRelationships = \array_filter(
             $collection->getAttribute('attributes', []),
             fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
