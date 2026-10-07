@@ -77,7 +77,7 @@ export function IntegrationHubSection({
   description,
   items,
 }: {
-  focus: PlatformProductId
+  focus: PlatformProductId | 'videos'
   focusLabel: string
   eyebrow?: string
   title: string

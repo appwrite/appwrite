@@ -136,6 +136,13 @@ async function buildRouter() {
 }
 
 export async function getRouter() {
+  // TanStack Start SSR must get a new router per request. A singleton leaks
+  // location/matches/redirect state and races serverSsr.dehydrate() under
+  // concurrent HTML requests (dev: browser + HMR often hit together).
+  if (import.meta.env.SSR) {
+    return buildRouter()
+  }
+
   if (!routerPromise) {
     routerPromise = buildRouter().catch((error) => {
       routerPromise = null

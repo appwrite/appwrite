@@ -322,6 +322,7 @@ function getExpandedFooterGroups(
       comparisonFooterLink(footerCopy.expanded.compare.vsClerk, 'clerk', marketing),
       comparisonFooterLink(footerCopy.expanded.compare.vsAmplify, 'amplify', marketing),
       comparisonFooterLink(footerCopy.expanded.compare.vsPlanetScale, 'planetscale', marketing),
+      comparisonFooterLink(footerCopy.expanded.compare.vsMux, 'mux', marketing),
       blogFooterLink(footerCopy.expanded.compare.nextjsHosting, 'free-nextjs-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.reactHosting, 'free-react-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.vueHosting, 'free-vuejs-hosting', marketing),

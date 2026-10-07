@@ -36,6 +36,7 @@ const WEBSITE_PAGES: Array<{ name: string; path: string; url?: RegExp }> = [
   { name: 'alternative to auth0', path: '/alternative-to/auth0' },
   { name: 'alternative to convex', path: '/alternative-to/convex' },
   { name: 'alternative to cloudinary', path: '/alternative-to/cloudinary' },
+  { name: 'alternative to mux', path: '/alternative-to/mux' },
   { name: 'alternative to clerk', path: '/alternative-to/clerk' },
   { name: 'alternative to amplify', path: '/alternative-to/amplify' },
   { name: 'alternative to planetscale', path: '/alternative-to/planetscale' },

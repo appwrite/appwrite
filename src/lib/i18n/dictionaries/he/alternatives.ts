@@ -1748,4 +1748,141 @@ export const heAlternativesDictionary: Record<string, string> = {
   'Yes. Appwrite is fully open source and self-hosts with Docker, with the same APIs, SDKs, and Console as Appwrite Cloud. PlanetScale publishes Vitess as open source, but the PlanetScale platform runs only on PlanetScale.':
     'כן. Appwrite היא קוד פתוח לגמרי ורצה באירוח עצמי עם Docker, עם אותם APIs, SDKs וקונסולה כמו ב-Appwrite Cloud. PlanetScale מפרסמת את Vitess כקוד פתוח, אבל הפלטפורמה של PlanetScale רצה רק ב-PlanetScale.',
   'PostgreSQL connections': 'חיבורים ל-PostgreSQL',
+
+  // Mux
+  'Appwrite vs Mux': 'Appwrite מול Mux',
+  'Why developers choose Appwrite over Mux': 'למה מפתחים בוחרים ב-Appwrite על פני Mux',
+  'Not offered by Mux': 'לא מוצעים ב-Mux',
+  'Video API': 'API לווידאו',
+  'Appwrite Videos vs Mux: video streaming inside your backend':
+    'Appwrite Videos מול Mux: סטרימינג וידאו בתוך ה-backend שלכם',
+  'Compare Appwrite Videos and Mux. Adaptive HLS, DASH, and CMAF streams from files in Storage, with subtitles, timeline thumbnails, and a built-in player, next to auth, databases, and functions in one open-source backend.':
+    'השוו בין Appwrite Videos ל-Mux. סטרימים אדפטיביים ב-HLS, DASH ו-CMAF מקבצים באחסון, עם כתוביות, תמונות תצוגה מקדימה בציר הזמן ונגן מובנה, לצד אימות, מסדי נתונים ופונקציות ב-backend אחד בקוד פתוח.',
+  'HLS, DASH, and CMAF next to your users and data.': 'HLS, DASH ו-CMAF לצד המשתמשים והנתונים שלכם.',
+  'Mux Player and the upload SDKs are open source, but encoding, storage, and delivery run only on Mux.':
+    'Mux Player וה-SDKs להעלאה הם קוד פתוח, אבל הקידוד, האחסון וההגשה רצים רק ב-Mux.',
+  'Streaming': 'סטרימינג',
+  'Every output has its own master manifest': 'לכל פלט יש מניפסט ראשי משלו',
+  'Plus MP4 renditions, no DASH': 'וגם גרסאות MP4, בלי DASH',
+  'Encoding ladder': 'סולם קידוד',
+  'Profiles you control': 'פרופילים בשליטתכם',
+  'Resolution, bitrates, and codec per profile': 'רזולוציה, קצבי סיביות וקודק לכל פרופיל',
+  'Pick a quality level and max resolution': 'בוחרים רמת איכות ורזולוציה מקסימלית',
+  'Audio-only streams': 'סטרימים של אודיו בלבד',
+  'Stays in your Storage bucket': 'נשאר בבאקט שלכם באחסון',
+  'Untouched, under your permissions': 'ללא שינוי, תחת ההרשאות שלכם',
+  'Ingested by Mux': 'נקלט ב-Mux',
+  'Up to 12 hours per asset': 'עד 12 שעות לכל נכס',
+  'Playback': 'ניגון',
+  'Built-in player': 'נגן מובנה',
+  'Embed with an iframe from the Console': 'הטמעה עם iframe מהקונסולה',
+  'Mux Player, open source': 'Mux Player, בקוד פתוח',
+  'Third-party players': 'נגני צד שלישי',
+  'hls.js, Shaka, Video.js, AVPlayer, ExoPlayer': 'hls.js, Shaka, Video.js, AVPlayer, ExoPlayer',
+  'Any HLS player': 'כל נגן HLS',
+  'Timeline hover thumbnails': 'תמונות תצוגה מקדימה בריחוף על ציר הזמן',
+  'Playback quality insights': 'תובנות על איכות הניגון',
+  'Inspector': 'בודק',
+  'Live experience score per session': 'ציון חוויה חי לכל סשן',
+  'Included with Mux Video': 'כלול ב-Mux Video',
+  'Subtitles': 'כתוביות',
+  'Upload WebVTT and SubRip': 'העלאת WebVTT ו-SubRip',
+  'From any file in Storage': 'מכל קובץ באחסון',
+  'Extract tracks embedded in the source': 'חילוץ רצועות שמוטמעות בקובץ המקור',
+  'Automatic on the first encoding job': 'אוטומטית במשימת הקידוד הראשונה',
+  'Documented for live captions': 'מתועד לכתוביות בשידור חי',
+  'File storage for any file type': 'אחסון קבצים לכל סוג קובץ',
+  'Image transformations included': 'כולל טרנספורמציות לתמונות',
+  'Player and uploader only': 'רק הנגן וכלי ההעלאה',
+  'When Mux might still fit': 'מתי Mux עדיין יכולה להתאים',
+  'Mux is a mature, dedicated video API. If video is the whole product, its depth may be worth a separate vendor.':
+    'Mux היא API ותיק וייעודי לווידאו. אם הווידאו הוא כל המוצר, ייתכן שהעומק שלה שווה ספק נפרד.',
+  'You need live streaming with RTMP or SRT ingest, simulcast, and low-latency modes.':
+    'אתם צריכים שידור חי עם קליטה ב-RTMP או SRT, סימולקאסט ומצבי השהיה נמוכה.',
+  'You need DRM with Widevine, FairPlay, and PlayReady licenses.':
+    'אתם צריכים DRM עם רישיונות Widevine, FairPlay ו-PlayReady.',
+  'You want captions generated automatically from speech, or AI chapters and summaries.':
+    'אתם רוצים כתוביות שנוצרות אוטומטית מהדיבור, או פרקים וסיכומים מבוססי AI.',
+  'You already run Mux Data across many players and want the same quality analytics everywhere.':
+    'אתם כבר מריצים את Mux Data על נגנים רבים ורוצים את אותו ניתוח איכות בכל מקום.',
+  'Adaptive HLS, DASH, and CMAF streams with subtitles.': 'סטרימים אדפטיביים ב-HLS, DASH ו-CMAF עם כתוביות.',
+  'Grant access per user, team, or role.': 'הענקת גישה לפי משתמש, צוות או תפקיד.',
+  'Run code on every upload in 13+ runtimes.': 'הריצו קוד על כל העלאה ביותר מ-13 סביבות ריצה.',
+  'Is Appwrite a good Mux alternative?': 'האם Appwrite היא חלופה טובה ל-Mux?',
+  'Yes, for on-demand video in apps. Appwrite Videos turns files in Storage into adaptive HLS, DASH, and CMAF streams with an encoding ladder, subtitles, scrubbing thumbnails, and a built-in player, in the same project as your auth, databases, and functions. Mux is a separate, proprietary video API that delivers HLS.':
+    'כן, לווידאו לפי דרישה באפליקציות. Appwrite Videos הופכת קבצים באחסון לסטרימים אדפטיביים ב-HLS, DASH ו-CMAF עם סולם קידוד, כתוביות, תמונות תצוגה מקדימה בגלילה ונגן מובנה, באותו פרויקט עם האימות, מסדי הנתונים והפונקציות שלכם. Mux היא API נפרד וקנייני לווידאו שמגיש HLS.',
+  'What is the best open-source alternative to Mux?': 'מהי החלופה הטובה ביותר בקוד פתוח ל-Mux?',
+  'Appwrite is an open-source backend that includes video streaming. Appwrite Videos encodes and packages streams from your Storage files, next to auth, databases, functions, realtime, messaging, and hosting. Mux open sources its player and uploader, but encoding, storage, and delivery run only on Mux.':
+    'Appwrite היא backend בקוד פתוח שכולל סטרימינג וידאו. Appwrite Videos מקודדת ואורזת סטרימים מהקבצים שלכם באחסון, לצד אימות, מסדי נתונים, פונקציות, Realtime, הודעות ואירוח. Mux מפרסמת את הנגן וכלי ההעלאה שלה בקוד פתוח, אבל הקידוד, האחסון וההגשה רצים רק ב-Mux.',
+  'Does Appwrite support DASH as well as HLS?': 'האם Appwrite תומכת ב-DASH וגם ב-HLS?',
+  'Yes. Package each rendition as HLS with MPEG-TS segments, DASH with fMP4 segments, or CMAF, which encodes fMP4 once and exposes both an HLS and a DASH master manifest. Mux delivers HLS and MP4 renditions.':
+    'כן. ארזו כל גרסת קידוד כ-HLS עם סגמנטים של MPEG-TS, כ-DASH עם סגמנטים של fMP4, או כ-CMAF, שמקודד fMP4 פעם אחת וחושף גם מניפסט ראשי של HLS וגם של DASH. Mux מגישה HLS וגרסאות MP4.',
+  'Can I control the encoding ladder?': 'האם אפשר לשלוט בסולם הקידוד?',
+  'Yes. Every project starts with a default ladder of encoding profiles. Add your own profile with a resolution, video and audio bitrate, and codec, and each video gets at most one rendition per profile and output.':
+    'כן. כל פרויקט מתחיל עם סולם ברירת מחדל של פרופילי קידוד. הוסיפו פרופיל משלכם עם רזולוציה, קצב סיביות לווידאו ולאודיו וקודק, ולכל סרטון תהיה לכל היותר גרסת קידוד אחת לכל צירוף של פרופיל ופלט.',
+  'Which players work with Appwrite Videos?': 'אילו נגנים עובדים עם Appwrite Videos?',
+  'Embed the built-in Appwrite player with an iframe, or use your own. The same master manifest works with hls.js, Shaka Player, and Video.js on the web, AVPlayer on Apple platforms, ExoPlayer on Android, and the usual Flutter and React Native players.':
+    'הטמיעו את הנגן המובנה של Appwrite עם iframe, או השתמשו בנגן משלכם. אותו מניפסט ראשי עובד עם hls.js, Shaka Player ו-Video.js ב-Web, עם AVPlayer בפלטפורמות של Apple, עם ExoPlayer ב-Android ועם הנגנים המוכרים של Flutter ו-React Native.',
+  'Upload a WebVTT or SubRip file to Storage and attach it to a video with a name and an ISO 639-2 language code. Subtitle tracks embedded in the source are extracted automatically during the first encoding job.':
+    'העלו קובץ WebVTT או SubRip לאחסון וצרפו אותו לסרטון עם שם וקוד שפה לפי ISO 639-2. רצועות כתוביות שמוטמעות בקובץ המקור מחולצות אוטומטית במהלך משימת הקידוד הראשונה.',
+  'Does Appwrite Videos support live streaming?': 'האם Appwrite Videos תומכת בשידור חי?',
+  'Not today. Appwrite Videos streams on-demand video and audio from files in Storage. If you need live ingest, simulcast, or low-latency live, Mux is a strong fit for that part of your product.':
+    'לא כרגע. Appwrite Videos מזרימה וידאו ואודיו לפי דרישה מקבצים באחסון. אם אתם צריכים קליטה של שידור חי, סימולקאסט או שידור חי בהשהיה נמוכה, Mux מתאימה מאוד לחלק הזה של המוצר שלכם.',
+  'Do I need another service for users and data with Mux?': 'האם עם Mux צריך שירות נוסף למשתמשים ולנתונים?',
+  'Usually, yes. Mux handles video and audio only, so sign-in, permissions, databases, and the rest of your backend live elsewhere and you sync them with webhooks. With Appwrite, videos sit in the same project as your users, files, and data.':
+    'בדרך כלל כן. Mux מטפלת רק בווידאו ובאודיו, כך שההתחברות, ההרשאות, מסדי הנתונים ושאר ה-backend נמצאים במקום אחר ואתם מסנכרנים אותם עם webhooks. ב-Appwrite, הסרטונים נמצאים באותו פרויקט עם המשתמשים, הקבצים והנתונים שלכם.',
+  'In your Storage bucket': 'בבאקט שלכם באחסון',
+  '1 source file': 'קובץ מקור אחד',
+  'Appwrite packages': 'Appwrite אורזת',
+  'Mux delivers': 'Mux מגישה',
+  'Profiles': 'פרופילים',
+  'Bitrates are an example. Every project starts with a default ladder, and each profile sets its own resolution, video and audio bitrate, and codec.':
+    'קצבי הסיביות הם דוגמה. כל פרויקט מתחיל עם סולם ברירת מחדל, וכל פרופיל קובע רזולוציה, קצב סיביות לווידאו ולאודיו וקודק משלו.',
+  'Closest Mux request': 'הבקשה הקרובה ביותר ב-Mux',
+  'Mux picks the renditions under that tier for you.': 'Mux בוחרת בשבילכם את גרסאות הקידוד מתחת למדרגה הזו.',
+  'Mux delivers HLS only, so there is no DASH manifest to request. Mux picks the renditions under that tier for you.':
+    'Mux מגישה רק HLS, כך שאין מניפסט DASH לבקש. Mux בוחרת בשבילכם את גרסאות הקידוד מתחת למדרגה הזו.',
+  'Create a video from a bucket and file ID. Codecs, resolution, frame rate, and duration are probed for you.':
+    'צרו סרטון ממזהה באקט וקובץ. קודקים, רזולוציה, קצב פריימים ומשך מזוהים בשבילכם.',
+  'Start from the default ladder, then add profiles with your own resolution, bitrates, and codec.':
+    'התחילו מסולם ברירת המחדל, ואז הוסיפו פרופילים עם רזולוציה, קצבי סיביות וקודק משלכם.',
+  'Upload WebVTT or SubRip, or use the tracks embedded in the source. Tag each one with a language.':
+    'העלו WebVTT או SubRip, או השתמשו ברצועות שמוטמעות בקובץ המקור. תייגו כל אחת בשפה.',
+  'Sprite sheets with a WebVTT index show a frame while viewers scrub, and give every video a poster.':
+    'גיליונות ספרייט עם אינדקס WebVTT מציגים פריים בזמן שצופים גוללים, ונותנים לכל סרטון תמונת פוסטר.',
+  'Copy an iframe from the Console. Set a start time, choose captions, or lock a rendition.':
+    'העתיקו iframe מהקונסולה. הגדירו זמן התחלה, בחרו כתוביות או נעלו גרסת קידוד.',
+  'Watch a live experience score for any session, then drill into buffer, bitrate, and dropped frames.':
+    'עקבו אחרי ציון חוויה חי לכל סשן, ואז העמיקו בבאפר, בקצב הסיביות ובפריימים שנפלו.',
+  'Video that streams from': 'וידאו שמוזרם מתוך',
+  'your own backend': 'ה-backend שלכם',
+  'Mux is a separate video API that delivers HLS. Appwrite Videos turns files in your Storage buckets into HLS, DASH, and CMAF streams, in the same project as your users, permissions, and data.':
+    'Mux היא API נפרד לווידאו שמגיש HLS. Appwrite Videos הופכת קבצים בבאקטים שלכם באחסון לסטרימים ב-HLS, DASH ו-CMAF, באותו פרויקט עם המשתמשים, ההרשאות והנתונים שלכם.',
+  'Explore Appwrite Videos': 'גלו את Appwrite Videos',
+  'Pick the ladder, pick the format': 'בחרו את הסולם, בחרו את הפורמט',
+  'Toggle profiles and outputs to see the master manifest players will load. On Mux, the closest you get is a quality level and a resolution cap.':
+    'הפעילו וכבו פרופילים ופלטים כדי לראות את המניפסט הראשי שהנגנים יטענו. ב-Mux, הכי קרוב שתגיעו הוא רמת איכות ותקרת רזולוציה.',
+  'Everything between upload and play': 'כל מה שבין ההעלאה לניגון',
+  'Appwrite Videos covers encoding, packaging, subtitles, thumbnails, playback, and quality, with the source file left untouched in Storage.':
+    'Appwrite Videos מכסה קידוד, אריזה, כתוביות, תמונות תצוגה מקדימה, ניגון ואיכות, וקובץ המקור נשאר באחסון ללא שינוי.',
+  'Videos that know who your users are': 'סרטונים שיודעים מי המשתמשים שלכם',
+  'Mux sits outside your backend, so users, files, and data live somewhere else and sync through webhooks. Appwrite Videos shares them with every other product in your project.':
+    'Mux יושבת מחוץ ל-backend שלכם, כך שמשתמשים, קבצים ונתונים נמצאים במקום אחר ומסונכרנים דרך webhooks. Appwrite Videos חולקת אותם עם כל שאר המוצרים בפרויקט שלכם.',
+  'Sign in viewers and creators with the same users and teams.': 'חברו צופים ויוצרים עם אותם משתמשים וצוותים.',
+  'Sources, subtitles, and thumbnails stay in your buckets.': 'קובצי מקור, כתוביות ותמונות תצוגה מקדימה נשארים בבאקטים שלכם.',
+  'Show encoding progress in every open client as it happens.': 'הציגו את התקדמות הקידוד בכל לקוח פתוח, בזמן אמת.',
+  'Keep video IDs, titles, and metadata in rows next to your data.': 'שמרו מזהי סרטונים, כותרות ומטא-דאטה בשורות לצד הנתונים שלכם.',
+  'Host the pages your videos play on in the same project.': 'ארחו באותו פרויקט את העמודים שבהם הסרטונים מתנגנים.',
+  'Mux handles video. Appwrite runs the whole app.': 'Mux מטפלת בווידאו. Appwrite מריצה את כל האפליקציה.',
+  'Swap a video vendor for a platform. Appwrite Videos comes with auth, databases, storage, functions, realtime, messaging, and hosting in the same project.':
+    'החליפו ספק וידאו בפלטפורמה. Appwrite Videos מגיעה עם אימות, מסדי נתונים, אחסון, פונקציות, Realtime, הודעות ואירוח באותו פרויקט.',
+  'A backend you can read, run, and extend': 'Backend שאפשר לקרוא, להריץ ולהרחיב',
+  'Mux open sources its player, but encoding and delivery are a closed service. Appwrite is open source, so the backend your videos depend on is code you can audit and run.':
+    'Mux מפרסמת את הנגן שלה בקוד פתוח, אבל הקידוד וההגשה הם שירות סגור. Appwrite היא קוד פתוח, כך שה-backend שהסרטונים שלכם תלויים בו הוא קוד שאפשר לבדוק ולהריץ.',
+  'Streaming features, inside your backend': 'יכולות סטרימינג, בתוך ה-backend שלכם',
+  'Mux is a dedicated video API. Appwrite Videos is video streaming built into your backend.':
+    'Mux היא API ייעודי לווידאו. Appwrite Videos היא סטרימינג וידאו שמובנה ב-backend שלכם.',
+  'Upload a file, get a stream': 'מעלים קובץ, מקבלים סטרים',
+  'Upload to Storage, create a video, and play an adaptive stream in any HLS or DASH player.':
+    'העלו לאחסון, צרו סרטון ונגנו סטרים אדפטיבי בכל נגן HLS או DASH.',
 }

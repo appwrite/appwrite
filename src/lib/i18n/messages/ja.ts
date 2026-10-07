@@ -202,6 +202,7 @@ export const jaCatalog: EnCatalog = {
           vsClerk: 'Appwrite vs. Clerk', // pragma: allowlist secret
           vsAmplify: 'Appwrite vs. AWS Amplify', // pragma: allowlist secret
           vsPlanetScale: 'Appwrite vs. PlanetScale', // pragma: allowlist secret
+          vsMux: 'Appwrite vs. Mux', // pragma: allowlist secret
           nextjsHosting: 'Next.js ホスティング',
           reactHosting: 'React ホスティング',
           vueHosting: 'Vue.js ホスティング',

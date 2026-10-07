@@ -14,6 +14,7 @@ export type AlternativeId =
   | 'clerk'
   | 'amplify'
   | 'planetscale'
+  | 'mux'
 
 /**
  * `true` renders a check, `false` a dash, `'partial'` a half mark, `'soon'` a "Coming soon" pill,
