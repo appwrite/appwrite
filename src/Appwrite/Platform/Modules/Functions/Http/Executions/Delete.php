@@ -7,6 +7,7 @@ use Appwrite\Event\Event;
 use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Schedule\Execution as ScheduledExecution;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -72,6 +73,7 @@ class Delete extends Base
             ->inject('authorization')
             ->inject('user')
             ->inject('bus')
+            ->inject('scheduleForExecutions')
             ->callback($this->action(...));
     }
 
@@ -87,6 +89,7 @@ class Delete extends Base
         Authorization $authorization,
         User $user,
         Bus $bus,
+        ScheduledExecution $scheduleForExecutions,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -100,14 +103,13 @@ class Delete extends Base
         $execution = $executionStore->get($project->getId(), $executionId, $roles);
         if ($execution->isEmpty()) {
             // A scheduled execution can be cancelled before its document has
-            // been persisted by the executions worker. Remove the schedule and
-            // dispatch ExecutionCancelled so the worker removes the document
-            // if it lands later.
+            // been persisted. The lookup includes an inactive row: active=false
+            // is only the worker's in-flight claim until the schedule lock is
+            // released, and a failed publish restores active=true first.
             $schedule = $authorization->skip(fn () => $dbForPlatform->findOne('schedules', [
                 Query::equal('resourceId', [$executionId]),
                 Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
                 Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::equal('active', [true]),
             ]));
 
             if ($schedule->isEmpty()) {
@@ -118,10 +120,7 @@ class Delete extends Base
                 throw new Exception(Exception::EXECUTION_NOT_FOUND);
             }
 
-            $cancelled = $authorization->skip(fn () => $this->cancelSchedule($dbForPlatform, $schedule->getId()));
-            if (!$cancelled) {
-                throw new Exception(Exception::EXECUTION_NOT_FOUND);
-            }
+            $this->cancelSchedule($dbForPlatform, $scheduleForExecutions, $schedule->getId(), $authorization);
 
             $execution = new Document([
                 '$id' => $executionId,
@@ -179,21 +178,19 @@ class Delete extends Base
         }
 
         if ($status === 'scheduled') {
+            // Include an inactive row so cancellation waits out an in-flight
+            // claim instead of rejecting it before a failed publish restores it.
             $schedule = $authorization->skip(fn () => $dbForPlatform->findOne('schedules', [
                 Query::equal('resourceId', [$execution->getId()]),
                 Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
                 Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::equal('active', [true]),
             ]));
 
             if ($schedule->isEmpty()) {
                 throw new Exception(Exception::EXECUTION_IN_PROGRESS);
             }
 
-            $cancelled = $authorization->skip(fn () => $this->cancelSchedule($dbForPlatform, $schedule->getId()));
-            if (!$cancelled) {
-                throw new Exception(Exception::EXECUTION_IN_PROGRESS);
-            }
+            $this->cancelSchedule($dbForPlatform, $scheduleForExecutions, $schedule->getId(), $authorization);
 
             // Route cancellation through the executions queue so it is ordered
             // after the scheduled insert. The schedule lock ensures no delayed
@@ -214,19 +211,12 @@ class Delete extends Base
         $response->noContent();
     }
 
-    private function cancelSchedule(Database $dbForPlatform, string $scheduleId): bool
+    private function cancelSchedule(Database $dbForPlatform, ScheduledExecution $schedules, string $scheduleId, Authorization $authorization): void
     {
-        return $dbForPlatform->withTransaction(function () use ($dbForPlatform, $scheduleId) {
-            $schedule = $dbForPlatform->getDocument('schedules', $scheduleId, forUpdate: true);
-
-            // active=false is the scheduler's durable claim. Cancellation
-            // loses once that claim is committed, even if queue publication
-            // succeeds and the scheduler later fails to remove the schedule.
-            if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
-                return false;
-            }
-
-            return $dbForPlatform->deleteDocument('schedules', $scheduleId);
-        });
+        // A lock timeout throws resource_locked so the client retries. False
+        // means publication already claimed the row.
+        if (!$schedules->cancel($dbForPlatform, $scheduleId, $authorization)) {
+            throw new Exception(Exception::EXECUTION_IN_PROGRESS);
+        }
     }
 }
