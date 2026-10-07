@@ -73,12 +73,8 @@
             "Utopia\\": [
                 "packages/console/src",
                 "packages/validators/src"
-            ],
-            "Utopia\\Database\\Validator\\": "src/Database/Validator/"
-        },
-        "exclude-from-classmap": [
-            "vendor/utopia-php/database/src/Database/Validator/Structure.php"
-        ]
+            ]
+        }
     },
     "autoload-dev": {
         "psr-4": {

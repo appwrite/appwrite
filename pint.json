@@ -6,8 +6,7 @@
         "app/console"
     ],
     "notPath": [
-        "data/data.php",
-        "src/Database/Validator/StructureUpstream.php"
+        "data/data.php"
     ],
     "rules": {
         "array_indentation": true,
