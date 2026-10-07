@@ -407,7 +407,7 @@ class Certificates extends Action
         } finally {
             // Update certificate document with logs
             $certificate->setAttribute('logs', $logs);
-            $this->upsertCertificate($rule, $certificate, $dbForPlatform);
+            $certificate = $this->upsertCertificate($rule, $certificate, $dbForPlatform);
 
             // Update rule and emit events
             $rule->setAttribute('certificateId', $certificate->getId());
