@@ -379,6 +379,10 @@ class Certificates extends Action
             $logs .= \mb_strcut($e->getMessage(), 0, 500000); // Limit to 500kb
 
             $attempts = $certificate->getAttribute('attempts', 0) + 1; // Increase attempts count
+            if ($e->getMessage() === LetsEncrypt::EMAIL_REQUIRED) {
+                // Nothing to retry until an address is configured. Maintenance reschedules any certificate still under the attempt cap.
+                $attempts = self::MAX_GENERATION_ATTEMPTS;
+            }
 
             // Update attributes on certificate document
             $certificate->setAttributes([

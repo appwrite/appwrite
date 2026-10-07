@@ -89,11 +89,9 @@ final class CertificatesDomainValidationTest extends TestCase
             $writes = $this->generate(new LetsEncrypt(''), skipDomainValidation: true, mail: $mail, error: $error);
 
             $this->assertInstanceOf(\Exception::class, $error);
-            $this->assertSame(
-                'You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.',
-                $error->getMessage(),
-            );
+            $this->assertSame(LetsEncrypt::EMAIL_REQUIRED, $error->getMessage());
             $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $writes['rules']['status']);
+            $this->assertSame(5, $writes['certificates']['attempts']);
             $this->assertNull($mail->getEvents('v1-mails'));
         } finally {
             putenv($previousCertificates === false ? '_APP_EMAIL_CERTIFICATES' : '_APP_EMAIL_CERTIFICATES=' . $previousCertificates);

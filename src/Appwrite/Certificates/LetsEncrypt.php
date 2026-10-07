@@ -13,6 +13,8 @@ use Utopia\System\System;
 
 class LetsEncrypt implements Provider
 {
+    public const string EMAIL_REQUIRED = 'You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.';
+
     private string $email;
 
     public function __construct(string $email)
@@ -31,7 +33,7 @@ class LetsEncrypt implements Provider
     public function assertCanIssue(): void
     {
         if ($this->email === '') {
-            throw new Exception('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
+            throw new Exception(self::EMAIL_REQUIRED);
         }
     }
 

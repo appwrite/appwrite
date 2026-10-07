@@ -29,7 +29,7 @@ final class LetsEncryptTest extends TestCase
     public function testIssueCertificateRequiresAnEmail(): void
     {
         $this->expectException(Exception::class);
-        $this->expectExceptionMessage('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
+        $this->expectExceptionMessage(LetsEncrypt::EMAIL_REQUIRED);
 
         (new LetsEncrypt(''))->issueCertificate('cert-name', 'example.test', null);
     }
@@ -40,7 +40,7 @@ final class LetsEncryptTest extends TestCase
         putenv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
 
         $this->expectException(Exception::class);
-        $this->expectExceptionMessage('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
+        $this->expectExceptionMessage(LetsEncrypt::EMAIL_REQUIRED);
 
         LetsEncrypt::fromEnvironment()->issueCertificate('cert-name', 'example.test', null);
     }
