@@ -991,9 +991,21 @@ return function (Container $context): void {
         return $requestTimestamp;
     }, ['request']);
 
-    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath) {
+    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath, string $mode) {
+        $teamId = '';
         $teamInternalId = '';
+        // Read the header here. Decoding an organization key depends on this team.
+        $presentedKey = $request->getHeaderLine('x-appwrite-key');
+        $organizationKey = \str_starts_with($presentedKey, API_KEY_ORGANIZATION . '_');
+
         if ($project->getId() !== 'console') {
+            // Organization API keys and console admins are the only readers.
+            // A cached anonymous read does not touch the team or its keys.
+            if ($mode !== APP_MODE_ADMIN && ! $organizationKey) {
+                return new Document([]);
+            }
+
+            $teamId = $project->getAttribute('teamId', '');
             $teamInternalId = $project->getAttribute('teamInternalId', '');
         } else {
             $route = $utopia->match($request)?->route;
@@ -1001,6 +1013,7 @@ return function (Container $context): void {
             $orgHeader = $request->getHeaderLine('x-appwrite-organization', '');
             if (str_starts_with($path, '/v1/projects/:projectId')) {
                 $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectIdFromPath));
+                $teamId = $p->getAttribute('teamId', '');
                 $teamInternalId = $p->getAttribute('teamInternalId', '');
             } elseif ($path === '/v1/projects') {
                 $teamId = $request->getParam('teamId', '');
@@ -1009,9 +1022,7 @@ return function (Container $context): void {
                     return new Document([]);
                 }
 
-                $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
-
-                return $team;
+                return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
             } elseif (\in_array('organization', $route?->getGroups() ?? [], true) && ! empty($orgHeader)) {
                 // Routes in the organization group act on the organization named in the header;
                 // every other console route names its own team.
@@ -1019,20 +1030,30 @@ return function (Container $context): void {
             }
         }
 
-        // if teamInternalId is empty, return an empty document
-
-        if (empty($teamInternalId)) {
+        if (empty($teamId) || empty($teamInternalId)) {
             return new Document([]);
         }
 
-        $team = $authorization->skip(function () use ($dbForPlatform, $teamInternalId) {
-            return $dbForPlatform->findOne('teams', [
-                Query::equal('$sequence', [$teamInternalId]),
-            ]);
-        });
+        // getDocument is cached, and writing the team purges that entry. An organization
+        // key reads its rows below, so revocation does not wait on that purge.
+        $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
+
+        // A team re-created under the same ID has a new sequence and does not own this project.
+        if ($team->isEmpty() || (string) $team->getSequence() !== (string) $teamInternalId) {
+            return new Document([]);
+        }
+
+        if ($organizationKey) {
+            // Authorization reads the current key rows. The copy stored with the cached team can be stale.
+            $team->setAttribute('keys', $authorization->skip(fn () => $dbForPlatform->find('keys', [
+                Query::equal('resourceType', ['teams']),
+                Query::equal('resourceInternalId', [$team->getSequence()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ])));
+        }
 
         return $team;
-    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath']);
+    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath', 'mode']);
 
     $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
         $allowed = false;
