@@ -40,8 +40,9 @@ class Dotenv extends Parser
      * Resolve the raw right-hand side of a dotenv line into its value.
      *
      * A quoted value keeps a `#` inside its quotes instead of having it treated
-     * as a comment; an unquoted value has any inline comment (from the first
-     * `#`) stripped.
+     * as a comment. In an unquoted value a `#` starts a comment only at the start
+     * of the value or after whitespace, so `pa#ss` and `https://x.com/a#b` stay
+     * whole while `value # note` loses the note.
      */
     protected function parseValue(string $raw): string
     {
@@ -51,9 +52,8 @@ class Dotenv extends Parser
             return $this->parseQuoted($raw, $raw[0]);
         }
 
-        $hash = strpos($raw, '#');
-        if ($hash !== false) {
-            $raw = substr($raw, 0, $hash);
+        if (\preg_match('/(^|\s)#/', $raw, $match, PREG_OFFSET_CAPTURE) === 1) {
+            $raw = substr($raw, 0, $match[0][1]);
         }
 
         return trim($raw);
@@ -136,7 +136,8 @@ class Dotenv extends Parser
                 throw new Parse('Config file is not a valid dotenv file.');
             }
 
-            $name = trim($parts[0]);
+            // `export KEY=value` is shell syntax for the same variable
+            $name = (string) \preg_replace('/^export\s+/', '', trim($parts[0]));
             $value = $this->parseValue($parts[1]);
 
             // Missing name likely means bad syntax

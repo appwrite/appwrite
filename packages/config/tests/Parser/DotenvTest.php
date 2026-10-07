@@ -126,6 +126,32 @@ final class DotenvTest extends TestCase
         $this->assertSame('value', $data['PLAIN']);
     }
 
+    public function testDotenvHashInsideUnquotedValuePreserved(): void
+    {
+        $data = $this->parser->parse(
+            <<<DOTENV
+            PASSWORD=pa#ss
+            URL=https://example.com/path#fragment
+            TABBED=value	# tab before the comment
+            EMPTY=# only a comment
+            DOTENV
+        );
+
+        $this->assertSame([
+            'PASSWORD' => 'pa#ss',
+            'URL' => 'https://example.com/path#fragment',
+            'TABBED' => 'value',
+            'EMPTY' => '',
+        ], $data);
+    }
+
+    public function testDotenvExportPrefixIsNotPartOfTheKey(): void
+    {
+        $data = $this->parser->parse("export HOST=db\nexport\tPORT=3306\nexported=yes");
+
+        $this->assertSame(['HOST' => 'db', 'PORT' => '3306', 'exported' => 'yes'], $data);
+    }
+
     public function testDotenvEscapedQuoteInsideValue(): void
     {
         $data = $this->parser->parse('KEY="abc\"#def"');
