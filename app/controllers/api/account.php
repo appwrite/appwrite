@@ -570,16 +570,17 @@ Http::delete('/v1/account')
         }
 
         $dbForProject->deleteDocument('users', $targetUser->getId());
-        $authorization->skip(function () use ($dbForProject, $targetUser) {
-            DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
-            DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
-        });
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,
             type: DELETE_TYPE_DOCUMENT,
             document: $targetUser,
         ));
+
+        $authorization->skip(function () use ($dbForProject, $targetUser) {
+            DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
+            DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
+        });
 
         $queueForEvents
             ->setParam('userId', $targetUser->getId())
