@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "Show every user's profile photo with Avatars getPhoto"
+date: 2026-09-25
+cover: /images/blog/announcing-user-photos/cover.avif
+tags: auth, api, sdk
+---
+
+Appwrite Avatars can now return a profile photo for any user. [`avatars.getPhoto`](/docs/products/avatars/user-photos) tries the user's OAuth2 identity photo, then Gravatar and Libravatar, then their initials, and returns a neutral placeholder when none of them has an image, so every user gets an avatar.
+
+Pass `current()` for the signed-in user, any user's ID for comment authors and member lists, or an `emailHash` and `name` for people who don't have an account yet. Appwrite stores photos from 33 OAuth2 providers, including Google, GitHub, Discord, and LinkedIn, and refreshes them when the user signs in again or refreshes their session.
+
+{% arrow_link href="/blog/post/announcing-user-photos" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/avatars/user-photos" %}
+Show user photos in your app
+{% /arrow_link %}

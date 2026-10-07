@@ -1,0 +1,168 @@
+---
+layout: post
+title: "Announcing an improved Appwrite Databases experience. A completely new look and feel"
+description: Appwrite Databases just got the most significant update to date. We proudly present new terminology, a new TablesDB UI, and a supporting TablesDB API, all built to make working with databases simpler and faster.
+date: 2025-08-26
+lastUpdated: 2026-06-29
+cover: /images/blog/announcing-appwrite-databases-new-ui/cover.avif
+timeToRead: 5
+author: darshan-pandya
+category: announcements
+featured: false
+faqs:
+  - question: "What is TablesDB in Appwrite?"
+    answer: "TablesDB is the updated naming and API layer for [Appwrite Databases](/docs/products/databases). It maps the familiar relational vocabulary (tables, rows, columns) onto Appwrite's existing data model. The storage engine itself has not changed, only the terminology and the new method names exposed in the SDKs and Console."
+  - question: "Do I have to migrate my code to the new TablesDB API?"
+    answer: "No. The old document-based methods like `createDocument` and `listDocuments` continue to work and are fully backwards compatible. They are marked as deprecated and will receive security patches but not new features, so we recommend the TablesDB methods for new projects."
+  - question: "What is the mapping between the old and new Database terms?"
+    answer: "Collections become tables, attributes become columns, and documents become rows. Methods follow the same pattern: `createCollection` becomes `createTable`, `createDocument` becomes `createRow`, `listDocuments` becomes `listRows`, and so on. The underlying behavior of each call is unchanged."
+  - question: "Does the new TablesDB UI replace the existing Databases section in the Console?"
+    answer: "Yes. The Databases section in the Appwrite Console has been redesigned around the TablesDB UI, with browsing, editing, and managing data built around tables, rows, and columns. Existing projects automatically open in the new UI without any migration step."
+  - question: "Can I still use Appwrite Databases as a document store?"
+    answer: "Yes. The rename is purely a terminology and API change, not a switch to a strict relational engine. You can still store flexible row data, use the same query operators, and apply per-row permissions. The relational vocabulary is meant to make the model easier to reason about for developers used to SQL."
+  - question: "Where can I learn the new TablesDB methods in detail?"
+    answer: "The [Databases documentation](/docs/products/databases) covers every TablesDB method with examples for each server and client SDK. The deprecated document methods remain documented for reference, but new tutorials and references default to the TablesDB naming."
+---
+As Appwrite has grown, so has the diversity of developers building with it, from document-based systems to others deeply familiar with relational data structures. To make the platform more intuitive and consistent for everyone, we’re evolving how Appwrite Databases is presented and managed. This update also adds the ability to generate dummy data for faster prototyping, and we’re actively working on features like AI-powered suggestions to help you design your structure even faster.
+
+Appwrite Databases now adopts a more familiar **relational model** across the Console, API, SDKs, and beyond, moving away from the documents and collections terminology rooted in our JSON-based API. The new model introduces conventional data concepts like **tables**, **rows**, and **columns**, making it easier to work with structured data while maintaining full backward compatibility.
+
+As part of this shift, the Appwrite Console has been completely redesigned. The new **TablesDB UI** was built specifically to support the upgraded database experience, making browsing, editing, and managing data more intuitive.
+
+We’re also introducing the **TablesDB API,** a new API layer designed to bridge this transition. This update clears up long-standing misconceptions about Appwrite’s data model and sets the foundation for a new wave of powerful features we’re actively building toward.
+
+# What’s new
+
+This release brings both **terminology changes** and a **completely reimagined data management interface**. Let’s dive in.
+
+# Updated terminology & the TablesDB API
+
+Until now, Appwrite Databases used terminology that made sense in a JSON-document world but could be unintuitive for developers used to relational data concepts. We’re introducing a parallel set of API endpoints and terms aligned with relational database language to make the platform more approachable.
+
+| Previous terms | New terms |
+| --- | --- |
+| Collections | Tables |
+| Attributes | Columns |
+| Documents | Rows |
+
+Functionality remains the same, but the developer experience becomes clearer and more consistent for anyone familiar with structured data workflows.
+
+# New TablesDB methods
+
+Alongside these terminology updates, the **TablesDB API** introduces new method names that map directly to common CRUD operations in a relational model:
+
+| Previous methods | New methods |
+| --- | --- |
+| `createCollection` | `createTable` |
+| `createDocument` | `createRow` |
+| `createAttribute` | `createColumn` |
+| `updateDocument` | `updateRow` |
+| `deleteDocument` | `deleteRow` |
+| `getDocument` | `getRow` |
+| `listDocuments` | `listRows` |
+
+These methods make it easier to understand exactly what an operation does at a glance, while still running on the same powerful API that Appwrite has always used.
+
+Here’s an example of how you can use the new SDK methods:
+
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+async function main() {
+	const database = await tablesDB.create({
+		databaseId: '<DATABASE_ID>',
+		name: '<NAME>'
+	});
+	
+	const table = await tablesDB.createTable({
+		databaseId: database.$id,
+		tableId: '<TABLE_ID>',
+		name: '<NAME>'
+	});
+	
+	const nameColumn = await tablesDB.createVarcharColumn({
+		databaseId: database.$id,
+		tableId: table.$id,
+		key: 'name',
+		size: 255,
+		required: true
+	});
+	
+	const row = await tablesDB.createRow({
+		databaseId: database.$id,
+		tableId: table.$id,
+		rowId: sdk.ID.unique(),
+		data: { name: 'Row 1' }
+	});
+} 
+
+main();
+```
+
+# What happens to the existing methods?
+
+The old document-based methods are now deprecated and will no longer receive major upgrades. They will continue to receive security patches and essential maintenance, and we are ensuring backwards compatibility with those methods for the API, so there’s no need to migrate immediately if a specific issue arises.
+
+However, we recommend adopting the new TablesDB API for future projects to take advantage of ongoing improvements and new capabilities.
+
+# The new TablesDB UI
+
+The TablesDB UI changes the way you interact with your data in the Console. The previous Databases view was read-only and required multiple clicks to edit a single record, fine for small fixes, but inefficient for larger updates.
+
+With TablesDB UI, now you can:
+
+- **Edit inline:** Click directly into cells to make changes without opening new pages.
+- **Reorder columns effortlessly:** Use drag-and-drop to arrange columns.
+- **Navigate like in a spreadsheet:** Arrow keys, copy/paste, and undo/redo make data editing familiar and fast.
+- **Apply bulk actions:** Select multiple rows for deletion or updates in one go.
+
+All of this happens in a single, responsive view, reducing friction and helping you work at the speed of thought.
+
+Watch this [product tour](https://www.youtube.com/watch?v=b80BXqj5CJE) to learn more about the new UI and how you can get the most out of it.
+
+# What changes in your workflow?
+
+**For the new terminology and TablesDB API:**
+
+The existing `Collections` API will continue to function as expected. The new `TablesDB` API introduces a parallel, relational model experience.
+
+Key changes include:
+
+- New endpoints for managing `tables`, `columns`, and `rows`
+- Console updated to use relational database terminology
+- SDKs and API documentation aligned with the new structure
+
+Developers can choose the interface that best fits their mental model. We recommend using the TablesDB API for a more relational model experience for new projects.
+
+The **TablesDB API works on both Cloud and Self-hosted** Appwrite deployments. To fully support this shift, we’ll continue rolling out improvements across SDKs, Console, and Docs.
+
+**For the new TablesDB UI:**
+
+With the new TablesDB UI, you will see a massive improvement. If you're working with live data, this can quickly become part of your workflow.
+
+It’s built for:
+
+- **Developers** fixing seed data, toggling feature flags, or updating stale entries.
+- **Support engineers** resolving edge-case bugs or adjusting user states.
+- **PMs and Growth teams** testing new flows with live data or updating promo settings.
+
+In short, it’s for the makers who work closest to real content and users.
+
+# The road ahead
+
+This release marks a significant step forward for Appwrite Databases: shifting to a relational model, introducing the TablesDB API, and delivering a spreadsheet-like UI for faster, more intuitive data management.
+
+And we’re just getting started. These changes set the stage for powerful new capabilities in the weeks and months ahead. Update to the latest version and experience the new TablesDB UI and API.
+
+# More resources
+
+- [Visit the TablesDB API reference](/docs/references/cloud/client-web/tablesDB)
+- [Announcing Bulk API: Handle heavy data workloads with ease](/blog/post/announcing-bulk-api)
+- [Announcing CSV Import: Bring in large datasets to Appwrite with ease](/blog/post/announcing-csv-imports)

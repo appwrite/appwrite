@@ -1,0 +1,141 @@
+---
+layout: post
+title: "September product update: New Roles | Hackathon | CCPA | 1.6 for self-hosted"
+description: "A recap of everything new at Appwrite in September."
+date: 2024-09-30
+lastUpdated: 2026-06-29
+cover: /images/blog/product-update-september/cover.avif
+timeToRead: 5
+author: dennis-ivy
+category: products
+faqs:
+  - question: "What roles are available in the Appwrite Console?"
+    answer: "In addition to the owner role, you can assign Developer, Editor, Analyst, and Billing roles to team members on the Pro and Enterprise plans. Each role limits what a member can see and change inside the Console, so you can grant access without handing over full control."
+  - question: "What is CCPA compliance and why does it matter for Appwrite users?"
+    answer: "CCPA is a California privacy law that gives consumers rights over how their personal data is collected and used. Appwrite being CCPA compliant means the platform meets those requirements, which makes it easier for you to satisfy your own obligations to California users."
+  - question: "What landed in Appwrite 1.6 for self-hosted?"
+    answer: "Self-hosted 1.6 includes local development tooling, the new Appwrite CLI, binary executions, dynamic keys, delayed executions, the Go SDK and runtime, and session alerts. These are the same features that shipped on Cloud during Init."
+  - question: "Can I update existing table column names and sizes in Appwrite?"
+    answer: "Yes. You can rename a column or change its size directly from the Console without recreating the column or running a manual migration. This makes schema iteration much less painful."
+  - question: "What was the 1.5.11 security patch about?"
+    answer: "An issue in open-runtimes/executor caused error stack traces to leak into build and execution logs. Cloud was patched and affected keys were rotated by the team, and self-hosted users should upgrade to 1.5.11 to apply the fix."
+---
+Right after Init, we hit the ground running with a busy month. We introduced the new **Roles** feature, announced **CCPA compliance**, and kicked off the **Appwrite** **Hacktoberfest Hackathon.**
+
+Let’s dive into it!
+
+![New roles announcement](/images/blog/product-update-september/3.avif)
+# New roles
+
+We’ve introduced Roles, a feature designed to bring granular permissions to the Appwrite Console, available for both the Pro and Enterprise plans.
+Alongside the existing owner role, you can now assign these new roles to your team members:
+
+- Developer
+- Editor
+- Analyst
+- Billing
+
+To celebrate the new feature, you can invite members with the new roles to your Pro teams for free until the end of the year.
+
+[Read the annoucement.](https://appwrite.io/blog/post/announcing-roles-for-enhanced-collaboration-and-security)
+
+
+![Hacktoberfest Hackathon](/images/blog/product-update-september/4.avif)
+# Hacktoberfest Hackathon
+
+We’ve heard your requests, and we're excited to deliver: Appwrite is organizing its very first Hacktoberfest Hackathon this October! Here’s what you need to know:
+
+- Dates: October 1st to October 31st.
+- Teams up to **4 members** or solo.
+- **Brand-new** projects only.
+- 1st place will receive **the Appwriter**; 2nd and 3rd, the **Appwrite swag kit**.
+
+Ready to join? Registration is open now until Oct 31.
+
+[Register here.](https://apwr.dev/htf24-hackathon)
+
+![1.6 for self-hosted](/images/blog/product-update-september/1.avif)
+# 1.6 for self-hosted
+
+Appwrite 1.6 is now LIVE for self-hosted instances!
+
+Everything we launched during Init is now ready for your self-hosted instance, including:
+
+- Local Development
+- New Appwrite CLI
+- Binary executions
+- Dynamic keys
+- Delayed executions
+- Go SDK & Runtime
+- Session alerts
+
+[Check out the release notes for more details.](https://github.com/appwrite/appwrite/releases/tag/1.6.0)
+
+![CCPA announcement](/images/blog/product-update-september/2.avif)
+# CCPA
+
+Appwrite is now fully CCPA-compliant, bringing you even more security and peace of mind when building your apps. 
+
+The [California Consumer Privacy Act (CCPA)](https://oag.ca.gov/privacy/ccpa) is a landmark data privacy law that enhances consumer rights for residents of California. 
+
+[Read the announcement.](https://appwrite.io/blog/post/announcing-appwrite-is-ccpa-compliant) 
+---
+
+# Product updates
+
+## 1.5.11 Security patch
+
+A security issue was discovered in open-runtimes/executor that caused error stack traces to be included in build and execution logs, potentially exposing sensitive information.
+
+For Appwrite Cloud users, we have deployed a security patch and rotated affected keys to prevent misuse, and we've confirmed that there was no exploitation of this issue, so no action is needed on your part.
+
+If you are using a self-hosted Appwrite instance, we strongly recommend upgrading to version 1.5.11 to implement the security patch and prevent any further exposure. This upgrade is straightforward and requires no migrations or additional steps.
+
+[Check out the changelog for more details.](https://appwrite.io/changelog/entry/2024-09-17)
+
+
+## Updating table column names and sizes
+
+You can now update column names and sizes directly from your Cloud Console.
+
+This update provides better flexibility in managing your data models, allowing you to adjust columns without needing to recreate them or handle complicated migrations.
+
+This is just one in a series of updates we plan to release for Appwrite databases over the next few weeks.
+
+---
+
+# Community recognitions
+
+This month, we’re excited to feature Paralino by [Zelimir](https://x.com/heyzlmr) as part of our Monthly Community Recognitions.
+
+Paralino is a privacy focused, end-to-end encrypted location-sharing and family safety app. The first version is built for Android (iOS version coming soon) and is powered fully by Appwrite.
+
+Check it out and download the [application on Google Play](https://play.google.com/store/apps/details?id=app.paralino.android&pli=1).
+
+If you'd like to participate in next month's Community Recognitions, [join our Discord server](https://appwrite.io/discord) to showcase your project.
+
+---
+
+# Engineering resources
+
+- [Watch](https://www.youtube.com/watch?v=HGlBpna17LQ): Appwrite Database Tutorial from NetNinja
+- [Read](https://appwrite.io/blog/post/how-to-optimize-your-appwrite-project): How to optimize your Appwrite project for cost and performance
+- [Read](https://appwrite.io/blog/post/gdpr-compliance-mobile-apps-alternative-firebase): GDPR compliance for mobile apps: a developer’s guide
+- [Read](https://appwrite.io/blog/post/best-ios-android-app-development-platforms): 7 best app development frameworks for iOS and Android
+- [Read](https://appwrite.io/blog/post/build-a-chat-app-with-appwrite-and-gemini): Building a chat app with Appwrite and Google Gemini
+- [Read](https://appwrite.io/blog/post/hacktoberfest-ideas-2024): Get inspired for Hacktoberfest 2024 with these ideas
+- [Read](https://appwrite.io/blog/post/ccpa-vs-gdpr): CCPA vs GDPR: Understanding the differences and implications
+- [Read](https://appwrite.io/blog/post/appwrite-realtime-for-flutter): Get started with Appwrite Realtime for Flutter
+- [Repository:](https://github.com/PinguApps/AppwriteSdk) Appwrite SDK for .NET by [Pingu](https://github.com/pingu2k4)
+
+---
+
+# What’s to come
+
+October will be jam-packed with announcements and new features, so stay tuned! 
+
+- New Cloud and Database features are to be revealed soon!
+- A certain Backups teaser made waves on our [Discord channel](https://appwrite.io/discord)…
+- And we filmed some exciting new stuff while at our Camp in Barcelona!
+
+Follow us on [X](https://x.com/appwrite) and check our [Changelog](https://appwrite.io/changelog) regularly, as we will release more information in the coming weeks.

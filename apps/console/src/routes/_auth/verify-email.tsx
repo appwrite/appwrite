@@ -1,0 +1,246 @@
+import { useEffect } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { createFileRoute, redirect, useNavigate, useSearch } from '@tanstack/react-router'
+import { z } from 'zod'
+import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
+import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
+import { VerifyEmail } from '@/components/global/auth/VerifyEmail'
+import { sdk } from '@/lib/appwrite/sdk'
+import { AppwriteException } from '@appwrite.io/console'
+import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
+import { pageTitle } from '@/lib/utils/page-title'
+import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
+import {
+  ensureConsoleAccountQueryData,
+  refreshConsoleAccountAfterAuth,
+} from '@/lib/react-query/hooks/auth'
+import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
+import {
+  isValidRelativeRedirect,
+  prefetchPostAuthDestination,
+  requiresConsoleEmailVerification,
+  resolvePostAuthRedirect,
+  toRedirectNavigateOptions,
+} from '@/lib/post-auth-navigation'
+import { measureOpenAiAdsRegistrationCompleted } from '@/lib/openai-ads'
+import { useRouter } from '@tanstack/react-router'
+
+const searchSchema = z.object({
+  redirect: z
+    .string()
+    .optional()
+    .refine((val) => !val || isValidRelativeRedirect(val), {
+      message: 'Redirect must be a relative URL',
+    }),
+  userId: z.string().optional(),
+  secret: z.string().optional(),
+  expire: z.string().optional(),
+})
+
+function isInvalidTokenError(error: unknown): boolean {
+  return (
+    error instanceof AppwriteException && error.type === 'user_invalid_token'
+  )
+}
+
+/**
+ * Secrets already submitted in this page session. A per-component ref does not
+ * survive the remount that follows `router.invalidate()`, so the spent secret
+ * was submitted a second time and the server answered `user_invalid_token` -
+ * reporting failure for a verification that had in fact just succeeded.
+ */
+const attemptedSecrets = new Set<string>()
+
+/** Parse userId and secret from the current URL (used when following email link) so long tokens are not altered by router. */
+function getVerificationParamsFromUrl(): {
+  userId: string
+  secret: string
+} | null {
+  if (typeof window === 'undefined') return null
+  const params = new URLSearchParams(window.location.search)
+  const userId = params.get('userId')
+  const secret = params.get('secret')
+  if (userId && secret) return { userId, secret }
+  return null
+}
+
+export const Route = createFileRoute('/_auth/verify-email')({
+  component: VerifyEmailPage,
+  validateSearch: searchSchema,
+  loader: async ({ context, location }) => {
+    if (typeof window === 'undefined') return
+
+    const params = getVerificationParamsFromUrl()
+    const account = await ensureConsoleAccountQueryData(context.queryClient)
+
+    // Email link confirmations can complete without an active session.
+    if (params) return
+
+    if (!account) {
+      const pendingRedirect = (location.search as { redirect?: string }).redirect
+      throw redirect({
+        to: '/sign-in',
+        search: {
+          redirect: pendingRedirect || '/verify-email',
+        },
+        replace: true,
+      })
+    }
+
+    // Already verified, including in another tab: resume the pending flow.
+    if (!requiresConsoleEmailVerification(account)) {
+      const targetRedirect = resolvePostAuthRedirect(
+        (location.search as { redirect?: string }).redirect,
+      )
+      if (targetRedirect) {
+        throw redirect({
+          ...toRedirectNavigateOptions(targetRedirect),
+          replace: true,
+        })
+      }
+      throw redirect({ to: CONSOLE_ENTRY_PATH, replace: true })
+    }
+  },
+  head: () => ({ meta: [{ title: pageTitle('Verify your email') }] }),
+})
+
+function VerifyEmailPage() {
+  const t = useT()
+  const search = useSearch({ from: '/_auth/verify-email' })
+  const navigate = useNavigate()
+  const router = useRouter()
+  const queryClient = useQueryClient()
+
+  const confirmMutation = useMutation({
+    mutationFn: async (params: { userId: string; secret: string }) => {
+      await sdk.forConsole.account.updateEmailVerification({
+        userId: params.userId,
+        secret: params.secret,
+      })
+    },
+    onSuccess: async (_data, variables) => {
+      toast.success(t('Email verified successfully'))
+      measureOpenAiAdsRegistrationCompleted(variables.userId)
+      try {
+        const account = await refreshConsoleAccountAfterAuth(queryClient)
+        await prefetchPostAuthDestination(queryClient, account, search.redirect)
+        await router.invalidate()
+
+        // If we're headed to a specific destination (e.g. an OAuth2
+        // consent/device flow), go straight there without provisioning a
+        // personal org/project - provisioning throws on single-tenant
+        // profiles and would otherwise drop the pending authorization.
+        const targetRedirect = resolvePostAuthRedirect(search.redirect)
+        if (targetRedirect) {
+          navigate(toRedirectNavigateOptions(targetRedirect))
+          return
+        }
+
+        const orgId = await resolvePostAuthOrganizationId(account)
+        navigate({
+          to: '/organizations/$orgId',
+          params: { orgId },
+          replace: true,
+        })
+      } catch {
+        navigate({ to: CONSOLE_ENTRY_PATH })
+      }
+    },
+    onError: async (error: unknown) => {
+      // A rejected token does not prove the address is unverified: whatever
+      // consumes the secret first (a duplicate submit, a link scanner, an
+      // earlier click) leaves the account verified and the token spent. Trust
+      // the account over the token before reporting a failure.
+      if (isInvalidTokenError(error)) {
+        try {
+          const account = await refreshConsoleAccountAfterAuth(queryClient)
+          if (account?.emailVerification) {
+            toast.success(t('Email verified successfully'))
+            measureOpenAiAdsRegistrationCompleted(account.$id)
+            await router.invalidate()
+            const targetRedirect = resolvePostAuthRedirect(search.redirect)
+            if (targetRedirect) {
+              navigate({
+                ...toRedirectNavigateOptions(targetRedirect),
+                replace: true,
+              })
+              return
+            }
+            navigate({ to: CONSOLE_ENTRY_PATH })
+            return
+          }
+        } catch {
+          // Fall through and report the original failure.
+        }
+      }
+
+      const message =
+        error instanceof AppwriteException
+          ? error.message
+          : t('Verification link is invalid or has expired.')
+      toast.error(message)
+    },
+  })
+
+  const resendMutation = useMutation({
+    mutationFn: async () => {
+      // Preserve the pending destination (e.g. an OAuth2 consent/device flow)
+      // so the resent link returns the user to it after verification.
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+      const redirectParam = search.redirect
+        ? `?redirect=${encodeURIComponent(search.redirect)}`
+        : ''
+      const url = `${origin}/verify-email${redirectParam}`
+      return await sdk.forConsole.account.createEmailVerification({ url })
+    },
+    onSuccess: () => {
+      toast.success(t('Verification email sent'))
+    },
+    onError: (error: unknown) => {
+      const message =
+        error instanceof AppwriteException
+          ? error.message
+          : t('Failed to send verification email')
+      toast.error(message)
+    },
+  })
+
+  // When landing with userId + secret (from email link), confirm and redirect.
+  // Read from URL directly so the long secret is not altered by router/search parsing.
+  useEffect(() => {
+    const params = getVerificationParamsFromUrl()
+    if (params && !attemptedSecrets.has(params.secret)) {
+      attemptedSecrets.add(params.secret)
+      confirmMutation.mutate(params)
+    }
+  }, [])
+
+  const urlParams =
+    typeof window !== 'undefined' ? getVerificationParamsFromUrl() : null
+  const isConfirming = Boolean(urlParams) && confirmMutation.isPending
+
+  if (isConfirming) {
+    return (
+      <AuthFlowShell
+        width="illustration"
+        accountSwitcher={<AuthFlowAccountSwitcher />}
+      >
+        <VerifyEmail status="confirming" />
+      </AuthFlowShell>
+    )
+  }
+
+  return (
+    <AuthFlowShell
+      width="illustration"
+      accountSwitcher={<AuthFlowAccountSwitcher />}
+    >
+      <VerifyEmail
+        onResend={() => resendMutation.mutate()}
+        isResendLoading={resendMutation.isPending}
+        redirect={search.redirect}
+      />
+    </AuthFlowShell>
+  )
+}

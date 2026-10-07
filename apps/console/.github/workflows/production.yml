@@ -1,0 +1,306 @@
+name: Production deployment
+
+on:
+    workflow_dispatch:
+    release:
+        types: [published]
+
+concurrency:
+    group: ${{ github.workflow }}
+    cancel-in-progress: false
+
+env:
+    ENVIRONMENT: production
+    PROJECT: assets
+    APPLICATION: console
+    DECLARATIVE_OWNER: appwrite-labs
+    DECLARATIVE_REPOSITORY: application-configuration
+    REGISTRY_GITHUB: ghcr.io
+    REGISTRY_DOCKERHUB: docker.io
+    IMAGE_NAME: appwrite/new
+    TAG: ${{ github.event.release.tag_name || github.sha }}
+
+jobs:
+    build:
+        # gcrunner has no arm64 runners; that leg cross-builds under QEMU.
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - arch: amd64
+                      platform: linux/amd64
+                    - arch: arm64
+                      platform: linux/arm64
+        runs-on: gcrunner=${{ github.run_id }}-build-${{ strategy.job-index }}/runner=build
+        timeout-minutes: 45
+        env:
+            DOCKER_BUILD_RECORD_UPLOAD: false
+        # Matrix legs share one output map, so each leg has to write to its own
+        # key; the leg it does not belong to gets an empty value, which GitHub
+        # drops rather than writing over the other leg's digest.
+        outputs:
+            digest_amd64: ${{ matrix.arch == 'amd64' && steps.build.outputs.digest || '' }}
+            digest_arm64: ${{ matrix.arch == 'arm64' && steps.build.outputs.digest || '' }}
+        steps:
+            - name: Checkout the repo
+              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+            - name: Set up QEMU
+              if: matrix.arch == 'arm64'
+              uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
+              with:
+                  driver: docker-container
+                  cleanup: false
+
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              with:
+                  registry: ${{ env.REGISTRY_GITHUB }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              with:
+                  registry: ${{ env.REGISTRY_DOCKERHUB }}
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+            - name: Build and push by digest
+              id: build
+              uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+              with:
+                  context: .
+                  platforms: ${{ matrix.platform }}
+                  # Pushed by digest, with no tag of its own: the manifest job below
+                  # is what tags the merged index, so ${TAG} is the only tag that ever
+                  # appears in the registries - no per-arch tags to clean up.
+                  outputs: type=image,"name=${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME }},${{ env.REGISTRY_DOCKERHUB }}/${{ env.IMAGE_NAME }}",push-by-digest=true,name-canonical=true,push=true
+                  # Default provenance would push an image index per arch, leaving
+                  # imagetools to merge an index of indexes.
+                  provenance: false
+                  # The CDN base and brand constants are fixed at build time.
+                  # Other public configuration comes from the Helm chart at runtime.
+                  build-args: |
+                      "CDN_ORIGIN=https://cdn.appwrite.io"
+                      "VITE_APPWRITE_PROJECT_ID=${{ vars.VITE_APPWRITE_PROJECT_ID }}"
+                      "VITE_COMPANY_NAME=${{ vars.VITE_COMPANY_NAME }}"
+                      "VITE_CONTACT_SALES_URL=${{ vars.VITE_CONTACT_SALES_URL }}"
+                      "VITE_PRIVACY_EMAIL=${{ vars.VITE_PRIVACY_EMAIL }}"
+                  secrets: ${{ secrets.SENTRY_AUTH_TOKEN != '' && format('sentry_auth_token={0}', secrets.SENTRY_AUTH_TOKEN) || '' }}
+
+    manifest:
+        needs: build
+        runs-on: gcrunner=${{ github.run_id }}-manifest/runner=deploy
+        timeout-minutes: 10
+        steps:
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              with:
+                  registry: ${{ env.REGISTRY_GITHUB }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              with:
+                  registry: ${{ env.REGISTRY_DOCKERHUB }}
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+            - name: Tag the per-arch digests as one multi-arch manifest
+              # Digests are content-addressed, so the same pair is valid in both
+              # registries.
+              env:
+                  DIGESTS: ${{ needs.build.outputs.digest_amd64 }} ${{ needs.build.outputs.digest_arm64 }}
+              run: |
+                  for registry in "$REGISTRY_GITHUB" "$REGISTRY_DOCKERHUB"; do
+                    refs=()
+                    for digest in $DIGESTS; do
+                      refs+=("$registry/$IMAGE_NAME@$digest")
+                    done
+                    docker buildx imagetools create --tag "$registry/$IMAGE_NAME:$TAG" "${refs[@]}"
+                    docker buildx imagetools inspect "$registry/$IMAGE_NAME:$TAG"
+                  done
+
+    build-self-hosted:
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - arch: amd64
+                      platform: linux/amd64
+                    - arch: arm64
+                      platform: linux/arm64
+        runs-on: gcrunner=${{ github.run_id }}-build-self-hosted-${{ strategy.job-index }}/runner=build
+        timeout-minutes: 45
+        env:
+            DOCKER_BUILD_RECORD_UPLOAD: false
+        outputs:
+            digest_amd64: ${{ matrix.arch == 'amd64' && steps.build.outputs.digest || '' }}
+            digest_arm64: ${{ matrix.arch == 'arm64' && steps.build.outputs.digest || '' }}
+        steps:
+            - name: Checkout the repo
+              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+            - name: Set up QEMU
+              if: matrix.arch == 'arm64'
+              uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
+              with:
+                  driver: docker-container
+                  cleanup: false
+
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              with:
+                  registry: ${{ env.REGISTRY_GITHUB }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              with:
+                  registry: ${{ env.REGISTRY_DOCKERHUB }}
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+            - name: Build and push by digest
+              id: build
+              uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+              with:
+                  context: .
+                  platforms: ${{ matrix.platform }}
+                  outputs: type=image,"name=${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME }},${{ env.REGISTRY_DOCKERHUB }}/${{ env.IMAGE_NAME }}",push-by-digest=true,name-canonical=true,push=true
+                  provenance: false
+                  build-args: |
+                      "CDN_ORIGIN="
+                      "VITE_APPWRITE_PROJECT_ID=${{ vars.VITE_APPWRITE_PROJECT_ID }}"
+                      "VITE_COMPANY_NAME=${{ vars.VITE_COMPANY_NAME }}"
+                      "VITE_CONTACT_SALES_URL=${{ vars.VITE_CONTACT_SALES_URL }}"
+                      "VITE_PRIVACY_EMAIL=${{ vars.VITE_PRIVACY_EMAIL }}"
+                  secrets: ${{ secrets.SENTRY_AUTH_TOKEN != '' && format('sentry_auth_token={0}', secrets.SENTRY_AUTH_TOKEN) || '' }}
+
+    manifest-self-hosted:
+        needs: build-self-hosted
+        runs-on: gcrunner=${{ github.run_id }}-manifest-self-hosted/runner=deploy
+        timeout-minutes: 10
+        steps:
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
+
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              with:
+                  registry: ${{ env.REGISTRY_GITHUB }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              with:
+                  registry: ${{ env.REGISTRY_DOCKERHUB }}
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+            - name: Publish the multi-arch self-hosted image
+              env:
+                  DIGEST_AMD64: ${{ needs.build-self-hosted.outputs.digest_amd64 }}
+                  DIGEST_ARM64: ${{ needs.build-self-hosted.outputs.digest_arm64 }}
+              run: |
+                  set -euo pipefail
+                  : "${DIGEST_AMD64:?Missing amd64 digest}"
+                  : "${DIGEST_ARM64:?Missing arm64 digest}"
+                  for registry in "$REGISTRY_GITHUB" "$REGISTRY_DOCKERHUB"; do
+                    image="$registry/$IMAGE_NAME"
+                    docker buildx imagetools create --tag "$image:$TAG-self-hosted" \
+                      "$image@$DIGEST_AMD64" "$image@$DIGEST_ARM64"
+                    docker buildx imagetools inspect "$image:$TAG-self-hosted" --raw \
+                      | jq -e '([.manifests[].platform | "\(.os)/\(.architecture)"] | sort) == ["linux/amd64", "linux/arm64"]'
+                  done
+
+    publish-assets:
+        environment: production
+        needs: build
+        runs-on: gcrunner=${{ github.run_id }}-publish-assets/runner=deploy
+        timeout-minutes: 25
+        permissions:
+            contents: read
+            packages: read
+        steps:
+            - name: Checkout the repo
+              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              with:
+                  registry: ${{ env.REGISTRY_GITHUB }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Extract the deployed images' client assets
+              env:
+                  DIGEST_AMD64: ${{ needs.build.outputs.digest_amd64 }}
+                  DIGEST_ARM64: ${{ needs.build.outputs.digest_arm64 }}
+              run: bash .github/scripts/extract-assets.sh
+
+            - name: Publish assets to R2
+              uses: docker://rclone/rclone@sha256:45401ad7410db1d67ffdb58e19059ad20b0d8e0285a60e38bbec55cc1019c7a5 # 1.75.1
+              with:
+                  entrypoint: /bin/sh
+                  args: .github/scripts/publish-assets.sh
+              env:
+                  RCLONE_CONFIG_R2_TYPE: s3
+                  RCLONE_CONFIG_R2_PROVIDER: Cloudflare
+                  RCLONE_CONFIG_R2_ENDPOINT: https://285d5ba7177bab8490e237b619b4b9f6.r2.cloudflarestorage.com
+                  RCLONE_CONFIG_R2_REGION: auto
+                  RCLONE_CONFIG_R2_NO_CHECK_BUCKET: 'true'
+                  RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+                  RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+                  R2_BUCKET: appwrite-console
+
+    deploy:
+        # Never roll out HTML that references assets which failed to publish.
+        needs: [manifest, publish-assets]
+        runs-on: gcrunner=${{ github.run_id }}-deploy/runner=deploy
+        timeout-minutes: 10
+        # Shared across the staging and production workflows so their deploy
+        # jobs never push to application-configuration at the same time.
+        concurrency:
+            group: declarative-deploy
+            cancel-in-progress: false
+        steps:
+            - name: Get token for ${{ env.DECLARATIVE_REPOSITORY }}
+              id: app-token
+              uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+              with:
+                  client-id: ${{ vars.DECLARATIVE_DEPLOYMENT_GITHUB_APP_ID }}
+                  private-key: ${{ secrets.DECLARATIVE_DEPLOYMENT_GITHUB_APP_PRIVATE_KEY }}
+                  owner: ${{ env.DECLARATIVE_OWNER }}
+                  repositories: ${{ env.DECLARATIVE_REPOSITORY }}
+
+            - name: Checkout ${{ env.DECLARATIVE_REPOSITORY }}
+              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+              with:
+                  repository: ${{ env.DECLARATIVE_OWNER }}/${{ env.DECLARATIVE_REPOSITORY }}
+                  token: ${{ steps.app-token.outputs.token }}
+
+            - name: Update image reference
+              run: yq -i '.global.image.repository = strenv(IMAGE_NAME) | .global.image.tag = strenv(TAG)' ${{ env.PROJECT }}/${{ env.ENVIRONMENT }}/${{ env.APPLICATION }}/default.yaml
+
+            - name: Commit and push
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git add ${{ env.PROJECT }}/${{ env.ENVIRONMENT }}/${{ env.APPLICATION }}/default.yaml
+                  if git diff --cached --quiet; then
+                    echo "No changes to commit"
+                  else
+                    git commit -m "chore(${{ env.ENVIRONMENT }}): ${{ env.APPLICATION }} image to ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
+                    git push
+                  fi

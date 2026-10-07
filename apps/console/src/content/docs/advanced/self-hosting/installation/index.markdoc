@@ -1,0 +1,494 @@
+---
+layout: article
+title: Installation
+description: Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.
+---
+
+This guide will walk you through installing Appwrite on your server using Docker. Appwrite is designed to run on any operating system that supports Docker.
+
+# System requirements {% #system-requirements %}
+
+Before installing Appwrite, ensure your system meets these minimum requirements:
+
+- **2 CPU cores**
+- **4GB of RAM**
+- **2GB of swap memory**
+- **Operating system** that supports Docker
+- **Docker Compose Version 2**
+
+# Install with Docker {% #install-with-docker %}
+
+The easiest way to install Appwrite is using our Docker installer. The installer launches a web-based setup wizard that guides you through the entire process.
+
+Before running the installation command, ensure you have [Docker CLI](https://www.docker.com/products/docker-desktop) installed on your host machine.
+
+{% info title="Firewall configuration" %}
+The installation wizard runs on port **20080**. If you are installing on a remote server, ensure that port 20080 is open in your firewall or security group settings before proceeding. You can close this port after installation is complete.
+{% /info %}
+
+## Installation commands {% #installation-commands %}
+
+{% tabs %}
+{% tabsitem #unix title="macOS and Linux" %}
+Run the following command in your terminal:
+
+```bash
+docker run -it --rm \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="install" \
+    appwrite/appwrite:2.3.0
+```
+{% /tabsitem %}
+
+{% tabsitem #cmd title="Windows (CMD)" %}
+```cmd
+docker run -it --rm ^
+    --publish 20080:20080 ^
+    --volume //var/run/docker.sock:/var/run/docker.sock ^
+    --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
+    --entrypoint="install" ^
+    appwrite/appwrite:2.3.0
+```
+{% /tabsitem %}
+
+{% tabsitem #powershell title="Windows (PowerShell)" %}
+```powershell
+docker run -it --rm `
+    --publish 20080:20080 `
+    --volume /var/run/docker.sock:/var/run/docker.sock `
+    --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
+    --entrypoint="install" `
+    appwrite/appwrite:2.3.0
+```
+{% /tabsitem %}
+{% /tabs %}
+
+Once the command is running, open your browser and navigate to `http://localhost:20080` to access the setup wizard.
+
+# Setup wizard {% #setup-wizard %}
+
+The setup wizard walks you through four steps to configure your Appwrite instance.
+
+## Step 1: Setup your app {% #wizard-setup %}
+
+Configure your Appwrite instance's basic settings.
+
+{% only_dark %}
+![Setup your app](/images/docs/advanced/self-hosting/installation/dark/wizard-setup-app.avif)
+{% /only_dark %}
+{% only_light %}
+![Setup your app](/images/docs/advanced/self-hosting/installation/wizard-setup-app.avif)
+{% /only_light %}
+
+- **Hostname** - The domain or IP address where your Appwrite instance will be accessible.
+- **Use HTTPS** - Turn this on when your Appwrite domain uses HTTPS, including behind a reverse proxy.
+- **Database** - Choose [PostgreSQL, MariaDB, or MongoDB](/docs/advanced/self-hosting/configuration/databases) as your database backend. PostgreSQL is selected by default.
+- **Advanced settings** - Optionally configure the [worker topology](/docs/advanced/self-hosting/configuration/topologies) under **Workers and schedulers**, HTTP and HTTPS ports, and SSL certificate email.
+
+## Step 2: Secure your app {% #wizard-secure %}
+
+A secret API key is automatically generated for your instance. This key is used to encrypt sensitive data.
+
+{% only_dark %}
+![Secure your app](/images/docs/advanced/self-hosting/installation/dark/wizard-secure.avif)
+{% /only_dark %}
+{% only_light %}
+![Secure your app](/images/docs/advanced/self-hosting/installation/wizard-secure.avif)
+{% /only_light %}
+
+{% info title="Save your key" %}
+You won't be able to see this key again after proceeding. Copy it somewhere safe before continuing.
+{% /info %}
+
+You can use the **Copy** button to copy the key or **Regenerate** to create a new one.
+
+## Step 3: Create your account {% #wizard-account %}
+
+Set up the email and password for your Appwrite account. You'll use these credentials to sign in to the Appwrite Console after installation.
+
+{% only_dark %}
+![Create your account](/images/docs/advanced/self-hosting/installation/dark/wizard-account.avif)
+{% /only_dark %}
+{% only_light %}
+![Create your account](/images/docs/advanced/self-hosting/installation/wizard-account.avif)
+{% /only_light %}
+
+## Step 4: Review your setup {% #wizard-review %}
+
+Review all your configuration settings. If anything looks wrong, use the **Back** button to make changes. When you're ready, click **Install** to begin the installation.
+
+{% only_dark %}
+![Review your setup](/images/docs/advanced/self-hosting/installation/dark/wizard-review.avif)
+{% /only_dark %}
+{% only_light %}
+![Review your setup](/images/docs/advanced/self-hosting/installation/wizard-review.avif)
+{% /only_light %}
+
+# Manual installation {% #manual-installation %}
+
+For advanced users who prefer manual setup, you can install Appwrite using Docker Compose directly.
+
+## Generate configuration files {% #generate-configuration %}
+
+{% compose_generator %}{% /compose_generator %}
+
+## Install Appwrite {% #install-appwrite %}
+
+1. Create a directory named `appwrite` and place the generated files inside. Every installation needs `docker-compose.yml` and `.env`; MongoDB installations also need `mongo-init.js` and `mongo-entrypoint.sh`
+2. Edit the `.env` file to customize your installation. At minimum, update `_APP_OPENSSL_KEY_V1` and `_APP_EXECUTOR_SECRET` with unique secret values
+3. Start the Appwrite stack:
+
+```bash
+docker compose up -d --remove-orphans
+```
+
+{% info title="Worker topologies" %}
+By default, Appwrite runs all queue workers in a single container. To run one container per queue instead, see [Worker topologies](/docs/advanced/self-hosting/configuration/topologies).
+{% /info %}
+
+# Post-installation {% #post-installation %}
+
+After installation completes:
+
+1. **Access the Console** - Navigate to your machine's hostname or IP address in your browser
+2. **Create your first project** - Set up your development environment
+
+{% info title="Startup time" %}
+On non-Linux hosts, the server might take a few minutes to start after installation completes. This is normal behavior.
+{% /info %}
+
+## Organizations {% #organizations %}
+
+A self-hosted instance allows one organization to be created. The Console creates it, along with an initial project, when the first user signs in. The limit applies to the instance, not to each account.
+
+Invite other users to the organization to share its existing projects. Creating an account alone does not grant organization or project access, and signing up does not create a separate project for each user. If you allow additional accounts to register with `_APP_CONSOLE_WHITELIST_ROOT=disabled`, they still need to accept an organization invitation.
+
+Existing organizations from an upgrade are preserved; they are not merged or deleted. Accounts belonging to several organizations can still switch between them and transfer projects. The Console hides the organization switcher when an account belongs to only one organization.
+
+Organizations use console teams, but this restriction does not apply to teams inside application projects. You can continue creating those teams through the API and SDKs.
+
+## SDK version compatibility {% #sdk-version-compatibility %}
+
+The tables below map each released self-hosted Appwrite version to the SDK versions built against it. Use this to pin your SDK to a version known to work with your server.
+
+The Appwrite CLI is not listed. One CLI build works against a range of server versions.
+
+### Client SDKs {% #client-compatibility %}
+
+{% table %}
+* Appwrite {% width=120 %}
+* Web
+* Flutter
+* React Native
+* Apple
+* Android
+---
+* 1.7.0
+* 18.0.0
+* 16.0.0
+* 0.9.0
+* 10.0.0
+* 8.0.0
+---
+* 1.7.1 to 1.7.3
+* 18.0.0
+* 16.0.0
+* 0.9.0
+* 10.0.0
+* 8.0.0
+---
+* 1.7.4
+* 18.1.1
+* 17.0.0
+* 0.10.0
+* 10.0.0
+* 8.0.0
+---
+* 1.7.5
+* 18.1.1
+* 17.0.0
+* 0.10.0
+* 10.0.0
+* 8.0.0
+---
+* 1.8.0
+* 21.4.0
+* 20.3.0
+* 0.18.0
+* 13.3.0
+* 11.3.0
+---
+* 1.8.1
+* 23.0.0
+* 22.0.0
+* 0.25.0
+* 15.0.0
+* 13.0.0
+---
+* 1.9.0
+* 24.1.1
+* 23.0.0
+* 0.27.1
+* 16.0.0
+* 14.1.0
+---
+* 1.9.5
+* 26.1.0
+* 25.2.0
+* 0.33.0
+* 18.2.0
+* 25.2.0
+---
+* 1.9.6
+* 26.2.0
+* 25.3.0
+* 0.34.0
+* 18.3.0
+* 26.0.0
+---
+* 2.0.0
+* 27.0.0
+* 26.2.0
+* 0.35.0
+* 19.0.0
+* 27.2.0
+---
+* 2.1.0
+* 27.0.0
+* 26.2.0
+* 0.35.0
+* 19.0.0
+* 27.2.0
+---
+* 2.2.0
+* 27.0.0
+* 26.2.0
+* 0.35.0
+* 19.0.0
+* 27.2.0
+---
+* 2.3.0
+* 27.0.0
+* 26.2.0
+* 1.0.0
+* 19.0.0
+* 27.2.0
+{% /table %}
+
+### Server SDKs {% #server-compatibility %}
+
+{% table %}
+* Appwrite {% width=120 %}
+* Node.js
+* Python
+* PHP
+* Dart
+* Ruby
+* .NET
+* Go
+* Swift
+* Kotlin
+* CLI
+---
+* 1.7.0
+* 17.0.0
+* 11.0.0
+* 15.0.0
+* 16.0.0
+* 16.0.0
+* 0.13.0
+* v0.7.0
+* 10.0.0
+* 9.0.0
+* 6.2.3
+---
+* 1.7.1 to 1.7.3
+* 17.0.0
+* 11.0.0
+* 15.0.0
+* 16.0.0
+* 16.0.0
+* 0.13.0
+* v0.7.0
+* 10.0.0
+* 9.0.0
+* 6.2.3
+---
+* 1.7.4
+* 17.1.0
+* 11.0.0
+* 15.0.0
+* 16.1.0
+* 16.0.0
+* 0.13.0
+* v0.7.0
+* 10.0.0
+* 9.0.0
+* 8.0.0
+---
+* 1.7.5
+* 17.1.0
+* 11.0.0
+* 15.0.0
+* 16.1.0
+* 16.0.0
+* 0.13.0
+* v0.7.0
+* 10.0.0
+* 9.0.0
+* 8.0.0
+---
+* 1.8.0
+* 20.2.1
+* 13.4.1
+* 17.5.0
+* 19.3.0
+* 19.3.0
+* 0.22.0
+* v0.13.1
+* 13.2.2
+* 12.3.0
+* 12.0.1
+---
+* 1.8.1
+* 22.1.3
+* 16.0.0
+* 20.2.1
+* 21.3.0
+* 21.1.0
+* 1.0.0
+* v1.0.0
+* 15.2.0
+* 14.1.0
+* 15.0.0
+---
+* 1.9.0
+* 23.1.0
+* 17.0.0
+* 21.0.0
+* 22.0.0
+* 22.0.0
+* 2.0.0
+* v2.0.0
+* 16.0.0
+* 15.0.0
+* 17.4.0
+---
+* 1.9.5
+* 26.2.0
+* 21.0.0
+* 26.1.0
+* 25.1.0
+* 25.1.0
+* 5.1.0
+* v5.1.0
+* 19.1.0
+* 18.1.0
+* 22.3.0
+---
+* 1.9.6
+* 27.0.0
+* 22.1.0
+* 27.0.0
+* 26.0.0
+* 26.0.0
+* 6.0.0
+* v6.0.0
+* 20.0.0
+* 19.0.0
+* 23.0.0
+---
+* 2.0.0
+* 29.0.0
+* 24.0.0
+* 30.0.0
+* 29.0.0
+* 28.0.0
+* 8.0.0
+* v7.2.0
+* 22.0.0
+* 22.0.0
+* 27.3.0
+---
+* 2.1.0
+* 29.0.0
+* 24.0.0
+* 30.0.0
+* 29.0.0
+* 28.0.0
+* 8.0.0
+* v7.3.0
+* 22.0.0
+* 22.0.0
+* 27.3.0
+---
+* 2.2.0
+* 29.0.0
+* 24.0.0
+* 30.0.0
+* 29.0.0
+* 28.0.0
+* 8.0.0
+* v7.3.0
+* 22.0.0
+* 22.0.0
+* 27.3.0
+---
+* 2.3.0
+* 29.0.0
+* 24.0.0
+* 30.0.0
+* 29.0.0
+* 28.0.0
+* 8.0.0
+* v7.3.0
+* 22.0.0
+* 22.0.0
+* 27.3.0
+{% /table %}
+
+# Managing your installation {% #managing-installation %}
+
+## Stop Appwrite {% #stop %}
+
+To stop your Appwrite containers:
+
+```bash
+docker compose stop
+```
+
+## Restart Appwrite {% #restart %}
+
+To restart your Appwrite containers:
+
+```bash
+docker compose start
+```
+
+## Uninstall Appwrite {% #uninstall %}
+
+To completely remove Appwrite and all its data:
+
+```bash
+docker compose down -v
+```
+
+{% info title="Data loss warning" %}
+The uninstall command will permanently delete all your Appwrite data. Make sure to backup any important information before running this command.
+{% /info %}
+
+# Next steps {% #next-steps %}
+
+After successfully installing Appwrite, you can:
+
+[Deploy on cloud platforms](/docs/advanced/self-hosting/platforms/aws) - Learn how to deploy on AWS, DigitalOcean, and other cloud providers
+
+[Configure services](/docs/advanced/self-hosting/configuration/email) - Set up email, SMS, storage, and other services
+
+[Configure databases](/docs/advanced/self-hosting/configuration/databases) - Learn more about MongoDB and MariaDB configuration
+
+[Production setup](/docs/advanced/self-hosting/production) - Prepare your installation for production use
+
+[Update Appwrite](/docs/advanced/self-hosting/production/updates) - Keep your installation up to date

@@ -1,0 +1,52 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build
+    runs-on: gcrunner=${{ github.run_id }}-build/runner=checks
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check deployment scripts
+        run: |
+          bash -n .github/scripts/extract-assets.sh
+          sh -n .github/scripts/publish-assets.sh
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check connect snippet line width
+        run: bun run lint:snippets
+
+      - name: Check content for hidden Unicode
+        run: bun run lint:content
+
+      - name: Check for links to removed blog posts
+        run: bun run lint:removed-blog-links
+
+      - name: Check for native browser dialogs
+        run: bun run lint:native-dialogs
+
+      - name: Check for preview SDK pins
+        run: bun run lint:sdk-pins
+
+      - name: Unit tests
+        run: bun run test:unit
+
+      - name: Build
+        run: bun run build
+        env:
+          VITE_APPWRITE_ENDPOINT: http://appwrite.test/v1
+          PUBLIC_APPWRITE_ENDPOINT: http://appwrite.test/v1

@@ -1,0 +1,1002 @@
+---
+layout: article
+title: Pagination
+description: Implement pagination for large data sets in Appwrite Databases. Explore techniques for splitting and displaying data across multiple pages.
+---
+
+As your database grows in size, you'll need to paginate results returned.
+Pagination improves performance by returning a subset of results that match a query at a time, called a page.
+
+By default, list operations return 25 items per page, which can be changed using the `Query.limit(25)` operator.
+There is no hard limit on the number of items you can request. However, beware that **large pages can degrade performance**.
+
+# Offset pagination {% #offset-pagination %}
+
+Offset pagination works by dividing rows into `M` pages containing `N` rows.
+Every page is retrieved by skipping `offset = M * (N - 1)` items and reading the following `M` pages.
+
+Using `Query.limit()` and `Query.offset()` you can achieve offset pagination.
+With `Query.limit()` you can define how many rows can be returned from one request.
+The `Query.offset()` is number of records you wish to skip before selecting records.
+
+{% multicode %}
+```client-web
+import { Client, Query, TablesDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+// Page 1
+const page1 = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+        Query.limit(25),
+        Query.offset(0)
+    ]
+});
+
+// Page 2
+const page2 = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+        Query.limit(25),
+        Query.offset(25)
+    ]
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    final tablesDB = TablesDB(client);
+
+    final page1 = await tablesDB.listRows(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<TABLE_ID>',
+        queries: [
+            Query.limit(25),
+            Query.offset(0)
+        ]
+    );
+
+    final page2 = await tablesDB.listRows(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<TABLE_ID>',
+        queries: [
+            Query.limit(25),
+            Query.offset(25)
+        ]
+    );
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    let tablesDB = TablesDB(client)
+
+    let page1 = try await tablesDB.listRows(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        queries: [
+            Query.limit(25),
+            Query.offset(0)
+        ]
+    )
+
+    let page2 = try await tablesDB.listRows(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        queries: [
+            Query.limit(25),
+            Query.offset(25)
+        ]
+    )
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    val tablesDB = TablesDB(client)
+
+    val page1 = tablesDB.listRows(
+        databaseId = "<DATABASE_ID>",
+        tableId = "<TABLE_ID>",
+        queries = [
+            Query.limit(25),
+            Query.offset(0)
+        ]
+    )
+
+    val page2 = tablesDB.listRows(
+        databaseId = "<DATABASE_ID>",
+        tableId = "<TABLE_ID>",
+        queries = [
+            Query.limit(25),
+            Query.offset(25)
+        ]
+    )
+}
+```
+
+{% /multicode %}
+
+{% info title="Drawbacks" %}
+While traditional offset pagination is familiar, it comes with some drawbacks.
+The request gets slower as the number of records increases because the database has to read up to the offset number `M * (N - 1)` of rows to know where it should start selecting data.
+If the data changes frequently, offset pagination will also produce **missing and duplicate** results.
+{% /info %}
+
+# Cursor pagination {% #cursor-pagination %}
+
+The cursor is a unique identifier for a row that points to where the next page should start.
+After reading a page of rows, pass the last row's ID into the `Query.cursorAfter(lastId)` query method to get the next page of rows.
+Pass the first row's ID into the `Query.cursorBefore(firstId)` query method to retrieve the previous page.
+
+{% multicode %}
+
+```client-web
+import { Client, Query, TablesDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>");
+
+const tablesDB = new TablesDB(client);
+
+// Page 1
+const page1 = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+        Query.limit(25),
+    ]
+});
+
+const lastId = page1.rows[page1.rows.length - 1].$id;
+
+// Page 2
+const page2 = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+        Query.limit(25),
+        Query.cursorAfter(lastId),
+    ]
+});
+```
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    final tablesDB = TablesDB(client);
+
+    final page1 = await tablesDB.listRows(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<TABLE_ID>',
+        queries: [
+            Query.limit(25)
+        ]
+    );
+
+    final lastId = page1.rows[page1.rows.length - 1].$id;
+
+    final page2 = await tablesDB.listRows(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<TABLE_ID>',
+        queries: [
+            Query.limit(25),
+            Query.cursorAfter(lastId)
+        ]
+    );
+
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+      .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+      .setProject("<PROJECT_ID>")
+
+    let tablesDB = TablesDB(client)
+
+    let page1 = try await tablesDB.listRows(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        queries: [
+            Query.limit(25)
+        ]
+    )
+
+    let lastId = page1.rows[page1.rows.count - 1].$id
+
+    let page2 = try await tablesDB.listRows(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        queries: [
+            Query.limit(25),
+            Query.cursorAfter(lastId)
+        ]
+    )
+}
+```
+```client-android-kotlin
+import android.util.Log
+import io.appwrite.AppwriteException
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    val tablesDB = TablesDB(client)
+
+    val page1 = tablesDB.listRows(
+        databaseId = "<DATABASE_ID>",
+        tableId = "<TABLE_ID>",
+        queries = [
+            Query.limit(25)
+        ]
+    )
+
+    val lastId = page1.rows[page1.rows.size - 1].$id
+
+    val page2 = tablesDB.listRows(
+        databaseId = "<DATABASE_ID>",
+        tableId = "<TABLE_ID>",
+        queries = [
+            Query.limit(25),
+            Query.cursorAfter(lastId)
+        ]
+    )
+}
+```
+
+{% /multicode %}
+
+# When to use what? {% #when-to-use %}
+Offset pagination should be used for tables that rarely change.
+Offset pagination allow you to create indicator of the current page number and total page number.
+For example, a list with up to 20 pages or static data like a list of countries or currencies.
+Using offset pagination on large tables and frequently updated tables may result in slow performance and **missing and duplicate** results.
+
+Cursor pagination should be used for frequently updated tablesDB.
+It is best suited for lazy-loaded pages with infinite scrolling.
+For example, a feed, comment section, chat history, or high volume datasets.
+
+# Skip totals for faster lists {% #skip-totals %}
+
+By default, list responses include an accurate `total` count. On large tables and filtered queries, calculating totals requires an extra database COUNT which can add latency.
+
+If your UI does not rely on exact totals (for example, infinite scroll or “load more”), you can skip counting totals by passing `total=false` to any list endpoint. The response keeps the same shape and sets `total` to `0` for compatibility.
+
+Recommendations:
+- Use with cursor pagination for the best performance and UX.
+- Keep the default behavior when you need “N results” or “Page X of Y”.
+
+{% multicode %}
+```client-web
+import { Client, Query, TablesDB } from "appwrite";
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+const page = await tablesDB.listRows({
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  queries: [
+    Query.limit(25)
+  ],
+  total: false // Skip computing total count
+});
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>')
+  .setKey('<YOUR_API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+const page = await tablesDB.listRows({
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  queries: [
+    sdk.Query.limit(25)
+  ],
+  total: false // Skip computing total count
+});
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+from appwrite.query import Query
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+tables_db = TablesDB(client)
+
+page = tables_db.list_rows(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    queries=[
+        Query.limit(25)
+    ],
+    total=False  # Skip computing total count
+)
+```
+```server-ruby
+require 'appwrite'
+
+client = Appwrite::Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+tables_db = Appwrite::TablesDB.new(client)
+
+page = tables_db.list_rows(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    queries: [
+        Appwrite::Query.limit(25)
+    ],
+    total: false  # Skip computing total count
+)
+```
+```server-deno
+import { Client, Query, TablesDB } from "https://deno.land/x/appwrite/mod.ts";
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>')
+  .setKey('<YOUR_API_KEY>');
+
+const tablesDB = new TablesDB(client);
+
+const page = await tablesDB.listRows({
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  queries: [
+    Query.limit(25)
+  ],
+  total: false // Skip computing total count
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Query;
+use Appwrite\Services\TablesDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$tablesDB = new TablesDB($client);
+
+$page = $tablesDB->listRows(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+        Query::limit(25)
+    ],
+    total: false // Skip computing total count
+);
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/query"
+)
+
+func main() {
+    client := appwrite.NewClient()
+    client.SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    client.SetProject("<PROJECT_ID>")
+    client.SetKey("<YOUR_API_KEY>")
+
+    tablesDB := appwrite.NewTablesDB(client)
+
+    page, err := tablesDB.ListRows(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        appwrite.WithListRowsQueries([]string{
+            query.Limit(25)
+        }),
+        appwrite.WithListRowsTotal(false), // Skip computing total count
+    )
+
+    if err != nil {
+        fmt.Println(err)
+    }
+}
+```
+```server-swift
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+        .setKey("<YOUR_API_KEY>")
+
+    let tablesDB = TablesDB(client)
+
+    let page = try await tablesDB.listRows(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        queries: [
+            Query.limit(25)
+        ],
+        total: false // Skip computing total count
+    )
+}
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+        .setKey("<YOUR_API_KEY>")
+
+    val tablesDB = TablesDB(client)
+
+    val page = tablesDB.listRows(
+        databaseId = "<DATABASE_ID>",
+        tableId = "<TABLE_ID>",
+        queries = listOf(
+            Query.limit(25)
+        ),
+        total = false // Skip computing total count
+    )
+}
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::query::Query;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let tables_db = TablesDB::new(&client);
+
+    let page = tables_db.list_rows(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        Some(vec![
+            Query::limit(25).to_string(),
+        ]),
+        None,           // transaction_id
+        Some(false),    // total - Skip computing total count
+        None,           // ttl
+    ).await?;
+
+    println!("{:?}", page);
+    Ok(())
+}
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.Query;
+import io.appwrite.services.TablesDB;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        Client client = new Client()
+            .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+            .setProject("<PROJECT_ID>")
+            .setKey("<YOUR_API_KEY>");
+
+        TablesDB tablesDB = new TablesDB(client);
+
+        RowList page = tablesDB.listRows(
+            "<DATABASE_ID>",
+            "<TABLE_ID>",
+            Arrays.asList(
+                Query.limit(25)
+            ),
+            false // Skip computing total count
+        );
+    }
+}
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+  final client = Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>');
+
+  final tablesDB = TablesDB(client);
+
+  final page = await tablesDB.listRows(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+      Query.limit(25)
+    ],
+    total: false, // Skip computing total count
+  );
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+  let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+  let tablesDB = TablesDB(client)
+
+  let page = try await tablesDB.listRows(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    queries: [
+      Query.limit(25)
+    ],
+    total: false // Skip computing total count
+  )
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    val tablesDB = TablesDB(client)
+
+    val page = tablesDB.listRows(
+        databaseId = "<DATABASE_ID>",
+        tableId = "<TABLE_ID>",
+        queries = listOf(
+            Query.limit(25)
+        ),
+        total = false // Skip computing total count
+    )
+}
+```
+```graphql
+query {
+    tablesListRows(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        queries: ["limit(25)"],
+        total: false
+    ) {
+        total
+        rows {
+            _id
+            data
+        }
+    }
+}
+```
+```http
+GET /v1/tablesdb/<DATABASE_ID>/tables/<TABLE_ID>/rows?total=false HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+```
+```json
+{
+  "total": 0,
+  "rows": [
+    { "_id": "...", "data": { /* ... */ } }
+  ]
+}
+```
+{% /multicode %}
+
+# Cache list responses {% #cache-list-responses %}
+
+You can cache list responses by passing a `ttl` (time-to-live) value in seconds. Subsequent identical requests return the cached result until the TTL expires. The cache is permission-aware, so users with different roles never see each other's cached data.
+
+Set `ttl` between `1` and `86400` (24 hours). The default is `0` (caching disabled). The response includes an `X-Appwrite-Cache` header with value `hit` or `miss`. Combine with `total=false` for the best performance on paginated queries over large tables.
+
+{% multicode %}
+```client-web
+import { Client, Query, TablesDB } from "appwrite";
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+const page = await tablesDB.listRows({
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  queries: [
+    Query.limit(25)
+  ],
+  ttl: 60 // Cache for 60 seconds
+});
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>')
+  .setKey('<YOUR_API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+const page = await tablesDB.listRows({
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  queries: [
+    sdk.Query.limit(25)
+  ],
+  ttl: 60 // Cache for 60 seconds
+});
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+from appwrite.query import Query
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+tables_db = TablesDB(client)
+
+page = tables_db.list_rows(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    queries=[
+        Query.limit(25)
+    ],
+    ttl=60  # Cache for 60 seconds
+)
+```
+```server-ruby
+require 'appwrite'
+
+client = Appwrite::Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+tables_db = Appwrite::TablesDB.new(client)
+
+page = tables_db.list_rows(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    queries: [
+        Appwrite::Query.limit(25)
+    ],
+    ttl: 60  # Cache for 60 seconds
+)
+```
+```server-deno
+import { Client, Query, TablesDB } from "https://deno.land/x/appwrite/mod.ts";
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>')
+  .setKey('<YOUR_API_KEY>');
+
+const tablesDB = new TablesDB(client);
+
+const page = await tablesDB.listRows({
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  queries: [
+    Query.limit(25)
+  ],
+  ttl: 60 // Cache for 60 seconds
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Query;
+use Appwrite\Services\TablesDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$tablesDB = new TablesDB($client);
+
+$page = $tablesDB->listRows(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+        Query::limit(25)
+    ],
+    ttl: 60 // Cache for 60 seconds
+);
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/client"
+    "github.com/appwrite/sdk-for-go/tablesdb"
+    "github.com/appwrite/sdk-for-go/query"
+)
+
+func main() {
+    clt := client.New(
+        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        client.WithProject("<PROJECT_ID>"),
+        client.WithKey("<YOUR_API_KEY>"),
+    )
+
+    tablesDB := tablesdb.New(clt)
+
+    page, err := tablesDB.ListRows(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        tablesDB.WithListRowsQueries([]string{
+            query.Limit(25),
+        }),
+        tablesDB.WithListRowsTtl(60), // Cache for 60 seconds
+    )
+
+    if err != nil {
+        fmt.Println(err)
+    }
+    _ = page
+}
+```
+```server-swift
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+        .setKey("<YOUR_API_KEY>")
+
+    let tablesDB = TablesDB(client)
+
+    let page = try await tablesDB.listRows(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        queries: [
+            Query.limit(25)
+        ],
+        ttl: 60 // Cache for 60 seconds
+    )
+}
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+        .setKey("<YOUR_API_KEY>")
+
+    val tablesDB = TablesDB(client)
+
+    val page = tablesDB.listRows(
+        databaseId = "<DATABASE_ID>",
+        tableId = "<TABLE_ID>",
+        queries = listOf(
+            Query.limit(25)
+        ),
+        ttl = 60 // Cache for 60 seconds
+    )
+}
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::query::Query;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let tables_db = TablesDB::new(&client);
+
+    let page = tables_db.list_rows(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        Some(vec![
+            Query::limit(25).to_string(),
+        ]),
+        None,        // transaction_id
+        None,        // total
+        Some(60),    // ttl - Cache for 60 seconds
+    ).await?;
+
+    println!("{:?}", page);
+    Ok(())
+}
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.Query;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.TablesDB;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>");
+
+TablesDB tablesDB = new TablesDB(client);
+
+tablesDB.listRows(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    List.of(Query.limit(25)),
+    null, // transactionId
+    null, // total
+    60, // ttl - Cache for 60 seconds
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+        System.out.println(result);
+    })
+);
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+  final client = Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>');
+
+  final tablesDB = TablesDB(client);
+
+  final page = await tablesDB.listRows(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+      Query.limit(25)
+    ],
+    ttl: 60, // Cache for 60 seconds
+  );
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+  let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+  let tablesDB = TablesDB(client)
+
+  let page = try await tablesDB.listRows(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    queries: [
+      Query.limit(25)
+    ],
+    ttl: 60 // Cache for 60 seconds
+  )
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    val tablesDB = TablesDB(client)
+
+    val page = tablesDB.listRows(
+        databaseId = "<DATABASE_ID>",
+        tableId = "<TABLE_ID>",
+        queries = listOf(
+            Query.limit(25)
+        ),
+        ttl = 60 // Cache for 60 seconds
+    )
+}
+```
+```graphql
+query {
+    tablesListRows(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        queries: ["limit(25)"],
+        ttl: 60
+    ) {
+        total
+        rows {
+            _id
+            data
+        }
+    }
+}
+```
+```http
+GET /v1/tablesdb/<DATABASE_ID>/tables/<TABLE_ID>/rows?ttl=60 HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+```
+{% /multicode %}
+
+Row writes do **not** invalidate the cache, so cached responses may contain stale data until the TTL expires. Schema changes invalidate cached entries automatically. To force an immediate purge, see [Rows: Purge cache](/docs/products/databases/rows#purge-cache).

@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Create Firewall rules from ready-made presets"
+date: 2026-09-21
+cover: /images/blog/announcing-firewall-presets/cover.avif
+tags: firewall, security, console
+---
+
+[Appwrite Firewall](/docs/products/firewall) now includes presets on the project API. Open **Firewall**, choose **Add preset**, and pick a policy for OTP abuse, country access, or scraping. Appwrite fills in the conditions and action, shows an impact preview, then creates ordinary rules you can edit, disable, or delete.
+
+Nine presets ship today: rate-limit or geo-filter phone and email OTP, block or allow the API by country, rate-limit `/v1/` or `/v1/tablesdb`, and deny hosting or datacenter networks. The last two need the [premium Geo DB addon](/docs/products/firewall/conditions#premium-geo-db). Presets currently apply to API traffic, not to a single Function or Site.
+
+If you keep recreating a rule that is not in the list, [open a GitHub issue](https://github.com/appwrite/appwrite/issues) with the policy you want next.
+
+{% arrow_link href="/blog/post/announcing-firewall-presets" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/firewall/quick-start" %}
+Start with Firewall
+{% /arrow_link %}
