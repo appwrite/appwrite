@@ -1,4 +1,4 @@
-name: Connect snippets QA (web)
+name: Console / Snippets QA (web)
 
 on:
   workflow_dispatch:
@@ -12,12 +12,12 @@ env:
 
 defaults:
   run:
-    working-directory: tests/connect-qa
+    working-directory: apps/console/tests/connect-qa
 
 jobs:
   qa:
     name: ${{ matrix.id }}
-    runs-on: gcrunner=${{ github.run_id }}-qa-${{ strategy.job-index }}/runner=snippets-qa
+    runs-on: gcrunner=${{ github.run_id }}-console-qa-${{ strategy.job-index }}/runner=snippets-qa
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -288,5 +288,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: connect-qa-web-${{ matrix.id }}
-          path: tests/connect-qa/artifacts/
+          path: apps/console/tests/connect-qa/artifacts/
           if-no-files-found: warn

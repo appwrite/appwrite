@@ -1,4 +1,4 @@
-name: Connect snippets QA (iOS)
+name: Console / Snippets QA (iOS)
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ env:
 
 defaults:
   run:
-    working-directory: tests/connect-qa/ios
+    working-directory: apps/console/tests/connect-qa/ios
 
 jobs:
   qa:
@@ -322,5 +322,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: connect-qa-ios-${{ matrix.id }}
-          path: tests/connect-qa/ios/artifacts/
+          path: apps/console/tests/connect-qa/ios/artifacts/
           if-no-files-found: warn

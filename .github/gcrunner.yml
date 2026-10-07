@@ -44,3 +44,24 @@ runners:
     ram: 16
     disk: 80gb
     spot: false
+
+  # A preempted image build leaves a half-pushed digest.
+  image:
+    family: c3d
+    cpu: 4
+    ram: 16
+    disk: 80gb
+    spot: false
+
+  deploy:
+    family: c3d
+    cpu: 4
+    ram: 8
+    disk: 80gb
+    spot: false
+
+  snippets-qa:
+    family: c3d
+    cpu: 4
+    ram: 16
+    disk: 80gb

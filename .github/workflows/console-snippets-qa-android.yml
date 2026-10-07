@@ -1,4 +1,4 @@
-name: Connect snippets QA (Android)
+name: Console / Snippets QA (Android)
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ env:
 
 defaults:
   run:
-    working-directory: tests/connect-qa/android
+    working-directory: apps/console/tests/connect-qa/android
 
 jobs:
   qa:
@@ -376,7 +376,7 @@ jobs:
           ram-size: 4096M
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
-          working-directory: tests/connect-qa/android
+          working-directory: apps/console/tests/connect-qa/android
           # android-emulator-runner executes each script line as a separate
           # `sh -c`, so anything multi-line lives in run-maestro.sh instead.
           script: |
@@ -412,5 +412,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: connect-qa-android-${{ matrix.id }}
-          path: tests/connect-qa/android/artifacts/
+          path: apps/console/tests/connect-qa/android/artifacts/
           if-no-files-found: warn

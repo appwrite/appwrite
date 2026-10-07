@@ -12,7 +12,7 @@ trap 'rm -rf "$merged"' EXIT
 for arch in amd64 arm64; do
   test -d "image-assets/$arch/assets"
   rclone copy "image-assets/$arch" "$merged" \
-    --filter-from .github/scripts/static-assets.filter --checksum --immutable
+    --filter-from .github/scripts/console/static-assets.filter --checksum --immutable
 done
 
 # Only content-hashed build assets are shared between environments.

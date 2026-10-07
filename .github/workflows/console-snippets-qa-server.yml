@@ -1,4 +1,4 @@
-name: Connect snippets QA (server)
+name: Console / Snippets QA (server)
 
 on:
   workflow_dispatch:
@@ -26,12 +26,12 @@ env:
 
 defaults:
   run:
-    working-directory: tests/connect-qa/server
+    working-directory: apps/console/tests/connect-qa/server
 
 jobs:
   qa:
     name: ${{ matrix.id }}
-    runs-on: gcrunner=${{ github.run_id }}-qa-${{ strategy.job-index }}/runner=snippets-qa
+    runs-on: gcrunner=${{ github.run_id }}-console-qa-${{ strategy.job-index }}/runner=snippets-qa
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -416,7 +416,7 @@ jobs:
           mise trust
           # Install only this directory's assertion tools plus the lane's
           # runtime - a bare `mise install` would also pull node, maestro and
-          # the JDK from the parent tests/connect-qa/mise.toml, which server
+          # the JDK from the parent apps/console/tests/connect-qa/mise.toml, which server
           # lanes never use. All matrix jobs share a few NAT egress IPs, and
           # the whole matrix downloading the JDK at once got
           # throttled (http2 "refused stream"). The retry with backoff and
@@ -568,5 +568,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: connect-qa-server-${{ matrix.id }}
-          path: tests/connect-qa/server/artifacts/
+          path: apps/console/tests/connect-qa/server/artifacts/
           if-no-files-found: warn

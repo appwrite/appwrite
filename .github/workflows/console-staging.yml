@@ -1,10 +1,14 @@
-name: Staging deployment
+name: Console / Staging
 
 on:
     workflow_dispatch:
     push:
         branches:
             - main
+        paths:
+            - apps/console/**
+            - .github/scripts/console/**
+            - .github/workflows/console-staging.yml
 
 concurrency:
     group: ${{ github.workflow }}
@@ -32,7 +36,7 @@ jobs:
                       platform: linux/amd64
                     - arch: arm64
                       platform: linux/arm64
-        runs-on: gcrunner=${{ github.run_id }}-build-${{ strategy.job-index }}/runner=build
+        runs-on: gcrunner=${{ github.run_id }}-console-build-${{ strategy.job-index }}/runner=image
         timeout-minutes: 45
         env:
             DOCKER_BUILD_RECORD_UPLOAD: false
@@ -44,7 +48,7 @@ jobs:
             digest_arm64: ${{ matrix.arch == 'arm64' && steps.build.outputs.digest || '' }}
         steps:
             - name: Checkout the repo
-              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
             - name: Set up QEMU
               if: matrix.arch == 'arm64'
@@ -67,14 +71,14 @@ jobs:
               uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
               with:
                   registry: ${{ env.REGISTRY_DOCKERHUB }}
-                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  username: ${{ vars.DOCKERHUB_USERNAME }}
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
 
             - name: Build and push by digest
               id: build
               uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
               with:
-                  context: .
+                  context: apps/console
                   platforms: ${{ matrix.platform }}
                   # Pushed by digest, with no tag of its own: the manifest job below
                   # is what tags the merged index, so ${TAG} is the only tag that ever
@@ -95,7 +99,7 @@ jobs:
 
     manifest:
         needs: build
-        runs-on: gcrunner=${{ github.run_id }}-manifest/runner=deploy
+        runs-on: gcrunner=${{ github.run_id }}-console-manifest/runner=deploy
         timeout-minutes: 10
         steps:
             - name: Login to GitHub Container Registry
@@ -109,7 +113,7 @@ jobs:
               uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
               with:
                   registry: ${{ env.REGISTRY_DOCKERHUB }}
-                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  username: ${{ vars.DOCKERHUB_USERNAME }}
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
 
             - name: Tag the per-arch digests as one multi-arch manifest
@@ -128,16 +132,16 @@ jobs:
                   done
 
     publish-assets:
-        environment: staging
+        environment: console-staging
         needs: build
-        runs-on: gcrunner=${{ github.run_id }}-publish-assets/runner=deploy
+        runs-on: gcrunner=${{ github.run_id }}-console-publish-assets/runner=deploy
         timeout-minutes: 25
         permissions:
             contents: read
             packages: read
         steps:
             - name: Checkout the repo
-              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
             - name: Login to GitHub Container Registry
               uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
@@ -150,13 +154,13 @@ jobs:
               env:
                   DIGEST_AMD64: ${{ needs.build.outputs.digest_amd64 }}
                   DIGEST_ARM64: ${{ needs.build.outputs.digest_arm64 }}
-              run: bash .github/scripts/extract-assets.sh
+              run: bash .github/scripts/console/extract-assets.sh
 
             - name: Publish assets to R2
               uses: docker://rclone/rclone@sha256:45401ad7410db1d67ffdb58e19059ad20b0d8e0285a60e38bbec55cc1019c7a5 # 1.75.1
               with:
                   entrypoint: /bin/sh
-                  args: .github/scripts/publish-assets.sh
+                  args: .github/scripts/console/publish-assets.sh
               env:
                   RCLONE_CONFIG_R2_TYPE: s3
                   RCLONE_CONFIG_R2_PROVIDER: Cloudflare
@@ -170,7 +174,7 @@ jobs:
     deploy:
         # Never roll out HTML that references assets which failed to publish.
         needs: [manifest, publish-assets]
-        runs-on: gcrunner=${{ github.run_id }}-deploy/runner=deploy
+        runs-on: gcrunner=${{ github.run_id }}-console-deploy/runner=deploy
         timeout-minutes: 10
         # Shared across the staging and production workflows so their deploy
         # jobs never push to application-configuration at the same time.
@@ -188,7 +192,7 @@ jobs:
                   repositories: ${{ env.DECLARATIVE_REPOSITORY }}
 
             - name: Checkout ${{ env.DECLARATIVE_REPOSITORY }}
-              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
               with:
                   repository: ${{ env.DECLARATIVE_OWNER }}/${{ env.DECLARATIVE_REPOSITORY }}
                   token: ${{ steps.app-token.outputs.token }}
