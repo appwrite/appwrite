@@ -338,6 +338,52 @@ export function buildAnalyticsInstallGuide(
   }
 }
 
+/**
+ * A prompt for an AI coding agent that sets up tracking end to end: the
+ * property context, the install command, the code to add, and the platform
+ * notes. Mirrors the project Connect modal's "Copy prompt".
+ */
+export function buildAnalyticsSetupPrompt(
+  platform: AnalyticsPlatform,
+  input: SnippetInput & { propertyName?: string },
+): string {
+  const meta = ANALYTICS_PLATFORM_META[platform]
+  const guide = buildAnalyticsInstallGuide(platform, input)
+  const fence = (language: string, code: string) =>
+    `\`\`\`${language}\n${code}\n\`\`\``
+
+  const lines = [
+    `Add Appwrite Analytics tracking to this ${meta.label === 'REST' ? 'app (using the REST API)' : `${meta.label} app`}.`,
+    '',
+    'Context:',
+    `- Appwrite endpoint: ${input.endpoint}`,
+    `- Project ID: ${input.projectId}`,
+    `- Analytics property${input.propertyName ? ` "${input.propertyName}"` : ''}, tracking ID: ${input.trackingId}`,
+    ...(input.domain ? [`- Site domain: ${input.domain}`] : []),
+    '',
+  ]
+  if (guide.install) {
+    lines.push('1. Install the SDK:', fence(guide.install.language, guide.install.code), '')
+  }
+  lines.push(
+    `${guide.install ? '2' : '1'}. ${platform === 'rest' ? 'Send events like this from the app or server:' : 'Initialize tracking once, as early as possible in the app (for example where the Appwrite client is created), and wire up the rest:'}`,
+    fence(guide.code.language, guide.code.code),
+    '',
+    'Requirements:',
+    '- Reuse an existing Appwrite Client if the app already has one; do not create a second client.',
+    '- Keep the tracking ID exactly as given.',
+    '- Replace the example custom event with events that matter in this app (sign-ups, purchases, key actions), named in snake_case.',
+    `- ${meta.note}`,
+  )
+  if (meta.unreleased) {
+    lines.push(
+      '- Note: this SDK helper is not published yet. If the import does not resolve, fall back to POSTing events to the REST endpoint shown in the Appwrite docs.',
+    )
+  }
+  lines.push('', 'When done, load a page or open the app once so the first event reaches Appwrite.')
+  return lines.join('\n')
+}
+
 export function buildAnalyticsSnippets(
   platform: AnalyticsPlatform,
   input: SnippetInput,
