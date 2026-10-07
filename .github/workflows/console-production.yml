@@ -22,6 +22,9 @@ env:
     REGISTRY_DOCKERHUB: docker.io
     IMAGE_NAME: appwrite/new
 
+permissions:
+    contents: read
+
 jobs:
     version:
         runs-on: ubuntu-24.04
@@ -44,6 +47,9 @@ jobs:
                   echo "Deploying $IMAGE_NAME:$tag"
 
     build:
+        permissions:
+            contents: read
+            packages: write
         # gcrunner has no arm64 runners; that leg cross-builds under QEMU.
         strategy:
             fail-fast: false
@@ -115,6 +121,9 @@ jobs:
                   secrets: ${{ secrets.SENTRY_AUTH_TOKEN != '' && format('sentry_auth_token={0}', secrets.SENTRY_AUTH_TOKEN) || '' }}
 
     manifest:
+        permissions:
+            contents: read
+            packages: write
         needs: [version, build]
         env:
             TAG: ${{ needs.version.outputs.tag }}
@@ -151,6 +160,9 @@ jobs:
                   done
 
     build-self-hosted:
+        permissions:
+            contents: read
+            packages: write
         strategy:
             fail-fast: false
             matrix:
@@ -211,6 +223,9 @@ jobs:
                   secrets: ${{ secrets.SENTRY_AUTH_TOKEN != '' && format('sentry_auth_token={0}', secrets.SENTRY_AUTH_TOKEN) || '' }}
 
     manifest-self-hosted:
+        permissions:
+            contents: read
+            packages: write
         needs: [version, build-self-hosted]
         env:
             TAG: ${{ needs.version.outputs.tag }}

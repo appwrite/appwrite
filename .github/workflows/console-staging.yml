@@ -25,8 +25,14 @@ env:
     IMAGE_NAME: appwrite/new
     TAG: ${{ github.sha }}
 
+permissions:
+    contents: read
+
 jobs:
     build:
+        permissions:
+            contents: read
+            packages: write
         # gcrunner has no arm64 runners; that leg cross-builds under QEMU.
         strategy:
             fail-fast: false
@@ -98,6 +104,9 @@ jobs:
                   secrets: ${{ secrets.SENTRY_AUTH_TOKEN != '' && format('sentry_auth_token={0}', secrets.SENTRY_AUTH_TOKEN) || '' }}
 
     manifest:
+        permissions:
+            contents: read
+            packages: write
         needs: build
         runs-on: gcrunner=${{ github.run_id }}-console-manifest/runner=deploy
         timeout-minutes: 10
