@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "561ec89792d8a1ec0dcba8dbe552bc75",
+    "content-hash": "6fe8551c62e90094a783e799b2e5d20c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3142,16 +3142,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "5.0.1",
+            "version": "dev-fix/webauth-location-header",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "dc832d125ca8fc5ce27284e7b241d21cbcb55bed"
+                "reference": "e0bf097f751ab9b8070640a516dbdeae085fa464"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/dc832d125ca8fc5ce27284e7b241d21cbcb55bed",
-                "reference": "dc832d125ca8fc5ce27284e7b241d21cbcb55bed",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/e0bf097f751ab9b8070640a516dbdeae085fa464",
+                "reference": "e0bf097f751ab9b8070640a516dbdeae085fa464",
                 "shasum": ""
             },
             "require": {
@@ -3188,9 +3188,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/5.0.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/fix/webauth-location-header"
             },
-            "time": "2026-09-12T18:58:40+00:00"
+            "time": "2026-10-07T13:00:33+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -6303,7 +6303,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "appwrite/sdk-generator": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
