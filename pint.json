@@ -2,7 +2,8 @@
     "preset": "psr12",
     "exclude": [
         "app/sdks",
-        "tests/resources/functions"
+        "tests/resources/functions",
+        "apps"
     ],
     "notPath": [
         "data/data.php"
