@@ -341,7 +341,7 @@ class Update extends Action
 
                 // Each write purged its cached row inside a savepoint of this transaction, so
                 // a read before COMMIT could cache the old row again. Purge now that it is committed.
-                $this->purgeCommittedDocuments($dbForDatabases, $written, $state);
+                $this->purgeCommittedDocuments($dbForDatabases, $written, $state, $operations, $collections);
 
                 $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
                     'transactions',
@@ -606,13 +606,27 @@ class Update extends Action
 
     /**
      * Purge every row the commit wrote. A cache error must not fail a commit that already landed.
+     *
+     * @param array<string, array<string, true>> $written
+     * @param array<string, array<string, Document>> $state
+     * @param array<Document> $operations
+     * @param array<string, Document> $collections
      */
-    private function purgeCommittedDocuments(Database $dbForDatabases, array $written, array $state): void
+    private function purgeCommittedDocuments(Database $dbForDatabases, array $written, array $state, array $operations, array $collections): void
     {
         // Bulk writes and $id changes name their rows only here
         foreach ($state as $collectionId => $documents) {
             foreach ($documents as $document) {
                 $written[$collectionId][$document->getId()] = true;
+            }
+        }
+
+        foreach ($operations as $operation) {
+            // Collecting related ids must not fail a commit that already landed
+            try {
+                $this->collectWrittenRelationships($dbForDatabases, $operation, $state, $collections, $written);
+            } catch (\Throwable $e) {
+                Console::warning('Failed to collect related rows for committed cache purge: ' . $e->getMessage());
             }
         }
 
@@ -625,6 +639,190 @@ class Update extends Action
                 }
             }
         }
+    }
+
+    /**
+     * Nested related rows are written with the parent, inside the same savepoint.
+     *
+     * @param array<string, array<string, Document>> $state
+     * @param array<string, Document> $collections
+     * @param array<string, array<string, true>> $written
+     */
+    private function collectWrittenRelationships(Database $db, Document $operation, array $state, array &$collections, array &$written): void
+    {
+        $action = $operation->getAttribute('action', '');
+        if (!\in_array($action, ['create', 'update', 'upsert'], true)) {
+            return;
+        }
+
+        $collectionId = 'database_' . $operation->getAttribute('databaseInternalId')
+            . '_collection_' . $operation->getAttribute('collectionInternalId');
+        $collection = $collections[$collectionId] ?? $this->collectionById($db, $collectionId, $collections);
+        if (!$collection instanceof Document || $collection->isEmpty()) {
+            return;
+        }
+
+        $data = $operation->getAttribute('data', []);
+        $documentId = $operation->getAttribute('documentId', '');
+        $result = null;
+        if (\is_string($documentId) && $documentId !== '' && ($state[$collectionId][$documentId] ?? null) instanceof Document) {
+            $result = $state[$collectionId][$documentId];
+        } else {
+            $dataId = $data instanceof Document ? $data->getId() : (\is_array($data) ? ($data['$id'] ?? '') : '');
+            if (\is_string($dataId) && $dataId !== '' && ($state[$collectionId][$dataId] ?? null) instanceof Document) {
+                $result = $state[$collectionId][$dataId];
+            }
+        }
+
+        $this->collectRelationshipData($db, $collection, $data, $result, $collections, $written, 0);
+    }
+
+    /**
+     * @param array<string, Document> $collections
+     * @param array<string, array<string, true>> $written
+     */
+    private function collectRelationshipData(Database $db, Document $collection, mixed $data, ?Document $result, array &$collections, array &$written, int $depth): void
+    {
+        if ($depth >= Database::RELATION_MAX_DEPTH) {
+            return;
+        }
+
+        if ($data instanceof Document) {
+            $data = $data->getArrayCopy();
+        }
+        if (!\is_array($data)) {
+            return;
+        }
+
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            if ($attribute instanceof Document) {
+                $type = $attribute->getAttribute('type');
+                $key = $attribute->getAttribute('key');
+                $options = $attribute->getAttribute('options', []);
+            } elseif (\is_array($attribute)) {
+                $type = $attribute['type'] ?? null;
+                $key = $attribute['key'] ?? '';
+                $options = $attribute['options'] ?? [];
+            } else {
+                continue;
+            }
+
+            if ($type !== Database::VAR_RELATIONSHIP || !\is_string($key) || $key === '' || !\array_key_exists($key, $data)) {
+                continue;
+            }
+
+            $relatedId = '';
+            if ($options instanceof Document) {
+                $relatedId = $options->getAttribute('relatedCollection', '');
+            } elseif (\is_array($options)) {
+                $relatedId = $options['relatedCollection'] ?? '';
+            }
+
+            $related = $this->collectionById($db, \is_string($relatedId) ? $relatedId : '', $collections);
+            if (!$related instanceof Document || $related->isEmpty()) {
+                continue;
+            }
+
+            $resultValue = $result instanceof Document ? $result->getAttribute($key) : null;
+            $this->collectRelationshipRows($db, $related, $data[$key], true, $collections, $written, $depth);
+            $this->collectRelationshipRows($db, $related, $resultValue, false, $collections, $written, $depth);
+        }
+    }
+
+    /**
+     * @param array<string, Document> $collections
+     * @param array<string, array<string, true>> $written
+     */
+    private function collectRelationshipRows(Database $db, Document $related, mixed $value, bool $fromPayload, array &$collections, array &$written, int $depth): void
+    {
+        foreach ($this->relationshipRows($value) as $row) {
+            $id = $this->relationshipRowId($row);
+            if ($id !== '') {
+                $written[$related->getId()][$id] = true;
+            }
+
+            if (!$fromPayload) {
+                continue;
+            }
+
+            $nested = null;
+            if ($row instanceof Document) {
+                $nested = $row;
+            } elseif (\is_array($row) && !\array_is_list($row)) {
+                $nested = new Document($row);
+            }
+
+            if ($nested instanceof Document) {
+                $this->collectRelationshipData($db, $related, $nested, null, $collections, $written, $depth + 1);
+            }
+        }
+    }
+
+    /**
+     * @param array<string, Document> $collections
+     */
+    private function collectionById(Database $db, string $id, array &$collections): ?Document
+    {
+        if ($id === '') {
+            return null;
+        }
+
+        if (isset($collections[$id]) && $collections[$id] instanceof Document && !$collections[$id]->isEmpty()) {
+            return $collections[$id];
+        }
+
+        try {
+            $collection = $db->getCollection($id);
+        } catch (\Throwable $e) {
+            Console::warning('Failed to resolve collection for committed cache purge: ' . $e->getMessage());
+            return null;
+        }
+
+        if ($collection->isEmpty()) {
+            return null;
+        }
+
+        $collections[$id] = $collection;
+        $collections[$collection->getId()] = $collection;
+
+        return $collection;
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    private function relationshipRows(mixed $value): array
+    {
+        if (\is_string($value)) {
+            return $value === '' ? [] : [$value];
+        }
+
+        if ($value instanceof Document) {
+            return [$value];
+        }
+
+        if (!\is_array($value) || $value === []) {
+            return [];
+        }
+
+        return \array_is_list($value) ? $value : [$value];
+    }
+
+    private function relationshipRowId(mixed $row): string
+    {
+        if (\is_string($row)) {
+            return $row;
+        }
+
+        if ($row instanceof Document) {
+            return $row->getId();
+        }
+
+        if (\is_array($row) && isset($row['$id']) && \is_string($row['$id'])) {
+            return $row['$id'];
+        }
+
+        return '';
     }
 
     /**
