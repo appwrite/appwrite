@@ -3763,16 +3763,6 @@ Http::patch('/v1/account/email')
 
         $email = \strtolower($email);
 
-        // Makes sure this email is not already used in another identity
-        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-            Query::equal('providerEmail', [$email]),
-            Query::notEqual('userInternalId', $user->getSequence()),
-        ]);
-        if (!$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST);
-            /** Return a generic bad request to prevent exposing existing accounts */
-        }
-
         $emailMetadata = [
             'emailCanonical' => null,
             'emailIsCanonical' => null,
@@ -3809,6 +3799,17 @@ Http::patch('/v1/account/email')
 
         if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
             throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
+        }
+
+        // Makes sure this email is not already used in another identity.
+        // Checked after the email policies so their errors do not depend on it.
+        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+            Query::equal('providerEmail', [$email]),
+            Query::notEqual('userInternalId', $user->getSequence()),
+        ]);
+        if (!$identityWithMatchingEmail->isEmpty()) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $user
