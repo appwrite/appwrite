@@ -254,11 +254,6 @@ class Certificates extends Action
         ?string $validationDomain = null,
         bool $skipDomainValidation = false
     ): void {
-        // Issuance needs an account email. Fail before the rule is updated.
-        if ($certificates instanceof LetsEncrypt) {
-            $certificates->assertCanIssue();
-        }
-
         /**
          * 1. Read arguments and validate domain
          * 2. Get main domain
@@ -319,6 +314,11 @@ class Certificates extends Action
         $awaitingProvider = false;
 
         try {
+            // A missing account email fails issuance here, so the rule is not left generating.
+            if ($certificates instanceof LetsEncrypt) {
+                $certificates->assertCanIssue();
+            }
+
             $certificate->setAttribute('logs', $logs);
 
             // Persist ASAP so that logs are reset in retry flow and user can see the latest logs on Console.
@@ -585,6 +585,11 @@ class Certificates extends Action
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
+        $recipient = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')) ?? '';
+        if ($recipient === '') {
+            return;
+        }
+
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
         $locale->setFallback('en');
 
@@ -613,7 +618,7 @@ class Certificates extends Action
 
         $publisherForMails->enqueue(new MailMessage(
             project: $console,
-            recipient: System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')),
+            recipient: $recipient,
             name: 'Appwrite Administrator',
             subject: $subject,
             template: MAIL_TEMPLATE_CERTIFICATE_FAILED,

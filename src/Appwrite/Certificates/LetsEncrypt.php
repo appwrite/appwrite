@@ -20,20 +20,14 @@ class LetsEncrypt implements Provider
         $this->email = $email;
     }
 
-    /**
-     * Account email comes from _APP_EMAIL_CERTIFICATES, then the security address.
-     * An empty address still returns a client: issuance checks it, file removal does not.
-     */
     public static function fromEnvironment(): self
     {
+        // Empty stays a client. Issuance rejects it; file removal does not.
         $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
 
         return new self(\is_string($email) ? $email : '');
     }
 
-    /**
-     * @throws Exception
-     */
     public function assertCanIssue(): void
     {
         if ($this->email === '') {

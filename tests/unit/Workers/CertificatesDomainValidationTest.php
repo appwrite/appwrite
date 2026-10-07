@@ -15,7 +15,6 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Workers\Certificates;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
 use Utopia\Bus\Bus;
@@ -77,11 +76,36 @@ final class CertificatesDomainValidationTest extends TestCase
         $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $writes['rules']['status']);
     }
 
-    public function testGenerationWithoutAnEmailFailsBeforeTheRuleIsTouched(): void
+    public function testGenerationWithoutAnEmailMarksTheRuleUnverifiedAndSendsNoMail(): void
+    {
+        $previousCertificates = getenv('_APP_EMAIL_CERTIFICATES');
+        $previousSecurity = getenv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
+        putenv('_APP_EMAIL_CERTIFICATES');
+        putenv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
+
+        try {
+            $mail = new MockPublisher();
+            $error = null;
+            $writes = $this->generate(new LetsEncrypt(''), skipDomainValidation: true, mail: $mail, error: $error);
+
+            $this->assertInstanceOf(\Exception::class, $error);
+            $this->assertSame(
+                'You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.',
+                $error->getMessage(),
+            );
+            $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $writes['rules']['status']);
+            $this->assertNull($mail->getEvents('v1-mails'));
+        } finally {
+            putenv($previousCertificates === false ? '_APP_EMAIL_CERTIFICATES' : '_APP_EMAIL_CERTIFICATES=' . $previousCertificates);
+            putenv($previousSecurity === false ? '_APP_SYSTEM_SECURITY_EMAIL_ADDRESS' : '_APP_SYSTEM_SECURITY_EMAIL_ADDRESS=' . $previousSecurity);
+        }
+    }
+
+    public function testGenerationWithoutAnEmailLeavesARuleThatIsNotIssuing(): void
     {
         $dbForPlatform = $this->createMock(Database::class);
-        $dbForPlatform->expects($this->never())->method('getDocument');
-        $dbForPlatform->expects($this->never())->method('findOne');
+        $dbForPlatform->method('getDocument')->willReturn(new Document());
+        $dbForPlatform->method('findOne')->willReturn(new Document());
         $dbForPlatform->expects($this->never())->method('updateDocument');
         $dbForPlatform->expects($this->never())->method('createDocument');
 
@@ -90,9 +114,6 @@ final class CertificatesDomainValidationTest extends TestCase
             domain: new Document(['domain' => self::DOMAIN, 'domainType' => 'site']),
             action: CertificateEvent::ACTION_GENERATION,
         ))->toArray());
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
 
         (new Certificates())->action(
             $message,
@@ -115,7 +136,7 @@ final class CertificatesDomainValidationTest extends TestCase
      *
      * @return array<string, array<string, mixed>> the attributes written per collection
      */
-    private function generate(Provider&Stub $certificates, bool $skipDomainValidation): array
+    private function generate(Provider $certificates, bool $skipDomainValidation, ?MockPublisher $mail = null, ?\Throwable &$error = null): array
     {
         $rule = new Document([
             '$id' => md5(self::DOMAIN),
@@ -168,7 +189,7 @@ final class CertificatesDomainValidationTest extends TestCase
             (new Certificates())->action(
                 $message,
                 $dbForPlatform,
-                new MailPublisher(new MockPublisher(), new Queue('v1-mails')),
+                new MailPublisher($mail ?? new MockPublisher(), new Queue('v1-mails')),
                 $this->createStub(Event::class),
                 $this->createStub(Webhook::class),
                 new FunctionPublisher(new MockPublisher(), new Queue('v1-functions')),
@@ -179,9 +200,10 @@ final class CertificatesDomainValidationTest extends TestCase
                 $this->createStub(Authorization::class),
                 (new Bus())->setResolver(static fn (): null => null),
             );
-        } catch (\Throwable) {
+        } catch (\Throwable $caught) {
             // The worker rethrows an issuance failure after recording it; the
             // records are what these tests read.
+            $error = $caught;
         }
 
         return $writes;

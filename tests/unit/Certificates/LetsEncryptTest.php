@@ -26,18 +26,54 @@ final class LetsEncryptTest extends TestCase
         $this->restore('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', $this->previousSecurity);
     }
 
-    public function testMissingEmailRejectsIssuanceAndStillDeletesFiles(): void
+    public function testIssueCertificateRequiresAnEmail(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
+
+        (new LetsEncrypt(''))->issueCertificate('cert-name', 'example.test', null);
+    }
+
+    public function testFromEnvironmentRejectsIssuanceWhenBothAddressesAreEmpty(): void
     {
         putenv('_APP_EMAIL_CERTIFICATES');
         putenv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
 
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
+
+        LetsEncrypt::fromEnvironment()->issueCertificate('cert-name', 'example.test', null);
+    }
+
+    public function testSecurityEmailAllowsIssuanceWhenCertificatesEmailIsEmpty(): void
+    {
+        putenv('_APP_EMAIL_CERTIFICATES');
+        putenv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS=admin@example.test');
+
         $certificates = LetsEncrypt::fromEnvironment();
+        $certificates->assertCanIssue();
+
+        $this->assertInstanceOf(LetsEncrypt::class, $certificates);
+    }
+
+    public function testCertificatesEmailAllowsIssuanceWithoutSecurityEmail(): void
+    {
+        putenv('_APP_EMAIL_CERTIFICATES=certs@example.test');
+        putenv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
+
+        $certificates = LetsEncrypt::fromEnvironment();
+        $certificates->assertCanIssue();
+
+        $this->assertInstanceOf(LetsEncrypt::class, $certificates);
+    }
+
+    public function testDeleteCertificateWithoutAnEmailRemovesFiles(): void
+    {
+        $certificates = new LetsEncrypt('');
         $domain = 'delete-' . bin2hex(random_bytes(8)) . '.example.test';
         $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
 
         try {
-            $certificates->deleteCertificate($domain, 'site');
-
             if (!is_dir(APP_STORAGE_CERTIFICATES) && !mkdir(APP_STORAGE_CERTIFICATES, 0755, true) && !is_dir(APP_STORAGE_CERTIFICATES)) {
                 $this->fail('Certificate storage is not writable');
             }
@@ -46,13 +82,9 @@ final class LetsEncryptTest extends TestCase
             $this->assertNotFalse(file_put_contents($directory . '/cert.pem', 'cert'));
             $this->assertNotFalse(file_put_contents($directory . '/privkey.pem', 'key'));
 
-            $certificates->deleteCertificate($domain, null);
+            $certificates->deleteCertificate($domain, 'site');
 
             $this->assertDirectoryDoesNotExist($directory);
-
-            $this->expectException(Exception::class);
-            $this->expectExceptionMessage('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
-            $certificates->issueCertificate('cert-name', $domain, null);
         } finally {
             if (is_dir($directory)) {
                 $files = glob($directory . '/*');
@@ -62,24 +94,6 @@ final class LetsEncryptTest extends TestCase
                 rmdir($directory);
             }
         }
-    }
-
-    public function testSecurityEmailAllowsIssuanceWhenCertificatesEmailIsEmpty(): void
-    {
-        putenv('_APP_EMAIL_CERTIFICATES');
-        putenv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS=admin@example.test');
-
-        $this->expectNotToPerformAssertions();
-        LetsEncrypt::fromEnvironment()->assertCanIssue();
-    }
-
-    public function testCertificatesEmailAllowsIssuanceWithoutSecurityEmail(): void
-    {
-        putenv('_APP_EMAIL_CERTIFICATES=certs@example.test');
-        putenv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
-
-        $this->expectNotToPerformAssertions();
-        LetsEncrypt::fromEnvironment()->assertCanIssue();
     }
 
     private function restore(string $name, string|false $value): void
