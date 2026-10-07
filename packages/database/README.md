@@ -1,5 +1,8 @@
 # Utopia Database
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`packages/database`](https://github.com/appwrite/appwrite/tree/main/packages/database) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Build Status](https://travis-ci.org/utopia-php/database.svg?branch=master)](https://travis-ci.com/utopia-php/database)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/database.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)

@@ -12,3 +12,4 @@ Makefile
 .envrc
 .vscode
 tmp
+composer.lock

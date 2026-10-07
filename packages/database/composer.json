@@ -2,11 +2,19 @@
     "name": "utopia-php/database",
     "description": "A simple library to manage application persistence using multiple database adapters",
     "type": "library",
-    "keywords": ["php","framework", "upf", "utopia", "database"],
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "database"
+    ],
     "license": "MIT",
     "minimum-stability": "stable",
     "autoload": {
-        "psr-4": {"Utopia\\Database\\": "src/Database"}
+        "psr-4": {
+            "Utopia\\Database\\": "src/Database"
+        }
     },
     "autoload-dev": {
         "psr-4": {
@@ -27,9 +35,6 @@
             "Composer\\Config::disableProcessTimeout",
             "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
         ],
-        "lint": "php -d memory_limit=2G ./vendor/bin/pint --test",
-        "format": "php -d memory_limit=2G ./vendor/bin/pint",
-        "check": "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 2G",
         "coverage": "./vendor/bin/coverage-check ./tmp/clover.xml 90"
     },
     "require": {
@@ -46,19 +51,15 @@
     },
     "require-dev": {
         "fakerphp/faker": "1.23.*",
-        "phpunit/phpunit": "9.*",
         "pcov/clobber": "2.*",
         "swoole/ide-helper": "5.1.3",
         "utopia-php/cli": "^0.24.4",
-        "laravel/pint": "*",
-        "phpstan/phpstan": "1.*",
         "rregeer/phpunit-coverage-check": "0.3.*"
     },
     "suggests": {
         "ext-redis": "Needed to support Redis Cache Adapter",
         "ext-pdo": "Needed to support MariaDB, MySQL or SQLite Database Adapter",
         "mongodb/mongodb": "Needed to support MongoDB Database Adapter"
-
     },
     "config": {
         "allow-plugins": {
