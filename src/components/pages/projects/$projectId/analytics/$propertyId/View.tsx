@@ -66,6 +66,9 @@ import {
   ANALYTICS_FILTER_COLUMNS,
   analyticsFiltersFromMap,
   equalFilterEntry,
+  trafficKindFilterEntry,
+  trafficKindOfFilterKey,
+  type AnalyticsTrafficKind,
   sanitizeAnalyticsFilterMap,
 } from '@/lib/analytics/analytics-filters'
 import {
@@ -145,9 +148,32 @@ export function View({
       }
       return undefined
     }
+    let trafficKind: AnalyticsTrafficKind | null = null
+    for (const key of filterMap.keys()) {
+      trafficKind = trafficKindOfFilterKey(key) ?? trafficKind
+    }
     return {
       filterMap,
       filters,
+      trafficKind,
+      toggleTrafficKind: (kind) => {
+        const next = new Map(filterMap)
+        // At most one humans/bots filter at a time.
+        for (const key of next.keys()) {
+          if (trafficKindOfFilterKey(key)) next.delete(key)
+        }
+        if (kind !== trafficKind) {
+          if (kind === 'human') {
+            // A bot category or agent filter would leave humans empty.
+            for (const key of next.keys()) {
+              if (key.c === 'botCategory' || key.c === 'botName') next.delete(key)
+            }
+          }
+          const entry = trafficKindFilterEntry(kind)
+          next.set(entry.key, entry.query)
+        }
+        commitFilterMap(next)
+      },
       isFilterActive: (attribute, value) => !!findEqual(attribute, value),
       addEqualFilter: (attribute, value) => {
         const next = new Map(filterMap)
@@ -160,6 +186,13 @@ export function View({
           // it rather than AND-ing two countries into an empty result.
           for (const key of next.keys()) {
             if (key.c === attribute && key.o === 'equal') next.delete(key)
+            // Picking a bot type or agent ends "humans only".
+            if (
+              (attribute === 'botCategory' || attribute === 'botName') &&
+              trafficKindOfFilterKey(key) === 'human'
+            ) {
+              next.delete(key)
+            }
           }
           const entry = equalFilterEntry(attribute, value)
           next.set(entry.key, entry.query)

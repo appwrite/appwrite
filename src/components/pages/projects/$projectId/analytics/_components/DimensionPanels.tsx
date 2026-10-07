@@ -5,7 +5,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { resolveCountryDisplayName } from '@/lib/locale/country-lookups'
 import { BreakdownPanel, type BreakdownTab } from './BreakdownPanel'
-import { BrowserIcon, CountryFlag, RowDot } from './BreakdownRow'
+import { BrowserIcon, CountryFlag, RowDot, SourceFavicon } from './BreakdownRow'
 
 /** Chart palette, reused so categorical panels stay consistent. */
 const SERIES_COLORS = [
@@ -66,8 +66,13 @@ export function TrafficSourcesPanel(props: PanelProps) {
       description="Where visitors came from, by channel, referrer and campaign"
       info="channels"
       tabs={SOURCE_TABS}
-      renderLeading={(_entry, index, tabId) =>
-        tabId === 'channels' ? <RowDot color={colorAt(index)} /> : undefined
+      renderLeading={(entry, index, tabId) =>
+        tabId === 'channels' ? (
+          <RowDot color={colorAt(index)} />
+        ) : tabId === 'sources' || tabId === 'utm-sources' ? (
+          // Referrer and utm_source values are mostly domains or site names.
+          <SourceFavicon value={entry.value} />
+        ) : undefined
       }
       rowColor={(_entry, index) => colorAt(index)}
     />

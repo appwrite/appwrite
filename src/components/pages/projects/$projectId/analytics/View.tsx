@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
-  RESOURCE_CARD_GRID_2_COL_CLASSNAME,
+  RESOURCE_CARD_GRID_CLASSNAME,
   RESOURCE_CARD_INTERACTIVE_CLASSNAME,
   RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
   RESOURCE_CARD_PADDED_CLASSNAME,
@@ -48,6 +48,7 @@ import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import {
   getDefaultAnalyticsRange,
+  getPreviousAnalyticsRange,
   DEFAULT_PAGE_SIZE,
   EMPTY_ANALYTICS_METRIC,
   useAnalyticsProperties,
@@ -60,6 +61,9 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canCreateAnalyticsProperty } from '@/lib/console-access-checks'
 import { DeleteProperty } from './_components/DeleteProperty'
+import { AnalyticsEmptyState } from './_components/AnalyticsEmptyState'
+import { ChangeBadge } from './_components/ChangeBadge'
+import { analyticsChangePercent } from './_components/chart-series'
 import {
   formatDuration,
   formatNumber,
@@ -70,10 +74,15 @@ function StatHighlight({
   label,
   value,
   icon: Icon,
+  change,
+  invert,
 }: {
   label: string
   value: string
   icon: typeof Users
+  /** % change vs the previous period; omitted when there's nothing to compare. */
+  change?: number
+  invert?: boolean
 }) {
   return (
     <div className="flex items-center gap-3 rounded-lg bg-muted/30 px-3 py-2">
@@ -82,12 +91,28 @@ function StatHighlight({
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-[11px] text-muted-foreground">{label}</p>
-        <span className="text-[14px] font-semibold text-foreground">
-          {value}
-        </span>
+        <p className="flex min-w-0 items-baseline gap-2">
+          <span className="text-[14px] font-semibold text-foreground">
+            {value}
+          </span>
+          <ChangeBadge change={change} invert={invert} />
+        </p>
       </div>
     </div>
   )
+}
+
+/**
+ * Trend vs the previous period, only when that period had traffic: a
+ * property created mid-window would otherwise show a meaningless +100%.
+ */
+function trendFor(
+  current: number,
+  previous: Models.AnalyticsMetric | undefined,
+  pick: (stats: Models.AnalyticsMetric) => number,
+): number | undefined {
+  if (!previous || !hasTraffic(previous)) return undefined
+  return analyticsChangePercent(current, pick(previous))
 }
 
 /** A property only has data once it has received at least one event. */
@@ -116,11 +141,19 @@ export function View() {
     () => properties.map((property) => property.$id),
     [properties],
   )
+  const range = getDefaultAnalyticsRange()
   const { statsByPropertyId } = useAnalyticsPropertiesStats(
     projectId,
     propertyIds,
-    getDefaultAnalyticsRange(),
+    range,
   )
+  // Same-length window right before, for the trend on each stat.
+  const { statsByPropertyId: previousStatsByPropertyId } =
+    useAnalyticsPropertiesStats(
+      projectId,
+      propertyIds,
+      getPreviousAnalyticsRange(range),
+    )
 
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -225,6 +258,7 @@ export function View() {
   }
 
   const showEmptyState = !isLoading && properties.length === 0
+  const showsFirstRunEmptyState = showEmptyState && !searchValue
 
   return (
     <div className="flex flex-col">
@@ -241,15 +275,32 @@ export function View() {
         createDisabledTooltip={createPermissionTooltip}
         showFilters
         fullWidthBorder
+        // First run: the empty state carries the create action, so the
+        // search / view toggle / create toolbar is hidden (as in Stores, Auth).
+        hideToolbar={showsFirstRunEmptyState}
         rightContent={<ViewToggle />}
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
-        {viewMode === 'grid' ? (
+        {showsFirstRunEmptyState ? (
+          // First run: the product empty state, like Functions or Firewall.
+          <AnalyticsEmptyState
+            onCreate={() =>
+              navigate({
+                to: '/projects/$projectId/analytics/add',
+                params: { projectId: projectId as string },
+              })
+            }
+            createDisabled={noCreatePermission}
+            createDisabledTooltip={createPermissionTooltip}
+          />
+        ) : viewMode === 'grid' ? (
           <div className="flex flex-col gap-2">
-            <div className={RESOURCE_CARD_GRID_2_COL_CLASSNAME}>
+            {/* 1 / 2 / 3 columns, cards stretched to equal height per row. */}
+            <div className={RESOURCE_CARD_GRID_CLASSNAME}>
               {properties.map((property) => {
                 const stats = statsFor(property.$id)
+                const previous = previousStatsByPropertyId[property.$id]
                 return (
                   <div
                     key={property.$id}
@@ -257,6 +308,10 @@ export function View() {
                       RESOURCE_CARD_PADDED_CLASSNAME,
                       RESOURCE_CARD_INTERACTIVE_CLASSNAME,
                       RESOURCE_CARD_SHELL_CLASSNAME,
+                      'flex flex-col',
+                      // The footer supplies the bottom inset (see
+                      // RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME).
+                      hasTraffic(stats) && 'pb-0',
                     )}
                     onClick={() =>
                       navigate({
@@ -362,26 +417,35 @@ export function View() {
                     {/* Stats Grid */}
                     {hasTraffic(stats) ? (
                       <>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid flex-1 grid-cols-2 content-start gap-2">
                           <StatHighlight
                             label={t('Visitors')}
                             value={formatNumber(stats.visitors)}
                             icon={Users}
+                            change={trendFor(stats.visitors, previous, (s) => s.visitors)}
                           />
                           <StatHighlight
                             label={t('Pageviews')}
                             value={formatNumber(stats.pageviews)}
                             icon={Eye}
+                            change={trendFor(stats.pageviews, previous, (s) => s.pageviews)}
                           />
                           <StatHighlight
                             label={t('Visit duration')}
                             value={formatDuration(stats.visitDuration)}
                             icon={Clock}
+                            change={trendFor(
+                              stats.visitDuration,
+                              previous,
+                              (s) => s.visitDuration,
+                            )}
                           />
                           <StatHighlight
                             label={t('Bounce rate')}
                             value={formatPercent(stats.bounceRate)}
                             icon={MousePointerClick}
+                            change={trendFor(stats.bounceRate, previous, (s) => s.bounceRate)}
+                            invert
                           />
                         </div>
 
@@ -389,11 +453,13 @@ export function View() {
                         <div
                           className={cn(
                             RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
-                            'flex items-center justify-between',
+                            'mt-4 flex items-center justify-between',
                           )}
                         >
                           <span className="text-[11px] text-muted-foreground">
-                            {t('Last 30 days')}
+                            {previous && hasTraffic(previous)
+                              ? t('Last 30 days vs previous 30 days')
+                              : t('Last 30 days')}
                           </span>
                           <DateTooltip
                             date={new Date(property.$createdAt)}
@@ -402,7 +468,7 @@ export function View() {
                         </div>
                       </>
                     ) : (
-                      <div className="flex flex-col items-center justify-center py-6 text-center">
+                      <div className="flex flex-1 flex-col items-center justify-center py-6 text-center">
                         <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
                           <Globe className="h-5 w-5 text-muted-foreground" />
                         </div>

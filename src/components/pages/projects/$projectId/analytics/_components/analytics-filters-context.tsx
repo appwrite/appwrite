@@ -3,6 +3,7 @@ import type { CompactFilterKey, FilterMap } from '@/lib/table-filters'
 import type {
   AnalyticsFilter,
   AnalyticsFilterAttribute,
+  AnalyticsTrafficKind,
 } from '@/lib/analytics/analytics-filters'
 
 export type AnalyticsFiltersContextValue = {
@@ -13,6 +14,10 @@ export type AnalyticsFiltersContextValue = {
   addEqualFilter: (attribute: AnalyticsFilterAttribute, value: string) => void
   /** True when an `equal` filter for this attribute/value is already active. */
   isFilterActive: (attribute: AnalyticsFilterAttribute, value: string) => boolean
+  /** Active humans/bots filter, if any. */
+  trafficKind: AnalyticsTrafficKind | null
+  /** Show only humans or only bots; clicking the active one clears it. */
+  toggleTrafficKind: (kind: AnalyticsTrafficKind) => void
   onApplyFilter: (
     key: CompactFilterKey,
     queryStr: string,
@@ -28,6 +33,8 @@ const EMPTY: AnalyticsFiltersContextValue = {
   filters: [],
   addEqualFilter: () => {},
   isFilterActive: () => false,
+  trafficKind: null,
+  toggleTrafficKind: () => {},
   onApplyFilter: () => {},
   onRemoveFilter: () => {},
   onClearAllFilters: () => {},

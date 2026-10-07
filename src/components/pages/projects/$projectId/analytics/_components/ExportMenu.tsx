@@ -20,7 +20,10 @@ import type {
 } from '@/lib/react-query/hooks'
 import { resolveCountryDisplayName } from '@/lib/locale/country-lookups'
 import { buildFilterTagFromCompactKey } from '@/lib/table-filters'
-import { ANALYTICS_FILTER_COLUMNS } from '@/lib/analytics/analytics-filters'
+import {
+  ANALYTICS_FILTER_COLUMNS,
+  trafficKindOfFilterKey,
+} from '@/lib/analytics/analytics-filters'
 import { collectAnalyticsExport } from '@/lib/analytics/export/collect'
 import { buildCsvEntries, slugify } from '@/lib/analytics/export/csv'
 import {
@@ -70,6 +73,9 @@ export function ExportMenu({
       : value
 
   const filterLabels = Array.from(filterMap.keys()).map((key) => {
+    // Same wording as the filter chips for the humans/bots filter.
+    const trafficKind = trafficKindOfFilterKey(key)
+    if (trafficKind) return trafficKind === 'human' ? 'Humans only' : 'Bots only'
     const displayKey =
       key.c === 'country' && typeof key.v === 'string' && countryLookups
         ? { ...key, v: resolveCountryDisplayName(key.v, countryLookups) }

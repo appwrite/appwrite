@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { Browser } from '@appwrite.io/console'
-import { Globe } from 'lucide-react'
+import { Globe, Link2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -138,6 +138,89 @@ export function RowRank({ index }: { index: number }) {
  */
 export function CountryFlag({ code }: { code: string | null | undefined }) {
   return <CountryFlagIcon countryCode={code ?? ''} />
+}
+
+/**
+ * Referrer sources come back either as domains (`github.com`) or as known
+ * source names (`Google`, `bing`). Names map to a domain for the favicon;
+ * anything else without a dot gets the neutral globe.
+ */
+const SOURCE_DOMAINS: Record<string, string> = {
+  google: 'google.com',
+  bing: 'bing.com',
+  duckduckgo: 'duckduckgo.com',
+  yahoo: 'yahoo.com',
+  baidu: 'baidu.com',
+  yandex: 'yandex.com',
+  ecosia: 'ecosia.org',
+  brave: 'search.brave.com',
+  github: 'github.com',
+  gitlab: 'gitlab.com',
+  twitter: 'x.com',
+  x: 'x.com',
+  'x (twitter)': 'x.com',
+  facebook: 'facebook.com',
+  instagram: 'instagram.com',
+  linkedin: 'linkedin.com',
+  reddit: 'reddit.com',
+  youtube: 'youtube.com',
+  tiktok: 'tiktok.com',
+  discord: 'discord.com',
+  slack: 'slack.com',
+  medium: 'medium.com',
+  'hacker news': 'news.ycombinator.com',
+  hackernews: 'news.ycombinator.com',
+  'product hunt': 'producthunt.com',
+  producthunt: 'producthunt.com',
+  gmail: 'mail.google.com',
+  chatgpt: 'chatgpt.com',
+  openai: 'openai.com',
+  perplexity: 'perplexity.ai',
+  claude: 'claude.ai',
+  gemini: 'gemini.google.com',
+  copilot: 'copilot.microsoft.com',
+}
+
+const DIRECT_SOURCES = new Set(['direct', 'direct / none', '(direct)', 'none'])
+
+export function sourceFaviconHostname(value: string | null | undefined): string | null {
+  const normalized = value?.trim().toLowerCase()
+  if (!normalized) return null
+  if (normalized.includes('.')) {
+    // Strip any scheme / path the API may include.
+    return normalized.replace(/^https?:\/\//, '').split('/')[0] || null
+  }
+  return SOURCE_DOMAINS[normalized] ?? null
+}
+
+/**
+ * Favicon for a traffic source, via the Avatars service (like Usage's
+ * hostnames). Drawn edge to edge in the 16px slot, with no frame or inner
+ * padding: favicons carry their own shape, and framed they shrink to ~10px.
+ */
+export function SourceFavicon({ value }: { value: string | null | undefined }) {
+  const [failed, setFailed] = useState(false)
+  const isDirect = DIRECT_SOURCES.has(value?.trim().toLowerCase() ?? '')
+  const hostname = isDirect ? null : sourceFaviconHostname(value)
+
+  if (isDirect || !hostname || failed) {
+    const Icon = isDirect ? Link2 : Globe
+    return (
+      <span className="flex h-4 w-4 shrink-0 items-center justify-center" aria-hidden>
+        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+      </span>
+    )
+  }
+
+  return (
+    <img
+      src={sdk.forConsole.avatars.getFavicon({ url: `https://${hostname}` })}
+      alt=""
+      aria-hidden
+      className="h-4 w-4 shrink-0 rounded-[3px] object-contain"
+      onError={() => setFailed(true)}
+    />
+  )
 }
 
 /**

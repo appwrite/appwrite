@@ -180,6 +180,35 @@ export function getDefaultAnalyticsRange(): AnalyticsRange {
   return range
 }
 
+/**
+ * `placeholderData` that keeps the previous result on screen while a query
+ * re-runs for a moved window: a refresh re-anchoring "Last 24 hours" to now,
+ * a new date range or interval. Numbers count and lines morph from where they
+ * were instead of the page resetting to dashes and skeletons.
+ *
+ * Only when nothing but the `varying` key segments (range, interval) changed:
+ * a different property, dimension, event, limit or filter is different data
+ * and must never borrow the old rows. Filter segments are appended to the key,
+ * so a filter change also changes the key length and is excluded here.
+ */
+function keepPreviousAcrossRange<T>(
+  queryKey: readonly unknown[],
+  varying: readonly number[],
+) {
+  return (
+    previous: T | undefined,
+    previousQuery: { queryKey: readonly unknown[] } | undefined,
+  ): T | undefined => {
+    const previousKey = previousQuery?.queryKey
+    if (previous === undefined || !previousKey) return undefined
+    if (previousKey.length !== queryKey.length) return undefined
+    const sameData = queryKey.every(
+      (part, index) => varying.includes(index) || part === previousKey[index],
+    )
+    return sameData ? previous : undefined
+  }
+}
+
 /** Stable serialization of a range, used as a query-key segment. */
 export function analyticsRangeKey(range: AnalyticsRange): string {
   return `${range.startAt}..${range.endAt}`
@@ -407,16 +436,20 @@ export function analyticsStatsQueryOptions(
   range: AnalyticsRange = getDefaultAnalyticsRange(),
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
+  const queryKey = [
+    'analytics',
+    'stats',
+    projectId,
+    propertyId,
+    analyticsRangeKey(range),
+    ...analyticsFiltersKey(filters),
+  ]
   return queryOptions({
-    queryKey: [
-      'analytics',
-      'stats',
-      projectId,
-      propertyId,
-      analyticsRangeKey(range),
-      ...analyticsFiltersKey(filters),
-    ],
+    queryKey,
     queryFn: () => fetchAnalyticsStats(projectId!, propertyId!, range, filters),
+    placeholderData: keepPreviousAcrossRange<
+      Awaited<ReturnType<typeof fetchAnalyticsStats>>
+    >(queryKey, [4]),
     enabled:
       !!projectId &&
       !!propertyId &&
@@ -515,18 +548,22 @@ export function analyticsEventsQueryOptions(
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
+  const queryKey = [
+    'analytics',
+    'events',
+    projectId,
+    propertyId,
+    analyticsRangeKey(range),
+    limit,
+    ...analyticsFiltersKey(filters),
+  ]
   return queryOptions({
-    queryKey: [
-      'analytics',
-      'events',
-      projectId,
-      propertyId,
-      analyticsRangeKey(range),
-      limit,
-      ...analyticsFiltersKey(filters),
-    ],
+    queryKey,
     queryFn: () =>
       fetchAnalyticsEvents(projectId!, propertyId!, range, limit, filters),
+    placeholderData: keepPreviousAcrossRange<
+      Awaited<ReturnType<typeof fetchAnalyticsEvents>>
+    >(queryKey, [4]),
     enabled: !!projectId && !!propertyId && isClientQueryEnabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -719,17 +756,23 @@ export function analyticsEventMetricsQueryOptions(
   interval: AnalyticsChartInterval = DEFAULT_ANALYTICS_CHART_INTERVAL,
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
+  const queryKey = [
+    'analytics',
+    'event-metrics',
+    projectId,
+    propertyId,
+    eventName ?? '*',
+    analyticsRangeKey(range),
+    interval,
+    ...analyticsFiltersKey(filters),
+  ]
   return queryOptions({
-    queryKey: [
-      'analytics',
-      'event-metrics',
-      projectId,
-      propertyId,
-      eventName ?? '*',
-      analyticsRangeKey(range),
-      interval,
-      ...analyticsFiltersKey(filters),
-    ],
+    queryKey,
+    // Range and interval: the chart re-buckets the old points onto the new
+    // grid until the new series lands.
+    placeholderData: keepPreviousAcrossRange<
+      Awaited<ReturnType<typeof fetchAnalyticsEventMetrics>>
+    >(queryKey, [5, 6]),
     queryFn: () =>
       fetchAnalyticsEventMetrics(
         projectId!,
@@ -927,17 +970,22 @@ export function analyticsBreakdownQueryOptions(
   enabled: boolean = true,
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
+  const queryKey = [
+    'analytics',
+    'breakdown',
+    projectId,
+    propertyId,
+    dimension,
+    analyticsRangeKey(range),
+    limit,
+    ...analyticsFiltersKey(filters),
+  ]
   return queryOptions({
-    queryKey: [
-      'analytics',
-      'breakdown',
-      projectId,
-      propertyId,
-      dimension,
-      analyticsRangeKey(range),
-      limit,
-      ...analyticsFiltersKey(filters),
-    ],
+    queryKey,
+    // Never across a tab switch (dimension) - only a moved window.
+    placeholderData: keepPreviousAcrossRange<
+      Awaited<ReturnType<typeof fetchAnalyticsBreakdown>>
+    >(queryKey, [5]),
     queryFn: () =>
       fetchAnalyticsBreakdown(
         projectId!,

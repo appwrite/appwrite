@@ -240,16 +240,22 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
       label: sidebarCopy.sections.observe,
       items: [
         {
-          id: 'activity',
-          label: sidebarCopy.items.activity,
-          icon: Activity,
-          path: `/projects/${projectId}/activity`,
+          id: 'analytics',
+          label: sidebarCopy.items.analytics,
+          icon: BarChart2,
+          path: `/projects/${projectId}/analytics`,
         },
         {
           id: 'realtime',
           label: sidebarCopy.items.realtime,
           icon: Radio,
           path: `/projects/${projectId}/realtime`,
+        },
+        {
+          id: 'activity',
+          label: sidebarCopy.items.activity,
+          icon: Activity,
+          path: `/projects/${projectId}/activity`,
         },
         {
           id: 'logs',
@@ -263,12 +269,6 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           label: sidebarCopy.items.usage,
           icon: BarChart3,
           path: `/projects/${projectId}/usage`,
-        },
-        {
-          id: 'analytics',
-          label: sidebarCopy.items.analytics,
-          icon: BarChart2,
-          path: `/projects/${projectId}/analytics`,
         },
         {
           id: 'errors',

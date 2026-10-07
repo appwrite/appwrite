@@ -147,6 +147,37 @@ export function equalFilterEntry(
   }
 }
 
+// ─── Humans / bots ──────────────────────────────────────────────────────────
+//
+// `trafficType` isn't a query attribute, so the humans/bots split filters on
+// `botCategory` instead: human traffic is the events with no bot category,
+// bots are everything with one. This relies on human events storing an empty
+// `botCategory` (not null); if the API ever accepts `trafficType` in
+// `queries[]`, switch these entries to it.
+
+export type AnalyticsTrafficKind = 'human' | 'bot'
+
+export function trafficKindFilterEntry(kind: AnalyticsTrafficKind): {
+  key: CompactFilterKey
+  query: string
+} {
+  const operator = kind === 'human' ? 'equal' : 'notEqual'
+  return {
+    key: { c: 'botCategory', o: operator, v: '' },
+    query: buildFilterQueryString(operator, 'botCategory', ''),
+  }
+}
+
+/** The humans/bots filter a key represents, if it is one. */
+export function trafficKindOfFilterKey(
+  key: CompactFilterKey,
+): AnalyticsTrafficKind | null {
+  if (key.c !== 'botCategory' || key.v !== '') return null
+  if (key.o === 'equal') return 'human'
+  if (key.o === 'notEqual') return 'bot'
+  return null
+}
+
 /**
  * `page` and `eventName` are only accepted "alongside `interval`, or with a
  * breakdown on a dimension other than entryPage, exitPage". The flat

@@ -1,5 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
+import { BreakdownRow } from './BreakdownRow'
 import { useAnalyticsCardTab } from '@/hooks/use-analytics-card-tab'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { AnalyticsDimension, type Models } from '@appwrite.io/console'
 import { Bot, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -25,8 +27,16 @@ import { BreakdownSkeleton } from './BreakdownPanel'
 type SplitMeasure = 'visitors' | 'events'
 const SPLIT_MEASURES: readonly SplitMeasure[] = ['visitors', 'events']
 
-/** Bot-type rows that fit beside a breakdown card of the same height. */
-const BOT_TYPE_ROWS = 5
+/** Rows per list under the bar (types, agents), sized to the card height. */
+const BOT_LIST_ROWS = 5
+
+/** The Humans / Bots figures double as "only humans" / "only bots" filters. */
+const KIND_BUTTON_CLASS =
+  '-m-1.5 flex min-w-0 cursor-pointer items-center gap-3 rounded-lg p-1.5 text-start transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+const KIND_ACTIVE_CLASS = 'bg-muted/60 ring-1 ring-border'
+/** Same layout with the filter flag off: not interactive. */
+const KIND_STATIC_CLASS =
+  '-m-1.5 flex min-w-0 cursor-default items-center gap-3 rounded-lg p-1.5 text-start'
 
 /**
  * Humans use the Appwrite brand purple (same value as `--network-globe-edge`),
@@ -134,7 +144,16 @@ export function TrafficSplit({
   const measure: SplitMeasure =
     storedMeasure === 'events' ? 'events' : 'visitors'
 
-  const { filters, addEqualFilter, isFilterActive } = useAnalyticsFilters()
+  const {
+    filters,
+    addEqualFilter,
+    isFilterActive,
+    trafficKind,
+    toggleTrafficKind,
+  } = useAnalyticsFilters()
+  // Humans/bots filtering is unverified against the backend (see the flag).
+  const { features } = useConsoleProfile()
+  const trafficFilterEnabled = features.analyticsTrafficFilter
 
   const { breakdown: trafficTypes, isLoading, error } = useAnalyticsBreakdown(
     projectId,
@@ -245,9 +264,14 @@ export function TrafficSplit({
     (segment) => segment.kind === 'bot' && segment.value > 0,
   )
 
+  // Ranked by the selected measure, like the bar.
   const topAgents = botNames
-    .filter((row) => isKnownBreakdownValue(row.value))
-    .slice(0, 4)
+    .filter((row) => isKnownBreakdownValue(row.value) && (row[measure] ?? 0) > 0)
+    .sort((a, b) => (b[measure] ?? 0) - (a[measure] ?? 0))
+    .slice(0, BOT_LIST_ROWS)
+
+  const maxSegment = botSegments.reduce((m, s) => Math.max(m, s.value), 0)
+  const maxAgent = topAgents.reduce((m, a) => Math.max(m, a[measure] ?? 0), 0)
 
   const hasData = total > 0
   const isPending = isLoading && trafficTypes.length === 0
@@ -292,24 +316,40 @@ export function TrafficSplit({
         </ToggleGroup>
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col px-4 pb-4 pt-6">
       {/* End labels */}
-      <div className="mb-2 flex items-end justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-2.5">
+      <div className="mb-4 flex items-end justify-between gap-4">
+        <button
+          type="button"
+          disabled={!trafficFilterEnabled}
+          onClick={() => toggleTrafficKind('human')}
+          aria-pressed={trafficFilterEnabled ? trafficKind === 'human' : undefined}
+          title={
+            !trafficFilterEnabled
+              ? undefined
+              : trafficKind === 'human'
+                ? t('Remove filter')
+                : t('Show humans only')
+          }
+          className={cn(
+            trafficFilterEnabled ? KIND_BUTTON_CLASS : KIND_STATIC_CLASS,
+            trafficKind === 'human' && KIND_ACTIVE_CLASS,
+          )}
+        >
           <span
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg"
             style={{
               backgroundColor: `color-mix(in oklch, ${HUMAN_COLOR} 14%, transparent)`,
             }}
           >
-            <User className="h-4 w-4" style={{ color: HUMAN_ICON_COLOR }} />
+            <User className="h-5 w-5" style={{ color: HUMAN_ICON_COLOR }} />
           </span>
           <div className="min-w-0">
-            <p className="text-[11px] text-muted-foreground">{t('Humans')}</p>
+            <p className="mb-1 text-[12px] text-muted-foreground">{t('Humans')}</p>
             <p className="flex items-baseline gap-2">
               <span
                 className={cn(
-                  'text-[22px] font-semibold leading-none tabular-nums text-foreground',
+                  'text-[30px] font-semibold leading-none tabular-nums text-foreground',
                   hasData && USAGE_CHART_FADE_IN_CLASS_NAME,
                 )}
               >
@@ -337,10 +377,27 @@ export function TrafficSplit({
               ) : null}
             </p>
           </div>
-        </div>
-        <div className="flex min-w-0 items-center gap-2.5 text-end">
+        </button>
+        <button
+          type="button"
+          disabled={!trafficFilterEnabled}
+          onClick={() => toggleTrafficKind('bot')}
+          aria-pressed={trafficFilterEnabled ? trafficKind === 'bot' : undefined}
+          title={
+            !trafficFilterEnabled
+              ? undefined
+              : trafficKind === 'bot'
+                ? t('Remove filter')
+                : t('Show bots only')
+          }
+          className={cn(
+            trafficFilterEnabled ? KIND_BUTTON_CLASS : KIND_STATIC_CLASS,
+            'text-end',
+            trafficKind === 'bot' && KIND_ACTIVE_CLASS,
+          )}
+        >
           <div className="min-w-0">
-            <p className="text-[11px] text-muted-foreground">{t('Bots')}</p>
+            <p className="mb-1 text-[12px] text-muted-foreground">{t('Bots')}</p>
             <p className="flex items-baseline justify-end gap-2">
               {hasData ? (
                 <span className="text-[12px] tabular-nums text-muted-foreground">
@@ -349,7 +406,7 @@ export function TrafficSplit({
               ) : null}
               <span
                 className={cn(
-                  'text-[22px] font-semibold leading-none tabular-nums text-foreground',
+                  'text-[30px] font-semibold leading-none tabular-nums text-foreground',
                   hasData && USAGE_CHART_FADE_IN_CLASS_NAME,
                 )}
               >
@@ -357,16 +414,16 @@ export function TrafficSplit({
               </span>
             </p>
           </div>
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
-            <Bot className="h-4 w-4 text-muted-foreground" />
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-muted">
+            <Bot className="h-5 w-5 text-muted-foreground" />
           </span>
-        </div>
+        </button>
       </div>
 
       {/* The bar */}
       <TooltipProvider delayDuration={0}>
         <div
-          className="relative flex h-3.5 w-full gap-[2px] overflow-hidden rounded-full bg-muted"
+          className="relative flex h-5 w-full gap-[3px] overflow-hidden rounded-full bg-muted"
           role="img"
           aria-label={
             hasData
@@ -385,7 +442,23 @@ export function TrafficSplit({
                   <Tooltip key={segment.key}>
                     <TooltipTrigger asChild>
                       <div
-                        className="h-full min-w-[3px] transition-[width] duration-700 ease-out first:rounded-s-full last:rounded-e-full hover:brightness-110 motion-reduce:transition-none"
+                        // A bot type → that category. Behind the flag:
+                        // humans → humans only, "Other bots" → bots only.
+                        onClick={
+                          segment.category
+                            ? () => addEqualFilter('botCategory', segment.category!)
+                            : trafficFilterEnabled
+                              ? () =>
+                                  toggleTrafficKind(
+                                    segment.kind === 'human' ? 'human' : 'bot',
+                                  )
+                              : undefined
+                        }
+                        className={cn(
+                          'h-full min-w-[3px] transition-[width] duration-700 ease-out first:rounded-s-full last:rounded-e-full hover:brightness-110 motion-reduce:transition-none',
+                          (segment.category || trafficFilterEnabled) &&
+                            'cursor-pointer',
+                        )}
                         style={{
                           width: `${width}%`,
                           backgroundColor: segment.color,
@@ -407,116 +480,115 @@ export function TrafficSplit({
         </div>
       </TooltipProvider>
 
-      {/* Bot types, one row each, shares of all traffic. */}
-      <div className="mt-5 min-h-0 flex-1">
-        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {t('Automated traffic by type')}
-        </p>
-        {error ? (
-          <p className="py-2 text-[12px] text-muted-foreground">
-            {error instanceof Error
-              ? error.message
-              : t('Could not load analytics data')}
-          </p>
-        ) : isPending ? (
-          <BreakdownSkeleton rows={BOT_TYPE_ROWS} />
-        ) : botSegments.length === 0 ? (
-          <p className="py-2 text-[12px] text-muted-foreground">
-            {hasData ? t('No bot traffic in this range') : t('No traffic in this range')}
-          </p>
-        ) : (
-          <div className="space-y-0.5">
-            {botSegments.slice(0, BOT_TYPE_ROWS).map((segment) => {
-              const segmentShare = share(segment.value, total)
-              // Named categories filter the page by `botCategory`;
-              // "Other bots" has no single value to use.
+      {/* Bot types and named agents side by side (stacked when narrow),
+          ranked rows with bars like the other cards. Shares are of all
+          traffic, so they add up with the humans figure above. */}
+      <div className="@container mt-7 min-h-0 flex-1">
+        <div className="grid h-full gap-x-6 gap-y-4 @md:grid-cols-2">
+          <BotColumn
+            title={t('By type')}
+            error={error}
+            isPending={isPending}
+            emptyLabel={
+              hasData ? t('No bot traffic in this range') : t('No traffic in this range')
+            }
+          >
+            {botSegments.slice(0, BOT_LIST_ROWS).map((segment) => {
               const category = segment.category
-              const active = category
-                ? isFilterActive('botCategory', category)
-                : false
-              const row = (
-                <>
-                  <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-sm"
-                    style={{
-                      backgroundColor: segment.color,
-                      backgroundImage: BOT_HATCH,
-                    }}
-                  />
-                  <span className="min-w-0 flex-1 truncate text-start text-foreground">
-                    {segment.label}
-                  </span>
-                  <span className="tabular-nums text-muted-foreground">
-                    {formatNumber(segment.value)}
-                  </span>
-                  <span className="w-12 text-end tabular-nums text-foreground">
-                    {formatShare(segmentShare)}
-                  </span>
-                </>
-              )
-              const rowClass =
-                'flex h-7 w-full items-center gap-2.5 rounded-md px-2 text-[12px]'
-              return category ? (
-                <button
+              const active = category ? isFilterActive('botCategory', category) : false
+              return (
+                <BreakdownRow
                   key={segment.key}
-                  type="button"
-                  onClick={() => addEqualFilter('botCategory', category)}
-                  title={active ? t('Remove filter') : t('Filter by this category')}
-                  aria-pressed={active}
-                  className={cn(
-                    rowClass,
-                    'cursor-pointer transition-colors hover:bg-muted/60',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                    active && 'bg-muted ring-1 ring-border',
-                  )}
-                >
-                  {row}
-                </button>
-              ) : (
-                <div key={segment.key} className={rowClass}>
-                  {row}
-                </div>
+                  label={segment.label}
+                  value={segment.value}
+                  share={share(segment.value, total)}
+                  barPercent={share(segment.value, maxSegment)}
+                  color={segment.color}
+                  leading={
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                      style={{ backgroundColor: segment.color, backgroundImage: BOT_HATCH }}
+                    />
+                  }
+                  // "Other bots" has no single category value to filter on.
+                  {...(category
+                    ? {
+                        onClick: () => addEqualFilter('botCategory', category),
+                        active,
+                        actionTitle: active
+                          ? t('Remove filter')
+                          : t('Filter by this category'),
+                      }
+                    : {})}
+                />
               )
             })}
-          </div>
-        )}
+          </BotColumn>
+
+          <BotColumn
+            title={t('Top agents')}
+            error={error}
+            isPending={isPending}
+            emptyLabel={t('No named agents in this range')}
+          >
+            {topAgents.map((agent) => {
+              const name = agent.value!
+              const value = agent[measure] ?? 0
+              const active = isFilterActive('botName', name)
+              return (
+                <BreakdownRow
+                  key={name}
+                  label={name}
+                  value={value}
+                  share={share(value, total)}
+                  barPercent={share(value, maxAgent)}
+                  mono
+                  onClick={() => addEqualFilter('botName', name)}
+                  active={active}
+                  actionTitle={active ? t('Remove filter') : t('Filter by this bot')}
+                />
+              )
+            })}
+          </BotColumn>
+        </div>
       </div>
 
-      {/* Top agents, pinned to the card's bottom edge. */}
-      <div className="mt-4 flex min-h-7 items-center gap-2 border-t border-border pt-3 text-[12px] text-muted-foreground">
-        {topAgents.length > 0 ? (
-          <>
-            <span className="shrink-0">{t('Top agents')}</span>
-            <div className="flex min-w-0 flex-wrap gap-1 overflow-hidden" style={{ maxHeight: 22 }}>
-              {topAgents.map((agent) => {
-                const name = agent.value!
-                const active = isFilterActive('botName', name)
-                return (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => addEqualFilter('botName', name)}
-                    aria-pressed={active}
-                    className={cn(
-                      'cursor-pointer truncate rounded-sm bg-muted px-1.5 py-0.5 font-mono text-[11px] text-foreground transition-colors hover:bg-accent',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                      active && 'ring-1 ring-foreground/40',
-                    )}
-                    title={`${formatNumber(agent.visitors)} ${t('visitors')} · ${
-                      active ? t('Remove filter') : t('Filter by this bot')
-                    }`}
-                  >
-                    {name}
-                  </button>
-                )
-              })}
-            </div>
-          </>
-        ) : (
-          <span>{t('No named agents in this range')}</span>
-        )}
-      </div>
       </div>
     </section>
+  )
+}
+
+/** One titled list under the bar: skeleton, error, empty or rows. */
+function BotColumn({
+  title,
+  error,
+  isPending,
+  emptyLabel,
+  children,
+}: {
+  title: string
+  error: unknown
+  isPending: boolean
+  emptyLabel: string
+  children: ReactNode[]
+}) {
+  const t = useT()
+  return (
+    <div className="min-w-0">
+      <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </p>
+      {error ? (
+        <p className="px-2 py-1 text-[12px] text-muted-foreground">
+          {error instanceof Error ? error.message : t('Could not load analytics data')}
+        </p>
+      ) : isPending ? (
+        <BreakdownSkeleton rows={BOT_LIST_ROWS} />
+      ) : children.length === 0 ? (
+        <p className="px-2 py-1 text-[12px] text-muted-foreground">{emptyLabel}</p>
+      ) : (
+        <div className="space-y-0.5">{children}</div>
+      )}
+    </div>
   )
 }

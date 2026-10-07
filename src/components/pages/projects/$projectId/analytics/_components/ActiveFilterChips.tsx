@@ -4,7 +4,10 @@ import { Button } from '@/components/ui/button'
 import { buildFilterTagFromCompactKey } from '@/lib/table-filters'
 import { useCountryLookups } from '@/lib/react-query/hooks'
 import { resolveCountryDisplayName } from '@/lib/locale/country-lookups'
-import { ANALYTICS_FILTER_COLUMNS } from '@/lib/analytics/analytics-filters'
+import {
+  ANALYTICS_FILTER_COLUMNS,
+  trafficKindOfFilterKey,
+} from '@/lib/analytics/analytics-filters'
 import { useAnalyticsFilters } from './analytics-filters-context'
 
 /** Render a "**Country** is **US**" tag with the bold parts emphasised. */
@@ -46,10 +49,12 @@ export function ActiveFilterChips() {
           key.c === 'country' && typeof key.v === 'string' && countryLookups
             ? { ...key, v: resolveCountryDisplayName(key.v, countryLookups) }
             : key
-        const { tag } = buildFilterTagFromCompactKey(
-          displayKey,
-          ANALYTICS_FILTER_COLUMNS,
-        )
+        // The humans/bots filter is an empty-category query underneath; show
+        // what it means rather than `Bot category is ""`.
+        const trafficKind = trafficKindOfFilterKey(key)
+        const tag = trafficKind
+          ? `**${trafficKind === 'human' ? t('Humans') : t('Bots')}** ${t('only')}`
+          : buildFilterTagFromCompactKey(displayKey, ANALYTICS_FILTER_COLUMNS).tag
         return (
           <span
             key={`${key.c}:${key.o}:${String(key.v)}`}

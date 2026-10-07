@@ -44,6 +44,7 @@ import { compareModeLabel, formatAnalyticsRangeLabel } from './CompareControl'
 import { MetricInfo, type AnalyticsMetricInfoKey } from './MetricInfo'
 import { useAnalyticsFilters } from './analytics-filters-context'
 import { ActiveFilterChips } from './ActiveFilterChips'
+import { ChangeBadge } from './ChangeBadge'
 import { ANALYTICS_FILTER_UNSUPPORTED_MESSAGE } from '@/lib/analytics/analytics-filters'
 import { useT } from '@/lib/i18n/translate'
 import {
@@ -147,35 +148,6 @@ function windowValues(
 }
 
 // ─── Small building blocks ──────────────────────────────────────────────────
-
-function ChangeBadge({
-  change,
-  invert = false,
-  suffix,
-}: {
-  change: number | undefined
-  /** Lower is better (e.g. bounce rate): flip the colouring. */
-  invert?: boolean
-  suffix?: ReactNode
-}) {
-  if (change === undefined) return null
-  const isGood = invert ? change < 0 : change > 0
-  const isBad = invert ? change > 0 : change < 0
-  return (
-    <span
-      className={cn(
-        'text-[12px] font-medium tabular-nums',
-        USAGE_CHART_FADE_IN_CLASS_NAME,
-        isGood && 'text-emerald-600 dark:text-emerald-400',
-        isBad && 'text-amber-600 dark:text-amber-400',
-        !isGood && !isBad && 'text-muted-foreground',
-      )}
-    >
-      {change > 0 ? '+' : ''}
-      {change}%{suffix}
-    </span>
-  )
-}
 
 function MetricTab({
   label,
