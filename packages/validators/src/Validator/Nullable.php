@@ -60,4 +60,17 @@ class Nullable extends Validator
 
         return $this->validator->isValid($value);
     }
+
+    /**
+     * Delegate casting to the wrapped validator so loose forms (for example
+     * boolean `"false"`) still become their canonical type when present.
+     */
+    public function cast(mixed $value): mixed
+    {
+        if (\is_null($value)) {
+            return null;
+        }
+
+        return $this->validator->cast($value);
+    }
 }

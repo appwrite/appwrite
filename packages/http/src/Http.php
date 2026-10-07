@@ -882,12 +882,14 @@ class Http
      * Validate Param
      *
      * Creates an validator instance and validate given value with given rules.
+     * On success, loose forms are cast to the validator's canonical PHP type
+     * (for example Boolean `"false"` becomes bool false) via {@see Validator::cast()}.
      *
      * @param  array<string, mixed>  $param
      *
      * @throws Exception
      */
-    protected function validate(string $key, array $param, mixed $value): void
+    protected function validate(string $key, array $param, mixed &$value): void
     {
         if ($param['optional'] && \is_null($value)) {
             return;
@@ -902,6 +904,8 @@ class Http
         if (!$validator->isValid($value)) {
             throw new Exception('Invalid `' . $key . '` param: ' . $validator->getDescription(), 400);
         }
+
+        $value = $validator->cast($value);
     }
 
     /**

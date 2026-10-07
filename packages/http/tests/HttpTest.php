@@ -15,6 +15,7 @@ use Utopia\Http\Exception;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
 use Utopia\Validator\AnyOf;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -1024,6 +1025,49 @@ final class HttpTest extends TestCase
             });
 
         $this->assertSame(var_export('abc', true), $run('/items/abc', ['x' => null]));
+    }
+
+    public function testLooseBooleanParamsAreCastToBool(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/flags';
+
+        Http::get('/flags')
+            ->param('total', true, new Boolean(true), 'total flag', true)
+            ->action(function (bool $total) {
+                echo json_encode([
+                    'total' => $total,
+                    'type' => \gettype($total),
+                ]);
+            });
+
+        $http = $this->http;
+        $this->assertInstanceOf(Http::class, $http);
+
+        // SDK and browser query strings send the literal text "false" / "true".
+        $this->assertSame('{"total":false,"type":"boolean"}', $this->executeTotalFlag($http, 'false'));
+        $this->assertSame('{"total":true,"type":"boolean"}', $this->executeTotalFlag($http, 'true'));
+        $this->assertSame('{"total":false,"type":"boolean"}', $this->executeTotalFlag($http, '0'));
+        $this->assertSame('{"total":true,"type":"boolean"}', $this->executeTotalFlag($http, '1'));
+        $this->assertSame('{"total":false,"type":"boolean"}', $this->executeTotalFlag($http, 0));
+        $this->assertSame('{"total":true,"type":"boolean"}', $this->executeTotalFlag($http, 1));
+        $this->assertSame('{"total":false,"type":"boolean"}', $this->executeTotalFlag($http, false));
+        $this->assertSame('{"total":true,"type":"boolean"}', $this->executeTotalFlag($http, true));
+    }
+
+    private function executeTotalFlag(Http $http, mixed $total): string
+    {
+        $request = new FPMRequest();
+        $request::_setParams(['total' => $total]);
+
+        ob_start();
+        $http->execute($request, new Response());
+        $result = ob_get_contents();
+        ob_end_clean();
+
+        $request::_setParams(null);
+
+        return (string) $result;
     }
 
     public function testCanInjectResourceAndParamWithSameName(): void

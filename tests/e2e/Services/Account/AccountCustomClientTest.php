@@ -1058,6 +1058,13 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(0, $response['body']['total']);
         $this->assertCount(1, $response['body']['sessions']);
+
+        // Official SDKs send the literal query string "false". http_build_query(false)
+        // becomes "0", so the string form has to be sent on the path itself.
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions?total=false', $headers, []);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+        $this->assertCount(1, $response['body']['sessions']);
     }
 
     public function testCreateEmailPasswordSessionWithDuration(): void
