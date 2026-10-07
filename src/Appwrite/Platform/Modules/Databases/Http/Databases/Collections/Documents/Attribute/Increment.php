@@ -215,8 +215,10 @@ class Increment extends Action
             );
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
+            // The library returns the PHP sum (`null + n`). SQL leaves NULL unchanged, so read the stored value back.
             if ($wasNull) {
-                $document->setAttribute($attribute, null);
+                $stored = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
+                $document->setAttribute($attribute, $stored->getAttribute($attribute));
             }
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());

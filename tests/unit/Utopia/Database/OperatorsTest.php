@@ -128,6 +128,29 @@ final class OperatorsTest extends TestCase
         Operators::limit($collection, $row, 'n', 1.5, null, true);
     }
 
+    public function testHugeOperandOnIntegerColumnIsRejected(): void
+    {
+        $collection = $this->collection([
+            $this->integer('n', \PHP_INT_MIN, \PHP_INT_MAX, 8),
+        ]);
+
+        $this->expectException(StructureException::class);
+        Operators::limit($collection, new Document(['n' => null]), 'n', 1e30, null, true);
+    }
+
+    public function testEvenIntegerDivisionStaysValid(): void
+    {
+        $collection = $this->collection([
+            $this->integer('sm', 0, 100, 4),
+        ]);
+        $operator = Operator::divide(2);
+        $data = ['sm' => $operator];
+
+        Operators::prepare($collection, new Document(['sm' => 10]), $data);
+
+        $this->assertSame([2], $operator->getValues());
+    }
+
     public function testRequestClampIsCombinedWithTheColumn(): void
     {
         $collection = $this->collection([
@@ -150,7 +173,6 @@ final class OperatorsTest extends TestCase
     }
 
     /**
-     * @param array<string, mixed> $attribute
      * @return array<string, mixed>
      */
     private function integer(string $key, int $min, int $max, int $size): array

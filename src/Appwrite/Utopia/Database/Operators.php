@@ -18,7 +18,7 @@ use Utopia\Database\Operator;
 class Operators
 {
     /**
-     * @param array<string, mixed> $data
+     * @param array<int|string, mixed> $data
      */
     public static function has(array $data): bool
     {
@@ -31,9 +31,6 @@ class Operators
         return false;
     }
 
-    /**
-     * @param Document|array<string, mixed>|null $attribute
-     */
     public static function find(Document $collection, string $key): Document|array|null
     {
         foreach ($collection->getAttribute('attributes', []) as $attribute) {
@@ -50,7 +47,7 @@ class Operators
      * On a 64-bit integer column, also records the column ceiling on the operator
      * so the library's 32-bit overflow check does not reject a value the column can hold.
      *
-     * @param array<string, mixed> $data
+     * @param array<int|string, mixed> $data
      * @throws StructureException
      */
     public static function prepare(Document $collection, Document $current, array &$data): void
@@ -404,7 +401,7 @@ class Operators
     /**
      * @param array<string, mixed> $attribute
      */
-    private static function typeBound(array $attribute, string $edge): int|float|null
+    private static function typeBound(array $attribute, string $edge): int|null
     {
         $type = (string) ($attribute['type'] ?? '');
         if (!\in_array($type, [Database::VAR_INTEGER, Database::VAR_BIGINT], true)) {

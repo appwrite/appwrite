@@ -841,7 +841,7 @@ class Update extends Action
         }
 
         $row = null;
-        if ($documentId !== null && isset($state[$collectionId][$documentId]) && $state[$collectionId][$documentId] instanceof Document) {
+        if ($documentId !== null && isset($state[$collectionId][$documentId])) {
             $row = $state[$collectionId][$documentId];
         } elseif ($documentId !== null) {
             $row = $dbForDatabases->getDocument($collectionId, $documentId);
@@ -885,7 +885,7 @@ class Update extends Action
         }
 
         $row = null;
-        if (isset($state[$collectionId][$documentId]) && $state[$collectionId][$documentId] instanceof Document) {
+        if (isset($state[$collectionId][$documentId])) {
             $row = $state[$collectionId][$documentId];
         } else {
             $row = $dbForDatabases->getDocument($collectionId, $documentId);
