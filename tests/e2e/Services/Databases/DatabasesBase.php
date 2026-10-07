@@ -1909,7 +1909,7 @@ trait DatabasesBase
         $this->waitForAttribute($databaseId, $containerId, 'relationship');
 
         /**
-         * Test for FAILURE
+         * Test for SUCCESS
          */
         $response = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $containerId, 'string', 'relationship'), array_merge([
             'content-type' => 'application/json',
@@ -1920,11 +1920,11 @@ trait DatabasesBase
             'default' => 'plain',
         ]);
 
-        // The legacy `/:key/relationship` alias outranks the typed route, so the request
-        // reaches the relationship update keyed `string` instead of the string update
-        // keyed `relationship`. Dropping the alias is what would flip this to a 200.
-        $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertEquals($this->getSchemaParam() . '_not_found', $response['body']['type']);
+        // The typed route has a static segment where the legacy `/:key/relationship` alias
+        // has a parameter, so it wins and the request reaches the string update keyed `relationship`.
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('relationship', $response['body']['key']);
+        $this->assertEquals('plain', $response['body']['default']);
     }
 
     public function testAttributeResponseModels(): void

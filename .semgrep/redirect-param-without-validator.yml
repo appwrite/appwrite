@@ -1,0 +1,29 @@
+rules:
+  - id: php.appwrite.redirect-param-without-validator
+    message: >
+      Redirect-target parameter (success, failure, redirect, returnUrl,
+      next, continue, url used for email links) validated with bare URL()
+      or Text(). Use the injected redirectValidator (or Host with the
+      project's platform hostnames) so redirects stay on registered
+      platforms.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/Modules/**"
+        - "**/app/controllers/**"
+    patterns:
+      - pattern: $ROUTE->param($NAME, $DEFAULT, $VALIDATOR, ...)
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: ^['"](?:success|failure|redirect|redirectUrl|redirectUri|returnUrl|returnTo|next|continue)['"]$
+      - metavariable-pattern:
+          metavariable: $VALIDATOR
+          pattern-either:
+            - pattern: new URL(...)
+            - pattern: new \Utopia\Validator\URL(...)
+            - pattern: new Text(...)
+            - pattern: new \Utopia\Validator\Text(...)

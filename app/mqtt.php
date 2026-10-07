@@ -235,6 +235,16 @@ $server->error(fn (\Throwable $error, string $action) => Console::error("MQTT {$
 // Appwrite clients never PUBLISH; messages are produced by the Messaging worker onto the channel.
 $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $register, $container, $telemetry): void {
     if (!$telemetry instanceof NoTelemetry) {
+        // Liveness signal that is off the client path. Every other broker metric is a synchronous
+        // counter or histogram, recorded only when a client acts, so a freshly rolled worker in a
+        // quiet region exports nothing until the first CONNECT. This uptime gauge is observed on
+        // every collect, so the broker reports within one cycle of a worker starting, whatever the
+        // traffic, and resets to zero on restart. The alert that pages when the broker stops
+        // reporting reads this series, so a rollout no longer looks like an outage.
+        $workerStartedAt = microtime(true);
+        $uptime = $telemetry->createObservableGauge('mqtt.server.uptime', 's', 'Seconds since the broker worker started.');
+        $uptime->observe(fn (callable $observe) => $observe(microtime(true) - $workerStartedAt, []));
+
         Timer::tick(60000, fn () => $telemetry->collect());
     }
 

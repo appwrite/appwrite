@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Http\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
@@ -58,6 +59,36 @@ final class RouterTest extends TestCase
         $this->assertEquals($routeBlogPost, Router::match(Http::REQUEST_METHOD_GET, '/blog/test')?->route);
         $this->assertEquals($routeBlogPostComments, Router::match(Http::REQUEST_METHOD_GET, '/blog/test/comments')?->route);
         $this->assertEquals($routeBlogPostCommentsSingle, Router::match(Http::REQUEST_METHOD_GET, '/blog/test/comments/:comment')?->route);
+    }
+
+    /**
+     * @return \Iterator<string, array{0: list<string>}>
+     */
+    public static function providerOverlappingTemplates(): \Iterator
+    {
+        yield 'enum first' => [['enum', 'relationship']];
+        yield 'relationship first' => [['relationship', 'enum']];
+    }
+
+    /**
+     * @param list<string> $order
+     */
+    #[DataProvider('providerOverlappingTemplates')]
+    public function testCanMatchStaticSegmentOverPlaceholder(array $order): void
+    {
+        $routes = [
+            'enum' => new Route(Http::REQUEST_METHOD_PATCH, '/v1/databases/:databaseId/collections/:collectionId/attributes/enum/:key'),
+            'relationship' => new Route(Http::REQUEST_METHOD_PATCH, '/v1/databases/:databaseId/collections/:collectionId/attributes/:key/relationship'),
+        ];
+
+        foreach ($order as $name) {
+            Router::addRoute($routes[$name]);
+        }
+
+        $match = Router::match(Http::REQUEST_METHOD_PATCH, '/v1/databases/db/collections/col/attributes/enum/relationship');
+
+        $this->assertSame($routes['enum'], $match?->route);
+        $this->assertSame('relationship', $match->params['key']);
     }
 
     public function testCanMatchUrlWithWildcard(): void

@@ -433,9 +433,12 @@ return [
         'description' => 'Access to use Health service',
         'category' => 'Other',
     ],
+    // The Assistant endpoint is gone, but OAuth2 clients registered with this scope
+    // (e.g. the ChatGPT app) still request it, so it must stay a known scope.
     'assistant.read' => [
-        'description' => 'Access to use Assistant service',
+        'description' => 'Access to use Assistant service. This scope is deprecated, the Assistant service has been removed.',
         'category' => 'Other',
+        'deprecated' => true,
     ],
     'migrations.read' => [
         'description' => 'Access to read migrations',

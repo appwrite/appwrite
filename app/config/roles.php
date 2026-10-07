@@ -35,7 +35,6 @@ $member = [
     'targets.write',
     'subscribers.write',
     'subscribers.read',
-    'assistant.read',
     'rules.read',
     'videos.play',
     'videos.read',
