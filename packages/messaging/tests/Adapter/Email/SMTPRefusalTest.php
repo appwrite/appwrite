@@ -75,11 +75,19 @@ final class SMTPRefusalTest extends TestCase
             'The server closed the connection',
             false,
         ];
-        // What a client is left with after a 4xx to EHLO sends it back to
-        // HELO: a session that offers no login at all, with no code behind it.
-        yield 'no login offered' => [
-            ['220 smtp.example.test ESMTP', '450 4.7.0 Temporary EHLO failure', '250 mail.example.test'],
-            'No shared mechanism. The server offers: none',
+        // A 4xx to EHLO is the server busy, not one without ESMTP: it surfaces
+        // as itself rather than as a HELO session that offers no login.
+        yield 'EHLO refused for now' => [
+            ['220 smtp.example.test ESMTP', '450 4.7.0 Temporary EHLO failure'],
+            'Expected 250, the server said: 450 4.7.0 Temporary EHLO failure',
+            false,
+        ];
+        // A 421 ends the session (RFC 5321). The client must not write HELO on
+        // the closed socket, which the real transport refuses with a LogicException
+        // that no SMTP catch would see.
+        yield 'closing at EHLO' => [
+            ['220 smtp.gmail.com ESMTP', '421 4.7.0 Try again later, closing connection.'],
+            'Expected 250, the server said: 421 4.7.0 Try again later, closing connection.',
             false,
         ];
     }
@@ -200,6 +208,28 @@ final class SMTPRefusalTest extends TestCase
 
         $this->assertStringContainsString('535 Authentication failed.', (string) $result['results'][0]['error']);
         $this->assertFalse($result['results'][0]['permanent']);
+    }
+
+    /**
+     * Encryption is required and the server never offers it: no retry can change
+     * what the server supports.
+     */
+    public function testAServerWithoutTheRequiredStartTlsIsFinal(): void
+    {
+        $server = new ScriptedSmtpServer(['220 mail.example.test ESMTP', self::EHLO]);
+
+        $adapter = new SMTP(host: "127.0.0.1:{$server->port}", username: 'jane', password: 'secret', smtpSecure: 'tls', timeout: 2, timelimit: 2);
+        $result = $adapter->send(new Email(
+            to: [['email' => 'to@example.test', 'name' => 'To']],
+            subject: 'Your code',
+            content: '123456',
+            fromName: 'Sender',
+            fromEmail: 'sender@example.test',
+        ));
+
+        $this->assertSame(0, $result['deliveredTo']);
+        $this->assertStringContainsString('The server does not offer STARTTLS', (string) $result['results'][0]['error']);
+        $this->assertTrue($result['results'][0]['permanent']);
     }
 
     public function testAHostNobodyListensOnIsWorthRepeating(): void

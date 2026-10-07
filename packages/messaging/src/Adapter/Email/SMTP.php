@@ -11,6 +11,7 @@ use Utopia\SMTP\Auth\Plain;
 use Utopia\SMTP\Client;
 use Utopia\SMTP\Encryption;
 use Utopia\SMTP\Exception\AuthenticationException;
+use Utopia\SMTP\Exception\CapabilityException;
 use Utopia\SMTP\Exception\SmtpException;
 use Utopia\SMTP\Exception\TransactionException;
 use Utopia\SMTP\Message as SmtpMessage;
@@ -207,9 +208,13 @@ class SMTP extends EmailAdapter
      * Whether the server said, with a 5xx reply, that sending the same message
      * again cannot change its answer. Anything short of that reply is worth
      * repeating: a connection that dropped or timed out, a 4xx, a reply out of
-     * protocol, and a login or capability failure no reply code stands behind.
-     * A 4xx to EHLO falls back to HELO, which advertises no mechanism and no
-     * extension, so even "nothing in common" can be gone on the next attempt.
+     * protocol, and a login failure no reply code stands behind.
+     *
+     * A capability the server lacks is final too: no STARTTLS when encryption is
+     * required, no SMTPUTF8 for a non-ASCII address, a message over the advertised
+     * SIZE. The client falls back to HELO only when EHLO is refused with a 5xx, by a
+     * server that does not speak ESMTP at all, so the extensions a session offers
+     * are the server's, not an artefact of a busy moment.
      */
     private function permanent(SmtpException $exception): bool
     {
@@ -218,6 +223,7 @@ class SMTP extends EmailAdapter
         return match (true) {
             $exception instanceof TransactionException => $exception->isPermanent(),
             $exception instanceof NoHostAnswered => $exception->permanent,
+            $exception instanceof CapabilityException => true,
             $exception instanceof AuthenticationException => $previous instanceof TransactionException && $previous->isPermanent(),
             default => false,
         };
