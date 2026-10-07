@@ -1,0 +1,28 @@
+rules:
+  - id: php.appwrite.related-permissions-helper
+    message: >
+      Nested or related-document $permissions reads or writes must go
+      through validateRelatedPermissions() so a caller cannot grant roles
+      they do not hold. Applies across Databases, TablesDB, DocumentsDB,
+      VectorsDB, and transaction operations. Top-level collection or
+      primary-document permission updates ($document, $data, $collection)
+      are not this rule.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/Modules/Databases/**"
+    patterns:
+      - pattern-either:
+          - pattern: $REL->getAttribute('$permissions')
+          - pattern: $REL->setAttribute('$permissions', ...)
+          - pattern: $REL['$permissions']
+          - pattern: $REL["$permissions"]
+      - metavariable-regex:
+          metavariable: $REL
+          regex: \$(?:rel(?:ation|ated)?|nested|child|peer|linked)[A-Za-z]*
+      - pattern-not-inside: |
+          $this->validateRelatedPermissions(...)

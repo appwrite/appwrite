@@ -7,12 +7,10 @@ use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Redelivery;
-use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
 use Utopia\Cache\Cache;
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -49,6 +47,7 @@ class Webhooks extends Action
             ->inject('publisherForUsage')
             ->inject('platform')
             ->inject('plan')
+            ->inject('clientForWebhooks')
             ->inject('cache')
             ->callback($this->action(...));
     }
@@ -61,11 +60,12 @@ class Webhooks extends Action
      * @param UsagePublisher $publisherForUsage
      * @param array $platform
      * @param array $plan
+     * @param Client $clientForWebhooks
      * @param Cache $cache
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, Cache $cache): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, Client $clientForWebhooks, Cache $cache): void
     {
         $payload = $message->getPayload();
 
@@ -100,7 +100,7 @@ class Webhooks extends Action
                 continue;
             }
 
-            $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan, $redelivery->id($webhook->getId()));
+            $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan, $clientForWebhooks, $redelivery->id($webhook->getId()));
             if ($error !== null) {
                 $errors[] = $error;
             } else {
@@ -132,27 +132,20 @@ class Webhooks extends Action
      * @param UsagePublisher $publisherForUsage
      * @param array $platform
      * @param array $plan
+     * @param Client $clientForWebhooks
      * @param string $deliveryId Identifies this event to this webhook; the same on every attempt
      * @return string|null The error log if the delivery failed, otherwise null
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, string $deliveryId): ?string
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, Client $clientForWebhooks, string $deliveryId): ?string
     {
         $rawUrl = $webhook->getAttribute('url');
-
-        if (System::getEnv('_APP_ENV', 'development') === 'production') {
-            $host = \parse_url($rawUrl, PHP_URL_HOST) ?? '';
-            $hostnameValidator = new PublicHostname();
-            if (!$hostnameValidator->isValid($host)) {
-                return 'Webhook target ' . $host . ' rejected: ' . $hostnameValidator->getDescription();
-            }
-        }
 
         $signatureKey = $webhook->getAttribute('signatureKey');
         $signature = base64_encode(hash_hmac('sha1', $rawUrl . $payload, $signatureKey, true));
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
 
-        $client = (new Client(new CurlAdapter()))
+        $client = $clientForWebhooks
             ->withTimeout(15)
             ->withConnectTimeout(15)
             ->withSslVerification($webhook->getAttribute('security', true));

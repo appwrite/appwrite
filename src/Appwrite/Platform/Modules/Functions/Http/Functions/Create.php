@@ -27,8 +27,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -199,28 +198,25 @@ class Create extends Base
 
         // Temporary abuse check
         $abuseCheck = function () use ($project, $timelimit, $response): void {
-            $abuseKey = "projectId:{projectId},url:{url}";
+            $abuseKey = 'projectId:{projectId},url:{url}';
             $abuseLimit = System::getEnv('_APP_FUNCTIONS_CREATION_ABUSE_LIMIT', 50);
             $abuseTime = 86400; // 1 day
 
-            $isRateLimited = $timelimit($abuseKey, $abuseLimit, $abuseTime, function (TimeLimit $timeLimit) use ($project, $response, $abuseTime): bool {
-                $timeLimit
-                    ->setParam('{projectId}', $project->getId())
-                    ->setParam('{url}', '/v1/functions');
-
-                $abuse = new Abuse($timeLimit);
-                $remaining = $timeLimit->remaining();
-                $limit = $timeLimit->limit();
-                $time = $timeLimit->time() + $abuseTime;
-
-                $response
-                    ->addHeader('X-RateLimit-Limit', $limit)
-                    ->addHeader('X-RateLimit-Remaining', $remaining)
-                    ->addHeader('X-RateLimit-Reset', $time);
+            $isRateLimited = $timelimit($abuseKey, $abuseLimit, $abuseTime, function (TimeLimit $timeLimit) use ($project, $response): bool {
+                $timeLimit = $timeLimit->withParams([
+                    '{projectId}' => (string) $project->getId(),
+                    '{url}' => '/v1/functions',
+                ]);
 
                 $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+                $result = $enabled ? $timeLimit->check() : $timeLimit->peek();
 
-                return $enabled && $abuse->check();
+                $response
+                    ->addHeader('X-RateLimit-Limit', (string) $result->limit)
+                    ->addHeader('X-RateLimit-Remaining', (string) $result->remaining)
+                    ->addHeader('X-RateLimit-Reset', (string) $result->reset);
+
+                return $enabled && $result->limited;
             });
 
             if ($isRateLimited) {

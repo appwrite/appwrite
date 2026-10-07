@@ -225,6 +225,8 @@ class Create extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
+        $dbForDatabases = $getDatabasesDB($database);
+
         $hasRelationships = \array_filter(
             $collection->getAttribute('attributes', []),
             fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
@@ -289,7 +291,7 @@ class Create extends Action
 
         $operations = 0;
 
-        $checkPermissions = function (Document $collection, Document $document, string $permission) use ($isAPIKey, $isPrivilegedUser, &$checkPermissions, $dbForProject, $database, &$operations, $authorization) {
+        $checkPermissions = function (Document $collection, Document $document, string $permission) use ($isAPIKey, $isPrivilegedUser, &$checkPermissions, $dbForProject, $dbForDatabases, $database, &$operations, $authorization) {
             $operations++;
 
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
@@ -342,8 +344,12 @@ class Create extends Action
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
 
                         $current = $authorization->skip(
-                            fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relation->getId())
+                            fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relation->getId())
                         );
+
+                        if (!$isAPIKey && !$isPrivilegedUser) {
+                            $this->validateRelatedPermissions($relation->getAttribute('$permissions'), $current, $authorization);
+                        }
 
                         if ($current->isEmpty()) {
                             $type = Database::PERMISSION_CREATE;
@@ -463,7 +469,6 @@ class Create extends Action
             return;
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         try {
             $created = [];

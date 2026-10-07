@@ -234,8 +234,11 @@ class Mails extends Action
             Span::add('mail.status', 'failure');
 
             if ($type === 'smtp') {
-                throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
+                Span::add('mail.error.message', $error->getMessage());
+
+                return;
             }
+
             throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
         }
 

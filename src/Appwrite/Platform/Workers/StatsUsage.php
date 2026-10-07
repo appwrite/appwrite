@@ -3,9 +3,9 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Detector\Detector;
+use Appwrite\Event\Message\ProjectContext;
 use Appwrite\Usage\Connection;
 use Utopia\Console;
-use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Usage\Accumulator;
@@ -30,12 +30,12 @@ class StatsUsage extends Action
         $this
             ->desc('Stats usage worker')
             ->inject('message')
-            ->inject('project')
+            ->inject('projectContext')
             ->inject('usageConnection')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Connection $usageConnection): void
+    public function action(Message $message, ProjectContext $projectContext, Connection $usageConnection): void
     {
         if (!$usageConnection->isEnabled()) {
             return;
@@ -49,11 +49,7 @@ class StatsUsage extends Action
             throw new \RuntimeException('Missing payload');
         }
 
-        if ((string) ($payload['project']['$id'] ?? '') !== $project->getId()) {
-            throw new \RuntimeException('Usage payload project does not match resolved project');
-        }
-
-        $tenant = (string) $project->getSequence();
+        $tenant = $projectContext->sequence;
         if ($tenant === '') {
             Console::warning('Skipping usage event write: project has no sequence');
             return;
@@ -162,7 +158,6 @@ class StatsUsage extends Action
             METRIC_COLLECTIONS,
             METRIC_DOCUMENTS,
             METRIC_DATABASES_STORAGE,
-            METRIC_AVATARS_STORAGE,
         ], true);
     }
 

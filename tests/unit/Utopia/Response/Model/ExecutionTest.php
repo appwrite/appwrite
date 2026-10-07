@@ -35,6 +35,31 @@ final class ExecutionTest extends TestCase
         $this->assertSame('42', $execution->getAttribute('responseHeaders')[0]->getAttribute('value'));
     }
 
+    public function testHeaderValuesAreStrings(): void
+    {
+        $execution = (new Execution())->filter(new Document([
+            'requestHeaders' => [
+                ['name' => 'x-retries', 'value' => 3],
+                ['name' => 'x-ratio', 'value' => 0.5],
+                ['name' => 'x-forwarded', 'value' => true],
+                ['name' => 'x-ports', 'value' => [80, 443]],
+            ],
+            'responseHeaders' => [
+                ['name' => 'content-length', 'value' => 8807],
+                new Document(['name' => 'age', 'value' => 60]),
+            ],
+        ]));
+
+        $this->assertSame([
+            ['name' => 'x-retries', 'value' => '3'],
+            ['name' => 'x-ratio', 'value' => '0.5'],
+            ['name' => 'x-forwarded', 'value' => 'true'],
+            ['name' => 'x-ports', 'value' => '80, 443'],
+        ], $execution->getAttribute('requestHeaders'));
+        $this->assertSame(['name' => 'content-length', 'value' => '8807'], $execution->getAttribute('responseHeaders')[0]);
+        $this->assertSame('60', $execution->getAttribute('responseHeaders')[1]->getAttribute('value'));
+    }
+
     public function testResourceIdentityIsRequired(): void
     {
         $rules = (new Execution())->getRules();
