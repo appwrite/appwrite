@@ -167,10 +167,6 @@ class Create extends Action
                 if ($document->isEmpty() && !$isDependant && $operation['action'] !== 'upsert') {
                     throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$documentId]);
                 }
-
-                if (\in_array($operation['action'], ['increment', 'decrement'], true) && !$document->isEmpty()) {
-                    $this->guardNumericOperation($collection, $document, $operation);
-                }
             }
 
             // Bulk operations skip permission validation entirely (API key/admin only, already checked above)
@@ -239,6 +235,10 @@ class Create extends Action
                         $this->validateRelationships($database, $collection, $operation['data'], $dbForProject, $transactionState, $transactionId, $authorization);
                     }
                 }
+            }
+
+            if (\in_array($operation['action'], ['increment', 'decrement'], true) && $document !== null && !$document->isEmpty()) {
+                $this->guardNumericOperation($collection, $document, $operation);
             }
 
             $staged[] = new Document([

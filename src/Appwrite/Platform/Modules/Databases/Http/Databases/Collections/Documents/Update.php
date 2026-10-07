@@ -176,14 +176,6 @@ class Update extends Action
             $permissions = $document->getPermissions() ?? [];
         }
 
-        if ($transactionId === null) {
-            try {
-                Operators::prepare($collection, $document, $data);
-            } catch (StructureException $e) {
-                throw new Exception($this->getStructureException(), $e->getMessage());
-            }
-        }
-
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions;
         $data = $this->removeReadonlyAttributes($data, $isAPIKey || $isPrivilegedUser);
@@ -346,11 +338,32 @@ class Update extends Action
         try {
             $document = $dbForDatabases->withRequestTimestamp(
                 $requestTimestamp,
-                fn () => $dbForDatabases->withPreserveDates(fn () => $dbForDatabases->updateDocument(
-                    $collectionTableId,
-                    $document->getId(),
-                    $newDocument
-                ))
+                fn () => $dbForDatabases->withPreserveDates(function () use ($dbForDatabases, $collectionTableId, $documentId, $newDocument, $collection, $authorization, $data, $isAPIKey, $isPrivilegedUser) {
+                    if (!Operators::has($data)) {
+                        return $dbForDatabases->updateDocument(
+                            $collectionTableId,
+                            $documentId,
+                            $newDocument
+                        );
+                    }
+
+                    // Hold the row lock across validation and the write so a concurrent
+                    // operator cannot pass the same column check and then store past it.
+                    return $dbForDatabases->withTransaction(function () use ($dbForDatabases, $collectionTableId, $documentId, $newDocument, $collection, $authorization, $data, $isAPIKey, $isPrivilegedUser) {
+                        $locked = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId, forUpdate: true));
+                        if ($locked->isEmpty()) {
+                            throw new Exception($this->getNotFoundException(), params: [$documentId]);
+                        }
+                        $this->authorizeUpdate($collection, $locked, $authorization, $isAPIKey || $isPrivilegedUser);
+                        Operators::prepare($collection, $locked, $data);
+
+                        return $dbForDatabases->updateDocument(
+                            $collectionTableId,
+                            $documentId,
+                            $newDocument
+                        );
+                    });
+                })
             );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());

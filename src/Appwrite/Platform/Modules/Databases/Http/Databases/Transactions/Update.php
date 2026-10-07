@@ -844,7 +844,7 @@ class Update extends Action
         if ($documentId !== null && isset($state[$collectionId][$documentId])) {
             $row = $state[$collectionId][$documentId];
         } elseif ($documentId !== null) {
-            $row = $dbForDatabases->getDocument($collectionId, $documentId);
+            $row = $dbForDatabases->getDocument($collectionId, $documentId, forUpdate: true);
         }
 
         if (!$row instanceof Document || $row->isEmpty()) {

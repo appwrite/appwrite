@@ -138,6 +138,16 @@ final class OperatorsTest extends TestCase
         Operators::limit($collection, new Document(['n' => null]), 'n', 1e30, null, true);
     }
 
+    public function testFloatAtSigned64BitCeilingIsRejected(): void
+    {
+        $collection = $this->collection([
+            $this->integer('big', \PHP_INT_MIN, \PHP_INT_MAX, 8),
+        ]);
+
+        $this->expectException(StructureException::class);
+        Operators::limit($collection, new Document(['big' => \PHP_INT_MAX]), 'big', 1, null, true);
+    }
+
     public function testEvenIntegerDivisionStaysValid(): void
     {
         $collection = $this->collection([

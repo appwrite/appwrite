@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Attribute;
 
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
@@ -90,10 +91,11 @@ class Decrement extends Action
             ->inject('plan')
             ->inject('authorization')
             ->inject('user')
+            ->inject('transactionState')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Context $usage, array $plan, Authorization $authorization, User $user): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Context $usage, array $plan, Authorization $authorization, User $user, TransactionState $transactionState): void
     {
         $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
@@ -141,8 +143,9 @@ class Decrement extends Action
             ) {
                 throw new Exception($this->getStructureNotFoundException(), params: [$attribute]);
             }
-            $existingRow = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
+            $existingRow = $authorization->skip(fn () => $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId));
             if (!$existingRow->isEmpty()) {
+                $this->authorizeUpdate($collection, $existingRow, $authorization, $isAPIKey || $isPrivilegedUser);
                 $min = $this->applyColumnLimit($collection, $existingRow, $attribute, $value, $min, false);
             }
 
@@ -201,6 +204,7 @@ class Decrement extends Action
             throw new Exception($this->getNotFoundException(), params: [$documentId]);
         }
 
+        $this->authorizeUpdate($collection, $existingRow, $authorization, $isAPIKey || $isPrivilegedUser);
         $column = Operators::find($collection, $attribute);
         $wasNull = $column !== null && $existingRow->getAttribute($attribute) === null;
         $min = $this->applyColumnLimit($collection, $existingRow, $attribute, $value, $min, false);

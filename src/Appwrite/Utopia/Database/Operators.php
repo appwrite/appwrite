@@ -368,10 +368,12 @@ class Operators
         if (!\in_array($type, [Database::VAR_INTEGER, Database::VAR_BIGINT], true)) {
             return $value;
         }
-        if (!\is_float($value) || !\is_finite($value)) {
+        if (!\is_float($value) || !\is_finite($value) || \floor($value) != $value) {
             return $value;
         }
-        if (\floor($value) != $value || $value < \PHP_INT_MIN || $value > \PHP_INT_MAX) {
+        // PHP_INT_MAX is not an exact float, so the comparison promotes it to
+        // 2^63. A float at that ceiling would pass and cast to PHP_INT_MIN.
+        if ($value >= 2.0 ** 63 || $value < (float) \PHP_INT_MIN) {
             return $value;
         }
 

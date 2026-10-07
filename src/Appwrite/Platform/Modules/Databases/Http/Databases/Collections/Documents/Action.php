@@ -14,6 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 
 abstract class Action extends DatabasesAction
 {
@@ -563,6 +564,28 @@ abstract class Action extends DatabasesAction
             return Operators::limit($collection, $row, $attribute, $value, $limit, $increase);
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
+        }
+    }
+
+    /**
+     * Update permission, before any check that depends on the row's current value.
+     * Keys and privileged users follow the same bypass as staged operations.
+     *
+     * @throws Exception
+     */
+    protected function authorizeUpdate(Document $collection, Document $row, Authorization $authorization, bool $privileged): void
+    {
+        if ($privileged) {
+            return;
+        }
+
+        $documentSecurity = (bool) $collection->getAttribute('documentSecurity', false);
+        $permissions = [
+            ...$collection->getUpdate(),
+            ...($documentSecurity && !$row->isEmpty() ? $row->getUpdate() : []),
+        ];
+        if (!$authorization->isValid(new Input(Database::PERMISSION_UPDATE, $permissions))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
     }
 }

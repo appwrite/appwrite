@@ -191,15 +191,6 @@ class Upsert extends Action
             }
         }
 
-        if ($transactionId === null && Operators::has($data)) {
-            $existing = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
-            try {
-                Operators::prepare($collection, $existing->isEmpty() ? new Document([]) : $existing, $data);
-            } catch (StructureException $e) {
-                throw new Exception($this->getStructureException(), $e->getMessage());
-            }
-        }
-
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions ?? [];
         $data = $this->removeReadonlyAttributes($data, $isAPIKey || $isPrivilegedUser);
@@ -357,14 +348,30 @@ class Upsert extends Action
 
         $upserted = [];
         try {
-            $dbForDatabases->withPreserveDates(function () use (&$upserted, $dbForDatabases, $collectionTableId, $newDocument) {
-                return $dbForDatabases->upsertDocuments(
-                    $collectionTableId,
-                    [$newDocument],
-                    onNext: function (Document $document) use (&$upserted) {
-                        $upserted[] = $document;
-                    },
-                );
+            $dbForDatabases->withPreserveDates(function () use (&$upserted, $dbForDatabases, $collectionTableId, $documentId, $newDocument, $collection, $authorization, $data, $isAPIKey, $isPrivilegedUser) {
+                $write = function () use (&$upserted, $dbForDatabases, $collectionTableId, $newDocument) {
+                    return $dbForDatabases->upsertDocuments(
+                        $collectionTableId,
+                        [$newDocument],
+                        onNext: function (Document $document) use (&$upserted) {
+                            $upserted[] = $document;
+                        },
+                    );
+                };
+
+                if (!Operators::has($data)) {
+                    return $write();
+                }
+
+                return $dbForDatabases->withTransaction(function () use ($write, $dbForDatabases, $collectionTableId, $documentId, $collection, $authorization, $data, $isAPIKey, $isPrivilegedUser) {
+                    $locked = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId, forUpdate: true));
+                    if (!$locked->isEmpty()) {
+                        $this->authorizeUpdate($collection, $locked, $authorization, $isAPIKey || $isPrivilegedUser);
+                    }
+                    Operators::prepare($collection, $locked->isEmpty() ? new Document([]) : $locked, $data);
+
+                    return $write();
+                });
             });
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
