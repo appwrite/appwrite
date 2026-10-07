@@ -18,12 +18,16 @@ else
   base=$(git rev-parse HEAD~1)
 fi
 
+# Assigned first so a failing diff stops the script instead of reporting no
+# changes; without renames, a move out of the server still counts its source.
+files=$(git diff --name-only --no-renames "$base" HEAD)
+
 server=false
 console=false
 while read -r file; do
   case "$file" in
     '') ;;
-    .github/scripts/changes.sh)
+    .github/scripts/changes.sh | .github/gcrunner.yml)
       server=true
       console=true
       ;;
@@ -35,7 +39,7 @@ while read -r file; do
       server=true
       ;;
   esac
-done <<< "$(git diff --name-only "$base" HEAD)"
+done <<< "$files"
 
 echo "server=$server" >> "$GITHUB_OUTPUT"
 echo "console=$console" >> "$GITHUB_OUTPUT"
