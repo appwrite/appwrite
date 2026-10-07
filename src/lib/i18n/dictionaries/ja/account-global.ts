@@ -1281,6 +1281,11 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'すでに Education プログラムに参加しています。',
   'Continue to Appwrite, then use the organization switcher to find your Education plan.':
     'Appwrite に進み、組織の切り替えメニューから Education プランを探してください。',
+  "You've already used the Education program.":
+    'すでに Education プログラムを利用済みです。',
+  'Each account can join once. Choose a plan to keep building with Appwrite.':
+    '各アカウントの参加は 1 回限りです。プランを選択して、Appwrite での開発を続けましょう。',
+  'Choose a plan': 'プランを選択',
   'We could not check your GitHub connection':
     'GitHub との接続を確認できませんでした',
   'We could not set up your Education plan':

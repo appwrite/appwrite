@@ -62,6 +62,7 @@ type Scenario = {
   profile?: 'cloud' | 'self-hosted'
   linked?: boolean
   membershipStatus?: 403 | 409
+  membershipType?: string
   failPrefs?: boolean
   pausePrefs?: Promise<void>
   pauseOrganizations?: Promise<void>
@@ -195,9 +196,10 @@ async function mockEducationApi(page: Page, scenario: Scenario) {
       if (scenario.membershipStatus) {
         return failure(
           scenario.membershipStatus,
-          scenario.membershipStatus === 409
-            ? 'team_already_exists'
-            : 'user_unauthorized',
+          scenario.membershipType ??
+            (scenario.membershipStatus === 409
+              ? 'team_already_exists'
+              : 'user_unauthorized'),
         )
       }
       if (created) return failure(409, 'team_already_exists')
@@ -400,6 +402,33 @@ test.describe('Education enrollment (mocked API)', () => {
       )
     })
   }
+
+  test('an account that already used the program is offered a plan', async ({
+    page,
+  }) => {
+    await mockEducationApi(page, {
+      account: student(),
+      linked: true,
+      membershipStatus: 409,
+      membershipType: 'program_already_used',
+    })
+    await page.goto('/education/join')
+    await expect(
+      page.getByRole('heading', {
+        name: "You've already used the Education program.",
+        exact: true,
+      }),
+    ).toBeVisible()
+    await expect(
+      page.getByText(
+        'Each account can join once. Choose a plan to keep building with Appwrite.',
+        { exact: true },
+      ),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('link', { name: 'Choose a plan', exact: true }),
+    ).toHaveAttribute('href', '/upgrade')
+  })
 
   test('a failed identity lookup can be retried to open the Education organization', async ({
     page,
