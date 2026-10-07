@@ -544,8 +544,6 @@ class OpenAPI3 extends Format
                     }
                 }
 
-                // 204 has no body. 301, 302, and 308 are redirects: the body is not
-                // part of the API, and the destination is the Location header.
                 if (in_array($response->getCode(), [204, 301, 302, 308], true)) {
                     unset($temp['responses'][(string)$response->getCode()]['content']);
                 }
@@ -555,10 +553,10 @@ class OpenAPI3 extends Format
                 }
 
                 if (in_array($response->getCode(), [301, 302, 308], true)) {
-                    $temp['responses'][(string)$response->getCode()]['description'] = 'Redirect to the OAuth2 provider\'s sign-in page.';
+                    $temp['responses'][(string)$response->getCode()]['description'] = 'Redirect';
                     $temp['responses'][(string)$response->getCode()]['headers'] = [
                         'Location' => [
-                            'description' => 'URL of the OAuth2 provider\'s authorization page.',
+                            'description' => 'URL to redirect the client to.',
                             'schema' => [
                                 'type' => 'string',
                                 'format' => 'uri',

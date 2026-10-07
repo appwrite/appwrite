@@ -1131,14 +1131,13 @@ final class FormatTest extends TestCase
         Method::$processed = [];
         Method::$errors = [];
 
-        $route = (new Route('GET', '/v1/account/sessions/oauth2/:provider'))
-            ->desc('Create OAuth2 session')
-            ->label('scope', 'sessions.write')
+        $route = (new Route('GET', '/v1/tests/redirect'))
+            ->desc('Redirect test')
             ->label('sdk', new Method(
-                namespace: 'account',
-                group: 'sessions',
-                name: 'createOAuth2Session',
-                description: 'Create OAuth2 session.',
+                namespace: 'test',
+                group: null,
+                name: 'getRedirect',
+                description: 'Redirect test.',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
@@ -1147,18 +1146,16 @@ final class FormatTest extends TestCase
                     ),
                 ],
                 contentType: ContentType::HTML,
-                type: MethodType::WEBAUTH,
-            ))
-            ->param('provider', '', new Text(128), 'OAuth2 provider.');
+            ));
 
         $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], ['console' => 0], 'console'))->parse();
-        $response = $openApi['paths']['/account/sessions/oauth2/{provider}']['get']['responses'][(string) $code];
+        $response = $openApi['paths']['/tests/redirect']['get']['responses'][(string) $code];
 
-        $this->assertSame('Redirect to the OAuth2 provider\'s sign-in page.', $response['description']);
+        $this->assertSame('Redirect', $response['description']);
         $this->assertArrayNotHasKey('content', $response);
         $this->assertSame([
             'Location' => [
-                'description' => 'URL of the OAuth2 provider\'s authorization page.',
+                'description' => 'URL to redirect the client to.',
                 'schema' => [
                     'type' => 'string',
                     'format' => 'uri',
@@ -1167,10 +1164,10 @@ final class FormatTest extends TestCase
         ], $response['headers']);
 
         $document = Parser::parse($openApi, Version::V3_0);
-        $parsed = $document->paths['/account/sessions/oauth2/{provider}']->operations['get']->responses[(string) $code];
+        $parsed = $document->paths['/tests/redirect']->operations['get']->responses[(string) $code];
 
         $this->assertSame(Version::V3_0, $document->version);
-        $this->assertSame('Redirect to the OAuth2 provider\'s sign-in page.', $parsed->description);
+        $this->assertSame('Redirect', $parsed->description);
         $this->assertSame([], $parsed->content);
         $this->assertInstanceOf(StringSchema::class, $parsed->headers['Location']->schema);
         $this->assertSame('uri', $parsed->headers['Location']->schema->format);
