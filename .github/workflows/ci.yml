@@ -814,7 +814,7 @@ jobs:
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
-            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
+            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --exclude-group queueRetry --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
 
       - name: Check for native crashes
         if: ${{ !cancelled() }}
@@ -868,6 +868,15 @@ jobs:
             compose_profiles: s3
             wait: executor
             storage_device: s3
+          # These tests retry a whole queue's failed jobs, as an operator would, so they run
+          # where no other test's jobs are in flight.
+          - label: Queue Retry
+            group: queueRetry
+            path: /usr/src/code/tests/e2e/Services
+            options_abuse: disabled
+            storage_antivirus: disabled
+            compose_profiles: ''
+            wait: executor
     env:
       # Shared tables mode connects every pool at boot, including the MongoDB-only DocumentsDB.
       COMPOSE_PROFILES: ${{ matrix.mode == 'shared' && format('mongodb,{0}', matrix.config.compose_profiles) || matrix.config.compose_profiles }}
