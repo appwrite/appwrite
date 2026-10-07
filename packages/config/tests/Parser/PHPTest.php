@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Config\Tests\Parser;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Exception\Parse;
 use Utopia\Config\Parser\PHP;
@@ -33,7 +34,7 @@ final class PHPTest extends TestCase
                 "boolean_false" => false,
                 "null_value" => null,
             ];
-        PHP;
+            PHP;
 
         $data = $this->parser->parse($php);
 
@@ -58,7 +59,7 @@ final class PHPTest extends TestCase
                 "nested_array" => [[1, 2, 3], ["a", "b", "c", "d"], [true, false]],
                 "empty_array" => [],
             ];
-        PHP;
+            PHP;
 
         $data = $this->parser->parse($php);
 
@@ -110,7 +111,7 @@ final class PHPTest extends TestCase
                 ],
                 "empty_object" => [],
             ];
-        PHP;
+            PHP;
 
         $data = $this->parser->parse($php);
 
@@ -138,10 +139,33 @@ final class PHPTest extends TestCase
         $this->assertCount(0, $data['empty_object']);
     }
 
-    public function testPHPParseExceptionMissingStart(): void
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function provideContentsBeforeTheOpenTag(): \Iterator
     {
-        $this->expectException(Parse::class);
-        $this->parser->parse('return [];');
+        yield 'no open tag' => ["return ['key' => 'value'];"];
+        yield 'text before the tag' => ["secret\n<?php return [];"];
+        yield 'newline before the tag' => ["\n<?php return [];"];
+        yield 'byte order mark' => ["\u{FEFF}<?php return [];"];
+    }
+
+    #[DataProvider('provideContentsBeforeTheOpenTag')]
+    public function testPHPParseExceptionMissingStart(string $php): void
+    {
+        $level = \ob_get_level();
+        \ob_start();
+        try {
+            $this->parser->parse($php);
+            $this->fail('Expected Parse');
+        } catch (Parse $e) {
+            $this->assertSame('PHP config must start with an opening <?php tag.', $e->getMessage());
+        } finally {
+            $output = \ob_get_clean();
+        }
+
+        $this->assertSame($level, \ob_get_level());
+        $this->assertSame('', $output);
     }
 
     public function testPHPParseExceptionMissingCode(): void

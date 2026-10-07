@@ -19,6 +19,12 @@ class PHP extends Parser
             throw new Parse('Contents must be a string.');
         }
 
+        // Anything before the open tag, including a missing one, would be
+        // printed by include rather than parsed.
+        if (\preg_match('/^<\?php(\s|$)/', $contents) !== 1) {
+            throw new Parse('PHP config must start with an opening <?php tag.');
+        }
+
         $tempPath = tempnam(sys_get_temp_dir(), 'utopia_config_');
         if ($tempPath === false) {
             throw new Parse('Failed to create temporary file for PHP config.');
