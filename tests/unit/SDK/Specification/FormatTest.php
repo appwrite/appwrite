@@ -62,7 +62,9 @@ use Utopia\Http\Route;
 use Utopia\OpenAPI\Model\CompositeSchema;
 use Utopia\OpenAPI\Model\Composition;
 use Utopia\OpenAPI\Model\Discriminator;
+use Utopia\OpenAPI\Model\StringSchema;
 use Utopia\OpenAPI\Parser;
+use Utopia\OpenAPI\Version;
 use Utopia\Platform\Enum;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
@@ -1110,8 +1112,68 @@ final class FormatTest extends TestCase
 
         $openApiMethod = $openApi['paths']['/tests/{testId}']['delete'];
 
+        $this->assertSame('No content', $openApiMethod['responses']['204']['description']);
         $this->assertArrayNotHasKey('content', $openApiMethod['responses']['204']);
+        $this->assertArrayNotHasKey('headers', $openApiMethod['responses']['204']);
         $this->assertArrayNotHasKey('produces', $openApiMethod['x-appwrite']);
+    }
+
+    public static function redirectResponseCodes(): \Iterator
+    {
+        yield 'moved permanently' => [301];
+        yield 'found' => [302];
+        yield 'permanent redirect' => [308];
+    }
+
+    #[DataProvider('redirectResponseCodes')]
+    public function testRedirectResponsesDeclareLocationHeader(int $code): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/account/sessions/oauth2/:provider'))
+            ->desc('Create OAuth2 session')
+            ->label('scope', 'sessions.write')
+            ->label('sdk', new Method(
+                namespace: 'account',
+                group: 'sessions',
+                name: 'createOAuth2Session',
+                description: 'Create OAuth2 session.',
+                auth: [AuthType::ADMIN],
+                responses: [
+                    new SDKResponse(
+                        code: $code,
+                        model: Response::MODEL_NONE,
+                    ),
+                ],
+                contentType: ContentType::HTML,
+                type: MethodType::WEBAUTH,
+            ))
+            ->param('provider', '', new Text(128), 'OAuth2 provider.');
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], ['console' => 0], 'console'))->parse();
+        $response = $openApi['paths']['/account/sessions/oauth2/{provider}']['get']['responses'][(string) $code];
+
+        $this->assertSame('Redirect to the OAuth2 provider\'s sign-in page.', $response['description']);
+        $this->assertArrayNotHasKey('content', $response);
+        $this->assertSame([
+            'Location' => [
+                'description' => 'URL of the OAuth2 provider\'s authorization page.',
+                'schema' => [
+                    'type' => 'string',
+                    'format' => 'uri',
+                ],
+            ],
+        ], $response['headers']);
+
+        $document = Parser::parse($openApi, Version::V3_0);
+        $parsed = $document->paths['/account/sessions/oauth2/{provider}']->operations['get']->responses[(string) $code];
+
+        $this->assertSame(Version::V3_0, $document->version);
+        $this->assertSame('Redirect to the OAuth2 provider\'s sign-in page.', $parsed->description);
+        $this->assertSame([], $parsed->content);
+        $this->assertInstanceOf(StringSchema::class, $parsed->headers['Location']->schema);
+        $this->assertSame('uri', $parsed->headers['Location']->schema->format);
     }
 
     public static function binaryResponseTypes(): \Iterator
