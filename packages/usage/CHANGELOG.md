@@ -2,6 +2,10 @@
 
 ## Unreleased — query 0.6.x builder
 
+### Changed
+
+- Require `utopia-php/client` ^0.6.
+
 ### Added
 
 - Added a separate immutable ClickHouse sample ledger for billable usage. A
