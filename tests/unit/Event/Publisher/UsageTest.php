@@ -47,7 +47,7 @@ final class UsageTest extends TestCase
         $usage = new Usage($publisher, new Queue('v1-stats-usage'));
 
         $this->assertSame($accepted, $usage->enqueue($this->message()) !== false);
-        $this->assertSame($accepted ? 1 : 0, count($publisher->getEvents('v1-stats-usage') ?? []));
+        $this->assertCount($accepted ? 1 : 0, $publisher->getEvents('v1-stats-usage') ?? []);
         $this->assertSame($pending + ($accepted ? 1 : 0), $publisher->pending);
     }
 
