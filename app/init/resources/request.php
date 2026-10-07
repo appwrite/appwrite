@@ -1043,7 +1043,8 @@ return function (Container $context): void {
             }
         }
 
-        if (empty($teamId) || empty($teamInternalId)) {
+        // "0" is a valid custom id. empty() would treat it as missing.
+        if ($teamId === '' || empty($teamInternalId)) {
             return new Document([]);
         }
 
