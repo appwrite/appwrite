@@ -359,6 +359,32 @@ final class ResponseTest extends TestCase
         $this->assertCount(1, $output['sessions']);
         $this->assertSame('lorem ipsum', $output['sessions'][0]['string']);
     }
+
+    public function testOutputSkipsSessionsOnNestedDocuments(): void
+    {
+        CountingDocument::$clones = 0;
+        $session = new CountingDocument([
+            '$id' => 'session',
+            'secret' => 'hashed-secret',
+        ]);
+        $nested = new Document([
+            'string' => 'lorem ipsum',
+            'integer' => 123,
+            'boolean' => true,
+            'sessions' => [$session],
+        ]);
+        $document = new Document([
+            'singles' => [$nested],
+        ]);
+
+        $output = $this->response->output($document, 'lists');
+
+        $this->assertSame(0, CountingDocument::$clones);
+        $this->assertSame($session, $nested->getAttribute('sessions')[0]);
+        $this->assertSame('hashed-secret', $session->getAttribute('secret'));
+        $this->assertSame('lorem ipsum', $output['singles'][0]['string']);
+        $this->assertArrayNotHasKey('sessions', $output['singles'][0]);
+    }
 }
 
 final class CountingDocument extends Document

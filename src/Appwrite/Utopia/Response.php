@@ -639,7 +639,8 @@ class Response extends SwooleResponse
 
     /**
      * Copy for rendering. Filters mutate this copy. Relationship lists the model
-     * does not render are left off so they are not deep-cloned. The caller is unchanged.
+     * does not render are left off, including on nested documents, so they are
+     * not deep-cloned. The caller is unchanged.
      */
     private function copyForOutput(Document $document, Model $model): Document
     {
@@ -655,7 +656,7 @@ class Response extends SwooleResponse
             }
         }
 
-        if ($skip === []) {
+        if ($skip === [] && !$this->embedsUnrenderedRelation($document, $rules)) {
             return clone $document;
         }
 
@@ -666,13 +667,14 @@ class Response extends SwooleResponse
             }
 
             if ($value instanceof Document) {
-                $copy->setAttribute($key, clone $value);
+                $copy->setAttribute($key, $this->copyNested($value, $rules[$key]['type'] ?? null));
                 continue;
             }
 
             if (\is_array($value)) {
+                $type = $rules[$key]['type'] ?? null;
                 $copy->setAttribute($key, \array_map(
-                    fn ($item) => $item instanceof Document ? clone $item : $item,
+                    fn ($item) => $item instanceof Document ? $this->copyNested($item, $type) : $item,
                     $value
                 ));
                 continue;
@@ -682,6 +684,53 @@ class Response extends SwooleResponse
         }
 
         return $copy;
+    }
+
+    /**
+     * @param mixed $type Rule type. A string names a nested model.
+     */
+    private function copyNested(Document $document, mixed $type): Document
+    {
+        if (\is_string($type) && self::hasModel($type)) {
+            return $this->copyForOutput($document, $this->getModel($type));
+        }
+
+        return clone $document;
+    }
+
+    /**
+     * True when a nested document carries a relationship list its model does not render.
+     *
+     * @param array<string, array<string, mixed>> $rules
+     */
+    private function embedsUnrenderedRelation(Document $document, array $rules): bool
+    {
+        foreach ($document as $key => $value) {
+            if (!$value instanceof Document && !\is_array($value)) {
+                continue;
+            }
+
+            $type = $rules[$key]['type'] ?? null;
+            if (!\is_string($type) || !self::hasModel($type)) {
+                continue;
+            }
+
+            $childRules = $this->getModel($type)->getRules();
+            $children = $value instanceof Document ? [$value] : $value;
+            foreach ($children as $child) {
+                if (!$child instanceof Document) {
+                    continue;
+                }
+
+                foreach (self::USER_RELATIONS as $relation) {
+                    if (!isset($childRules[$relation]) && $child->isSet($relation)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
