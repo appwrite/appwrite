@@ -1024,7 +1024,8 @@ class Memory extends Adapter
                 }
                 $hash = \serialize($signature);
                 if (isset($hashTable[$hash])) {
-                    throw new UniqueException('Cannot create unique index: existing rows already contain duplicate values');
+                    // Under shared tables the duplicates may be another tenant's rows
+                    throw new UniqueException('Unique index violation');
                 }
                 $hashTable[$hash] = $docKey;
             }
