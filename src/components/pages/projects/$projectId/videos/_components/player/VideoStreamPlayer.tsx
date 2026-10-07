@@ -667,7 +667,19 @@ export function VideoStreamPlayer({
     />
   ) : null
 
-  const inspectorPanel = (container: HTMLElement) => (
+  const showInlineInspector = featured && !embed && !inspectorContainer
+
+  const streamInspector = ({
+    detached,
+    portalContainer,
+    onOpenWindow,
+    onClose,
+  }: {
+    detached: boolean
+    portalContainer?: HTMLElement
+    onOpenWindow?: () => void
+    onClose?: () => void
+  }) => (
     <StreamDebugPanel
       player={state}
       qoe={qoe}
@@ -687,9 +699,10 @@ export function VideoStreamPlayer({
       onClearEvents={clearEvents}
       onClearData={clearSessionData}
       onRestartSession={() => reload()}
-      detached
-      portalContainer={container}
-      onClose={inspector?.close}
+      detached={detached}
+      portalContainer={portalContainer}
+      onOpenWindow={onOpenWindow}
+      onClose={onClose}
     />
   )
 
@@ -906,6 +919,13 @@ export function VideoStreamPlayer({
         ) : null}
       </div>
 
+      {showInlineInspector
+        ? streamInspector({
+            detached: false,
+            onOpenWindow: openInspector,
+          })
+        : null}
+
       {!embed && inspectorContainer ? (
         <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card/50 px-3 py-2">
           <SquareArrowOutUpRight className="h-3.5 w-3.5 text-muted-foreground" />
@@ -934,7 +954,14 @@ export function VideoStreamPlayer({
       ) : null}
 
       {inspectorContainer
-        ? createPortal(inspectorPanel(inspectorContainer), inspectorContainer)
+        ? createPortal(
+            streamInspector({
+              detached: true,
+              portalContainer: inspectorContainer,
+              onClose: inspector?.close,
+            }),
+            inspectorContainer,
+          )
         : null}
     </div>
   )
