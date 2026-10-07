@@ -10,6 +10,7 @@ use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Exception\Unique as UniqueException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -507,6 +508,46 @@ trait IndexTests
         $this->assertCount(2, $database->find(__FUNCTION__, [
             Query::equal('email', ['chester@example.com']),
         ]));
+
+        $database->deleteCollection(__FUNCTION__);
+    }
+
+    public function testCreateUniqueIndexOverDuplicates(): void
+    {
+        /** @var Database $database */
+        $database = $this->getDatabase();
+
+        if (!$database->getAdapter()->getSupportForUniqueIndex()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $database->createCollection(__FUNCTION__);
+        $database->createAttribute(__FUNCTION__, 'name', Database::VAR_STRING, 128, false);
+        $database->createAttribute(__FUNCTION__, 'age', Database::VAR_INTEGER, 0, false);
+
+        foreach (['first', 'second'] as $id) {
+            $database->createDocument(__FUNCTION__, new Document([
+                '$id' => $id,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                ],
+                'name' => 'chester',
+                'age' => 7,
+            ]));
+        }
+
+        foreach (['name', 'age'] as $attribute) {
+            try {
+                $database->createIndex(__FUNCTION__, "unique_{$attribute}", Database::INDEX_UNIQUE, [$attribute]);
+                $this->fail('Failed to throw exception');
+            } catch (Exception $e) {
+                $this->assertInstanceOf(UniqueException::class, $e);
+            }
+
+            $indexes = $database->getCollection(__FUNCTION__)->getAttribute('indexes');
+            $this->assertNotContains("unique_{$attribute}", \array_map(fn ($index) => $index->getId(), $indexes));
+        }
 
         $database->deleteCollection(__FUNCTION__);
     }
