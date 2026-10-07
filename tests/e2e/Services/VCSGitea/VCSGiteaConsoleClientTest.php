@@ -225,6 +225,50 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'web:functions/web'), 30000, 1000);
     }
 
+    public function testDetectionReadsVariablesFromDotenv(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'dotenv-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+
+        $workdir = \sys_get_temp_dir() . '/vcs-gitea-' . \uniqid();
+        $endpoint = System::getEnv('_APP_VCS_GITEA_ENDPOINT', 'http://gitea:3000');
+        $remote = \str_replace('://', '://' . self::GITEA_USERNAME . ':' . self::GITEA_PASSWORD . '@', $endpoint)
+            . '/' . self::GITEA_USERNAME . '/' . $repository['body']['name'] . '.git';
+
+        $this->gitHelper("git clone {$remote} {$workdir}", \sys_get_temp_dir());
+        \file_put_contents($workdir . '/package.json', "{\"name\": \"dotenv\", \"main\": \"index.js\"}\n");
+        $this->writeFunctionHelper($workdir, 'dotenv');
+        \file_put_contents($workdir . '/.env', "# Defaults\nPLAIN=value # inline comment\nQUOTED=\"keeps # inside quotes\"\nUNSET=null\n");
+        $this->gitHelper('git add . && git commit -m "Add function with .env"', $workdir);
+        $this->gitHelper('git push origin main', $workdir);
+
+        $detection = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/detections', $headers, [
+            'providerRepositoryId' => (string) $repository['body']['id'],
+            'type' => 'runtime',
+        ]);
+        $this->assertEquals(200, $detection['headers']['status-code'], \json_encode($detection['body']));
+
+        $variables = \array_column($detection['body']['variables'], 'value', 'name');
+        \ksort($variables);
+        $this->assertSame([
+            'PLAIN' => 'value',
+            'QUOTED' => 'keeps # inside quotes',
+            'UNSET' => '',
+        ], $variables);
+    }
+
     public function testUpdateSiteKeepsRepositoryOnNull(): void
     {
         $headers = \array_merge([

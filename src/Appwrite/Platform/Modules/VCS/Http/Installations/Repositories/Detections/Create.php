@@ -11,9 +11,9 @@ use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Swoole\Coroutine\WaitGroup;
-use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
 use Utopia\Config\Config;
-use Utopia\Config\Exceptions\Parse;
+use Utopia\Config\Exception\Parse;
+use Utopia\Config\Parser\Dotenv as ConfigDotenv;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Detector\Detection\Framework\Analog;
@@ -295,7 +295,7 @@ class Create extends Action
                     try {
                         $envObject = $configAdapter->parse($envFile);
                         foreach ($envObject as $envName => $envValue) {
-                            $envs[$envName] = $envValue;
+                            $envs[$envName] = $envValue ?? '';
                         }
                     } catch (Parse $err) {
                         // Silence error, so rest of endpoint can return
