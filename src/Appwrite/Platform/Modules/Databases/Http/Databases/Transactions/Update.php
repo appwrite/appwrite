@@ -298,11 +298,11 @@ class Update extends Action
                                 break;
                             case 'increment':
                                 $this->tightenNumeric($dbForDatabases, $collection, $collectionId, $documentId, $data, $state, true);
-                                $this->handleIncrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleIncrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state, $authorization);
                                 break;
                             case 'decrement':
                                 $this->tightenNumeric($dbForDatabases, $collection, $collectionId, $documentId, $data, $state, false);
-                                $this->handleDecrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleDecrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state, $authorization);
                                 break;
                             case 'bulkCreate':
                                 $count = $this->handleBulkCreateOperation($dbForDatabases, $collectionId, $data, $createdAt, $state);
@@ -917,31 +917,30 @@ class Update extends Action
         string $documentId,
         array $data,
         \DateTime $createdAt,
-        array &$state
+        array &$state,
+        Authorization $authorization,
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
         $attribute = $this->getAttributeNameFromData($data);
 
-        if ($dependent) {
-            $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute(
+        $apply = function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute, $authorization) {
+            $document = $dbForDatabases->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
                 value: $data['value'] ?? 1,
                 max: $data['max'] ?? null
             );
+            $this->keepStoredNull($dbForDatabases, $authorization, $collectionId, $documentId, $attribute, $document);
+            $state[$collectionId][$documentId] = $document;
+        };
+
+        if ($dependent) {
+            $apply();
             return;
         }
 
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
-            $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute(
-                collection: $collectionId,
-                id: $documentId,
-                attribute: $attribute,
-                value: $data['value'] ?? 1,
-                max: $data['max'] ?? null
-            );
-        });
+        $dbForDatabases->withRequestTimestamp($createdAt, $apply);
     }
 
     /**
@@ -963,31 +962,57 @@ class Update extends Action
         string $documentId,
         array $data,
         \DateTime $createdAt,
-        array &$state
+        array &$state,
+        Authorization $authorization,
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
         $attribute = $this->getAttributeNameFromData($data);
 
-        if ($dependent) {
-            $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute(
+        $apply = function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute, $authorization) {
+            $document = $dbForDatabases->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
                 value: $data['value'] ?? 1,
                 min: $data['min'] ?? null
             );
+            $this->keepStoredNull($dbForDatabases, $authorization, $collectionId, $documentId, $attribute, $document);
+            $state[$collectionId][$documentId] = $document;
+        };
+
+        if ($dependent) {
+            $apply();
             return;
         }
 
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
-            $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute(
-                collection: $collectionId,
-                id: $documentId,
-                attribute: $attribute,
-                value: $data['value'] ?? 1,
-                min: $data['min'] ?? null
-            );
-        });
+        $dbForDatabases->withRequestTimestamp($createdAt, $apply);
+    }
+
+    /**
+     * increase/decrease return the PHP sum. SQL leaves a null column null, so
+     * read that stored null back before the next operation in this commit
+     * validates against the sum.
+     */
+    private function keepStoredNull(
+        Database $dbForDatabases,
+        Authorization $authorization,
+        string $collectionId,
+        string $documentId,
+        string $attribute,
+        Document $document,
+    ): void {
+        if ($attribute === '') {
+            return;
+        }
+
+        $stored = $authorization->skip(
+            fn () => $dbForDatabases->getDocument($collectionId, $documentId, forUpdate: true)
+        );
+        if ($stored->isEmpty() || $stored->getAttribute($attribute) !== null) {
+            return;
+        }
+
+        $document->setAttribute($attribute, null);
     }
 
     /**
