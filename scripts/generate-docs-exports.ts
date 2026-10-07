@@ -18,7 +18,15 @@ import {
   serializeDiscoveryJson,
 } from '../src/lib/seo/agent-discovery'
 import {
+  ALTERNATIVE_IDS,
+} from '../src/lib/alternatives/registry'
+import {
+  buildAlternativeMarkdownExport,
+  getAllAlternativeLlmsMeta,
+} from '../src/lib/alternatives/markdown-export'
+import {
   buildAppwriteLlmsTxt,
+  buildAlternativesMarkdownIndex,
   buildBlogMarkdownIndex,
   buildChangelogMarkdownIndex,
   buildDocsLlmsTxt,
@@ -228,7 +236,13 @@ type ExportFile = { relativePath: string; contents: string }
 
 async function buildExportFiles(): Promise<ExportFile[]> {
   const { blog, changelog, integrations } = await collectContentMeta()
+  const alternatives = getAllAlternativeLlmsMeta()
   const llmsFullTxt = await generateLlmsFullTxt()
+
+  const alternativeMarkdownExports: ExportFile[] = ALTERNATIVE_IDS.map((id) => ({
+    relativePath: `alternative-to/${id}.md`,
+    contents: buildAlternativeMarkdownExport(id, SITE_ORIGIN),
+  }))
 
   return [
     {
@@ -243,6 +257,7 @@ async function buildExportFiles(): Promise<ExportFile[]> {
           integrations,
           blog,
           changelog,
+          alternatives,
         },
         SITE_ORIGIN,
       ),
@@ -275,6 +290,11 @@ async function buildExportFiles(): Promise<ExportFile[]> {
       relativePath: 'integrations.md',
       contents: buildIntegrationsMarkdownIndex(integrations, SITE_ORIGIN),
     },
+    {
+      relativePath: 'alternative-to.md',
+      contents: buildAlternativesMarkdownIndex(alternatives, SITE_ORIGIN),
+    },
+    ...alternativeMarkdownExports,
     {
       relativePath: '.well-known/mcp/server-card.json',
       contents: serializeDiscoveryJson(buildMcpServerCard(SITE_ORIGIN)),

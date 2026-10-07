@@ -10,6 +10,7 @@ import { DOCS_FRAMEWORK_STRIP } from '@/lib/docs/framework-strip'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { DocsRouteLink } from './DocsRouteLink'
+import { DocsHomeHeroCtas } from './DocsHomeHeroCtas'
 
 const PREVIEW_HERO_FRAMEWORK_COUNT = 8
 
@@ -33,16 +34,7 @@ export function DocsPreviewHeroSection() {
           Functions, Messaging, Realtime, and hosting.
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center justify-start gap-2 @[480px]:mt-10">
-          <Button variant="outline" size="sm" className="h-8 text-[12px]" asChild>
-            <DocsRouteLink href="/docs/quick-starts" previewView="menu">
-              Quick starts
-            </DocsRouteLink>
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 text-[12px]" asChild>
-            <DocsRouteLink href="/docs/references">API references</DocsRouteLink>
-          </Button>
-        </div>
+        <DocsHomeHeroCtas quickStartsPreviewView="menu" />
 
         <div className="mt-14 w-full min-w-0 @[480px]:mt-16">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">

@@ -204,8 +204,3 @@ If running in production, it might be easier to use a 3rd party SMTP server as i
 |-------------------------------------------------|---------------------------------------------------------------------------------------------------------|
 | `_APP_MIGRATIONS_FIREBASE_CLIENT_ID`            | **version >= 1.4.0** - Google OAuth client ID. You can find it in your GCP application settings.        |
 | `_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET`        | **version >= 1.4.0** - Google OAuth client secret. You can generate secrets in your GCP application settings. |
-
-# Assistant {% #assistant %}
-| **Name**                               | **Description**                                                         |
-|----------------------------------------|-------------------------------------------------------------------------|
-| `_APP_ASSISTANT_OPENAI_API_KEY`        | **version >= 1.4.0** - OpenAI API key. You can find it in your OpenAI application settings. |

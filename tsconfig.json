@@ -9,6 +9,8 @@
   // "exclude" replaces the tsc defaults, so node_modules must stay listed.
   "exclude": [
     "node_modules",
+    "dist",
+    "public",
     "src/components/pages/projects/$projectId/shared/connect-snippets"
   ],
   "compilerOptions": {

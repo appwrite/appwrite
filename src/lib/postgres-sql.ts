@@ -94,6 +94,26 @@ export async function runPostgresDdlStatements(
   }
 }
 
+export type PostgresDdlFailure = {
+  applied: number
+  error: unknown
+}
+
+export async function runPostgresDdlStatementsUntilFailure(
+  run: (sql: string) => Promise<unknown>,
+  statements: string[],
+): Promise<PostgresDdlFailure | null> {
+  const normalized = normalizePostgresDdlStatements(statements)
+  for (const [applied, sql] of normalized.entries()) {
+    try {
+      await run(sql)
+    } catch (error) {
+      return { applied, error }
+    }
+  }
+  return null
+}
+
 export function escapePostgresLikePattern(value: string): string {
   return value
     .replace(/\\/g, '\\\\')

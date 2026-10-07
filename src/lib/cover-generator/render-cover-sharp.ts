@@ -31,7 +31,7 @@ async function renderCoverSvg(data: CoverRenderData): Promise<string> {
     content = await renderCoverExtraTemplateSvg(data, data.theme)
   } else switch (data.template) {
     case 'simple-title': {
-      content = renderSimpleTitleTemplateSvg(data, data.theme)
+      content = await renderSimpleTitleTemplateSvg(data, data.theme)
       break
     }
     case 'integration':

@@ -231,6 +231,8 @@ test.describe('markdown exports (read-only)', () => {
     const body = await response.text()
     expect(body).toContain('xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"')
     expect(body).toContain('<urlset')
+    expect(body).toContain('<url>')
+    expect(body).toContain('<loc>')
     expect(body).toContain('</urlset>')
   })
 

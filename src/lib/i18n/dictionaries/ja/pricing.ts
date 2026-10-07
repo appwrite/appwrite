@@ -5,7 +5,9 @@
 export const jaPricingDictionary: Record<string, string> = {
   '-': '含まれない',
   '+20% of base': '基本料金の+20%',
-  '+50% of base per replica': 'レプリカ1台あたり基本料金の+50%',
+  'Full tier price per replica': 'レプリカ1台あたりフルティア料金',
+  'Full tier price per replica, +20% for point-in-time recovery':
+    'レプリカ1台あたりフルティア料金、ポイントインタイムリカバリは+20%',
   '$0': '$0',
   '$0 fixed fee': '固定料金 $0',
   '$0.004 per screenshot': 'スクリーンショット1枚あたり $0.004',

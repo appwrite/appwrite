@@ -3,6 +3,19 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "build-a-living-ai-town-appwrite-functions-realtime",
+    "href": "/blog/post/build-a-living-ai-town-appwrite-functions-realtime",
+    "title": "Build a living AI town with Appwrite Functions, TablesDB, and Realtime",
+    "description": "Build Murmur, a tiny 3D town where ten AI residents work, talk, and pass rumors on. A scheduled function moves the world forward every minute, and Realtime shows the same town to every visitor.",
+    "date": "2026-10-06",
+    "lastUpdated": "2026-10-06",
+    "timeToRead": 12,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/build-a-living-ai-town-appwrite-functions-realtime/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "firewall-network-rules-premium-geo-db",
     "href": "/blog/post/firewall-network-rules-premium-geo-db",
     "title": "Stop IP-rotating bots with network-based Appwrite Firewall rules",
@@ -2300,8 +2313,8 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "claude-vs-gpt-vs-gemini-for-developers-who-wins-in-2026",
     "href": "/blog/post/claude-vs-gpt-vs-gemini-for-developers-who-wins-in-2026",
-    "title": "Claude vs GPT vs Gemini for developers: Who wins in 2026?",
-    "description": "Compare Claude, GPT, and Gemini through a developer lens. We break down how each model performs in real workflows, from debugging and code review to UI generation and multimodal tasks, so you know which one to use and when.",
+    "title": "Claude vs GPT vs Gemini: Best for developers?",
+    "description": "Compare Claude, GPT, and Gemini for developers. See how they perform across coding, debugging, UI generation, multimodal tasks, and more.",
     "date": "2026-04-30",
     "lastUpdated": "2026-04-30",
     "timeToRead": 5,

@@ -54,7 +54,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { GraphqlIcon } from '@/components/global/shared/GraphqlIcon'
-import { McpIcon } from '@/components/global/shared/McpIcon'
+import { McpNavIconWithStatus } from '@/components/global/shared/McpNavIconWithStatus'
 import { OAuthIcon } from '@/components/global/shared/OAuthIcon'
 import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
 import {
@@ -63,6 +63,7 @@ import {
   DOCS_NAV_ITEM_LIST_CLASS,
   DOCS_NAV_SCROLL_CLASS,
   DOCS_NAV_TREE_GAP_CLASS,
+  docsNavGroupFooterLinkClassName,
   docsNavLinkClassName,
 } from '@/lib/docs/nav-styles'
 import { isAgentDocsPathname } from '@/lib/docs/agent-docs-feature'
@@ -185,12 +186,7 @@ function DocsOAuthNavIcon({ className, isActive }: DocsCustomNavIconProps) {
 }
 
 function DocsMcpNavIcon({ className, isActive }: DocsCustomNavIconProps) {
-  return (
-    <McpIcon
-      variant="nav"
-      className={cn(isActive && 'opacity-100', className)}
-    />
-  )
+  return <McpNavIconWithStatus className={className} isActive={isActive} />
 }
 
 const CUSTOM_ICON_MAP: Record<string, ComponentType<DocsCustomNavIconProps>> = {
@@ -341,9 +337,51 @@ function DocsGlobalNavItem({
   return link
 }
 
+function DocsGlobalNavGroupFooterLink({
+  item,
+  pathname,
+  collapsed,
+  isMobile = false,
+  onNavigate,
+  marketingEnabled,
+  sectionAnalytics,
+}: {
+  item: DocsNavLink
+  pathname: string
+  collapsed: boolean
+  isMobile?: boolean
+  onNavigate?: () => void
+  marketingEnabled: boolean
+  sectionAnalytics?: AnalyticsActionId
+}) {
+  const docsPath = parseDocsPagePath(item.href)
+  const resolvedHref = docsPath
+    ? getDocsPageUrl(docsPath, marketingEnabled)
+    : item.href
+  const isActive = isDocsNavActive(resolvedHref, pathname, item.isParent)
+  const navAnalytics = getDocsNavAnalyticsAction(item.href) ?? sectionAnalytics
+  const analytics = navAnalytics ? analyticsAttrs(navAnalytics) : undefined
+
+  if (collapsed && !isMobile) return null
+
+  return (
+    <div className="mt-2 border-t border-border/60 pt-2">
+      <DocsRouteLink
+        href={resolvedHref}
+        onClick={onNavigate}
+        className={docsNavGroupFooterLinkClassName(isActive)}
+        {...analytics}
+      >
+        {item.label}
+      </DocsRouteLink>
+    </div>
+  )
+}
+
 function DocsGlobalNavCategory({
   label,
   items,
+  footerLink,
   pathname,
   collapsed,
   isMobile = false,
@@ -354,6 +392,7 @@ function DocsGlobalNavCategory({
 }: {
   label?: string
   items: DocsNavLink[]
+  footerLink?: DocsNavLink
   pathname: string
   collapsed: boolean
   isMobile?: boolean
@@ -364,6 +403,18 @@ function DocsGlobalNavCategory({
 }) {
   const [open, setOpen] = useState(!(initiallyCollapsed ?? false))
   const sectionAnalytics = label ? DOCS_NAV_GROUP_ACTIONS[label] : undefined
+
+  const footer = footerLink ? (
+    <DocsGlobalNavGroupFooterLink
+      item={footerLink}
+      pathname={pathname}
+      collapsed={collapsed}
+      isMobile={isMobile}
+      onNavigate={onNavigate}
+      marketingEnabled={marketingEnabled}
+      sectionAnalytics={sectionAnalytics}
+    />
+  ) : null
 
   const itemList = (
     <div className={DOCS_NAV_ITEM_LIST_CLASS}>
@@ -379,6 +430,7 @@ function DocsGlobalNavCategory({
           sectionAnalytics={sectionAnalytics}
         />
       ))}
+      {footer}
     </div>
   )
 
@@ -444,6 +496,7 @@ function DocsGlobalNavTree({
             key={entry.label ?? index}
             label={entry.label}
             items={entry.items}
+            footerLink={entry.footerLink}
             pathname={pathname}
             collapsed={collapsed}
             isMobile={isMobile}

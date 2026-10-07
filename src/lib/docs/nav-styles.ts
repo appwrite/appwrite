@@ -38,6 +38,17 @@ export function docsNavLinkClassName(active: boolean) {
   )
 }
 
+/** Compact footer link under a docs global nav group (e.g. All tools). */
+export function docsNavGroupFooterLinkClassName(active: boolean) {
+  return cn(
+    'block rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors duration-150',
+    'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+    active
+      ? 'text-foreground'
+      : 'text-muted-foreground/70 hover:text-muted-foreground',
+  )
+}
+
 /** Section subnav links (desktop panel + mobile sheet). */
 export function docsSidebarNavLinkClassName(active: boolean) {
   return cn('block w-full truncate text-start', docsNavLinkClassName(active))

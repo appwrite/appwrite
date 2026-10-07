@@ -1,5 +1,4 @@
 import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
-import { buildOgImageUrl } from '@/lib/seo/og-image'
 import { getPageMetaTags } from '@/lib/seo/page-meta'
 import { asRouteHead } from '@/lib/seo/route-head'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -7,8 +6,10 @@ import { pageTitle } from '@/lib/utils/page-title'
 export const MARKETING_HOMEPAGE_TITLE =
   'Appwrite · The open-source cloud for developers and agents'
 
-export const MARKETING_HOMEPAGE_OG_DESCRIPTION =
-  'The open-source developer platform with Auth, Databases, Storage, Functions, Messaging, and Sites. The open-source cloud for agents and developers.'
+/** Homepage social card from `Logotype · dark@2x` (2400×1260, 2× Open Graph). */
+export const MARKETING_HOME_OG_IMAGE_PATH = '/assets/logotype/dark@2x.avif'
+export const MARKETING_HOME_OG_IMAGE_WIDTH = 2400
+export const MARKETING_HOME_OG_IMAGE_HEIGHT = 1260
 
 type MetaTag = Record<string, string>
 
@@ -18,6 +19,8 @@ type MarketingPageMetaInput = {
   title?: string
   description: string
   ogImage?: string
+  ogImageWidth?: number
+  ogImageHeight?: number
   ogImageTitle?: string
   ogImageSubtitle?: string
   ogImageEyebrow?: string
@@ -32,13 +35,7 @@ function asRouteMetaTags(tags: readonly MetaTag[]): MetaTag[] {
 }
 
 export function getMarketingHomeOgImage(siteOrigin?: string): string {
-  return buildOgImageUrl(
-    {
-      title: 'Appwrite',
-      subtitle: MARKETING_HOMEPAGE_OG_DESCRIPTION,
-    },
-    siteOrigin,
-  )
+  return `${getSeoSiteOrigin(siteOrigin)}${MARKETING_HOME_OG_IMAGE_PATH}`
 }
 
 export function getMarketingPageMetaTags(input: MarketingPageMetaInput): MetaTag[] {
@@ -51,6 +48,8 @@ export function getMarketingPageMetaTags(input: MarketingPageMetaInput): MetaTag
       canonical: input.canonical,
       ogType: input.ogType,
       ogImage: input.ogImage,
+      ogImageWidth: input.ogImageWidth,
+      ogImageHeight: input.ogImageHeight,
       ogImageParams: input.ogImage
         ? undefined
         : {

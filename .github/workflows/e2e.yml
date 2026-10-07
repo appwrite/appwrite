@@ -7,6 +7,12 @@ on:
       - '**/*.md'
       - 'static/**/*'
 
+# Every run signs the shared test account in, and the console keeps only the
+# newest sessions per user. Superseded runs would sign out the current one.
+concurrency:
+  group: e2e-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   session:
     name: session
@@ -136,3 +142,30 @@ jobs:
             export E2E_FALLBACK_COOKIES
           fi
           bun run e2e -- ${{ matrix.args }}
+
+      # Artifact storage is over quota (#401), so print the page snapshot of
+      # each failure into the log instead.
+      - name: Print failure context
+        if: failure()
+        run: |
+          find test-results -name error-context.md 2>/dev/null | while read -r file; do
+            echo "::group::$file"
+            cat "$file"
+            echo '::endgroup::'
+          done
+
+  session-cleanup:
+    name: session cleanup
+    needs: [session, e2e]
+    if: ${{ always() && needs.session.outputs.session != '' }}
+    runs-on: gcrunner=${{ github.run_id }}-e2e-session-cleanup/runner=checks
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Delete console session
+        env:
+          VITE_APPWRITE_ENDPOINT: ${{ secrets.VITE_APPWRITE_ENDPOINT }}
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+          SESSION: ${{ needs.session.outputs.session }}
+        run: bash .github/scripts/delete-session.sh
