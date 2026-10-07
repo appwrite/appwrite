@@ -145,7 +145,7 @@
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "shaka-player": "^4.12.0",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.5",
     "sonner": "^2.0.7",
     "sql-formatter": "^15.8.1",
     "tailwind-merge": "^3.0.2",
@@ -164,7 +164,8 @@
     "use-sync-external-store": "^1.6.0",
     "@tanstack/react-store": "^0.11.2",
     "@tanstack/store": "^0.11.2",
-    "dompurify": "^3.4.16"
+    "dompurify": "^3.4.16",
+    "sharp": "^0.35.5"
   },
   "pnpm": {
     "overrides": {
@@ -172,7 +173,8 @@
       "react-dom": "19.1.1",
       "@tanstack/react-store": "^0.11.2",
       "@tanstack/store": "^0.11.2",
-      "dompurify": "^3.4.16"
+      "dompurify": "^3.4.16",
+      "sharp": "^0.35.5"
     }
   },
   "devDependencies": {
