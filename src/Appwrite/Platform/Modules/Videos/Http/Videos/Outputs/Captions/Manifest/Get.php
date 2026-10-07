@@ -92,11 +92,10 @@ class Get extends Base
             throw new Exception(Exception::VIDEO_CAPTION_NOT_FOUND);
         }
 
-        // DASH addresses the WebVTT file directly from the MPD's <BaseURL>, so this
-        // route serves the file itself rather than a playlist. The pre-merge version
-        // sent it and then fell through into the HLS branch, throwing after the
-        // response was already committed.
-        if ($output === self::OUTPUT_DASH) {
+        // DASH and CMAF-DASH address the WebVTT file directly from the MPD's
+        // <BaseURL> (mimeType text/vtt). CMAF-HLS keeps its playlist on the hls
+        // output, because this same cmaf path is what the MPD fetches.
+        if ($output === self::OUTPUT_DASH || $output === self::OUTPUT_CMAF) {
             $path = $caption->getAttribute('path', '');
 
             if (empty($path) || !$deviceForVideos->exists($path)) {

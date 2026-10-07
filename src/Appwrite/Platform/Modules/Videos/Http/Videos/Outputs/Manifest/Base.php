@@ -259,12 +259,19 @@ abstract class Base extends VideosAction
 
         $captionEntries = [];
 
+        // CMAF-DASH fetches /outputs/cmaf/captions/{id}/manifest as text/vtt.
+        // The subtitle playlist for CMAF-HLS therefore lives on the hls output.
+        $captionOutput = $output === self::OUTPUT_CMAF ? self::OUTPUT_HLS : $output;
+
         foreach ($captions as $caption) {
             $captionEntries[] = [
                 'name' => $caption->getAttribute('name', ''),
                 'code' => $caption->getAttribute('code', ''),
                 'default' => $caption->getAttribute('default', false) ? 'YES' : 'NO',
-                'uri' => $this->withProject($baseUri . '/captions/' . $caption->getId() . '/manifest', $project),
+                'uri' => $this->withProject(
+                    $this->baseUri($video, $captionOutput) . '/captions/' . $caption->getId() . '/manifest',
+                    $project
+                ),
             ];
         }
 
