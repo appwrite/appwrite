@@ -21,7 +21,10 @@ import {
   isValidRelativeRedirect,
   requiresConsoleEmailVerification,
 } from '@/lib/post-auth-navigation'
-import { maybeMeasureOpenAiAdsRegistrationAfterAuth } from '@/lib/openai-ads'
+import {
+  maybeMeasureOpenAiAdsRegistrationAfterAuth,
+  syncOpenAiAdsUser,
+} from '@/lib/openai-ads'
 import {
   applyScreenshotModeAccount,
   subscribeScreenshotMode,
@@ -307,6 +310,7 @@ export function RequireAuth({
   const account = applyScreenshotModeAccount(accountData)
 
   useEffect(() => {
+    syncOpenAiAdsUser(accountData)
     maybeMeasureOpenAiAdsRegistrationAfterAuth(accountData)
   }, [accountData])
 
@@ -323,7 +327,10 @@ export function RequireAuth({
   useEffect(() => {
     if (!needsEmailVerification) return
     if (location.pathname === '/verify-email') return
-    if (isAuthPage(location.pathname) || isOptionalAuthPage(location.pathname)) {
+    if (
+      isAuthPage(location.pathname) ||
+      isOptionalAuthPage(location.pathname)
+    ) {
       return
     }
     const redirectUrl = getRelativeRedirectUrl(location.pathname)
@@ -441,6 +448,11 @@ export function useAuth(): AuthData {
   )
 
   useAuthErrorNavigation(error, location)
+
+  useEffect(() => {
+    if (error || !accountData?.$id) return
+    syncOpenAiAdsUser(accountData)
+  }, [accountData, error])
 
   const accountAccessBlocked = !!error && isHttpForbiddenError(error)
   const account = applyScreenshotModeAccount(accountData)
