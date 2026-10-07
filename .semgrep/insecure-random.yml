@@ -1,0 +1,59 @@
+rules:
+  - id: php.appwrite.insecure-random
+    message: >
+      Non-cryptographic randomness (rand, mt_rand, lcg_value, str_shuffle,
+      srand / mt_srand seeding) or a hash of time / microtime / uniqid. Use random_int(), random_bytes(), ID::unique()
+      or Auth::tokenGenerator() so values cannot be predicted. Picking
+      a shard or pool member (array_rand, shuffle) is out of scope.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/**"
+        - "**/app/controllers/**"
+        - "**/app/init/**"
+    pattern-either:
+      - pattern: rand(...)
+      - pattern: \rand(...)
+      - pattern: mt_rand(...)
+      - pattern: \mt_rand(...)
+      - pattern: lcg_value(...)
+      - pattern: \lcg_value(...)
+      - pattern: str_shuffle(...)
+      - pattern: \str_shuffle(...)
+      - pattern: srand(...)
+      - pattern: \srand(...)
+      - pattern: mt_srand(...)
+      - pattern: \mt_srand(...)
+      - patterns:
+          - pattern-either:
+              - pattern: md5($SEED)
+              - pattern: \md5($SEED)
+              - pattern: sha1($SEED)
+              - pattern: \sha1($SEED)
+              - pattern: hash($ALGO, $SEED)
+              - pattern: \hash($ALGO, $SEED)
+          - metavariable-pattern:
+              metavariable: $SEED
+              pattern-either:
+                - pattern: uniqid(...)
+                - pattern: \uniqid(...)
+                - pattern: time()
+                - pattern: \time()
+                - pattern: microtime(...)
+                - pattern: \microtime(...)
+                - pattern: "uniqid(...) . $X"
+                - pattern: '\uniqid(...) . $X'
+                - pattern: "time() . $X"
+                - pattern: '\time() . $X'
+                - pattern: "microtime(...) . $X"
+                - pattern: '\microtime(...) . $X'
+                - pattern: "$X . uniqid(...)"
+                - pattern: "$X . time()"
+                - pattern: "$X . microtime(...)"
+                - pattern: '$X . \uniqid(...)'
+                - pattern: '$X . \time()'
+                - pattern: '$X . \microtime(...)'
