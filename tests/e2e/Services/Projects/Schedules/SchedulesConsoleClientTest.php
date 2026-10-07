@@ -190,16 +190,17 @@ final class SchedulesConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        // Missing schedule
+        // Missing schedule and interval
         $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'resourceType' => 'function',
-            'resourceId' => ID::unique(),
+            'resourceId' => $functionId,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
     }
 
     public function testCreateIntervalSchedule(): void

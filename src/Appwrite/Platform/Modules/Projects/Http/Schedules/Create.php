@@ -92,7 +92,7 @@ class Create extends Action
             ->param('resourceType', '', new WhiteList($resourceTypes, true), 'The resource type for the schedule. Possible values: '.implode(', ', $resourceTypes).'.', enum: new Enum(name: 'ScheduleResourceType'))
             ->param('resourceId', '', new UID(), 'The resource ID to associate with this schedule.')
             ->param('schedule', '', new Cron(), 'Schedule CRON expression. Cannot be combined with interval.', true)
-            ->param('interval', null, new Nullable(new WhiteList(Interval::values(), true)), 'How often the schedule runs, for function schedules only. Cannot be combined with schedule.', true, enum: new Enum(name: 'Interval', map: Interval::names()))
+            ->param('interval', null, new Nullable(new WhiteList(Interval::values(), true)), 'How often the schedule runs, for function schedules only. Cannot be combined with schedule.', true, example: '1h', enum: new Enum(name: 'Interval', map: Interval::names()))
             ->param('active', false, new Boolean(), 'Whether the schedule is active.', true)
             ->param('data', null, new JSON(), 'Schedule data as a JSON string. Used to store resource-specific context needed for execution.', true)
             ->inject('response')
@@ -123,8 +123,8 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Only function schedules support "interval".');
         }
 
-        if ($interval !== '' && $schedule !== '') {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Set either "schedule" or "interval", not both.');
+        if (($schedule === '') === ($interval === '')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Set either "schedule" or "interval".');
         }
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
