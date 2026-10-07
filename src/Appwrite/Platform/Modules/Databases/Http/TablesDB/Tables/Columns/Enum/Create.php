@@ -63,6 +63,7 @@ class Create extends EnumCreate
             ->param('array', false, new Boolean(), 'Is column an array?', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')

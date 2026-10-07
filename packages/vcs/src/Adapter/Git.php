@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Utopia\VCS\Adapter;
 
 use Exception;
+use InvalidArgumentException;
 use Utopia\Cache\Cache;
+use Utopia\Command;
 use Utopia\VCS\Adapter;
 
 abstract class Git extends Adapter
@@ -291,6 +293,115 @@ abstract class Git extends Adapter
      * @return array<mixed> List of commit statuses
      */
     abstract public function getCommitStatuses(string $owner, string $repositoryName, string $commitHash): array;
+
+    /**
+     * Sparse, shallow clone of one ref into $directory, checking out only
+     * $rootDirectory. Every value reaches git as its own argument. The shell
+     * scripts are constant and read their values from positional parameters.
+     */
+    protected function cloneCommand(string $cloneUrl, string $version, string $versionType, string $directory, string $rootDirectory): Command
+    {
+        $rootDirectory = $this->normalizeRepositoryPath($rootDirectory);
+        if ($rootDirectory === '') {
+            $rootDirectory = '*';
+        }
+
+        // A leading dash would reach git as an option instead of a ref; a tag
+        // travels as refs/tags/<name>, so any name is safe there
+        if ($versionType !== self::CLONE_TYPE_TAG && str_starts_with($version, '-')) {
+            throw new InvalidArgumentException("Invalid clone version: {$version}");
+        }
+
+        $checkout = match ($versionType) {
+            self::CLONE_TYPE_BRANCH => new Command('sh')
+                ->flag('-c')
+                ->argument('if git -C "$1" ls-remote --exit-code --heads origin "$2"; then git -C "$1" pull --depth=1 origin "$2" && git -C "$1" checkout "$2"; else git -C "$1" checkout -b "$2"; fi')
+                ->argument('sh')
+                ->argument($directory)
+                ->argument($version),
+            self::CLONE_TYPE_COMMIT => Command::and(
+                $this->git($directory)->argument('fetch')->option('--depth', '1')->argument('origin')->argument($version),
+                $this->git($directory)->argument('checkout')->argument($version),
+            ),
+            self::CLONE_TYPE_TAG => $this->tagCheckout($directory, $version),
+            default => throw new Exception("Unsupported clone type: {$versionType}"),
+        };
+
+        return Command::and(
+            new Command('mkdir')->flag('-p')->argument($directory),
+            new Command('git')->argument('config')->flag('--global')->argument('init.defaultBranch')->argument('main'),
+            $this->git($directory)->argument('init'),
+            $this->git($directory)->argument('remote')->argument('add')->argument('origin')->argument($cloneUrl),
+            $this->git($directory)->argument('config')->argument('core.sparseCheckout')->argument('true'),
+            Command::appendStdout(
+                new Command('printf')->argument('%s\n')->argument($rootDirectory),
+                $directory . '/.git/info/sparse-checkout',
+            ),
+            // Disable fetching of refs we don't need
+            $this->git($directory)->argument('config')->flag('--add')->argument('remote.origin.fetch')->argument('+refs/heads/*:refs/remotes/origin/*'),
+            // Disable fetching of tags
+            $this->git($directory)->argument('config')->argument('remote.origin.tagopt')->argument('--no-tags'),
+            $checkout,
+        );
+    }
+
+    /**
+     * Resolve a tag glob the way GitHub and Origin used to: the last tag
+     * `git ls-remote --tags` lists for the pattern. `--refs` omits the peeled
+     * `^{}` line of an annotated tag. The name is everything after
+     * `refs/tags/`, so a namespaced tag such as `release/0.1.2` stays whole.
+     * The directory and the pattern arrive as `$1` and `$2`.
+     */
+    private const string TAG_GLOB_CHECKOUT = <<<'SCRIPT'
+refs=$(git -C "$1" ls-remote --refs --tags origin -- "$2") || exit
+line=$(printf '%s\n' "$refs" | tail -n 1)
+tag=${line#*refs/tags/}
+if [ -z "$tag" ]; then
+    printf 'fatal: no tag matching %s\n' "$2" >&2
+    exit 1
+fi
+git -C "$1" fetch --depth=1 origin "refs/tags/$tag" && git -C "$1" checkout FETCH_HEAD
+SCRIPT;
+
+    /**
+     * Check out $version. A glob is resolved to one tag. An exact name is
+     * fetched as refs/tags/<name>, so a leading dash stays part of the name.
+     */
+    private function tagCheckout(string $directory, string $version): Command
+    {
+        if (!$this->isTagGlob($version)) {
+            return Command::and(
+                $this->git($directory)->argument('fetch')->option('--depth', '1')->argument('origin')->argument('refs/tags/' . $version),
+                $this->git($directory)->argument('checkout')->argument('FETCH_HEAD'),
+            );
+        }
+
+        return new Command('sh')
+            ->flag('-c')
+            ->argument(self::TAG_GLOB_CHECKOUT)
+            ->argument('sh')
+            ->argument($directory)
+            ->argument($version);
+    }
+
+    /**
+     * True when $version is a git ref glob. `*`, `?` and `[` cannot appear in
+     * a tag name, and they are the wildcards `git ls-remote` matches on.
+     */
+    private function isTagGlob(string $version): bool
+    {
+        return str_contains($version, '*')
+            || str_contains($version, '?')
+            || str_contains($version, '[');
+    }
+
+    /**
+     * git, run against the repository in $directory
+     */
+    protected function git(string $directory): Command
+    {
+        return new Command('git')->option('-C', $directory);
+    }
 
     /**
      * Resolve the path sentinels a caller may pass - '', '.', './', 'src//' -

@@ -3,6 +3,7 @@
 require_once __DIR__ . '/init.php';
 $registerWorkerMessageResources = require __DIR__ . '/init/worker/message.php';
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Workers\Jobs;
@@ -19,6 +20,16 @@ use Utopia\Queue\Connection\Redis as Connection;
 use Utopia\Queue\Server;
 use Utopia\Span\Span;
 use Utopia\System\System;
+
+try {
+    EncryptionKey::assertProduction(
+        System::getEnv('_APP_ENV', 'production'),
+        System::getEnv('_APP_OPENSSL_KEY_V1')
+    );
+} catch (\RuntimeException $exception) {
+    Console::error($exception->getMessage());
+    exit(1);
+}
 
 Runtime::enableCoroutine();
 require_once __DIR__ . '/init/span.php';

@@ -10,6 +10,7 @@ use Appwrite\Utopia\Messaging\Messages\Console as ConsoleMessage;
 use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
 use Exception;
 use Throwable;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -55,10 +56,11 @@ class Notifications extends Action
             ->inject('register')
             ->inject('dbForPlatform')
             ->inject('platform')
+            ->inject('clientForWebhooks')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform): void
+    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks): void
     {
         $payload = $message->getPayload();
 
@@ -93,7 +95,7 @@ class Notifications extends Action
             }
 
             try {
-                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform);
+                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform, $clientForWebhooks);
                 if ($messageId !== '' && $channel === NOTIFICATION_TYPE_WEBHOOK && $alertId === null) {
                     $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload, $project);
                 }
@@ -184,13 +186,14 @@ class Notifications extends Action
         Registry $register,
         Database $dbForPlatform,
         array $platform,
+        Client $clientForWebhooks,
     ): ?string {
         $channel = $recipient['channel'];
 
         return match ($channel) {
             NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform),
             NOTIFICATION_TYPE_CONSOLE => $this->dispatchConsole($recipient, $messageId, $payload, $project, $dbForPlatform),
-            NOTIFICATION_TYPE_WEBHOOK => $this->dispatchWebhook($recipient, $payload),
+            NOTIFICATION_TYPE_WEBHOOK => $this->dispatchWebhook($recipient, $payload, $clientForWebhooks),
             default => throw new Exception('Unsupported notification channel: ' . $channel),
         };
     }
@@ -440,7 +443,7 @@ class Notifications extends Action
     /**
      * @param array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $recipient
      */
-    protected function dispatchWebhook(array $recipient, array $payload): ?string
+    protected function dispatchWebhook(array $recipient, array $payload, Client $clientForWebhooks): ?string
     {
         $address = $recipient['address'];
         $signatureKey = $recipient['signatureKey'] ?? null;
@@ -465,7 +468,7 @@ class Notifications extends Action
             signingSecret: $signatureKey,
         );
 
-        $adapter = new WebhookAdapter();
+        $adapter = new WebhookAdapter($clientForWebhooks);
         $result = $adapter->send($message);
 
         if (($result['deliveredTo'] ?? 0) === 0) {

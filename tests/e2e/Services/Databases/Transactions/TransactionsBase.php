@@ -190,6 +190,31 @@ trait TransactionsBase
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    public function testListTransactionsTotal(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl(), $headers, [
+            'total' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $response['body']['total']);
+        $this->assertNotEmpty($response['body']['transactions']);
+
+        $response = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl(), $headers, [
+            'total' => false,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+        $this->assertNotEmpty($response['body']['transactions']);
+    }
+
     /**
      * Test adding operations to a transaction
      */
@@ -1566,6 +1591,88 @@ trait TransactionsBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']); // Bad request - already rolled back
+    }
+
+    public function testConcurrentCommit(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'ConcurrentCommitDB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'ConcurrentCommitCollection',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'integer', null), $headers, [
+                'key' => 'counter',
+                'required' => false,
+                'default' => 0,
+            ]);
+
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), $headers, [
+            $this->getRecordIdParam() => 'counter_doc',
+            'data' => ['counter' => 0],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $transactionId = $transaction['body']['$id'];
+
+        $operations = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'increment',
+                    $this->getRecordIdParam() => 'counter_doc',
+                    'data' => [
+                        $this->getSchemaParam() => 'counter',
+                        'value' => 1,
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(201, $operations['headers']['status-code']);
+
+        $responses = $this->client->callConcurrently(array_fill(0, 4, [
+            Client::METHOD_PATCH,
+            $this->getTransactionUrl($transactionId),
+            $headers,
+            ['commit' => true],
+        ]));
+
+        $committed = array_values(array_filter($responses, fn (array $response): bool => $response['headers']['status-code'] === 200));
+        $rejected = array_filter($responses, fn (array $response): bool => $response['headers']['status-code'] === 400);
+        $statuses = json_encode(array_map(fn (array $response): int => $response['headers']['status-code'], $responses));
+
+        $this->assertCount(1, $committed, 'Exactly one concurrent commit may apply the transaction: ' . $statuses);
+        $this->assertCount(3, $rejected, 'Every other concurrent commit must be rejected: ' . $statuses);
+        $this->assertEquals('committed', $committed[0]['body']['status']);
+        foreach ($rejected as $response) {
+            $this->assertEquals(Exception::TRANSACTION_NOT_READY, $response['body']['type']);
+        }
+
+        $document = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, 'counter_doc'), $headers);
+        $this->assertEquals(1, $document['body']['counter']);
     }
 
     /**

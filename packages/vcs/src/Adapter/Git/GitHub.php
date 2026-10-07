@@ -5,8 +5,10 @@ namespace Utopia\VCS\Adapter\Git;
 use Ahc\Jwt\JWT;
 use Exception;
 use Utopia\Cache\Cache;
+use Utopia\Command;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\FileNotFound;
+use Utopia\VCS\Exception\OwnerNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 class GitHub extends Git
@@ -712,6 +714,12 @@ class GitHub extends Git
         $url = '/app/installations/' . $installationId;
         $response = $this->call(self::METHOD_GET, $url, ['Authorization' => "Bearer $this->jwtToken"]);
 
+        // Only a missing installation is permanent; rate limits and server errors stay retryable failures
+        $responseHeaders = $response['headers'] ?? [];
+        if (\is_array($responseHeaders) && ($responseHeaders['status-code'] ?? 0) === 404) {
+            throw new OwnerNotFound("Installation '{$installationId}' was not found.");
+        }
+
         $responseBody = $response['body'] ?? [];
         $responseBodyAccount = $responseBody['account'] ?? [];
 
@@ -750,7 +758,7 @@ class GitHub extends Git
     public function getPullRequestFiles(string $owner, string $repositoryName, int $pullRequestNumber): array
     {
         $allFiles = [];
-        $perPage = 30;
+        $perPage = 100;
         $currentPage = 1;
 
         while (true) {
@@ -761,7 +769,16 @@ class GitHub extends Git
                 'page' => $currentPage,
             ]);
 
+            $statusCode = $response['headers']['status-code'] ?? 0;
+            if ($statusCode >= 400) {
+                throw new Exception("Failed to get pull request files: HTTP {$statusCode}", $statusCode);
+            }
+
             $files = $response['body'] ?? [];
+            if (!\is_array($files)) {
+                throw new Exception("Failed to get pull request files: HTTP {$statusCode} returned a non-JSON body");
+            }
+
             $allFiles = array_merge($allFiles, $files);
 
             if (\count($files) < $perPage) {
@@ -1201,13 +1218,8 @@ class GitHub extends Git
     /**
      * Generates a clone command using app access token
      */
-    public function generateCloneCommand(string $owner, string $repositoryName, string $version, string $versionType, string $directory, string $rootDirectory): string
+    public function generateCloneCommand(string $owner, string $repositoryName, string $version, string $versionType, string $directory, string $rootDirectory): Command
     {
-        $rootDirectory = $this->normalizeRepositoryPath($rootDirectory);
-        if ($rootDirectory === '') {
-            $rootDirectory = '*';
-        }
-
         // URL encode the components for the clone URL
         $owner = urlencode($owner);
         $repositoryName = urlencode($repositoryName);
@@ -1215,40 +1227,7 @@ class GitHub extends Git
 
         $cloneUrl = "https://{$owner}{$accessToken}@github.com/{$owner}/{$repositoryName}";
 
-        $directory = escapeshellarg($directory);
-        $rootDirectory = escapeshellarg($rootDirectory);
-
-        $commands = [
-            "mkdir -p {$directory}",
-            "cd {$directory}",
-            'git config --global init.defaultBranch main',
-            'git init',
-            "git remote add origin {$cloneUrl}",
-            // Enable sparse checkout
-            'git config core.sparseCheckout true',
-            "echo {$rootDirectory} >> .git/info/sparse-checkout",
-            // Disable fetching of refs we don't need
-            "git config --add remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'",
-            // Disable fetching of tags
-            'git config remote.origin.tagopt --no-tags',
-        ];
-
-        switch ($versionType) {
-            case self::CLONE_TYPE_BRANCH:
-                $branchName = escapeshellarg($version);
-                $commands[] = "if git ls-remote --exit-code --heads origin {$branchName}; then git pull --depth=1 origin {$branchName} && git checkout {$branchName}; else git checkout -b {$branchName}; fi";
-                break;
-            case self::CLONE_TYPE_COMMIT:
-                $commitHash = escapeshellarg($version);
-                $commands[] = "git fetch --depth=1 origin {$commitHash} && git checkout {$commitHash}";
-                break;
-            case self::CLONE_TYPE_TAG:
-                $tagName = escapeshellarg($version);
-                $commands[] = "git fetch --depth=1 origin refs/tags/$(git ls-remote --tags origin {$tagName} | tail -n 1 | awk -F '/' '{print $3}') && git checkout FETCH_HEAD";
-                break;
-        }
-
-        return implode(' && ', $commands);
+        return $this->cloneCommand($cloneUrl, $version, $versionType, $directory, $rootDirectory);
     }
 
     public function getEventHeaderName(): string

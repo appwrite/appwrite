@@ -263,7 +263,9 @@ class Create extends Action
 
         $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
 
-        if (! $isOwner && ! $isPrivilegedUser && ! $isAppUser) { // Not owner, not admin, not app (server)
+        // Same console rule as membership role updates: organization developer
+        // must not count as privileged enough to invite with arbitrary roles.
+        if (! $isOwner && ! $isAppUser && ($project->getId() === 'console' || ! $isPrivilegedUser)) {
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
         }
 

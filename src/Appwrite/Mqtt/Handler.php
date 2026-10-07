@@ -4,8 +4,7 @@ namespace Appwrite\Mqtt;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Mqtt;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -64,6 +63,7 @@ class Handler implements MqttHandler
 
         if ($identity === []) {
             Span::add('mqtt.result', 'rejected');
+            $this->mqtt->connectRefused->add(1, ['reason' => 'not_authorized']);
             return $this->refuseConnect(Connack::NOT_AUTHORIZED, Exception::USER_UNAUTHORIZED, $authMethod);
         }
 
@@ -73,11 +73,11 @@ class Handler implements MqttHandler
         // Rate-limit CONNECT per user (keyed on userId until the infra surfaces client IP).
         if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
             $getRedis = $this->container->get('getRedis');
-            $timeLimit = new TimeLimitRedis('mqtt:connect:{userId}', 128, 60, $getRedis());
-            $timeLimit->setParam('{userId}', $identity['userId'] ?? '');
+            $timeLimit = new TimeLimitRedis('mqtt:connect:{userId}', 128, 60, $getRedis())->withParams(['{userId}' => (string) ($identity['userId'] ?? '')]);
 
-            if ((new Abuse($timeLimit))->check()) {
+            if ($timeLimit->check()->limited) {
                 Span::add('mqtt.result', 'abuse');
+                $this->mqtt->connectRefused->add(1, ['reason' => 'rate_limited']);
                 return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED, $authMethod);
             }
         }
@@ -90,6 +90,8 @@ class Handler implements MqttHandler
         }
         $connection->setClientId($clientId);
         Span::add('mqtt.client_id', $connection->getClientId());
+
+        $this->mqtt->recordConnection($connection->prefix);
 
         return Connack::accept(properties: $this->connackProperties($authMethod));
     }
@@ -170,7 +172,8 @@ class Handler implements MqttHandler
         $userId = $connection->identity['userId'] ?? '';
 
         // Subscription is open: a permitted connection may subscribe to any topic or wildcard, except
-        // the reserved users/ namespace which is ownership-gated (see deniesUserTopic). The topic
+        // a filter that could reach the reserved users/ namespace, which is ownership-gated (see
+        // deniesUserTopic); a wildcard first level is refused for that reason. The topic
         // document is consulted only to cap the QoS and to enable offline replay for an exact name.
         $names = [];
         foreach ($subscribe->filters() as $filter) {
@@ -250,17 +253,34 @@ class Handler implements MqttHandler
     /**
      * Fan a message out to a topic's local subscribers, each at the QoS granted to that
      * subscription (clamped by the message QoS). Returns the number delivered.
+     *
+     * A reserved users/<id> topic reaches only that user's connections, whatever filter matched:
+     * the subscribe gate is the first line, this holds even for a subscription it did not catch.
      */
-    public function deliver(Server $server, string $projectId, string $topic, string $message, int $qos, int $sequence): int
+    public function deliver(Server $server, string $projectId, string $topic, string $message, int $qos, int $sequence, float $publishedAt = 0.0): int
     {
+        $segments = \explode('/', $topic);
+        $owner = \count($segments) === 2 && $segments[0] === self::USER_TOPIC_PREFIX ? $segments[1] : null;
+
+        // publish (worker) -> deliver (broker) latency; clamped as the two clocks may differ slightly.
+        if ($publishedAt > 0.0) {
+            $this->mqtt->deliveryLatency->record(\max(0.0, \microtime(true) - $publishedAt));
+        }
+
         $delivered = 0;
 
         foreach ($server->subscribers($projectId, $topic) as [$connection, $grantedQos]) {
+            if ($owner !== null && ($connection->identity['userId'] ?? '') !== $owner) {
+                continue;
+            }
+
             $deliveryQos = min($qos, $grantedQos);
             $connection->publish($topic, $message, qos: $deliveryQos, sequence: $sequence);
             $this->mqtt->messagesDelivered->add(1, ['qos' => $deliveryQos]);
             $delivered++;
         }
+
+        $this->mqtt->recordDeliveries($projectId, $delivered);
 
         return $delivered;
     }
@@ -290,9 +310,9 @@ class Handler implements MqttHandler
 
     public function onDisconnect(?Disconnect $disconnect, Connection $connection): void
     {
-        // The broker already removed the connection, its subscriptions and keep-alive slot, and
-        // records the active-connections gauge itself. Record the connection lifetime for
-        // accepted sessions.
+        // The broker already removed the connection, its subscriptions and keep-alive slot, and owns
+        // the connections.active gauge. Record the lifetime of accepted sessions (identity set in
+        // onConnect) only, which also have an openedAt.
         if (($connection->identity['userId'] ?? '') !== '') {
             $this->mqtt->connectionDuration->record(microtime(true) - $connection->openedAt);
         }
@@ -305,13 +325,19 @@ class Handler implements MqttHandler
     }
 
     /**
-     * Whether a filter in the reserved users/ namespace must be refused: any wildcard under users/
-     * (so it can't span other users), or an exact users/<id> that is not the caller's own. An owned
-     * users/<id> is allowed (served like any exact topic), and a deeper users/<id>/… path is an
-     * ordinary topic, not a reserved one.
+     * Whether a filter that could reach the reserved users/ namespace must be refused: a wildcard
+     * first level (# or +, which the broker matches against users/<id> like any other first level),
+     * any wildcard under users/ (so it can't span other users), or an exact users/<id> that is not
+     * the caller's own. An owned users/<id> is allowed (served like any exact topic), and a deeper
+     * users/<id>/… path is an ordinary topic, not a reserved one.
      */
     private function deniesUserTopic(string $topic, string $userId): bool
     {
+        $first = \explode('/', $topic, 2)[0];
+        if ($first === '#' || $first === '+') {
+            return true;
+        }
+
         if (!\str_starts_with($topic, self::USER_TOPIC_PREFIX . '/')) {
             return false;
         }
@@ -362,6 +388,7 @@ class Handler implements MqttHandler
                 continue;
             }
 
+            $this->mqtt->replayBacklog->record($tail - $from);
             $connection->resume($filter, $from);
 
             $start = max($from + 1, $tail - $maxDepth + 1);
@@ -372,11 +399,18 @@ class Handler implements MqttHandler
                 Query::limit($maxDepth),
             ]));
 
+            $replayed = 0;
             foreach ($messages as $message) {
                 $stored = $message->getAttribute('data');
                 $data = \is_string($stored) ? $stored : (string) json_encode($stored);
                 $connection->publish($filter, $data, qos: 1, dup: true, sequence: (int) $message->getAttribute('sequence'));
+                $this->mqtt->messagesDelivered->add(1, ['qos' => 1]);
+                $replayed++;
             }
+
+            // Offline-replay re-deliveries are real deliveries: account for them in per-project usage
+            // too, so a device catching up after reconnect is not undercounted.
+            $this->mqtt->recordDeliveries($connection->prefix, $replayed);
         }
 
         if ($persist !== []) {

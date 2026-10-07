@@ -4,6 +4,7 @@ namespace Utopia\VCS\Adapter\Git;
 
 use Exception;
 use Utopia\Cache\Cache;
+use Utopia\Command;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
@@ -985,13 +986,8 @@ class GitLab extends Git
         }
     }
 
-    public function generateCloneCommand(string $owner, string $repositoryName, string $version, string $versionType, string $directory, string $rootDirectory): string
+    public function generateCloneCommand(string $owner, string $repositoryName, string $version, string $versionType, string $directory, string $rootDirectory): Command
     {
-        $rootDirectory = $this->normalizeRepositoryPath($rootDirectory);
-        if ($rootDirectory === '') {
-            $rootDirectory = '*';
-        }
-
         $ownerPath = $this->getOwnerPath($owner);
 
         // GitLab clone URL format: http://oauth2:{token}@host/owner/repo.git
@@ -1000,40 +996,9 @@ class GitLab extends Git
             $baseUrl = str_replace('://', '://oauth2:' . urlencode($this->accessToken) . '@', $this->gitlabUrl);
         }
 
-        $cloneUrl = escapeshellarg("{$baseUrl}/{$ownerPath}/{$repositoryName}.git");
-        $directory = escapeshellarg($directory);
-        $rootDirectory = escapeshellarg($rootDirectory);
+        $cloneUrl = "{$baseUrl}/{$ownerPath}/{$repositoryName}.git";
 
-        $commands = [
-            "mkdir -p {$directory}",
-            "cd {$directory}",
-            'git config --global init.defaultBranch main',
-            'git init',
-            "git remote add origin {$cloneUrl}",
-            'git config core.sparseCheckout true',
-            "echo {$rootDirectory} >> .git/info/sparse-checkout",
-            "git config --add remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'",
-            'git config remote.origin.tagopt --no-tags',
-        ];
-
-        switch ($versionType) {
-            case self::CLONE_TYPE_BRANCH:
-                $branchName = escapeshellarg($version);
-                $commands[] = "if git ls-remote --exit-code --heads origin {$branchName}; then git pull --depth=1 origin {$branchName} && git checkout {$branchName}; else git checkout -b {$branchName}; fi";
-                break;
-            case self::CLONE_TYPE_COMMIT:
-                $commitHash = escapeshellarg($version);
-                $commands[] = "git fetch --depth=1 origin {$commitHash} && git checkout {$commitHash}";
-                break;
-            case self::CLONE_TYPE_TAG:
-                $tagName = escapeshellarg($version);
-                $commands[] = "git fetch --depth=1 origin refs/tags/{$tagName} && git checkout FETCH_HEAD";
-                break;
-            default:
-                throw new Exception("Unsupported clone type: {$versionType}");
-        }
-
-        return implode(' && ', $commands);
+        return $this->cloneCommand($cloneUrl, $version, $versionType, $directory, $rootDirectory);
     }
 
     // Maps GitLab's native action to the GitHub/Gitea verbs consumers key off of; 'merge' counts as 'closed' too.
