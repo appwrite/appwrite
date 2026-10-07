@@ -528,20 +528,27 @@ class Videos extends Action
                     ?: $profile->getAttribute('codec')
             );
 
+            // Apply loudnorm only when the probe found an audio stream.
+            $params = ['-dn', '-sn'];
+            if (\trim((string) $video->getAttribute('audioCodec', '')) !== '') {
+                $params[] = '-af';
+                $params[] = 'loudnorm=I=-14:TP=-1.5:LRA=11';
+            }
+
             $format = match ($codec) {
                 Base::CODEC_HEVC => (new HEVC())
                     ->crf(22)
                     ->keyframe(2.0)
-                    ->params(['-dn', '-sn']),
+                    ->params($params),
                 Base::CODEC_VP9 => (new VP9())
                     ->crf(32)
                     ->keyframe(2.0)
-                    ->params(['-dn', '-sn']),
+                    ->params($params),
                 default => (new X264())
                     ->crf(22)
                     ->bframes(3)
                     ->keyframe(2.0)
-                    ->params(['-dn', '-sn']),
+                    ->params($params),
             };
 
             $target = match ($output) {
