@@ -875,10 +875,10 @@ class Install extends Action
                 messageOverride: 'Creating Appwrite account'
             );
 
-            // Create the account — tolerate "already exists" and "console
-            // is restricted" errors so we can still create a session
-            // (common when re-running the installer or upgrading).
+            // The account may already exist (re-running the installer or upgrading), and sign-up
+            // answers that with a generic error, so a failed create only counts if signing in fails too.
             $userId = null;
+            $createError = null;
             try {
                 $userId = $this->makeApiCall('/v1/account', [
                     'userId' => 'unique()',
@@ -887,18 +887,17 @@ class Install extends Action
                     'name' => $name
                 ], false, $apiUrl, $domain);
             } catch (\Throwable $e) {
-                $message = $e->getMessage();
-                $accountExists = \stripos($message, 'already exists') !== false
-                    || \stripos($message, 'console is restricted') !== false;
-                if (!$accountExists) {
-                    throw $e;
-                }
+                $createError = $e;
             }
 
-            $session = $this->makeApiCall('/v1/account/sessions/email', [
-                'email' => $email,
-                'password' => $password
-            ], true, $apiUrl, $domain);
+            try {
+                $session = $this->makeApiCall('/v1/account/sessions/email', [
+                    'email' => $email,
+                    'password' => $password
+                ], true, $apiUrl, $domain);
+            } catch (\Throwable $e) {
+                throw $createError ?? $e;
+            }
 
             $this->updateProgress(
                 $progress,
