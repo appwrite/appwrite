@@ -5690,8 +5690,9 @@ final class AccountCustomClientTest extends Scope
             'identifier' => 'test-identifier-taken',
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
-        $this->assertEquals('user_target_already_exists', $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_bad_request', $response['body']['type']);
+        $this->assertEquals('There was an error processing your request. Please check the inputs and try again.', $response['body']['message']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', \array_merge([
             'content-type' => 'application/json',

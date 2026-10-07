@@ -5475,7 +5475,8 @@ Http::post('/v1/account/targets/push')
                     'name' => $name,
                 ]));
         } catch (Duplicate) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         // Anything left holds a token the client just told us it no longer uses. Expiring rather than
@@ -5559,7 +5560,8 @@ Http::put('/v1/account/targets/:targetId/push')
                 'name' => $target->getAttribute('name'),
             ]));
         } catch (Duplicate) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
