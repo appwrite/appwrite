@@ -70,7 +70,7 @@ class XList extends Base
         User $user,
         Authorization $authorization
     ): void {
-        $video = $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
+        $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
         $queries = [
             Query::equal('videoInternalId', [$video->getSequence()]),

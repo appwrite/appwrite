@@ -74,9 +74,14 @@ class Delete extends Base
         Event $queueForEvents,
         DeletePublisher $publisherForDeletes
     ): void {
-        $video = $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
+        $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
-        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videos', $video->getId()));
+        $roles = $authorization->getRoles();
+        if ($user->isPrivileged($roles) || $user->isKey($roles)) {
+            $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videos', $video->getId()));
+        } else {
+            $deleted = $dbForProject->deleteDocument('videos', $video->getId());
+        }
 
         if (!$deleted) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video from DB');

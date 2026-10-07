@@ -45,7 +45,7 @@ class XList extends Base
                 group: 'videos',
                 name: 'list',
                 description: '/docs/references/videos/list-videos.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -72,14 +72,8 @@ class XList extends Base
         User $user,
         Authorization $authorization
     ): void {
-        // Video rows are project-internal and carry no ACL, so this listing reads
-        // with authorization skipped. Per-file access checks cannot express a
-        // cross-bucket listing, so gate it to the callers the SDK advertises
-        // (admin, API key) — otherwise any member with videos.read could
-        // enumerate every video in the project regardless of file permissions.
-        if (!$user->isPrivileged($authorization->getRoles()) && !$user->isKey($authorization->getRoles())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
+        $roles = $authorization->getRoles();
+        $skipAuth = $user->isPrivileged($roles) || $user->isKey($roles);
 
         try {
             $queries = Query::parseQueries($queries);
@@ -101,7 +95,9 @@ class XList extends Base
             }
 
             $videoId = $cursor->getValue();
-            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
+            $cursorDocument = $skipAuth
+                ? $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId))
+                : $dbForProject->getDocument('videos', $videoId);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Video '{$videoId}' for the 'cursor' value not found.");
@@ -113,10 +109,17 @@ class XList extends Base
         $filterQueries = Query::groupByType($queries)['filters'];
 
         try {
-            $videos = $authorization->skip(fn () => $dbForProject->find('videos', $queries));
-            $total = $includeTotal
-                ? $authorization->skip(fn () => $dbForProject->count('videos', $filterQueries, APP_LIMIT_COUNT))
-                : 0;
+            if ($skipAuth) {
+                $videos = $authorization->skip(fn () => $dbForProject->find('videos', $queries));
+                $total = $includeTotal
+                    ? $authorization->skip(fn () => $dbForProject->count('videos', $filterQueries, APP_LIMIT_COUNT))
+                    : 0;
+            } else {
+                $videos = $dbForProject->find('videos', $queries);
+                $total = $includeTotal
+                    ? $dbForProject->count('videos', $filterQueries, APP_LIMIT_COUNT)
+                    : 0;
+            }
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         } catch (QueryException $e) {

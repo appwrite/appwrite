@@ -1,1 +1,1 @@
-Update a video's name. The source file cannot be replaced; delete the video and create a new one to point at a different file.
+Update a video's name and optional permissions. The caller must hold update permission on the video document. Omit `permissions` to keep the current ACL. The source file cannot be replaced; delete the video and create a new one to point at a different file.

@@ -28,6 +28,13 @@ class Video extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('$permissions', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Video permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
+                'default' => [],
+                'example' => ['read("any")'],
+                'array' => true,
+            ])
             ->addRule('bucketId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Storage bucket ID holding the source file.',

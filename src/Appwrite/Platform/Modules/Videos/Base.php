@@ -208,11 +208,10 @@ abstract class Base extends UtopiaAction
     }
 
     /**
-     * Loads a video, or throws if it does not exist.
+     * Loads a video with authorization skipped, or throws if it does not exist.
      *
-     * Video documents are project-internal — they carry no permissions of their
-     * own and inherit access from the bucket/file they point at, so reads are
-     * done with authorization skipped and gated by assertFileAccess() instead.
+     * Used by play surfaces (then gated by assertFileAccess) and by privileged
+     * paths that intentionally bypass document ACL.
      */
     protected function getVideo(Database $dbForProject, Authorization $authorization, string $videoId): Document
     {
@@ -220,6 +219,32 @@ abstract class Base extends UtopiaAction
 
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
+        }
+
+        return $video;
+    }
+
+    /**
+     * Loads a video enforcing document `$permissions` for sessions.
+     *
+     * Privileged users and API keys skip authorization. Empty → VIDEO_NOT_FOUND.
+     */
+    protected function getAuthorizedVideo(
+        Database $dbForProject,
+        Authorization $authorization,
+        User $user,
+        string $videoId
+    ): Document {
+        $roles = $authorization->getRoles();
+
+        if ($user->isPrivileged($roles) || $user->isKey($roles)) {
+            $video = $this->getVideo($dbForProject, $authorization, $videoId);
+        } else {
+            $video = $dbForProject->getDocument('videos', $videoId);
+
+            if ($video->isEmpty()) {
+                throw new Exception(Exception::VIDEO_NOT_FOUND);
+            }
         }
 
         return $video;
@@ -276,9 +301,9 @@ abstract class Base extends UtopiaAction
     }
 
     /**
-     * Loads a video and asserts read access to its source file in one step.
+     * Loads a video for playback: skips document ACL, requires source-file read.
      */
-    protected function getReadableVideo(
+    protected function getPlayableVideo(
         Database $dbForProject,
         Authorization $authorization,
         User $user,

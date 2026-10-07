@@ -41,13 +41,13 @@ final class VideosCustomServerTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(5, $response['body']['total']);
+        $this->assertEquals(6, $response['body']['total']);
 
         $names = \array_column($response['body']['profiles'], 'name');
-        $this->assertEquals(['360p', '480p', '576p', '720p', '1080p'], $names);
+        $this->assertEquals(['360p', '480p', '576p', '720p', '1080p', '2160p'], $names);
 
         $heights = \array_column($response['body']['profiles'], 'height');
-        $this->assertSame([360, 480, 576, 720, 1080], $heights);
+        $this->assertSame([360, 480, 576, 720, 1080, 2160], $heights);
 
         foreach ($response['body']['profiles'] as $profile) {
             $this->assertEquals('h264', $profile['codec']);
@@ -294,6 +294,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals($this->getVideoBucket()['$id'], $response['body']['bucketId']);
         $this->assertEquals($this->getVideoFile()['$id'], $response['body']['fileId']);
         $this->assertEquals($this->getVideoFile()['sizeOriginal'], $response['body']['size']);
+        $this->assertSame([], $response['body']['$permissions'] ?? null);
         $this->assertArrayNotHasKey('status', $response['body']);
         $this->assertArrayNotHasKey('chunksTotal', $response['body']);
         $this->assertArrayNotHasKey('chunksUploaded', $response['body']);

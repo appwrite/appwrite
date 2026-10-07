@@ -1,1 +1,1 @@
-Get a list of all the videos in the current project.
+Get a list of videos in the current project. Sessions receive only videos they can read according to each video's `$permissions`. API keys and admins receive the full project catalog. Playback URLs are separate: guests and members with `videos.play` can still stream when the source Storage file is readable, even if a video does not appear in this list.

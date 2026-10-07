@@ -94,7 +94,7 @@ class Create extends Base
         Event $queueForEvents,
         VideoPublisher $publisherForVideos
     ): void {
-        $video = $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
+        $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
         $file = $this->assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
 
         if (!\in_array($file->getAttribute('mimeType', ''), self::CAPTION_MIME_TYPES, true)) {

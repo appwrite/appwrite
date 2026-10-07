@@ -61,7 +61,7 @@ class Get extends Base
         User $user,
         Authorization $authorization
     ): void {
-        $video = $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
+        $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
         $response->dynamic($video, Response::MODEL_VIDEO);
     }

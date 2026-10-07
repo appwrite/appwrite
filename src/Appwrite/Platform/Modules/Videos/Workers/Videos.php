@@ -1684,19 +1684,24 @@ class Videos extends Action
             $roles[] = Role::team($teamId)->toString();
         }
 
-        try {
-            $bucket = $dbForProject->getDocument('buckets', $video->getAttribute('bucketId', ''));
-            if (!$bucket->isEmpty()) {
-                $roles = \array_merge($roles, $bucket->getRead());
+        $own = $video->getAttribute('$permissions', []);
+        if (\is_array($own) && $own !== []) {
+            $roles = \array_merge($roles, $video->getRead());
+        } else {
+            try {
+                $bucket = $dbForProject->getDocument('buckets', $video->getAttribute('bucketId', ''));
+                if (!$bucket->isEmpty()) {
+                    $roles = \array_merge($roles, $bucket->getRead());
 
-                $file = $dbForProject->getDocument(
-                    'bucket_' . $bucket->getSequence(),
-                    $video->getAttribute('fileId', '')
-                );
-                $roles = \array_merge($roles, $file->getRead());
+                    $file = $dbForProject->getDocument(
+                        'bucket_' . $bucket->getSequence(),
+                        $video->getAttribute('fileId', '')
+                    );
+                    $roles = \array_merge($roles, $file->getRead());
+                }
+            } catch (\Throwable) {
+                // Source may be mid-delete; the console team role above still applies.
             }
-        } catch (\Throwable) {
-            // Source may be mid-delete; the console team role above still applies.
         }
 
         return \array_map(
@@ -1711,8 +1716,8 @@ class Videos extends Action
      * Video child rows (and timeline payloads) carry no ACL of their own, and
      * the Realtime adapter derives delivery roles from the payload's read
      * permissions — an empty set means the event is silently dropped. Stamp the
-     * roles resolved from the source bucket/file (see sourceReadPermissions())
-     * so subscribers receive the event.
+     * roles from the video document when set, otherwise from the source
+     * bucket/file (see sourceReadPermissions()) so subscribers receive the event.
      *
      * @param array<string, string> $params
      * @param array<string> $permissions

@@ -93,7 +93,7 @@ class Get extends Base
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
-        $video = $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
+        $video = $this->getPlayableVideo($dbForProject, $authorization, $user, $videoId);
 
         $preview = $authorization->skip(fn () => $dbForProject->getDocument('videos_previews', $previewId));
 

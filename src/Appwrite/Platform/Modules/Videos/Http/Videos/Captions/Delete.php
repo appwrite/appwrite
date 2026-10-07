@@ -78,7 +78,7 @@ class Delete extends Base
         Event $queueForEvents,
         DeletePublisher $publisherForDeletes
     ): void {
-        $video = $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
+        $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
         $caption = $authorization->skip(fn () => $dbForProject->getDocument('videos_captions', $captionId));
 

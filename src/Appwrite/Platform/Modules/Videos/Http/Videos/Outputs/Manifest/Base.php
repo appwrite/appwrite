@@ -163,7 +163,7 @@ abstract class Base extends VideosAction
         User $user,
         string $videoId
     ): Document {
-        return $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
+        return $this->getPlayableVideo($dbForProject, $authorization, $user, $videoId);
     }
 
     /**

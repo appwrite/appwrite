@@ -85,7 +85,7 @@ class Create extends Base
         Event $queueForEvents,
         VideoPublisher $publisherForVideos
     ): void {
-        $video = $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
+        $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('videos_profiles', $profileId));
 

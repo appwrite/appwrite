@@ -84,7 +84,7 @@ class Get extends Base
         // The pre-merge endpoint ran no permission check at all and never verified
         // the segment belonged to the requested video or rendition, so any segment
         // id in the project was readable by anyone.
-        $video = $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
+        $video = $this->getPlayableVideo($dbForProject, $authorization, $user, $videoId);
 
         $rendition = $authorization->skip(fn () => $dbForProject->getDocument('videos_renditions', $renditionId));
 
