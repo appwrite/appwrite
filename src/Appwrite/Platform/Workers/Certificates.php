@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
+use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -253,6 +254,11 @@ class Certificates extends Action
         ?string $validationDomain = null,
         bool $skipDomainValidation = false
     ): void {
+        // Issuance needs an account email. Fail before the rule is updated.
+        if ($certificates instanceof LetsEncrypt) {
+            $certificates->assertCanIssue();
+        }
+
         /**
          * 1. Read arguments and validate domain
          * 2. Get main domain

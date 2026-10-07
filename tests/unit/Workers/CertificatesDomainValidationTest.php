@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Workers;
 
+use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Event\Certificate as CertificateEvent;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Certificate as CertificateMessage;
@@ -74,6 +75,39 @@ final class CertificatesDomainValidationTest extends TestCase
         $writes = $this->generate($certificates, skipDomainValidation: false);
 
         $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $writes['rules']['status']);
+    }
+
+    public function testGenerationWithoutAnEmailFailsBeforeTheRuleIsTouched(): void
+    {
+        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform->expects($this->never())->method('getDocument');
+        $dbForPlatform->expects($this->never())->method('findOne');
+        $dbForPlatform->expects($this->never())->method('updateDocument');
+        $dbForPlatform->expects($this->never())->method('createDocument');
+
+        $message = (new Message())->setPayload((new CertificateMessage(
+            project: new Document(['$id' => 'project-1', '$sequence' => '1']),
+            domain: new Document(['domain' => self::DOMAIN, 'domainType' => 'site']),
+            action: CertificateEvent::ACTION_GENERATION,
+        ))->toArray());
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
+
+        (new Certificates())->action(
+            $message,
+            $dbForPlatform,
+            new MailPublisher(new MockPublisher(), new Queue('v1-mails')),
+            $this->createStub(Event::class),
+            $this->createStub(Webhook::class),
+            new FunctionPublisher(new MockPublisher(), new Queue('v1-functions')),
+            $this->createStub(Realtime::class),
+            new CertificatePublisher(new MockPublisher(), new Queue('v1-certificates')),
+            new LetsEncrypt(''),
+            [],
+            $this->createStub(Authorization::class),
+            (new Bus())->setResolver(static fn (): null => null),
+        );
     }
 
     /**

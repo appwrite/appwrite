@@ -9,6 +9,7 @@ use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\DateTime;
 use Utopia\Http\Http;
+use Utopia\System\System;
 
 class LetsEncrypt implements Provider
 {
@@ -19,9 +20,31 @@ class LetsEncrypt implements Provider
         $this->email = $email;
     }
 
+    /**
+     * Account email comes from _APP_EMAIL_CERTIFICATES, then the security address.
+     * An empty address still returns a client: issuance checks it, file removal does not.
+     */
+    public static function fromEnvironment(): self
+    {
+        $email = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
+
+        return new self(\is_string($email) ? $email : '');
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function assertCanIssue(): void
+    {
+        if ($this->email === '') {
+            throw new Exception('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
+        }
+    }
 
     public function issueCertificate(string $certName, string $domain, ?string $domainType): ?string
     {
+        $this->assertCanIssue();
+
         $stdout = '';
         $stderr = '';
 
