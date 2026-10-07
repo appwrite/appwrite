@@ -1721,6 +1721,13 @@ trait DatabasesBase
         $this->assertEquals(201, $document['headers']['status-code']);
         $documentId = $document['body']['$id'];
 
+        $second = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['title' => 'original'],
+        ]);
+        $this->assertEquals(201, $second['headers']['status-code']);
+        $secondId = $second['body']['$id'];
+
         $note = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, 'string', 'note'), $headers, [
             'required' => true,
             'default' => null,
@@ -1737,6 +1744,19 @@ trait DatabasesBase
         ]);
         $this->assertEquals(200, $updated['headers']['status-code']);
         $this->assertSame('renamed', $updated['body']['title']);
+        $this->assertNull($updated['body']['note']);
+
+        $fetched = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertSame('renamed', $fetched['body']['title']);
+        $this->assertNull($fetched['body']['note']);
+
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $secondId), $headers, [
+            'data' => ['title' => 'upserted'],
+        ]);
+        $this->assertEquals(200, $upserted['headers']['status-code']);
+        $this->assertSame('upserted', $upserted['body']['title']);
+        $this->assertNull($upserted['body']['note']);
 
         $filled = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
             'data' => ['note' => 'present'],
