@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "561ec89792d8a1ec0dcba8dbe552bc75",
+    "content-hash": "19cfcbb59bfee9068c1e9d1ffd7323ac",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2777,53 +2777,6 @@
                 "source": "https://github.com/Nevay/spi/tree/v1.0.5"
             },
             "time": "2025-06-29T15:42:06+00:00"
-        },
-        {
-            "name": "utopia-php/config",
-            "version": "1.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/config.git",
-                "reference": "6672bf6c1b54ba608593570cbef31bef75f17dd8"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/config/zipball/6672bf6c1b54ba608593570cbef31bef75f17dd8",
-                "reference": "6672bf6c1b54ba608593570cbef31bef75f17dd8",
-                "shasum": ""
-            },
-            "require": {
-                "ext-yaml": "*",
-                "php": ">=8.0"
-            },
-            "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "^2.0",
-                "phpunit/phpunit": "^9.3"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Config\\": "src/Config"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple Config library to managing application config variables",
-            "keywords": [
-                "config",
-                "framework",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/config/issues",
-                "source": "https://github.com/utopia-php/config/tree/1.0.0"
-            },
-            "time": "2025-11-18T17:02:00+00:00"
         },
         {
             "name": "utopia-php/database",
