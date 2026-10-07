@@ -579,7 +579,7 @@ final class NotificationsTest extends TestCase
         ];
 
         try {
-            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform);
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
             $this->fail('expected the fan-out failure to propagate');
         } catch (PermanentFailure) {
             $this->fail('a permanent refusal must not end a message another recipient can still receive');
