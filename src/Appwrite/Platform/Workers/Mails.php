@@ -228,14 +228,12 @@ class Mails extends Action
             return;
         } catch (\Throwable $error) {
             Span::add('mail.status', 'failure');
+            Span::add('mail.error.message', $error->getMessage());
 
-            if ($type === 'smtp') {
-                Span::add('mail.error.message', $error->getMessage());
-
-                return;
-            }
-
-            throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
+            // The adapter reports a refusal in its result, classified below. What
+            // it throws instead is nothing the server said, so nothing says the
+            // next attempt fails the same way.
+            throw new Exception('Error sending mail: ' . $error->getMessage(), $type === 'smtp' ? 401 : 500);
         }
 
         if (($result['deliveredTo'] ?? 0) === 0) {

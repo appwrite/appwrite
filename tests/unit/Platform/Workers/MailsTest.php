@@ -10,9 +10,11 @@ use Utopia\Database\Document;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email as EmailMessage;
+use Utopia\Messaging\Tests\Support\ScriptedSmtpServer;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
 use Utopia\Registry\Registry;
 use Utopia\Telemetry\Adapter\None;
 
@@ -166,15 +168,55 @@ final class MailsTest extends TestCase
         $this->assertSame(1, $adapter->sendCount);
     }
 
-    public function testProjectSmtpFailureIsNotRetried(): void
+    /**
+     * A project's own server that cannot be reached may answer the next attempt,
+     * so the job stays retryable; Appwrite's provider is never used in its place.
+     */
+    public function testAnUnreachableProjectSmtpIsRetried(): void
     {
         $adapter = new SpyMailAdapter();
 
-        $this->runMailWorker($adapter, recipient: 'john@example.test', smtp: [
-            'host' => '127.0.0.1',
-            'port' => 1,
-            'senderEmail' => 'sender@example.test',
+        try {
+            $this->runMailWorker($adapter, recipient: 'john@example.test', smtp: [
+                'host' => '127.0.0.1',
+                'port' => 1,
+                'senderEmail' => 'sender@example.test',
+            ]);
+            $this->fail('An unreachable project SMTP server must fail the job so it is retried');
+        } catch (PermanentFailure) {
+            $this->fail('An unreachable server may answer next time; the job must not end');
+        } catch (\Exception $error) {
+            $this->assertStringContainsString('No SMTP host answered', $error->getMessage());
+        }
+
+        $this->assertSame(0, $adapter->sendCount);
+    }
+
+    /**
+     * A project's own server that refused for good answers every attempt the same
+     * way, so the job ends instead of repeating the login from the shared egress IP.
+     */
+    public function testAProjectSmtpThatRefusesForGoodEndsTheJob(): void
+    {
+        $adapter = new SpyMailAdapter();
+        $server = new ScriptedSmtpServer([
+            '220 smtp.example.test ESMTP',
+            "250-smtp.example.test\r\n250 AUTH PLAIN LOGIN",
+            '535 5.7.8 Authentication credentials invalid',
         ]);
+
+        try {
+            $this->runMailWorker($adapter, recipient: 'john@example.test', smtp: [
+                'host' => '127.0.0.1',
+                'port' => $server->port,
+                'username' => 'jane',
+                'password' => 'wrong',
+                'senderEmail' => 'sender@example.test',
+            ]);
+            $this->fail('A permanent refusal must end the job');
+        } catch (PermanentFailure $failure) {
+            $this->assertStringContainsString('535', $failure->getMessage());
+        }
 
         $this->assertSame(0, $adapter->sendCount);
     }
