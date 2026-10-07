@@ -248,6 +248,10 @@ export const jaVideosDictionary: Record<string, string> = {
   '{failed} failed · {ready} of {total} ready':
     '{failed} 件失敗 · {ready}/{total} 件完了',
   'Some renditions failed': '一部のレンディションが失敗しました',
+  'Renditions are still encoding. Playback starts when one is ready.':
+    'レンディションはまだ処理中です。準備ができると再生が始まります。',
+  'No renditions are ready to play.': '再生できるレンディションはまだありません。',
+  'This video has no source to play.': 'この動画には再生できるソースがありません。',
   'Auto quality': '自動画質',
   'Subtitles off': '字幕オフ',
   'New renditions are ready.': '新しいレンディションの準備ができました。',
@@ -846,9 +850,9 @@ export const jaVideosDictionary: Record<string, string> = {
   'Loading video': '動画を読み込み中',
   'This video does not exist or was removed. Check the link and try again.':
     'この動画は存在しないか、削除されました。リンクを確認してもう一度お試しください。',
-  'Sign in required': 'サインインが必要です',
-  'You need permission to watch this video. Sign in with an account that can access it, or ask the owner to make the stream public.':
-    'この動画を視聴する権限が必要です。アクセスできるアカウントでサインインするか、所有者にストリームを公開してもらってください。',
+  'This video is private': 'この動画は非公開です',
+  'Sign in to watch it, or ask the owner to make it public.':
+    '視聴するにはサインインするか、所有者に公開してもらってください。',
   'Access denied': 'アクセスが拒否されました',
   'Your account cannot play this video. The owner may need to update bucket or video permissions.':
     'このアカウントでは動画を再生できません。所有者がバケットまたは動画の権限を更新する必要がある場合があります。',
@@ -883,6 +887,12 @@ export const jaVideosDictionary: Record<string, string> = {
 
   // Create video wizard
   'Encoding settings': 'エンコード設定',
+  Upload: 'アップロード',
+  Demo: 'デモ',
+  'Advanced settings': '詳細設定',
+  'Serves both HLS and DASH.': 'HLS と DASH の両方に対応します。',
+  'Plays natively on Safari and iOS.': 'Safari と iOS でネイティブ再生できます。',
+  'Not supported natively on Safari.': 'Safari ではネイティブ再生に対応していません。',
   'Review': '確認',
   'Uploaded from your computer': 'コンピューターからアップロード',
   'File in Storage': 'ストレージ内のファイル',
@@ -940,6 +950,19 @@ export const jaVideosDictionary: Record<string, string> = {
   'New video': '新しい動画',
   'Choose a source to see a preview.': 'ソースを選択するとプレビューが表示されます。',
   'Creating your video': '動画を作成しています',
+  'Encoding renditions': 'レンディションをエンコード中',
+  'You can leave this screen. Encoding continues on the video.':
+    'この画面を離れても、エンコードは動画上で続行されます。',
+  'The source is saved first. Renditions start after that.':
+    '先にソースを保存します。その後レンディションを開始します。',
+  'The upload ended before the whole file was stored.':
+    'ファイル全体が保存される前にアップロードが終了しました。',
+  'The demo download ended before the whole file was received.':
+    'ファイル全体を受信する前にデモのダウンロードが終了しました。',
+  'Saving the source and registering the video.':
+    'ソースを保存し、動画を登録しています。',
+  'Open the video when you are ready.': '準備ができたら動画を開いてください。',
+  '{ready} of {total} ready': '{ready} / {total} 件が準備完了',
   'Video could not be created': '動画を作成できませんでした',
   'Keep this window open while the file uploads. Once the video exists, you can open it and the remaining steps continue in the background.':
     'ファイルのアップロード中はこのウィンドウを開いたままにしてください。動画が作成されたら開くことができ、残りの処理はバックグラウンドで続行されます。',

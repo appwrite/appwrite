@@ -241,6 +241,10 @@ export const heVideosDictionary: Record<string, string> = {
   '{failed} failed · {ready} of {total} ready':
     '{failed} נכשלו · {ready} מתוך {total} מוכנות',
   'Some renditions failed': 'חלק מגרסאות הקידוד נכשלו',
+  'Renditions are still encoding. Playback starts when one is ready.':
+    'גרסאות הקידוד עדיין בעיבוד. הניגון יתחיל כשאחת מהן תהיה מוכנה.',
+  'No renditions are ready to play.': 'אין גרסאות קידוד מוכנות לניגון.',
+  'This video has no source to play.': 'לסרטון הזה אין מקור לניגון.',
   'Auto quality': 'איכות אוטומטית',
   'Subtitles off': 'ללא כתוביות',
   'New renditions are ready.': 'גרסאות קידוד חדשות מוכנות.',
@@ -831,9 +835,9 @@ export const heVideosDictionary: Record<string, string> = {
   'Loading video': 'טוען סרטון',
   'This video does not exist or was removed. Check the link and try again.':
     'הסרטון הזה לא קיים או שהוסר. בדקו את הקישור ונסו שוב.',
-  'Sign in required': 'נדרשת התחברות',
-  'You need permission to watch this video. Sign in with an account that can access it, or ask the owner to make the stream public.':
-    'נדרשת הרשאה לצפייה בסרטון. התחברו עם חשבון שיש לו גישה, או בקשו מהבעלים להפוך את הסטרים לציבורי.',
+  'This video is private': 'הסרטון הזה פרטי',
+  'Sign in to watch it, or ask the owner to make it public.':
+    'התחברו כדי לצפות בו, או בקשו מהבעלים להפוך אותו לציבורי.',
   'Access denied': 'הגישה נדחתה',
   'Your account cannot play this video. The owner may need to update bucket or video permissions.':
     'החשבון שלכם לא יכול לנגן את הסרטון. ייתכן שהבעלים צריך לעדכן הרשאות באקט או בסרטון.',
@@ -868,6 +872,12 @@ export const heVideosDictionary: Record<string, string> = {
 
   // Create video wizard
   'Encoding settings': 'הגדרות קידוד',
+  Upload: 'העלאה',
+  Demo: 'הדגמה',
+  'Advanced settings': 'הגדרות מתקדמות',
+  'Serves both HLS and DASH.': 'זמין גם כ-HLS וגם כ-DASH.',
+  'Plays natively on Safari and iOS.': 'מתנגן באופן מובנה ב-Safari וב-iOS.',
+  'Not supported natively on Safari.': 'לא נתמך באופן מובנה ב-Safari.',
   'Review': 'סקירה',
   'Uploaded from your computer': 'הועלה מהמחשב שלכם',
   'File in Storage': 'קובץ באחסון',
@@ -929,6 +939,19 @@ export const heVideosDictionary: Record<string, string> = {
   'New video': 'סרטון חדש',
   'Choose a source to see a preview.': 'בחרו מקור כדי לראות תצוגה מקדימה.',
   'Creating your video': 'יוצרים את הסרטון שלכם',
+  'Encoding renditions': 'קידוד גרסאות',
+  'You can leave this screen. Encoding continues on the video.':
+    'צאו מהמסך הזה. הקידוד ממשיך על הסרטון.',
+  'The source is saved first. Renditions start after that.':
+    'קודם נשמר המקור. גרסאות הקידוד מתחילות אחר כך.',
+  'The upload ended before the whole file was stored.':
+    'ההעלאה נעצרה לפני שכל הקובץ נשמר.',
+  'The demo download ended before the whole file was received.':
+    'הורדת ההדגמה נעצרה לפני שכל הקובץ התקבל.',
+  'Saving the source and registering the video.':
+    'שומרים את המקור ורושמים את הסרטון.',
+  'Open the video when you are ready.': 'פתחו את הסרטון כשתהיו מוכנים.',
+  '{ready} of {total} ready': '{ready} מתוך {total} מוכנות',
   'Video could not be created': 'לא ניתן ליצור את הסרטון',
   'Keep this window open while the file uploads. Once the video exists, you can open it and the remaining steps continue in the background.':
     'השאירו את החלון פתוח בזמן שהקובץ עולה. אחרי שהסרטון נוצר אפשר לפתוח אותו, והשלבים הנותרים ימשיכו ברקע.',

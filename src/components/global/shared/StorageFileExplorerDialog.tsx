@@ -46,6 +46,8 @@ export interface StorageFileExplorerDialogProps {
   accept?: StorageFileAcceptInput
   /** Tooltip on disabled files when `accept` rejects them. */
   acceptMismatchTooltip?: string
+  /** Bucket to open first instead of the first bucket in the list. */
+  initialBucketId?: string | null
   /** Stack above a fullscreen `WizardLayout`. */
   aboveWizard?: boolean
 }
@@ -61,6 +63,7 @@ export function StorageFileExplorerDialog({
   onConfirm,
   accept,
   acceptMismatchTooltip,
+  initialBucketId,
   aboveWizard = false,
 }: StorageFileExplorerDialogProps) {
   const t = useT()
@@ -102,6 +105,7 @@ export function StorageFileExplorerDialog({
           onSelectionChange={setSelection}
           accept={accept}
           acceptMismatchTooltip={acceptMismatchTooltip}
+          initialBucketId={initialBucketId}
           aboveWizard={aboveWizard}
           className="flex-1"
         />

@@ -123,13 +123,19 @@ export function videoThumbAspectRatio(
   return `${width} / ${height}`
 }
 
+export type VideoPlayerViewportFit = 'height' | 'width'
+
 /**
  * Inline styles so the player frame matches video aspect ratio up to `maxHeight`.
- * Width shrinks for tall/narrow sources when height hits the cap.
+ *
+ * - `height` (default): width shrinks for tall/narrow sources when height hits the cap.
+ * - `width`: use full container width when height at that width fits under `maxHeight`
+ *   (CSS aspect-ratio + max-height shrink width only when needed).
  */
 export function getVideoPlayerViewportStyle(
   aspect: { width: number; height: number },
   maxHeight: string,
+  fit: VideoPlayerViewportFit = 'height',
 ): {
   aspectRatio: string
   maxHeight: string
@@ -139,7 +145,10 @@ export function getVideoPlayerViewportStyle(
   return {
     aspectRatio: `${width} / ${height}`,
     maxHeight,
-    width: `min(100%, calc(${maxHeight} * ${width} / ${height}))`,
+    width:
+      fit === 'width'
+        ? '100%'
+        : `min(100%, calc(${maxHeight} * ${width} / ${height}))`,
   }
 }
 

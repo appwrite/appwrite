@@ -31,7 +31,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-4 py-2">
       <dt className="shrink-0 text-[12px] text-muted-foreground">{label}</dt>
-      <dd className="min-w-0 text-end text-[12px] font-medium text-foreground">
+      <dd className="min-w-0 break-words text-end text-[12px] font-medium text-foreground">
         {children}
       </dd>
     </div>
@@ -76,8 +76,14 @@ function SourcePreview({
           }}
           onError={() => setFailedUrl(url)}
         />
+      ) : source?.posterUrl ? (
+        <img
+          src={source.posterUrl}
+          alt=""
+          className="h-full w-full object-contain"
+        />
       ) : null}
-      {!url || failed || audioOnly ? (
+      {((!url && !source?.posterUrl) || failed || audioOnly) ? (
         <div
           className={cn(
             'pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/60',
@@ -110,7 +116,6 @@ export function CreateVideoSummary({
   showEncoding,
   output,
   profileNames,
-  timeline,
 }: {
   source: CreateVideoSourceSummary | null
   meta: CreateVideoSourceMeta | null
@@ -119,11 +124,10 @@ export function CreateVideoSummary({
   showEncoding: boolean
   output: VideoOutput
   profileNames: string[]
-  timeline: boolean
 }) {
   const t = useT()
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card/50">
+    <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-card/50">
       <SourcePreview source={source} meta={meta} onMeta={onMeta} />
       <div className="px-4 py-3">
         <p className="truncate text-[14px] font-semibold text-foreground">
@@ -175,9 +179,6 @@ export function CreateVideoSummary({
             ) : (
               <span className="text-muted-foreground">{t('None')}</span>
             )}
-          </Row>
-          <Row label={t('Timeline previews')}>
-            {timeline ? t('Enabled') : t('Disabled')}
           </Row>
         </dl>
       ) : null}

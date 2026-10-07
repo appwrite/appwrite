@@ -238,8 +238,8 @@ export function WizardLayout({
     return () => window.removeEventListener('keydown', handleKeyDown, true)
   }, [handleClose])
   const containerClasses = fullscreen
-    ? 'fixed inset-0 z-[9998] flex h-[100dvh] max-h-[100dvh] w-screen flex-col overflow-hidden bg-background'
-    : 'flex h-full flex-col'
+    ? 'fixed inset-0 z-[9998] flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden bg-background'
+    : 'flex h-full min-w-0 flex-col'
 
   const headerClasses = fullscreen
     ? cn(
@@ -252,8 +252,11 @@ export function WizardLayout({
       )
 
   const contentWrapperClasses = fullscreen
-    ? cn('flex-1 min-h-0 overflow-y-auto', contentWrapperClassName)
-    : 'mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6'
+    ? cn(
+        'min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto',
+        contentWrapperClassName,
+      )
+    : 'mx-auto w-full min-w-0 max-w-7xl flex-1 overflow-x-hidden overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6'
 
   const footerClasses = fullscreen
     ? 'shrink-0 border-t border-border bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80'
@@ -272,7 +275,7 @@ export function WizardLayout({
                 (fullscreen
                   ? 'border-b border-border'
                   : 'border-b border-border/30'),
-              fullscreen ? 'px-6' : 'px-4 @[1000px]:px-6',
+              fullscreen ? 'px-4 sm:px-6' : 'px-4 @[1000px]:px-6',
             )}
           >
             <div className="flex items-center justify-between w-full">
@@ -349,27 +352,30 @@ export function WizardLayout({
         {fullscreen && (
           <div
             className={cn(
-              'mx-auto w-full',
-              fullscreenContentXClassName ?? 'px-6',
+              'mx-auto w-full min-w-0',
+              fullscreenContentXClassName ?? 'px-4 sm:px-6',
               constrainWidth && maxWidth,
-              contentPadding && (fullscreen ? 'py-6' : 'pt-6'),
+              contentPadding && (fullscreen ? 'py-4 sm:py-6' : 'pt-6'),
               fullscreenInnerClassName,
             )}
           >
             {contentTop ? <div className="mb-8">{contentTop}</div> : null}
             {useSidebar ? (
-              <div className="grid gap-8 lg:grid-cols-3">
+              <div className="grid min-w-0 gap-6 sm:gap-8 lg:grid-cols-3">
                 {/* Main Content */}
                 <div
                   ref={contentRef}
-                  className={cn('lg:col-span-2 space-y-8', contentClassName)}
+                  className={cn(
+                    'min-w-0 lg:col-span-2 space-y-8',
+                    contentClassName,
+                  )}
                 >
                   {children}
                 </div>
 
                 {/* Sidebar */}
                 {sidebar && (
-                  <div className="lg:col-span-1 self-start sticky top-6">
+                  <div className="min-w-0 self-start lg:sticky lg:top-6 lg:col-span-1">
                     {sidebar}
                   </div>
                 )}
@@ -385,24 +391,27 @@ export function WizardLayout({
         {!fullscreen && useSidebar && (
           <div
             className={cn(
-              'grid gap-6 lg:grid-cols-3',
+              'grid min-w-0 gap-6 lg:grid-cols-3',
               contentPadding && 'pt-6',
             )}
           >
             {contentTop ? (
-              <div className="lg:col-span-3">{contentTop}</div>
+              <div className="min-w-0 lg:col-span-3">{contentTop}</div>
             ) : null}
             {/* Main Content */}
             <div
               ref={contentRef}
-              className={cn('lg:col-span-2 space-y-6', contentClassName)}
+              className={cn(
+                'min-w-0 lg:col-span-2 space-y-6',
+                contentClassName,
+              )}
             >
               {children}
             </div>
 
             {/* Sidebar */}
             {sidebar && (
-              <div className="lg:col-span-1 self-start sticky top-6">
+              <div className="min-w-0 self-start lg:sticky lg:top-6 lg:col-span-1">
                 {sidebar}
               </div>
             )}
@@ -412,7 +421,7 @@ export function WizardLayout({
         {!fullscreen && !useSidebar && (
           <div
             ref={contentRef}
-            className={cn(contentPadding && 'pt-6', contentClassName)}
+            className={cn('min-w-0', contentPadding && 'pt-6', contentClassName)}
           >
             {contentTop ? <div className="mb-6">{contentTop}</div> : null}
             {children}
@@ -425,9 +434,9 @@ export function WizardLayout({
         <div className={footerClasses}>
           <div
             className={cn(
-              'mx-auto w-full flex items-center gap-3',
+              'mx-auto flex w-full min-w-0 flex-wrap items-center gap-2 sm:gap-3',
               constrainFooterWidth && maxWidth,
-              fullscreen && 'px-6 py-4',
+              fullscreen && 'px-4 py-3 sm:px-6 sm:py-4',
               footerAlign === 'right' && 'justify-end',
             )}
           >

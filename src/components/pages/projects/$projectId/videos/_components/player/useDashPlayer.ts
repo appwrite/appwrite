@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import shaka from 'shaka-player'
+import { playbackFatalMessage } from '@/lib/videos/embed-player-errors'
 import {
   applyVideoStreamAccess,
   type VideoStreamAccess,
@@ -351,7 +352,14 @@ export function useDashPlayer(
         detail,
       })
       if (error.severity === shaka.util.Error.Severity.CRITICAL) {
-        setState((prev) => ({ ...prev, fatalError: detail }))
+        const status = error.data?.[1]
+        setState((prev) => ({
+          ...prev,
+          fatalError: playbackFatalMessage(
+            typeof status === 'number' ? status : undefined,
+            detail,
+          ),
+        }))
       }
     })
 

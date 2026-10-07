@@ -6,6 +6,8 @@
  * transcode and upload it into the project's Storage bucket.
  */
 
+import { translate } from '@/lib/i18n/translate'
+
 export type DemoVideoQuality = '1080p' | '480p'
 
 export type DemoVideoVariant = {
@@ -196,7 +198,8 @@ export async function downloadDemoVideo(
   if (!response.ok || !response.body) {
     throw new Error(`Demo download failed (HTTP ${response.status})`)
   }
-  const total = Number(response.headers.get('content-length')) || variant.size
+  const declared = Number(response.headers.get('content-length'))
+  const total = declared || variant.size
   const reader = response.body.getReader()
   const chunks: BlobPart[] = []
   let received = 0
@@ -205,7 +208,12 @@ export async function downloadDemoVideo(
     if (done) break
     chunks.push(value)
     received += value.byteLength
-    onProgress(Math.min(100, (received / total) * 100))
+    onProgress(total > 0 ? Math.min(99, (received / total) * 100) : 0)
+  }
+  if (declared > 0 && received < declared) {
+    throw new Error(
+      translate('The demo download ended before the whole file was received.'),
+    )
   }
   onProgress(100)
   return new File(chunks, demoVideoFileName(video, variant), {

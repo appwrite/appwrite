@@ -72,6 +72,7 @@ import {
   PRE_LAUNCH_BOOT_SCRIPT,
 } from '@/lib/pre-launch'
 import { STALE_CHUNK_BOOT_SCRIPT } from '@/lib/stale-chunk-error'
+import { isEmbedPlayerPath } from '@/lib/videos/embed-player-url'
 import { getStatusBannerParts } from '@/lib/cloud-status-copy'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
@@ -138,6 +139,15 @@ const THEME_SCRIPT = `(function(){
       e.setAttribute('lang', resolvedLang);
       e.setAttribute('dir', dir);
     } catch (e3) {}
+    if (location.pathname === '/player' || location.pathname.indexOf('/player/') === 0) {
+      e.classList.add('embed-player');
+      e.style.background = '#000';
+      e.style.colorScheme = 'dark';
+      if (document.body) {
+        document.body.style.background = '#000';
+        document.body.style.colorScheme = 'dark';
+      }
+    }
   } catch (e) {}
 })()`
 
@@ -422,7 +432,10 @@ function RootAppShell({ children }: { children: React.ReactNode }) {
   const rootHome = useRouterState({
     select: (s) => isRootHomeMatch(s.matches),
   })
-  if (isConsoleRedirectHopPath(renderedPathname) && !rootHome) {
+  if (
+    isEmbedPlayerPath(renderedPathname) ||
+    (isConsoleRedirectHopPath(renderedPathname) && !rootHome)
+  ) {
     return <>{children}</>
   }
 
@@ -452,6 +465,10 @@ function RootInitialLoadCoordinator({
   children: React.ReactNode
 }) {
   const { isLoading, skipStaticLoader } = useInitialLoader()
+  const pathname = useRouterState({
+    select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
+  })
+  const embedPlayer = isEmbedPlayerPath(pathname)
   const [clientMounted, setClientMounted] = useState(false)
   const { isCloud, features } = useConsoleProfile()
   const { account, isFetched } = useAuth()
@@ -466,7 +483,7 @@ function RootInitialLoadCoordinator({
   )
 
   const loaderVisible =
-    showFullscreenLoader || (!skipStaticLoader && isLoading)
+    !embedPlayer && (showFullscreenLoader || (!skipStaticLoader && isLoading))
   const shellRef = useRef<HTMLDivElement>(null)
   const shellRevealedRef = useRef(!loaderVisible)
   const [shellRevealed, setShellRevealed] = useState(() => !loaderVisible)

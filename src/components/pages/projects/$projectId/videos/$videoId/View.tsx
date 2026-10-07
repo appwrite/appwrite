@@ -1,20 +1,13 @@
-import { useState, type ReactNode } from 'react'
-import { Link, useNavigate, useParams } from '@tanstack/react-router'
+import type { ReactNode } from 'react'
+import { Link, useParams } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
-import { Check, ChevronDown, Circle, Info } from 'lucide-react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import {
-  VideoActionButton,
-  VideoFact,
-  VideoPage,
-  VideoSectionCard,
-} from '../_components/VideoPage'
-import { VideoTermHint } from '../_components/VideoTermHint'
-import { useVideoDetailActions } from '../_components/video-detail-actions'
-import { VIDEO_TAB_NEEDS_READY_RENDITION } from '../_components/video-tabs'
+import { ChevronDown, Info } from 'lucide-react'
+import { VideoFact, VideoPage } from '../_components/VideoPage'
 import { VideoPreviewEmbedMenu } from '../_components/VideoPreviewEmbedMenu'
 import { VideoStreamPlayer } from '../_components/player/VideoStreamPlayer'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { sdk } from '@/lib/appwrite/sdk'
+import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -25,23 +18,17 @@ import {
   isVideoMetadataReady,
   useProjectVideo,
   useVideoRenditions,
-  useVideoCaptions,
   videoSourceHasAudio,
 } from '@/lib/react-query/hooks'
-import { cn } from '@/lib/utils'
-import { formatBytes } from '@/lib/utils/mock-data'
 import {
   formatBitrate,
   formatResolution,
-  formatVideoDuration,
 } from '@/lib/utils/video-format'
-import type { VideoGlossaryTerm } from '@/lib/videos/glossary'
 import { useT } from '@/lib/i18n/translate'
 
 export type VideoOverviewInitialData = {
   video: Models.Video
   renditions: Models.VideoRenditionList
-  captions: Models.VideoCaptionList
 }
 
 type ViewProps = {
@@ -56,48 +43,19 @@ export function View({ initialData }: ViewProps = {}) {
   }
   const { data: videoFromHook } = useProjectVideo(projectId, videoId)
   const { data: renditionsFromHook } = useVideoRenditions(projectId, videoId)
-  const { data: captionsFromHook } = useVideoCaptions(projectId, videoId)
 
   const video = videoFromHook ?? initialData?.video
   const renditions =
     renditionsFromHook?.renditions ?? initialData?.renditions.renditions ?? []
-  const captions =
-    captionsFromHook?.captions ?? initialData?.captions.captions ?? []
 
   if (!video) return null
-
-  const hasRenditions = renditions.length > 0
-  const hasReady = renditions.some((r) => r.status === 'ready')
-
-  const spacerClassName = cn(
-    'transition-[flex-grow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-    hasRenditions ? 'grow-0' : 'grow',
-  )
 
   return (
     <VideoPage
       title={t('Overview')}
       showVideoId
-      toolbar={
-        <>
-          <MetricChip
-            label={t('Resolution')}
-            value={formatResolutionAndAspectRatio(video)}
-          />
-          <MetricChip
-            label={t('Duration')}
-            value={formatVideoDuration(video.duration)}
-            className="hidden @[560px]:flex"
-          />
-          <MetricChip
-            label={t('Source size')}
-            value={video.size > 0 ? formatBytes(video.size) : '-'}
-            className="hidden @[720px]:flex"
-          />
-        </>
-      }
-      actions={
-        <>
+      titleActions={
+        <div className="flex items-center gap-2">
           <VideoPreviewEmbedMenu
             variant="toolbar"
             projectId={projectId}
@@ -105,73 +63,16 @@ export function View({ initialData }: ViewProps = {}) {
             renditions={renditions}
           />
           <SourcePopover projectId={projectId} video={video} />
-        </>
+        </div>
       }
-      contentClassName="flex min-h-full flex-col space-y-0"
     >
-      <div aria-hidden className={spacerClassName} />
-      <AnimatePresence initial={false}>
-        {hasReady ? null : (
-          <Collapse key="checklist">
-            <div
-              className={cn(
-                'mx-auto w-full pb-5 transition-[max-width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-                hasRenditions ? 'max-w-full' : 'max-w-xl',
-              )}
-            >
-              <SetupChecklist
-                projectId={projectId}
-                video={video}
-                renditions={renditions}
-                captions={captions}
-              />
-            </div>
-          </Collapse>
-        )}
-      </AnimatePresence>
-      <AnimatePresence initial={false}>
-        {hasRenditions ? (
-          <Collapse key="player">
-            <VideoStreamPlayer
-              projectId={projectId}
-              video={video}
-              renditions={renditions}
-              showProcessing={false}
-              variant="featured"
-            />
-          </Collapse>
-        ) : null}
-      </AnimatePresence>
-      <div aria-hidden className={spacerClassName} />
+      <VideoStreamPlayer
+        projectId={projectId}
+        video={video}
+        renditions={renditions}
+        variant="featured"
+      />
     </VideoPage>
-  )
-}
-
-const COLLAPSE_TRANSITION = {
-  duration: 0.5,
-  ease: [0.22, 1, 0.36, 1],
-} as const
-
-/** Grows in from zero height and collapses out, so siblings glide instead of jumping. */
-function Collapse({ children }: { children: ReactNode }) {
-  const reduceMotion = useReducedMotion()
-  // Starts unclipped: when AnimatePresence skips the initial animation, no
-  // completion callback fires. Enter starts at opacity 0, so nothing flashes.
-  const [animating, setAnimating] = useState(false)
-  return (
-    <motion.div
-      initial={{ gridTemplateRows: '0fr', opacity: 0 }}
-      animate={{ gridTemplateRows: '1fr', opacity: 1 }}
-      exit={{ gridTemplateRows: '0fr', opacity: 0 }}
-      transition={reduceMotion ? { duration: 0 } : COLLAPSE_TRANSITION}
-      onAnimationStart={() => setAnimating(true)}
-      onAnimationComplete={() => setAnimating(false)}
-      style={{ display: 'grid' }}
-    >
-      <div className={cn('min-h-0 min-w-0', animating && 'overflow-y-clip')}>
-        {children}
-      </div>
-    </motion.div>
   )
 }
 
@@ -183,6 +84,24 @@ function SourcePopover({
   video: Models.Video
 }) {
   const t = useT()
+  const hasSource = Boolean(video.bucketId && video.fileId)
+  const storage = sdk.forProject(projectId).storage
+  const viewUrl = hasSource
+    ? withAdminMode(
+        storage.getFileView({
+          bucketId: video.bucketId,
+          fileId: video.fileId,
+        }),
+      )
+    : null
+  const downloadUrl = hasSource
+    ? withAdminMode(
+        storage.getFileDownload({
+          bucketId: video.bucketId,
+          fileId: video.fileId,
+        }),
+      )
+    : null
 
   return (
     <Popover>
@@ -320,6 +239,38 @@ function SourcePopover({
             ) : null}
           </FactGroup>
         </div>
+        <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-5 py-3 sm:flex-row sm:justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 text-[13px]"
+            disabled={!viewUrl}
+            asChild={!!viewUrl}
+          >
+            {viewUrl ? (
+              <a href={viewUrl} target="_blank" rel="noopener noreferrer">
+                {t('View')}
+              </a>
+            ) : (
+              t('View')
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 text-[13px]"
+            disabled={!downloadUrl}
+            asChild={!!downloadUrl}
+          >
+            {downloadUrl ? (
+              <a href={downloadUrl} target="_blank" rel="noopener noreferrer">
+                {t('Download')}
+              </a>
+            ) : (
+              t('Download')
+            )}
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   )
@@ -342,247 +293,3 @@ function FactGroup({
   )
 }
 
-type DetailPath =
-  | '/projects/$projectId/videos/$videoId/renditions'
-  | '/projects/$projectId/videos/$videoId/captions'
-  | '/projects/$projectId/videos/$videoId/timeline'
-  | '/projects/$projectId/videos/$videoId/streaming'
-
-function formatResolutionAndAspectRatio(video: Models.Video): string {
-  const resolution =
-    video.width > 0 ? formatResolution(video.width, video.height) : ''
-  const ratio = video.aspectRatio?.trim() ?? ''
-  if (resolution && ratio) return `${resolution} · ${ratio}`
-  return resolution || ratio || '-'
-}
-
-function MetricChip({
-  label,
-  term,
-  value,
-  to,
-  projectId,
-  videoId,
-  className,
-}: {
-  label: string
-  term?: VideoGlossaryTerm
-  value: string
-  to?: DetailPath
-  projectId?: string
-  videoId?: string
-  className?: string
-}) {
-  const body = (
-    <>
-      <span className="flex items-center gap-1 text-muted-foreground">
-        {label}
-        {term ? <VideoTermHint term={term} /> : null}
-      </span>
-      <span className="font-semibold tabular-nums text-foreground">
-        {value}
-      </span>
-    </>
-  )
-  const chipClassName = cn(
-    'flex h-9 items-center gap-2 whitespace-nowrap rounded-md border border-border bg-card/50 px-3 text-[13px]',
-    className,
-  )
-  if (to && projectId && videoId) {
-    return (
-      <Link
-        to={to}
-        params={{ projectId, videoId }}
-        className={cn(chipClassName, 'transition-colors hover:bg-muted/40')}
-      >
-        {body}
-      </Link>
-    )
-  }
-  return <div className={chipClassName}>{body}</div>
-}
-
-type ChecklistStep = {
-  id: string
-  title: string
-  description: string
-  term?: VideoGlossaryTerm
-  done: boolean
-  optional?: boolean
-  /** Waiting on an earlier step; shown muted. */
-  blocked?: boolean
-  action?: ReactNode
-}
-
-/** Guides first-time users through the order the API expects. Hidden once streaming works. */
-function SetupChecklist({
-  projectId,
-  video,
-  renditions,
-  captions,
-}: {
-  projectId: string
-  video: Models.Video
-  renditions: Models.VideoRendition[]
-  captions: Models.VideoCaption[]
-}) {
-  const t = useT()
-  const { openCreateRenditions, openCreateCaption, writeDisabledReason } =
-    useVideoDetailActions()
-  const navigate = useNavigate()
-
-  const hasReady = renditions.some((r) => r.status === 'ready')
-
-  const linkButton = (to: DetailPath, label: string) => (
-    <Button variant="outline" size="sm" className="h-8 text-[12px]" asChild>
-      <Link to={to} params={{ projectId, videoId: video.$id }}>
-        {label}
-      </Link>
-    </Button>
-  )
-
-  const steps: ChecklistStep[] = [
-    {
-      id: 'renditions',
-      title: t('Encode renditions'),
-      description: t('Pick profiles and an output format such as HLS.'),
-      term: 'rendition',
-      done: renditions.length > 0,
-      action: (
-        <VideoActionButton
-          size="sm"
-          className="h-8 text-[12px]"
-          onClick={openCreateRenditions}
-          disabledReason={writeDisabledReason}
-        >
-          {t('Create renditions')}
-        </VideoActionButton>
-      ),
-    },
-    {
-      id: 'captions',
-      title: t('Add captions'),
-      description: t('Upload WebVTT or SRT files per language, or write them in the editor.'),
-      optional: true,
-      done: captions.length > 0,
-      action: (
-        <div className="flex flex-wrap gap-2">
-          <VideoActionButton
-            size="sm"
-            variant="outline"
-            className="h-8 text-[12px]"
-            onClick={openCreateCaption}
-            disabledReason={writeDisabledReason}
-          >
-            {t('Upload caption')}
-          </VideoActionButton>
-          <VideoActionButton
-            size="sm"
-            variant="outline"
-            className="h-8 text-[12px]"
-            onClick={() =>
-              void navigate({
-                to: '/projects/$projectId/videos/$videoId/captions/create',
-                params: { projectId, videoId: video.$id },
-              })
-            }
-            disabledReason={writeDisabledReason}
-          >
-            {t('Create caption')}
-          </VideoActionButton>
-        </div>
-      ),
-    },
-    {
-      id: 'timeline',
-      title: t('Generate a timeline'),
-      description: t('Thumbnails for scrubbing and poster images.'),
-      term: 'timeline',
-      optional: true,
-      done: Boolean(video.previewId),
-      action: linkButton(
-        '/projects/$projectId/videos/$videoId/timeline',
-        t('Open timeline'),
-      ),
-    },
-    {
-      id: 'stream',
-      title: t('Stream it'),
-      description: t('Copy a manifest URL into your player.'),
-      term: 'manifest',
-      done: hasReady,
-      blocked: true,
-      action: (
-        <VideoActionButton
-          variant="outline"
-          size="sm"
-          className="h-8 text-[12px]"
-          disabledReason={VIDEO_TAB_NEEDS_READY_RENDITION}
-        >
-          {t('View streaming URLs')}
-        </VideoActionButton>
-      ),
-    },
-  ]
-  const required = steps.filter((step) => !step.optional)
-  const doneCount = required.filter((step) => step.done).length
-  const nextId = steps.find((step) => !step.done && !step.optional)?.id
-
-  return (
-    <VideoSectionCard
-      title={t('Get streaming')}
-      description={t('{done} of {total} required steps done')
-        .replace('{done}', String(doneCount))
-        .replace('{total}', String(required.length))}
-      bodyClassName="px-0 py-0"
-    >
-      <ol className="divide-y divide-border">
-        {steps.map((step) => {
-          const isNext = step.id === nextId
-          return (
-            <li
-              key={step.id}
-              className={cn(
-                'flex flex-col gap-3 px-6 py-3 sm:flex-row sm:items-center',
-                isNext && 'bg-muted/30',
-                step.blocked && !step.done && 'opacity-60',
-              )}
-            >
-              <div className="flex min-w-0 flex-1 items-start gap-3">
-                {step.done ? (
-                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
-                    <Check className="h-3 w-3" />
-                  </span>
-                ) : (
-                  <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/60" />
-                )}
-                <div className="min-w-0">
-                  <p
-                    className={cn(
-                      'flex items-center gap-1.5 text-[13px] font-medium text-foreground',
-                      step.done && 'text-muted-foreground line-through',
-                    )}
-                  >
-                    {step.title}
-                    {step.optional ? (
-                      <span className="text-[11px] font-normal text-muted-foreground no-underline">
-                        {t('Optional')}
-                      </span>
-                    ) : null}
-                    {step.term ? <VideoTermHint term={step.term} /> : null}
-                  </p>
-                  <p className="text-[12px] text-muted-foreground">
-                    {step.description}
-                  </p>
-                </div>
-              </div>
-              {!step.done && step.action ? (
-                <div className="shrink-0 ps-7 sm:ps-0">{step.action}</div>
-              ) : null}
-            </li>
-          )
-        })}
-      </ol>
-    </VideoSectionCard>
-  )
-}

@@ -77,10 +77,7 @@ export function VideoSelector({
             className,
           )}
         >
-          <span
-            className="min-w-0 truncate font-medium text-foreground"
-            title={video.name}
-          >
+          <span className="min-w-0 truncate font-medium text-foreground">
             {video.name || t('Untitled video')}
           </span>
           <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
@@ -130,7 +127,6 @@ export function VideoSelector({
                     video={item}
                     width={120}
                     uniformSize
-                    fetchTimeline={false}
                     className="w-12 shrink-0 rounded border border-border/60 [&_svg]:h-3 [&_svg]:w-3"
                   />
                   <span className="min-w-0 flex-1">

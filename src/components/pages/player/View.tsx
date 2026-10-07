@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useSearch } from '@tanstack/react-router'
 import { AlertCircle, Loader2 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
+import { EmbedUnauthorized } from '@/components/pages/player/EmbedUnauthorized'
 import { VideoStreamPlayer } from '@/components/pages/projects/$projectId/videos/_components/player/VideoStreamPlayer'
 import { VideoInspectorProvider } from '@/components/pages/projects/$projectId/videos/_components/player/VideoInspectorContext'
 import {
@@ -99,6 +100,7 @@ export function View({ videoId, initialData }: EmbedViewProps) {
   }
 
   if (loadError && videoFetched && renditionsFetched) {
+    if (loadError.kind === 'unauthorized') return <EmbedUnauthorized />
     return <EmbedErrorScreen error={loadError} />
   }
 
@@ -128,7 +130,6 @@ export function View({ videoId, initialData }: EmbedViewProps) {
           video={video}
           renditions={renditions}
           layout="embed"
-          showProcessing={false}
           initialStartSeconds={initialStartSeconds}
         />
       </div>

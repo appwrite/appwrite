@@ -28,14 +28,7 @@ export function videoEmbedErrorFromUnknown(error: unknown): VideoEmbedError {
           'This video does not exist or was removed. Check the link and try again.',
       }
     }
-    if (isHttpUnauthorizedError(error)) {
-      return {
-        kind: 'unauthorized',
-        title: 'Sign in required',
-        message:
-          'You need permission to watch this video. Sign in with an account that can access it, or ask the owner to make the stream public.',
-      }
-    }
+    if (isHttpUnauthorizedError(error)) return VIDEO_EMBED_UNAUTHORIZED
     if (isHttpForbiddenError(error)) {
       return {
         kind: 'forbidden',
@@ -68,6 +61,27 @@ function isShortUserMessage(message: string | undefined): boolean {
     !message.includes('\n') &&
     !message.includes(' at ')
   )
+}
+
+export const VIDEO_EMBED_UNAUTHORIZED: VideoEmbedError = {
+  kind: 'unauthorized',
+  title: 'This video is private',
+  message: 'Sign in to watch it, or ask the owner to make it public.',
+}
+
+export function isEmbedUnauthorizedMessage(
+  message: string | null | undefined,
+): boolean {
+  return message === VIDEO_EMBED_UNAUTHORIZED.message
+}
+
+/** User-facing playback failure. A 401 uses the private-video copy. */
+export function playbackFatalMessage(
+  httpStatus: number | undefined,
+  fallback: string,
+): string {
+  if (httpStatus === 401) return VIDEO_EMBED_UNAUTHORIZED.message
+  return fallback
 }
 
 export const VIDEO_EMBED_MISSING_PROJECT: VideoEmbedError = {

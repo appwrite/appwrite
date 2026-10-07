@@ -12,13 +12,15 @@ import {
   ChevronLeft,
   Loader2,
   Minus,
+  Plus,
   SquareArrowOutUpRight,
 } from 'lucide-react'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { CreateRenditions } from './_components/CreateRenditions'
+import { CreateVideo } from './_components/CreateVideo'
 import { VideoRenditionsProgressHeaderAlert } from './_components/VideoRenditionsProgressHeaderAlert'
 import { CreateSubtitle } from './_components/CreateSubtitle'
 import { VideoStatusBadge } from './_components/VideoStatusBadge'
-import { VideoTermHint } from './_components/VideoTermHint'
 import { VideoThumb } from './_components/VideoThumb'
 import { VideoPreviewEmbedMenu } from './_components/VideoPreviewEmbedMenu'
 import { VideoSectionSelector } from './_components/VideoSectionSelector'
@@ -82,6 +84,7 @@ export function Layout() {
   const navigate = useNavigate()
   const [renditionsOpen, setRenditionsOpen] = useState(false)
   const [captionOpen, setCaptionOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
 
   const activeTab = useMemo<VideoTab>(() => {
     const parts = location.pathname.split('/').filter(Boolean)
@@ -125,6 +128,9 @@ export function Layout() {
   const writeDisabledReason = canWrite
     ? null
     : t("You don't have permission to manage videos.")
+  const createDisabledReason = canWrite
+    ? undefined
+    : t("You don't have permission to create videos.")
 
   useEffect(() => {
     if (showSettings || activeTab !== 'settings') return
@@ -210,11 +216,13 @@ export function Layout() {
   return (
     <VideoDetailActionsContext.Provider value={actions}>
       <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-        <VideoRenditionsProgressHeaderAlert
-          projectId={projectId}
-          videoId={videoId}
-          renditions={renditions}
-        />
+        {activeTab === 'overview' ? null : (
+          <VideoRenditionsProgressHeaderAlert
+            projectId={projectId}
+            videoId={videoId}
+            renditions={renditions}
+          />
+        )}
         <div className="flex min-h-0 min-w-0 flex-1">
           <aside className="hidden w-[248px] shrink-0 flex-col border-e border-border bg-background lg:flex">
             <SubnavHeader
@@ -223,6 +231,9 @@ export function Layout() {
               renditions={renditions}
               timelineCues={timeline?.cues}
               onSwitchVideo={switchVideo}
+              createDisabled={!canWrite}
+              createDisabledReason={createDisabledReason}
+              onCreateVideo={() => setCreateOpen(true)}
             />
             <nav
               aria-label={t('Video sections')}
@@ -268,23 +279,31 @@ export function Layout() {
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             <div className="shrink-0 border-b border-border lg:hidden">
-              <div className="flex items-center gap-2 px-4 pt-3">
-                <BackToVideosLink projectId={projectId} />
-                <VideoSelector
-                  projectId={projectId}
-                  video={video}
-                  onSelect={switchVideo}
-                  className="flex-1"
-                />
-                <VideoStatusBadge status={encodingStatus} />
-                <VideoPreviewEmbedMenu
-                  variant="toolbar"
-                  projectId={projectId}
-                  video={video}
-                  renditions={renditions}
+              <div className="px-4 py-3">
+                <CreateVideoButton
+                  disabled={!canWrite}
+                  disabledReason={createDisabledReason}
+                  onClick={() => setCreateOpen(true)}
                 />
               </div>
-              <div className="px-4 pb-3 pt-2">
+              <div className="border-t border-border" />
+              <div className="space-y-2 px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <BackToVideosLink projectId={projectId} />
+                  <VideoSelector
+                    projectId={projectId}
+                    video={video}
+                    onSelect={switchVideo}
+                    className="flex-1"
+                  />
+                  <VideoStatusBadge status={encodingStatus} />
+                  <VideoPreviewEmbedMenu
+                    variant="toolbar"
+                    projectId={projectId}
+                    video={video}
+                    renditions={renditions}
+                  />
+                </div>
                 <VideoSectionSelector
                   projectId={projectId}
                   videoId={videoId}
@@ -314,7 +333,47 @@ export function Layout() {
         projectId={projectId}
         videoId={videoId}
       />
+      <CreateVideo
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        projectId={projectId}
+      />
     </VideoDetailActionsContext.Provider>
+  )
+}
+
+function CreateVideoButton({
+  disabled,
+  disabledReason,
+  onClick,
+}: {
+  disabled: boolean
+  disabledReason?: string
+  onClick: () => void
+}) {
+  const t = useT()
+  const button = (
+    <Button
+      type="button"
+      variant="brandCta"
+      size="sm"
+      className="h-9 w-full gap-1.5 text-[13px] font-medium"
+      disabled={disabled}
+      onClick={onClick}
+      {...analyticsAttrs('create-video')}
+    >
+      <Plus className="h-4 w-4" />
+      {t('Create video')}
+    </Button>
+  )
+  if (!disabled || !disabledReason) return button
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="block w-full">{button}</span>
+      </TooltipTrigger>
+      <TooltipContent side="right">{disabledReason}</TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -339,12 +398,18 @@ function SubnavHeader({
   renditions,
   timelineCues,
   onSwitchVideo,
+  createDisabled,
+  createDisabledReason,
+  onCreateVideo,
 }: {
   projectId: string
   video: Models.Video
   renditions: Models.VideoRendition[]
   timelineCues?: VideoTimelineCue[]
   onSwitchVideo: (videoId: string) => void
+  createDisabled: boolean
+  createDisabledReason?: string
+  onCreateVideo: () => void
 }) {
   const t = useT()
   return (
@@ -360,6 +425,14 @@ function SubnavHeader({
           {t('Videos')}
         </Link>
       </div>
+      <div className="p-3">
+        <CreateVideoButton
+          disabled={createDisabled}
+          disabledReason={createDisabledReason}
+          onClick={onCreateVideo}
+        />
+      </div>
+      <div className="border-t border-border" />
       <div className="space-y-2 p-3">
         <VideoSelector
           projectId={projectId}
@@ -445,16 +518,9 @@ function SubnavLink({
       )}
     >
       <Icon className="h-3.5 w-3.5 shrink-0" />
-      {tab.id === 'renditions' && tab.term ? (
-        <span className="flex min-w-0 flex-1 items-center gap-1">
-          <span className="min-w-0 truncate text-start">{t(tab.label)}</span>
-          <VideoTermHint term={tab.term} side="right" />
-        </span>
-      ) : (
-        <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
-          {t(tab.label)}
-        </span>
-      )}
+      <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
+        {t(tab.label)}
+      </span>
       <SubnavTrailing
         tab={tab.id}
         renditions={renditions}
@@ -535,7 +601,6 @@ function SubnavTrailing({
     <span
       role="img"
       aria-label={label}
-      title={label}
       className={cn(
         'h-1.5 w-1.5 shrink-0 rounded-full',
         tone === 'success' && 'bg-emerald-500',
@@ -564,12 +629,7 @@ function SubnavTrailing({
           ) : hasFailed ? (
             dot('error', t('Some renditions failed'))
           ) : null}
-          <span
-            className={countClass}
-            title={t('{ready} of {total} ready')
-              .replace('{ready}', String(ready))
-              .replace('{total}', String(total))}
-          >
+          <span className={countClass}>
             {ready}/{total}
           </span>
         </span>

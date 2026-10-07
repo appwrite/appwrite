@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
 import {
   useCreateVideoRenditions,
   useVideoProfiles,
@@ -20,11 +19,10 @@ import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   getDefaultProfileSelection,
-  OutputPicker,
+  OutputFormatField,
   ProfilePicker,
   sortProfilesByPixels,
 } from './RenditionOptions'
-import { VideoTermHint } from './VideoTermHint'
 
 type CreateRenditionsProps = {
   open: boolean
@@ -40,7 +38,7 @@ export function CreateRenditions({
   video,
 }: CreateRenditionsProps) {
   const t = useT()
-  const [output, setOutput] = useState<VideoOutput>(VideoOutput.Hls)
+  const [output, setOutput] = useState<VideoOutput>(VideoOutput.Cmaf)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const { data: profilesData, isLoading: profilesLoading } =
     useVideoProfiles(projectId)
@@ -63,6 +61,11 @@ export function CreateRenditions({
   )
 
   const source = { width: video.width, height: video.height }
+
+  useEffect(() => {
+    if (open) return
+    setOutput(VideoOutput.Cmaf)
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -111,14 +114,12 @@ export function CreateRenditions({
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        <div className="space-y-6 px-6 pb-6 pt-5">
-          <div className="space-y-2.5">
-            <Label className="flex items-center gap-1 text-[13px]">
-              {t('Output')}
-              <VideoTermHint term="output" />
-            </Label>
-            <OutputPicker value={output} onValueChange={setOutput} />
-          </div>
+        <div className="space-y-5 px-6 pb-6 pt-5">
+          <OutputFormatField
+            key={open ? 'open' : 'closed'}
+            value={output}
+            onValueChange={setOutput}
+          />
           <ProfilePicker
             projectId={projectId}
             profiles={profiles}

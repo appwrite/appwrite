@@ -119,7 +119,14 @@ const OverlayContext = createContext(false)
 
 /** Ghost icon control on the video overlay. */
 const OVERLAY_ICON_CLASS =
-  "h-9 w-9 shrink-0 border-0 bg-transparent text-white/90 shadow-none hover:bg-white/10 hover:text-white [&_svg:not([class*='text-'])]:text-white/90"
+  "h-14 w-14 shrink-0 border-0 bg-transparent text-white/90 shadow-none hover:bg-white/15 hover:text-white [&_svg:not([class*='text-'])]:text-white/90"
+
+const OVERLAY_GLYPH_CLASS = 'h-6 w-6'
+const OVERLAY_PLAY_GLYPH_CLASS = 'h-7 w-7'
+
+/** Bottom scrim; opaque at the edge, fades out toward the video. Safe-area padding sits on this layer so the shade reaches the player bottom. */
+const OVERLAY_SCRIM_CLASS =
+  'relative w-full shrink-0 bg-gradient-to-t from-black via-black/55 to-transparent pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-12 sm:pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pt-16'
 
 /** Glass chip for selects and menus on the video overlay. */
 const OVERLAY_CHIP_CLASS =
@@ -144,7 +151,7 @@ const PLAYER_MORE_MENU_CONTENT_CLASS = 'max-h-none overflow-visible'
 
 /** Open toward the video when the ⋯ menu is anchored on the bottom-right. */
 const playerMoreSubMenuContentClass = (overlay: boolean) =>
-  cn('z-[130]', overlay && OVERLAY_MENU_CLASS)
+  cn('relative z-[160]', overlay && OVERLAY_MENU_CLASS)
 
 function ControlsSeparator() {
   const overlay = useContext(OverlayContext)
@@ -169,7 +176,7 @@ function seekThumbCenterX(fraction: number, trackWidth: number): number {
   return fraction * trackWidth
 }
 
-const SEEK_THUMB_PX = 14
+const SEEK_THUMB_PX = 20
 
 /** Keep the scrub thumb inside the track (no half-dot hanging past the edges). */
 function clampSeekThumbCenterX(
@@ -226,6 +233,7 @@ type VideoStreamPlayerControlsProps = {
   hasNewRenditions: boolean
   isLoading?: boolean
   scrubCues?: VideoTimelineCue[]
+  /** Browser fullscreen. The control chrome is always the on-video overlay. */
   fullscreen: boolean
   onToggleFullscreen: () => void
   onOpenInspector?: () => void
@@ -257,7 +265,7 @@ function IconControl({
           variant={overlay ? 'ghost' : 'outline'}
           size="icon"
           className={cn(
-            overlay ? OVERLAY_ICON_CLASS : 'h-9 w-9 shrink-0',
+            overlay ? OVERLAY_ICON_CLASS : 'h-12 w-12 shrink-0',
           )}
           onClick={onClick}
           aria-label={label}
@@ -319,13 +327,13 @@ function VolumeControl({
           }
         }}
       >
-        <Icon className="h-4 w-4" />
+        <Icon className={OVERLAY_GLYPH_CLASS} />
       </IconControl>
       <Slider
         className={cn(
-          'hidden w-[4.5rem] @sm:flex @lg:w-24',
+          'hidden w-32 shrink-0 @sm:flex',
           overlay &&
-            '[&_[data-slot=slider-range]]:bg-white [&_[data-slot=slider-thumb]]:size-3 [&_[data-slot=slider-thumb]]:border-white/40 [&_[data-slot=slider-track]]:h-1 [&_[data-slot=slider-track]]:bg-white/25',
+            '[&_[data-slot=slider-range]]:bg-white [&_[data-slot=slider-thumb]]:size-[18px] [&_[data-slot=slider-thumb]]:border-white/40 [&_[data-slot=slider-track]]:h-2 [&_[data-slot=slider-track]]:bg-white/25',
         )}
         min={0}
         max={1}
@@ -370,7 +378,7 @@ function PlaybackFormatSelect({
       <SelectTrigger
         size="sm"
         className={cn(
-          'h-8 w-[9.5rem] text-[12px]',
+          'h-8 w-[9.5rem] shrink-0 text-[12px]',
           overlay && OVERLAY_CHIP_CLASS,
         )}
         aria-label={t('Stream format')}
@@ -425,6 +433,8 @@ export function VideoStreamPlayerControls({
   className,
 }: VideoStreamPlayerControlsProps) {
   const t = useT()
+  // Same on-video chrome in the console and on the embed player page.
+  const overlay = true
   const seekTrackRef = useRef<HTMLDivElement | null>(null)
   const seekDraggingRef = useRef(false)
   const [trackWidth, setTrackWidth] = useState(0)
@@ -670,7 +680,7 @@ export function VideoStreamPlayerControls({
               aria-valuenow={displayPlayheadTime}
               aria-disabled={!(duration > 0)}
               className={cn(
-                'group/seek relative z-0 h-5 w-full touch-none select-none overflow-visible sm:h-6',
+                'group/seek relative z-0 h-8 w-full touch-none select-none overflow-visible sm:h-9',
                 duration > 0
                   ? 'cursor-pointer'
                   : 'cursor-not-allowed opacity-40',
@@ -707,15 +717,15 @@ export function VideoStreamPlayerControls({
               <div
                 aria-hidden
                 className={cn(
-                  'pointer-events-none absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full transition-[height] duration-150 group-hover/seek:h-1.5 group-focus-within/seek:h-1.5',
-                  fullscreen ? 'bg-white/30' : 'bg-border',
+                  'pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full transition-[height] duration-150 group-hover/seek:h-2.5 group-focus-within/seek:h-2.5',
+                  overlay ? 'bg-white/30' : 'bg-border',
                 )}
               />
               <div
                 aria-hidden
                 className={cn(
-                  'pointer-events-none absolute left-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full transition-[height] duration-150 group-hover/seek:h-1.5 group-focus-within/seek:h-1.5',
-                  fullscreen ? 'bg-white' : 'bg-primary',
+                  'pointer-events-none absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full transition-[height] duration-150 group-hover/seek:h-2.5 group-focus-within/seek:h-2.5',
+                  overlay ? 'bg-white' : 'bg-primary',
                 )}
                 style={{ width: `${playedFraction * 100}%` }}
               />
@@ -736,8 +746,8 @@ export function VideoStreamPlayerControls({
                 >
                   <div
                     className={cn(
-                      'size-3 rounded-full border shadow-sm transition-transform duration-150 group-hover/seek:scale-110 group-focus-within/seek:scale-110 sm:size-3.5',
-                      fullscreen
+                      'size-5 rounded-full border shadow-sm transition-transform duration-150 group-hover/seek:scale-110 group-focus-within/seek:scale-110',
+                      overlay
                         ? 'border-white/50 bg-white shadow-black/40'
                         : 'border-primary/30 bg-primary',
                     )}
@@ -757,7 +767,7 @@ export function VideoStreamPlayerControls({
                     <div
                       className={cn(
                         'overflow-hidden rounded-md border border-border bg-popover shadow-md',
-                        fullscreen &&
+                        overlay &&
                           `${OVERLAY_SURFACE_CLASS} [&_p]:text-white/80`,
                       )}
                     >
@@ -772,7 +782,7 @@ export function VideoStreamPlayerControls({
                     <div
                       className={cn(
                         'size-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-border bg-popover',
-                        fullscreen && 'hidden',
+                        overlay && 'hidden',
                       )}
                       style={{
                         marginLeft: Math.min(
@@ -795,17 +805,17 @@ export function VideoStreamPlayerControls({
   const controlsBody = (
     <div className="space-y-2">
       {seekSlider}
-      <div className="flex min-h-9 flex-wrap items-center gap-x-0.5 gap-y-1.5 sm:gap-x-1">
+      <div className="flex h-14 flex-nowrap items-center gap-x-1 sm:gap-x-2">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
-                    variant={fullscreen ? 'ghost' : 'secondary'}
+                    variant={overlay ? 'ghost' : 'secondary'}
                     size="icon"
                     className={cn(
-                      fullscreen
-                        ? cn(OVERLAY_ICON_CLASS, 'hover:bg-white/15')
-                        : 'h-9 w-9 shrink-0',
+                      overlay
+                        ? cn(OVERLAY_ICON_CLASS, 'hover:bg-white/20')
+                        : 'h-12 w-12 shrink-0',
                     )}
                     onClick={togglePlay}
                     aria-label={playing ? t('Pause') : t('Play')}
@@ -813,26 +823,26 @@ export function VideoStreamPlayerControls({
                     {isLoading ? (
                       <Loader2
                         className={cn(
-                          'h-5 w-5 animate-spin',
-                          fullscreen
+                          'h-6 w-6 animate-spin',
+                          overlay
                             ? 'text-white/70'
                             : 'text-muted-foreground',
                         )}
                       />
                     ) : playing ? (
-                      <Pause className="h-5 w-5" />
+                      <Pause className={OVERLAY_PLAY_GLYPH_CLASS} />
                     ) : (
-                      <Play className="h-5 w-5 fill-current" />
+                      <Play className={cn(OVERLAY_PLAY_GLYPH_CLASS, 'fill-current')} />
                     )}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent
                   className={cn(
                     'text-[12px]',
-                    fullscreen && OVERLAY_TOOLTIP_CLASS,
+                    overlay && OVERLAY_TOOLTIP_CLASS,
                   )}
-                  arrow={!fullscreen}
-                  sideOffset={fullscreen ? OVERLAY_TOOLTIP_OFFSET : undefined}
+                  arrow={!overlay}
+                  sideOffset={overlay ? OVERLAY_TOOLTIP_OFFSET : undefined}
                   container={portalContainer}
                 >
                   {playing ? t('Pause') : t('Play')}
@@ -840,10 +850,10 @@ export function VideoStreamPlayerControls({
               </Tooltip>
 
               <IconControl label={t('Go to start')} onClick={goToStart}>
-                <SkipBack className="h-4 w-4" />
+                <SkipBack className={OVERLAY_GLYPH_CLASS} />
               </IconControl>
               <IconControl label={t('Go to end')} onClick={goToEnd}>
-                <SkipForward className="h-4 w-4" />
+                <SkipForward className={OVERLAY_GLYPH_CLASS} />
               </IconControl>
 
               <ControlsSeparator />
@@ -857,8 +867,8 @@ export function VideoStreamPlayerControls({
 
               <span
                 className={cn(
-                  'min-w-[5.5rem] shrink-0 px-1 text-[13px] font-medium tabular-nums tracking-tight',
-                  fullscreen
+                  'w-[12rem] shrink-0 px-1.5 text-[16px] font-medium tabular-nums tracking-tight',
+                  overlay
                     ? 'text-white/95 [text-shadow:0_1px_2px_rgb(0_0_0/0.5)]'
                     : 'text-foreground',
                 )}
@@ -866,14 +876,14 @@ export function VideoStreamPlayerControls({
                 {formatPlayerClock(displayPlayheadTime)}
                 <span
                   className={
-                    fullscreen ? 'text-white/55' : 'text-muted-foreground'
+                    overlay ? 'text-white/55' : 'text-muted-foreground'
                   }
                 >
                   {' / '}
                 </span>
                 <span
                   className={
-                    fullscreen ? 'text-white/75' : 'text-muted-foreground'
+                    overlay ? 'text-white/75' : 'text-muted-foreground'
                   }
                 >
                   {duration > 0 ? formatPlayerClock(duration) : '--:--'}
@@ -895,17 +905,17 @@ export function VideoStreamPlayerControls({
                   {...menuState('format')}
                 />
 
-                {showQuality ? (
-                  <Select
-                    value={currentLevelValue}
+                <Select
+                    value={showQuality ? currentLevelValue : AUTO_LEVEL}
                     onValueChange={(value) => onSelectLevel(Number(value))}
+                    disabled={!showQuality}
                     {...menuState('quality')}
                   >
                     <SelectTrigger
                       size="sm"
                       className={cn(
-                        'h-8 w-[min(100%,11rem)] text-[12px]',
-                        fullscreen && OVERLAY_CHIP_CLASS,
+                        'h-8 w-44 shrink-0 overflow-hidden text-[12px]',
+                        overlay && OVERLAY_CHIP_CLASS,
                       )}
                       aria-label={t('Quality')}
                     >
@@ -930,7 +940,7 @@ export function VideoStreamPlayerControls({
                     </SelectTrigger>
                     <SelectContent
                       container={portalContainer}
-                      className={cn(fullscreen && OVERLAY_MENU_CLASS)}
+                      className={cn(overlay && OVERLAY_MENU_CLASS)}
                     >
                       <SelectItem value={AUTO_LEVEL} className="text-[12px]">
                         {t('Auto quality')}
@@ -956,21 +966,24 @@ export function VideoStreamPlayerControls({
                       ))}
                     </SelectContent>
                   </Select>
-                ) : null}
 
-                {playerState.subtitleTracks.length > 0 ? (
-                  <Select
-                    value={String(playerState.currentSubtitleTrack)}
+                <Select
+                    value={
+                      playerState.subtitleTracks.length > 0
+                        ? String(playerState.currentSubtitleTrack)
+                        : SUBTITLES_OFF
+                    }
                     onValueChange={(value) =>
                       onSelectSubtitleTrack(Number(value))
                     }
+                    disabled={playerState.subtitleTracks.length === 0}
                     {...menuState('subtitles')}
                   >
                     <SelectTrigger
                       size="sm"
                       className={cn(
-                        'h-8 w-[min(100%,10rem)] text-[12px]',
-                        fullscreen && OVERLAY_CHIP_CLASS,
+                        'h-8 w-40 shrink-0 overflow-hidden text-[12px]',
+                        overlay && OVERLAY_CHIP_CLASS,
                       )}
                       aria-label={t('Subtitles')}
                     >
@@ -978,7 +991,7 @@ export function VideoStreamPlayerControls({
                     </SelectTrigger>
                     <SelectContent
                       container={portalContainer}
-                      className={cn(fullscreen && OVERLAY_MENU_CLASS)}
+                      className={cn(overlay && OVERLAY_MENU_CLASS)}
                     >
                       <SelectItem value={SUBTITLES_OFF} className="text-[12px]">
                         {t('Subtitles off')}
@@ -995,7 +1008,6 @@ export function VideoStreamPlayerControls({
                       ))}
                     </SelectContent>
                   </Select>
-                ) : null}
 
                 {onOpenInspector ? (
                   <>
@@ -1006,7 +1018,7 @@ export function VideoStreamPlayerControls({
                       size="sm"
                       className={cn(
                         'h-8 shrink-0 gap-1.5 text-[12px]',
-                        fullscreen && OVERLAY_CHIP_CLASS,
+                        overlay && OVERLAY_CHIP_CLASS,
                       )}
                       onClick={onOpenInspector}
                     >
@@ -1015,17 +1027,6 @@ export function VideoStreamPlayerControls({
                       <SquareArrowOutUpRight className="h-3 w-3 text-muted-foreground" />
                     </Button>
                   </>
-                ) : null}
-
-                {hasNewRenditions ? (
-                  <span
-                    className={cn(
-                      'text-[12px]',
-                      fullscreen ? 'text-white/80' : 'text-muted-foreground',
-                    )}
-                  >
-                    {t('New renditions are ready.')}
-                  </span>
                 ) : null}
               </div>
 
@@ -1037,7 +1038,7 @@ export function VideoStreamPlayerControls({
                   )}
                 >
                   <IconControl label={t('Reload stream')} onClick={onReload}>
-                    <RefreshCw className="h-4 w-4" />
+                    <RefreshCw className={OVERLAY_GLYPH_CLASS} />
                   </IconControl>
                 </div>
                 <DropdownMenu modal={false} {...menuState('more')}>
@@ -1046,18 +1047,18 @@ export function VideoStreamPlayerControls({
                       <DropdownMenuTrigger asChild>
                         <Button
                           type="button"
-                          variant={fullscreen ? 'ghost' : 'outline'}
+                          variant={overlay ? 'ghost' : 'outline'}
                           size="icon"
                           className={cn(
                             'relative shrink-0',
                             menuOnlyAdvanced ? 'flex' : '@5xl:hidden',
-                            fullscreen
+                            overlay
                               ? OVERLAY_ICON_CLASS
-                              : 'h-9 w-9',
+                              : 'h-12 w-12',
                           )}
                           aria-label={t('More options')}
                         >
-                          <MoreHorizontal className="h-4 w-4" />
+                          <MoreHorizontal className={OVERLAY_GLYPH_CLASS} />
                           {hasNewRenditions ? (
                             <span
                               aria-hidden
@@ -1070,11 +1071,11 @@ export function VideoStreamPlayerControls({
                     <TooltipContent
                       className={cn(
                         'text-[12px]',
-                        fullscreen && OVERLAY_TOOLTIP_CLASS,
+                        overlay && OVERLAY_TOOLTIP_CLASS,
                       )}
-                      arrow={!fullscreen}
+                      arrow={!overlay}
                       sideOffset={
-                        fullscreen ? OVERLAY_TOOLTIP_OFFSET : undefined
+                        overlay ? OVERLAY_TOOLTIP_OFFSET : undefined
                       }
                       container={portalContainer}
                     >
@@ -1086,9 +1087,9 @@ export function VideoStreamPlayerControls({
                     side="top"
                     container={portalContainer}
                     className={cn(
-                      'min-w-[13rem]',
+                      'relative z-[150] min-w-[13rem]',
                       PLAYER_MORE_MENU_CONTENT_CLASS,
-                      fullscreen && OVERLAY_MENU_CLASS,
+                      overlay && OVERLAY_MENU_CLASS,
                     )}
                   >
                     <DropdownMenuSub>
@@ -1103,8 +1104,8 @@ export function VideoStreamPlayerControls({
                         </span>
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent
-                        side={fullscreen ? 'left' : 'right'}
-                        className={playerMoreSubMenuContentClass(fullscreen)}
+                        side={overlay ? 'left' : 'right'}
+                        className={playerMoreSubMenuContentClass(overlay)}
                       >
                         <DropdownMenuRadioGroup
                           value={output}
@@ -1150,8 +1151,8 @@ export function VideoStreamPlayerControls({
                           </span>
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent
-                          side={fullscreen ? 'left' : 'right'}
-                          className={playerMoreSubMenuContentClass(fullscreen)}
+                          side={overlay ? 'left' : 'right'}
+                          className={playerMoreSubMenuContentClass(overlay)}
                         >
                           <DropdownMenuRadioGroup
                             value={currentLevelValue}
@@ -1198,8 +1199,8 @@ export function VideoStreamPlayerControls({
                           </span>
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent
-                          side={fullscreen ? 'left' : 'right'}
-                          className={playerMoreSubMenuContentClass(fullscreen)}
+                          side={overlay ? 'left' : 'right'}
+                          className={playerMoreSubMenuContentClass(overlay)}
                         >
                           <DropdownMenuRadioGroup
                             value={String(playerState.currentSubtitleTrack)}
@@ -1239,8 +1240,8 @@ export function VideoStreamPlayerControls({
                         </span>
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent
-                        side={fullscreen ? 'left' : 'right'}
-                        className={playerMoreSubMenuContentClass(fullscreen)}
+                        side={overlay ? 'left' : 'right'}
+                        className={playerMoreSubMenuContentClass(overlay)}
                       >
                         <DropdownMenuRadioGroup
                           value={subtitleSize}
@@ -1295,9 +1296,9 @@ export function VideoStreamPlayerControls({
                   onClick={onToggleFullscreen}
                 >
                   {fullscreen ? (
-                    <Minimize className="h-4 w-4" />
+                    <Minimize className={OVERLAY_GLYPH_CLASS} />
                   ) : (
-                    <Maximize className="h-4 w-4" />
+                    <Maximize className={OVERLAY_GLYPH_CLASS} />
                   )}
                 </IconControl>
               </div>
@@ -1307,9 +1308,9 @@ export function VideoStreamPlayerControls({
 
   return (
     <PortalContainerContext.Provider value={portalContainer}>
-      <OverlayContext.Provider value={fullscreen}>
-        {fullscreen ? (
-          <div className="w-full shrink-0 bg-gradient-to-t from-black/90 via-black/55 to-transparent pb-1 pt-6 sm:pt-8">
+      <OverlayContext.Provider value={overlay}>
+        {overlay ? (
+          <div className={OVERLAY_SCRIM_CLASS}>
             <div
               className={cn(
                 '@container group/controls relative mx-auto w-full max-w-7xl px-4 sm:px-6',

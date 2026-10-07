@@ -1,10 +1,4 @@
-import {
-  useLayoutEffect,
-  useRef,
-  useState,
-  type DragEvent,
-  type RefObject,
-} from 'react'
+import { useRef, useState, type DragEvent } from 'react'
 import type { Models } from '@appwrite.io/console'
 import {
   AlertCircle,
@@ -17,7 +11,6 @@ import {
   Upload,
   X,
 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
@@ -33,9 +26,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import {
-  StorageFileExplorer,
+  StorageFileExplorerDialog,
   type StorageFileSelection,
-} from '@/components/global/shared/StorageFileExplorer'
+} from '@/components/global/shared/StorageFileExplorerDialog'
 import {
   STORAGE_FILE_ACCEPT_VIDEO_AUDIO,
   storageAcceptToHtmlAccept,
@@ -67,19 +60,19 @@ const SOURCE_TABS: {
 }[] = [
   {
     id: 'upload',
-    title: 'Upload a file',
+    title: 'Upload',
     description: 'Drop a video or audio file from your computer.',
     icon: Upload,
   },
   {
     id: 'storage',
-    title: 'Choose from Storage',
+    title: 'Storage',
     description: 'Use a file that is already in a bucket.',
     icon: FolderOpen,
   },
   {
     id: 'demo',
-    title: 'Try a demo video',
+    title: 'Demo',
     description: 'Import an open movie to explore Videos.',
     icon: Clapperboard,
   },
@@ -116,42 +109,38 @@ export function SourceTabs({
   onValueChange: (value: CreateVideoSourceTab) => void
 }) {
   const t = useT()
+  const selected = SOURCE_TABS.find((tab) => tab.id === value) ?? SOURCE_TABS[0]
   return (
-    <div
-      role="radiogroup"
-      aria-label={t('Source')}
-      className="grid gap-3 sm:grid-cols-3"
-    >
-      {SOURCE_TABS.map((tab) => {
-        const Icon = tab.icon
-        const selected = value === tab.id
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            onClick={() => onValueChange(tab.id)}
-            className={cn(
-              'flex w-full items-start gap-3 rounded-xl border border-border bg-card/50 p-3.5 text-start transition-all hover:bg-card',
-              selected &&
-                'border-primary ring-1 ring-primary/20 hover:border-primary',
-            )}
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-              <Icon className="h-4 w-4" />
-            </span>
-            <span className="min-w-0">
-              <span className="block text-[13px] font-medium text-foreground">
-                {t(tab.title)}
-              </span>
-              <span className="mt-0.5 block text-[12px] leading-snug text-muted-foreground">
-                {t(tab.description)}
-              </span>
-            </span>
-          </button>
-        )
-      })}
+    <div className="min-w-0 space-y-2">
+      <div
+        role="radiogroup"
+        aria-label={t('Source')}
+        className="grid min-w-0 grid-cols-3 gap-1 rounded-lg border border-border bg-muted/30 p-1"
+      >
+        {SOURCE_TABS.map((tab) => {
+          const Icon = tab.icon
+          const active = value === tab.id
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onValueChange(tab.id)}
+              className={cn(
+                'flex h-8 min-w-0 cursor-pointer items-center justify-center gap-1 rounded-md px-1.5 text-[13px] transition-colors sm:gap-1.5 sm:px-2',
+                active
+                  ? 'bg-background font-medium text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <span className="min-w-0 truncate">{t(tab.title)}</span>
+            </button>
+          )
+        })}
+      </div>
+      <p className="text-[12px] text-muted-foreground">{t(selected.description)}</p>
     </div>
   )
 }
@@ -177,14 +166,26 @@ function FileIssue({
   )
 }
 
+export type DestinationBucketControl = {
+  buckets: Models.Bucket[]
+  bucketsLoading: boolean
+  value: string | null
+  onValueChange: (bucketId: string) => void
+  onCreateBucket: () => void
+  createBucketDisabledReason: string | null
+  creatingBucket: boolean
+}
+
 export function UploadPanel({
   file,
   onFileChange,
   bucket,
+  destination,
 }: {
   file: File | null
   onFileChange: (file: File | null) => void
   bucket: Models.Bucket | null | undefined
+  destination: DestinationBucketControl
 }) {
   const t = useT()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -211,7 +212,7 @@ export function UploadPanel({
   const Icon = file?.type.startsWith('audio/') ? FileAudio : FileVideo
 
   return (
-    <div className="space-y-2">
+    <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-card/50">
       <input
         ref={inputRef}
         type="file"
@@ -223,7 +224,7 @@ export function UploadPanel({
         }}
       />
       {file ? (
-        <div className="flex items-center gap-3 rounded-xl border border-border bg-card/50 px-4 py-3">
+        <div className="flex min-w-0 items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
             <Icon className="h-5 w-5" />
           </span>
@@ -235,25 +236,27 @@ export function UploadPanel({
               {[file.type || '-', formatBytes(file.size)].join(' · ')}
             </p>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 text-[12px]"
-            onClick={() => inputRef.current?.click()}
-          >
-            {t('Replace')}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-            aria-label={t('Remove file')}
-            onClick={() => onFileChange(null)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 px-2.5 text-[12px] sm:px-3"
+              onClick={() => inputRef.current?.click()}
+            >
+              {t('Replace')}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+              aria-label={t('Remove file')}
+              onClick={() => onFileChange(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       ) : (
         <button
@@ -266,15 +269,15 @@ export function UploadPanel({
           onDragLeave={() => setDragging(false)}
           onDrop={onDrop}
           className={cn(
-            'flex w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-muted/20 px-6 py-12 text-center transition-colors hover:border-foreground/30 hover:bg-muted/40',
+            'm-3 flex w-[calc(100%-1.5rem)] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/20 px-4 py-6 text-center transition-colors hover:border-foreground/30 hover:bg-muted/40',
             dragging && 'border-primary bg-primary/5',
           )}
         >
-          <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-xs">
-            <Upload className="h-5 w-5" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-xs">
+            <Upload className="h-4 w-4" />
           </span>
           <span>
-            <span className="block text-[14px] font-medium text-foreground">
+            <span className="block text-[13px] font-medium text-foreground">
               {t('Drop a file here or click to browse')}
             </span>
             <span className="mt-1 block text-[12px] text-muted-foreground">
@@ -286,13 +289,20 @@ export function UploadPanel({
           </span>
         </button>
       )}
-      {rejected ? (
-        <p className="flex items-start gap-1.5 text-[12px] text-destructive">
-          <AlertCircle className="mt-px h-3.5 w-3.5 shrink-0" />
-          {t('Choose a video or audio file.')}
-        </p>
+      {rejected || issue ? (
+        <div className="space-y-2 border-t border-border px-4 py-3">
+          {rejected ? (
+            <p className="flex items-start gap-1.5 text-[12px] text-destructive">
+              <AlertCircle className="mt-px h-3.5 w-3.5 shrink-0" />
+              {t('Choose a video or audio file.')}
+            </p>
+          ) : null}
+          {issue ? <FileIssue issue={issue} bucket={bucket} /> : null}
+        </div>
       ) : null}
-      {issue ? <FileIssue issue={issue} bucket={bucket} /> : null}
+      <div className="border-t border-border px-4 py-3">
+        <DestinationBucketField {...destination} />
+      </div>
     </div>
   )
 }
@@ -309,49 +319,37 @@ export function StoragePanel({
   onSelectionChange: (selection: StorageFileSelection | null) => void
 }) {
   const t = useT()
-  const [initialBucketId] = useState(selection?.bucketId ?? null)
-  const explorerRef = useRef<HTMLDivElement>(null)
-  const tailRef = useRef<HTMLDivElement>(null)
-  const explorerHeight = useFillAvailableHeight(explorerRef, tailRef)
+  const [browserOpen, setBrowserOpen] = useState(false)
   const Icon = file?.mimeType?.startsWith('audio/') ? FileAudio : FileVideo
   const isMedia =
     !file || storageFileMatchesAccept(file, STORAGE_FILE_ACCEPT_VIDEO_AUDIO)
   return (
-    <div className="space-y-2">
-      <div
-        ref={explorerRef}
-        style={{ height: explorerHeight }}
-        className="overflow-hidden rounded-xl border border-border bg-card/50"
-      >
-        <StorageFileExplorer
-          projectId={projectId}
-          selection={selection}
-          onSelectionChange={onSelectionChange}
-          accept={STORAGE_FILE_ACCEPT_VIDEO_AUDIO}
-          acceptMismatchTooltip={t('Choose a video or audio file.')}
-          initialBucketId={initialBucketId}
-          keepSelectionOnNavigate
-          aboveWizard
-          variant="inline"
-          className="h-full"
-        />
-      </div>
-      <div ref={tailRef} className="space-y-2">
-        {selection ? (
-          <div className="flex items-center gap-3 rounded-xl border border-border bg-card/50 px-4 py-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-              <Icon className="h-5 w-5" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-medium text-foreground">
-                {file?.name ?? t('Loading file...')}
-              </p>
-              <p className="truncate text-[12px] text-muted-foreground">
-                {file
-                  ? [file.mimeType, formatBytes(file.sizeOriginal)].join(' · ')
-                  : '-'}
-              </p>
-            </div>
+    <div className="min-w-0 space-y-2">
+      {selection ? (
+        <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-card/50 px-3 py-2.5 sm:gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+            <Icon className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[13px] font-medium text-foreground">
+              {file?.name ?? t('Loading file...')}
+            </p>
+            <p className="truncate text-[12px] text-muted-foreground">
+              {file
+                ? [file.mimeType, formatBytes(file.sizeOriginal)].join(' · ')
+                : '-'}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 px-2.5 text-[12px] sm:px-3"
+              onClick={() => setBrowserOpen(true)}
+            >
+              {t('Replace')}
+            </Button>
             <Button
               type="button"
               variant="ghost"
@@ -363,93 +361,66 @@ export function StoragePanel({
               <X className="h-4 w-4" />
             </Button>
           </div>
-        ) : (
-          <p className="text-[12px] text-muted-foreground">
-            {t('The file stays in its bucket. Nothing is copied.')}
-          </p>
-        )}
-        {!isMedia ? (
-          <p className="text-[12px] text-amber-600 dark:text-amber-400">
-            {t(
-              'This file does not look like video or audio. The server may reject it.',
-            )}
-          </p>
-        ) : null}
-      </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setBrowserOpen(true)}
+          className="flex w-full min-w-0 items-center gap-3 rounded-lg border border-dashed border-border bg-muted/20 px-4 py-4 text-start transition-colors hover:border-foreground/30 hover:bg-muted/40"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-xs">
+            <FolderOpen className="h-4 w-4" />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-[13px] font-medium text-foreground">
+              {t('Choose from Storage')}
+            </span>
+            <span className="mt-0.5 block text-[12px] text-muted-foreground">
+              {t('The file stays in its bucket. Nothing is copied.')}
+            </span>
+          </span>
+        </button>
+      )}
+      {!isMedia ? (
+        <p className="text-[12px] text-amber-600 dark:text-amber-400">
+          {t(
+            'This file does not look like video or audio. The server may reject it.',
+          )}
+        </p>
+      ) : null}
+      <StorageFileExplorerDialog
+        open={browserOpen}
+        onOpenChange={setBrowserOpen}
+        projectId={projectId}
+        title="Choose from Storage"
+        description="The file stays in its bucket. Nothing is copied."
+        confirmLabel="Select"
+        accept={STORAGE_FILE_ACCEPT_VIDEO_AUDIO}
+        acceptMismatchTooltip={t('Choose a video or audio file.')}
+        initialBucketId={selection?.bucketId}
+        aboveWizard
+        onConfirm={(next) => onSelectionChange(next)}
+      />
     </div>
   )
-}
-
-const MIN_EXPLORER_HEIGHT = 320
-/** Gap above the tail plus the wizard content's bottom padding (`py-6`). */
-const EXPLORER_BOTTOM_RESERVE = 8 + 24
-
-function getScrollParent(element: HTMLElement): HTMLElement | null {
-  let node = element.parentElement
-  while (node) {
-    const { overflowY } = getComputedStyle(node)
-    if (overflowY === 'auto' || overflowY === 'scroll') return node
-    node = node.parentElement
-  }
-  return null
-}
-
-/** Height that fills the scroll parent from `ref` down, leaving room for `tailRef`. */
-function useFillAvailableHeight(
-  ref: RefObject<HTMLElement | null>,
-  tailRef: RefObject<HTMLElement | null>,
-) {
-  const [height, setHeight] = useState(440)
-
-  useLayoutEffect(() => {
-    const element = ref.current
-    if (!element) return
-    const scroller = getScrollParent(element)
-    if (!scroller) return
-
-    const measure = () => {
-      const offsetTop =
-        element.getBoundingClientRect().top -
-        scroller.getBoundingClientRect().top +
-        scroller.scrollTop
-      const tail = tailRef.current?.offsetHeight ?? 0
-      const next = Math.max(
-        MIN_EXPLORER_HEIGHT,
-        Math.floor(
-          scroller.clientHeight - offsetTop - tail - EXPLORER_BOTTOM_RESERVE,
-        ),
-      )
-      setHeight((prev) => (prev === next ? prev : next))
-    }
-
-    measure()
-    const observer = new ResizeObserver(measure)
-    observer.observe(scroller)
-    if (tailRef.current) observer.observe(tailRef.current)
-    window.addEventListener('resize', measure)
-    return () => {
-      observer.disconnect()
-      window.removeEventListener('resize', measure)
-    }
-  }, [ref, tailRef])
-
-  return height
 }
 
 export function DemoPanel({
   selectedId,
   onSelect,
   bucket,
+  destination,
 }: {
   selectedId: string | null
   onSelect: (demo: DemoVideo) => void
   bucket: Models.Bucket | null | undefined
+  destination: DestinationBucketControl
 }) {
   const t = useT()
   const maxFileSize = bucketMaxFileSize(bucket)
   return (
-    <div className="space-y-3">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-card/50">
+      <div className="overlay-scrollbar flex w-full min-w-0 flex-col gap-3 p-3 sm:flex-row sm:overflow-x-auto sm:p-4">
         {DEMO_VIDEOS.map((demo) => {
           const variant = pickDemoVideoVariant(demo, maxFileSize)
           const selected = selectedId === demo.id
@@ -460,56 +431,52 @@ export function DemoPanel({
               aria-pressed={selected}
               onClick={() => onSelect(demo)}
               className={cn(
-                'group w-full overflow-hidden rounded-xl border border-border bg-card/50 text-start transition-all',
+                'flex w-full flex-col overflow-hidden rounded-lg border text-start transition-colors',
+                selected ? 'border-foreground' : 'border-border',
                 variant
-                  ? 'hover:border-foreground/20 hover:bg-card'
+                  ? 'cursor-pointer hover:bg-muted/40'
                   : 'cursor-not-allowed opacity-50',
-                selected &&
-                  'border-primary ring-1 ring-primary/20 hover:border-primary',
               )}
             >
-              <div className="relative aspect-video overflow-hidden bg-muted">
+              <span className="relative aspect-video w-full bg-muted">
                 <img
                   src={demo.posterUrl}
                   alt=""
                   loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                  className="h-full w-full object-cover"
                 />
-                <span className="absolute bottom-2 end-2 rounded bg-black/75 px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-white">
+                <span className="absolute bottom-2 end-2 rounded bg-black/70 px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-white">
                   {formatVideoDuration(demo.duration)}
+                  {variant ? ` · ${formatBytes(variant.size)}` : ''}
                 </span>
                 {selected ? (
-                  <span className="absolute top-2 end-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                  <span className="absolute start-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-background text-foreground shadow-sm">
                     <Check className="h-3.5 w-3.5" />
                   </span>
                 ) : null}
-              </div>
-              <div className="space-y-1 p-3">
-                <div className="flex items-center gap-2">
-                  <p className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
-                    {demo.title}
-                  </p>
-                  {variant ? (
-                    <Badge variant="info" className="text-[10px] shrink-0">
-                      {variant.quality}
-                    </Badge>
-                  ) : null}
-                </div>
-                <p className="line-clamp-2 text-[12px] leading-snug text-muted-foreground">
-                  {t(demo.description)}
-                </p>
-                <p className="text-[11px] tabular-nums text-muted-foreground/80">
-                  {variant ? formatBytes(variant.size) : '-'} · {demo.license}
-                </p>
-              </div>
+              </span>
+              <span className="min-w-0 px-3 py-2.5">
+                <span className="block truncate text-[13px] font-medium text-foreground">
+                  {demo.title}
+                </span>
+                {variant ? (
+                  <span className="mt-0.5 block truncate text-[12px] text-muted-foreground">
+                    {variant.quality}
+                  </span>
+                ) : null}
+              </span>
             </button>
           )
           return variant ? (
-            <div key={demo.id}>{card}</div>
+            <div key={demo.id} className="w-full sm:w-64 sm:max-w-[calc(100%-2.5rem)] sm:shrink-0">
+              {card}
+            </div>
           ) : (
             <Tooltip key={demo.id}>
               <TooltipTrigger asChild>
-                <span className="block">{card}</span>
+                <span className="block w-full sm:w-64 sm:max-w-[calc(100%-2.5rem)] sm:shrink-0">
+                  {card}
+                </span>
               </TooltipTrigger>
               <TooltipContent className={cn('max-w-xs text-xs', TOOLTIP_Z)}>
                 {t('Too large for the selected bucket.')}
@@ -518,11 +485,14 @@ export function DemoPanel({
           )
         })}
       </div>
-      <p className="text-[12px] leading-relaxed text-muted-foreground">
-        {t(
-          'Open movies by Blender Studio, served from Wikimedia Commons. The file is downloaded in your browser and uploaded to the selected bucket.',
-        )}
-      </p>
+      <div className="space-y-2 border-t border-border px-4 py-3">
+        <p className="text-[12px] leading-relaxed text-muted-foreground">
+          {t(
+            'Open movies by Blender Studio, served from Wikimedia Commons. The file is downloaded in your browser and uploaded to the selected bucket.',
+          )}
+        </p>
+        <DestinationBucketField {...destination} />
+      </div>
     </div>
   )
 }
@@ -566,7 +536,7 @@ export function DestinationBucketField({
     <div className="space-y-2">
       <Label className="text-[13px]">{t('Destination bucket')}</Label>
       {!bucketsLoading && buckets.length === 0 ? (
-        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card/50 px-4 py-3 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <p className="min-w-0 flex-1 text-[12px] text-muted-foreground">
             {t(
               'The source file is stored in a Storage bucket. Create one to continue.',
@@ -592,7 +562,7 @@ export function DestinationBucketField({
             onValueChange={onValueChange}
             disabled={bucketsLoading}
           >
-            <SelectTrigger className="h-9 w-full text-[13px]">
+            <SelectTrigger className="h-9 w-full min-w-0 overflow-hidden text-[13px] [&_[data-slot=select-value]]:min-w-0">
               <SelectValue placeholder={t('Select a bucket')} />
             </SelectTrigger>
             <SelectContent>

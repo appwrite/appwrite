@@ -1,6 +1,6 @@
 /**
  * Create a video end to end: get the source into Storage, register the video,
- * then queue the timeline and renditions.
+ * then queue renditions. Timeline generation is queued by create.
  *
  * Runs outside React so it keeps going when the wizard closes; callers follow
  * along through `onStep`.
@@ -11,10 +11,8 @@ import type { Models, VideoOutput } from '@appwrite.io/console'
 import type { QueryClient } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from '@/lib/react-query/hooks/dependencies'
-import {
-  isVideoMetadataReady,
-  videoKeys,
-} from '@/lib/react-query/hooks/videos'
+import { videoKeys } from '@/lib/react-query/hooks/videos'
+import { translate } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   downloadDemoVideo,
@@ -33,12 +31,7 @@ export type CreateVideoSource =
       variant: DemoVideoVariant
     }
 
-export type CreateVideoStepId =
-  | 'import'
-  | 'upload'
-  | 'create'
-  | 'timeline'
-  | 'renditions'
+export type CreateVideoStepId = 'import' | 'upload' | 'create' | 'renditions'
 
 export type CreateVideoStepStatus =
   | 'pending'
@@ -55,7 +48,6 @@ export type CreateVideoStepState = {
 }
 
 export type CreateVideoOptions = {
-  timeline: boolean
   output: VideoOutput
   profileIds: string[]
 }
@@ -70,13 +62,12 @@ export type CreateVideoResult = {
 /** Steps shown for a source and option set, in run order. */
 export function getCreateVideoSteps(
   source: Pick<CreateVideoSource, 'kind'>,
-  options: Pick<CreateVideoOptions, 'timeline' | 'profileIds'>,
+  options: Pick<CreateVideoOptions, 'profileIds'>,
 ): CreateVideoStepId[] {
   const steps: CreateVideoStepId[] = []
   if (source.kind === 'demo') steps.push('import')
   if (source.kind !== 'storage') steps.push('upload')
   steps.push('create')
-  if (options.timeline) steps.push('timeline')
   if (options.profileIds.length > 0) steps.push('renditions')
   return steps
 }
@@ -91,18 +82,46 @@ export class CreateVideoError extends Error {
   }
 }
 
+const UPLOAD_INCOMPLETE = 'The upload ended before the whole file was stored.'
+
+/**
+ * Copy the file into a new Blob before any preview `<video>` is unmounted.
+ * The preview and the upload otherwise share one read, and tearing the
+ * player down cuts that read off after the first buffered seconds.
+ */
+export async function snapshotFile(file: File): Promise<File> {
+  const buffer = await file.arrayBuffer()
+  if (buffer.byteLength !== file.size) {
+    throw new Error(translate(UPLOAD_INCOMPLETE))
+  }
+  return new File([buffer], file.name, {
+    type: file.type,
+    lastModified: file.lastModified,
+  })
+}
+
 async function uploadSource(
   projectId: string,
   bucketId: string,
   file: File,
   onProgress: (progress: number) => void,
 ): Promise<Models.File> {
-  return await sdk.forProject(projectId).storage.createFile({
+  const uploaded = await sdk.forProject(projectId).storage.createFile({
     bucketId,
     fileId: ID.unique(),
     file,
     onProgress: (event) => onProgress(event.progress),
   })
+  const chunksTotal = Number(uploaded.chunksTotal) || 0
+  const chunksUploaded = Number(uploaded.chunksUploaded) || 0
+  const sizeOriginal = Number(uploaded.sizeOriginal) || 0
+  if (
+    (chunksTotal > 0 && chunksUploaded < chunksTotal) ||
+    (file.size > 0 && sizeOriginal > 0 && sizeOriginal !== file.size)
+  ) {
+    throw new Error(translate(UPLOAD_INCOMPLETE))
+  }
+  return uploaded
 }
 
 export async function runCreateVideoPipeline(input: {
@@ -179,71 +198,43 @@ export async function runCreateVideoPipeline(input: {
   queryClient.setQueryData(videoKeys.detail(projectId, video.$id), video)
   void queryClient.refetchQueries({ queryKey: Dependencies.VIDEOS })
   input.onVideo?.(video)
+  markTimelinePending(projectId, video.$id)
+  void queryClient.invalidateQueries({
+    queryKey: videoKeys.timeline(projectId, video.$id),
+  })
 
   const failedSteps: CreateVideoStepId[] = []
-  const skipRemaining = () => {
-    if (options.timeline) onStep('timeline', { status: 'skipped' })
-    if (options.profileIds.length > 0) {
-      onStep('renditions', { status: 'skipped' })
-    }
-  }
-  if (!options.timeline && options.profileIds.length === 0) {
+  if (options.profileIds.length === 0) {
     return { video, failedSteps, renditionsQueued: 0 }
   }
 
-  // 3. Timeline and renditions are independent; workers probe the source per job.
-  const audioOnly =
-    (video.duration ?? 0) > 0 && !isVideoMetadataReady(video)
-  const timelineTask = options.timeline
-    ? audioOnly
-      ? Promise.resolve(onStep('timeline', { status: 'skipped' }))
-      : runStep('timeline', async () => {
-          markTimelinePending(projectId, video.$id)
-          await queryClient.invalidateQueries({
-            queryKey: videoKeys.timeline(projectId, video.$id),
-          })
-        }).catch(() => {
-          failedSteps.push('timeline')
-        })
-    : Promise.resolve()
-
   let renditionsQueued = 0
-  const renditionsTask =
-    options.profileIds.length > 0
-      ? runStep('renditions', async (onProgress) => {
-          let settled = 0
-          const results = await Promise.allSettled(
-            options.profileIds.map((profileId) =>
-              videos
-                .createRendition({
-                  videoId: video.$id,
-                  profileId,
-                  output: options.output,
-                })
-                .finally(() => {
-                  settled += 1
-                  onProgress((settled / options.profileIds.length) * 100)
-                }),
-            ),
-          )
-          const rejected = results.filter(
-            (r): r is PromiseRejectedResult => r.status === 'rejected',
-          )
-          renditionsQueued = results.length - rejected.length
-          if (rejected.length > 0) throw rejected[0].reason
-        }).then(
-          () => undefined,
-          () => {
-            failedSteps.push('renditions')
-          },
-        )
-      : Promise.resolve()
-
-  await Promise.all([timelineTask, renditionsTask])
-  if (options.profileIds.length > 0) {
-    void queryClient.refetchQueries({
-      queryKey: videoKeys.renditions(projectId, video.$id),
-    })
-  }
+  await runStep('renditions', async (onProgress) => {
+    let settled = 0
+    const results = await Promise.allSettled(
+      options.profileIds.map((profileId) =>
+        videos
+          .createRendition({
+            videoId: video.$id,
+            profileId,
+            output: options.output,
+          })
+          .finally(() => {
+            settled += 1
+            onProgress((settled / options.profileIds.length) * 100)
+          }),
+      ),
+    )
+    const rejected = results.filter(
+      (r): r is PromiseRejectedResult => r.status === 'rejected',
+    )
+    renditionsQueued = results.length - rejected.length
+    if (rejected.length > 0) throw rejected[0].reason
+  }).catch(() => {
+    failedSteps.push('renditions')
+  })
+  void queryClient.refetchQueries({
+    queryKey: videoKeys.renditions(projectId, video.$id),
+  })
   return { video, failedSteps, renditionsQueued }
 }

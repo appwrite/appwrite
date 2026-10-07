@@ -1,28 +1,28 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ID, VideoOutput } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
-import { Check, GalleryHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import type { StorageFileSelection } from '@/components/global/shared/StorageFileExplorer'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useVideoCreateSourcePref } from '@/hooks/use-video-create-source-pref'
 import { sdk } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import { canCreateBucket } from '@/lib/console-access-checks'
 import {
   Dependencies,
+  isVideoRenditionActive,
   useOrganizationPlan,
   useOrganizationScopes,
   useProject,
   useProjectBuckets,
   useVideoProfiles,
+  videoRenditionsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -34,27 +34,23 @@ import {
   CreateVideoError,
   getCreateVideoSteps,
   runCreateVideoPipeline,
+  snapshotFile,
   type CreateVideoResult,
   type CreateVideoSource,
   type CreateVideoStepId,
   type CreateVideoStepState,
 } from '@/lib/videos/create-video-pipeline'
 import { useT } from '@/lib/i18n/translate'
-import { cn } from '@/lib/utils'
 import {
   bucketMaxFileSize,
   DemoPanel,
-  DestinationBucketField,
   getBucketFileIssue,
   SourceTabs,
   StoragePanel,
   UploadPanel,
   type CreateVideoSourceTab,
 } from './CreateVideoSourceStep'
-import {
-  CREATE_VIDEO_STEP_COPY,
-  CreateVideoProgress,
-} from './CreateVideoProgress'
+import { CreateVideoProgress } from './CreateVideoProgress'
 import {
   CreateVideoSummary,
   type CreateVideoSourceMeta,
@@ -62,12 +58,10 @@ import {
 } from './CreateVideoSummary'
 import {
   getDefaultProfileSelection,
-  OutputPicker,
+  OutputFormatField,
   ProfilePicker,
   sortProfilesByPixels,
 } from './RenditionOptions'
-import { VideoOutputBadge } from './VideoOutputBadge'
-import { VideoTermHint } from './VideoTermHint'
 
 interface CreateVideoProps {
   open: boolean
@@ -76,8 +70,6 @@ interface CreateVideoProps {
   /** Preselects a Storage file as the source. */
   initialSource?: StorageFileSelection
 }
-
-const WIZARD_STEPS = ['Source', 'Encoding settings', 'Review'] as const
 
 const SOURCE_KIND_LABEL: Record<CreateVideoSourceTab, string> = {
   upload: 'Uploaded from your computer',
@@ -116,8 +108,11 @@ type RunState = {
   steps: CreateVideoStepId[]
   states: Partial<Record<CreateVideoStepId, CreateVideoStepState>>
   video: Models.Video | null
-  phase: 'running' | 'done' | 'failed'
+  phase: 'running' | 'encoding' | 'done' | 'failed'
   failedSteps: CreateVideoStepId[]
+  profiles: { id: string; name: string }[]
+  /** Renditions the server accepted. Encoding finishes when this many are terminal. */
+  expectedRenditions: number
 }
 
 function stripExtension(fileName: string): string {
@@ -125,7 +120,7 @@ function stripExtension(fileName: string): string {
   return dot > 0 ? fileName.slice(0, dot) : fileName
 }
 
-/** Fullscreen wizard: pick a source, configure encoding, review, then create. */
+/** Fullscreen wizard: pick a source, configure encoding, then watch progress. */
 export function CreateVideo({
   open,
   onOpenChange,
@@ -142,34 +137,6 @@ export function CreateVideo({
   )
 }
 
-function StepHeading({
-  title,
-  description,
-}: {
-  title: string
-  description: string
-}) {
-  return (
-    <div>
-      <h2 className="text-[18px] font-semibold tracking-tight text-foreground">
-        {title}
-      </h2>
-      <p className="mt-1.5 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
-        {description}
-      </p>
-    </div>
-  )
-}
-
-function ReviewRow({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="grid gap-1 px-4 py-3 sm:grid-cols-[160px_minmax(0,1fr)] sm:gap-4">
-      <dt className="text-[12px] text-muted-foreground">{label}</dt>
-      <dd className="min-w-0 text-[13px] text-foreground">{children}</dd>
-    </div>
-  )
-}
-
 function CreateVideoWizard({
   projectId,
   initialSource,
@@ -182,10 +149,12 @@ function CreateVideoWizard({
   const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { source: savedSource, setSource: persistSource } =
+    useVideoCreateSourcePref()
+  const tabTouched = useRef(!!initialSource)
 
-  const [step, setStep] = useState(0)
   const [tab, setTab] = useState<CreateVideoSourceTab>(
-    initialSource ? 'storage' : 'upload',
+    initialSource ? 'storage' : savedSource,
   )
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [storageSelection, setStorageSelection] =
@@ -193,15 +162,27 @@ function CreateVideoWizard({
   const [demoId, setDemoId] = useState<string | null>(null)
   const [bucketId, setBucketId] = useState<string | null>(null)
   const [name, setName] = useState('')
-  const [timeline, setTimeline] = useState(true)
-  const [output, setOutput] = useState<VideoOutput>(VideoOutput.Hls)
+  const [output, setOutput] = useState<VideoOutput>(VideoOutput.Cmaf)
   const [selectedProfiles, setSelectedProfiles] = useState<Set<string>>(
     new Set(),
   )
   const [profilesTouched, setProfilesTouched] = useState(false)
   const [meta, setMeta] = useState<CreateVideoSourceMeta | null>(null)
   const [run, setRun] = useState<RunState | null>(null)
+  const [preparingFile, setPreparingFile] = useState(false)
   const detachedRef = useRef(false)
+  const finishOnceRef = useRef(false)
+
+  useEffect(() => {
+    if (tabTouched.current || initialSource) return
+    setTab(savedSource)
+  }, [savedSource, initialSource])
+
+  const selectTab = (next: CreateVideoSourceTab) => {
+    tabTouched.current = true
+    setTab(next)
+    persistSource(next)
+  }
 
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -330,7 +311,7 @@ function CreateVideoWizard({
           name: demo.title,
           size: demoVariant?.size,
           mimeType: 'video/webm',
-          previewUrl: (demoVariant ?? demo.variants['480p']).url,
+          previewUrl: null,
           posterUrl: demo.posterUrl,
         }
       : null
@@ -358,7 +339,6 @@ function CreateVideoWizard({
           hasVideo: true,
         }
       : null)
-  const audioOnly = effectiveMeta ? !effectiveMeta.hasVideo : false
   const sourceWidth = effectiveMeta?.hasVideo ? effectiveMeta.width : null
   const sourceHeight = effectiveMeta?.hasVideo ? effectiveMeta.height : null
   const sourceSize = useMemo(
@@ -377,8 +357,6 @@ function CreateVideoWizard({
   const selectedProfileList = profiles.filter((p) =>
     selectedProfiles.has(p.$id),
   )
-  const timelineEnabled = timeline && !audioOnly
-
   const uploadIssue =
     tab === 'upload' && uploadFile ? getBucketFileIssue(bucket, uploadFile) : null
   const demoIssue =
@@ -416,14 +394,6 @@ function CreateVideoWizard({
     return null
   }
 
-  const plannedSteps = getCreateVideoSteps(
-    { kind: tab },
-    {
-      timeline: timelineEnabled,
-      profileIds: selectedProfileList.map((p) => p.$id),
-    },
-  )
-
   const openVideo = (videoId: string) =>
     navigate({
       to: '/projects/$projectId/videos/$videoId',
@@ -445,27 +415,40 @@ function CreateVideoWizard({
       return
     }
     toast.success(t('Video created'), { action })
-    if (!detached) {
-      onClose()
-      openVideo(result.video.$id)
-    }
   }
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     const src = pipelineSource()
-    if (!src) return
+    if (!src || preparingFile) return
     const options = {
-      timeline: timelineEnabled,
       output,
       profileIds: selectedProfileList.map((p) => p.$id),
     }
+    let source = src
+    if (src.kind === 'upload') {
+      setPreparingFile(true)
+      try {
+        source = { ...src, file: await snapshotFile(src.file) }
+      } catch (error) {
+        toast.error(getErrorMessage(error))
+        return
+      } finally {
+        setPreparingFile(false)
+      }
+    }
     detachedRef.current = false
+    finishOnceRef.current = false
     setRun({
       steps: getCreateVideoSteps(src, options),
       states: {},
       video: null,
       phase: 'running',
       failedSteps: [],
+      profiles: selectedProfileList.map((profile) => ({
+        id: profile.$id,
+        name: profile.name,
+      })),
+      expectedRenditions: selectedProfileList.length,
     })
     const update = (patch: (prev: RunState) => RunState) =>
       setRun((prev) => (prev ? patch(prev) : prev))
@@ -473,7 +456,7 @@ function CreateVideoWizard({
     runCreateVideoPipeline({
       projectId,
       queryClient,
-      source: src,
+      source,
       name: name.trim() || defaultName,
       options,
       onStep: (id, state) =>
@@ -481,6 +464,16 @@ function CreateVideoWizard({
       onVideo: (video) => update((prev) => ({ ...prev, video })),
     })
       .then((result) => {
+        if (result.renditionsQueued > 0 && !detachedRef.current) {
+          update((prev) => ({
+            ...prev,
+            phase: 'encoding',
+            video: result.video,
+            failedSteps: result.failedSteps,
+            expectedRenditions: result.renditionsQueued,
+          }))
+          return
+        }
         update((prev) => ({
           ...prev,
           phase: 'done',
@@ -501,8 +494,53 @@ function CreateVideoWizard({
       })
   }
 
+  const watchRenditions =
+    !!run?.video &&
+    run.profiles.length > 0 &&
+    (run.phase === 'running' || run.phase === 'encoding')
+  const { data: renditionsData } = useQuery({
+    ...videoRenditionsQueryOptions(projectId, run?.video?.$id),
+    enabled: watchRenditions,
+    refetchInterval: watchRenditions ? 2000 : false,
+  })
+  const liveRenditions = renditionsData?.renditions ?? []
+
+  useEffect(() => {
+    if (run?.phase !== 'encoding' || !run.video || finishOnceRef.current) return
+    if (liveRenditions.length < run.expectedRenditions) return
+    if (liveRenditions.some((rendition) => isVideoRenditionActive(rendition.status))) {
+      return
+    }
+    finishOnceRef.current = true
+    const failed = liveRenditions.some(
+      (rendition) =>
+        rendition.status === 'error' || rendition.status === 'aborted',
+    )
+    const result: CreateVideoResult = {
+      video: run.video,
+      failedSteps: failed ? ['renditions'] : [],
+      renditionsQueued: liveRenditions.length,
+    }
+    setRun((prev) =>
+      prev
+        ? {
+            ...prev,
+            phase: 'done',
+            failedSteps: result.failedSteps,
+          }
+        : prev,
+    )
+    handleFinished(result)
+  }, [liveRenditions, run?.phase, run?.expectedRenditions, run?.video])
+
+  const handleSkip = () => {
+    detachedRef.current = true
+    toast.info(t('Video creation continues in the background.'))
+    onClose()
+  }
+
   const handleClose = () => {
-    if (run?.phase === 'running') {
+    if (run?.phase === 'running' || run?.phase === 'encoding') {
       detachedRef.current = true
       toast.info(t('Video creation continues in the background.'))
     }
@@ -511,69 +549,17 @@ function CreateVideoWizard({
 
   const handleOpenRunVideo = () => {
     if (!run?.video) return
-    if (run.phase === 'running') detachedRef.current = true
+    if (run.phase === 'running' || run.phase === 'encoding') {
+      detachedRef.current = true
+    }
     onClose()
     openVideo(run.video.$id)
   }
 
-  const stepper = (
-    <nav aria-label={t('Steps')}>
-      <ol className="mx-auto grid w-full max-w-6xl grid-cols-3 gap-2 px-6 pt-3 pb-2.5">
-        {WIZARD_STEPS.map((label, index) => {
-          const complete = !!run || index < step
-          const current = !run && index === step
-          const clickable = !run && index < step
-          return (
-            <li key={label} className="min-w-0">
-              <button
-                type="button"
-                disabled={!clickable}
-                aria-current={current ? 'step' : undefined}
-                onClick={() => setStep(index)}
-                className="group flex w-full flex-col gap-2 text-start disabled:cursor-default"
-              >
-                <span className="relative h-1 w-full overflow-hidden rounded-full bg-border">
-                  <span
-                    className={cn(
-                      'absolute inset-y-0 start-0 rounded-full bg-foreground transition-[width] duration-300 ease-out',
-                      complete || current ? 'w-full' : 'w-0',
-                      complete && 'bg-foreground/60 group-hover:bg-foreground',
-                    )}
-                  />
-                </span>
-                <span className="flex min-w-0 items-center gap-1.5 text-[12px]">
-                  {complete ? (
-                    <Check className="h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover:text-foreground" />
-                  ) : (
-                    <span
-                      className={cn(
-                        'shrink-0 font-mono tabular-nums',
-                        current ? 'text-foreground' : 'text-muted-foreground/70',
-                      )}
-                    >
-                      {index + 1}
-                    </span>
-                  )}
-                  <span
-                    className={cn(
-                      'truncate',
-                      current
-                        ? 'font-medium text-foreground'
-                        : complete
-                          ? 'text-muted-foreground group-hover:text-foreground'
-                          : 'text-muted-foreground/70',
-                    )}
-                  >
-                    {t(label)}
-                  </span>
-                </span>
-              </button>
-            </li>
-          )
-        })}
-      </ol>
-    </nav>
-  )
+  const canSkip =
+    !!run?.video &&
+    run.profiles.length > 0 &&
+    (run.phase === 'running' || run.phase === 'encoding')
 
   const footer = run ? (
     run.phase === 'failed' ? (
@@ -584,57 +570,52 @@ function CreateVideoWizard({
         <Button onClick={handleCreate}>{t('Try again')}</Button>
       </>
     ) : (
-      <Button onClick={handleOpenRunVideo} disabled={!run.video}>
-        {t('Open video')}
-      </Button>
+      <>
+        {run.profiles.length > 0 ? (
+          <Button
+            variant="outline"
+            className="min-w-28"
+            onClick={run.phase === 'done' ? handleClose : handleSkip}
+            disabled={run.phase !== 'done' && !canSkip}
+          >
+            {run.phase === 'done' ? t('Close') : t('Skip')}
+          </Button>
+        ) : null}
+        <Button onClick={handleOpenRunVideo} disabled={!run.video}>
+          {t('Open video')}
+        </Button>
+      </>
     )
   ) : (
     <>
-      {step === 0 ? (
-        <Button variant="outline" onClick={handleClose}>
-          {t('Cancel')}
-        </Button>
-      ) : (
-        <Button variant="outline" onClick={() => setStep(step - 1)}>
-          {t('Back')}
-        </Button>
-      )}
-      {step < WIZARD_STEPS.length - 1 ? (
-        <Button
-          onClick={() => setStep(step + 1)}
-          disabled={step === 0 && !sourceReady}
-        >
-          {t('Continue')}
-        </Button>
-      ) : (
-        <Button onClick={handleCreate} disabled={!sourceReady}>
-          {t('Create video')}
-        </Button>
-      )}
+      <Button variant="outline" onClick={handleClose}>
+        {t('Cancel')}
+      </Button>
+      <Button onClick={handleCreate} disabled={!sourceReady || preparingFile}>
+        {t('Create video')}
+      </Button>
     </>
   )
 
-  const content = run ? (
-    <CreateVideoProgress
-      steps={run.steps}
-      states={run.states}
-      phase={run.phase}
-      hasFailedSteps={run.failedSteps.length > 0}
-    />
-  ) : step === 0 ? (
-    <div className="space-y-6">
-      <StepHeading
-        title={t('Choose a source')}
-        description={t(
-          'Every video starts from a file in Storage. Upload one, pick a file you already have, or start with a demo.',
-        )}
-      />
-      <SourceTabs value={tab} onValueChange={setTab} />
+  const destination = {
+    buckets,
+    bucketsLoading,
+    value: bucketId,
+    onValueChange: setBucketId,
+    onCreateBucket: () => createBucketMutation.mutate(),
+    createBucketDisabledReason,
+    creatingBucket: createBucketMutation.isPending,
+  }
+
+  const form = (
+    <div className="min-w-0 space-y-5">
+      <SourceTabs value={tab} onValueChange={selectTab} />
       {tab === 'upload' ? (
         <UploadPanel
           file={uploadFile}
           onFileChange={setUploadFile}
           bucket={bucket}
+          destination={destination}
         />
       ) : tab === 'storage' ? (
         <StoragePanel
@@ -648,67 +629,22 @@ function CreateVideoWizard({
           selectedId={demoId}
           onSelect={(next) => setDemoId(next.id)}
           bucket={bucket}
+          destination={destination}
         />
       )}
-      {tab !== 'storage' ? (
-        <DestinationBucketField
-          buckets={buckets}
-          bucketsLoading={bucketsLoading}
-          value={bucketId}
-          onValueChange={setBucketId}
-          onCreateBucket={() => createBucketMutation.mutate()}
-          createBucketDisabledReason={createBucketDisabledReason}
-          creatingBucket={createBucketMutation.isPending}
-        />
-      ) : null}
-    </div>
-  ) : step === 1 ? (
-    <div className="space-y-6">
-      <StepHeading
-        title={t('Configure encoding')}
-        description={t(
-          'Choose how the video is packaged for adaptive streaming. Encoding starts as soon as the source is ready.',
-        )}
-      />
-      <div className="flex items-start gap-3 rounded-xl border border-border bg-card/50 px-4 py-3.5">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-          <GalleryHorizontal className="h-4 w-4" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <Label
-              htmlFor="create-video-timeline"
-              className="text-[13px] font-medium"
-            >
-              {t('Generate timeline')}
-            </Label>
-            {!audioOnly ? (
-              <Badge variant="info" className="text-[10px] shrink-0">
-                {t('Recommended')}
-              </Badge>
-            ) : null}
-          </div>
-          <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
-            {audioOnly
-              ? t('Audio-only sources have no frames to preview.')
-              : t(
-                  'Sprite sheet thumbnails and a WebVTT track for previews while scrubbing. Also sets the video poster.',
-                )}
-          </p>
-        </div>
-        <Switch
-          id="create-video-timeline"
-          checked={timelineEnabled}
-          disabled={audioOnly}
-          onCheckedChange={setTimeline}
-        />
-      </div>
-      <div className="space-y-2.5">
-        <Label className="flex items-center gap-1 text-[13px]">
-          {t('Output')}
-          <VideoTermHint term="output" />
+      <div className="space-y-2">
+        <Label htmlFor="create-video-name" className="text-[13px]">
+          {t('Name')}{' '}
+          <span className="text-muted-foreground">({t('optional')})</span>
         </Label>
-        <OutputPicker value={output} onValueChange={setOutput} />
+        <Input
+          id="create-video-name"
+          value={name}
+          maxLength={128}
+          onChange={(event) => setName(event.target.value)}
+          placeholder={defaultName || t('Defaults to the file name')}
+          className="h-9 text-[13px]"
+        />
       </div>
       <div className="space-y-2">
         <ProfilePicker
@@ -729,117 +665,47 @@ function CreateVideoWizard({
           )}
         </p>
       </div>
-    </div>
-  ) : (
-    <div className="space-y-6">
-      <StepHeading
-        title={t('Review and create')}
-        description={t(
-          'Name your video and confirm the details. You can rename it later.',
-        )}
-      />
-      <div className="space-y-2">
-        <Label htmlFor="create-video-name" className="text-[13px]">
-          {t('Name')}{' '}
-          <span className="text-muted-foreground">({t('optional')})</span>
-        </Label>
-        <Input
-          id="create-video-name"
-          value={name}
-          maxLength={128}
-          onChange={(event) => setName(event.target.value)}
-          placeholder={defaultName || t('Defaults to the file name')}
-          className="h-9 text-[13px]"
-        />
-      </div>
-      <dl className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card/50">
-        <ReviewRow label={t('Source')}>
-          <span className="block truncate font-medium">{source?.name}</span>
-          <span className="block text-[12px] text-muted-foreground">
-            {t(SOURCE_KIND_LABEL[tab])}
-          </span>
-        </ReviewRow>
-        {tab !== 'storage' && bucket ? (
-          <ReviewRow label={t('Destination bucket')}>{bucket.name}</ReviewRow>
-        ) : null}
-        <ReviewRow label={t('Output')}>
-          <VideoOutputBadge output={output} />
-        </ReviewRow>
-        <ReviewRow label={t('Profiles')}>
-          {selectedProfileList.length > 0 ? (
-            <span className="flex flex-wrap gap-1.5">
-              {selectedProfileList.map((profile) => (
-                <Badge
-                  key={profile.$id}
-                  variant="info"
-                  className="text-[11px] font-mono"
-                >
-                  {profile.name}
-                </Badge>
-              ))}
-            </span>
-          ) : (
-            <span className="text-muted-foreground">
-              {t('No renditions. You can encode later.')}
-            </span>
-          )}
-        </ReviewRow>
-        <ReviewRow label={t('Timeline previews')}>
-          {timelineEnabled ? t('Enabled') : t('Disabled')}
-        </ReviewRow>
-      </dl>
-      <div className="space-y-3">
-        <h3 className="text-[13px] font-semibold text-foreground">
-          {t('What happens next')}
-        </h3>
-        <ol className="space-y-3">
-          {plannedSteps.map((id, index) => (
-            <li key={id} className="flex gap-3">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold tabular-nums text-muted-foreground">
-                {index + 1}
-              </span>
-              <div className="min-w-0">
-                <p className="text-[13px] font-medium text-foreground">
-                  {t(CREATE_VIDEO_STEP_COPY[id].title)}
-                </p>
-                <p className="text-[12px] text-muted-foreground">
-                  {t(CREATE_VIDEO_STEP_COPY[id].description)}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </div>
+      <OutputFormatField value={output} onValueChange={setOutput} />
     </div>
   )
 
   return (
-    <>
-      <WizardLayout
-        title={t('Create video')}
-        fullscreen
-        onClose={handleClose}
-        footerAlign="right"
-        maxWidth="max-w-6xl"
-        headerBottom={stepper}
-        skipInitialFieldFocus={step !== 2 || !!run}
-        initialFocusKey={step}
-        sidebar={
-          <CreateVideoSummary
-            source={source}
-            meta={effectiveMeta}
-            onMeta={setMeta}
-            bucketName={tab !== 'storage' ? (bucket?.name ?? null) : null}
-            showEncoding={step > 0 || !!run}
-            output={output}
-            profileNames={selectedProfileList.map((p) => p.name)}
-            timeline={timelineEnabled}
-          />
-        }
-        footer={footer}
-      >
-        {content}
-      </WizardLayout>
-    </>
+    <WizardLayout
+      title={t('Create video')}
+      fullscreen
+      onClose={handleClose}
+      footerAlign="right"
+      maxWidth="max-w-6xl"
+      useSidebar={!run}
+      skipInitialFieldFocus
+      contentClassName={
+        run ? 'mx-auto w-full min-w-0 max-w-xl' : 'min-w-0'
+      }
+      sidebar={
+        <CreateVideoSummary
+          source={source}
+          meta={effectiveMeta}
+          onMeta={setMeta}
+          bucketName={tab !== 'storage' ? (bucket?.name ?? null) : null}
+          showEncoding
+          output={output}
+          profileNames={selectedProfileList.map((p) => p.name)}
+        />
+      }
+      footer={footer}
+    >
+      {run ? (
+        <CreateVideoProgress
+          steps={run.steps}
+          states={run.states}
+          phase={run.phase}
+          hasFailedSteps={run.failedSteps.length > 0}
+          profiles={run.profiles}
+          renditions={liveRenditions}
+        />
+      ) : (
+        form
+      )}
+    </WizardLayout>
   )
 }

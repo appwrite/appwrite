@@ -22,5 +22,8 @@ export function isSelfHostedAllowedPath(
   if (isConsoleAreaPath(path)) return true
   if (path === '/debug' || path.startsWith('/debug/')) return true
   if (path === '/reset') return true
+  // Public embed player. Signed-in visitors must stay here; bouncing them to
+  // sign-in sends them straight back into the console.
+  if (path === '/player' || path.startsWith('/player/')) return true
   return false
 }

@@ -110,8 +110,8 @@ export function View() {
     <VideoPage
       title={t('Timeline')}
       term="timeline"
-      createLabel={timeline ? t('Regenerate timeline') : t('Generate timeline')}
-      onCreate={generate}
+      createLabel={timeline ? undefined : t('Generate timeline')}
+      onCreate={timeline ? undefined : generate}
       createDisabled={generating || Boolean(generateDisabledReason)}
       createDisabledTooltip={generateDisabledReason ?? undefined}
     >

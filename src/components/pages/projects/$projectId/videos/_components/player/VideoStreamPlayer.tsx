@@ -8,25 +8,22 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import type { Models } from '@appwrite.io/console'
-import { Info, Loader2, Pause, Play, SquareArrowOutUpRight } from 'lucide-react'
+import { Pause, Play, SquareArrowOutUpRight } from 'lucide-react'
 import { sdk } from '@/lib/appwrite/sdk'
+import { isEmbedUnauthorizedMessage } from '@/lib/videos/embed-player-errors'
 import { applyVideoStreamAccess } from '@/lib/videos/video-stream-access'
+import { EmbedUnauthorized } from '@/components/pages/player/EmbedUnauthorized'
 import {
   groupReadyRenditionIds,
   resolvePreferredPlaybackOutput,
 } from '@/lib/videos/preferred-playback-output'
 import { Button } from '@/components/ui/button'
-import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
 import { AppwriteMarkIcon } from '@/components/global/shared/AppwriteMarkIcon'
 import {
-  getVideoEncodingStatus,
   isVideoMetadataReady,
   isVideoRenditionActive,
-  parseVideoProgress,
   useVideoTimeline,
-  videoSourceHasAudio,
 } from '@/lib/react-query/hooks/videos'
-import { VideoFormatLabel } from '../VideoOutputBadge'
 import {
   getVideoPlayerViewportStyle,
   resolveVideoViewportAspect,
@@ -61,8 +58,6 @@ export interface VideoStreamPlayerProps {
   projectId: string
   video: Models.Video
   renditions: Models.VideoRendition[]
-  /** Rendition progress card above the player. */
-  showProcessing?: boolean
   /** Overview layout: slightly shorter max height. */
   variant?: 'default' | 'featured'
   /** Full-viewport embed player for end users (`/player/:videoId`). */
@@ -75,7 +70,6 @@ export function VideoStreamPlayer({
   projectId,
   video,
   renditions,
-  showProcessing = false,
   variant = 'default',
   layout = 'console',
   initialStartSeconds,
@@ -216,15 +210,24 @@ export function VideoStreamPlayer({
     )
   }, [inspectorContainer, video.name, t])
 
+  const hasStorageFile = Boolean(video.bucketId && video.fileId)
+
   const playerSource: PlayerSource | null = useMemo(() => {
-    if (!activeManifestUrl) {
+    const adaptiveReady =
+      (output === 'hls' && readyIds.hls.length > 0) ||
+      (output === 'dash' && readyIds.dash.length > 0) ||
+      (output === 'cmaf' && readyIds.cmaf.length > 0)
+    if (adaptiveReady && activeManifestUrl) {
+      return {
+        url: activeManifestUrl,
+        type: output === 'dash' ? 'dash' : 'hls',
+      }
+    }
+    if (hasStorageFile) {
       return { url: sourceFileUrl, type: 'file' }
     }
-    if (output === 'dash') {
-      return { url: activeManifestUrl, type: 'dash' }
-    }
-    return { url: activeManifestUrl, type: 'hls' }
-  }, [activeManifestUrl, sourceFileUrl, output])
+    return null
+  }, [activeManifestUrl, hasStorageFile, output, readyIds, sourceFileUrl])
 
   useEffect(() => {
     setLoadedKey(outputReadyKey)
@@ -414,10 +417,6 @@ export function VideoStreamPlayer({
   } | null>(null)
 
   useEffect(() => {
-    setMediaPixelSize(null)
-  }, [playerSource?.url, reloadToken])
-
-  useEffect(() => {
     const el = videoRef.current
     if (!el) return
 
@@ -438,11 +437,11 @@ export function VideoStreamPlayer({
     }
   }, [playerSource?.url, reloadToken, state.loadStartedAt])
 
-  // `cqh` is the visible height of the VideoPage scroll area; the offset
-  // reserves room for the controls bar so the whole player stays on screen.
+  // `cqh` is the visible height of the VideoPage scroll area. Controls sit on
+  // the picture, so the frame can use almost the full area.
   const playerMaxHeight = featured
-    ? 'max(200px, min(800px, calc(100cqh - 130px)))'
-    : 'max(240px, min(800px, calc(100cqh - 120px)))'
+    ? 'max(240px, min(800px, calc(100cqh - 32px)))'
+    : 'max(240px, min(800px, calc(100cqh - 24px)))'
   const viewportAspect = useMemo(() => {
     if (mediaPixelSize) {
       return mediaPixelSize
@@ -457,8 +456,12 @@ export function VideoStreamPlayer({
     () =>
       embed
         ? { width: '100%', height: '100%', maxHeight: 'none' }
-        : getVideoPlayerViewportStyle(viewportAspect, playerMaxHeight),
-    [embed, viewportAspect, playerMaxHeight],
+        : getVideoPlayerViewportStyle(
+            viewportAspect,
+            playerMaxHeight,
+            featured ? 'width' : 'height',
+          ),
+    [embed, featured, viewportAspect, playerMaxHeight],
   )
 
   const audioOnly =
@@ -504,7 +507,7 @@ export function VideoStreamPlayer({
   useEffect(() => {
     const container = playerContainerRef.current
     const video = videoRef.current
-    if ((!fullscreen && !overlayControls) || !container || !video) {
+    if (!container || !video) {
       setControlsVisible(true)
       return
     }
@@ -527,7 +530,7 @@ export function VideoStreamPlayer({
       video.removeEventListener('play', revealControls)
       video.removeEventListener('pause', revealControls)
     }
-  }, [fullscreen, overlayControls, revealControls])
+  }, [revealControls])
 
   const toggleFullscreen = () => {
     if (document.fullscreenElement) {
@@ -552,18 +555,18 @@ export function VideoStreamPlayer({
   )
   const timelineCues = timelineQuery.data?.cues
 
-  const activeRenditions = renditions.filter((r) =>
-    isVideoRenditionActive(r.status),
-  )
-  const failedRenditions = renditions.filter((r) => r.status === 'error')
-
-  const hasAdaptiveReady =
-    readyIds.hls.length + readyIds.cmaf.length + readyIds.dash.length > 0
-
-  const sourceMissingAudio =
-    getVideoEncodingStatus(renditions) === 'ready' &&
-    (video.duration ?? 0) > 0 &&
-    !videoSourceHasAudio(video)
+  let emptyPlaybackMessage: string | null = null
+  if (!playerSource) {
+    if (renditions.some((rendition) => isVideoRenditionActive(rendition.status))) {
+      emptyPlaybackMessage = t(
+        'Renditions are still encoding. Playback starts when one is ready.',
+      )
+    } else if (renditions.length > 0) {
+      emptyPlaybackMessage = t('No renditions are ready to play.')
+    } else {
+      emptyPlaybackMessage = t('This video has no source to play.')
+    }
+  }
 
   const outputOptions: Array<{
     id: PlaybackOutput
@@ -597,15 +600,10 @@ export function VideoStreamPlayer({
     state.firstFrameAt == null &&
     state.loadStartedAt != null
 
-  /** Overlay-style controls (embed page or browser fullscreen). Must not remount `<video>`. */
-  const controlsInOverlay = embed || fullscreen
-  const menuOnlyAdvanced = embed || fullscreen
+  /** Overlay-style controls, same chrome as the embed player page. */
+  const menuOnlyAdvanced = true
 
   useEffect(() => {
-    if (!controlsInOverlay) {
-      setSubtitleInsetPx(VIDEO_SUBTITLE_INSET_CONSOLE_PX)
-      return
-    }
     const node = controlsRef.current
     if (!node) {
       setSubtitleInsetPx(72)
@@ -628,7 +626,7 @@ export function VideoStreamPlayer({
     const ro = new ResizeObserver(measure)
     ro.observe(node)
     return () => ro.disconnect()
-  }, [controlsInOverlay, embed, fullscreen, state.fatalError])
+  }, [embed, fullscreen, state.fatalError])
 
   const videoSubtitleStyle = useMemo(
     (): CSSProperties =>
@@ -654,19 +652,18 @@ export function VideoStreamPlayer({
       hasNewRenditions={hasNewRenditions}
       isLoading={streamLoading}
       scrubCues={timelineCues}
-      fullscreen={controlsInOverlay}
+      fullscreen={fullscreen}
       onToggleFullscreen={toggleFullscreen}
       onOpenInspector={openInspector}
       menuOnlyAdvanced={menuOnlyAdvanced}
       portalContainer={
-        controlsInOverlay
+        embed || fullscreen
           ? (playerContainerRef.current ?? undefined)
           : undefined
       }
-      className={cn(
-        controlsInOverlay &&
-          (controlsVisible ? 'pointer-events-auto' : 'pointer-events-none'),
-      )}
+      className={
+        controlsVisible ? 'pointer-events-auto' : 'pointer-events-none'
+      }
     />
   ) : null
 
@@ -696,73 +693,42 @@ export function VideoStreamPlayer({
     />
   )
 
-  const processingCard =
-    showProcessing &&
-    !embed &&
-      (activeRenditions.length > 0 || failedRenditions.length > 0) ? (
-        <div className="rounded-xl border border-border bg-card/50 px-6 py-4">
-          <div className="flex items-center gap-2">
-            {activeRenditions.length > 0 ? (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            ) : (
-              <Info className="h-4 w-4 text-muted-foreground" />
-            )}
-            <h3 className="text-[13px] font-semibold text-foreground">
-              {activeRenditions.length > 0
-                ? t('Processing renditions')
-                : t('Some renditions failed')}
-            </h3>
-          </div>
-          <div className="mt-3 space-y-2">
-            {[...activeRenditions, ...failedRenditions].map((rendition) => (
-              <div
-                key={rendition.$id}
-                className="grid grid-cols-[minmax(0,160px)_1fr] items-center gap-3"
-              >
-                <VideoFormatLabel
-                  format={rendition.output}
-                  className="min-w-0 truncate font-mono text-[12px]"
-                >
-                  {rendition.output.toUpperCase()} {rendition.height}p
-                </VideoFormatLabel>
-                {rendition.status === 'error' ? (
-                  <span className="text-[12px] text-red-600 dark:text-red-400">
-                    {t('Failed')}
-                  </span>
-                ) : (
-                  <ProgressBarRow
-                    value={parseVideoProgress(rendition.progress)}
-                    className="mb-0"
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null
+  const frameMessage = emptyPlaybackMessage ? (
+    <div className="absolute inset-0 flex items-center justify-center bg-black px-6 text-center">
+      <p className="max-w-sm text-[13px] leading-relaxed text-white/75">
+        {emptyPlaybackMessage}
+      </p>
+    </div>
+  ) : state.fatalError ? (
+    <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-6 text-center">
+      <p className="max-w-md text-[13px] text-white/80">
+        {isEmbedUnauthorizedMessage(state.fatalError)
+          ? t(state.fatalError)
+          : state.fatalError}
+      </p>
+    </div>
+  ) : null
+
+  if (embed && isEmbedUnauthorizedMessage(state.fatalError)) {
+    return <EmbedUnauthorized className="h-full" />
+  }
+
+  const frameVisible = state.firstFrameAt != null && !reloading
+  const videoFrameClass = cn(
+    'transition-opacity duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+    frameVisible ? 'opacity-100' : 'opacity-0',
+  )
 
   return (
     <div
       className={cn(
         'min-w-0 max-w-full',
-        embed ? 'flex h-full min-h-0 flex-col' : 'space-y-4',
+        featured && !fullscreen && 'w-full',
+        embed
+          ? 'animate-player-fade-in flex h-full min-h-0 flex-col'
+          : 'space-y-4',
       )}
     >
-      {processingCard}
-
-      {!embed && sourceMissingAudio ? (
-        <div className="rounded-xl border border-border bg-card/50 px-4 py-3 sm:px-6">
-          <div className="flex gap-2">
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-            <p className="text-[13px] text-muted-foreground">
-              {t(
-                'This video has no detected audio track after prepare. Adaptive streams and the original file will play without sound. Re-upload a file with an audio track or check the source in storage.',
-              )}
-            </p>
-          </div>
-        </div>
-      ) : null}
-
       <div
         ref={playerContainerRef}
         className={cn(
@@ -776,7 +742,8 @@ export function VideoStreamPlayer({
       >
         <div
           className={cn(
-            'flex w-full min-w-0 justify-center',
+            'flex w-full min-w-0',
+            featured && !fullscreen ? 'justify-stretch' : 'justify-center',
             embed && 'min-h-0 flex-1',
             (fullscreen || overlayControls) && 'absolute inset-0',
           )}
@@ -790,9 +757,7 @@ export function VideoStreamPlayer({
                 ref={videoRef}
                 className={cn(
                   'video-stream-player size-full object-contain outline-none',
-                  reloading
-                    ? 'opacity-0'
-                    : 'opacity-100 transition-opacity duration-700 ease-out',
+                  videoFrameClass,
                   !controlsVisible ? 'cursor-none' : 'cursor-pointer',
                 )}
                 style={videoSubtitleStyle}
@@ -830,18 +795,23 @@ export function VideoStreamPlayer({
                   </div>
                 </div>
               ) : null}
-              {state.fatalError ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-6 text-center">
-                  <p className="max-w-md text-[13px] text-white/80">
-                    {state.fatalError}
-                  </p>
+              {frameMessage}
+              {playerControls ? (
+                <div
+                  ref={controlsRef}
+                  className={cn(
+                    'pointer-events-none absolute inset-x-0 bottom-0 z-10 transition duration-300',
+                    !controlsVisible && 'translate-y-2 opacity-0',
+                  )}
+                >
+                  {playerControls}
                 </div>
               ) : null}
             </div>
           ) : (
             <div
               className={cn(
-                'flex min-w-0 max-w-full flex-col overflow-hidden',
+                'animate-player-fade-in relative flex min-w-0 max-w-full flex-col overflow-hidden',
                 fullscreen
                   ? 'size-full min-h-0'
                   : 'rounded-xl border border-border shadow-sm',
@@ -869,12 +839,8 @@ export function VideoStreamPlayer({
                   ref={videoRef}
                   className={cn(
                     'video-stream-player size-full object-contain outline-none',
-                    reloading
-                      ? 'opacity-0'
-                      : 'opacity-100 transition-opacity duration-700 ease-out',
-                    fullscreen && !controlsVisible
-                      ? 'cursor-none'
-                      : 'cursor-pointer',
+                    videoFrameClass,
+                    !controlsVisible ? 'cursor-none' : 'cursor-pointer',
                   )}
                   style={videoSubtitleStyle}
                   playsInline
@@ -911,19 +877,19 @@ export function VideoStreamPlayer({
                     </div>
                   </div>
                 ) : null}
-                {state.fatalError ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-6 text-center">
-                    <p className="max-w-md text-[13px] text-white/80">
-                      {state.fatalError}
-                    </p>
+                {frameMessage}
+                {playerControls ? (
+                  <div
+                    ref={controlsRef}
+                    className={cn(
+                      'pointer-events-none absolute inset-x-0 bottom-0 z-10 transition duration-300',
+                      !controlsVisible && 'translate-y-2 opacity-0',
+                    )}
+                  >
+                    {playerControls}
                   </div>
                 ) : null}
               </div>
-              {playerControls && !controlsInOverlay ? (
-                <div className="shrink-0 border-t border-border bg-background py-2">
-                  {playerControls}
-                </div>
-              ) : null}
             </div>
           )}
         </div>
@@ -936,17 +902,6 @@ export function VideoStreamPlayer({
             )}
           >
             <AppwriteMarkIcon className="size-5" />
-          </div>
-        ) : null}
-        {controlsInOverlay && playerControls ? (
-          <div
-            ref={controlsRef}
-            className={cn(
-              'pointer-events-none absolute inset-x-0 bottom-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition duration-300 sm:pb-[max(1.25rem,env(safe-area-inset-bottom))]',
-              !controlsVisible && 'translate-y-2 opacity-0',
-            )}
-          >
-            {playerControls}
           </div>
         ) : null}
       </div>
@@ -976,19 +931,6 @@ export function VideoStreamPlayer({
             {t('Close')}
           </Button>
         </div>
-      ) : null}
-
-      {!embed && output === 'source' ? (
-        <p className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-          <Info className="h-3.5 w-3.5 shrink-0" />
-          {hasAdaptiveReady
-            ? t(
-                'Playing the original Storage file. Switch to HLS, DASH, or CMAF to test adaptive streaming.',
-              )
-            : t(
-                'Playing the original Storage file. Create HLS, DASH, or CMAF renditions to test adaptive streaming.',
-              )}
-        </p>
       ) : null}
 
       {inspectorContainer

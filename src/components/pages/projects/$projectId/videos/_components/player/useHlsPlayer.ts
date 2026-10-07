@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import type Hls from 'hls.js'
 import type { ErrorData, Level, LevelDetails, MediaPlaylist } from 'hls.js'
+import { playbackFatalMessage } from '@/lib/videos/embed-player-errors'
 import {
   applyVideoStreamAccess,
   type VideoStreamAccess,
@@ -383,13 +384,17 @@ export function useHlsPlayer(
           detail: describeError(data),
         })
         if (!data.fatal || !hls) return
+        const fatalError = playbackFatalMessage(
+          data.response?.code,
+          describeError(data),
+        )
         if (data.type === HlsClass.ErrorTypes.NETWORK_ERROR) {
-          setState((prev) => ({ ...prev, fatalError: describeError(data) }))
-          hls.startLoad()
+          setState((prev) => ({ ...prev, fatalError }))
+          if (data.response?.code !== 401) hls.startLoad()
         } else if (data.type === HlsClass.ErrorTypes.MEDIA_ERROR) {
           hls.recoverMediaError()
         } else {
-          setState((prev) => ({ ...prev, fatalError: describeError(data) }))
+          setState((prev) => ({ ...prev, fatalError }))
           hls.destroy()
           hlsRef.current = null
         }

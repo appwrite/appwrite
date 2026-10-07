@@ -1,12 +1,17 @@
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, ChevronDown } from 'lucide-react'
 import { VideoOutput } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { VIDEO_OUTPUTS } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { formatBitrate, formatResolution } from '@/lib/utils/video-format'
@@ -17,6 +22,18 @@ const OUTPUT_DESCRIPTIONS: Record<VideoOutput, string> = {
   [VideoOutput.Hls]: 'MPEG-TS segments. Plays natively on Safari and iOS.',
   [VideoOutput.Dash]: 'MPEG-DASH with fragmented MP4 segments.',
   [VideoOutput.Cmaf]: 'Fragmented MP4 served as both HLS and DASH.',
+}
+
+const OUTPUT_PICKER_ORDER: VideoOutput[] = [
+  VideoOutput.Cmaf,
+  VideoOutput.Hls,
+  VideoOutput.Dash,
+]
+
+const OUTPUT_SUMMARY: Record<VideoOutput, string> = {
+  [VideoOutput.Cmaf]: 'Serves both HLS and DASH.',
+  [VideoOutput.Hls]: 'Plays natively on Safari and iOS.',
+  [VideoOutput.Dash]: 'Not supported natively on Safari.',
 }
 
 export function sortProfilesByPixels(
@@ -61,6 +78,49 @@ export function getDefaultProfileSelection(
   )
 }
 
+/** CMAF by default. HLS and DASH stay behind Advanced settings. */
+export function OutputFormatField({
+  value,
+  onValueChange,
+}: {
+  value: VideoOutput
+  onValueChange: (value: VideoOutput) => void
+}) {
+  const t = useT()
+  const [open, setOpen] = useState(false)
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <VideoOutputBadge output={value} className="shrink-0" />
+          <span className="min-w-0 truncate text-[12px] text-muted-foreground">
+            {t(OUTPUT_SUMMARY[value])}
+          </span>
+          <VideoTermHint term="output" />
+        </div>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="inline-flex shrink-0 items-center gap-1 self-start text-[12px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline sm:self-auto"
+          >
+            <ChevronDown
+              className={cn(
+                'h-3.5 w-3.5 transition-transform',
+                open && 'rotate-180',
+              )}
+            />
+            {t('Advanced settings')}
+          </button>
+        </CollapsibleTrigger>
+      </div>
+      <CollapsibleContent className="pt-2.5">
+        <OutputPicker value={value} onValueChange={onValueChange} />
+      </CollapsibleContent>
+    </Collapsible>
+  )
+}
+
 export function OutputPicker({
   value,
   onValueChange,
@@ -76,12 +136,12 @@ export function OutputPicker({
       aria-label={t('Output')}
       className="gap-0 divide-y divide-border overflow-hidden rounded-lg border border-border"
     >
-      {VIDEO_OUTPUTS.map((output) => (
+      {OUTPUT_PICKER_ORDER.map((output) => (
         <Label
           key={output}
           htmlFor={`video-output-${output}`}
           className={cn(
-            'flex cursor-pointer items-center gap-3 px-4 py-3 font-normal leading-5 transition-colors hover:bg-muted/40',
+            'flex min-w-0 cursor-pointer items-center gap-3 px-3 py-3 font-normal leading-5 transition-colors hover:bg-muted/40 sm:px-4',
             value === output && 'bg-muted/40',
           )}
         >
@@ -148,9 +208,9 @@ export function ProfilePicker({
   }
 
   return (
-    <div className="space-y-2.5">
-      <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-1 text-[13px]">
+    <div className="min-w-0 space-y-2.5">
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <Label className="flex min-w-0 items-center gap-1 text-[13px]">
           {t('Profiles')}
           <VideoTermHint term="profile" />
         </Label>
@@ -158,14 +218,15 @@ export function ProfilePicker({
           to="/projects/$projectId/videos/profiles"
           params={{ projectId }}
           target={openManageInNewTab ? '_blank' : undefined}
-          className="text-[12px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          className="shrink-0 text-[12px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
         >
           {t('Manage profiles')}
         </Link>
       </div>
       <div className="overflow-hidden rounded-lg border border-border">
-        <div className="flex items-center gap-4 border-b border-border bg-muted/30 px-4 py-2.5 text-[12px] font-medium leading-5 text-muted-foreground">
+        <div className="flex items-center gap-3 border-b border-border bg-muted/30 px-3 py-2.5 text-[12px] font-medium leading-5 text-muted-foreground sm:gap-4 sm:px-4">
           <Checkbox
+            className="shrink-0"
             aria-label={t('Select all')}
             checked={
               allSelected ? true : selected.size > 0 ? 'indeterminate' : false
@@ -174,9 +235,15 @@ export function ProfilePicker({
             onCheckedChange={toggleAll}
           />
           <span className="min-w-0 flex-1">{t('Profile')}</span>
-          <span className="w-[96px] shrink-0 text-end">{t('Resolution')}</span>
-          <span className="w-[80px] shrink-0 text-end">{t('Video')}</span>
-          <span className="w-[72px] shrink-0 text-end">{t('Audio')}</span>
+          <span className="hidden w-[96px] shrink-0 text-end sm:block">
+            {t('Resolution')}
+          </span>
+          <span className="hidden w-[80px] shrink-0 text-end sm:block">
+            {t('Video')}
+          </span>
+          <span className="hidden w-[72px] shrink-0 text-end sm:block">
+            {t('Audio')}
+          </span>
         </div>
         {loading ? (
           <p className="px-3 py-6 text-center text-[13px] text-muted-foreground">
@@ -196,7 +263,7 @@ export function ProfilePicker({
                 <label
                   key={profile.$id}
                   className={cn(
-                    'flex items-center gap-4 px-4 py-3 leading-5 transition-colors',
+                    'flex items-start gap-3 px-3 py-3 leading-5 transition-colors sm:items-center sm:gap-4 sm:px-4',
                     encoded
                       ? 'cursor-not-allowed'
                       : 'cursor-pointer hover:bg-muted/40',
@@ -204,38 +271,55 @@ export function ProfilePicker({
                   )}
                 >
                   <Checkbox
+                    className="mt-0.5 shrink-0 sm:mt-0"
                     checked={encoded || checked}
                     disabled={encoded}
                     onCheckedChange={() => toggle(profile.$id)}
                   />
-                  <span
-                    className={cn(
-                      'flex min-w-0 flex-1 items-center gap-2',
-                      dimmed,
-                    )}
-                  >
-                    <span className="truncate text-[13px] font-medium leading-5">
-                      {profile.name}
-                    </span>
-                    {encoded ? (
-                      <Badge variant="info" className="text-[10px] shrink-0">
-                        {t('Exists')}
-                      </Badge>
-                    ) : isProfileUpscale(profile, source) ? (
-                      <span className="flex shrink-0 items-center gap-1">
-                        <Badge
-                          variant="warning"
-                          className="text-[10px] shrink-0"
-                        >
-                          {t('Upscale')}
-                        </Badge>
-                        <VideoTermHint term="upscale" />
+                  <span className={cn('min-w-0 flex-1', dimmed)}>
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="truncate text-[13px] font-medium leading-5">
+                        {profile.name}
                       </span>
-                    ) : null}
+                      {encoded ? (
+                        <Badge variant="info" className="text-[10px] shrink-0">
+                          {t('Exists')}
+                        </Badge>
+                      ) : isProfileUpscale(profile, source) ? (
+                        <span className="flex shrink-0 items-center gap-1">
+                          <Badge
+                            variant="warning"
+                            className="text-[10px] shrink-0"
+                          >
+                            {t('Upscale')}
+                          </Badge>
+                          <VideoTermHint term="upscale" />
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] leading-4 text-muted-foreground sm:hidden">
+                      <span className="font-mono">
+                        {formatResolution(profile.width, profile.height)}
+                      </span>
+                      <span aria-hidden="true">·</span>
+                      <span>
+                        {t('Video')}{' '}
+                        <span className="font-mono">
+                          {formatBitrate(profile.videoBitRate, 'kbps')}
+                        </span>
+                      </span>
+                      <span aria-hidden="true">·</span>
+                      <span>
+                        {t('Audio')}{' '}
+                        <span className="font-mono">
+                          {formatBitrate(profile.audioBitRate, 'kbps')}
+                        </span>
+                      </span>
+                    </span>
                   </span>
                   <span
                     className={cn(
-                      'w-[96px] shrink-0 text-end font-mono text-[12px] text-muted-foreground',
+                      'hidden w-[96px] shrink-0 text-end font-mono text-[12px] text-muted-foreground sm:block',
                       dimmed,
                     )}
                   >
@@ -243,7 +327,7 @@ export function ProfilePicker({
                   </span>
                   <span
                     className={cn(
-                      'w-[80px] shrink-0 text-end font-mono text-[12px] text-muted-foreground',
+                      'hidden w-[80px] shrink-0 text-end font-mono text-[12px] text-muted-foreground sm:block',
                       dimmed,
                     )}
                   >
@@ -251,7 +335,7 @@ export function ProfilePicker({
                   </span>
                   <span
                     className={cn(
-                      'w-[72px] shrink-0 text-end font-mono text-[12px] text-muted-foreground',
+                      'hidden w-[72px] shrink-0 text-end font-mono text-[12px] text-muted-foreground sm:block',
                       dimmed,
                     )}
                   >

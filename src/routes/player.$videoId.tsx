@@ -1,3 +1,4 @@
+import { useLayoutEffect } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { View } from '@/components/pages/player/View'
@@ -27,39 +28,48 @@ export const Route = createFileRoute('/player/$videoId')({
       { name: 'color-scheme', content: 'dark' },
     ],
   }),
-  loader: async ({ params, context, location }) => {
-    if (typeof window === 'undefined') return undefined
-    const projectId = new URLSearchParams(location.searchStr).get('project')?.trim()
-    if (!projectId) return undefined
+  loader: ({ params, context, location }) => {
+    if (typeof window === 'undefined') return
+    const projectId = new URLSearchParams(location.searchStr)
+      .get('project')
+      ?.trim()
+    if (!projectId) return
     const { videoId } = params
     const { queryClient } = context
-
-    try {
-      const [video, renditionsList] = await Promise.all([
-        queryClient.fetchQuery(videoQueryOptions(projectId, videoId)),
-        queryClient.fetchQuery(
-          videoRenditionsQueryOptions(projectId, videoId),
-        ),
-      ])
-      return {
-        video,
-        renditions: renditionsList.renditions ?? [],
-      }
-    } catch {
-      return undefined
-    }
+    // Start the fetch without blocking first paint. The black player frame
+    // renders immediately and reads the same query cache.
+    void queryClient
+      .prefetchQuery(videoQueryOptions(projectId, videoId))
+      .catch(() => {})
+    void queryClient
+      .prefetchQuery(videoRenditionsQueryOptions(projectId, videoId))
+      .catch(() => {})
   },
   component: PlayerPage,
 })
 
 function PlayerPage() {
   const { videoId } = Route.useParams()
-  const loaderData = Route.useLoaderData()
+  useEmbedPlayerDocument()
   return (
-    <View
-      key={`embed-${videoId}`}
-      videoId={videoId}
-      initialData={loaderData}
-    />
+    <div className="h-[100dvh] w-full bg-black">
+      <View key={`embed-${videoId}`} videoId={videoId} />
+    </div>
   )
+}
+
+/** Paint the document black before the themed app shell can flash through. */
+function useEmbedPlayerDocument() {
+  useLayoutEffect(() => {
+    const root = document.documentElement
+    const { body } = document
+    root.classList.add('embed-player')
+    root.style.background = '#000'
+    body.style.background = '#000'
+    return () => {
+      root.classList.remove('embed-player')
+      root.style.background = ''
+      body.style.background = ''
+    }
+  }, [])
 }

@@ -63,6 +63,9 @@ export function VideoThumb({
 
   const cues = timelineCuesProp ?? timelineQuery.data?.cues ?? null
   const hasTimelineCues = (cues?.length ?? 0) > 0
+  // A sized preview URL center-crops the sprite sheet. Wait for cues so the
+  // thumb is the poster frame, not that crop. Cached timelines skip the wait.
+  const timelinePending = shouldFetchTimeline && timelineQuery.isPending
 
   const posterCueIndex = useMemo(
     () => (cues ? getVideoPosterCueIndex(cues, video.previewId) : 0),
@@ -75,7 +78,7 @@ export function VideoThumb({
   )
 
   const previewSrc =
-    !hasTimelineCues && video.previewId && !previewFailed
+    !hasTimelineCues && !timelinePending && video.previewId && !previewFailed
       ? withAdminMode(
           sdk.forProject(projectId).videos.getPreview({
             videoId: video.$id,

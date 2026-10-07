@@ -1,5 +1,13 @@
 import { buildConsoleUrl } from '@/lib/utils/context-menu'
 
+/** Public embed player (`/player` and `/player/:videoId`). */
+export function isEmbedPlayerPath(
+  pathname: string | null | undefined,
+): boolean {
+  if (!pathname) return false
+  return pathname === '/player' || pathname.startsWith('/player/')
+}
+
 /** Full console URL for the public embed player (`/player/:videoId?project=…`). */
 export function getVideoEmbedPlayerUrl(
   projectId: string,
