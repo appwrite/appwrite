@@ -5,5 +5,9 @@
 # `bin/monorepo test`), the root toolchain and the Docker socket.
 set -e
 cd "$(dirname "$0")/.."
-docker compose exec -T tests \
-    php -d memory_limit=1024M /usr/src/toolchain/phpunit/phpunit/phpunit --testsuite e2e "$@"
+# No arguments runs the whole e2e suite; otherwise they go to phpunit as given.
+if [ $# -eq 0 ]; then
+    set -- --testsuite e2e
+fi
+COMPOSE_FILE=docker-compose.yml docker compose exec -T tests \
+    php -d memory_limit=1024M /usr/src/toolchain/phpunit/phpunit/phpunit "$@"

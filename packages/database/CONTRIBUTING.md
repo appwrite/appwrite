@@ -71,77 +71,24 @@ You can follow our [Adding new Database Adapter](docs/add-new-adapter.md) tutori
 
 ## Tests
 
-To run tests, you first need to bring up the example Docker stack with the following command:
+The library lives in [`packages/database`](https://github.com/appwrite/appwrite/tree/main/packages/database) in appwrite/appwrite and uses that repository's toolchain. From the repository root:
 
 ```bash
-docker compose up -d --build
+# unit tier on the host, then the adapter suites inside the compose network
+bin/monorepo test database
+
+# Rector, Pint and PHPStan
+bin/monorepo check database
 ```
 
-To run all unit tests, use the following Docker command:
+To run part of the adapter suites, bring the stack up and pass PHPUnit arguments through `tests/e2e.sh`, which runs them in the `tests` service:
 
 ```bash
-docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml tests
+cd packages/database
+COMPOSE_FILE=docker-compose.yml docker compose up -d --wait
+tests/e2e.sh tests/E2E/Adapter/MariaDBTest.php
+tests/e2e.sh --filter testCreateDocument
 ```
-
-To run tests for a single file, use the following Docker command structure:
-
-```bash
-docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml tests/Database/[FILE_PATH]
-```
-
-To run static code analysis, use the following phpstan command:
-
-```bash
-composer check
-```
-
-### Load testing
-
-Three commands have been added to `bin/` to fill, index, and query the DB to test changes:
-
-- `bin/load` invokes `bin/tasks/load.php`
-- `bin/index` invokes `bin/tasks/index.php`
-- `bin/query` invokes `bin/tasks/query.php`
-
-To test your DB changes under load:
-
-#### Load the database
-
-```bash
-docker compose exec tests bin/load --adapter=[adapter] --limit=[limit] [--name=[name]]
-
-# [adapter]: either 'mongodb' or 'mariadb', no quotes
-# [limit]: integer of total documents to generate
-# [name]: (optional) name for new database
-```
-
-#### Create indexes
-
-```bash
-docker compose exec tests bin/index --adapter=[adapter] --name=[name]
-
-# [adapter]: either 'mongodb' or 'mariadb', no quotes
-# [name]: name of filled database by bin/load
-```
-
-#### Run Query Suite
-
-```bash
-docker compose exec tests bin/query --adapter=[adapter] --limit=[limit] --name=[name]
-
-# [adapter]: either 'mongodb' or 'mariadb', no quotes
-# [limit]: integer of query limit (default 25)
-# [name]: name of filled database by bin/load
-```
-
-#### Visualize Query Results
-
-```bash
-docker compose exec tests bin/compare
-```
-
-Navigate to `localhost:8708` to visualize query results.
-
 
 ## Other Ways to Help
 
