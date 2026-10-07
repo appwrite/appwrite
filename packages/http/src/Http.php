@@ -9,6 +9,8 @@ use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Telemetry\Histogram;
 use Utopia\Telemetry\UpDownCounter;
 use Utopia\Validator;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 
 class Http
 {
@@ -882,8 +884,7 @@ class Http
      * Validate Param
      *
      * Creates an validator instance and validate given value with given rules.
-     * On success, loose forms are cast to the validator's canonical PHP type
-     * (for example Boolean `"false"` becomes bool false) via {@see Validator::cast()}.
+     * On success, loose boolean strings are coerced via {@see coerce()}.
      *
      * @param  array<string, mixed>  $param
      *
@@ -905,7 +906,37 @@ class Http
             throw new Exception('Invalid `' . $key . '` param: ' . $validator->getDescription(), 400);
         }
 
-        $value = $validator->cast($value);
+        $value = $this->coerce($validator, $value);
+    }
+
+    /**
+     * Coerce a validated loose boolean string to a real bool.
+     *
+     * Query strings arrive as text. `Boolean(loose: true)` accepts
+     * "true"/"false"/"1"/"0" and leaves them as strings. A typed `bool`
+     * parameter then casts every non-empty string except "0" to true, so
+     * `total=false` still runs the count. Validators only check values, so
+     * the conversion happens here. Same rule as `Utopia\CLI\CLI::coerce()`.
+     *
+     * The empty string is left unchanged: `filter_var` would turn it into false.
+     */
+    protected function coerce(Validator $validator, mixed $value): mixed
+    {
+        if (!\is_string($value) || $value === '') {
+            return $value;
+        }
+
+        while ($validator instanceof Nullable) {
+            $validator = $validator->getValidator();
+        }
+
+        if (!$validator instanceof Boolean) {
+            return $value;
+        }
+
+        $coerced = \filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+        return $coerced ?? $value;
     }
 
     /**

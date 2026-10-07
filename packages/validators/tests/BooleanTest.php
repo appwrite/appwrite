@@ -46,22 +46,4 @@ final class BooleanTest extends TestCase
         $this->assertFalse($boolean->isArray());
         $this->assertSame(\Utopia\Validator::TYPE_BOOLEAN, $boolean->getType());
     }
-
-    public function testCanCastLooseValues(): void
-    {
-        $boolean = new Boolean(true);
-
-        $this->assertTrue($boolean->cast(true));
-        $this->assertFalse($boolean->cast(false));
-        $this->assertTrue($boolean->cast('true'));
-        $this->assertFalse($boolean->cast('false'));
-        $this->assertTrue($boolean->cast('1'));
-        $this->assertFalse($boolean->cast('0'));
-        $this->assertTrue($boolean->cast(1));
-        $this->assertFalse($boolean->cast(0));
-
-        $strict = new Boolean();
-        $this->assertSame('false', $strict->cast('false'));
-        $this->assertFalse($strict->cast(false));
-    }
 }

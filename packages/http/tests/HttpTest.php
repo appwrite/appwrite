@@ -1027,7 +1027,24 @@ final class HttpTest extends TestCase
         $this->assertSame(var_export('abc', true), $run('/items/abc', ['x' => null]));
     }
 
-    public function testLooseBooleanParamsAreCastToBool(): void
+    /**
+     * @return iterable<string, array{0: string, 1: string}>
+     */
+    public static function looseBooleanValuesProvider(): iterable
+    {
+        yield '"false" string' => ['false', 'false'];
+        yield '"true" string' => ['true', 'true'];
+        yield '"0" string' => ['0', 'false'];
+        yield '"1" string' => ['1', 'true'];
+    }
+
+    /**
+     * Query string "false" used to reach a typed bool as true, so list
+     * endpoints still counted. The dispatcher now coerces loose boolean
+     * strings to a real bool before the action runs.
+     */
+    #[DataProvider('looseBooleanValuesProvider')]
+    public function testLooseBooleanQueryStringIsCoerced(string $input, string $expected): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/flags';
@@ -1035,30 +1052,85 @@ final class HttpTest extends TestCase
         Http::get('/flags')
             ->param('total', true, new Boolean(true), 'total flag', true)
             ->action(function (bool $total) {
-                echo json_encode([
-                    'total' => $total,
-                    'type' => \gettype($total),
-                ]);
+                echo $total ? 'true' : 'false';
             });
 
         $http = $this->http;
         $this->assertInstanceOf(Http::class, $http);
 
-        // SDK and browser query strings send the literal text "false" / "true".
-        $this->assertSame('{"total":false,"type":"boolean"}', $this->executeTotalFlag($http, 'false'));
-        $this->assertSame('{"total":true,"type":"boolean"}', $this->executeTotalFlag($http, 'true'));
-        $this->assertSame('{"total":false,"type":"boolean"}', $this->executeTotalFlag($http, '0'));
-        $this->assertSame('{"total":true,"type":"boolean"}', $this->executeTotalFlag($http, '1'));
-        $this->assertSame('{"total":false,"type":"boolean"}', $this->executeTotalFlag($http, 0));
-        $this->assertSame('{"total":true,"type":"boolean"}', $this->executeTotalFlag($http, 1));
-        $this->assertSame('{"total":false,"type":"boolean"}', $this->executeTotalFlag($http, false));
-        $this->assertSame('{"total":true,"type":"boolean"}', $this->executeTotalFlag($http, true));
+        $this->assertSame($expected, $this->executeParams($http, ['total' => $input]));
     }
 
-    private function executeTotalFlag(Http $http, mixed $total): string
+    public function testLooseBooleanCoercionUnwrapsNullable(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/flags';
+
+        Http::get('/flags')
+            ->param('total', null, new Nullable(new Boolean(true)), 'total flag', true)
+            ->action(function (?bool $total) {
+                echo $total === null ? 'null' : ($total ? 'true' : 'false');
+            });
+
+        $http = $this->http;
+        $this->assertInstanceOf(Http::class, $http);
+
+        $this->assertSame('false', $this->executeParams($http, ['total' => 'false']));
+        $this->assertSame('null', $this->executeParams($http, []));
+    }
+
+    public function testNonBooleanParamKeepsFalseString(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/names';
+
+        Http::get('/names')
+            ->param('name', '', new Text(64), 'name', true)
+            ->action(function (string $name) {
+                echo $name;
+            });
+
+        $http = $this->http;
+        $this->assertInstanceOf(Http::class, $http);
+
+        $this->assertSame('false', $this->executeParams($http, ['name' => 'false']));
+    }
+
+    public function testLooseBooleanRejectsUnrecognizedSpellings(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/flags';
+
+        $http = $this->http;
+        $this->assertInstanceOf(Http::class, $http);
+
+        $http
+            ->error()
+            ->inject('error')
+            ->action(function (\Throwable $error) {
+                echo 'error: ' . $error->getMessage();
+            });
+
+        Http::get('/flags')
+            ->param('total', true, new Boolean(true), 'total flag', true)
+            ->action(function (bool $total) {
+                echo $total ? 'true' : 'false';
+            });
+
+        $message = 'error: Invalid `total` param: Value must be a valid boolean';
+        $this->assertSame($message, $this->executeParams($http, ['total' => 'FALSE']));
+        $this->assertSame($message, $this->executeParams($http, ['total' => 'no']));
+        $this->assertSame($message, $this->executeParams($http, ['total' => 'yes']));
+        $this->assertSame($message, $this->executeParams($http, ['total' => '']));
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function executeParams(Http $http, array $params): string
     {
         $request = new FPMRequest();
-        $request::_setParams(['total' => $total]);
+        $request::_setParams($params);
 
         ob_start();
         $http->execute($request, new Response());
