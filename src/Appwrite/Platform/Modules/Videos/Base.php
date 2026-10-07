@@ -208,23 +208,6 @@ abstract class Base extends UtopiaAction
     }
 
     /**
-     * Loads a video with authorization skipped, or throws if it does not exist.
-     *
-     * Used by play surfaces (then gated by assertFileAccess) and by privileged
-     * paths that intentionally bypass document ACL.
-     */
-    protected function getVideo(Database $dbForProject, Authorization $authorization, string $videoId): Document
-    {
-        $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
-
-        if ($video->isEmpty()) {
-            throw new Exception(Exception::VIDEO_NOT_FOUND);
-        }
-
-        return $video;
-    }
-
-    /**
      * Loads a video enforcing document `$permissions` for sessions.
      *
      * Privileged users and API keys skip authorization. Empty → VIDEO_NOT_FOUND.
@@ -235,16 +218,15 @@ abstract class Base extends UtopiaAction
         User $user,
         string $videoId
     ): Document {
-        $roles = $authorization->getRoles();
+        $isAPIKey = $user->isKey($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
-        if ($user->isPrivileged($roles) || $user->isKey($roles)) {
-            $video = $this->getVideo($dbForProject, $authorization, $videoId);
-        } else {
-            $video = $dbForProject->getDocument('videos', $videoId);
+        $video = ($isAPIKey || $isPrivilegedUser)
+            ? $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId))
+            : $dbForProject->getDocument('videos', $videoId);
 
-            if ($video->isEmpty()) {
-                throw new Exception(Exception::VIDEO_NOT_FOUND);
-            }
+        if ($video->isEmpty()) {
+            throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
 
         return $video;
@@ -302,6 +284,9 @@ abstract class Base extends UtopiaAction
 
     /**
      * Loads a video for playback: skips document ACL, requires source-file read.
+     *
+     * Guests and members reach play via the videos.play scope; per-video access
+     * is the source file (assertFileAccess), not the video document's $permissions.
      */
     protected function getPlayableVideo(
         Database $dbForProject,
@@ -309,7 +294,11 @@ abstract class Base extends UtopiaAction
         User $user,
         string $videoId
     ): Document {
-        $video = $this->getVideo($dbForProject, $authorization, $videoId);
+        $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
+
+        if ($video->isEmpty()) {
+            throw new Exception(Exception::VIDEO_NOT_FOUND);
+        }
 
         self::assertFileAccess(
             $dbForProject,

@@ -168,11 +168,14 @@ class Create extends Base
 
         $current = $existing[0] ?? null;
 
-        if (
-            $current === null
-            || !empty($current->getAttribute('fileId', ''))
-            || $current->getAttribute('code', '') !== $caption->getAttribute('code', '')
-        ) {
+        if ($current === null || !empty($current->getAttribute('fileId', ''))) {
+            return $caption;
+        }
+
+        $currentLanguage = (string) $current->getAttribute('code', '');
+        $uploadedLanguage = (string) $caption->getAttribute('code', '');
+
+        if ($currentLanguage !== $uploadedLanguage) {
             return $caption;
         }
 

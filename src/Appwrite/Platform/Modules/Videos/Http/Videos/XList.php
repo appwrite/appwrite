@@ -72,8 +72,8 @@ class XList extends Base
         User $user,
         Authorization $authorization
     ): void {
-        $roles = $authorization->getRoles();
-        $skipAuth = $user->isPrivileged($roles) || $user->isKey($roles);
+        $isAPIKey = $user->isKey($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         try {
             $queries = Query::parseQueries($queries);
@@ -95,7 +95,7 @@ class XList extends Base
             }
 
             $videoId = $cursor->getValue();
-            $cursorDocument = $skipAuth
+            $cursorDocument = ($isAPIKey || $isPrivilegedUser)
                 ? $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId))
                 : $dbForProject->getDocument('videos', $videoId);
 
@@ -109,7 +109,7 @@ class XList extends Base
         $filterQueries = Query::groupByType($queries)['filters'];
 
         try {
-            if ($skipAuth) {
+            if ($isAPIKey || $isPrivilegedUser) {
                 $videos = $authorization->skip(fn () => $dbForProject->find('videos', $queries));
                 $total = $includeTotal
                     ? $authorization->skip(fn () => $dbForProject->count('videos', $filterQueries, APP_LIMIT_COUNT))

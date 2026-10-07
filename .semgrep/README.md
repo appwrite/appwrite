@@ -80,7 +80,7 @@ Review the `baseline.json` diff like code: an added ERROR entry should come with
 | Pattern | Result |
 | --- | --- |
 | Ungated `$auth->skip` / `Authorization::skip` + `getDocument`/`find`/`findOne` of a non-allowlisted name (`files`, `transactions`, or any new name) | **ERROR** `skip-ungated-load` |
-| Same skip gated on API-key / privileged callers (ternary or `if`), of allowlisted metadata / lookup / subquery collections, or of a variable collection | ok |
+| Same skip gated on API-key / privileged callers (ternary or `if`), of allowlisted metadata / lookup / subquery / video-child collections, of a variable collection, or a `videos` skip followed by `assertFileAccess` | ok |
 | `$authorization->disable()` / `setDefaultStatus(false)` in a module or `app/controllers/api` handler | **ERROR** `global-authorization-disable` |
 | `/v1` route (module or `Http::*`) with no `->label('scope', …)` | **ERROR** `route-without-scope` |
 | `/v1` route with a non-public scope and no `api` (or `graphql`) group | **ERROR** `route-without-api-group` |
@@ -120,7 +120,7 @@ Review the `baseline.json` diff like code: an added ERROR entry should come with
 
 | ID | Severity | What it flags |
 | --- | --- | --- |
-| `php.appwrite.skip-ungated-load` | ERROR | Ungated skip + named-collection load outside the allowlist. |
+| `php.appwrite.skip-ungated-load` | ERROR | Ungated skip + named-collection load outside the allowlist (video children / profiles and play-path `assertFileAccess` exempt). |
 | `php.appwrite.global-authorization-disable` | ERROR | Request-wide authorization disable in handlers. |
 | `php.appwrite.route-without-scope` | ERROR | `/v1` route with no scope label. |
 | `php.appwrite.route-without-api-group` | ERROR | Non-public `/v1` route outside the `api` hook group. |

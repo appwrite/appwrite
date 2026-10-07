@@ -58,3 +58,29 @@ $transaction = ($isAPIKey || $isPrivilegedUser)
     : $dbForProject->withTransaction(function () use ($dbForProject, $transactionId) {
         return $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
     });
+
+// Video child / profile collections (no per-document ACL; parent is gated first).
+// ok: php.appwrite.skip-ungated-load
+$profile = $authorization->skip(fn () => $dbForProject->getDocument('videos_profiles', $profileId));
+
+// ok: php.appwrite.skip-ungated-load
+$rendition = $authorization->skip(fn () => $dbForProject->getDocument('videos_renditions', $renditionId));
+
+// Bare videos without assertFileAccess stays an error.
+// ruleid: php.appwrite.skip-ungated-load
+$video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
+
+// Play / cache: skip videos ACL then gate on the source file (same function).
+function playWithSelfAssert($authorization, $dbForProject, $videoId, $user, $bucketId, $fileId)
+{
+    // ok: php.appwrite.skip-ungated-load
+    $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
+    self::assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
+}
+
+function playWithClassAssert($authorization, $dbForProject, $videoId, $user, $bucketId, $fileId)
+{
+    // ok: php.appwrite.skip-ungated-load
+    $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
+    VideosBase::assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
+}
