@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from 'react'
+import { useState, type KeyboardEvent, type ReactNode } from 'react'
 import { Browser } from '@appwrite.io/console'
-import { Globe, Link2 } from 'lucide-react'
+import { ExternalLink, Globe, Link2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -28,7 +28,13 @@ export function BreakdownRow({
   onClick,
   active = false,
   actionTitle,
+  href,
 }: {
+  /**
+   * External URL for the value (a page or hostname). Adds a small "open in a
+   * new window" icon after the label, shown on hover / focus.
+   */
+  href?: string
   /** Small trailing badge after the label (e.g. "Plotted"). */
   badge?: ReactNode
   /** Makes the row a button (e.g. apply a page filter for this value). */
@@ -49,15 +55,25 @@ export function BreakdownRow({
   /** Render the label in a monospace face (paths, hostnames). */
   mono?: boolean
 }) {
-  const Root = onClick ? 'button' : 'div'
   return (
     // Fixed height (BREAKDOWN_ROW_HEIGHT_PX) so panels can reserve an exact
     // body height and never shift when tabs or data change.
-    <Root
+    //
+    // A div with role="button" rather than a <button>: the row can contain
+    // the external link, and a link inside a button is invalid HTML.
+    <div
       {...(onClick
         ? {
-            type: 'button' as const,
+            role: 'button',
+            tabIndex: 0,
             onClick,
+            onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
+              if (event.target !== event.currentTarget) return
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                onClick()
+              }
+            },
             title: actionTitle,
             'aria-pressed': active,
           }
@@ -85,14 +101,30 @@ export function BreakdownRow({
         {leading}
         <span
           className={cn(
-            'min-w-0 flex-1 truncate text-[12px] font-medium text-foreground',
+            'min-w-0 truncate text-[12px] font-medium text-foreground',
             mono && 'font-mono',
           )}
           title={label}
         >
           {label}
         </span>
+        {href ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            // Opening the page must not also toggle the row's filter.
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+            title={href}
+            aria-label={`Open ${href} in a new window`}
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:opacity-100"
+          >
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        ) : null}
         {badge}
+        <span className="flex-1" />
         <div className="flex shrink-0 items-center gap-3">
           <span className="text-[11px] font-medium tabular-nums text-muted-foreground">
             {Math.round(share)}%
@@ -102,7 +134,7 @@ export function BreakdownRow({
           </span>
         </div>
       </div>
-    </Root>
+    </div>
   )
 }
 

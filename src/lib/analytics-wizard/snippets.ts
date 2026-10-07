@@ -303,6 +303,41 @@ tracking.event('signup_completed', props: {
   ]
 }
 
+export type AnalyticsInstallGuide = {
+  /** Package install command; null when there's nothing to install (REST). */
+  install: SnippetBlock | null
+  /** Everything else as one file, each part introduced by a comment. */
+  code: SnippetBlock
+  /** Labels of the parts in `code`, in order (for a short summary). */
+  parts: string[]
+}
+
+/**
+ * The setup as two blocks instead of one per step: the install command, then
+ * all the code in a single snippet that can be copied in one go.
+ */
+export function buildAnalyticsInstallGuide(
+  platform: AnalyticsPlatform,
+  input: SnippetInput,
+): AnalyticsInstallGuide {
+  const blocks = buildAnalyticsSnippets(platform, input)
+  const [first, ...others] = blocks
+  const hasInstall = platform !== 'rest' && first?.language === 'bash'
+  const parts = hasInstall ? others : blocks
+  const comment = platform === 'rest' ? '#' : '//'
+  return {
+    install: hasInstall ? first : null,
+    parts: parts.map((block) => block.label),
+    code: {
+      label: 'Code',
+      language: parts[0]?.language ?? 'bash',
+      code: parts
+        .map((block) => `${comment} ${block.label}\n${block.code}`)
+        .join('\n\n'),
+    },
+  }
+}
+
 export function buildAnalyticsSnippets(
   platform: AnalyticsPlatform,
   input: SnippetInput,

@@ -11,8 +11,8 @@ type EventAsideProps = {
 }
 
 /**
- * Setup-step sidebar: mirrors the apps wizard's connection panel, but waits for
- * the property's first tracked event instead of a ping.
+ * Install-stage status banner: mirrors the apps wizard's connection panel, but
+ * waits for the property's first tracked event instead of a ping.
  */
 export function EventAside({
   platformSlug,
@@ -23,18 +23,11 @@ export function EventAside({
   const waiting = !eventReceived
 
   return (
-    <div className="rounded-xl border border-border bg-card/50 p-5">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {t('Tracking')}
-      </p>
-      <p className="mt-1 text-[13px] text-muted-foreground">
-        {t(
-          'Your site sends events to the analytics endpoint using this property ID.',
-        )}
-      </p>
-
-      <div className="mt-6 flex flex-col items-center gap-3">
-        <div className="flex w-full max-w-[220px] items-center justify-between gap-2">
+    // Banner at the top of the install stage: connection diagram on one side,
+    // live status on the other (stacked on narrow screens).
+    <div className="flex flex-col items-center gap-5 rounded-xl border border-border bg-card/50 p-5 sm:flex-row sm:gap-8">
+      <div className="flex shrink-0 flex-col items-center">
+        <div className="flex w-[220px] items-center justify-between gap-2">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/50">
             <PlatformIcon platform={platformSlug} size="md" />
           </div>
@@ -62,34 +55,31 @@ export function EventAside({
             </svg>
           </div>
         </div>
-
-        <div
-          className={cn(
-            'mt-6 w-full rounded-lg border px-3 py-2.5 text-center text-[12px]',
-            eventReceived &&
-              'border-green-500/40 bg-green-500/10 text-green-800 dark:text-green-300',
-            waiting && 'border-primary/30 bg-primary/5 text-foreground',
-          )}
-        >
-          {waiting && (
-            <span>{t('Waiting for the first event from your site…')}</span>
-          )}
-          {eventReceived && (
-            <span className="inline-flex items-center justify-center gap-2 font-medium">
-              <Check className="h-3.5 w-3.5 shrink-0" />
-              {firstEventName
-                ? `${t('Event received')}: ${firstEventName}`
-                : t('Event received')}
-            </span>
-          )}
-        </div>
       </div>
 
-      <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground">
-        {t(
-          'Keep this tab open and load a page on your site. Events usually appear within a few seconds.',
-        )}
-      </p>
+      <div className="min-w-0 flex-1 text-center sm:text-start">
+        <p
+          className={cn(
+            'inline-flex items-center gap-2 text-[14px] font-semibold',
+            eventReceived ? 'text-green-700 dark:text-green-400' : 'text-foreground',
+          )}
+          aria-live="polite"
+        >
+          {eventReceived ? <Check className="h-4 w-4 shrink-0" /> : null}
+          {eventReceived
+            ? firstEventName
+              ? `${t('Event received')}: ${firstEventName}`
+              : t('Event received')
+            : t('Waiting for the first event…')}
+        </p>
+        <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+          {eventReceived
+            ? t('Tracking works. Your dashboard is ready.')
+            : t(
+                'Install the snippet below and load a page. Events usually appear within a few seconds, or skip and check back later.',
+              )}
+        </p>
+      </div>
     </div>
   )
 }

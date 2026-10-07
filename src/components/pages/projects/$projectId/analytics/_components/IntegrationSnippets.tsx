@@ -9,7 +9,7 @@ import { useT } from '@/lib/i18n/translate'
 import {
   ANALYTICS_PLATFORMS,
   ANALYTICS_PLATFORM_META,
-  buildAnalyticsSnippets,
+  buildAnalyticsInstallGuide,
   type AnalyticsPlatform,
 } from '@/lib/analytics-wizard/snippets'
 
@@ -42,18 +42,24 @@ export function IntegrationSnippets({
     onPlatformChange?.(next)
   }
 
-  const blocks = useMemo(
-    () =>
-      buildAnalyticsSnippets(active, {
-        endpoint: getProjectApiEndpoint(projectId),
-        projectId,
-        // The ingestion endpoint takes either ID; the snippet ID is the one
-        // meant to be embedded in client-side code.
-        trackingId: property.snippetId || property.$id,
-        domain: property.domain,
-      }),
-    [active, projectId, property],
-  )
+  // Same two blocks as the Install modal: install command, then all the code.
+  const blocks = useMemo(() => {
+    const guide = buildAnalyticsInstallGuide(active, {
+      endpoint: getProjectApiEndpoint(projectId),
+      projectId,
+      // The ingestion endpoint takes either ID; the snippet ID is the one
+      // meant to be embedded in client-side code.
+      trackingId: property.snippetId || property.$id,
+      domain: property.domain,
+    })
+    return [
+      ...(guide.install ? [{ ...guide.install, label: 'Installation' }] : []),
+      {
+        ...guide.code,
+        label: guide.install ? 'Add to your app' : 'Send events',
+      },
+    ]
+  }, [active, projectId, property])
 
   const meta = ANALYTICS_PLATFORM_META[active]
 

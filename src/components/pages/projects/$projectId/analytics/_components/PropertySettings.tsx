@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { Plus, X } from 'lucide-react'
+import { Download, Plus, X } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,7 +17,7 @@ import {
   type UpdateAnalyticsPropertyInput,
 } from '@/lib/react-query/hooks'
 import { DeleteProperty } from './DeleteProperty'
-import { IntegrationSnippets } from './IntegrationSnippets'
+import { InstallTrackingDialog } from './InstallTrackingDialog'
 
 interface PropertySettingsProps {
   projectId: string
@@ -46,6 +46,7 @@ export function PropertySettings({
   )
   const [originInput, setOriginInput] = useState('')
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [installOpen, setInstallOpen] = useState(false)
 
   // Re-seed the form whenever the property is refetched.
   useEffect(() => {
@@ -106,23 +107,47 @@ export function PropertySettings({
   return (
     <div className="w-full px-4 py-4 sm:px-6">
       <div className="space-y-6">
-        {/* Integration */}
+        {/* Integration: the instructions live in the Install modal. */}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              {t('Integration')}
-            </h3>
-            <p className="text-[13px] text-muted-foreground mt-2">
-              {t(
-                'Add tracking to your site or app to start collecting events.',
-              )}
-            </p>
-          </div>
-          <div className="border-t border-border" />
-          <div className="px-6 py-4">
-            <IntegrationSnippets projectId={projectId} property={property} />
+          <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
+            <div className="min-w-0">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                {t('Integration')}
+              </h3>
+              <p className="text-[13px] text-muted-foreground mt-2">
+                {t(
+                  'Add tracking to your site or app with the Web or Flutter SDK, or send events over REST.',
+                )}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-muted-foreground">
+                <span className="inline-flex items-center gap-2">
+                  {t('Property ID')}
+                  <CopyableId id={property.$id} size="xs" />
+                </span>
+                {property.snippetId ? (
+                  <span className="inline-flex items-center gap-2">
+                    {t('Snippet ID')}
+                    <CopyableId id={property.snippetId} size="xs" />
+                  </span>
+                ) : null}
+              </div>
+            </div>
+            <Button
+              size="sm"
+              className="h-9 gap-1.5 text-[13px]"
+              onClick={() => setInstallOpen(true)}
+            >
+              <Download className="h-3.5 w-3.5" />
+              {t('Install')}
+            </Button>
           </div>
         </div>
+        <InstallTrackingDialog
+          open={installOpen}
+          onOpenChange={setInstallOpen}
+          projectId={projectId}
+          property={property}
+        />
 
         {/* Name */}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">

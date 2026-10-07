@@ -62,6 +62,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canCreateAnalyticsProperty } from '@/lib/console-access-checks'
 import { DeleteProperty } from './_components/DeleteProperty'
 import { AnalyticsEmptyState } from './_components/AnalyticsEmptyState'
+import { PropertyContextMenu } from './_components/PropertyContextMenu'
 import { ChangeBadge } from './_components/ChangeBadge'
 import { analyticsChangePercent } from './_components/chart-series'
 import {
@@ -302,8 +303,17 @@ export function View() {
                 const stats = statsFor(property.$id)
                 const previous = previousStatsByPropertyId[property.$id]
                 return (
-                  <div
+                  <PropertyContextMenu
                     key={property.$id}
+                    projectId={projectId as string}
+                    property={property}
+                    onDelete={
+                      noCreatePermission
+                        ? undefined
+                        : () => setPropertyToDelete(property)
+                    }
+                  >
+                  <div
                     className={cn(
                       RESOURCE_CARD_PADDED_CLASSNAME,
                       RESOURCE_CARD_INTERACTIVE_CLASSNAME,
@@ -483,6 +493,7 @@ export function View() {
                       </div>
                     )}
                   </div>
+                  </PropertyContextMenu>
                 )
               })}
 
@@ -540,7 +551,17 @@ export function View() {
                       propertyId: property.$id,
                     }
                     return (
-                      <TableRow key={property.$id} className="cursor-pointer">
+                      <PropertyContextMenu
+                        key={property.$id}
+                        projectId={projectId as string}
+                        property={property}
+                        onDelete={
+                          noCreatePermission
+                            ? undefined
+                            : () => setPropertyToDelete(property)
+                        }
+                      >
+                      <TableRow className="cursor-pointer">
                         <TableCell className="px-4 py-3">
                           <Link
                             to="/projects/$projectId/analytics/$propertyId"
@@ -682,6 +703,7 @@ export function View() {
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
+                      </PropertyContextMenu>
                     )
                   })}
                 </TableBody>

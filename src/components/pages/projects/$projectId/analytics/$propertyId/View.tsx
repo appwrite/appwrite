@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { differenceInHours } from 'date-fns'
-import { BarChart3 } from 'lucide-react'
+import { BarChart3, Download } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { InstallTrackingDialog } from '../_components/InstallTrackingDialog'
 import {
   ServiceHeader,
   type Tab,
@@ -117,6 +119,7 @@ export function View({
 }: ViewProps) {
   const t = useT()
   const [activeTab, setActiveTab] = useState('analytics')
+  const [installOpen, setInstallOpen] = useState(false)
   const isAnalyticsTab = activeTab === 'analytics'
   const [filtersOpen, setFiltersOpen] = useState(false)
 
@@ -431,11 +434,25 @@ export function View({
           </div>
         }
         titleRightContent={
-          <LiveVisitors
-            projectId={projectId}
-            propertyId={propertyId}
-            enabled={property?.enabled !== false}
-          />
+          <div className="flex items-center gap-2">
+            <LiveVisitors
+              projectId={projectId}
+              propertyId={propertyId}
+              enabled={property?.enabled !== false}
+            />
+            {/* Install instructions, on both tabs (also in Settings). */}
+            {property ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-[12px]"
+                onClick={() => setInstallOpen(true)}
+              >
+                <Download className="h-3.5 w-3.5" />
+                {t('Install')}
+              </Button>
+            ) : null}
+          </div>
         }
         tabs={tabs}
         activeTab={activeTab}
@@ -578,7 +595,7 @@ export function View({
                   events={events}
                   isLoading={eventsLoading}
                   property={property}
-                  onOpenSetup={() => setActiveTab('settings')}
+                  onOpenSetup={() => setInstallOpen(true)}
                 />
               </div>
             </div>
@@ -595,6 +612,15 @@ export function View({
           />
         </div>
       )}
+
+      {property ? (
+        <InstallTrackingDialog
+          open={installOpen}
+          onOpenChange={setInstallOpen}
+          projectId={projectId}
+          property={property}
+        />
+      ) : null}
     </div>
     </AnalyticsFiltersProvider>
   )

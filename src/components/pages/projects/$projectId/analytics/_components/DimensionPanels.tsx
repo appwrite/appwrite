@@ -1,5 +1,6 @@
 import { AnalyticsDimension } from '@appwrite.io/console'
 import {
+  useAnalyticsProperty,
   useCountryLookups,
   type AnalyticsRange,
 } from '@/lib/react-query/hooks'
@@ -66,6 +67,13 @@ export function TrafficSourcesPanel(props: PanelProps) {
       description="Where visitors came from, by channel, referrer and campaign"
       info="channels"
       tabs={SOURCE_TABS}
+      // Referrers that are domains (github.com) link out; names (Google,
+      // direct) and UTM values don't.
+      rowHref={(value, tabId) =>
+        tabId === 'sources' && /^[^\s/]+\.[a-z]{2,}(\/|$)/i.test(bareHost(value))
+          ? `https://${bareHost(value)}`
+          : undefined
+      }
       renderLeading={(entry, index, tabId) =>
         tabId === 'channels' ? (
           <RowDot color={colorAt(index)} />
@@ -91,10 +99,39 @@ const PAGE_TABS: BreakdownTab[] = [
   { id: 'hosts', label: 'Hostnames', dimension: AnalyticsDimension.Hostname },
 ]
 
+/** `example.com`, `https://example.com/` → `example.com`. */
+function bareHost(value: string): string {
+  return value.trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '')
+}
+
+/**
+ * Link for a page path or hostname row. Paths resolve against the property's
+ * domain; without one there's nowhere to send a bare path, so no link.
+ */
+export function pageRowHref(
+  value: string,
+  tabId: string,
+  domain: string | null | undefined,
+): string | undefined {
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  if (tabId === 'hosts') return `https://${bareHost(trimmed)}`
+  if (trimmed.startsWith('/')) {
+    return domain ? `https://${bareHost(domain)}${trimmed}` : undefined
+  }
+  // `host.tld/path` without a scheme.
+  if (/^[^\s/]+\.[^\s/]+(\/|$)/.test(trimmed)) return `https://${trimmed}`
+  return undefined
+}
+
 export function PagesPanel(props: PanelProps) {
+  // Cached by the page header already; used to turn paths into links.
+  const { property } = useAnalyticsProperty(props.projectId, props.propertyId)
   return (
     <BreakdownPanel
       {...props}
+      rowHref={(value, tabId) => pageRowHref(value, tabId, property?.domain)}
       cardId="pages"
       title="Pages"
       description="Most visited paths"

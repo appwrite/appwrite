@@ -211,6 +211,8 @@ type BreakdownPanelProps = {
   mono?: boolean
   /** Copy shown when the range has no data for this dimension. */
   emptyLabel?: string
+  /** External URL for a row (pages, hostnames): adds an open-in-new icon. */
+  rowHref?: (value: string, tabId: string) => string | undefined
 }
 
 /**
@@ -235,6 +237,7 @@ export function BreakdownPanel({
   formatLabel,
   mono = false,
   emptyLabel,
+  rowHref,
 }: BreakdownPanelProps) {
   const t = useT()
   const tabIds = useMemo(() => tabs.map((tab) => tab.id), [tabs])
@@ -369,6 +372,7 @@ export function BreakdownPanel({
                 }
                 color={rowColor?.(entry, index)}
                 mono={mono}
+                href={rowHref?.(entry.value!, active.id)}
                 {...filterRowProps(entry.value)}
               />
             ))}
@@ -393,6 +397,7 @@ export function BreakdownPanel({
           formatLabel={formatLabel}
           mono={mono}
           emptyLabel={emptyLabel}
+          rowHref={rowHref}
         />
       ) : null}
     </div>

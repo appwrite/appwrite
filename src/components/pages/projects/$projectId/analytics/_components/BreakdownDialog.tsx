@@ -65,6 +65,8 @@ export type BreakdownDialogProps = {
   renderBadge?: (entry: Models.AnalyticsMetric, tabId: string) => ReactNode
   /** Drop rows before ranking (e.g. automatic events from Custom events). */
   rowFilter?: (entry: Models.AnalyticsMetric) => boolean
+  /** External URL for a row (pages, hostnames): adds an open-in-new icon. */
+  rowHref?: (value: string, tabId: string) => string | undefined
 }
 
 /**
@@ -95,6 +97,7 @@ export function BreakdownDialog({
   onRowClick,
   renderBadge,
   rowFilter,
+  rowHref,
 }: BreakdownDialogProps) {
   const t = useT()
   const [activeTab, setActiveTab] = useState(initialTabId ?? tabs[0]?.id ?? '')
@@ -290,6 +293,13 @@ export function BreakdownDialog({
                     badge={renderBadge?.(entry, active.id)}
                     color={rowColor?.(entry, rows.indexOf(entry))}
                     mono={mono}
+                    // Not when the whole row is a <button> (onRowClick):
+                    // a link can't nest inside it.
+                    href={
+                      onRowClick || !entry.value
+                        ? undefined
+                        : rowHref?.(entry.value, active.id)
+                    }
                   />
                 )
                 return onRowClick && entry.value ? (

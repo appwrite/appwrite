@@ -1,3 +1,4 @@
+import { Braces, Check } from 'lucide-react'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -14,11 +15,20 @@ type Props = {
   disabled?: boolean
 }
 
+/**
+ * Platform picker: three equal cards, content stacked (icon row, title,
+ * description) so the cards stay readable at a third of a narrow form and
+ * the "SDK coming soon" badge never collides with the title.
+ */
 export function PlatformCards({ value, onChange, disabled }: Props) {
   const t = useT()
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div
+      role="radiogroup"
+      aria-label={t('Platform')}
+      className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+    >
       {ANALYTICS_PLATFORMS.map((id) => {
         const meta = ANALYTICS_PLATFORM_META[id]
         const selected = value === id
@@ -26,35 +36,52 @@ export function PlatformCards({ value, onChange, disabled }: Props) {
           <button
             key={id}
             type="button"
+            role="radio"
+            aria-checked={selected}
             disabled={disabled}
             onClick={() => onChange(id)}
             className={cn(
-              'flex w-full min-w-0 cursor-pointer items-start gap-3 rounded-lg border border-border bg-card/50 p-4 text-start transition-colors',
+              'flex w-full min-w-0 cursor-pointer flex-col rounded-lg border bg-card/50 p-4 text-start transition-colors',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               selected
-                ? 'border-primary bg-card ring-1 ring-primary/30'
-                : 'hover:bg-card',
+                ? 'border-foreground/40 bg-card ring-1 ring-foreground/20'
+                : 'border-border hover:bg-card',
               disabled && 'pointer-events-none cursor-not-allowed opacity-50',
             )}
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-              <PlatformIcon platform={meta.iconSlug} size="md" />
-            </div>
-            <span className="min-w-0">
-              <span className="flex items-center gap-1.5">
-                <span className="text-[13px] font-medium leading-snug text-foreground">
-                  {t(meta.label)}
-                </span>
-                {meta.unreleased && (
-                  <Badge variant="warning" className="text-[10px] shrink-0">
-                    {t('SDK coming soon')}
-                  </Badge>
+            <span className="flex items-center justify-between gap-2">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                {/* REST has no platform logo; a neutral glyph reads better
+                    than reusing the JS one. */}
+                {id === 'rest' ? (
+                  <Braces className="h-4 w-4" />
+                ) : (
+                  <PlatformIcon platform={meta.iconSlug} size="md" />
                 )}
               </span>
-              <span className="mt-0.5 block text-[12px] leading-snug text-muted-foreground">
-                {t(meta.description)}
+              <span
+                className={cn(
+                  'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
+                  selected
+                    ? 'border-foreground bg-foreground text-background'
+                    : 'border-border',
+                )}
+                aria-hidden
+              >
+                {selected ? <Check className="h-2.5 w-2.5" strokeWidth={3} /> : null}
               </span>
             </span>
+            <span className="mt-3 text-[13px] font-medium text-foreground">
+              {t(meta.label)}
+            </span>
+            <span className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
+              {t(meta.description)}
+            </span>
+            {meta.unreleased ? (
+              <Badge variant="warning" className="mt-3 w-fit text-[10px]">
+                {t('SDK coming soon')}
+              </Badge>
+            ) : null}
           </button>
         )
       })}
