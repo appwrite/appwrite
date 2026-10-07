@@ -163,14 +163,16 @@
     "react-dom": "19.1.1",
     "use-sync-external-store": "^1.6.0",
     "@tanstack/react-store": "^0.11.2",
-    "@tanstack/store": "^0.11.2"
+    "@tanstack/store": "^0.11.2",
+    "dompurify": "^3.4.16"
   },
   "pnpm": {
     "overrides": {
       "react": "19.1.1",
       "react-dom": "19.1.1",
       "@tanstack/react-store": "^0.11.2",
-      "@tanstack/store": "^0.11.2"
+      "@tanstack/store": "^0.11.2",
+      "dompurify": "^3.4.16"
     }
   },
   "devDependencies": {
