@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Avatars;
 
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
+use Utopia\Database\Helpers\ID;
 
 trait AvatarsBase
 {
@@ -637,8 +638,8 @@ trait AvatarsBase
             'height' => 600,
             'userAgent' => str_repeat('a', 512),
             'headers' => [
-                'User-Agent' => 'Mozilla/5.0 (compatible; AppwriteBot/1.0)',
-                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language' => 'en-US,en;q=0.9',
             ],
         ]);
 
@@ -697,17 +698,17 @@ trait AvatarsBase
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        // Test with mixed array (some numeric keys) - Assoc validator allows this
-        // Mixed arrays are considered associative by the Assoc validator
+        // Mixed arrays pass the Assoc validator, but a numeric key is not an allowed header name
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
-            'headers' => ['User-Agent' => 'MyApp', 'value2', 'Accept' => 'text/html'], // Mixed array
+            'headers' => ['Accept-Language' => 'en-US', 'value2', 'Accept' => 'text/html'], // Mixed array
         ]);
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
 
         // Test with empty array (should pass - empty associative array)
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
@@ -720,7 +721,7 @@ trait AvatarsBase
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Test with valid headers object (should pass)
+        // Allowed header names are matched case-insensitively
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -728,29 +729,12 @@ trait AvatarsBase
             'width' => 800,
             'height' => 600,
             'headers' => [
-                'User-Agent' => 'MyApp/1.0',
-                'Accept' => 'text/html,application/xhtml+xml',
-                'Accept-Language' => 'en-US,en;q=0.9'
+                'accept' => 'text/html,application/xhtml+xml',
+                'ACCEPT-LANGUAGE' => 'fr-FR,fr;q=0.9',
             ],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-
-        // Test with headers containing special characters (should pass validation)
-        // Note: Authorization/Content-Type headers may cause the target site to respond differently,
-        // so the browser service may fail (404) even though parameter validation passes.
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
-            'width' => 800,
-            'height' => 600,
-            'headers' => [
-                'X-Custom-Header' => 'custom-value',
-                'Authorization' => 'Bearer token123',
-                'Content-Type' => 'application/json'
-            ],
-        ]);
-        $this->assertContains($response['headers']['status-code'], [200, 404]);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
 
         // Test with custom viewport width and height
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
@@ -816,16 +800,49 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
-         * Test for FAILURE - Headers that unlock cloud metadata services
+         * Test for FAILURE - Headers outside the allowlist, including those that unlock cloud metadata services
          */
-        foreach (['Metadata-Flavor' => 'Google', 'Metadata' => 'true', 'host' => 'metadata.google.internal'] as $name => $value) {
+        $disallowed = [
+            'Metadata-Flavor' => 'Google',
+            'Metadata' => 'true',
+            'host' => 'metadata.google.internal',
+            'X-aws-ec2-metadata-token' => 'token',
+            'Authorization' => 'Bearer Oracle',
+            'Cookie' => 'session=abc',
+            'User-Agent' => 'MyApp/1.0',
+            'X-Forwarded-For' => '127.0.0.1',
+            'X-Custom-Header' => 'custom-value',
+            'Content-Type' => 'application/json',
+        ];
+        foreach ($disallowed as $name => $value) {
             $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
                 'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
                 'headers' => [$name => $value],
             ]);
-            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals(400, $response['headers']['status-code'], "Header '{$name}' should be rejected");
+            $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
+        }
+
+        /**
+         * Test for FAILURE - Allowed header names with unsafe values
+         */
+        $invalidValues = [
+            'crlf' => ['Accept-Language' => "en-US\r\nMetadata-Flavor: Google"],
+            'newline' => ['Accept' => "text/html\nHost: metadata.google.internal"],
+            'empty' => ['Accept' => ''],
+            'too long' => ['Accept-Language' => \str_repeat('a', 513)],
+            'array' => ['Accept' => ['text/html', 'application/json']],
+        ];
+        foreach ($invalidValues as $case => $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+                'headers' => $headers,
+            ]);
+            $this->assertEquals(400, $response['headers']['status-code'], "Header value case '{$case}' should be rejected");
             $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
         }
 
@@ -1790,6 +1807,133 @@ trait AvatarsBase
                 ['r' => $color['r'], 'g' => $color['g'], 'b' => $color['b']],
                 "Pixel at {$x},{$y} does not match the expected avatar background."
             );
+        }
+    }
+
+    /**
+     * A user of its own, so a photo never leaks into tests that expect the default chain.
+     *
+     * @return array<string, string>
+     */
+    private function createPhotoUser(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = \uniqid('photo-', true) . '@localhost.test';
+
+        $user = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'User Name',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        return [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ];
+    }
+
+    /**
+     * Random pixels don't compress, so the PNG size follows the dimensions.
+     */
+    private function createNoiseImage(int $width, int $height): string
+    {
+        $image = new \Imagick();
+        $image->newImage($width, $height, '#808080');
+        $image->addNoiseImage(\Imagick::NOISE_RANDOM);
+        $image->setImageDepth(8);
+        $image->setImageFormat('png24');
+
+        return $image->getImageBlob();
+    }
+
+    private function createImage(string $color, string $format): string
+    {
+        $image = new \Imagick();
+        $image->newImage(64, 64, $color);
+        $image->setImageFormat($format);
+        $image->setImageCompressionQuality(100);
+
+        if ($format === 'webp') {
+            $image->setOption('webp:lossless', 'true');
+        }
+
+        return $image->getImageBlob();
+    }
+
+    /**
+     * @param array<string, string> $headers
+     * @param array<string, string> $extra
+     * @return array<string, mixed>
+     */
+    private function uploadPhoto(array $headers, string $contents, string $filename, array $extra = []): array
+    {
+        return $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
+            'content-type' => 'multipart/form-data',
+        ], $extra), [
+            'file' => new \CURLFile('data://application/octet-stream;base64,' . \base64_encode($contents), 'application/octet-stream', $filename),
+        ]);
+    }
+
+    /**
+     * @param array<string, string> $headers
+     */
+    private function getPhoto(array $headers): string
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', $headers, [
+            'width' => 0,
+            'height' => 0,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        return $response['body'];
+    }
+
+    /**
+     * Tolerance is the largest difference allowed per colour channel, for lossy formats.
+     */
+    private function assertSamePhoto(string $expected, string $actual, int $tolerance = 0): void
+    {
+        $expectedImage = new \Imagick();
+        $expectedImage->readImageBlob($expected);
+        $actualImage = new \Imagick();
+        $actualImage->readImageBlob($actual);
+
+        $width = $expectedImage->getImageWidth();
+        $height = $expectedImage->getImageHeight();
+
+        $this->assertSame([$width, $height], [$actualImage->getImageWidth(), $actualImage->getImageHeight()]);
+
+        foreach ([[0, 0], [$width - 1, $height - 1], [\intdiv($width, 2), \intdiv($height, 2)], [\intdiv($width, 3), \intdiv($height, 5)]] as [$x, $y]) {
+            $expectedColor = $expectedImage->getImagePixelColor($x, $y)->getColor();
+            $actualColor = $actualImage->getImagePixelColor($x, $y)->getColor();
+
+            foreach (['r', 'g', 'b'] as $channel) {
+                $this->assertLessThanOrEqual(
+                    $tolerance,
+                    \abs($expectedColor[$channel] - $actualColor[$channel]),
+                    "Pixel at {$x},{$y} differs from the uploaded photo."
+                );
+            }
         }
     }
 }

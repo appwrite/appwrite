@@ -2,10 +2,12 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
 use Appwrite\Installer\Report;
+use Appwrite\Installer\Secret;
 use Appwrite\Migration\Infrastructure\Migration as InfrastructureMigration;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
@@ -13,7 +15,6 @@ use Appwrite\Platform\Installer\Validator\AppDomain;
 use Appwrite\Utopia\View;
 use Swoole\Coroutine;
 use Utopia\Auth\Proofs\Password;
-use Utopia\Auth\Proofs\Token;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
@@ -243,7 +244,6 @@ class Install extends Action
         // Skip the web installer when explicit CLI params are provided
         if ($interactive === 'Y' && Console::isInteractive() && !$this->hasExplicitCliParams()) {
             Console::success('Starting web installer...');
-            Console::info('Open your browser at: http://localhost:' . InstallerServer::INSTALLER_WEB_PORT);
             Console::info('Press Ctrl+C to cancel installation');
 
             $detectedDb = ($existingInstallation && isset($existingDatabase)) ? $existingDatabase : null;
@@ -253,30 +253,6 @@ class Install extends Action
 
         // Fall back to CLI mode
         $source = ($interactive === 'Y' && Console::isInteractive()) ? Report::SOURCE_CLI : Report::SOURCE_CLI_HEADLESS;
-        $enableAssistant = false;
-        $assistantExistsInOldCompose = false;
-        if ($existingInstallation) {
-            try {
-                $compose->getService('appwrite-assistant');
-                $assistantExistsInOldCompose = true;
-            } catch (\Throwable) {
-                /* ignore */
-            }
-        }
-
-        if ($interactive === 'Y' && Console::isInteractive()) {
-            $prompt = 'Add Appwrite Assistant? (Y/n)' . ($assistantExistsInOldCompose ? ' [Currently enabled]' : '');
-            $answer = Console::confirm($prompt);
-
-            if (empty($answer)) {
-                $enableAssistant = $assistantExistsInOldCompose;
-            } else {
-                $enableAssistant = \strtolower($answer) === 'y';
-            }
-        } elseif ($assistantExistsInOldCompose) {
-            $enableAssistant = true;
-        }
-
         if (empty($httpPort)) {
             $httpPort = Console::confirm('Choose your server HTTP port: (default: ' . $defaultHttpPort . ')');
             $httpPort = ($httpPort) ?: $defaultHttpPort;
@@ -295,31 +271,6 @@ class Install extends Action
 
         foreach ($vars as $var) {
             if (isset($userInput[$var['name']])) {
-                continue;
-            }
-
-            if ($var['name'] === '_APP_ASSISTANT_OPENAI_API_KEY') {
-                if (!$enableAssistant) {
-                    $userInput[$var['name']] = '';
-                    continue;
-                }
-
-                if (!empty($var['default'])) {
-                    $userInput[$var['name']] = $var['default'];
-                    continue;
-                }
-
-                if (Console::isInteractive() && $interactive === 'Y') {
-                    $userInput[$var['name']] = Console::confirm('Enter your OpenAI API key for Appwrite Assistant:');
-                    if (empty($userInput[$var['name']])) {
-                        Console::warning('No API key provided. Assistant will be disabled.');
-                        $enableAssistant = false;
-                        $userInput[$var['name']] = '';
-                    }
-                } else {
-                    $userInput[$var['name']] = '';
-                }
-
                 continue;
             }
 
@@ -407,10 +358,15 @@ class Install extends Action
         // Start Swoole-based installer server in background
         // Redirect stdout/stderr to a log file so exec() returns immediately
         // (otherwise the backgrounded process holds the pipe open and exec() hangs)
+        $secret = Secret::generate()->value;
         $serverScript = \escapeshellarg(dirname(__DIR__) . '/Installer/Server.php');
         $logFile = \sys_get_temp_dir() . '/appwrite-installer-server.log';
         $output = [];
-        \exec("php {$serverScript} > " . \escapeshellarg($logFile) . " 2>&1 & echo \$!", $output);
+        \exec(
+            Secret::ENVIRONMENT . '=' . \escapeshellarg($secret)
+            . " php {$serverScript} > " . \escapeshellarg($logFile) . " 2>&1 & echo \$!",
+            $output
+        );
         $pid = isset($output[0]) ? (int) $output[0] : 0;
 
         \register_shutdown_function(function () use ($pid) {
@@ -418,6 +374,9 @@ class Install extends Action
                 @\posix_kill($pid, SIGTERM);
             }
         });
+        Console::info('Installer secret: ' . $secret);
+        Console::info('Open your browser at: http://localhost:' . $port . '/?secret=' . $secret);
+
         \sleep(1);
 
         if (!$this->waitForWebServer($port)) {
@@ -439,7 +398,6 @@ class Install extends Action
     {
         $input = [];
         $password = new Password();
-        $token = new Token();
 
         // Start with all defaults
         foreach ($vars as $var) {
@@ -447,15 +405,7 @@ class Install extends Action
             $default = $var['default'] ?? null;
             $hasDefault = $default !== null && $default !== '';
 
-            if ($filter === 'token') {
-                if ($hasDefault) {
-                    $input[$var['name']] = $default;
-                } elseif ($shouldGenerateSecrets) {
-                    $input[$var['name']] = $token->generate();
-                } else {
-                    $input[$var['name']] = '';
-                }
-            } elseif ($filter === 'password') {
+            if ($filter === 'password') {
                 if ($hasDefault) {
                     $input[$var['name']] = $default;
                 } elseif ($shouldGenerateSecrets) {
@@ -471,9 +421,18 @@ class Install extends Action
 
         // Override with user inputs
         foreach ($userInput as $key => $value) {
-            if ($value !== null && ($value !== '' || $key === '_APP_ASSISTANT_OPENAI_API_KEY')) {
+            if ($value !== null && $value !== '') {
                 $input[$key] = $value;
             }
+        }
+
+        foreach ($vars as $var) {
+            if (($var['filter'] ?? null) !== 'token') {
+                continue;
+            }
+            $name = $var['name'];
+            $value = $input[$name] ?? '';
+            $input[$name] = EncryptionKey::resolve(is_string($value) ? $value : '', $shouldGenerateSecrets);
         }
 
         // Multiline values (e.g. GitHub App PEM private keys) are allowed; env.phtml
@@ -661,8 +620,6 @@ class Install extends Action
             $this->hostPath = $this->detectInstallerHostPath($this->path) ?? '';
         }
 
-        $assistantKey = (string) ($input['_APP_ASSISTANT_OPENAI_API_KEY'] ?? '');
-        $enableAssistant = trim($assistantKey) !== '';
         $enabledRuntimes = \array_unique(\array_filter(\array_map(
             'trim',
             \explode(',', ($input['_APP_FUNCTIONS_RUNTIMES'] ?? '') . ',' . ($input['_APP_SITES_RUNTIMES'] ?? ''))
@@ -687,7 +644,6 @@ class Install extends Action
             'version' => $version,
             'database' => $database,
             'hostPath' => $this->hostPath,
-            'enableAssistant' => $enableAssistant,
             'topology' => $this->topology,
         ]);
 
@@ -745,8 +701,11 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_CONFIG_FILES, InstallerServer::STATUS_COMPLETED, $messages);
             }
 
-            if ($database === 'mongodb' && !$useExistingConfig && $startIndex <= 1) {
-                $this->copyMongoFilesIfNeeded();
+            if (!$useExistingConfig && $startIndex <= 1) {
+                $this->copyConfigFiles(match ($database) {
+                    'mongodb' => ['clickhouse-config.xml', 'mongo-entrypoint.sh', 'mongo-init.js'],
+                    default => ['clickhouse-config.xml'],
+                });
             }
 
             // Changes to what the containers run on, rather than to what is inside the
@@ -1299,17 +1258,21 @@ class Install extends Action
         }
     }
 
-    private function copyMongoFilesIfNeeded(): void
+    /**
+     * Copy the files the compose file bind-mounts next to itself.
+     *
+     * @param array<string> $files
+     */
+    private function copyConfigFiles(array $files): void
     {
-        $files = [
-            'mongo-entrypoint.sh',
-            'mongo-init.js',
-        ];
-
         foreach ($files as $file) {
             $source = $this->buildFromProjectPath('/' . $file);
             if (file_exists($source)) {
                 $target = $this->path . '/' . $file;
+                // A local install writes into the project root itself, and copy() fails onto the same file
+                if (\realpath($source) === \realpath($target)) {
+                    continue;
+                }
                 if (@copy($source, $target) === false) {
                     $lastError = error_get_last();
                     $errorMsg = $lastError ? $lastError['message'] : 'Unknown error';

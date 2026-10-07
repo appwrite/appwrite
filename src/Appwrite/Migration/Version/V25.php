@@ -333,9 +333,10 @@ class V25 extends Migration
     protected function migrateDocument(Document $document): Document
     {
         if (\in_array($document->getCollection(), ['keys', 'functions', 'sites'], true)) {
+            $retired = ['devKeys.read', 'devKeys.write', 'assistant.read'];
             $scopes = $document->getAttribute('scopes', []);
-            if (\is_array($scopes) && \array_intersect($scopes, ['devKeys.read', 'devKeys.write']) !== []) {
-                $document->setAttribute('scopes', \array_values(\array_diff($scopes, ['devKeys.read', 'devKeys.write'])));
+            if (\is_array($scopes) && \array_intersect($scopes, $retired) !== []) {
+                $document->setAttribute('scopes', \array_values(\array_diff($scopes, $retired)));
             }
 
             return $document;
