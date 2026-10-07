@@ -216,6 +216,49 @@ final class FunctionsCustomClientTest extends Scope
         $this->assertEquals(202, $execution['headers']['status-code']);
     }
 
+    public function testCreateExecutionReservedHeaderSpoof()
+    {
+        /**
+         * Test for FAILURE
+         */
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test reserved header spoof',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+
+        try {
+            foreach ([
+                [
+                    'X-Appwrite-User-Id' => 'impersonated-user',
+                    'X-Appwrite-Trigger' => 'event',
+                ],
+                [
+                    'X-APPWRITE-USER-ID' => 'impersonated-user',
+                    'X-APPWRITE-TRIGGER' => 'event',
+                ],
+            ] as $headers) {
+                $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], [
+                    'async' => false,
+                    'method' => 'GET',
+                    'path' => '/',
+                    'headers' => $headers,
+                ]);
+
+                $this->assertSame(400, $execution['headers']['status-code']);
+                $this->assertSame('general_argument_invalid', $execution['body']['type']);
+            }
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
+    }
+
     public function testCreateExecutionNoDeployment()
     {
         $functionId = $this->setupFunction([

@@ -2205,6 +2205,26 @@ final class FunctionsCustomServerTest extends Scope
 
             $this->assertEquals(400, $execution['headers']['status-code']);
             $this->assertEquals('general_argument_invalid', $execution['body']['type']);
+
+            $execution = $this->createExecution($data['functionId'], [
+                'headers' => [
+                    'X-Appwrite-User-Id' => 'impersonated-user',
+                    'X-Appwrite-Trigger' => 'event',
+                ],
+            ]);
+
+            $this->assertEquals(400, $execution['headers']['status-code']);
+            $this->assertEquals('general_argument_invalid', $execution['body']['type']);
+
+            $execution = $this->createExecution($data['functionId'], [
+                'headers' => [
+                    'X-APPWRITE-USER-ID' => 'impersonated-user',
+                    'X-APPWRITE-TRIGGER' => 'event',
+                ],
+            ]);
+
+            $this->assertEquals(400, $execution['headers']['status-code']);
+            $this->assertEquals('general_argument_invalid', $execution['body']['type']);
         } finally {
             $this->cleanupFunction($functionId);
         }

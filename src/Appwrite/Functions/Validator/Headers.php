@@ -82,12 +82,37 @@ class Headers extends Validator
                 }
             }
 
-            // Check for x-appwrite- prefix
-            if (str_starts_with($key, 'x-appwrite-')) {
+            if (self::isReserved($key)) {
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * Drop reserved Appwrite headers, matching names case-insensitively.
+     *
+     * @param array<array-key, mixed> $headers
+     * @return array<array-key, mixed>
+     */
+    public static function stripReserved(array $headers): array
+    {
+        $sanitized = [];
+
+        foreach ($headers as $key => $value) {
+            if (\is_string($key) && self::isReserved($key)) {
+                continue;
+            }
+
+            $sanitized[$key] = $value;
+        }
+
+        return $sanitized;
+    }
+
+    private static function isReserved(string $key): bool
+    {
+        return \str_starts_with(\strtolower($key), 'x-appwrite-');
     }
 
     /**
