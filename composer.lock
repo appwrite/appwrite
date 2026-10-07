@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "154c0de0f5918994250349d4a30bf121",
+    "content-hash": "3542d6d46dbe7f998094bde2b4bf71c4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2779,66 +2779,6 @@
             "time": "2025-06-29T15:42:06+00:00"
         },
         {
-            "name": "utopia-php/database",
-            "version": "7.4.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/database.git",
-                "reference": "7dc55467fffc4d7ba017fd435c5621ff8fdc4949"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/7dc55467fffc4d7ba017fd435c5621ff8fdc4949",
-                "reference": "7dc55467fffc4d7ba017fd435c5621ff8fdc4949",
-                "shasum": ""
-            },
-            "require": {
-                "ext-mbstring": "*",
-                "ext-mongodb": "*",
-                "ext-pdo": "*",
-                "ext-redis": "*",
-                "php": ">=8.5",
-                "utopia-php/cache": "^4.0 || ^5.0",
-                "utopia-php/console": "^0.1 || ^0.2",
-                "utopia-php/mongo": "1.*",
-                "utopia-php/pools": "2.*",
-                "utopia-php/validators": "^1.0"
-            },
-            "require-dev": {
-                "fakerphp/faker": "1.23.*",
-                "laravel/pint": "*",
-                "pcov/clobber": "2.*",
-                "phpstan/phpstan": "1.*",
-                "phpunit/phpunit": "9.*",
-                "rregeer/phpunit-coverage-check": "0.3.*",
-                "swoole/ide-helper": "5.1.3",
-                "utopia-php/cli": "^0.24.4"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Database\\": "src/Database"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple library to manage application persistence using multiple database adapters",
-            "keywords": [
-                "database",
-                "framework",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/7.4.1"
-            },
-            "time": "2026-10-07T10:18:48+00:00"
-        },
-        {
             "name": "utopia-php/migration",
             "version": "2.0.8",
             "source": {
@@ -2892,66 +2832,6 @@
                 "source": "https://github.com/utopia-php/migration/tree/2.0.8"
             },
             "time": "2026-09-29T10:25:37+00:00"
-        },
-        {
-            "name": "utopia-php/mongo",
-            "version": "1.5.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/mongo.git",
-                "reference": "34ccfd6e81d76fd6ee9f26313bfad42c95b9ce88"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/34ccfd6e81d76fd6ee9f26313bfad42c95b9ce88",
-                "reference": "34ccfd6e81d76fd6ee9f26313bfad42c95b9ce88",
-                "shasum": ""
-            },
-            "require": {
-                "ext-mongodb": "^2.1.0",
-                "php": ">=8.0",
-                "ramsey/uuid": "4.9.*"
-            },
-            "require-dev": {
-                "fakerphp/faker": "1.*",
-                "laravel/pint": "*",
-                "phpstan/phpstan": "*",
-                "phpunit/phpunit": "9.*",
-                "swoole/ide-helper": "5.1.*"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Mongo\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                },
-                {
-                    "name": "Wess",
-                    "email": "wess@appwrite.io"
-                }
-            ],
-            "description": "A simple library to manage Mongo database",
-            "keywords": [
-                "database",
-                "mongo",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/mongo/issues",
-                "source": "https://github.com/utopia-php/mongo/tree/1.5.4"
-            },
-            "time": "2026-09-09T05:42:37+00:00"
         },
         {
             "name": "webmozart/assert",
@@ -6274,7 +6154,8 @@
         "ext-openssl": "*",
         "ext-zlib": "*",
         "ext-simplexml": "*",
-        "ext-sockets": "*"
+        "ext-sockets": "*",
+        "ext-mongodb": "*"
     },
     "platform-dev": {
         "ext-fileinfo": "*"

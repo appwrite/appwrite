@@ -259,6 +259,9 @@ jobs:
   matrix:
     name: Tests / Matrix
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       databases: ${{ steps.generate.outputs.databases }}
       modes: ${{ steps.generate.outputs.modes }}
@@ -306,26 +309,21 @@ jobs:
 
             const pr = context.payload.pull_request;
 
-            const isDatabaseVersionChanged = async () => {
-              const getContent = (ref) => github.rest.repos.getContent({
+            // database and mongo live in packages/, so a change to either widens
+            // the e2e matrix to every database adapter and both table modes.
+            const touchesDatabase = async () => {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                path: 'composer.lock',
-                ref,
+                pull_number: pr.number,
+                per_page: 100,
               });
 
-              const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
-              const [{ data: base }, { data: head }] = await Promise.all([
-                getContent(pr.base.sha),
-                getContent(pr.head.sha),
-              ]);
-
-              const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
-              return getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
+              return files.some(({ filename }) => filename.startsWith('packages/database/') || filename.startsWith('packages/mongo/'));
             };
 
             const fullMatrix = context.eventName === 'workflow_dispatch'
-              || (pr && await isDatabaseVersionChanged());
+              || (pr && await touchesDatabase());
 
             if (fullMatrix) {
               core.setOutput('databases', JSON.stringify(['MariaDB', 'PostgreSQL', 'MongoDB']));
