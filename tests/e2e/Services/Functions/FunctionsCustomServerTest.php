@@ -2645,8 +2645,9 @@ final class FunctionsCustomServerTest extends Scope
      */
     private function retryFailedFunctions(): void
     {
-        // Without --limit the task retries nothing: it reads the missing limit as 0.
-        \exec('queue-retry --name=' . \escapeshellarg(Event::FUNCTIONS_QUEUE_NAME) . ' --limit=1000 2>&1', $output, $exitCode);
+        // Without --limit the task retries nothing: it reads the missing limit as 0. --connection names the broker
+        // hosting the functions queue, which Cloud requires when several are configured; this task ignores it.
+        \exec('queue-retry --name=' . \escapeshellarg(Event::FUNCTIONS_QUEUE_NAME) . ' --connection=queue --limit=1000 2>&1', $output, $exitCode);
         $this->assertSame(0, $exitCode, \implode("\n", $output));
     }
 
