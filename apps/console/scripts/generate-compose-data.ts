@@ -1,11 +1,10 @@
 /**
- * Generates the docs compose-generator data from the sibling appwrite repo.
- * Reads ../appwrite/docker-compose.yml, .env, and the MongoDB helper files,
+ * Generates the docs compose-generator data from the enclosing appwrite repo.
+ * Reads docker-compose.yml, .env, and the MongoDB helper files at its root,
  * strips Compose profiles, pins the appwrite image version, and writes
  * src/lib/docs/compose-generator/composeData.ts.
  * Run: bun run scripts/generate-compose-data.ts
  */
-import { execSync } from 'node:child_process'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -13,16 +12,9 @@ import { load as loadYaml } from 'js-yaml'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = join(__dirname, '..')
-// Resolve the sibling appwrite repo from the main checkout, so the script
-// also works from git worktrees. Override with APPWRITE_REPO.
-const MAIN_CHECKOUT = dirname(
-  execSync('git rev-parse --path-format=absolute --git-common-dir', {
-    cwd: VIBES_ROOT,
-    encoding: 'utf-8',
-  }).trim(),
-)
-const APPWRITE_REPO =
-  process.env.APPWRITE_REPO ?? join(MAIN_CHECKOUT, '..', 'appwrite')
+// The console lives at apps/console in the appwrite repo. Override with
+// APPWRITE_REPO to generate from another checkout.
+const APPWRITE_REPO = process.env.APPWRITE_REPO ?? join(VIBES_ROOT, '..', '..')
 const OUTPUT_DIR = join(VIBES_ROOT, 'src', 'lib', 'docs', 'compose-generator')
 const OUTPUT_FILE = join(OUTPUT_DIR, 'composeData.ts')
 

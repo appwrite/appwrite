@@ -9,14 +9,14 @@
  *   bun run scripts/release-self-hosted.ts <version> [--notes=<file>] [--appwrite=<path>] [--date=YYYY-MM-DD] [--specs]
  *
  * --notes     release notes markdown; defaults to the published GitHub Release
- * --appwrite  appwrite checkout at the release commit (default: APPWRITE_REPO or ../appwrite)
+ * --appwrite  appwrite checkout at the release commit (default: APPWRITE_REPO or this repository)
  * --date      changelog entry date (default: today, UTC)
  * --specs     also move the @appwrite.io/specs pin to appwrite/specs main and
  *             regenerate the reference versions; run after the specs PR merged
  */
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
 
 const ROOT = join(import.meta.dirname, '..')
 const DOCS = join(ROOT, 'src', 'content', 'docs', 'advanced', 'self-hosting')
@@ -420,15 +420,7 @@ const previous =
     /APPWRITE_VERSION = "([^"]+)"/,
   )?.[1] ?? fail(`APPWRITE_VERSION not found in ${COMPOSE_DATA}`)
 const appwrite =
-  options.appwrite ??
-  process.env.APPWRITE_REPO ??
-  join(
-    dirname(
-      run('git', ['rev-parse', '--path-format=absolute', '--git-common-dir']),
-    ),
-    '..',
-    'appwrite',
-  )
+  options.appwrite ?? process.env.APPWRITE_REPO ?? join(ROOT, '..', '..')
 const date = day(options.date ?? new Date().toISOString().slice(0, 10))
 
 if (previous === version) {
