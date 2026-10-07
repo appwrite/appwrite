@@ -190,16 +190,27 @@
         return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
     };
 
-    const copyToClipboard = (value, input) => {
+    const copyToClipboard = (value, input, wrapper) => {
         if (!value) return;
+
+        const handleSuccess = () => {
+            if (wrapper) {
+                setTooltipText(wrapper, 'Copied!');
+                setTimeout(() => {
+                    resetTooltipText(wrapper);
+                }, 2000);
+            }
+        };
+
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(value);
+            navigator.clipboard.writeText(value).then(handleSuccess);
             return;
         }
         if (input) {
             input.select();
             document.execCommand('copy');
             input.setSelectionRange(0, 0);
+            handleSuccess();
             return;
         }
         const textArea = document.createElement('textarea');
@@ -211,6 +222,7 @@
         textArea.select();
         try {
             document.execCommand('copy');
+            handleSuccess();
         } catch (error) {} finally {
             document.body.removeChild(textArea);
         }
