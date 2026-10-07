@@ -32,15 +32,33 @@ export const Route = createFileRoute('/_marketing/threads/$threadId')({
       throw notFound()
     }
 
-    const [messages, related] = await Promise.all([
-      getThreadMessages(params.threadId),
-      getRelatedThreads(thread),
-    ])
+    let messages: Awaited<ReturnType<typeof getThreadMessages>> = []
+    let related: Awaited<ReturnType<typeof getRelatedThreads>> = []
+    let mentionLookup: Awaited<
+      ReturnType<typeof resolveThreadMentionLookup>
+    > = { users: {}, channels: {} }
 
-    const mentionLookup = await resolveThreadMentionLookup(
-      messages.map((message) => message.message),
-      messages,
-    )
+    try {
+      ;[messages, related] = await Promise.all([
+        getThreadMessages(params.threadId),
+        getRelatedThreads(thread),
+      ])
+    } catch {
+      try {
+        messages = await getThreadMessages(params.threadId)
+      } catch {
+        // Thread metadata still renders for crawlers when replies fail to load.
+      }
+    }
+
+    try {
+      mentionLookup = await resolveThreadMentionLookup(
+        messages.map((message) => message.message),
+        messages,
+      )
+    } catch {
+      // Mention labels fall back to raw Discord markup.
+    }
 
     const canonicalUrl = getThreadsCanonicalUrl(
       `/threads/${getThreadPublicId(thread)}`,
