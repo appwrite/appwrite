@@ -22,6 +22,8 @@ import {
 } from '@/components/pages/projects/$projectId/overview/chart-panel'
 import {
   FIREWALL_TRAFFIC_SERIES,
+  firewallTrafficPointPeak,
+  firewallTrafficSeriesValue,
   getFirewallTrafficSeriesTotals,
   sortFirewallTrafficSeriesByValueAsc,
   type FirewallTrafficSeriesKey,
@@ -36,6 +38,27 @@ import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const TRAFFIC_CHART_MARGIN = { top: 8, right: 12, left: 0, bottom: 4 } as const
+
+/** Hover ring only for the series that actually has requests at this bucket. */
+export function FirewallTrafficActiveDot({
+  cx,
+  cy,
+  payload,
+  dataKey,
+  color,
+}: {
+  cx?: number
+  cy?: number
+  payload?: FirewallTrafficPoint
+  dataKey?: unknown
+  color: string
+}) {
+  const value = firewallTrafficSeriesValue(payload, dataKey)
+  if (!value || cx == null || cy == null) return <g />
+  return (
+    <circle cx={cx} cy={cy} r={4} fill={color} stroke="#fff" strokeWidth={2} />
+  )
+}
 
 export type FirewallTrafficChartProps = {
   data: readonly FirewallTrafficPoint[]
@@ -74,19 +97,7 @@ export function FirewallTrafficChart({
     [seriesTotals],
   )
   const chartAxisMax = useMemo(
-    () =>
-      data.reduce(
-        (max, point) =>
-          Math.max(
-            max,
-            point.requests +
-              point.denied +
-              point.challenged +
-              point.rateLimited +
-              point.redirected,
-          ),
-        0,
-      ),
+    () => data.reduce((max, point) => Math.max(max, firewallTrafficPointPeak(point)), 0),
     [data],
   )
   const yAxisTickFormatter = useMemo(
@@ -222,23 +233,31 @@ export function FirewallTrafficChart({
                     )
                   }}
                 />
-                {seriesByValueAsc.map((series) => {
+                {/* Paint the largest series first so a smaller spike (a deny
+                    on an otherwise quiet bucket) stays visible on top. */}
+                {[...seriesByValueAsc].reverse().map((series) => {
                   const gradientId = `${series.gradientId}-${suffix}`
+                  const hasSeries = seriesTotals[series.key] > 0
                   return (
                     <Area
                       key={series.key}
                       type="monotone"
-                      stackId="firewall-traffic"
                       dataKey={series.key}
                       name={t(series.label)}
-                      stroke={
-                        seriesTotals[series.key] > 0
-                          ? series.color
-                          : 'transparent'
-                      }
+                      stroke={hasSeries ? series.color : 'transparent'}
                       strokeWidth={2}
                       fill={`url(#${gradientId})`}
                       dot={false}
+                      activeDot={
+                        hasSeries
+                          ? (props) => (
+                              <FirewallTrafficActiveDot
+                                {...props}
+                                color={series.color}
+                              />
+                            )
+                          : false
+                      }
                       {...CHART_ANIMATION_DISABLED}
                     />
                   )

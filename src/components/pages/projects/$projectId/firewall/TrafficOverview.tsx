@@ -58,9 +58,11 @@ import {
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
 import {
   FIREWALL_TRAFFIC_SERIES,
+  firewallTrafficPointPeak,
   sortFirewallTrafficSeriesByValueAsc,
   type FirewallTrafficSeriesKey,
 } from '@/lib/firewall/traffic-series'
+import { FirewallTrafficActiveDot } from './_components/FirewallTrafficChart'
 import { formatFirewallSolveTime } from '@/lib/firewall/usage'
 import { UsageLogRetentionAlert } from '../usage/_components/UsageLogRetentionAlert'
 import { UsageChartBrushReferenceArea } from '../usage/_components/UsageChartBrushReferenceArea'
@@ -357,19 +359,10 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
     onDateRangeChange: setDateRange,
   })
 
-  // Series are stacked, so the axis max is the per-point sum of all series.
   const chartAxisMax = useMemo(
     () =>
       chartData.reduce(
-        (max, point) =>
-          Math.max(
-            max,
-            point.requests +
-              point.denied +
-              point.challenged +
-              point.rateLimited +
-              point.redirected,
-          ),
+        (max, point) => Math.max(max, firewallTrafficPointPeak(point)),
         0,
       ),
     [chartData],
@@ -403,8 +396,8 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
     ],
   )
 
-  // Lowest total first (legend / tooltip preference). Recharts stacks
-  // bottom-up, so render in this order for lowest at the bottom.
+  // Lowest total first in the legend. The chart paints the reverse so a
+  // smaller series is not covered by a larger one.
   const seriesByValueAsc = useMemo(
     () => sortFirewallTrafficSeriesByValueAsc(seriesTotals),
     [seriesTotals],
@@ -731,26 +724,32 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
                     )
                   }}
                 />
-                {/* Recharts stacks bottom-up: render lowest totals first so the
-                    highest-value series sits on top (and owns the outer stroke). */}
-                {seriesByValueAsc.map((series) => (
-                  <Area
-                    key={series.key}
-                    type="monotone"
-                    stackId="firewall-traffic"
-                    dataKey={series.key}
-                    name={t(series.label)}
-                    stroke={
-                      seriesTotals[series.key] > 0
-                        ? series.color
-                        : 'transparent'
-                    }
-                    strokeWidth={2}
-                    fill={`url(#${series.gradientId})`}
-                    dot={false}
-                    {...chartLiveAnimation}
-                  />
-                ))}
+                {[...seriesByValueAsc].reverse().map((series) => {
+                  const hasSeries = seriesTotals[series.key] > 0
+                  return (
+                    <Area
+                      key={series.key}
+                      type="monotone"
+                      dataKey={series.key}
+                      name={t(series.label)}
+                      stroke={hasSeries ? series.color : 'transparent'}
+                      strokeWidth={2}
+                      fill={`url(#${series.gradientId})`}
+                      dot={false}
+                      activeDot={
+                        hasSeries
+                          ? (props) => (
+                              <FirewallTrafficActiveDot
+                                {...props}
+                                color={series.color}
+                              />
+                            )
+                          : false
+                      }
+                      {...chartLiveAnimation}
+                    />
+                  )
+                })}
                 <UsageChartBrushReferenceArea
                   left={brushLeft}
                   right={brushRight}

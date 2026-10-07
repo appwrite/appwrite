@@ -1,5 +1,6 @@
 import { useMemo, type ReactNode } from 'react'
 import { BreakdownRow } from './BreakdownRow'
+import { AnalyticsValueMenu } from './AnalyticsValueMenu'
 import { useAnalyticsCardTab } from '@/hooks/use-analytics-card-tab'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { AnalyticsDimension, type Models } from '@appwrite.io/console'
@@ -536,17 +537,26 @@ export function TrafficSplit({
               const value = agent[measure] ?? 0
               const active = isFilterActive('botName', name)
               return (
-                <BreakdownRow
+                // Right-click: filter / exclude, or block the bot with a
+                // user-agent firewall rule on the linked site.
+                <AnalyticsValueMenu
                   key={name}
-                  label={name}
-                  value={value}
-                  share={share(value, total)}
-                  barPercent={share(value, maxAgent)}
-                  mono
-                  onClick={() => addEqualFilter('botName', name)}
-                  active={active}
-                  actionTitle={active ? t('Remove filter') : t('Filter by this bot')}
-                />
+                  dimension={AnalyticsDimension.BotName}
+                  value={name}
+                >
+                  <div>
+                    <BreakdownRow
+                      label={name}
+                      value={value}
+                      share={share(value, total)}
+                      barPercent={share(value, maxAgent)}
+                      mono
+                      onClick={() => addEqualFilter('botName', name)}
+                      active={active}
+                      actionTitle={active ? t('Remove filter') : t('Filter by this bot')}
+                    />
+                  </div>
+                </AnalyticsValueMenu>
               )
             })}
           </BotColumn>

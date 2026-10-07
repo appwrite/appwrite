@@ -654,6 +654,48 @@ export function useRefreshAnalyticsProperty(
   return { refresh, isRefreshing }
 }
 
+/**
+ * The Appwrite Site serving a property's domain, if any: the proxy rule for
+ * that domain (or its www. variant) that deploys a site. Properties and sites
+ * aren't linked by ID, so the domain is the join.
+ */
+export function useAnalyticsLinkedSite(
+  projectId: string | null | undefined,
+  domain: string | null | undefined,
+  enabled: boolean = true,
+) {
+  const host = (domain ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .split('/')[0]
+    .replace(/^www\./, '')
+  const { data } = useQuery({
+    queryKey: ['analytics', 'linked-site', projectId, host],
+    queryFn: async () => {
+      const response = await withReadTimeout(
+        'linked site',
+        sdk.forProject(projectId!).proxy.listRules({
+          queries: [
+            Query.equal('domain', [host, `www.${host}`]),
+            Query.equal('deploymentResourceType', 'site'),
+            Query.limit(1),
+          ],
+        }),
+      )
+      const rule = response.rules?.[0] as
+        | (Models.ProxyRule & { deploymentResourceId?: string })
+        | undefined
+      return rule?.deploymentResourceId || null
+    },
+    enabled: enabled && !!projectId && !!host && isClientQueryEnabled,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+    refetchOnWindowFocus: false,
+  })
+  return { siteId: data ?? null }
+}
+
 /** How often the setup wizard asks whether the first event has landed. */
 const FIRST_EVENT_POLL_INTERVAL = 5000
 
