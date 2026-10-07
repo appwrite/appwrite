@@ -172,15 +172,6 @@ class Create extends Action
                 }
             }
 
-            // Makes sure this email is not already used in another identity
-            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                Query::equal('providerEmail', [$email]),
-            ]);
-            if (! $identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                /** Return a generic bad request to prevent exposing existing accounts */
-            }
-
             $emailMetadata = [
                 'emailCanonical' => null,
                 'emailIsCanonical' => null,
@@ -216,6 +207,16 @@ class Create extends Action
 
             if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
+            }
+
+            // Makes sure this email is not already used in another identity.
+            // Checked after the email policies so their errors do not depend on it.
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+            ]);
+            if (! $identityWithMatchingEmail->isEmpty()) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $hash = $proofForPassword->hash($proofForPassword->generate());
