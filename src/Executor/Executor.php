@@ -217,6 +217,10 @@ class Executor
             $request = $request->withHeader($name, $value);
         }
 
+        // libcurl adds Expect: 100-continue for bodies over 1 MiB and waits up to
+        // 1s for a 100 the executor never sends. An empty value disables that wait.
+        $request = $request->withHeader('Expect', '');
+
         if ($method != self::METHOD_GET) {
             $request = $request->withBody((new StreamFactory())->createStream($query));
         }
