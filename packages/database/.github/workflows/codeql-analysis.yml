@@ -1,0 +1,20 @@
+name: "CodeQL"
+
+on: [ pull_request ]
+jobs:
+  lint:
+    name: CodeQL
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 2
+
+      - run: git checkout HEAD^2
+
+      - name: Run CodeQL
+        run: |
+          docker run --rm -v $PWD:/app -w /app phpswoole/swoole:5.1.8-php8.3-alpine sh -c \
+          "composer install --profile --ignore-platform-reqs && composer check"

@@ -1,0 +1,257 @@
+services:
+  tests:
+    container_name: tests
+    image: databases-dev
+    build:
+      context: .
+      args:
+        DEBUG: true
+    networks:
+      - database
+    volumes:
+      - ./bin:/usr/src/code/bin
+      - ./src:/usr/src/code/src
+      - ./tests:/usr/src/code/tests
+      - ./dev:/usr/src/code/dev
+      - ./phpunit.xml:/usr/src/code/phpunit.xml
+      - ./dev/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./docker-compose.yml:/usr/src/code/docker-compose.yml
+    environment:
+      PHP_IDE_CONFIG: serverName=tests
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres-mirror:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
+      mariadb-mirror:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      mysql-mirror:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      redis-mirror:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+
+  adminer:
+    image: adminer
+    container_name: utopia-adminer
+    restart: always
+    ports:
+      - "8700:8080"
+    networks:
+      - database
+
+  postgres:
+    build:
+      context: .
+      dockerfile: postgres.dockerfile
+      args:
+        POSTGRES_VERSION: 16
+    container_name: utopia-postgres
+    networks:
+      - database
+    ports:
+      - "8701:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: root
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  postgres-mirror:
+    build:
+      context: .
+      dockerfile: postgres.dockerfile
+      args:
+        POSTGRES_VERSION: 16
+    container_name: utopia-postgres-mirror
+    networks:
+      - database
+    ports:
+      - "8702:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: root
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  mariadb:
+    image: mariadb:10.11
+    container_name: utopia-mariadb
+    command: mariadbd --max_allowed_packet=1G
+    networks:
+      - database
+    ports:
+      - "8703:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  mariadb-mirror:
+    image: mariadb:10.11
+    container_name: utopia-mariadb-mirror
+    command: mariadbd --max_allowed_packet=1G
+    networks:
+      - database
+    ports:
+      - "8704:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  mongo:
+    image: mongo:8.0.14
+    container_name: utopia-mongo
+    entrypoint: ["/entrypoint.sh"]
+    networks:
+      - database
+    ports:
+      - "9706:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./tests/resources/mongo/mongo-keyfile:/tmp/keyfile:ro
+      - ./tests/resources/mongo/entrypoint.sh:/entrypoint.sh:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: utopia_testing
+    healthcheck:
+      test: |
+        bash -c "
+          if mongosh -u root -p password --authenticationDatabase admin --quiet --eval 'rs.status().ok' 2>/dev/null; then
+            exit 0
+          else
+            mongosh -u root -p password --authenticationDatabase admin --quiet --eval \"
+              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]})
+            \" 2>/dev/null || exit 1
+          fi
+        "
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - database
+    ports:
+      - "8083:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://root:password@mongo:27017/?authSource=admin&directConnection=true
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+
+  mysql:
+    image: mysql:8.0.43
+    container_name: utopia-mysql
+    networks:
+      - database
+    ports:
+      - "8706:3307"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: default
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_TCP_PORT: 3307
+    cap_add:
+      - SYS_NICE
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -P $$MYSQL_TCP_PORT -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mysql-mirror:
+    image: mysql:8.0.43
+    container_name: utopia-mysql-mirror
+    networks:
+      - database
+    ports:
+      - "8707:3307"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: default
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_TCP_PORT: 3307
+    cap_add:
+      - SYS_NICE
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -P $$MYSQL_TCP_PORT -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:8.2.1-alpine3.22
+    container_name: utopia-redis
+    ports:
+      - "8708:6379"
+    networks:
+      - database
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  redis-mirror:
+    image: redis:8.2.1-alpine3.22
+    container_name: utopia-redis-mirror
+    ports:
+      - "8709:6379"
+    networks:
+      - database
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  mongo-data:
+
+networks:
+  database:
+
+secrets:
+  mongo_keyfile:
+    file: ./tests/resources/mongo/mongo-keyfile
+

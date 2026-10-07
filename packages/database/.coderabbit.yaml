@@ -1,0 +1,8 @@
+reviews:
+  path_filters:
+    - "!dev/**"
+    - "!docs/**"
+  auto_review:
+    base_branches:
+      - main
+      - 0.69.x

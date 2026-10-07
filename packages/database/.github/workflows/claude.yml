@@ -1,0 +1,40 @@
+# name: Claude
+
+# on:
+#   pull_request:
+#     types: [opened, synchronize, ready_for_review, reopened]
+#   pull_request_review:
+#     types: [submitted]
+#   issue_comment:
+#     types: [created]
+#   pull_request_review_comment:
+#     types: [created]
+#   issues:
+#     types: [opened, assigned]
+#   workflow_run:
+#     workflows: [Tests]
+#     types: [completed]
+
+# jobs:
+#   claude:
+#     # Caller must grant the union of every permission the callee's jobs ask
+#     # for; reusable workflows can't exceed the caller's ceiling.
+#     permissions:
+#       contents: write
+#       pull-requests: write
+#       issues: write
+#       actions: read
+#       id-token: write
+#     uses: abnegate/claude-pr-owner/.github/workflows/orchestrator.yml@7138fd26ee7317ac1f05001eafeb41d371ba58a6 # v0.6.0
+#     secrets:
+#       oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+#       # PAT with `contents: write` on this repo. Without this, commits pushed
+#       # by the consolidator (authenticated with GITHUB_TOKEN) do not trigger
+#       # workflow_run/synchronize events, so Tests/CodeQL/Linter stay dormant
+#       # on Claude's fixes.
+#       push_token: ${{ secrets.CLAUDE_PUSH_TOKEN }}
+#     with:
+#       # improvement: true
+#       # healing: true
+#       bots: true
+#       comments: true

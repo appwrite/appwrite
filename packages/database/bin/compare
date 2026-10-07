@@ -1,0 +1,6 @@
+#!/bin/sh
+
+echo ""
+echo "Navigate to http://localhost:8708 in your browser"
+echo ""
+php -t /usr/src/code/bin/view -S 0.0.0.0:8708
