@@ -32,15 +32,13 @@ jobs:
               id: version
               env:
                   REF: ${{ github.ref }}
-                  SHA: ${{ github.sha }}
               run: |
                   case "$REF" in
                     refs/tags/apps/console/?*) tag="${REF#refs/tags/apps/console/}" ;;
-                    refs/tags/*)
-                      echo "::error::Production deploys only from apps/console/<version> tags, not ${REF#refs/tags/}"
+                    *)
+                      echo "::error::Production deploys only from apps/console/<version> tags, not $REF"
                       exit 1
                       ;;
-                    *) tag="$SHA" ;;
                   esac
                   echo "tag=$tag" >> "$GITHUB_OUTPUT"
                   echo "Deploying $IMAGE_NAME:$tag"
