@@ -287,6 +287,53 @@ class BuilderAstTest extends TestCase
         $this->assertContains(50, $result->bindings);
     }
 
+    public function testFromAstJoinKeepsEveryOnCondition(): void
+    {
+        $ast = new Select(
+            columns: [new Star()],
+            from: new Table('users'),
+            joins: [new JoinClause(
+                'LEFT JOIN',
+                new Table('orders', 'o'),
+                new Binary(
+                    new Binary(new Column('id', 'users'), '=', new Column('user_id', 'o')),
+                    'AND',
+                    new Binary(
+                        new Binary(new Column('region', 'users'), '=', new Column('region', 'o')),
+                        'AND',
+                        new Binary(new Column('status', 'o'), '=', new Literal('paid')),
+                    ),
+                ),
+            )],
+        );
+
+        $result = MySQL::fromAst($ast)->build();
+
+        $this->assertSame(
+            'SELECT * FROM `users` LEFT JOIN `orders` AS `o` ON `users`.`id` = `o`.`user_id` AND `users`.`region` = `o`.`region` AND `o`.`status` IN (?)',
+            $result->query,
+        );
+        $this->assertSame(['paid'], $result->bindings);
+    }
+
+    public function testFromAstJoinRejectsConditionItCannotRepresent(): void
+    {
+        $ast = new Select(
+            columns: [new Star()],
+            from: new Table('users'),
+            joins: [new JoinClause(
+                'JOIN',
+                new Table('orders', 'o'),
+                new Binary(new Column('id', 'users'), 'LIKE', new Column('user_id', 'o')),
+            )],
+        );
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Invalid join operator: LIKE');
+
+        MySQL::fromAst($ast)->build();
+    }
+
     public function testRoundTripBuilderToAst(): void
     {
         $builder = new MySQL()

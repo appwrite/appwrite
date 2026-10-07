@@ -2590,28 +2590,41 @@ abstract class Builder implements
                 default => Method::Join,
             };
 
-            $on = [];
             $isUnconditioned = $method === Method::CrossJoin || $method === Method::NaturalJoin;
-            if (! $isUnconditioned && $join->condition instanceof Binary) {
-                $on[] = Query::on(
-                    $this->astExpressionToColumnString($join->condition->left),
-                    $this->astExpressionToColumnString($join->condition->right),
-                    $join->condition->operator,
-                );
-            }
+            $on = $isUnconditioned || $join->condition === null ? [] : $this->astJoinConditionToQueries($join->condition);
 
             $this->pendingQueries[] = new Query($method, $table, $on, $alias);
         }
     }
 
-    private function astExpressionToColumnString(Expression $expression): string
+    /**
+     * @return list<Query>
+     *
+     * @throws ValidationException
+     */
+    private function astJoinConditionToQueries(Expression $condition): array
     {
-        if ($expression instanceof Column) {
-            return $this->astColumnReferenceToString($expression);
+        if ($condition instanceof Binary && \strtoupper($condition->operator) === 'AND') {
+            return [
+                ...$this->astJoinConditionToQueries($condition->left),
+                ...$this->astJoinConditionToQueries($condition->right),
+            ];
         }
 
-        $serializer = $this->createAstSerializer();
-        return $serializer->serializeExpression($expression);
+        if ($condition instanceof Binary && $condition->left instanceof Column && $condition->right instanceof Column) {
+            return [Query::on(
+                $this->astColumnReferenceToString($condition->left),
+                $this->astColumnReferenceToString($condition->right),
+                $condition->operator,
+            )];
+        }
+
+        $query = $this->astExpressionToSingleQuery($condition);
+        if ($query === null || ! $query->getMethod()->isJoinCondition()) {
+            throw new ValidationException('Unsupported join ON condition: ' . $this->createAstSerializer()->serializeExpression($condition));
+        }
+
+        return [$query];
     }
 
     private function applyAstWhere(Select $ast): void

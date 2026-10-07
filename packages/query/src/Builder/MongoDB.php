@@ -1326,6 +1326,10 @@ class MongoDB extends BaseBuilder implements
         $rightCol = $columns[2] ?? '';
         $alias = $joinQuery->getAlias() !== '' ? $joinQuery->getAlias() : $table;
 
+        if ($leftCol === '' || $rightCol === '') {
+            throw new ValidationException('Join ON requires left and right columns');
+        }
+
         if ($operator !== '=') {
             throw new UnsupportedException(
                 'MongoDB $lookup in localField/foreignField form only supports equality joins. '

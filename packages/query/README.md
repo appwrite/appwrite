@@ -172,11 +172,11 @@ Query::offset(50);
 
 // A cursor is the row a page starts after or ends before:
 // an associative array of its columns, or an object such as a document
-Query::cursorAfter(['id' => 'doc_abc123', 'createdAt' => '2026-01-01']);
-Query::cursorBefore($lastDocument);
+Query::cursorAfter(['_cursor' => 'doc_abc123']);
+Query::cursorBefore($lastRow);
 ```
 
-The builders page on a `_cursor` column, so they bind the cursor row's `_cursor` value (`['_cursor' => 'doc_abc123']`); a row without one throws `ValidationException`.
+The bundled builders page on a `_cursor` column, so they bind the cursor row's `_cursor` value; a row without one throws `ValidationException`. Consumers that compile cursors themselves read whichever columns they page on (utopia-php/database reads the document, the audit and usage adapters their ordering columns).
 
 ### Join Queries
 

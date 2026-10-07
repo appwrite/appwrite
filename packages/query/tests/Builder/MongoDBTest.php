@@ -4300,6 +4300,17 @@ class MongoDBTest extends TestCase
         $this->assertSame('u', $lookupBody['as']);
     }
 
+    public function testJoinQueryRequiresBothColumns(): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Join ON requires left and right columns');
+
+        new Builder()
+            ->from('orders')
+            ->queries([Query::join('users', 'u', [Query::on('', 'u.id')])])
+            ->build();
+    }
+
     public function testJoinQueryWithFilteredOnListIsUnsupported(): void
     {
         $this->expectException(UnsupportedException::class);

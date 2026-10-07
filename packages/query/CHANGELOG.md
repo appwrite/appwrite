@@ -54,7 +54,7 @@ All notable changes to `utopia-php/query` are documented in this file.
 | `Query::crossJoin('colors')` | `Query::crossJoin('colors', 'colors')` |
 | `$join->getJoinAlias()` | `$join->getAlias()` |
 | `$aggregate->getValue('')` for the alias | `$aggregate->getAlias()` |
-| `Query::cursorAfter('id')` | `Query::cursorAfter($document)` or `Query::cursorAfter(['id' => 'id'])` |
+| `Query::cursorAfter('id')` | `Query::cursorAfter(['_cursor' => 'id'])` for the bundled builders, or the row your own compiler pages on (a document, `['id' => …]`) |
 | `$builder->cursorAfter('value')` | `$builder->cursorAfter(['_cursor' => 'value'])` |
 | `protected function compileSearchExpr(...)` | `protected function compileSearchExpression(...)` (likewise for the other four) |
 
