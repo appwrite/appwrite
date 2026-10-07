@@ -355,10 +355,14 @@ function resolveDocsSlug(slug: string): string | null {
   return best
 }
 
+/** Served by the `/docs/$` route handler, not a docs page slug. */
+const DOCS_LLMS_TXT = 'llms.txt'
+
 function docsPathRedirect(pathname: string): string | null {
   if (pathname !== '/docs' && !pathname.startsWith('/docs/')) return null
 
   let slug = pathname.slice('/docs/'.length).replace(/^\/+|\/+$/g, '')
+  if (slug === DOCS_LLMS_TXT) return null
   if (slug.endsWith('.md') || slug.endsWith('.json')) {
     const bare = slug.replace(/\.(md|json)$/, '')
     if (docsSlugExists(bare)) return null
