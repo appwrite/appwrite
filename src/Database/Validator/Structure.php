@@ -267,6 +267,11 @@ class Structure extends Validator
             $keys[$name] = $attribute; // List of allowed attributes to help find unknown ones
 
             if ($required && !isset($structure[$name])) {
+                // Documents stored before the attribute became required hold null, and may keep it
+                if ($this->currentDocument !== null && $this->currentDocument->getAttribute($name) === null) {
+                    continue;
+                }
+
                 $this->message = 'Missing required attribute "'.$name.'"';
                 return false;
             }
@@ -330,6 +335,10 @@ class Structure extends Validator
             $signed = $attribute['signed'] ?? true;
 
             if ($required === false && is_null($value)) { // Allow null value to optional params
+                continue;
+            }
+
+            if (is_null($value) && $this->currentDocument !== null && $this->currentDocument->getAttribute($key) === null) {
                 continue;
             }
 
