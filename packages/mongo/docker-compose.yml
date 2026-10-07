@@ -1,0 +1,27 @@
+services:
+
+  tests:
+    container_name: utopia-mongo-test-1
+    build:
+      context: .
+      dockerfile: php${PHP_VERSION:-83}.Dockerfile
+    networks:
+      - database
+    volumes:
+      - ./:/usr/src/code
+    ports:
+      - "8882:8882"
+
+  mongo:
+    image: mongo:8
+    container_name: utopia-mongo-1
+    networks:
+      - database
+    ports:
+      - "8881:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+networks:
+  database:

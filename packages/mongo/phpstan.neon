@@ -1,0 +1,4 @@
+parameters:
+  paths:
+    - src
+  level: 4
