@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Documents;
 
+use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
@@ -20,6 +21,21 @@ class User extends Document
     public const ROLE_OWNER = 'owner';
     public const ROLE_KEYS = 'keys';
     public const ROLE_SYSTEM = 'system';
+
+    /**
+     * Secret checked by the last sessionVerify() call on this instance.
+     */
+    private ?string $verifiedSecret = null;
+
+    /**
+     * Sessions array identity from the last sessionVerify() call.
+     */
+    private mixed $verifiedSessions = null;
+
+    /**
+     * Result of the last sessionVerify() call. Null until the first call.
+     */
+    private string|false|null $verifiedSessionId = null;
 
     /**
      * Returns all roles for a user.
@@ -132,27 +148,51 @@ class User extends Document
     /**
      * Verify session and check that its not expired.
      *
+     * The session secret is hashed once. Repeating the check for the same
+     * secret and sessions array (the user resource and the session resource
+     * both do this on every request) reuses that result.
+     *
      * @param string $secret
      *
-     * @return bool|string
+     * @return string|false
      */
-    public function sessionVerify(string $secret, Token $proofForToken)
+    public function sessionVerify(string $secret, Token $proofForToken): string|false
     {
         $sessions = $this->getAttribute('sessions', []);
+        if ($this->verifiedSecret === $secret && $this->verifiedSessions === $sessions && $this->verifiedSessionId !== null) {
+            return $this->verifiedSessionId;
+        }
+
+        $sessionId = false;
+        // Session secrets are SHA-256. Hash the cookie secret once and compare.
+        // Other proofs (tests, legacy) keep per-session verify(), which may be salted.
+        $prepared = $proofForToken->getHash() instanceof Sha;
+        $hashed = $prepared ? $proofForToken->hash($secret) : '';
 
         foreach ($sessions as $session) {
+            $sessionSecret = $session->getAttribute('secret');
+            $matches = \is_string($sessionSecret) && (
+                $prepared
+                    ? \hash_equals($sessionSecret, $hashed)
+                    : $proofForToken->verify($secret, $sessionSecret)
+            );
+
             if (
-                $session->isSet('secret') &&
+                $matches &&
                 $session->isSet('provider') &&
                 $session->isSet('expire') &&
-                $proofForToken->verify($secret, $session->getAttribute('secret')) &&
                 DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now())
             ) {
-                return $session->getId();
+                $sessionId = $session->getId();
+                break;
             }
         }
 
-        return false;
+        $this->verifiedSecret = $secret;
+        $this->verifiedSessions = $sessions;
+        $this->verifiedSessionId = $sessionId;
+
+        return $sessionId;
     }
 
     /**

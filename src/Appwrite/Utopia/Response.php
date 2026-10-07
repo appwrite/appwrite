@@ -475,12 +475,16 @@ class Response extends SwooleResponse
             && $this->user !== null
             && $document->getId() === $this->user->getId()
         ) {
-            $document = clone $document;
+            $document = $this->copyForOutput($document, $this->getModel($model));
             $document->setAttribute('impersonatorUserId', $this->impersonatorUser->getId());
         }
 
-        $output = $this->output(clone $document, $model);
-        $output = $this->applyFilters($output, $model, raw: clone $document);
+        // output() copies what the model renders. Filters receive their own copy
+        // only when one is registered, so an unfiltered response is not cloned twice.
+        $output = $this->output($document, $model);
+        if ($this->hasFilters()) {
+            $output = $this->applyFilters($output, $model, raw: $this->copyForOutput($document, $this->getModel($model)));
+        }
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
@@ -524,8 +528,8 @@ class Response extends SwooleResponse
      */
     public function output(Document $document, string $model): array
     {
-        $data       = clone $document;
         $model      = $this->getModel($model);
+        $data       = $this->copyForOutput($document, $model);
         $output     = [];
 
         $data = $model->filter($data);
@@ -617,6 +621,54 @@ class Response extends SwooleResponse
         $this->payload = $output;
 
         return $this->payload;
+    }
+
+    /**
+     * Relationship lists stored on the cached user document. Response models do
+     * not render them, but a deep clone still copies every nested document.
+     *
+     * @var array<int, string>
+     */
+    private const array USER_RELATIONS = [
+        'sessions',
+        'tokens',
+        'challenges',
+        'memberships',
+        'authenticators',
+        'identities',
+    ];
+
+    /**
+     * Copy a document for response rendering.
+     *
+     * Model filters mutate the document they receive, so the caller keeps the
+     * original. User relationship lists the model does not render are detached
+     * for the clone and put back before this returns.
+     */
+    private function copyForOutput(Document $document, Model $model): Document
+    {
+        if ($model->isAny()) {
+            return clone $document;
+        }
+
+        $rules = $model->getRules();
+        $removed = [];
+        foreach (self::USER_RELATIONS as $key) {
+            if (isset($rules[$key]) || !$document->isSet($key)) {
+                continue;
+            }
+
+            $removed[$key] = $document->getAttribute($key);
+            $document->removeAttribute($key);
+        }
+
+        try {
+            return clone $document;
+        } finally {
+            foreach ($removed as $key => $value) {
+                $document->setAttribute($key, $value);
+            }
+        }
     }
 
     /**

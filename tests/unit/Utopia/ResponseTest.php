@@ -283,4 +283,69 @@ final class ResponseTest extends TestCase
         $this->assertTrue($payload['afterInner']);
         $this->assertFalse($isShowingSensitive->getValue($this->response));
     }
+
+    public function testOutputDoesNotCloneUserRelationships(): void
+    {
+        CountingDocument::$clones = 0;
+        $session = new CountingDocument([
+            '$id' => 'session',
+            'secret' => 'hashed-secret',
+        ]);
+        $document = new Document([
+            'string' => 'lorem ipsum',
+            'integer' => 123,
+            'boolean' => true,
+            'sessions' => [$session],
+            'tokens' => [new CountingDocument([
+                '$id' => 'token',
+                'secret' => 'hashed-token',
+            ])],
+            'memberships' => [new CountingDocument([
+                '$id' => 'membership',
+            ])],
+        ]);
+
+        $output = $this->response->output($document, 'single');
+
+        $this->assertSame(0, CountingDocument::$clones);
+        $this->assertSame($session, $document->getAttribute('sessions')[0]);
+        $this->assertSame('hashed-secret', $document->getAttribute('sessions')[0]->getAttribute('secret'));
+        $this->assertCount(1, $document->getAttribute('tokens'));
+        $this->assertCount(1, $document->getAttribute('memberships'));
+        $this->assertArrayNotHasKey('sessions', $output);
+        $this->assertSame('lorem ipsum', $output['string']);
+    }
+
+    public function testOutputClonesNestedDocumentsTheModelRenders(): void
+    {
+        CountingDocument::$clones = 0;
+        $nested = new CountingDocument([
+            'string' => 'lorem ipsum',
+            'integer' => 123,
+            'boolean' => true,
+            'hidden' => 'secret',
+        ]);
+        $document = new Document([
+            'singles' => [$nested],
+        ]);
+
+        $output = $this->response->output($document, 'lists');
+
+        $this->assertGreaterThan(0, CountingDocument::$clones);
+        $this->assertSame('lorem ipsum', $nested->getAttribute('string'));
+        $this->assertSame('secret', $nested->getAttribute('hidden'));
+        $this->assertSame('lorem ipsum', $output['singles'][0]['string']);
+        $this->assertArrayNotHasKey('hidden', $output['singles'][0]);
+    }
+}
+
+final class CountingDocument extends Document
+{
+    public static int $clones = 0;
+
+    public function __clone(): void
+    {
+        self::$clones++;
+        parent::__clone();
+    }
 }
