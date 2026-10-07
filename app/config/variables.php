@@ -1935,6 +1935,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_STATS_USAGE_QUEUE_MAX',
+                'description' => 'Maximum pending jobs on the usage queue. That queue shares Redis with the cache, and the default Compose Redis evicts least-recently-used keys once it reaches 512mb, so an uncapped backlog pushes the cache out. Further usage metrics are dropped while the queue is at this depth. Set to -1 to disable the cap. Default value is: 8192.',
+                'introduction' => '',
+                'default' => '8192',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_STATS_RESOURCES_QUEUE_NAME',
                 'description' => 'Queue name for usage resource gauge ingestion.',
                 'introduction' => '',
