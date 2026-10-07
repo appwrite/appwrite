@@ -93,3 +93,6 @@ scripts/oauth2-shots.mjs
 
 # Bundled site template screenshots (served at /images/sites/templates)
 !public/images/sites/templates/*.png
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo
