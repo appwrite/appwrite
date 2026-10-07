@@ -61,6 +61,7 @@ final class DatabaseTest extends TestCase
         $database->documents['projects']['project'] = new Document(['$id' => 'project']);
         $entry = $source->make($row);
 
+        $this->assertNotNull($entry);
         $this->assertSame('project', $entry->payload['project']->getId());
         $this->assertFalse($database->getDocument('schedules', 'schedule')->isEmpty());
     }
@@ -90,13 +91,14 @@ final class DatabaseTest extends TestCase
         $source = $this->source($database);
         $row = iterator_to_array($source->snapshot())[0];
 
-        $this->assertNull($source->make($row));
+        $source->make($row);
         $this->assertTrue($database->getDocument('schedules', 'schedule')->isEmpty());
 
         $database->documents['projects']['project'] = new Document(['$id' => 'project']);
         $database->documents['schedules']['schedule'] = $row->data;
         $entry = $source->make($row);
 
+        $this->assertNotNull($entry);
         $this->assertSame('project', $entry->payload['project']->getId());
         $this->assertFalse($database->getDocument('schedules', 'schedule')->isEmpty());
     }

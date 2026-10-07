@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\Schedule;
 
 use Utopia\Schedule\Clock\System as SystemClock;
+use Utopia\Schedule\Source\Entry;
 use Utopia\Schedule\Source\Row;
 use Utopia\Schedule\Store\Memory as MemoryStore;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -286,7 +287,7 @@ final class Scheduler
                 continue;
             }
 
-            if ($entry === null) {
+            if (!$entry instanceof Entry) {
                 unset($this->entries[$id]);
                 continue;
             }
