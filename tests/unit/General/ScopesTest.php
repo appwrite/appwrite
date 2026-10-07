@@ -19,15 +19,13 @@ final class ScopesTest extends TestCase
     private const string LOCK = __DIR__ . '/../../../app/config/scopes/lock.json';
 
     /**
-     * @return array<string, array{string, string}>
+     * @return \Iterator<string, array{string, string}>
      */
-    public static function catalogs(): array
+    public static function catalogs(): \Iterator
     {
-        return [
-            'project' => ['project', 'projectScopes'],
-            'organization' => ['organization', 'organizationScopes'],
-            'account' => ['account', 'accountScopes'],
-        ];
+        yield 'project' => ['project', 'projectScopes'];
+        yield 'organization' => ['organization', 'organizationScopes'];
+        yield 'account' => ['account', 'accountScopes'];
     }
 
     #[DataProvider('catalogs')]
