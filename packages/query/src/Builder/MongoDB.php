@@ -1244,8 +1244,7 @@ class MongoDB extends BaseBuilder implements
         foreach ($grouped->aggregations as $agg) {
             $method = $agg->getMethod();
             $attr = $agg->getAttribute();
-            /** @var string $alias */
-            $alias = $agg->getValue('');
+            $alias = $agg->getAlias();
             if ($alias === '') {
                 $alias = $method->value;
             }
@@ -1283,8 +1282,7 @@ class MongoDB extends BaseBuilder implements
         }
 
         foreach ($grouped->aggregations as $agg) {
-            /** @var string $alias */
-            $alias = $agg->getValue('');
+            $alias = $agg->getAlias();
             if ($alias === '') {
                 $alias = $agg->getMethod()->value;
             }
@@ -1300,7 +1298,6 @@ class MongoDB extends BaseBuilder implements
     private function buildJoinStages(Query $joinQuery): array
     {
         $table = $joinQuery->getAttribute();
-        $values = $joinQuery->getValues();
         $stages = [];
 
         if ($joinQuery->getMethod() === Method::CrossJoin || $joinQuery->getMethod() === Method::NaturalJoin) {
@@ -1310,18 +1307,24 @@ class MongoDB extends BaseBuilder implements
             );
         }
 
-        if (empty($values)) {
+        $conditions = $joinQuery->getJoinOnQueries();
+        if ($conditions === []) {
             throw new ValidationException('Join query must have values.');
         }
 
-        /** @var string $leftCol */
-        $leftCol = $values[0];
-        /** @var string $operator */
-        $operator = $values[1] ?? '=';
-        /** @var string $rightCol */
-        $rightCol = $values[2];
-        /** @var string $alias */
-        $alias = $values[3] ?? $table;
+        if (\count($conditions) > 1 || $conditions[0]->getMethod() !== Method::On) {
+            throw new UnsupportedException(
+                'MongoDB $lookup in localField/foreignField form only supports a single on() condition. '
+                . 'Use a pipeline-form $lookup via a raw stage for filtered joins.'
+            );
+        }
+
+        /** @var array{0?: string, 1?: string, 2?: string} $columns */
+        $columns = $conditions[0]->getValues();
+        $leftCol = $columns[0] ?? '';
+        $operator = $columns[1] ?? '=';
+        $rightCol = $columns[2] ?? '';
+        $alias = $joinQuery->getAlias() !== '' ? $joinQuery->getAlias() : $table;
 
         if ($operator !== '=') {
             throw new UnsupportedException(

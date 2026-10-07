@@ -2,6 +2,7 @@
 
 namespace Utopia\Query;
 
+use ArrayAccess;
 use Closure;
 use Utopia\Query\AST\Call\Func;
 use Utopia\Query\AST\Definition\Cte as CteDefinition;
@@ -75,6 +76,8 @@ abstract class Builder implements
 
     /** @var list<string> */
     protected const COLUMN_PREDICATE_OPERATORS = ['=', '!=', '<>', '<', '>', '<=', '>='];
+
+    protected const string CURSOR_COLUMN = '_cursor';
 
     protected string $table = '';
 
@@ -509,8 +512,7 @@ abstract class Builder implements
 
         $this->qualify = true;
         foreach ($grouped->aggregations as $agg) {
-            /** @var string $aggAlias */
-            $aggAlias = $agg->getValue('');
+            $aggAlias = $agg->getAlias();
             if ($aggAlias !== '') {
                 $this->aggregationAliases[$aggAlias] = true;
             }
@@ -659,7 +661,7 @@ abstract class Builder implements
                     default => throw new UnsupportedException('Unsupported join method: ' . $joinQuery->getMethod()->value),
                 };
                 $isCrossJoin = $joinType === JoinType::Cross || $joinType === JoinType::Natural;
-                $joinAlias = $joinQuery->getJoinAlias();
+                $joinAlias = $joinQuery->getAlias();
                 $effectiveJoinTable = $joinAlias !== '' ? $joinAlias : $joinTable;
 
                 foreach ($this->joinFilterHooks as $hook) {
@@ -837,8 +839,7 @@ abstract class Builder implements
     {
         $aliasToExpr = [];
         foreach ($grouped->aggregations as $agg) {
-            /** @var string $alias */
-            $alias = $agg->getValue('');
+            $alias = $agg->getAlias();
             if ($alias === '') {
                 continue;
             }
@@ -1368,12 +1369,38 @@ abstract class Builder implements
     #[\Override]
     public function compileCursor(Query $query): string
     {
-        $value = $query->getValue();
-        $this->addBinding($value);
+        $this->addBinding($this->resolveCursorValue($query->getValue()));
 
         $operator = $query->getMethod() === Method::CursorAfter ? '>' : '<';
 
-        return $this->quote('_cursor') . ' ' . $operator . ' ?';
+        return $this->quote(self::CURSOR_COLUMN) . ' ' . $operator . ' ?';
+    }
+
+    /**
+     * A cursor is the row a page starts after or ends before, so the value
+     * compared is that row's cursor column. A parsed query can still carry
+     * the bare value.
+     *
+     * @throws ValidationException
+     */
+    private function resolveCursorValue(mixed $cursor): mixed
+    {
+        $row = match (true) {
+            \is_array($cursor) => $cursor,
+            $cursor instanceof ArrayAccess => $cursor->offsetExists(self::CURSOR_COLUMN) ? [self::CURSOR_COLUMN => $cursor->offsetGet(self::CURSOR_COLUMN)] : [],
+            \is_object($cursor) => \get_object_vars($cursor),
+            default => null,
+        };
+
+        if ($row === null) {
+            return $cursor;
+        }
+
+        if (! \array_key_exists(self::CURSOR_COLUMN, $row)) {
+            throw new ValidationException('Cursor row has no ' . self::CURSOR_COLUMN . ' value');
+        }
+
+        return $row[self::CURSOR_COLUMN];
     }
 
     #[\Override]
@@ -1384,8 +1411,7 @@ abstract class Builder implements
         if ($method === Method::CountDistinct) {
             $attr = $query->getAttribute();
             $col = ($attr === '*' || $attr === '') ? '*' : $this->resolveAndWrap($attr);
-            /** @var string $alias */
-            $alias = $query->getValue('');
+            $alias = $query->getAlias();
             $sql = 'COUNT(DISTINCT ' . $col . ')';
 
             if ($alias !== '') {
@@ -1402,8 +1428,7 @@ abstract class Builder implements
             \is_numeric($attr) => $attr,
             default => $this->resolveAndWrap($attr),
         };
-        /** @var string $alias */
-        $alias = $query->getValue('');
+        $alias = $query->getAlias();
         $sql = $func . '(' . $col . ')';
 
         if ($alias !== '') {
@@ -1463,54 +1488,16 @@ abstract class Builder implements
         };
 
         $table = $this->quote($query->getAttribute());
-        $values = $query->getValues();
-
-        // Handle alias for cross join and natural join (alias is values[0])
-        if ($query->getMethod() === Method::CrossJoin || $query->getMethod() === Method::NaturalJoin) {
-            /** @var string $alias */
-            $alias = $values[0] ?? '';
-            if ($alias !== '') {
-                $table .= ' AS ' . $this->quote($alias);
-            }
-
-            return $type . ' ' . $table;
-        }
-
-        if ($query->isNestedJoin()) {
-            $alias = $query->getJoinAlias();
-            if ($alias !== '') {
-                $table .= ' AS ' . $this->quote($alias);
-            }
-
-            return $type . ' ' . $table . ' ON ' . \implode(' AND ', $this->compileJoinOn($query));
-        }
-
-        if (empty($values)) {
-            return $type . ' ' . $table;
-        }
-
-        /** @var string $leftCol */
-        $leftCol = $values[0];
-        /** @var string $operator */
-        $operator = $values[1];
-        /** @var string $rightCol */
-        $rightCol = $values[2];
-        /** @var string $alias */
-        $alias = $values[3] ?? '';
-
+        $alias = $query->getAlias();
         if ($alias !== '') {
             $table .= ' AS ' . $this->quote($alias);
         }
 
-        $allowedOperators = ['=', '!=', '<', '>', '<=', '>=', '<>'];
-        if (! \in_array($operator, $allowedOperators, true)) {
-            throw new ValidationException('Invalid join operator: ' . $operator);
+        if ($query->getMethod() === Method::CrossJoin || $query->getMethod() === Method::NaturalJoin) {
+            return $type . ' ' . $table;
         }
 
-        $left = $this->resolveAndWrap($leftCol);
-        $right = $this->resolveAndWrap($rightCol);
-
-        return $type . ' ' . $table . ' ON ' . $left . ' ' . $operator . ' ' . $right;
+        return $type . ' ' . $table . ' ON ' . \implode(' AND ', $this->compileJoinOn($query));
     }
 
     /**
@@ -1573,7 +1560,7 @@ abstract class Builder implements
         };
 
         $table = $this->quote($query->getAttribute());
-        $alias = $query->getJoinAlias();
+        $alias = $query->getAlias();
 
         if ($alias !== '') {
             $table .= ' AS ' . $this->quote($alias);
@@ -2030,8 +2017,7 @@ abstract class Builder implements
     {
         $method = $query->getMethod();
         $attr = $query->getAttribute();
-        /** @var string $alias */
-        $alias = $query->getValue('');
+        $alias = $query->getAlias();
 
         $funcName = $method->sqlFunction() ?? \strtoupper($method->value);
 
@@ -2071,7 +2057,6 @@ abstract class Builder implements
         foreach ($grouped->joins as $joinQuery) {
             $joinMethod = $joinQuery->getMethod();
             $table = $joinQuery->getAttribute();
-            $values = $joinQuery->getValues();
 
             $type = match ($joinMethod) {
                 Method::Join => 'JOIN',
@@ -2083,38 +2068,12 @@ abstract class Builder implements
                 default => 'JOIN',
             };
 
-            $isCrossOrNatural = $joinMethod === Method::CrossJoin || $joinMethod === Method::NaturalJoin;
+            $alias = $joinQuery->getAlias();
+            $tableRef = new Table($table, $alias !== '' ? $alias : null);
 
-            if ($isCrossOrNatural) {
-                $joinAlias = $joinQuery->getJoinAlias();
-                $tableRef = new Table($table, $joinAlias !== '' ? $joinAlias : null);
-                $joins[] = new AstJoinClause($type, $tableRef, null);
-            } elseif ($joinQuery->isNestedJoin()) {
-                $joinAlias = $joinQuery->getJoinAlias();
-                $tableRef = new Table($table, $joinAlias !== '' ? $joinAlias : null);
-                $joins[] = new AstJoinClause($type, $tableRef, $this->nestedJoinOnToAst($joinQuery));
-            } else {
-                /** @var string $leftCol */
-                $leftCol = $values[0] ?? '';
-                /** @var string $operator */
-                $operator = $values[1] ?? '=';
-                /** @var string $rightCol */
-                $rightCol = $values[2] ?? '';
-                $joinAlias = $joinQuery->getJoinAlias();
+            $condition = $joinQuery->getJoinOnQueries() === [] ? null : $this->nestedJoinOnToAst($joinQuery);
 
-                $tableRef = new Table($table, $joinAlias !== '' ? $joinAlias : null);
-
-                $condition = null;
-                if ($leftCol !== '' && $rightCol !== '') {
-                    $condition = new Binary(
-                        $this->columnNameToAstExpression($leftCol),
-                        $operator,
-                        $this->columnNameToAstExpression($rightCol),
-                    );
-                }
-
-                $joins[] = new AstJoinClause($type, $tableRef, $condition);
-            }
+            $joins[] = new AstJoinClause($type, $tableRef, $condition);
         }
 
         return $joins;
@@ -2568,7 +2527,7 @@ abstract class Builder implements
         };
 
         if ($method !== null) {
-            $this->pendingQueries[] = new Query($method, $attr, $alias !== '' ? [$alias] : []);
+            $this->pendingQueries[] = new Query($method, $attr, [], $alias);
             return;
         }
 
@@ -2645,39 +2604,26 @@ abstract class Builder implements
             $alias = $join->table->alias ?? '';
             $type = \strtoupper($join->type);
 
-            if ($type === 'CROSS JOIN') {
-                $this->pendingQueries[] = Query::crossJoin($table, $alias);
-                continue;
-            }
-
-            if ($type === 'NATURAL JOIN') {
-                $this->pendingQueries[] = Query::naturalJoin($table, $alias);
-                continue;
-            }
-
-            $leftCol = '';
-            $operator = '=';
-            $rightCol = '';
-
-            if ($join->condition instanceof Binary) {
-                $leftCol = $this->astExpressionToColumnString($join->condition->left);
-                $operator = $join->condition->operator;
-                $rightCol = $this->astExpressionToColumnString($join->condition->right);
-            }
-
             $method = match ($type) {
+                'CROSS JOIN' => Method::CrossJoin,
+                'NATURAL JOIN' => Method::NaturalJoin,
                 'LEFT JOIN', 'LEFT OUTER JOIN' => Method::LeftJoin,
                 'RIGHT JOIN', 'RIGHT OUTER JOIN' => Method::RightJoin,
                 'FULL OUTER JOIN', 'FULL JOIN' => Method::FullOuterJoin,
-                'INNER JOIN', 'JOIN' => Method::Join,
                 default => Method::Join,
             };
 
-            $values = [$leftCol, $operator, $rightCol];
-            if ($alias !== '') {
-                $values[] = $alias;
+            $on = [];
+            $isUnconditioned = $method === Method::CrossJoin || $method === Method::NaturalJoin;
+            if (! $isUnconditioned && $join->condition instanceof Binary) {
+                $on[] = Query::on(
+                    $this->astExpressionToColumnString($join->condition->left),
+                    $this->astExpressionToColumnString($join->condition->right),
+                    $join->condition->operator,
+                );
             }
-            $this->pendingQueries[] = new Query($method, $table, $values);
+
+            $this->pendingQueries[] = new Query($method, $table, $on, $alias);
         }
     }
 

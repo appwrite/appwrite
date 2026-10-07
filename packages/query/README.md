@@ -18,6 +18,7 @@ composer require utopia-php/query
 - [Query Object](#query-object)
   - [Filters](#filters)
   - [Ordering and Pagination](#ordering-and-pagination)
+  - [Join Queries](#join-queries)
   - [Logical Combinations](#logical-combinations)
   - [Spatial Queries](#spatial-queries)
   - [Vector Similarity](#vector-similarity)
@@ -169,9 +170,34 @@ Query::orderDesc('score', NullsPosition::First);
 Query::limit(25);
 Query::offset(50);
 
-Query::cursorAfter('doc_abc123');
-Query::cursorBefore('doc_xyz789');
+// A cursor is the row a page starts after or ends before:
+// an associative array of its columns, or an object such as a document
+Query::cursorAfter(['id' => 'doc_abc123', 'createdAt' => '2026-01-01']);
+Query::cursorBefore($lastDocument);
 ```
+
+The builders page on a `_cursor` column, so they bind the cursor row's `_cursor` value (`['_cursor' => 'doc_abc123']`); a row without one throws `ValidationException`.
+
+### Join Queries
+
+Every join names the joined collection and an alias, which is required. Conditioned joins take an ON list of `on()` column comparisons and filters; anything else in the list (`limit()`, `select()`, `orderAsc()`, an aggregate, another join, …) throws `ValidationException`.
+
+```php
+Query::join('orders', 'o', [Query::on('users.id', 'o.user_id')]);
+Query::leftJoin('orders', 'o', [
+    Query::on('users.id', 'o.user_id'),
+    Query::equal('o.status', ['paid']),
+]);
+Query::rightJoin('orders', 'o', [Query::on('users.id', 'o.user_id', '!=')]);
+Query::fullOuterJoin('orders', 'o', [Query::on('users.id', 'o.user_id')]);
+Query::crossJoin('colors', 'c');
+Query::naturalJoin('profiles', 'p');
+
+$join->getAlias();          // 'o'
+$join->getJoinOnQueries();  // the ON list
+```
+
+Aggregates expose their alias the same way: `Query::count('*', 'total')->getAlias()` is `'total'`.
 
 ### Logical Combinations
 
@@ -245,6 +271,10 @@ $query = Query::equal('status', ['active']);
 // Serialize
 $json = $query->toString();
 // '{"method":"equal","attribute":"status","values":["active"]}'
+
+// Joins and aliased aggregates carry their alias under "alias"
+Query::count('*', 'total')->toString();
+// '{"method":"count","attribute":"*","alias":"total","values":[]}'
 
 // Parse back
 $parsed = Query::parse($json);

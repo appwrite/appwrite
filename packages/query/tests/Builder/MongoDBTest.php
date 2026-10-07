@@ -3837,7 +3837,7 @@ class MongoDBTest extends TestCase
 
         new Builder()
             ->from('users')
-            ->queries([Query::crossJoin('roles')])
+            ->queries([Query::crossJoin('roles', 'r')])
             ->build();
     }
 
@@ -3848,7 +3848,7 @@ class MongoDBTest extends TestCase
 
         new Builder()
             ->from('users')
-            ->queries([Query::naturalJoin('roles')])
+            ->queries([Query::naturalJoin('roles', 'r')])
             ->build();
     }
 
@@ -4276,6 +4276,42 @@ class MongoDBTest extends TestCase
         /** @var array<string, mixed> $lookupBody */
         $lookupBody = $lookupStage['$lookup'];
         $this->assertSame('users', $lookupBody['as']);
+    }
+
+    public function testJoinQueryLooksUpUnderItsAlias(): void
+    {
+        $result = new Builder()
+            ->from('orders')
+            ->queries([Query::leftJoin('users', 'u', [Query::on('orders.user_id', 'u.id')])])
+            ->build();
+        $this->assertBindingCount($result);
+
+        $op = $this->decode($result->query);
+        /** @var list<array<string, mixed>> $pipeline */
+        $pipeline = $op['pipeline'];
+
+        $lookupStage = $this->findStage($pipeline, '$lookup');
+        $this->assertNotNull($lookupStage);
+        /** @var array<string, mixed> $lookupBody */
+        $lookupBody = $lookupStage['$lookup'];
+        $this->assertSame('users', $lookupBody['from']);
+        $this->assertSame('user_id', $lookupBody['localField']);
+        $this->assertSame('id', $lookupBody['foreignField']);
+        $this->assertSame('u', $lookupBody['as']);
+    }
+
+    public function testJoinQueryWithFilteredOnListIsUnsupported(): void
+    {
+        $this->expectException(UnsupportedException::class);
+        $this->expectExceptionMessage('only supports a single on() condition');
+
+        new Builder()
+            ->from('orders')
+            ->queries([Query::join('users', 'u', [
+                Query::on('orders.user_id', 'u.id'),
+                Query::equal('u.status', ['active']),
+            ])])
+            ->build();
     }
 
     public function testSortRandomWithSortAscCombined(): void
