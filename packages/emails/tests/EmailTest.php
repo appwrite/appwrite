@@ -460,35 +460,35 @@ class EmailTest extends TestCase
     public function test_get_unique_yahoo_aliases(): void
     {
         $testCases = [
-            // Yahoo keeps hyphens: nickname-keyword@yahoo.com is a disposable address, not an alias
-            ['user-name@yahoo.com', 'user-name@yahoo.com'],
-            ['user-name-tag@yahoo.com', 'user-name-tag@yahoo.com'],
-            ['user-name-spam@yahoo.com', 'user-name-spam@yahoo.com'],
-            ['user-name-newsletter@yahoo.com', 'user-name-newsletter@yahoo.com'],
-            ['user-name-work@yahoo.com', 'user-name-work@yahoo.com'],
-            ['user-name-personal@yahoo.com', 'user-name-personal@yahoo.com'],
-            ['user-name-test123@yahoo.com', 'user-name-test123@yahoo.com'],
-            ['user-name-anything@yahoo.com', 'user-name-anything@yahoo.com'],
-            ['user-name-verylongtag@yahoo.com', 'user-name-verylongtag@yahoo.com'],
-            ['user-name-tag.with.dots@yahoo.com', 'user-name-tag.with.dots@yahoo.com'],
-            ['user-name-tag-with-hyphens@yahoo.com', 'user-name-tag-with-hyphens@yahoo.com'],
-            ['user-name-tag_with_underscores@yahoo.com', 'user-name-tag_with_underscores@yahoo.com'],
-            ['user-name-tag123@yahoo.com', 'user-name-tag123@yahoo.com'],
+            // Yahoo hyphen-based subaddress removal
+            ['user-name@yahoo.com', 'user@yahoo.com'],
+            ['user-name-tag@yahoo.com', 'user-name@yahoo.com'],
+            ['user-name-spam@yahoo.com', 'user-name@yahoo.com'],
+            ['user-name-newsletter@yahoo.com', 'user-name@yahoo.com'],
+            ['user-name-work@yahoo.com', 'user-name@yahoo.com'],
+            ['user-name-personal@yahoo.com', 'user-name@yahoo.com'],
+            ['user-name-test123@yahoo.com', 'user-name@yahoo.com'],
+            ['user-name-anything@yahoo.com', 'user-name@yahoo.com'],
+            ['user-name-verylongtag@yahoo.com', 'user-name@yahoo.com'],
+            ['user-name-tag.with.dots@yahoo.com', 'user-name@yahoo.com'],
+            ['user-name-tag-with-hyphens@yahoo.com', 'user-name-tag-with@yahoo.com'],
+            ['user-name-tag_with_underscores@yahoo.com', 'user-name@yahoo.com'],
+            ['user-name-tag123@yahoo.com', 'user-name@yahoo.com'],
             // Multiple hyphens
-            ['u-s-e-r-n-a-m-e@yahoo.com', 'u-s-e-r-n-a-m-e@yahoo.com'],
-            ['u-s-e-r-n-a-m-e-tag@yahoo.com', 'u-s-e-r-n-a-m-e-tag@yahoo.com'],
+            ['u-s-e-r-n-a-m-e@yahoo.com', 'u-s-e-r-n-a-m@yahoo.com'],
+            ['u-s-e-r-n-a-m-e-tag@yahoo.com', 'u-s-e-r-n-a-m-e@yahoo.com'],
             // Other Yahoo domains
-            ['user-name-tag@yahoo.co.uk', 'user-name-tag@yahoo.com'],
-            ['user-name-tag@yahoo.ca', 'user-name-tag@yahoo.com'],
-            ['user-name-tag@ymail.com', 'user-name-tag@yahoo.com'],
-            ['user-name-tag@rocketmail.com', 'user-name-tag@yahoo.com'],
+            ['user-name-tag@yahoo.co.uk', 'user-name@yahoo.com'],
+            ['user-name-tag@yahoo.ca', 'user-name@yahoo.com'],
+            ['user-name-tag@ymail.com', 'user-name@yahoo.com'],
+            ['user-name-tag@rocketmail.com', 'user-name@yahoo.com'],
             // Edge cases
-            ['user-@yahoo.com', 'user-@yahoo.com'],
-            // Dots and hyphens are preserved for Yahoo
+            ['user-@yahoo.com', 'user@yahoo.com'],
+            // Dots are preserved for Yahoo, hyphens are removed as subaddresses
             ['user.name@yahoo.com', 'user.name@yahoo.com'],
-            ['user-name@yahoo.com', 'user-name@yahoo.com'],
+            ['user-name@yahoo.com', 'user@yahoo.com'],
             ['u.s.e.r.n.a.m.e@yahoo.com', 'u.s.e.r.n.a.m.e@yahoo.com'],
-            ['u-s-e-r-n-a-m-e@yahoo.com', 'u-s-e-r-n-a-m-e@yahoo.com'],
+            ['u-s-e-r-n-a-m-e@yahoo.com', 'u-s-e-r-n-a-m@yahoo.com'],
             ['user.@yahoo.com', 'user.@yahoo.com'],
             ['.user@yahoo.com', '.user@yahoo.com'],
             // Other Yahoo domains
@@ -724,10 +724,10 @@ class EmailTest extends TestCase
             ['USER.NAME@OUTLOOK.COM', 'user.name@outlook.com'],
             ['User.Name@Outlook.Com', 'user.name@outlook.com'],
             ['user.name@Outlook.com', 'user.name@outlook.com'],
-            // Yahoo preserves hyphens and plus signs
-            ['USER-NAME+TAG@YAHOO.COM', 'user-name+tag@yahoo.com'],
-            ['User-Name+Tag@Yahoo.Com', 'user-name+tag@yahoo.com'],
-            ['user-name+tag@Yahoo.com', 'user-name+tag@yahoo.com'],
+            // Yahoo hyphen-based subaddress removal
+            ['USER-NAME+TAG@YAHOO.COM', 'user@yahoo.com'],
+            ['User-Name+Tag@Yahoo.Com', 'user@yahoo.com'],
+            ['user-name+tag@Yahoo.com', 'user@yahoo.com'],
             ['USER.NAME+TAG@ICLOUD.COM', 'user.name@icloud.com'],
             ['User.Name+Tag@Icloud.Com', 'user.name@icloud.com'],
             ['user.name+tag@Icloud.com', 'user.name@icloud.com'],
@@ -862,9 +862,9 @@ class EmailTest extends TestCase
         $genericEmail = new Email('user.name+tag@example.com');
         $this->assertSame('user.name+tag@example.com', $genericEmail->getCanonical());
 
-        // Yahoo preserves hyphens
+        // Yahoo removes hyphen-based subaddresses, other providers preserve characters
         $yahooEmail = new Email('user-name@yahoo.com');
-        $this->assertSame('user-name@yahoo.com', $yahooEmail->getCanonical());
+        $this->assertSame('user@yahoo.com', $yahooEmail->getCanonical());
 
         $genericEmail = new Email('user.name@example.com');
         $this->assertSame('user.name@example.com', $genericEmail->getCanonical());
