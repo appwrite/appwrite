@@ -13,6 +13,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
+use Appwrite\Task\Validator\Interval;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
@@ -80,7 +81,8 @@ class Update extends Base
             ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', true, enum: new Enum(name: 'Runtime'))
             ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
             ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
-            ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
+            ->param('schedule', '', new Cron(), 'Schedule CRON syntax. Cannot be combined with interval.', true)
+            ->param('interval', 0, new Interval(), 'Seconds between scheduled executions. Appwrite picks when within each interval the function runs. Allowed values: ' . \implode(', ', Interval::VALUES) . '. Use 0 to disable. Cannot be combined with schedule.', true, example: '3600')
             ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
             ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
             ->param('logging', true, new Boolean(), 'When disabled, executions will exclude logs and errors, and will be slightly faster.', true)
@@ -132,6 +134,7 @@ class Update extends Base
         array $execute,
         array $events,
         string $schedule,
+        int $interval,
         int $timeout,
         bool $enabled,
         bool $logging,
@@ -178,6 +181,10 @@ class Update extends Base
 
         if (!empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
+        }
+
+        if ($schedule !== '' && $interval !== 0) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Set either "schedule" or "interval", not both.');
         }
 
         if (empty($runtime)) {
@@ -306,6 +313,7 @@ class Update extends Base
             'runtime' => $runtime,
             'events' => $events,
             'schedule' => $schedule,
+            'interval' => $interval,
             'timeout' => $timeout,
             'enabled' => $enabled,
             'live' => $live,
@@ -349,6 +357,7 @@ class Update extends Base
                     'projectId' => $project->getId(),
                     'projectInternalId' => $project->getSequence(),
                     'schedule'  => $function->getAttribute('schedule'),
+                    'interval' => $function->getAttribute('interval'),
                     'active' => false,
                 ]))
             );
@@ -363,7 +372,8 @@ class Update extends Base
             ->setAttribute('projectInternalId', $project->getSequence())
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
+            ->setAttribute('interval', $function->getAttribute('interval'))
+            ->setAttribute('active', (!empty($function->getAttribute('schedule')) || !empty($function->getAttribute('interval'))) && !empty($function->getAttribute('deploymentId')));
         $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForEvents->setParam('functionId', $function->getId());

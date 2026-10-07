@@ -128,6 +128,12 @@ class Func extends Model
                 'default' => '',
                 'example' => '5 4 * * *',
             ])
+            ->addRule('interval', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Seconds between scheduled executions. 0 when the function has no interval.',
+                'default' => 0,
+                'example' => 3600,
+            ])
             ->addRule('timeout', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Function execution timeout in seconds.',

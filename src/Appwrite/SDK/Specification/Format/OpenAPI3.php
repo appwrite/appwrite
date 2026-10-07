@@ -708,6 +708,11 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '0 0 * * *';
                         break;
+                    case \Appwrite\Task\Validator\Interval::class:
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'int32';
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? (int) $param['example'] : 3600;
+                        break;
                     case \Utopia\Validator\HexColor::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : 'FFFFFF';

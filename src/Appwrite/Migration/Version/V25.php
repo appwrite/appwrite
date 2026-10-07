@@ -90,10 +90,12 @@ class V25 extends Migration
 
                 case 'schedules':
                     if ($collectionType === 'console') {
-                        try {
-                            $this->createAttributeFromCollection($this->dbForProject, $id, 'projectInternalId');
-                        } catch (Throwable $th) {
-                            Console::warning("Failed to create attribute \"projectInternalId\" in collection {$id}: {$th->getMessage()}");
+                        foreach (['projectInternalId', 'interval'] as $attribute) {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                            }
                         }
 
                         $this->dbForProject->purgeCachedCollection($id);
@@ -189,6 +191,9 @@ class V25 extends Migration
                         $attributes = ['providerBranches', 'providerPaths'];
                         if ($id === 'sites') {
                             $attributes[] = 'scopes';
+                        }
+                        if ($id === 'functions') {
+                            $attributes[] = 'interval';
                         }
                         try {
                             $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);

@@ -9,6 +9,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
+use Appwrite\Task\Validator\Interval;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -90,6 +91,7 @@ class Create extends Action
             ->param('resourceType', '', new WhiteList($resourceTypes, true), 'The resource type for the schedule. Possible values: '.implode(', ', $resourceTypes).'.', enum: new Enum(name: 'ScheduleResourceType'))
             ->param('resourceId', '', new UID(), 'The resource ID to associate with this schedule.')
             ->param('schedule', '', new Cron(), 'Schedule CRON expression.')
+            ->param('interval', 0, new Interval(), 'Seconds between runs, for function schedules only. Allowed values: ' . \implode(', ', Interval::VALUES) . '. Use 0 to disable. Cannot be combined with schedule.', true, example: '3600')
             ->param('active', false, new Boolean(), 'Whether the schedule is active.', true)
             ->param('data', null, new JSON(), 'Schedule data as a JSON string. Used to store resource-specific context needed for execution.', true)
             ->inject('response')
@@ -105,6 +107,7 @@ class Create extends Action
         string $resourceType,
         string $resourceId,
         string $schedule,
+        int $interval,
         bool $active,
         ?string $data,
         Response $response,
@@ -113,6 +116,14 @@ class Create extends Action
         Store $executionStore,
         Event $queueForEvents,
     ): void {
+        if ($interval !== 0 && $resourceType !== SCHEDULE_RESOURCE_TYPE_FUNCTION) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Only function schedules support "interval".');
+        }
+
+        if ($interval !== 0 && $schedule !== '') {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Set either "schedule" or "interval", not both.');
+        }
+
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -136,6 +147,7 @@ class Create extends Action
             'projectId' => $project->getId(),
             'projectInternalId' => $project->getSequence(),
             'schedule' => $schedule,
+            'interval' => $interval,
             'active' => $active,
         ];
 

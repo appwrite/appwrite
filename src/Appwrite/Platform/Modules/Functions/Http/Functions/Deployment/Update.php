@@ -116,10 +116,12 @@ class Update extends Base
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
+            ->setAttribute('interval', $function->getAttribute('interval'))
+            ->setAttribute('active', (!empty($function->getAttribute('schedule')) || !empty($function->getAttribute('interval'))) && !empty($function->getAttribute('deploymentId')));
         $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
             'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
             'schedule' => $schedule->getAttribute('schedule'),
+            'interval' => $schedule->getAttribute('interval'),
             'active' => $schedule->getAttribute('active'),
         ])));
 
