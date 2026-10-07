@@ -12,6 +12,7 @@ parameters:
     - vendor/swoole/ide-helper
   excludePaths:
     - tests/resources
+    - src/Database/Validator/StructureUpstream.php
   ignoreErrors:
     # The E2E harness talks to the stack under test, not to a destination a user chose
     -
