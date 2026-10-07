@@ -7133,8 +7133,9 @@ final class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $attacker['session'],
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
-        $this->assertEquals('user_already_exists', $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_bad_request', $response['body']['type']);
+        $this->assertEquals('There was an error processing your request. Please check the inputs and try again.', $response['body']['message']);
     }
 
     public function testCreateIdTokenSessionForeignSubjectKeepsSession(): void
@@ -7170,8 +7171,9 @@ final class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $other['session'],
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
-        $this->assertEquals('user_already_exists', $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_bad_request', $response['body']['type']);
+        $this->assertEquals('There was an error processing your request. Please check the inputs and try again.', $response['body']['message']);
 
         // A failed link must leave the caller's existing session intact
         $account = $this->client->call(Client::METHOD_GET, '/account', array_merge([
