@@ -1991,7 +1991,6 @@ trait TransactionsBase
         // The commit handler builds this payload by hand rather than going through
         // processDocument(), so it has to add the same keys: the synthetic $databaseId,
         // and only the container id belonging to the surface that was called.
-        // Two tables in one commit must each keep their own id.
         foreach ([
             [$recordId, $collectionId],
             [$otherRecordId, $otherCollectionId],
@@ -2003,6 +2002,7 @@ trait TransactionsBase
                 }
             );
 
+            $this->assertNotEmpty($delivery);
             $this->assertEquals($databaseId, $delivery['data']['$databaseId']);
             $this->assertEquals($containerId, $delivery['data'][$this->getContainerIdResponseKey()]);
             $this->assertArrayNotHasKey($this->getOppositeContainerIdResponseKey(), $delivery['data']);
