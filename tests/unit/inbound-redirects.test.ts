@@ -36,6 +36,7 @@ describe('legacy redirects that already existed', () => {
     expect(target('/products/sites')).toBeNull()
     expect(target('/docs/tooling/command-line/installation')).toBeNull()
     expect(target('/docs/partners/project/key-rotation.md')).toBeNull()
+    expect(target('/docs/llms.txt')).toBeNull()
   })
 })
 
