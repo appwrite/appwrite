@@ -1,16 +1,18 @@
 services:
 
+  # The e2e suites reach MongoDB by its service name, so tests/e2e.sh runs them
+  # here, on the compose network, with the package and the root toolchain mounted.
   tests:
     container_name: utopia-mongo-test-1
-    build:
-      context: .
-      dockerfile: php${PHP_VERSION:-83}.Dockerfile
+    image: appwrite/base:2.1.0
+    entrypoint: ["tail", "-f", "/dev/null"]
     networks:
       - database
     volumes:
       - ./:/usr/src/code
-    ports:
-      - "8882:8882"
+      # phpunit comes from the root toolchain, as on the host
+      - ../../vendor:/usr/src/toolchain:ro
+    working_dir: /usr/src/code
 
   mongo:
     image: mongo:8
@@ -22,6 +24,11 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
 
 networks:
   database:

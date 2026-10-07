@@ -1,0 +1,1441 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Cannot access property \$conversationId on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Cannot access property \$payload on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Cannot call method getData\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Auth\:\:__construct\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Auth\:\:continue\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Auth\:\:hash\(\) has parameter \$data with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Auth\:\:hmac\(\) has parameter \$key with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Auth\:\:hmac\(\) has parameter \$str with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Auth\:\:start\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Parameter \#1 \$challenge of method Utopia\\Mongo\\Auth\:\:generateResponse\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Parameter \#1 \$data of class MongoDB\\BSON\\Binary constructor expects string, bool\|string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Auth.php
+
+		-
+			message: '#^Parameter \#1 \$string of function base64_encode expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Parameter \#2 \$data of function hash expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Parameter \#2 \$data of function hash_hmac expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Parameter \#3 \$key of function hash_hmac expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Property Utopia\\Mongo\\Auth\:\:\$authSource \(string\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Property Utopia\\Mongo\\Auth\:\:\$authcid \(string\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Property Utopia\\Mongo\\Auth\:\:\$authzid \(string\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Property Utopia\\Mongo\\Auth\:\:\$secret \(string\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Auth.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 2
+			path: src/Client.php
+
+		-
+			message: '#^Binary operation "\*" between mixed and 1000 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/Client.php
+
+		-
+			message: '#^Binary operation "\." between ''Invalid read…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Binary operation "\." between ''Invalid response…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/Client.php
+
+		-
+			message: '#^Binary operation "\." between ''Response too large\: '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''afterClusterTime'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''filter'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''firstOperationDone'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 7
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 7
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''l'' on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''lastUse'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 6
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''multi'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''readConcern'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''retryableWriteNumber'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''sessionId'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''state'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 8
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''transactionOptions'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''txnNumber'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 5
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''unique'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''update'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset ''writeConcern'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access property \$code on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access property \$codeName on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access property \$errmsg on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access property \$firstBatch on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access property \$id on array\|int\|stdClass\.$#'
+			identifier: property.nonObject
+			count: 5
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access property \$id on mixed\.$#'
+			identifier: property.nonObject
+			count: 12
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access property \$n on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access property \$ok on array\|int\|stdClass\.$#'
+			identifier: property.nonObject
+			count: 4
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access property \$ok on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot access property \$writeErrors on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot cast array\|int\|stdClass to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 5
+			path: src/Client.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/Client.php
+
+		-
+			message: '#^Cannot use \+\+ on mixed\.$#'
+			identifier: postInc.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:__construct\(\) has parameter \$tlsOptions with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:abortTransaction\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:abortTransaction\(\) has parameter \$session with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:aggregate\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:aggregate\(\) has parameter \$pipeline with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:aggregate\(\) should return stdClass but returns array\|int\|stdClass\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:cleanFilters\(\) has parameter \$filters with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:cleanFilters\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:commitTransaction\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:commitTransaction\(\) has parameter \$session with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:count\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:count\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:count\(\) should return int but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:createCollection\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:createIndexes\(\) has parameter \$indexes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:createIndexes\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:createReadConcern\(\) has parameter \$readConcern with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:createReadConcern\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:createWriteConcern\(\) has parameter \$writeConcern with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:createWriteConcern\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:delete\(\) has parameter \$deleteOptions with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:delete\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:delete\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:delete\(\) should return int but returns array\|int\|stdClass\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:dropCollection\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:dropDatabase\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:dropIndexes\(\) has parameter \$indexes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:dropIndexes\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:endSessions\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:endSessions\(\) has parameter \$sessions with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:find\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:find\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:find\(\) should return stdClass but returns array\|int\|stdClass\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:findAndModify\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:findAndModify\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:findAndModify\(\) has parameter \$update with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:findAndModify\(\) should return stdClass but returns array\|int\|stdClass\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:getConnectionInfo\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:getMore\(\) should return stdClass but returns array\|int\|stdClass\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:getSessionState\(\) has parameter \$session with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:getSessionState\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:insert\(\) has parameter \$document with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:insert\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:insert\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:insert\(\) should return array but returns array\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:insertMany\(\) has parameter \$documents with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:insertMany\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:insertMany\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:lastDocument\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:lastDocument\(\) should return array but returns array\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:listCollectionNames\(\) has parameter \$filter with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:listCollectionNames\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:listCollectionNames\(\) should return stdClass but returns array\|int\|stdClass\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:listDatabaseNames\(\) should return stdClass but returns array\|int\|stdClass\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:parseResponse\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:parseResponse\(\) should return array\|int\|stdClass but returns mixed\.$#'
+			identifier: return.type
+			count: 2
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:query\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:receive\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:recvWithin\(\) should return string\|false but returns mixed\.$#'
+			identifier: return.type
+			count: 2
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:selectCollection\(\) has parameter \$name with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:send\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:shouldSkipReadConcern\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:startSession\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:startSession\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:startTransaction\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:startTransaction\(\) has parameter \$session with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:toObject\(\) has parameter \$dict with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:update\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:update\(\) has parameter \$updates with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:update\(\) has parameter \$where with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:update\(\) should return int but returns array\|int\|stdClass\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:upsert\(\) has parameter \$operations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:upsert\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:upsert\(\) should return int but returns array\|int\|stdClass\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:withTransaction\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Client\:\:withTransaction\(\) has parameter \$session with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#1 \$command of method Utopia\\Mongo\\Client\:\:query\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 16
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#1 \$command of method Utopia\\Mongo\\Client\:\:query\(\) expects array\<string, mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#1 \$dict of method Utopia\\Mongo\\Client\:\:toObject\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#1 \$message of class Utopia\\Mongo\\Exception constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#1 \$object_or_class of function property_exists expects object\|string, array\|int\|stdClass given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#1 \$object_or_class of function property_exists expects object\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 4
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#1 \$readConcern of method Utopia\\Mongo\\Client\:\:createReadConcern\(\) expects array\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 7
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#1 \$string of function strlen expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#1 \$value of class MongoDB\\BSON\\Int64 constructor expects int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#1 \$writeConcern of method Utopia\\Mongo\\Client\:\:createWriteConcern\(\) expects array\|int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 4
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_key_exists expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#2 \$code of class Utopia\\Mongo\\Exception constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#2 \$db of method Utopia\\Mongo\\Client\:\:query\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#2 \$length of function array_chunk expects int\<1, max\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$arrays of function array_merge expects array, array\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Part \$errCode \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 3
+			path: src/Client.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 27
+			path: src/Client.php
+
+		-
+			message: '#^Property Utopia\\Mongo\\Client\:\:\$clusterTime \(object\|null\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Property Utopia\\Mongo\\Client\:\:\$operationTime \(object\|null\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Property Utopia\\Mongo\\Client\:\:\$readConcernNotSupportedCommands type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Property Utopia\\Mongo\\Client\:\:\$sessions type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\BulkWriteException\:\:__construct\(\) has parameter \$result with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\BulkWriteException\:\:getResult\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Exception\:\:__construct\(\) has parameter \$errorLabels with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Exception\:\:__construct\(\) has parameter \$writeConcernErrors with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Exception\:\:__construct\(\) has parameter \$writeErrors with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Exception\:\:getErrorLabels\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Exception\:\:getWriteConcernErrors\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Exception\:\:getWriteErrors\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Parameter \#1 \$message of class Utopia\\Mongo\\Exception constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Parameter \#2 \$code of class Utopia\\Mongo\\Exception constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Parameter \#4 \$errorLabels of class Utopia\\Mongo\\Exception constructor expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Parameter \#5 \$writeErrors of class Utopia\\Mongo\\Exception constructor expects array\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Parameter \#6 \$writeConcernErrors of class Utopia\\Mongo\\Exception constructor expects array\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Property Utopia\\Mongo\\BulkWriteException\:\:\$result type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Property Utopia\\Mongo\\Exception\:\:\$errorLabels type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Property Utopia\\Mongo\\Exception\:\:\$writeConcernErrors type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Property Utopia\\Mongo\\Exception\:\:\$writeErrors type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Exception.php
+
+		-
+			message: '#^Cannot access offset ''saslContinue'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/AuthTest.php
+
+		-
+			message: '#^Cannot access offset ''saslStart'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/AuthTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\) with array will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access offset ''deep'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access offset ''empty'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access offset ''inner'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access offset ''list'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access offset ''value'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 13
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access offset 1 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access offset 2 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access offset 3 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$_id on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$array on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$big on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$count on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$counter on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$country on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$date_object on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$date_string on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$deep on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$firstBatch on mixed\.$#'
+			identifier: property.nonObject
+			count: 18
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$float on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$integer on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$is_open on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$language on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$list on mixed\.$#'
+			identifier: property.nonObject
+			count: 5
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$name on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$nested on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$small on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$total on mixed\.$#'
+			identifier: property.nonObject
+			count: 5
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot access property \$value on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testCountMethod\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testCreateCollection\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testCreateDocument\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testCreateDocuments\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testDeleteDatabase\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testDriverException\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testDuplicationException\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testEmptyObjectSurvivesToArray\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testExceedTimeException\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testGetHost\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testInt64ValuesDecodeToNativeIntegers\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testListDatabases\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testToArrayNestedConversion\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testToArrayWithNestedDocumentFromMongo\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testUpdateDocuments\(\) has parameter \$documents with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\MongoTest\:\:testUpsert\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Offset ''big'' might not exist on array\|null\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Offset ''empty'' might not exist on array\|null\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Offset ''emptyList'' might not exist on array\|null\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Offset ''filled'' might not exist on array\|null\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Offset ''inner'' might not exist on array\|null\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Offset ''list'' might not exist on array\|null\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of static method PHPUnit\\Framework\\Assert\:\:assertCount\(\) expects Countable\|iterable, mixed given\.$#'
+			identifier: argument.type
+			count: 7
+			path: tests/E2E/MongoTest.php
+
+		-
+			message: '#^Call to function is_object\(\) with object will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: tests/E2E/TransactionTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertTrue\(\) with true will always evaluate to true\.$#'
+			identifier: method.alreadyNarrowedType
+			count: 2
+			path: tests/E2E/TransactionTest.php
+
+		-
+			message: '#^Cannot access property \$firstBatch on mixed\.$#'
+			identifier: property.nonObject
+			count: 4
+			path: tests/E2E/TransactionTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\TransactionTest\:\:testCRUDWithSessionAndConcerns\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/TransactionTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\TransactionTest\:\:testCausalConsistency\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/TransactionTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\TransactionTest\:\:testConnectionValidation\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/TransactionTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\TransactionTest\:\:testReadWriteConcerns\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/TransactionTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\TransactionTest\:\:testSessionCleanup\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/TransactionTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\TransactionTest\:\:testSessionManagement\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/TransactionTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\TransactionTest\:\:testTransactionAbort\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/TransactionTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\TransactionTest\:\:testTransactionStateManagement\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/TransactionTest.php
+
+		-
+			message: '#^Method Utopia\\Mongo\\Tests\\E2E\\TransactionTest\:\:testWithTransactionHelper\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/E2E/TransactionTest.php

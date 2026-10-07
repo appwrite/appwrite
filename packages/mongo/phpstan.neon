@@ -1,4 +1,13 @@
+includes:
+    - phpstan-baseline.neon
+
 parameters:
-  paths:
-    - src
-  level: 4
+    level: max
+    paths:
+        - src
+        - tests
+    excludePaths:
+        # Its transport doubles narrow the parameters of Swoole's client
+        # methods, which the stubs type as mixed; PHPStan reports that as
+        # non-ignorable, so it cannot sit in the baseline until the burn-down.
+        - tests/ClientTest.php

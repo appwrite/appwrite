@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Mongo\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Mongo\Auth;

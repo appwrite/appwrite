@@ -23,16 +23,17 @@
     ],
     "autoload": {
         "psr-4": {
-            "Utopia\\Mongo\\": "src"
+            "Utopia\\Mongo\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\": "tests"
+            "Utopia\\Mongo\\Tests\\": "tests/"
         }
     },
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "tests/e2e.sh"
     },
     "require": {
         "php": ">=8.0",

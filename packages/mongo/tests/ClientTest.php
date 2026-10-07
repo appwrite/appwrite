@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Mongo\Tests;
 
 use MongoDB\BSON\Binary;
 use MongoDB\BSON\Document;

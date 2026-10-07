@@ -1,24 +1,19 @@
 services:
+  # The adapter suites reach each database by its service name and stop and
+  # start containers by name, so tests/e2e.sh runs them here, on the compose
+  # network, with the package and the root toolchain mounted.
   tests:
     container_name: tests
-    image: databases-dev
-    build:
-      context: .
-      args:
-        DEBUG: true
+    image: appwrite/base:2.1.0
+    entrypoint: ["tail", "-f", "/dev/null"]
     networks:
       - database
     volumes:
-      - ./bin:/usr/src/code/bin
-      - ./src:/usr/src/code/src
-      - ./tests:/usr/src/code/tests
-      - ./dev:/usr/src/code/dev
-      - ./phpunit.xml:/usr/src/code/phpunit.xml
-      - ./dev/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+      - ./:/usr/src/code
+      # phpunit comes from the root toolchain, as on the host
+      - ../../vendor:/usr/src/toolchain:ro
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./docker-compose.yml:/usr/src/code/docker-compose.yml
-    environment:
-      PHP_IDE_CONFIG: serverName=tests
+    working_dir: /usr/src/code
     depends_on:
       postgres:
         condition: service_healthy
@@ -40,6 +35,7 @@ services:
         condition: service_healthy
 
   adminer:
+    profiles: [debug]
     image: adminer
     container_name: utopia-adminer
     restart: always
@@ -159,6 +155,7 @@ services:
       start_period: 10s
 
   mongo-express:
+    profiles: [debug]
     image: mongo-express
     container_name: mongo-express
     depends_on:
