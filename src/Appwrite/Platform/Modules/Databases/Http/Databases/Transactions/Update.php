@@ -734,8 +734,8 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): void {
-        // upsertDocument identifies the row by `$id`. The staged record id is that identity.
-        if (\is_string($documentId) && $documentId !== '') {
+        // upsertDocument reads `$id`. The staged id is the one permissions were checked against.
+        if ($documentId) {
             $data['$id'] = $documentId;
         }
 

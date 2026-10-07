@@ -164,10 +164,7 @@ class Create extends Action
                     && isset($operation['data']['$id'])
                     && $operation['data']['$id'] !== $documentId
                 ) {
-                    throw new Exception(
-                        Exception::GENERAL_BAD_REQUEST,
-                        '`' . $this->getResourceId() . '` does not match `$id` in data'
-                    );
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST, $this->getResourceId() . ' does not match $id in data');
                 }
 
                 $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
