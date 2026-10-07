@@ -306,7 +306,7 @@ class Update extends Action
                                 $this->handleUpsertOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'delete':
-                                $this->handleDeleteOperation($dbForDatabases, $collectionId, $documentId, $createdAt, $state);
+                                $this->handleDeleteOperation($dbForDatabases, $collectionId, $documentId, $createdAt, $state, $written, $collections);
                                 break;
                             case 'increment':
                                 $this->handleIncrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
@@ -651,6 +651,7 @@ class Update extends Action
     private function collectWrittenRelationships(Database $db, Document $operation, array $state, array &$collections, array &$written): void
     {
         $action = $operation->getAttribute('action', '');
+        // A delete's related rows are recorded in handleDeleteOperation, before they are removed.
         if (!\in_array($action, ['create', 'update', 'upsert'], true)) {
             return;
         }
@@ -755,6 +756,173 @@ class Update extends Action
             if ($nested instanceof Document) {
                 $this->collectRelationshipData($db, $related, $nested, null, $collections, $written, $depth + 1);
             }
+        }
+    }
+
+    /**
+     * Rows a cascade delete removes. Captured before the delete, because a query after COMMIT no longer finds them.
+     *
+     * @param array<string, array<string, true>> $written
+     * @param array<string, Document> $collections
+     * @param array<string, true> $seen
+     */
+    private function collectDeletedRelationships(Database $db, string $collectionId, string $documentId, array &$written, array &$collections, array &$seen, int $depth): void
+    {
+        if ($documentId === '' || $depth >= Database::RELATION_MAX_DEPTH || isset($seen[$collectionId . ':' . $documentId])) {
+            return;
+        }
+
+        $seen[$collectionId . ':' . $documentId] = true;
+
+        $collection = $this->collectionById($db, $collectionId, $collections);
+        if (!$collection instanceof Document || $collection->isEmpty() || !$this->collectionCascades($collection)) {
+            return;
+        }
+
+        $document = $db->getAuthorization()->skip(
+            fn () => $db->getDocument($collectionId, $documentId)
+        );
+        if ($document->isEmpty()) {
+            return;
+        }
+
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            $type = $attribute instanceof Document ? $attribute->getAttribute('type') : ($attribute['type'] ?? null);
+            if ($type !== Database::VAR_RELATIONSHIP) {
+                continue;
+            }
+
+            $key = $attribute instanceof Document ? $attribute->getAttribute('key') : ($attribute['key'] ?? '');
+            $options = $attribute instanceof Document ? $attribute->getAttribute('options', []) : ($attribute['options'] ?? []);
+            if ($options instanceof Document) {
+                $options = $options->getArrayCopy();
+            }
+            if (!\is_string($key) || $key === '' || !\is_array($options) || ($options['onDelete'] ?? '') !== Database::RELATION_MUTATE_CASCADE) {
+                continue;
+            }
+
+            $related = $this->collectionById($db, \is_string($options['relatedCollection'] ?? null) ? $options['relatedCollection'] : '', $collections);
+            if (!$related instanceof Document || $related->isEmpty()) {
+                continue;
+            }
+
+            try {
+                $ids = $this->cascadedRelationshipIds($db, $collection, $related, $document, $key, $options, $written);
+            } catch (\Throwable $e) {
+                Console::warning('Failed to collect cascaded rows for committed cache purge: ' . $e->getMessage());
+                continue;
+            }
+
+            foreach ($ids as $id) {
+                if ($id === '') {
+                    continue;
+                }
+
+                $written[$related->getId()][$id] = true;
+                $this->collectDeletedRelationships($db, $related->getId(), $id, $written, $collections, $seen, $depth + 1);
+            }
+        }
+    }
+
+    private function collectionCascades(Document $collection): bool
+    {
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            $options = $attribute instanceof Document ? $attribute->getAttribute('options', []) : ($attribute['options'] ?? []);
+            if ($options instanceof Document) {
+                $options = $options->getArrayCopy();
+            }
+
+            if (\is_array($options) && ($options['onDelete'] ?? '') === Database::RELATION_MUTATE_CASCADE) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Same rows deleteCascade() removes. Junction rows are recorded here; the returned ids are the related documents.
+     *
+     * @param array<string, mixed> $options
+     * @param array<string, array<string, true>> $written
+     * @return array<int, string>
+     */
+    private function cascadedRelationshipIds(Database $db, Document $collection, Document $related, Document $document, string $key, array $options, array &$written): array
+    {
+        $relationType = $options['relationType'] ?? '';
+        $side = $options['side'] ?? '';
+        $twoWayKey = $options['twoWayKey'] ?? '';
+        $value = $document->getAttribute($key);
+
+        switch ($relationType) {
+            case Database::RELATION_ONE_TO_ONE:
+                $id = $this->relationshipRowId($value);
+
+                return $id === '' ? [] : [$id];
+            case Database::RELATION_ONE_TO_MANY:
+                if ($side === Database::RELATION_SIDE_CHILD) {
+                    return [];
+                }
+
+                $ids = [];
+                foreach ($this->relationshipRows(\is_array($value) ? $value : []) as $row) {
+                    $id = $this->relationshipRowId($row);
+                    if ($id !== '') {
+                        $ids[] = $id;
+                    }
+                }
+
+                return $ids;
+            case Database::RELATION_MANY_TO_ONE:
+                if ($side === Database::RELATION_SIDE_PARENT || !\is_string($twoWayKey) || $twoWayKey === '') {
+                    return [];
+                }
+
+                $found = $db->find($related->getId(), [
+                    Query::select(['$id']),
+                    Query::equal($twoWayKey, [$document->getId()]),
+                    Query::limit(PHP_INT_MAX),
+                ]);
+
+                $ids = [];
+                foreach ($found as $row) {
+                    if ($row instanceof Document && $row->getId() !== '') {
+                        $ids[] = $row->getId();
+                    }
+                }
+
+                return $ids;
+            case Database::RELATION_MANY_TO_MANY:
+                if (!\is_string($twoWayKey) || $twoWayKey === '') {
+                    return [];
+                }
+
+                $junctionId = $side === Database::RELATION_SIDE_PARENT
+                    ? '_' . $collection->getSequence() . '_' . $related->getSequence()
+                    : '_' . $related->getSequence() . '_' . $collection->getSequence();
+
+                $junctions = $db->skipRelationships(fn () => $db->find($junctionId, [
+                    Query::select(['$id', $key]),
+                    Query::equal($twoWayKey, [$document->getId()]),
+                    Query::limit(PHP_INT_MAX),
+                ]));
+
+                $ids = [];
+                foreach ($junctions as $junction) {
+                    $written[$junctionId][$junction->getId()] = true;
+                    if ($side !== Database::RELATION_SIDE_PARENT) {
+                        continue;
+                    }
+
+                    $target = $junction->getAttribute($key);
+                    if (\is_string($target) && $target !== '') {
+                        $ids[] = $target;
+                    }
+                }
+
+                return $ids;
+            default:
+                return [];
         }
     }
 
@@ -1005,6 +1173,8 @@ class Update extends Action
      * @param string $documentId
      * @param \DateTime $createdAt
      * @param array &$state
+     * @param array<string, array<string, true>> $written
+     * @param array<string, Document> $collections
      * @return void
      * @throws \Utopia\Database\Exception
      * @throws NotFoundException
@@ -1014,8 +1184,21 @@ class Update extends Action
         string $collectionId,
         string $documentId,
         \DateTime $createdAt,
-        array &$state
+        array &$state,
+        array &$written,
+        array &$collections
     ): void {
+        // Cascade removes related rows inside this savepoint. Record them while they still exist.
+        // Reads stay silent so discovery does not emit document events for the commit.
+        try {
+            $dbForDatabases->silent(function () use ($dbForDatabases, $collectionId, $documentId, &$written, &$collections) {
+                $seen = [];
+                $this->collectDeletedRelationships($dbForDatabases, $collectionId, (string) $documentId, $written, $collections, $seen, 0);
+            });
+        } catch (\Throwable $e) {
+            Console::warning('Failed to collect related rows for committed cache purge: ' . $e->getMessage());
+        }
+
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
