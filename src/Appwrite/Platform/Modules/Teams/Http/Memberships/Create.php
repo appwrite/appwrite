@@ -187,7 +187,7 @@ class Create extends Action
                 Query::equal('providerEmail', [$email]),
             ]);
             if (! $identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS, 'This email is linked to another account through a sign-in provider. Invite the email address that account uses instead.');
+                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS, 'This email is linked to another account through a sign-in provider. Ask them which email they sign in with and invite that instead.');
             }
 
             $emailMetadata = [
