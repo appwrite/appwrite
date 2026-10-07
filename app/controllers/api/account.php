@@ -569,18 +569,19 @@ Http::delete('/v1/account')
             }
         }
 
-        $dbForProject->deleteDocument('users', $targetUser->getId());
+        // A failure rolls back to an intact account to retry; the rest is queued only once these rows are gone.
+        $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $targetUser) {
+            $dbForProject->deleteDocument('users', $targetUser->getId());
+            DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
+            DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
+            $dbForProject->deleteDocuments('sessions', [Query::equal('userInternalId', [$targetUser->getSequence()])]);
+        }));
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,
             type: DELETE_TYPE_DOCUMENT,
             document: $targetUser,
         ));
-
-        $authorization->skip(function () use ($dbForProject, $targetUser) {
-            DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
-            DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
-        });
 
         $queueForEvents
             ->setParam('userId', $targetUser->getId())
