@@ -758,7 +758,7 @@ class GitHub extends Git
     public function getPullRequestFiles(string $owner, string $repositoryName, int $pullRequestNumber): array
     {
         $allFiles = [];
-        $perPage = 30;
+        $perPage = 100;
         $currentPage = 1;
 
         while (true) {
@@ -769,7 +769,16 @@ class GitHub extends Git
                 'page' => $currentPage,
             ]);
 
+            $statusCode = $response['headers']['status-code'] ?? 0;
+            if ($statusCode >= 400) {
+                throw new Exception("Failed to get pull request files: HTTP {$statusCode}", $statusCode);
+            }
+
             $files = $response['body'] ?? [];
+            if (!\is_array($files)) {
+                throw new Exception("Failed to get pull request files: HTTP {$statusCode} returned a non-JSON body");
+            }
+
             $allFiles = array_merge($allFiles, $files);
 
             if (\count($files) < $perPage) {
