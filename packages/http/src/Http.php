@@ -912,13 +912,13 @@ class Http
     /**
      * Coerce a validated loose boolean string to a real bool.
      *
-     * Query strings arrive as text. `Boolean(loose: true)` accepts
-     * "true"/"false"/"1"/"0" and leaves them as strings. A typed `bool`
-     * parameter then casts every non-empty string except "0" to true, so
-     * `total=false` still runs the count. Validators only check values, so
-     * the conversion happens here. Same rule as `Utopia\CLI\CLI::coerce()`.
+     * `Boolean(loose: true)` accepts "true", "false", "1", and "0" but leaves
+     * them as strings. A typed `bool` parameter then casts every non-empty
+     * string except "0" to true, so "false" becomes true. Validators only
+     * check values, so the conversion happens here, as in `CLI::coerce()`.
      *
-     * The empty string is left unchanged: `filter_var` would turn it into false.
+     * Non-strings pass through. The empty string stays empty because
+     * `filter_var` would turn it into false.
      */
     protected function coerce(Validator $validator, mixed $value): mixed
     {

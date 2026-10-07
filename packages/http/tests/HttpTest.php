@@ -1039,9 +1039,8 @@ final class HttpTest extends TestCase
     }
 
     /**
-     * Query string "false" used to reach a typed bool as true, so list
-     * endpoints still counted. The dispatcher now coerces loose boolean
-     * strings to a real bool before the action runs.
+     * The string "false" used to reach a typed bool as true. Loose boolean
+     * strings are coerced to a real bool before the action runs.
      */
     #[DataProvider('looseBooleanValuesProvider')]
     public function testLooseBooleanQueryStringIsCoerced(string $input, string $expected): void
@@ -1059,6 +1058,31 @@ final class HttpTest extends TestCase
         $this->assertInstanceOf(Http::class, $http);
 
         $this->assertSame($expected, $this->executeParams($http, ['total' => $input]));
+    }
+
+    public function testLooseBooleanCoercionTouchesOnlyAcceptedStrings(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/flags';
+
+        Http::get('/flags')
+            ->param('total', true, new Boolean(true), 'total flag', true)
+            ->action(function (mixed $total) {
+                echo \gettype($total) . ':' . \var_export($total, true);
+            });
+
+        $http = $this->http;
+        $this->assertInstanceOf(Http::class, $http);
+
+        $this->assertSame('boolean:false', $this->executeParams($http, ['total' => 'false']));
+        $this->assertSame('boolean:true', $this->executeParams($http, ['total' => 'true']));
+        $this->assertSame('boolean:false', $this->executeParams($http, ['total' => '0']));
+        $this->assertSame('boolean:true', $this->executeParams($http, ['total' => '1']));
+        $this->assertSame('boolean:false', $this->executeParams($http, ['total' => false]));
+        $this->assertSame('boolean:true', $this->executeParams($http, ['total' => true]));
+        $this->assertSame('integer:0', $this->executeParams($http, ['total' => 0]));
+        $this->assertSame('integer:1', $this->executeParams($http, ['total' => 1]));
+        $this->assertSame('boolean:true', $this->executeParams($http, []));
     }
 
     public function testLooseBooleanCoercionUnwrapsNullable(): void
