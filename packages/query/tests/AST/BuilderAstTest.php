@@ -20,6 +20,7 @@ use Utopia\Query\AST\Statement\Select;
 use Utopia\Query\Builder\MySQL;
 use Utopia\Query\Builder\PostgreSQL;
 use Utopia\Query\Exception\ValidationException;
+use Utopia\Query\Method;
 use Utopia\Query\OrderDirection;
 use Utopia\Query\Query;
 
@@ -284,6 +285,82 @@ class BuilderAstTest extends TestCase
         $this->assertStringContainsString('OFFSET', $result->query);
         $this->assertContains(25, $result->bindings);
         $this->assertContains(50, $result->bindings);
+    }
+
+    public function testFromAstJoinKeepsEveryOnCondition(): void
+    {
+        $ast = new Select(
+            columns: [new Star()],
+            from: new Table('users'),
+            joins: [new JoinClause(
+                'LEFT JOIN',
+                new Table('orders', 'o'),
+                new Binary(
+                    new Binary(new Column('id', 'users'), '=', new Column('user_id', 'o')),
+                    'AND',
+                    new Binary(
+                        new Binary(new Column('region', 'users'), '=', new Column('region', 'o')),
+                        'AND',
+                        new Binary(new Column('status', 'o'), '=', new Literal('paid')),
+                    ),
+                ),
+            )],
+        );
+
+        $result = MySQL::fromAst($ast)->build();
+
+        $this->assertSame(
+            'SELECT * FROM `users` LEFT JOIN `orders` AS `o` ON `users`.`id` = `o`.`user_id` AND `users`.`region` = `o`.`region` AND `o`.`status` IN (?)',
+            $result->query,
+        );
+        $this->assertSame(['paid'], $result->bindings);
+    }
+
+    public function testFromAstJoinKeepsBothOperandsOfOr(): void
+    {
+        $ast = new Select(
+            columns: [new Star()],
+            from: new Table('users'),
+            joins: [new JoinClause(
+                'JOIN',
+                new Table('orders', 'o'),
+                new Binary(
+                    new Binary(new Column('id', 'users'), '=', new Column('user_id', 'o')),
+                    'OR',
+                    new Binary(
+                        new Binary(new Column('status', 'o'), '=', new Literal('paid')),
+                        'AND',
+                        new Binary(new Column('region', 'users'), '=', new Column('region', 'o')),
+                    ),
+                ),
+            )],
+        );
+
+        $result = MySQL::fromAst($ast)->build();
+
+        $this->assertSame(
+            'SELECT * FROM `users` JOIN `orders` AS `o` ON (`users`.`id` = `o`.`user_id` OR (`o`.`status` IN (?) AND `users`.`region` = `o`.`region`))',
+            $result->query,
+        );
+        $this->assertSame(['paid'], $result->bindings);
+    }
+
+    public function testFromAstJoinRejectsConditionItCannotRepresent(): void
+    {
+        $ast = new Select(
+            columns: [new Star()],
+            from: new Table('users'),
+            joins: [new JoinClause(
+                'JOIN',
+                new Table('orders', 'o'),
+                new Binary(new Column('id', 'users'), 'LIKE', new Column('user_id', 'o')),
+            )],
+        );
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Invalid join operator: LIKE');
+
+        MySQL::fromAst($ast)->build();
     }
 
     public function testRoundTripBuilderToAst(): void
@@ -582,10 +659,10 @@ class BuilderAstTest extends TestCase
         $builder = new MySQL()
             ->from('users')
             ->filter([
-                Query::leftJoin('orders', 'ord', [
+                new Query(Method::LeftJoin, 'orders', [
                     Query::on('users.id', 'orders.user_id'),
                     Query::search('ord.status', 'paid'),
-                ]),
+                ], 'ord'),
             ]);
 
         $this->expectException(ValidationException::class);

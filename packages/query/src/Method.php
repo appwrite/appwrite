@@ -228,6 +228,37 @@ enum Method: string
         };
     }
 
+    /**
+     * Whether a join's ON list may hold this method: on() column comparisons,
+     * the filters every builder compiles inside ON, and and/or of those.
+     */
+    public function isJoinCondition(): bool
+    {
+        return match ($this) {
+            self::On,
+            self::Equal,
+            self::NotEqual,
+            self::GreaterThan,
+            self::GreaterThanEqual,
+            self::LessThan,
+            self::LessThanEqual,
+            self::Between,
+            self::NotBetween,
+            self::IsNull,
+            self::IsNotNull,
+            self::Contains,
+            self::ContainsAny,
+            self::NotContains,
+            self::StartsWith,
+            self::NotStartsWith,
+            self::EndsWith,
+            self::NotEndsWith,
+            self::And,
+            self::Or => true,
+            default => false,
+        };
+    }
+
     public function isJoin(): bool
     {
         return match ($this) {
