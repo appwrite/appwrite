@@ -2520,7 +2520,8 @@ Http::post('/v1/account/tokens/magic-url')
                 Query::equal('providerEmail', [$email]),
             ]);
             if (!$identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
@@ -2598,7 +2599,8 @@ Http::post('/v1/account/tokens/magic-url')
             try {
                 $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             } catch (Duplicate) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
         }
 
@@ -2930,7 +2932,8 @@ Http::post('/v1/account/tokens/email')
             try {
                 $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             } catch (Duplicate) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
@@ -3338,7 +3341,8 @@ Http::post('/v1/account/tokens/phone')
             try {
                 $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             } catch (Duplicate) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([

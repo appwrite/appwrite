@@ -4801,7 +4801,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
-         * Existing user ID with a different phone -> SHOULD FAIL with 409, not 500
+         * Existing user ID with a different phone -> SHOULD FAIL with the generic 400, not 500
          */
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
             'origin' => 'http://localhost',
@@ -4812,8 +4812,9 @@ final class AccountCustomClientTest extends Scope
             'phone' => '+123456780',
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
-        $this->assertEquals('user_already_exists', $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_bad_request', $response['body']['type']);
+        $this->assertEquals('There was an error processing your request. Please check the inputs and try again.', $response['body']['message']);
     }
 
     public function testCreateEmailTokenWithExistingUserId(): void
@@ -4839,8 +4840,9 @@ final class AccountCustomClientTest extends Scope
             'email' => uniqid() . 'other@localhost.test',
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
-        $this->assertEquals('user_already_exists', $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_bad_request', $response['body']['type']);
+        $this->assertEquals('There was an error processing your request. Please check the inputs and try again.', $response['body']['message']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
             'origin' => 'http://localhost',
@@ -4851,8 +4853,9 @@ final class AccountCustomClientTest extends Scope
             'email' => uniqid() . 'other@localhost.test',
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
-        $this->assertEquals('user_already_exists', $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_bad_request', $response['body']['type']);
+        $this->assertEquals('There was an error processing your request. Please check the inputs and try again.', $response['body']['message']);
     }
 
     public function testCreateSessionWithPhone(): void
