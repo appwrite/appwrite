@@ -18,6 +18,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
@@ -239,8 +240,12 @@ class Update extends Action
                     }
                 }
 
-                $dbForDatabases->withTransaction(function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $collections, $isAPIKey, $isPrivilegedUser, $authorization) {
+                $written = [];
+                $state = [];
+
+                $dbForDatabases->withTransaction(function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $collections, $isAPIKey, $isPrivilegedUser, $authorization, &$state, &$written) {
                     $state = [];
+                    $written = [];
 
                     foreach ($operations as $operation) {
                         $databaseInternalId = $operation['databaseInternalId'];
@@ -248,6 +253,12 @@ class Update extends Action
                         $collectionId = "database_{$databaseInternalId}_collection_{$collectionInternalId}";
                         $documentId = $operation['documentId'];
                         $currentDocumentId = $documentId;
+
+                        // Bulk deletes learn their ids from the rows they match; every other
+                        // staged write names the row here or leaves it in $state.
+                        if (\is_string($documentId) && $documentId !== '') {
+                            $written[$collectionId][$documentId] = true;
+                        }
                         $createdAt = new \DateTime($operation['$createdAt']);
                         $action = $operation['action'];
                         $data = $operation['data'];
@@ -319,7 +330,7 @@ class Update extends Action
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkDelete':
-                                $count = $this->handleBulkDeleteOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkDeleteOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state, $written);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
@@ -327,6 +338,12 @@ class Update extends Action
                     }
 
                 });
+
+                // Each write purges its document cache when its own withTransaction()
+                // returns. That call is a savepoint of this one, so the purge runs
+                // before COMMIT. A getRow in between caches the pre-commit row and
+                // keeps it until the next write. Purge again now that the commit is durable.
+                $this->purgeCommittedDocuments($dbForDatabases, $written, $state);
 
                 $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
                     'transactions',
@@ -587,6 +604,47 @@ class Update extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
+    }
+
+    /**
+     * Drop the document cache for every row this commit wrote.
+     *
+     * Creates stay in $state. Deletes and updates are recorded as they are
+     * applied, including bulk deletes, which have no single row id on the
+     * operation. A cache error must not fail a commit that already landed.
+     *
+     * @param array<string, array<string, true>> $written
+     * @param array<string, array<string, Document>> $state
+     */
+    private function purgeCommittedDocuments(Database $db, array $written, array $state): void
+    {
+        foreach ($state as $collectionId => $documents) {
+            foreach ($documents as $id => $document) {
+                if ($id !== '') {
+                    $written[(string) $collectionId][(string) $id] = true;
+                }
+
+                // An update can change $id; the state key stays the id the operation named.
+                $renamed = $document->getId();
+                if ($renamed !== '') {
+                    $written[(string) $collectionId][$renamed] = true;
+                }
+            }
+        }
+
+        foreach ($written as $collectionId => $ids) {
+            foreach (\array_keys($ids) as $id) {
+                if ($id === '') {
+                    continue;
+                }
+
+                try {
+                    $db->purgeCachedDocument((string) $collectionId, (string) $id);
+                } catch (\Throwable $e) {
+                    Console::warning('Failed to purge committed document from cache: ' . $e->getMessage());
+                }
+            }
+        }
     }
 
     /**
@@ -1079,6 +1137,7 @@ class Update extends Action
      * @param array $data
      * @param \DateTime $createdAt
      * @param array &$state
+     * @param array<string, array<string, true>> $written
      * @return int Number of documents deleted
      * @throws \Utopia\Database\Exception\Query
      * @throws ConflictException
@@ -1090,14 +1149,20 @@ class Update extends Action
         string $collectionId,
         array $data,
         \DateTime $createdAt,
-        array &$state
+        array &$state,
+        array &$written
     ): int {
         $queries = Query::parseQueries($data['queries'] ?? []);
 
         $count = $dbForDatabases->deleteDocuments(
             $collectionId,
             $queries,
-            onNext: function (Document $deleted, Document $old) use (&$state, $collectionId, $createdAt) {
+            onNext: function (Document $deleted, Document $old) use (&$state, &$written, $collectionId, $createdAt) {
+                $deletedId = $deleted->getId();
+                if ($deletedId !== '') {
+                    $written[$collectionId][$deletedId] = true;
+                }
+
                 $dependent = isset($state[$collectionId][$deleted->getId()]);
 
                 if (!$dependent) {

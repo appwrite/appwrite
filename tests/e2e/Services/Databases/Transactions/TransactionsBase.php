@@ -2105,6 +2105,72 @@ trait TransactionsBase
     }
 
     /**
+     * A get after the commit returns must see the committed row. The get before
+     * the commit fills the document cache with the pre-commit value.
+     */
+    public function testGetAfterCommit(): void
+    {
+        $databaseId = $this->getSharedDatabase();
+        $collectionId = $this->getSharedCollection();
+        $documentId = ID::unique();
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), $headers, [
+            $this->getRecordIdParam() => $documentId,
+            'data' => [
+                'name' => 'open',
+            ],
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+
+        $before = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $before['headers']['status-code']);
+        $this->assertEquals('open', $before['body']['name']);
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $staged = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
+            'data' => [
+                'name' => 'done',
+            ],
+            'transactionId' => $transactionId,
+        ]);
+
+        $this->assertEquals(200, $staged['headers']['status-code']);
+
+        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
+            'commit' => true,
+        ]);
+
+        $this->assertEquals(200, $commit['headers']['status-code']);
+        $this->assertEquals('committed', $commit['body']['status']);
+
+        $after = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $after['headers']['status-code']);
+        $this->assertEquals('done', $after['body']['name']);
+    }
+
+    /**
      * Test upsertDocument with transactionId via normal route
      */
     public function testUpsertDocument(): void
