@@ -24,6 +24,7 @@ trait VideoCustom
     protected static array $videoFileWithCaptions = [];
     protected static array $videoFileWithUndeterminedCaptions = [];
     protected static array $videoFileWithTwoCaptions = [];
+    protected static array $videoFileWithSameNameCaptions = [];
     protected static array $overrideCaptionFile = [];
     protected static array $audioOnlyFile = [];
     protected static array $invalidVideoFile = [];
@@ -339,6 +340,41 @@ trait VideoCustom
         ];
 
         return self::$videoFileWithTwoCaptions;
+    }
+
+    /**
+     * Uploads the short MP4 with two untitled English `mov_text` tracks
+     * (one full, one forced). Both resolve to the same caption name.
+     * Cues are `EMBEDDED CUE FULL` and `EMBEDDED CUE FORCED`.
+     */
+    public function getVideoFileWithSameNameCaptions(): array
+    {
+        if (!empty(self::$videoFileWithSameNameCaptions)) {
+            return self::$videoFileWithSameNameCaptions;
+        }
+
+        $source = \realpath(__DIR__ . '/../../resources/disk-a/video-with-same-name-subs.mp4');
+        $this->assertNotFalse($source);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files', \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => 'unique()',
+            'file' => new \CURLFile($source, 'video/mp4', 'video-with-same-name-subs.mp4'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        self::$videoFileWithSameNameCaptions = [
+            '$id' => $file['body']['$id'],
+            'sizeOriginal' => $file['body']['sizeOriginal'],
+        ];
+
+        return self::$videoFileWithSameNameCaptions;
     }
 
     /**

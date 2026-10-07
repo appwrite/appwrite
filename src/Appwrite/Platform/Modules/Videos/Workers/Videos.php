@@ -1047,6 +1047,10 @@ class Videos extends Action
                         'default' => $isDefault,
                         'status' => Base::STATUS_STARTED,
                     ]));
+                    // Reserve this row before the next track. Two untitled
+                    // streams share a language and name; without this the
+                    // second one finds the row just created and skips it.
+                    $used[$caption->getId()] = true;
                     $this->notify(
                         $queueForRealtime,
                         $project,

@@ -1314,6 +1314,52 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
+     * Two untitled English tracks (full and forced) share a language and name.
+     * Both must be registered; the second must not attach to the first row.
+     */
+    public function testExtractSameNameEmbeddedCaptions(): void
+    {
+        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFileWithSameNameCaptions()['$id'],
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $videoId = $create['body']['$id'];
+
+        $this->waitForTimeline($videoId);
+        $embedded = $this->waitForEmbeddedCaptions($videoId, 2);
+        $this->assertCount(2, $embedded, 'Expected both untitled English tracks');
+
+        $this->assertEquals('eng', $embedded[0]['code']);
+        $this->assertEquals($embedded[0]['code'], $embedded[1]['code']);
+        $this->assertEquals($embedded[0]['name'], $embedded[1]['name']);
+        $this->assertTrue($embedded[0]['default'] xor $embedded[1]['default'], 'Only one default track');
+
+        $full = null;
+        $forced = null;
+        foreach ($embedded as $caption) {
+            $vtt = $this->client->call(
+                Client::METHOD_GET,
+                '/videos/' . $videoId . '/outputs/dash/captions/' . $caption['$id'] . '/manifest',
+                $this->headers()
+            );
+            $this->assertEquals(200, $vtt['headers']['status-code']);
+            $body = (string) $vtt['body'];
+            if (\str_contains($body, 'EMBEDDED CUE FULL')) {
+                $full = $body;
+            }
+            if (\str_contains($body, 'EMBEDDED CUE FORCED')) {
+                $forced = $body;
+            }
+        }
+
+        $this->assertNotNull($full, 'Full English cue was not stored on its own caption');
+        $this->assertNotNull($forced, 'Forced English cue was not stored on its own caption');
+        $this->assertStringNotContainsString('EMBEDDED CUE FORCED', $full);
+        $this->assertStringNotContainsString('EMBEDDED CUE FULL', $forced);
+    }
+
+    /**
      * An eng upload created before the timeline finishes does not block
      * extraction: both tracks stay listed and the upload keeps default.
      */
