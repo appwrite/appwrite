@@ -207,7 +207,7 @@ jobs:
 
       - name: Paste Connect snippets over the starter
         run: |
-          SRC="$GITHUB_WORKSPACE/src/components/pages/projects/\$projectId/shared/connect-snippets/web/${{ matrix.snippets }}"
+          SRC="$GITHUB_WORKSPACE/apps/console/src/components/pages/projects/\$projectId/shared/connect-snippets/web/${{ matrix.snippets }}"
           DEST="$APP_DIR/${{ matrix.copy_to || '.' }}"
           mkdir -p "$DEST"
           cp -Rv "$SRC/." "$DEST/"
