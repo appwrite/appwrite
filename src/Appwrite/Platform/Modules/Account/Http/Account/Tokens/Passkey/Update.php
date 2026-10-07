@@ -30,6 +30,18 @@ class Update extends Action
 {
     use HTTP;
 
+    /**
+     * Guests call this endpoint, so only the members of `PublicKeyCredential.toJSON()` reach the ceremony.
+     */
+    private const ALLOWED_KEYS = [
+        'id',
+        'rawId',
+        'type',
+        'response',
+        'authenticatorAttachment',
+        'clientExtensionResults',
+    ];
+
     public static function getName(): string
     {
         return 'updatePasskeyToken';
@@ -57,7 +69,7 @@ class Update extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
-                        model: Response::MODEL_TOKEN,
+                        model: Response::MODEL_TOKEN_SECRET,
                     )
                 ],
                 contentType: ContentType::JSON
@@ -90,6 +102,7 @@ class Update extends Action
     ): void {
         // Configuration changes invalidate outstanding challenges
         $ceremony = Ceremony::fromProject($project) ?? throw new Exception(Exception::USER_INVALID_TOKEN);
+        $credential = \array_intersect_key($credential, \array_flip(self::ALLOWED_KEYS));
 
         $state = (new Challenges($dbForProject, $authorization))->consume($challengeId, Ceremony::TYPE_AUTHENTICATION, $ceremony);
 
@@ -161,10 +174,8 @@ class Update extends Action
 
         // Possession of the passkey is proven, so the caller gets the secret to exchange for a session
         $token->setAttribute('secret', $secret);
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->showSensitive(function () use ($response, $token) {
-            $response->dynamic($token, Response::MODEL_TOKEN);
-            return [];
-        });
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($token, Response::MODEL_TOKEN_SECRET);
     }
 }

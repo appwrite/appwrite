@@ -122,6 +122,7 @@ class Response extends SwooleResponse
     public const MODEL_IDENTITY = 'identity';
     public const MODEL_IDENTITY_LIST = 'identityList';
     public const MODEL_TOKEN = 'token';
+    public const MODEL_TOKEN_SECRET = 'tokenSecret';
     public const MODEL_JWT = 'jwt';
     public const MODEL_PREFERENCES = 'preferences';
 
