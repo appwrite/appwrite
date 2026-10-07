@@ -11,6 +11,9 @@ const addPropertySearchSchema = z.object({
   propertyId: z.string().optional(),
   /** `platform` = choose stack; `details` = create form (deep-link to skip step 1) */
   configureStep: z.enum(['platform', 'details']).optional(),
+  /** Prefill (e.g. "Add analytics" from a site's overview). */
+  name: z.string().max(128).optional(),
+  domain: z.string().max(253).optional(),
 })
 
 export const Route = createFileRoute(

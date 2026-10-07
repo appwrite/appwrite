@@ -33,6 +33,9 @@ export type AddPropertySearchState = {
   propertyId?: string
   /** Legacy two-part configure step; ignored (configure is one page now). */
   configureStep?: 'platform' | 'details'
+  /** Prefill values, e.g. from a site's "Add analytics". */
+  name?: string
+  domain?: string
 }
 
 type ViewProps = {
@@ -75,8 +78,8 @@ export function View({ projectId, search }: ViewProps) {
   const { access } = useOrganizationScopes(project?.teamId)
   const mayCreate = canCreateAnalyticsProperty(access, features)
 
-  const [name, setName] = useState('')
-  const [domain, setDomain] = useState('')
+  const [name, setName] = useState(search.name ?? '')
+  const [domain, setDomain] = useState(search.domain ?? '')
   const [propertyId, setPropertyId] = useState<string | undefined>(undefined)
   const [nameError, setNameError] = useState<string | null>(null)
   const [createError, setCreateError] = useState<string | null>(null)
@@ -109,6 +112,8 @@ export function View({ projectId, search }: ViewProps) {
     navigate({
       to: '/projects/$projectId/analytics/add',
       params: { projectId },
+      // Prefill params are dropped: after the first render the form state
+      // owns those values.
       search: {
         step: search.step,
         platform: search.platform,

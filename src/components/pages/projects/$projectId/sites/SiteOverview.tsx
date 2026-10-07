@@ -62,7 +62,6 @@ import { mergeActiveDeploymentForCard } from '@/lib/sites/deployment-screenshots
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { domainUrl } from '@/lib/domains/url'
-
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
   const minutes = Math.floor(seconds / 60)
@@ -176,7 +175,6 @@ export function SiteOverviewView() {
       proxyRuleServesActiveDeployment(rule, activeDeploymentResolved?.$id),
     ).length ?? 0
   const hasMoreDomains = totalActiveDomains > activeDomains.length
-
   const isBuilding =
     activeDeploymentResolved != null &&
     isDeploymentInProgress(activeDeploymentResolved.status)
