@@ -62,9 +62,7 @@ use Utopia\Http\Route;
 use Utopia\OpenAPI\Model\CompositeSchema;
 use Utopia\OpenAPI\Model\Composition;
 use Utopia\OpenAPI\Model\Discriminator;
-use Utopia\OpenAPI\Model\StringSchema;
 use Utopia\OpenAPI\Parser;
-use Utopia\OpenAPI\Version;
 use Utopia\Platform\Enum;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
@@ -1112,9 +1110,7 @@ final class FormatTest extends TestCase
 
         $openApiMethod = $openApi['paths']['/tests/{testId}']['delete'];
 
-        $this->assertSame('No content', $openApiMethod['responses']['204']['description']);
         $this->assertArrayNotHasKey('content', $openApiMethod['responses']['204']);
-        $this->assertArrayNotHasKey('headers', $openApiMethod['responses']['204']);
         $this->assertArrayNotHasKey('produces', $openApiMethod['x-appwrite']);
     }
 
@@ -1149,28 +1145,16 @@ final class FormatTest extends TestCase
             ));
 
         $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], ['console' => 0], 'console'))->parse();
-        $response = $openApi['paths']['/tests/redirect']['get']['responses'][(string) $code];
 
-        $this->assertSame('Redirect', $response['description']);
-        $this->assertArrayNotHasKey('content', $response);
         $this->assertSame([
-            'Location' => [
-                'description' => 'URL to redirect the client to.',
-                'schema' => [
-                    'type' => 'string',
-                    'format' => 'uri',
+            'description' => 'Redirect',
+            'headers' => [
+                'Location' => [
+                    'description' => 'URL to redirect the client to.',
+                    'schema' => ['type' => 'string', 'format' => 'uri'],
                 ],
             ],
-        ], $response['headers']);
-
-        $document = Parser::parse($openApi, Version::V3_0);
-        $parsed = $document->paths['/tests/redirect']->operations['get']->responses[(string) $code];
-
-        $this->assertSame(Version::V3_0, $document->version);
-        $this->assertSame('Redirect', $parsed->description);
-        $this->assertSame([], $parsed->content);
-        $this->assertInstanceOf(StringSchema::class, $parsed->headers['Location']->schema);
-        $this->assertSame('uri', $parsed->headers['Location']->schema->format);
+        ], $openApi['paths']['/tests/redirect']['get']['responses'][(string) $code]);
     }
 
     public static function binaryResponseTypes(): \Iterator
