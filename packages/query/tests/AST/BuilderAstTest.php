@@ -20,6 +20,7 @@ use Utopia\Query\AST\Statement\Select;
 use Utopia\Query\Builder\MySQL;
 use Utopia\Query\Builder\PostgreSQL;
 use Utopia\Query\Exception\ValidationException;
+use Utopia\Query\Method;
 use Utopia\Query\OrderDirection;
 use Utopia\Query\Query;
 
@@ -582,10 +583,10 @@ class BuilderAstTest extends TestCase
         $builder = new MySQL()
             ->from('users')
             ->filter([
-                Query::leftJoin('orders', 'ord', [
+                new Query(Method::LeftJoin, 'orders', [
                     Query::on('users.id', 'orders.user_id'),
                     Query::search('ord.status', 'paid'),
-                ]),
+                ], 'ord'),
             ]);
 
         $this->expectException(ValidationException::class);

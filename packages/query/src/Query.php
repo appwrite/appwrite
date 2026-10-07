@@ -1436,25 +1436,19 @@ class Query
     {
         $method = $condition->method;
 
-        if ($method === Method::And || $method === Method::Or) {
-            foreach ($condition->values as $child) {
-                if (! $child instanceof self) {
-                    throw new ValidationException('Join ON conditions must be Query objects');
-                }
-                self::assertJoinCondition($child);
-            }
+        if (! $method->isJoinCondition()) {
+            throw new ValidationException('Unsupported join ON condition: '.$method->value);
+        }
 
+        if ($method !== Method::And && $method !== Method::Or) {
             return;
         }
 
-        $isCondition = $method === Method::On
-            || $method === Method::ContainsAll
-            || $method->isFilter()
-            || $method->isSpatial()
-            || $method->isJson();
-
-        if (! $isCondition) {
-            throw new ValidationException('Join ON accepts only on() and filter conditions, got: '.$method->value);
+        foreach ($condition->values as $child) {
+            if (! $child instanceof self) {
+                throw new ValidationException('Join ON conditions must be Query objects');
+            }
+            self::assertJoinCondition($child);
         }
     }
 

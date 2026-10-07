@@ -12,11 +12,13 @@ All notable changes to `utopia-php/query` are documented in this file.
   form (`join($table, $left, $right, $operator, $alias)`) and the alias-less
   and alias-last overloads are gone. An empty alias throws
   `ValidationException`.
-- The ON list is validated when the join is built: every member must be a
-  `Query` that is `on()` or a filter (comparison, text, null, range, spatial,
-  JSON, `containsAll`, or `and`/`or` of those). `limit()`, `select()`,
-  ordering, cursors, aggregates, grouping, joins, unions, vectors, `raw()` and
-  JSON strings throw `ValidationException`, at any depth.
+- The ON list is validated when the join is built, against the same set the
+  builders compile (`Method::isJoinCondition()`, new): `on()`, the
+  comparisons, `between`, null checks, `contains`/`containsAny`/`notContains`,
+  the `startsWith`/`endsWith` family, and `and`/`or` of those. Anything else
+  (`limit()`, `select()`, ordering, cursors, aggregates, joins, `search()`,
+  `regex()`, spatial, JSON, `raw()`, JSON strings) throws `ValidationException`
+  (`Unsupported join ON condition: <method>`), at any depth.
 - The alias is a property: `Query::getAlias()` replaces `getJoinAlias()`, and
   aggregates (`count('*', 'total')`, …) keep it there instead of in
   `values[0]`. `toArray()` writes it as `"alias"`, and `new Query()` takes it

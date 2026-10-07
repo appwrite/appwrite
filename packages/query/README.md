@@ -180,7 +180,7 @@ The builders page on a `_cursor` column, so they bind the cursor row's `_cursor`
 
 ### Join Queries
 
-Every join names the joined collection and an alias, which is required. Conditioned joins take an ON list of `on()` column comparisons and filters; anything else in the list (`limit()`, `select()`, `orderAsc()`, an aggregate, another join, …) throws `ValidationException`.
+Every join names the joined collection and an alias, which is required. Conditioned joins take an ON list of `on()` column comparisons and the filters `Method::isJoinCondition()` accepts (comparisons, `between`, null checks, `contains*`, `startsWith`/`endsWith` and their negations, and `and`/`or` of those); anything else in the list (`limit()`, `select()`, `orderAsc()`, an aggregate, another join, `search()`, …) throws `ValidationException`.
 
 ```php
 Query::join('orders', 'o', [Query::on('users.id', 'o.user_id')]);

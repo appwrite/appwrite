@@ -2144,31 +2144,8 @@ abstract class Builder implements
     private function assertJoinOnPredicate(Query $query): void
     {
         $method = $query->getMethod();
-        $allowed = match ($method) {
-            Method::On,
-            Method::Equal,
-            Method::NotEqual,
-            Method::GreaterThan,
-            Method::GreaterThanEqual,
-            Method::LessThan,
-            Method::LessThanEqual,
-            Method::Between,
-            Method::NotBetween,
-            Method::IsNull,
-            Method::IsNotNull,
-            Method::Contains,
-            Method::ContainsAny,
-            Method::NotContains,
-            Method::StartsWith,
-            Method::NotStartsWith,
-            Method::EndsWith,
-            Method::NotEndsWith,
-            Method::And,
-            Method::Or => true,
-            default => false,
-        };
 
-        if (! $allowed) {
+        if (! $method->isJoinCondition()) {
             throw new ValidationException('Unsupported join ON condition: ' . $method->value);
         }
 

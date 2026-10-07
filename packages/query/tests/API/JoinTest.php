@@ -141,6 +141,12 @@ class JoinTest extends TestCase
             'vectorCosine' => [Query::vectorCosine('embedding', [0.1, 0.2])],
             'elemMatch' => [Query::elemMatch('tags', [Query::equal('name', ['a'])])],
             'raw' => [Query::raw('1 = 1')],
+            'search' => [Query::search('ord.note', 'gift')],
+            'regex' => [Query::regex('ord.note', '^g')],
+            'containsAll' => [Query::containsAll('ord.tags', ['a', 'b'])],
+            'exists' => [Query::exists(['ord.note'])],
+            'intersects' => [Query::intersects('ord.area', [[0, 0], [1, 1]])],
+            'jsonContains' => [Query::jsonContains('ord.meta', 'x')],
         ];
     }
 
@@ -148,7 +154,7 @@ class JoinTest extends TestCase
     public function testOnListRejectsMemberThatIsNotACondition(Query $member): void
     {
         $this->expectException(ValidationException::class);
-        $this->expectExceptionMessage('Join ON accepts only on() and filter conditions, got: ' . $member->getMethod()->value);
+        $this->expectExceptionMessage('Unsupported join ON condition: ' . $member->getMethod()->value);
 
         Query::join('orders', 'ord', [Query::on('users.id', 'ord.user_id'), $member]);
     }
@@ -157,7 +163,7 @@ class JoinTest extends TestCase
     public function testOnListRejectsMemberNestedInLogicalCondition(Query $member): void
     {
         $this->expectException(ValidationException::class);
-        $this->expectExceptionMessage('Join ON accepts only on() and filter conditions, got: ' . $member->getMethod()->value);
+        $this->expectExceptionMessage('Unsupported join ON condition: ' . $member->getMethod()->value);
 
         Query::join('orders', 'ord', [
             Query::on('users.id', 'ord.user_id'),
@@ -166,30 +172,36 @@ class JoinTest extends TestCase
     }
 
     /**
-     * @return array<string, array{Query}>
+     * @return array<string, array{Query, string}>
      */
     public static function conditions(): array
     {
         return [
-            'on' => [Query::on('users.id', 'ord.user_id', '!=')],
-            'equal' => [Query::equal('ord.status', ['paid'])],
-            'between' => [Query::between('ord.total', 1, 10)],
-            'isNull' => [Query::isNull('ord.deleted_at')],
-            'search' => [Query::search('ord.note', 'gift')],
-            'containsAll' => [Query::containsAll('ord.tags', ['a', 'b'])],
-            'intersects' => [Query::intersects('ord.area', [[0, 0], [1, 1]])],
-            'jsonContains' => [Query::jsonContains('ord.meta', 'x')],
-            'and' => [Query::and([Query::equal('ord.status', ['paid']), Query::isNotNull('ord.paid_at')])],
-            'or' => [Query::or([Query::equal('ord.status', ['paid']), Query::equal('ord.status', ['refunded'])])],
+            'on' => [Query::on('users.id', 'ord.user_id', '!='), '`users`.`id` != `ord`.`user_id`'],
+            'equal' => [Query::equal('ord.status', ['paid']), '`ord`.`status` IN (?)'],
+            'notEqual' => [Query::notEqual('ord.status', 'void'), '`ord`.`status` != ?'],
+            'greaterThan' => [Query::greaterThan('ord.total', 5), '`ord`.`total` > ?'],
+            'between' => [Query::between('ord.total', 1, 10), '`ord`.`total` BETWEEN ? AND ?'],
+            'isNull' => [Query::isNull('ord.deleted_at'), '`ord`.`deleted_at` IS NULL'],
+            'startsWith' => [Query::startsWith('ord.code', 'A'), '`ord`.`code` LIKE ?'],
+            'and' => [
+                Query::and([Query::equal('ord.status', ['paid']), Query::isNotNull('ord.paid_at')]),
+                '(`ord`.`status` IN (?) AND `ord`.`paid_at` IS NOT NULL)',
+            ],
+            'or' => [
+                Query::or([Query::equal('ord.status', ['paid']), Query::equal('ord.status', ['refunded'])]),
+                '(`ord`.`status` IN (?) OR `ord`.`status` IN (?))',
+            ],
         ];
     }
 
     #[DataProvider('conditions')]
-    public function testOnListAcceptsCondition(Query $condition): void
+    public function testOnListAcceptsAndCompilesCondition(Query $condition, string $sql): void
     {
         $query = Query::join('orders', 'ord', [$condition]);
 
         $this->assertSame([$condition], $query->getJoinOnQueries());
+        $this->assertSame('JOIN `orders` AS `ord` ON ' . $sql, $query->compile(new MySQL()));
     }
 
     public function testCrossJoinRejectsConditionsWhenParsed(): void
@@ -345,7 +357,7 @@ class JoinTest extends TestCase
     public function testParseRejectsNonConditionInOnList(): void
     {
         $this->expectException(ValidationException::class);
-        $this->expectExceptionMessage('Join ON accepts only on() and filter conditions, got: limit');
+        $this->expectExceptionMessage('Unsupported join ON condition: limit');
 
         Query::parseQuery([
             'method' => 'join',
@@ -419,24 +431,25 @@ class JoinTest extends TestCase
         Query::on('$id', 'customerId', 'LIKE')->compile(new MySQL());
     }
 
-    public function testNestedJoinRejectsSearchOnCompile(): void
+    public function testBuilderRejectsConditionOfAJoinBuiltWithoutTheFactory(): void
     {
         $this->expectException(ValidationException::class);
         $this->expectExceptionMessage('Unsupported join ON condition: search');
-        Query::leftJoin('orders', 'ord', [
+
+        new Query(Method::LeftJoin, 'orders', [
             Query::on('$id', 'customerId'),
             Query::search('ord.status', 'paid'),
-        ])->compile(new MySQL());
+        ], 'ord')->compile(new MySQL());
     }
 
-    public function testNestedJoinRejectsRegexOnCompile(): void
+    public function testJoinConditionMethods(): void
     {
-        $this->expectException(ValidationException::class);
-        $this->expectExceptionMessage('Unsupported join ON condition: regex');
-        Query::leftJoin('orders', 'ord', [
-            Query::on('$id', 'customerId'),
-            Query::regex('ord.status', 'paid'),
-        ])->compile(new MySQL());
+        $this->assertTrue(Method::On->isJoinCondition());
+        $this->assertTrue(Method::Equal->isJoinCondition());
+        $this->assertTrue(Method::Or->isJoinCondition());
+        $this->assertFalse(Method::Search->isJoinCondition());
+        $this->assertFalse(Method::Limit->isJoinCondition());
+        $this->assertFalse(Method::Join->isJoinCondition());
     }
 
     public function testNestedJoinShapeIncludesOnQueries(): void
