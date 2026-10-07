@@ -1919,6 +1919,38 @@ trait TransactionsBase
         $databaseId = $this->getSharedDatabase();
         $collectionId = $this->getSharedCollection();
 
+        $otherCollection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'CommitEventPayloadCollection',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $otherCollection['headers']['status-code']);
+        $otherCollectionId = $otherCollection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $nameAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $otherCollectionId, 'string', null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $nameAttr['headers']['status-code']);
+            $this->waitForAllAttributes($databaseId, $otherCollectionId);
+        }
+
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1927,18 +1959,24 @@ trait TransactionsBase
         $this->assertEquals(201, $transaction['headers']['status-code']);
 
         $recordId = ID::unique();
+        $otherRecordId = ID::unique();
 
-        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            $this->getRecordIdParam() => $recordId,
-            'data' => ['name' => 'Event payload'],
-            'transactionId' => $transaction['body']['$id'],
-        ]);
+        foreach ([
+            [$recordId, $collectionId],
+            [$otherRecordId, $otherCollectionId],
+        ] as [$id, $containerId]) {
+            $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId, null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                $this->getRecordIdParam() => $id,
+                'data' => ['name' => 'Event payload'],
+                'transactionId' => $transaction['body']['$id'],
+            ]);
 
-        $this->assertEquals(201, $created['headers']['status-code']);
+            $this->assertEquals(201, $created['headers']['status-code']);
+        }
 
         $committed = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transaction['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -1953,16 +1991,22 @@ trait TransactionsBase
         // The commit handler builds this payload by hand rather than going through
         // processDocument(), so it has to add the same keys: the synthetic $databaseId,
         // and only the container id belonging to the surface that was called.
-        $delivery = $this->getLastRequestForProject(
-            $this->getProject()['$id'],
-            probe: function (array $request) use ($recordId) {
-                $this->assertStringContainsString($recordId, $request['headers']['X-Appwrite-Webhook-Events'] ?? '');
-            }
-        );
+        // Two tables in one commit must each keep their own id.
+        foreach ([
+            [$recordId, $collectionId],
+            [$otherRecordId, $otherCollectionId],
+        ] as [$id, $containerId]) {
+            $delivery = $this->getLastRequestForProject(
+                $this->getProject()['$id'],
+                probe: function (array $request) use ($id) {
+                    $this->assertStringContainsString($id, $request['headers']['X-Appwrite-Webhook-Events'] ?? '');
+                }
+            );
 
-        $this->assertEquals($databaseId, $delivery['data']['$databaseId']);
-        $this->assertEquals($collectionId, $delivery['data'][$this->getContainerIdResponseKey()]);
-        $this->assertArrayNotHasKey($this->getOppositeContainerIdResponseKey(), $delivery['data']);
+            $this->assertEquals($databaseId, $delivery['data']['$databaseId']);
+            $this->assertEquals($containerId, $delivery['data'][$this->getContainerIdResponseKey()]);
+            $this->assertArrayNotHasKey($this->getOppositeContainerIdResponseKey(), $delivery['data']);
+        }
     }
 
     /**
