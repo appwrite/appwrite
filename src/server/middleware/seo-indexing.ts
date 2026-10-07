@@ -6,6 +6,7 @@ import {
   isSeoIndexableHost,
   NOINDEX_ROBOTS_HEADER,
 } from '@/lib/seo/indexing'
+import { isSearchNonIndexablePath } from '@/lib/seo/non-indexable-paths'
 import { trackServerPageview } from '@/lib/server-analytics'
 
 export const seoIndexingMiddleware = createMiddleware({
@@ -28,7 +29,24 @@ export const seoIndexingMiddleware = createMiddleware({
 
   const result = await next()
   const response = result.response
-  if (!response || indexable) {
+  if (!response) {
+    return result
+  }
+
+  const shouldNoIndex =
+    !indexable ||
+    isSearchNonIndexablePath(
+      pathname ??
+        (() => {
+          try {
+            return new URL(request.url).pathname
+          } catch {
+            return '/'
+          }
+        })(),
+    )
+
+  if (!shouldNoIndex) {
     return result
   }
 

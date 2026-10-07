@@ -75,7 +75,7 @@ import { OnboardingCard } from './OnboardingCard'
 import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
-import { McpIcon } from '@/components/global/shared/McpIcon'
+import { McpNavIconWithStatus } from '@/components/global/shared/McpNavIconWithStatus'
 import { useI18n } from '@/lib/i18n'
 import { useT } from '@/lib/i18n/translate'
 import { hasAccountMcpAgentConnected } from '@/lib/mcp-adoption'
@@ -240,16 +240,22 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
       label: sidebarCopy.sections.observe,
       items: [
         {
-          id: 'activity',
-          label: sidebarCopy.items.activity,
-          icon: Activity,
-          path: `/projects/${projectId}/activity`,
+          id: 'analytics',
+          label: sidebarCopy.items.analytics,
+          icon: BarChart2,
+          path: `/projects/${projectId}/analytics`,
         },
         {
           id: 'realtime',
           label: sidebarCopy.items.realtime,
           icon: Radio,
           path: `/projects/${projectId}/realtime`,
+        },
+        {
+          id: 'activity',
+          label: sidebarCopy.items.activity,
+          icon: Activity,
+          path: `/projects/${projectId}/activity`,
         },
         {
           id: 'logs',
@@ -263,13 +269,6 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           label: sidebarCopy.items.usage,
           icon: BarChart3,
           path: `/projects/${projectId}/usage`,
-        },
-        {
-          id: 'analytics',
-          label: sidebarCopy.items.analytics,
-          icon: BarChart2,
-          path: `/projects/${projectId}/analytics`,
-          comingSoon: true,
         },
         {
           id: 'errors',
@@ -360,6 +359,11 @@ export function ConsoleSidebar({
             return features.activity && canSeeActivityNav(access, features)
           if (item.id === 'firewall')
             return isCloud && canSeeProjectNavItem(access, features, item.id)
+          if (item.id === 'analytics')
+            return (
+              features.analytics &&
+              canSeeProjectNavItem(access, features, item.id)
+            )
           if (item.id === 'videos')
             return (
               features.videos && canSeeProjectNavItem(access, features, item.id)
@@ -465,26 +469,10 @@ export function ConsoleSidebar({
         )
       }
       if (isMcpIcon) {
-        const statusLabel = agentMcpConnected
-          ? t('Connected')
-          : t('Not connected')
         return (
-          <span className="relative inline-flex shrink-0">
-            <McpIcon
-              variant="nav"
-              className={cn('h-4 w-4', isMobile && 'h-[18px] w-[18px]')}
-            />
-            <span
-              className={cn(
-                'absolute -end-0.5 -bottom-0.5 h-1.5 w-1.5 rounded-full ring-2 ring-background',
-                agentMcpConnected
-                  ? 'bg-green-500'
-                  : 'bg-red-500',
-              )}
-              aria-hidden
-            />
-            <span className="sr-only">{statusLabel}</span>
-          </span>
+          <McpNavIconWithStatus
+            className={cn('h-4 w-4', isMobile && 'h-[18px] w-[18px]')}
+          />
         )
       }
       const Icon = item.icon as LucideIcon

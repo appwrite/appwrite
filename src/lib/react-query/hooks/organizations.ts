@@ -343,7 +343,8 @@ export async function fetchOrganizationPlan(orgId: string) {
 /**
  * Query function to fetch current user's roles and scopes for an organization.
  * Use in organization context (orgId) or project context (project's teamId).
- * When API is unavailable or fails, returns defaultRoles and defaultScopes (full access).
+ * When API is unavailable or fails, returns `previous` (the roles already known)
+ * or else defaultRoles and defaultScopes (full access).
  *
  * `projectId` resolves project-specific roles (`project-{id}-{role}`) for that
  * one project. Omitting it is what the org-wide view wants, but the backend then
@@ -353,6 +354,7 @@ export async function fetchOrganizationPlan(orgId: string) {
 export async function fetchOrganizationScopes(
   organizationId: string,
   projectId?: string | null,
+  previous?: OrganizationRolesScopes,
 ): Promise<OrganizationRolesScopes> {
   if (!organizationId) {
     return { roles: [...DEFAULT_ROLES], scopes: [...DEFAULT_SCOPES] }
@@ -376,7 +378,9 @@ export async function fetchOrganizationScopes(
       scopes: response.scopes ?? [...DEFAULT_SCOPES],
     }
   } catch {
-    return { roles: [...DEFAULT_ROLES], scopes: [...DEFAULT_SCOPES] }
+    return (
+      previous ?? { roles: [...DEFAULT_ROLES], scopes: [...DEFAULT_SCOPES] }
+    )
   }
 }
 
@@ -1575,12 +1579,20 @@ export function organizationScopesQueryOptions(
     // the same membership are genuinely different answers and must not share a
     // cache entry.
     queryKey: ['organization', 'scopes', organizationId, projectId ?? null],
-    queryFn: () => fetchOrganizationScopes(organizationId!, projectId),
+    // A failed background refresh keeps the cached role instead of widening it.
+    queryFn: ({ client, queryKey }) =>
+      fetchOrganizationScopes(
+        organizationId!,
+        projectId,
+        client.getQueryData<OrganizationRolesScopes>(queryKey),
+      ),
     enabled,
-    staleTime: LONG_STALE_TIME,
+    staleTime: DEFAULT_STALE_TIME,
     retry: false,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
+    // Another owner can change this member's role at any time; without these
+    // the old role sticks until the console is reloaded.
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     refetchOnReconnect: false,
     gcTime: organizationId ? 5 * 60 * 1000 : 0,
   })
@@ -1600,6 +1612,7 @@ export function organizationScopesQueryOptions(
  */
 export async function fetchOrganizationProjectScope(
   organizationId: string,
+  previous?: string[] | null,
 ): Promise<string[] | null> {
   if (!organizationId || !getActiveProfileFeatures().orgRoles) return null
   try {
@@ -1622,9 +1635,10 @@ export async function fetchOrganizationProjectScope(
     if (!hasProjectSpecificRoles(roles)) return null
     return projectIdsFromRoles(roles)
   } catch {
-    // Never fail closed on a lookup error: fall back to the unrestricted list
-    // and let the API reject anything this member cannot open.
-    return null
+    // Never fail closed on a lookup error: keep the list already known, else
+    // fall back to the unrestricted one and let the API reject anything this
+    // member cannot open.
+    return previous ?? null
   }
 }
 
@@ -1635,12 +1649,16 @@ export function organizationProjectScopeQueryOptions(
   const enabled = !!organizationId && !!features.orgRoles
   return queryOptions({
     queryKey: ['organization', 'project-scope', organizationId],
-    queryFn: () => fetchOrganizationProjectScope(organizationId!),
+    queryFn: ({ client, queryKey }) =>
+      fetchOrganizationProjectScope(
+        organizationId!,
+        client.getQueryData<string[] | null>(queryKey),
+      ),
     enabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     refetchOnReconnect: false,
     gcTime: organizationId ? 5 * 60 * 1000 : 0,
   })

@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { createPortal } from 'react-dom'
-import maplibregl from 'maplibre-gl'
+import * as maplibregl from '@/lib/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'

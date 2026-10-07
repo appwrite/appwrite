@@ -1,4 +1,5 @@
 import { useTheme } from 'next-themes'
+import { SiteAnalyticsCard } from './_components/SiteAnalyticsCard'
 import {
   useState,
   useEffect,
@@ -455,7 +456,7 @@ export function View() {
   }, [activeDeploymentResolved?.$id, screenshotTheme])
 
   // Same limit as site layout loader prefetch (DOMAINS_DEFAULT_PAGE_SIZE) to avoid cache miss
-  const { rules: siteDomainsRules } = useSiteDomains(
+  const { rules: siteDomainsRules, isLoading: siteDomainsLoading } = useSiteDomains(
     projectId,
     siteId,
     0,
@@ -485,6 +486,11 @@ export function View() {
     [siteDomainsRules, activeDeploymentIdForDomains],
   )
   const hasMoreDomains = totalActiveDomains > activeDomains.length
+  // Every domain of the site, for matching an analytics property.
+  const siteDomainNames = useMemo(
+    () => (siteDomainsRules ?? []).map((rule) => rule.domain),
+    [siteDomainsRules],
+  )
 
   // Get VCS provider info (use resolved for consistency)
   const vcsProvider = activeDeploymentResolved
@@ -1368,6 +1374,16 @@ export function View() {
                 </div>
               )
             })()}
+
+          {/* Analytics for the site's domains (hidden when the product is off). */}
+          {activeDeploymentResolved && projectId && site ? (
+            <SiteAnalyticsCard
+              projectId={projectId}
+              siteName={site.name}
+              siteDomains={siteDomainNames}
+              domainsLoading={siteDomainsLoading}
+            />
+          ) : null}
 
           {/* No Active Deployment */}
           {!activeDeploymentResolved && !isBuilding && (

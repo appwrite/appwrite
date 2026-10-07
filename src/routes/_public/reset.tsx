@@ -26,8 +26,8 @@ import {
 import { prefetchPostAuthDestination } from '@/lib/post-auth-navigation'
 
 const searchSchema = z.object({
-  userId: z.string().min(1, 'User ID is required'),
-  secret: z.string().min(1, 'Secret token is required'),
+  userId: z.string().optional(),
+  secret: z.string().optional(),
 })
 
 export const Route = createFileRoute('/_public/reset')({

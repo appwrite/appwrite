@@ -214,6 +214,7 @@ export const ANALYTICS_ACTIONS = {
   'docs-nav-home': 'Docs Home Nav Clicked',
   'docs-nav-quick-start': 'Docs Quick Start Nav Clicked',
   'docs-nav-tutorials': 'Docs Tutorials Nav Clicked',
+  'docs-nav-mcp': 'Docs MCP Nav Clicked',
   'docs-nav-sdks': 'Docs SDKs Nav Clicked',
   'docs-nav-products': 'Docs Products Nav Clicked',
   'docs-nav-apis': 'Docs APIs Nav Clicked',
@@ -294,7 +295,7 @@ export const ANALYTICS_ACTIONS = {
   'restore-pitr': 'Restore PITR Clicked',
   'import-data': 'Import Data Clicked',
   'create-marketplace-app': 'Create Marketplace App Clicked',
-  'add-website': 'Add Website Clicked',
+  'create-analytics-property': 'Create Analytics Property Clicked',
 } as const
 
 export type AnalyticsActionId = keyof typeof ANALYTICS_ACTIONS
@@ -375,6 +376,7 @@ const DOCS_NAV_ACTIONS: Record<string, AnalyticsActionId> = {
   '/docs': 'docs-nav-home',
   '/docs/quick-starts': 'docs-nav-quick-start',
   '/docs/tutorials': 'docs-nav-tutorials',
+  '/docs/tooling/ai/mcp-servers': 'docs-nav-mcp',
   '/docs/sdks': 'docs-nav-sdks',
   '/docs/partners': 'docs-nav-partners',
   '/docs/partners/quick-start': 'docs-nav-quick-start',

@@ -172,6 +172,44 @@ export function mapPostgresRoleRowToFormState(
   }
 }
 
+type PostgresRoleAttribute =
+  | 'canLogin'
+  | 'isSuperuser'
+  | 'canCreateRole'
+  | 'canCreateDb'
+  | 'canReplicate'
+  | 'inherit'
+  | 'bypassRls'
+
+const POSTGRES_ROLE_ATTRIBUTE_KEYWORDS: ReadonlyArray<
+  readonly [PostgresRoleAttribute, string]
+> = [
+  ['canLogin', 'LOGIN'],
+  ['isSuperuser', 'SUPERUSER'],
+  ['canCreateRole', 'CREATEROLE'],
+  ['canCreateDb', 'CREATEDB'],
+  ['canReplicate', 'REPLICATION'],
+  ['inherit', 'INHERIT'],
+  ['bypassRls', 'BYPASSRLS'],
+]
+
+const POSTGRES_CREATE_ROLE_DEFAULTS = createDefaultPostgresRoleFormState()
+
+const POSTGRES_UNLIMITED_CONNECTIONS = -1
+
+const POSTGRES_NO_EXPIRY = 'infinity'
+
+function effectiveConnectionLimit(formState: PostgresRoleFormState): number {
+  if (formState.unlimitedConnections) return POSTGRES_UNLIMITED_CONNECTIONS
+  return Number.parseInt(formState.connectionLimit.trim(), 10)
+}
+
+function effectiveExpiry(formState: PostgresRoleFormState): number | null {
+  if (formState.noExpiry) return null
+  const instant = new Date(formState.validUntil.trim()).getTime()
+  return Number.isNaN(instant) ? null : instant
+}
+
 export function validatePostgresRoleFormState(
   formState: PostgresRoleFormState,
   options: { isEdit: boolean },
@@ -196,7 +234,7 @@ export function validatePostgresRoleFormState(
     }
   }
 
-  if (!formState.noExpiry && !formState.validUntil.trim()) {
+  if (!formState.noExpiry && effectiveExpiry(formState) === null) {
     return 'Valid until is required when expiry is enabled.'
   }
 
@@ -208,39 +246,31 @@ function quotePostgresRoleNames(roleNames: string[]): string {
 }
 
 function buildPostgresRoleAttributeClauses(
-  formState: PostgresRoleFormState,
-  options: { includePassword: boolean },
+  previous: PostgresRoleFormState,
+  next: PostgresRoleFormState,
 ): string[] {
-  const clauses: string[] = [
-    formState.canLogin ? 'LOGIN' : 'NOLOGIN',
-    formState.isSuperuser ? 'SUPERUSER' : 'NOSUPERUSER',
-    formState.canCreateRole ? 'CREATEROLE' : 'NOCREATEROLE',
-    formState.canCreateDb ? 'CREATEDB' : 'NOCREATEDB',
-    formState.canReplicate ? 'REPLICATION' : 'NOREPLICATION',
-    formState.inherit ? 'INHERIT' : 'NOINHERIT',
-    formState.bypassRls ? 'BYPASSRLS' : 'NOBYPASSRLS',
-  ]
+  const clauses: string[] = []
 
-  if (options.includePassword && formState.password.trim()) {
-    clauses.push(`PASSWORD ${quotePostgresStringLiteral(formState.password.trim())}`)
+  for (const [attribute, keyword] of POSTGRES_ROLE_ATTRIBUTE_KEYWORDS) {
+    if (previous[attribute] !== next[attribute]) {
+      clauses.push(next[attribute] ? keyword : `NO${keyword}`)
+    }
   }
 
-  if (formState.unlimitedConnections) {
-    clauses.push('CONNECTION LIMIT -1')
-  } else {
-    const limit = Number.parseInt(formState.connectionLimit.trim(), 10)
-    clauses.push(`CONNECTION LIMIT ${limit}`)
+  if (next.canLogin && next.password.trim()) {
+    clauses.push(`PASSWORD ${quotePostgresStringLiteral(next.password)}`)
   }
 
-  if (formState.noExpiry) {
-    clauses.push("VALID UNTIL 'infinity'")
-  } else {
-    const parsed = new Date(formState.validUntil.trim())
-    const pad = (n: number) => String(n).padStart(2, '0')
-    const normalized = Number.isNaN(parsed.getTime())
-      ? formState.validUntil.trim().replace('T', ' ')
-      : `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())} ${pad(parsed.getHours())}:${pad(parsed.getMinutes())}:${pad(parsed.getSeconds())}`
-    clauses.push(`VALID UNTIL ${quotePostgresStringLiteral(normalized)}`)
+  const connectionLimit = effectiveConnectionLimit(next)
+  if (effectiveConnectionLimit(previous) !== connectionLimit) {
+    clauses.push(`CONNECTION LIMIT ${connectionLimit}`)
+  }
+
+  const expiry = effectiveExpiry(next)
+  if (effectiveExpiry(previous) !== expiry) {
+    const validUntil =
+      expiry === null ? POSTGRES_NO_EXPIRY : new Date(expiry).toISOString()
+    clauses.push(`VALID UNTIL ${quotePostgresStringLiteral(validUntil)}`)
   }
 
   return clauses
@@ -292,9 +322,10 @@ export function buildPostgresCreateRoleSql(
   formState: PostgresRoleFormState,
 ): string {
   const roleName = formState.roleName.trim()
-  const clauses = buildPostgresRoleAttributeClauses(formState, {
-    includePassword: true,
-  })
+  const clauses = buildPostgresRoleAttributeClauses(
+    POSTGRES_CREATE_ROLE_DEFAULTS,
+    formState,
+  )
 
   if (formState.memberOf.length > 0) {
     clauses.push(`IN ROLE ${quotePostgresRoleNames(formState.memberOf)}`)
@@ -337,18 +368,20 @@ function buildPostgresRoleMembershipChangeSql(
 }
 
 export function buildPostgresUpdateRoleSql(
-  formState: PostgresRoleFormState,
-  previousMembers: string[],
+  previous: PostgresRoleFormState,
+  next: PostgresRoleFormState,
 ): string[] {
-  const roleName = formState.roleName.trim()
+  const roleName = previous.roleName
+  const role = quotePostgresIdentifier(roleName)
+  const clauses = buildPostgresRoleAttributeClauses(previous, next)
   const statements = [
-    `ALTER ROLE ${quotePostgresIdentifier(roleName)} WITH ${buildPostgresRoleAttributeClauses(formState, {
-      includePassword: Boolean(formState.password.trim()),
-    }).join(' ')}`,
+    ...(clauses.length > 0
+      ? [`ALTER ROLE ${role} WITH ${clauses.join(' ')}`]
+      : []),
     ...buildPostgresRoleMembershipChangeSql(
       roleName,
-      previousMembers,
-      formState.memberOf,
+      previous.memberOf,
+      next.memberOf,
     ),
   ]
 

@@ -17,7 +17,7 @@
     "e2e:databases": "playwright test --project=console-mysql --project=console-postgres --project=console-tablesdb --project=console-documentsdb --project=console-vectorsdb",
     "e2e:cleanup-projects": "bun run e2e/cleanup-projects.ts",
     "e2e:usage": "playwright test --project=console-usage && bun run e2e:usage-self-hosted",
-    "e2e:usage-self-hosted": "VITE_CONSOLE_PROFILE=self-hosted playwright test --project=self-hosted-usage",
+    "e2e:usage-self-hosted": "VITE_CONSOLE_PROFILE=self-hosted VITE_CONSOLE_WEBSITE_ACCESS=false playwright test --project=self-hosted-usage",
     "e2e:organizations-self-hosted": "VITE_CONSOLE_PROFILE=self-hosted playwright test --project=self-hosted-organizations",
     "e2e:usage-live": "playwright test --project=console-usage-live",
     "e2e:ui": "playwright test --ui",
@@ -127,7 +127,7 @@
     "input-otp": "^1.4.2",
     "js-yaml": "^4.2.0",
     "lucide-react": "^0.544.0",
-    "maplibre-gl": "^4.7.1",
+    "maplibre-gl": "^6.13.0",
     "mediabunny": "^1.55.3",
     "monaco-editor": "^0.55.1",
     "motion": "^12.23.22",
@@ -145,7 +145,7 @@
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "shaka-player": "^4.12.0",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.5",
     "sonner": "^2.0.7",
     "sql-formatter": "^15.8.1",
     "tailwind-merge": "^3.0.2",
@@ -163,14 +163,18 @@
     "react-dom": "19.1.1",
     "use-sync-external-store": "^1.6.0",
     "@tanstack/react-store": "^0.11.2",
-    "@tanstack/store": "^0.11.2"
+    "@tanstack/store": "^0.11.2",
+    "dompurify": "^3.4.16",
+    "sharp": "^0.35.5"
   },
   "pnpm": {
     "overrides": {
       "react": "19.1.1",
       "react-dom": "19.1.1",
       "@tanstack/react-store": "^0.11.2",
-      "@tanstack/store": "^0.11.2"
+      "@tanstack/store": "^0.11.2",
+      "dompurify": "^3.4.16",
+      "sharp": "^0.35.5"
     }
   },
   "devDependencies": {

@@ -145,7 +145,12 @@ export function formatBreakdownLabel(
   return translateUnknownBreakdownLabel(label)
 }
 
-function CountryFlagIcon({ countryCode }: { countryCode: string }) {
+/**
+ * Country flag from the Avatars service. Fetched through the console client so
+ * it never depends on the viewed project's `avatars.read` scope. Shared with
+ * the Analytics breakdowns.
+ */
+export function CountryFlagIcon({ countryCode }: { countryCode: string }) {
   const [failed, setFailed] = useState(false)
   const normalizedCode = countryCode.trim().toLowerCase()
 

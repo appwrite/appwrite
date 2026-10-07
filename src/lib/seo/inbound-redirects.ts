@@ -90,7 +90,6 @@ const BLOG_SLUG_ALIASES: Record<string, string> = {
   'init-august-2026': 'appwrite-init-2026-recap',
   drizzle: 'drizzle-orm-appwrite-postgres',
   'startups-ideas-for-developers-2024': 'startups-ideas-for-developers-2025',
-  'build-a-currency-converter-with-deno': 'build-a-currency-converter-with-deno2',
   'remote-appwrite-mcp-server': 'announcing-remote-appwrite-mcp-server',
   hackt: 'hacktoberfest-ideas-2024',
   'guide-to': 'guide-to-user-authentication',
@@ -356,10 +355,14 @@ function resolveDocsSlug(slug: string): string | null {
   return best
 }
 
+/** Served by the `/docs/$` route handler, not a docs page slug. */
+const DOCS_LLMS_TXT = 'llms.txt'
+
 function docsPathRedirect(pathname: string): string | null {
   if (pathname !== '/docs' && !pathname.startsWith('/docs/')) return null
 
   let slug = pathname.slice('/docs/'.length).replace(/^\/+|\/+$/g, '')
+  if (slug === DOCS_LLMS_TXT) return null
   if (slug.endsWith('.md') || slug.endsWith('.json')) {
     const bare = slug.replace(/\.(md|json)$/, '')
     if (docsSlugExists(bare)) return null
@@ -611,7 +614,7 @@ const EXACT_REDIRECTS: Record<string, string> = {
   '/products/sites/open-source-netlify': '/alternative-to/netlify',
   '/init/tickets': '/init',
   '/oauth/success': '/auth/oauth2/success',
-  '/oss-fund-announcement': '/blog/post/oss-journey-blog',
+  '/oss-fund-announcement': '/blog/post/announcing-the-appwrite-oss-program',
   '/api/users/signup': '/sign-up',
   '/api/user': '/account',
   '/api/appwrite': '/docs',
