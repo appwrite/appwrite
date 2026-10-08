@@ -3,6 +3,7 @@
 namespace Appwrite\Deletes;
 
 use Appwrite\Extend\Exception;
+use Throwable;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -11,7 +12,14 @@ use Utopia\Database\Query;
 
 class Targets
 {
-    public static function delete(Database $database, Query $query): void
+    /**
+     * @param callable(Throwable): void|null $onError Receives a failure instead of it
+     *        being thrown. Only a maintenance sweep passes one: it may run against a
+     *        database created before `targets` existed and should skip it rather than
+     *        fail the run. Deleting a user's or a session's targets passes none, so a
+     *        failure there fails the job instead of reporting it done.
+     */
+    public static function delete(Database $database, Query $query, ?callable $onError = null): void
     {
         $database->deleteDocuments(
             'targets',
@@ -20,7 +28,8 @@ class Targets
                 Query::orderAsc()
             ],
             Database::DELETE_BATCH_SIZE,
-            fn (Document $target) => self::deleteSubscribers($database, $target)
+            fn (Document $target) => self::deleteSubscribers($database, $target),
+            $onError
         );
     }
 
