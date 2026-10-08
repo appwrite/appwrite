@@ -1,0 +1,701 @@
+---
+layout: article
+title: Installations
+description: Let clients install on teams in your project and act with installation tokens that need no signed-in user.
+back: /docs/products/auth/oauth-server
+---
+
+A [client](/docs/products/auth/oauth-server/clients) is a third-party app registered on your OAuth2 server. Your server can grant a client access in two ways. The first is **user consent**: the [authorization flow](/docs/products/auth/oauth-server/authorization) sends a user to your consent screen, the user approves, and the client receives tokens that act as that user. The grant ends when the user revokes it or leaves.
+
+An **installation** is the second way. It connects a client to one team in your project. A team owner installs the client once. After that, the client's backend creates its own access tokens for that team, signed by your project's keys, with no user in the flow. The grant belongs to the team, so it survives when no one is signed in. Use it for sync jobs, bots, and provisioning backends.
+
+The two models differ in who grants access and how long it lives:
+
+| | User consent | Installation |
+| --- | --- | --- |
+| Who grants it | One user, on your consent screen | A team owner, once |
+| The token acts as | The user who signed in | The client itself |
+| Token renewal | Refresh token rotation | Create a new token with an app key |
+| Revoked by | The user, per token or per grant | The owner, by removing the installation |
+
+# Allow installation scopes {% #installation-scopes %}
+
+You decide which scopes clients may request at install time. Declare them in the `installationScopes` array on the `updateOAuth2Server` method, next to your other OAuth2 server settings. A project starts with an empty list. With an empty list, clients can still install, but every installation carries an empty grant.
+
+The list accepts two kinds of values:
+
+- **Appwrite catalog scopes.** The `project:` scopes act on your project's Appwrite APIs, the same set an [API key](/docs/partners/project/api-keys) reaches. (`organization:` scopes resolve only on the Appwrite Console, so they do nothing on your own project's OAuth2 server.) A token with `project:databases.read` can list your project's databases, and a token with `project:teams.read` can read the team it is installed on. A call outside the granted scopes fails with `general_unauthorized_scope`.
+- **Your own scope values.** Any vocabulary you define, such as `tasks.sync`. Appwrite stamps these onto the token's `scope` claim, and your API enforces them, the same way it enforces [custom scopes](/docs/products/auth/oauth-server/scopes#custom) in the user consent flow.
+
+Identity scopes such as `openid` have no place in the list, because no user takes part in an installation. The update replaces the whole list, so send every value on each `updateOAuth2Server` call; omitting the parameter clears it.
+
+# Request installation scopes {% #request-scopes %}
+
+A client declares the scopes it requests at install time in its `installationScopes` setting.
+
+- Set the scopes with the `update` method. The `create` method does not accept installation fields, so register the client first, then update it.
+- A client can request only values from the project's allowed list. Other values fail validation, and the error message lists the accepted scopes.
+- The `listInstallationScopes` method returns the allowed list, so a client can discover it.
+- The optional `installationRedirectUrl` tells your product where to send the owner after an install or update. Appwrite stores the URL; your install flow performs the redirect.
+
+{% multicode %}
+```client-web
+import { Client, Apps } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const apps = new Apps(client);
+
+const app = await apps.update({
+    appId: '<APP_ID>',
+    name: 'Vantage',
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+    type: 'confidential',
+    installationScopes: ['project:databases.read', 'project:teams.read'],
+    installationRedirectUrl: 'https://vantage.localhost/setup',
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+Apps apps = Apps(client);
+
+App app = await apps.update(
+    appId: '<APP_ID>',
+    name: 'Vantage',
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+    type: 'confidential',
+    installationScopes: ['project:databases.read', 'project:teams.read'],
+    installationRedirectUrl: 'https://vantage.localhost/setup',
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+let apps = Apps(client)
+
+let app = try await apps.update(
+    appId: "<APP_ID>",
+    name: "Vantage",
+    redirectUris: ["https://vantage.localhost/auth/redirect"],
+    type: "confidential",
+    installationScopes: ["project:databases.read", "project:teams.read"],
+    installationRedirectUrl: "https://vantage.localhost/setup"
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Apps
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+val apps = Apps(client)
+
+val app = apps.update(
+    appId = "<APP_ID>",
+    name = "Vantage",
+    redirectUris = listOf("https://vantage.localhost/auth/redirect"),
+    type = "confidential",
+    installationScopes = listOf("project:databases.read", "project:teams.read"),
+    installationRedirectUrl = "https://vantage.localhost/setup"
+)
+```
+```client-android-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Apps;
+
+Client client = new Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>"); // Your project ID
+
+Apps apps = new Apps(client);
+
+apps.update(
+    "<APP_ID>", // appId
+    "Vantage", // name
+    null, // description (optional)
+    null, // clientUri (optional)
+    null, // logoUri (optional)
+    null, // privacyPolicyUrl (optional)
+    null, // termsUrl (optional)
+    null, // contacts (optional)
+    null, // tagline (optional)
+    null, // tags (optional)
+    null, // images (optional)
+    null, // supportUrl (optional)
+    null, // dataDeletionUrl (optional)
+    null, // enabled (optional)
+    List.of("https://vantage.localhost/auth/redirect"), // redirectUris
+    null, // postLogoutRedirectUris (optional)
+    "confidential", // type (optional)
+    null, // deviceFlow (optional)
+    List.of("project:databases.read", "project:teams.read"), // installationScopes
+    "https://vantage.localhost/setup", // installationRedirectUrl
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        Log.d("Appwrite", result.toString());
+    })
+);
+```
+```client-react-native
+import { Client, Apps } from "react-native-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const apps = new Apps(client);
+
+const app = await apps.update({
+    appId: '<APP_ID>',
+    name: 'Vantage',
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+    type: 'confidential',
+    installationScopes: ['project:databases.read', 'project:teams.read'],
+    installationRedirectUrl: 'https://vantage.localhost/setup',
+});
+```
+{% /multicode %}
+
+Request the smallest set that serves the client. The owner sees every scope at install time, and a long list costs installs.
+
+{% info title="Scopes are a snapshot" %}
+Each installation copies the client's scopes at the moment the owner creates or updates it. When the client's scopes change later, existing installations keep their old grant until their owner updates them.
+{% /info %}
+
+# Install on a team {% #install %}
+
+Only team members with the owner role can install a client on their team, though a project API key or an admin-mode call can install on any team. Each client installs once per team; a second attempt fails with `app_installation_already_exists`. The owner installs with the `createInstallation` method, authenticated by their own session in your product:
+
+{% multicode %}
+```client-web
+import { Client, Teams } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const teams = new Teams(client);
+
+const installation = await teams.createInstallation({
+    teamId: '<TEAM_ID>',
+    appId: '<APP_ID>',
+    authorizationDetails: JSON.stringify([
+        { type: 'workspace', identifiers: ['<WORKSPACE_ID>'] },
+    ]),
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+Teams teams = Teams(client);
+
+AppInstallation installation = await teams.createInstallation(
+    teamId: '<TEAM_ID>',
+    appId: '<APP_ID>',
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+let teams = Teams(client)
+
+let installation = try await teams.createInstallation(
+    teamId: "<TEAM_ID>",
+    appId: "<APP_ID>"
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+val teams = Teams(client)
+
+val installation = teams.createInstallation(
+    teamId = "<TEAM_ID>",
+    appId = "<APP_ID>"
+)
+```
+```client-android-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Teams;
+
+Client client = new Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>"); // Your project ID
+
+Teams teams = new Teams(client);
+
+teams.createInstallation(
+    "<TEAM_ID>", // teamId
+    "<APP_ID>", // appId
+    null, // authorizationDetails (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        Log.d("Appwrite", result.toString());
+    })
+);
+```
+```client-react-native
+import { Client, Teams } from "react-native-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const teams = new Teams(client);
+
+const installation = await teams.createInstallation({
+    teamId: '<TEAM_ID>',
+    appId: '<APP_ID>',
+});
+```
+{% /multicode %}
+
+The response is the installation record, with the scope snapshot in its `scopes` field:
+
+```json
+{
+  "$id": "6a731f142c5de7834fec",
+  "$createdAt": "2026-08-05T11:30:00.000+00:00",
+  "$updatedAt": "2026-08-05T11:30:00.000+00:00",
+  "appId": "<APP_ID>",
+  "teamId": "<TEAM_ID>",
+  "scopes": ["project:databases.read", "project:teams.read"],
+  "authorizationDetails": [{ "type": "workspace", "identifiers": ["<WORKSPACE_ID>"] }],
+  "createdById": "6a150ace003bc4c2919e",
+  "createdByName": "Walter O'Brien",
+  "lastAccessedAt": null
+}
+```
+
+The optional `authorizationDetails` parameter narrows the grant with entries in the [rich authorization request](/docs/products/auth/oauth-server/scopes#rich-authorization-requests) shape. Each entry is an object with a `type` you define and any fields your client understands. Pass it as a JSON string; the response returns it parsed. Omit it for a grant with no extra narrowing. When the client has an `installationRedirectUrl`, send the owner there after the install so the client can finish its setup.
+
+# App keys {% #app-keys %}
+
+The client's backend authenticates its installation calls with an app key. App keys are separate from [client secrets](/docs/products/auth/oauth-server/clients#secrets): a client secret proves the client's identity at the token endpoint during user sign-in, while an app key mints installation tokens. App keys carry no scopes; each installation decides what the key's tokens can do.
+
+The client's developer creates a key with the `createKey` method:
+
+{% multicode %}
+```client-web
+import { Client, Apps } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const apps = new Apps(client);
+
+const key = await apps.createKey({
+    appId: '<APP_ID>',
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+Apps apps = Apps(client);
+
+AppKey key = await apps.createKey(
+    appId: '<APP_ID>',
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+let apps = Apps(client)
+
+let key = try await apps.createKey(
+    appId: "<APP_ID>"
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Apps
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+val apps = Apps(client)
+
+val key = apps.createKey(
+    appId = "<APP_ID>"
+)
+```
+```client-android-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Apps;
+
+Client client = new Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>"); // Your project ID
+
+Apps apps = new Apps(client);
+
+apps.createKey(
+    "<APP_ID>", // appId
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        Log.d("Appwrite", result.toString());
+    })
+);
+```
+```client-react-native
+import { Client, Apps } from "react-native-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const apps = new Apps(client);
+
+const key = await apps.createKey({
+    appId: '<APP_ID>',
+});
+```
+{% /multicode %}
+
+The response holds the secret in its `secret` field. App keys are encrypted at rest and readable on every read, so `apps.getKey` and `apps.listKeys` return the secret again whenever you need it. The `hint` field repeats the secret's last six characters, so you can tell keys apart later. Treat the secret like a password: anyone who holds it can mint tokens for every installation of the client.
+
+# Create installation tokens {% #create-tokens %}
+
+The client's backend holds no user session in your project, so its installation calls go over plain HTTP with the app key. This is the same pattern [dynamic client registration](/docs/products/auth/oauth-server/clients#dynamic-registration) uses. Send the key in the `X-Appwrite-Key` header together with the client ID in the `X-Appwrite-App` header.
+
+Exchange the app key for an access token bound to one installation:
+
+{% multicode %}
+```curl
+curl -X POST https://<REGION>.cloud.appwrite.io/v1/apps/<APP_ID>/installations/<INSTALLATION_ID>/tokens \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-App: <APP_ID>" \
+  -H "X-Appwrite-Key: <APP_KEY_SECRET>"
+```
+
+```hurl
+POST https://<REGION>.cloud.appwrite.io/v1/apps/<APP_ID>/installations/<INSTALLATION_ID>/tokens
+X-Appwrite-Project: <PROJECT_ID>
+X-Appwrite-App: <APP_ID>
+X-Appwrite-Key: <APP_KEY_SECRET>
+```
+{% /multicode %}
+
+The response is a standard OAuth2 token response. The `refresh_token` field comes back empty and `id_token` comes back `null`; only user grants carry those:
+
+```json
+{
+  "access_token": "eyJ0eXAiOiJhdCtqd3QiLCJhbGciOiJSUzI1NiJ9...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "refresh_token": "",
+  "scope": "project:databases.read project:teams.read",
+  "authorization_details": [
+    { "type": "workspace", "identifiers": ["<WORKSPACE_ID>"] },
+    { "type": "organization", "identifiers": ["<TEAM_ID>"] }
+  ],
+  "id_token": null
+}
+```
+
+Three things to know about this token:
+
+- **It acts as the installation, not as a user.** The token's `sub` claim is the installation ID, and its `client_id` is the client.
+- **It is pinned to the installed team.** Appwrite writes the `organization` entry in `authorization_details` itself, next to any entries the installation stored. A token can never claim a different team than the one that installed the client.
+- **There is no refresh token.** Tokens last 1 hour by default; your project's `installationAccessTokenDuration` setting controls the lifetime. When one expires, create another; the installation record is the durable grant. Several tokens can be active at once, so each worker of the client's backend can hold its own.
+
+# List installations {% #list-installations %}
+
+The client's backend can list where it is installed, with the same headers:
+
+{% multicode %}
+```curl
+curl https://<REGION>.cloud.appwrite.io/v1/apps/<APP_ID>/installations \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-App: <APP_ID>" \
+  -H "X-Appwrite-Key: <APP_KEY_SECRET>"
+```
+
+```hurl
+GET https://<REGION>.cloud.appwrite.io/v1/apps/<APP_ID>/installations
+X-Appwrite-Project: <PROJECT_ID>
+X-Appwrite-App: <APP_ID>
+X-Appwrite-Key: <APP_KEY_SECRET>
+```
+{% /multicode %}
+
+The response wraps the records in an `installations` array with a `total` count. Each record has the shape shown in [Install on a team](#install), and its `lastAccessedAt` timestamp reports when the client last minted a token for it. The write is throttled to at most once an hour, so the value can trail real usage by that much.
+
+# Validate installation tokens {% #validate %}
+
+An installation token is a JWT of type `at+jwt`, signed by your project's keys, the same as every access token your server issues. Its `iss` claim is your project's issuer and its `aud` claim is your project's API. Verify it against your project's JWKS exactly as [Tokens](/docs/products/auth/oauth-server/tokens#validate) describes, then read `scope` and `authorization_details` to decide what it may do. The decoded payload:
+
+```json
+{
+  "iss": "https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>",
+  "aud": ["https://<REGION>.cloud.appwrite.io/v1/<PROJECT_ID>"],
+  "sub": "<INSTALLATION_ID>",
+  "client_id": "<APP_ID>",
+  "scope": "project:databases.read project:teams.read",
+  "authorization_details": [
+    { "type": "workspace", "identifiers": ["<WORKSPACE_ID>"] },
+    { "type": "organization", "identifiers": ["<TEAM_ID>"] }
+  ],
+  "exp": 1785933118,
+  "iat": 1785929518,
+  "jti": "711d16054c093d7b1841340dae47d957"
+}
+```
+
+# Update and remove {% #lifecycle %}
+
+The team owner stays in control after the install. Updating an installation refreshes its grant to the client's current scopes and revokes every active token for it. Removing it deletes the grant and every token together. Both emit `teams.[teamId].installations.[installationId].update` and `.delete` [events](/docs/apis/events), so integrations can react.
+
+The owner updates an installation with the `updateInstallation` method. Pass `authorizationDetails` to change the stored entries, or omit it to keep them:
+
+{% multicode %}
+```client-web
+import { Client, Teams } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const teams = new Teams(client);
+
+const installation = await teams.updateInstallation({
+    teamId: '<TEAM_ID>',
+    installationId: '<INSTALLATION_ID>',
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+Teams teams = Teams(client);
+
+AppInstallation installation = await teams.updateInstallation(
+    teamId: '<TEAM_ID>',
+    installationId: '<INSTALLATION_ID>',
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+let teams = Teams(client)
+
+let installation = try await teams.updateInstallation(
+    teamId: "<TEAM_ID>",
+    installationId: "<INSTALLATION_ID>"
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+val teams = Teams(client)
+
+val installation = teams.updateInstallation(
+    teamId = "<TEAM_ID>",
+    installationId = "<INSTALLATION_ID>"
+)
+```
+```client-android-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Teams;
+
+Client client = new Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>"); // Your project ID
+
+Teams teams = new Teams(client);
+
+teams.updateInstallation(
+    "<TEAM_ID>", // teamId
+    "<INSTALLATION_ID>", // installationId
+    null, // authorizationDetails (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        Log.d("Appwrite", result.toString());
+    })
+);
+```
+```client-react-native
+import { Client, Teams } from "react-native-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const teams = new Teams(client);
+
+const installation = await teams.updateInstallation({
+    teamId: '<TEAM_ID>',
+    installationId: '<INSTALLATION_ID>',
+});
+```
+{% /multicode %}
+
+The owner removes an installation with the `deleteInstallation` method:
+
+{% multicode %}
+```client-web
+import { Client, Teams } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const teams = new Teams(client);
+
+await teams.deleteInstallation({
+    teamId: '<TEAM_ID>',
+    installationId: '<INSTALLATION_ID>',
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+Teams teams = Teams(client);
+
+await teams.deleteInstallation(
+    teamId: '<TEAM_ID>',
+    installationId: '<INSTALLATION_ID>',
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+let teams = Teams(client)
+
+try await teams.deleteInstallation(
+    teamId: "<TEAM_ID>",
+    installationId: "<INSTALLATION_ID>"
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+val teams = Teams(client)
+
+teams.deleteInstallation(
+    teamId = "<TEAM_ID>",
+    installationId = "<INSTALLATION_ID>"
+)
+```
+```client-android-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Teams;
+
+Client client = new Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>"); // Your project ID
+
+Teams teams = new Teams(client);
+
+teams.deleteInstallation(
+    "<TEAM_ID>", // teamId
+    "<INSTALLATION_ID>", // installationId
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        Log.d("Appwrite", result.toString());
+    })
+);
+```
+```client-react-native
+import { Client, Teams } from "react-native-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const teams = new Teams(client);
+
+await teams.deleteInstallation({
+    teamId: '<TEAM_ID>',
+    installationId: '<INSTALLATION_ID>',
+});
+```
+{% /multicode %}
+
+Because updates and removals revoke tokens immediately, a client should treat a `401` on a previously working token as a lifecycle event. Create a fresh token; when that also fails with `app_installation_not_found`, the installation is gone, and the client should mark the team as disconnected.

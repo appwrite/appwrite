@@ -1,0 +1,142 @@
+---
+layout: post
+title: How Appwrite streamlines database operations using hooks
+description: Learn how Appwrite implemented hook functions to develop custom filters in the Databases services.
+date: 2025-01-18
+lastUpdated: 2026-06-29
+cover: /images/blog/hooks-appwrite-databases/cover.avif
+timeToRead: 10
+author: aditya-oberai
+category: tutorials
+removed: true
+faqs:
+  - question: "What is a hook in software engineering?"
+    answer: "A hook is a point in an application's execution where developers can inject custom code without modifying the core. Hooks let you intercept and transform data, trigger side effects, or extend behavior at well-defined moments like before a database write or after authentication."
+  - question: "How does Appwrite use hooks in its Databases service?"
+    answer: "Appwrite's Databases service uses hooks as custom filters in the Utopia PHP Databases library. Each filter has a name, an encode function (run on writes), and a decode function (run on reads). This is how Appwrite handles password hashing, encryption of secrets, and DateTime conversions transparently."
+  - question: "What's the difference between an encode and decode filter?"
+    answer: "An encode function runs when data is written to the database, transforming the value before storage (for example, encrypting it). A decode function runs when data is read, reversing the transformation so callers see the original shape (for example, decrypting it). Together they let storage and application representations differ cleanly."
+  - question: "Where should I add a hook in my own application?"
+    answer: "Pick hook points that correspond to clear lifecycle events: pre-write validation, post-read transformation, pre-request authentication, post-response logging. Avoid spreading hooks across arbitrary call sites, since that makes the execution order hard to reason about and easy to break later."
+  - question: "Are hooks the same thing as middleware?"
+    answer: "They overlap but are not identical. Middleware typically wraps an entire request/response cycle, while hooks fire at specific named points inside a library or framework. Middleware is one common implementation of hooks for the HTTP layer, but hooks exist at many other layers including database, ORM, and UI rendering."
+  - question: "Does [Appwrite Functions](/docs/products/functions) let me hook into database events?"
+    answer: "Yes. You can configure an Appwrite Function to run on database events like row creation, updates, or deletes. This gives you an event-driven hook outside the database layer, useful for sending notifications, syncing third-party services, or running async business logic after a write."
+---
+
+Software engineering is complex, especially when you aim to build robust applications. For example, you may want to handle type conversions and clean your data before storing it in your database, add external loggers and observability tools, or add additional user authentication factors for specific functionalities. At some point, the need for extensibility will inevitably arise in your software.
+
+This is where **hooks** come into the picture. But what are hooks, and how do we implement them? Let's find out.
+
+# What are hooks?
+
+Hooks allow developers to inject custom code at specific points in the application's execution flow. They also provide a mechanism to intercept and modify data at various points in the application's lifecycle.
+
+Hooks let you manipulate data and trigger custom behavior without directly altering the core codebase. They are used for various tasks such as data validation, manipulation, logging, and even triggering external processes.
+
+## How are hooks implemented?
+
+Different programming languages implement hooks in different ways. However, the process of preparing hooks is usually similar across various languages and frameworks:
+
+1. **Identify hook points:** First, you need to identify the points in your application where you want to allow custom code to be executed. These points are often associated with specific events or actions in your application lifecycle, such as before or after a database query, before rendering a template, or after user authentication.
+
+2. **Define hook functions**: Next, you'll create functions that contain the custom code you want to execute at these hook points. These functions are often referred to as hook functions or callbacks. These functions could be defined anywhere in your codebase, such as within a dedicated hooks file or the relevant class or file.
+
+3. **Register hook functions:** At the appropriate points in your application's code, register the hook functions to be executed. If your application uses a framework or library that supports hooks, you can register them manually or via a hook management system.
+
+4. **Trigger hook execution:** When the application reaches the registered hook points, the hook functions are executed in the order they were registered. This allows your custom code to be seamlessly integrated into the application logic.
+
+# How we implemented hooks in Appwrite's codebase
+
+Appwrite's tech stack has numerous points where we need to extend the fundamental functionality of our tools. This section will discuss how we implemented hooks in our Databases service.
+
+## Step 1: Identifying hook points
+
+Our Database library, the [Utopia PHP Databases library](https://github.com/utopia-php/database/), powers every database-relevant action in Appwrite, whether we're talking about user-facing functionalities present in [Appwrite's TablesDB API](https://appwrite.io/docs/references/cloud/client-web/tablesDB) or internal functionalities such as storing Appwrite organization and project data, usage statistics for different services, SSL certificates for custom domains, etc.
+
+There are various scenarios (or "hook points") in Appwrite where we need to transform data, such as hashing passwords, converting timezones for DateTime value, and serializing JSON objects before storing them in our underlying MariaDB database. Therefore, we decided to implement hooks in the form of custom filters to achieve these data transformations.
+
+## Step 2: **Defining the hook functions**
+
+After the hook points were decided, we created hooks or, in this case, custom filters for our Database tables. These filters consist of three fundamental components:
+
+- **Filter name:** The filter name is a unique identifier for a specific hook. It allows us to target the desired hook when defining their custom logic.
+- **Encode function:** The encode function comes into play when data is being written to the database. It acts as a transformation mechanism, allowing us to modify the data before it gets stored. For example, if we want to encrypt sensitive data before saving it, we can create a filter and define the encryption logic within the encode function.
+- **Decode function:** The decode function operates when data is read from the database. This function enables data transformation during retrieval. For example, if our application stores dates in UNIX timestamp format but wants to display them in ISO format, we can implement the conversion within the decode function.
+
+Here is a [code example](https://github.com/appwrite/appwrite/blob/a49c3a33f0fd831423afa7a0b53df2c5d709fc2b/app/init.php#L554-L578) of how we prepared the `encrypt` filter in Appwrite using the Utopia PHP Databases library to store secrets:
+
+```php
+.
+.
+.
+Database::addFilter(
+    'encrypt', // Filter name
+    function (mixed $value) { // Encode function
+        $key = System::getEnv('_APP_OPENSSL_KEY_V1');
+        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+        $tag = null;
+
+        return json_encode([
+            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+            'method' => OpenSSL::CIPHER_AES_128_GCM,
+            'iv' => \bin2hex($iv),
+            'tag' => \bin2hex($tag ?? ''),
+            'version' => '1',
+        ]);
+    },
+    function (mixed $value) { // Decode function
+        if (is_null($value)) {
+            return;
+        }
+        $value = json_decode($value, true);
+        $key = System::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
+
+        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+    }
+);
+.
+.
+.
+```
+
+## Step 3: Registering the hook functions
+
+Next, we attached these filters to specific hook points within Appwrite. For example, the `encrypt` filter we saw in the previous step had to be declared for each column (attribute) that needs to be encrypted in a table (collection) in Appwrite's underlying MariaDB database, like the `secret` column in the `tokens` table in our [code example](https://github.com/appwrite/appwrite/blob/a49c3a33f0fd831423afa7a0b53df2c5d709fc2b/app/config/collections.php#L502):
+
+```php
+.
+.
+.
+[
+    '$id' => ID::custom('secret'),
+    'type' => Database::VAR_STRING,
+    'format' => '',
+    'size' => 512, // https://www.tutorialspoint.com/how-long-is-the-sha256-hash-in-mysql (512 for encryption)
+    'signed' => true,
+    'required' => false,
+    'default' => null,
+    'array' => false,
+    'filters' => ['encrypt'],
+],
+.
+.
+.
+```
+
+These encode and decode functions for these filters were already "hooked" into the necessary functions within the Utopia PHP Databases library, like the [`createDocument`](https://github.com/utopia-php/database/blob/f979e2fed855118da1455da205982645be8b2ae6/src/Database/Database.php#L3265) function. The [encode](https://github.com/utopia-php/database/blob/f979e2fed855118da1455da205982645be8b2ae6/src/Database/Database.php#L5329) and [decode](https://github.com/utopia-php/database/blob/f979e2fed855118da1455da205982645be8b2ae6/src/Database/Database.php#L5388) functions then verified which filters had to be applied for each field in the database entity using the table name. With a simple declaration in the Appwrite configuration, we could apply any filter to any data added or retrieved from our underlying database.
+
+## Step 4: Triggering the hook functions
+
+Implementing and registering the filters allowed them to be triggered whenever data is written or read in the appropriate columns in our database tables, invoking the respective `encode` or `decode` functions. This has resulted in seamless, transparent data transformation, enhancing security and user experience.
+
+# Conclusion
+
+Hooks are integral to the functioning of Appwrite Databases. As shown above, they enable data sanity without altering core database functionality.
+
+In addition to databases, [Appwrite](https://appwrite.io/) provides other core backend services like user authentication and authorization, databases, file storage, serverless functions, messaging, and more. You can check it out and get started with your first project in minutes here:
+
+- [Quickstarts](https://appwrite.io/docs/quick-starts)
+- [Appwrite Cloud](https://cloud.appwrite.io)
+- [Appwrite Docs](https://appwrite.io/docs)
+- [Discord community](https://appwrite.io/discord)

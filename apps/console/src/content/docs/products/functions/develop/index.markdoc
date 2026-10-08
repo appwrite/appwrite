@@ -1,0 +1,2669 @@
+---
+layout: article
+title: Develop Appwrite Functions
+description: Master serverless function development with Appwrite. Learn how to write and test functions locally, debug code, and optimize for efficient execution.
+---
+
+Appwrite Functions offer a familiar interface if you've developed REST endpoints.
+Each function is handled following a request and response pattern.
+
+# Lifecycle {% #life-cycle %}
+There is a clear lifecycle for all Appwrite Functions, from beginning to end.
+Here's everything that happens during a function execution.
+
+1. The function is invoked.
+1. The active [deployment](/docs/products/functions/deployments)'s executor will handle the request.
+1. The Executor passes in request information like headers, body or path through the `context.req` object of your exported function.
+1. The runtime executes the code you defined, you can log through the `context.log()` or `context.error()` methods.
+1. Function terminates when you return results using `return context.res.text()`, `return context.res.json()` or similar.
+
+[Locally developed functions](/docs/products/functions/develop-locally) follow the same lifecycle on your local machine.
+
+## Entrypoint {% #entrypoint %}
+You'll find all of these steps in a simple function like this.
+Notice the exported entry point that the executor will call.
+
+{% multicode %}
+```server-nodejs
+import { Client } from 'node-appwrite';
+
+// This is your Appwrite function
+// It's executed each time we get a request
+export default async ({ req, res, log, error }) => {
+  // Why not try the Appwrite SDK?
+  //
+  // Set project and set API key
+  // const client = new Client()
+  //    .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+  //    .setKey(req.headers['x-appwrite-key']);
+
+  // You can log messages to the console
+  log('Hello, Logs!');
+
+  // If something goes wrong, log an error
+  error('Hello, Errors!');
+
+  // The `req` object contains the request data
+  if (req.method === 'GET') {
+    // Send a response with the res object helpers
+    // `res.text()` dispatches a string back to the client
+    return res.text('Hello, World!');
+  }
+
+  // `res.json()` is a handy helper for sending JSON
+  return res.json({
+    motto: 'The open-source cloud for agents and developers_',
+    learn: 'https://appwrite.io/docs',
+    connect: 'https://appwrite.io/discord',
+    getInspired: 'https://builtwith.appwrite.io',
+  });
+};
+```
+
+```php
+require(__DIR__ . '/../vendor/autoload.php');
+
+use Appwrite\Client;
+use Appwrite\Exception;
+
+// This is your Appwrite function
+// It's executed each time we get a request
+return function ($context) {
+    // Why not try the Appwrite SDK?
+    //
+    // Set project and set API key
+    // $client = (new Client())
+    //      ->setProject(getenv(APPWRITE_FUNCTION_PROJECT_ID))
+    //      ->setKey($context->req->headers['x-appwrite-key']);
+   
+    // You can log messages to the console
+    $context->log('Hello, Logs!');
+
+    // If something goes wrong, log an error
+    $context->error('Hello, Errors!');
+
+    // The `req` object contains the request data
+    if ($context->req->method === 'GET') {
+        // Send a response with the res object helpers
+        // `res.text()` dispatches a string back to the client
+        return $context->res->text('Hello, World!');
+    }
+
+    // `res.json()` is a handy helper for sending JSON
+    return $context->res->json([
+        'motto' => 'The open-source cloud for agents and developers_',
+        'learn' => 'https://appwrite.io/docs',
+        'connect' => 'https://appwrite.io/discord',
+        'getInspired' => 'https://builtwith.appwrite.io',
+    ]);
+};
+```
+
+```python
+from appwrite.client import Client
+import os
+
+
+# This is your Appwrite function
+# It's executed each time we get a request
+def main(context):
+    # Why not try the Appwrite SDK?
+    #
+    # Set project and set API key
+    # client = (
+    #     Client()
+    #        .set_project(os.environ["APPWRITE_FUNCTION_PROJECT_ID"])
+    #        .set_key(context.req.headers["x-appwrite-key"])
+    # )
+
+    # You can log messages to the console
+    context.log("Hello, Logs!")
+
+    # If something goes wrong, log an error
+    context.error("Hello, Errors!")
+
+    # The `context.req` object contains the request data
+    if context.req.method == "GET":
+        # Send a response with the res object helpers
+        # `context.res.text()` dispatches a string back to the client
+        return context.res.text("Hello, World!")
+
+    # `context.res.json()` is a handy helper for sending JSON
+    return context.res.json({
+        "motto": "The open-source cloud for agents and developers_",
+        "learn": "https://appwrite.io/docs",
+        "connect": "https://appwrite.io/discord",
+        "getInspired": "https://builtwith.appwrite.io",
+    })
+```
+```ruby
+require "appwrite"
+
+# This is your Appwrite function
+# It's executed each time we get a request
+def main(context)
+  # Why not try the Appwrite SDK?
+  #
+  # Set project and set API key
+  # client = Client.new
+  #   .set_project(ENV['APPWRITE_FUNCTION_PROJECT_ID'])
+  #   .set_key(context.req.headers['x-appwrite-key'])
+
+  # You can log messages to the console
+  context.log("Hello, Logs!")
+
+  # If something goes wrong, log an error
+  context.error("Hello, Errors!")
+
+  # The `context.req` object contains the request data
+  if (context.req.method == "GET")
+    # Send a response with the res object helpers
+    # `context.res.text()` dispatches a string back to the client
+    return context.res.text("Hello, World!")
+  end
+
+  # `context.res.json()` is a handy helper for sending JSON
+  return context.res.json({
+    "motto": "The open-source cloud for agents and developers_",
+    "learn": "https://appwrite.io/docs",
+    "connect": "https://appwrite.io/discord",
+    "getInspired": "https://builtwith.appwrite.io",
+  })
+end
+```
+```deno
+import { Client } from "npm:node-appwrite";
+
+// This is your Appwrite function
+// It's executed each time we get a request
+export default ({ req, res, log, error }: any) => {
+  // Why not try the Appwrite SDK?
+  //
+  // Set project and set API key
+  // const client = new Client()
+  //    .setProject(Deno.env.get("APPWRITE_FUNCTION_PROJECT_ID") || "")
+  //    .setKey(req.headers["x-appwrite-key"] || "");
+
+  // You can log messages to the console
+  log("Hello, Logs!");
+
+  // If something goes wrong, log an error
+  error("Hello, Errors!");
+
+  // The `req` object contains the request data
+  if (req.method === "GET") {
+    // Send a response with the res object helpers
+    // `res.text()` dispatches a string back to the client
+    return res.text("Hello, World!");
+  }
+
+  // `res.json()` is a handy helper for sending JSON
+  return res.json({
+    motto: "The open-source cloud for agents and developers_",
+    learn: "https://appwrite.io/docs",
+    connect: "https://appwrite.io/discord",
+    getInspired: "https://builtwith.appwrite.io",
+  });
+};
+```
+```go
+package handler
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/appwrite/sdk-for-go/appwrite"
+	"github.com/open-runtimes/types-for-go/v4/openruntimes"
+)
+
+type Response struct {
+	Motto       string `json:"motto"`
+	Learn       string `json:"learn"`
+	Connect     string `json:"connect"`
+	GetInspired string `json:"getInspired"`
+}
+
+func Main(Context openruntimes.Context) openruntimes.Response {
+	// This is your Appwrite function
+	// It's executed each time we get a request service
+	var _ = appwrite.NewClient(
+		appwrite.WithProject(os.Getenv("APPWRITE_FUNCTION_PROJECT_ID")),
+		appwrite.WithKey(Context.Req.Headers["x-appwrite-key"]),
+	)
+
+	// You can log messages to the console
+	fmt.Println("Hello, Logs!")
+
+	fmt.Fprintln(os.Stderr, "Error:", "Hello, Errors!")
+
+	// The `Context.Req` object contains the request data
+	if Context.Req.Method == "GET" {
+		// Send a response with the Context.Res object helpers
+		// `Context.Res.Text()` dispatches a string back to the client
+		return Context.Res.Text("Hello, World!")
+	}
+
+	// `res.json()` is a handy helper for sending JSON
+	return Context.Res.Json(
+		Response{
+			Motto:       "The open-source cloud for agents and developers_",
+			Learn:       "https://appwrite.io/docs",
+			Connect:     "https://appwrite.io/discord",
+			GetInspired: "https://builtwith.appwrite.io",
+		})
+}
+```
+```dart
+import 'dart:async';
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+// This is your Appwrite function
+// It's executed each time we get a request
+Future main(final context) async {
+  // Why not try the Appwrite SDK?
+  //
+  // Set project and set API key
+  // final client = Client()
+  //    .setProject(Platform.environment['APPWRITE_FUNCTION_PROJECT_ID'])
+  //    .setKey(context.req.headers['x-appwrite-key']);
+
+
+  // You can log messages to the console
+  context.log('Hello, Logs!');
+
+  // If something goes wrong, log an error
+  context.error('Hello, Errors!');
+
+  // The `req` object contains the request data
+  if (context.req.method == 'GET') {
+    // Send a response with the res object helpers
+    // `res.text()` dispatches a string back to the client
+    return context.res.text('Hello, World!');
+  }
+
+  // `res.json()` is a handy helper for sending JSON
+  return context.res.json({
+    'motto': 'The open-source cloud for agents and developers_',
+    'learn': 'https://appwrite.io/docs',
+    'connect': 'https://appwrite.io/discord',
+    'getInspired': 'https://builtwith.appwrite.io',
+  });
+}
+```
+```kotlin
+package io.openruntimes.kotlin.src
+
+import io.openruntimes.kotlin.RuntimeContext
+import io.openruntimes.kotlin.RuntimeOutput
+import io.appwrite.Client
+import java.util.HashMap
+
+class Main {
+    // This is your Appwrite function
+    // It's executed each time we get a request
+    fun main(context: RuntimeContext): RuntimeOutput {
+        // Why not try the Appwrite SDK?
+        //
+        // Set project and set API key
+        // val client = Client()
+        //    .setProject(System.getenv("APPWRITE_FUNCTION_PROJECT_ID"))
+        //    .setKey(context.req.headers["x-appwrite-key"])
+
+        // You can log messages to the console
+        context.log("Hello, Logs!")
+
+        // If something goes wrong, log an error
+        context.error("Hello, Errors!")
+
+        // The `context.req` object contains the request data
+        if (context.req.method == "GET") {
+            // Send a response with the res object helpers
+            // `context.res.text()` dispatches a string back to the client
+            return context.res.text("Hello, World!")
+        }
+
+        // `context.res.json()` is a handy helper for sending JSON
+        return context.res.json(mutableMapOf(
+            "motto" to "The open-source cloud for agents and developers_",
+            "learn" to "https://appwrite.io/docs",
+            "connect" to "https://appwrite.io/discord",
+            "getInspired" to "https://builtwith.appwrite.io"
+        ))
+    }
+}
+```
+```java
+package io.openruntimes.java.src;
+
+import io.openruntimes.java.RuntimeContext;
+import io.openruntimes.java.RuntimeOutput;
+import java.util.HashMap;
+import io.appwrite.Client;
+
+public class Main {
+
+    // This is your Appwrite function
+    // It's executed each time we get a request
+    public RuntimeOutput main(RuntimeContext context) throws Exception {
+        // Why not try the Appwrite SDK?
+        //
+        // Set project and set API key
+        // Client client = new Client();
+        //     .setProject(System.getenv("APPWRITE_FUNCTION_PROJECT_ID"))
+        //     .setKey(context.getReq().getHeaders().get("x-appwrite-key"));
+
+        // You can log messages to the console
+        context.log("Hello, Logs!");
+
+        // If something goes wrong, log an error
+        context.error("Hello, Errors!");
+
+        // The `context.getReq()` object contains the request data
+        if (context.getReq().getMethod().equals("GET")) {
+            // Send a response with the res object helpers
+            // `context.getRes().text()` dispatches a string back to the client
+            return context.getRes().text("Hello, World!");
+        }
+
+        Map json = new HashMap<>();
+        json.put("motto", "The open-source cloud for agents and developers_");
+        json.put("learn", "https://appwrite.io/docs");
+        json.put("connect", "https://appwrite.io/discord");
+        json.put("getInspired", "https://builtwith.appwrite.io");
+
+        // `context.getRes().json()` is a handy helper for sending JSON
+        return context.getRes().json(json);
+    }
+}
+```
+```swift
+import Appwrite
+import AppwriteModels
+import Foundation
+
+// This is your Appwrite function
+// It's executed each time we get a request
+func main(context: RuntimeContext) async throws -> RuntimeOutput {
+    // Why not try the Appwrite SDK?
+    //
+    // Set project and set API key
+    // let client = Client()
+    //    .setProject(ProcessInfo.processInfo.environment["APPWRITE_FUNCTION_PROJECT_ID"])
+    //    .setKey(context.req.headers["x-appwrite-key"] ?? "")
+
+    // You can log messages to the console
+    context.log("Hello, Logs!")
+
+    // If something goes wrong, log an error
+    context.error("Hello, Errors!")
+
+    // The `context.req` object contains the request data
+    if context.req.method == "GET" {
+        // Send a response with the res object helpers
+        // `res.text()` dispatches a string back to the client
+        return context.res.text("Hello, World!")
+    }
+
+    // `context.res.json()` is a handy helper for sending JSON
+    return try context.res.json([
+        "motto": "The open-source cloud for agents and developers_",
+        "learn": "https://appwrite.io/docs",
+        "connect": "https://appwrite.io/discord",
+        "getInspired": "https://builtwith.appwrite.io",
+    ])
+}
+```
+```csharp
+namespace DotNetRuntime;
+
+using Appwrite;
+using Appwrite.Services;
+using Appwrite.Models;
+
+public class Handler {
+
+    // This is your Appwrite function
+    // It"s executed each time we get a request
+    public async Task Main(RuntimeContext Context)
+    {
+        // Why not try the Appwrite SDK?
+        //
+        // Set project and set API key
+        // var client = new Client()
+        //     .SetProject(Environment.GetEnvironmentVariable("APPWRITE_FUNCTION_PROJECT_ID"))
+        //     .SetKey(Context.Req.Headers["x-appwrite-key"]);
+
+        // You can log messages to the console
+        Context.Log("Hello, Logs!");
+
+        // If something goes wrong, log an error
+        Context.Error("Hello, Errors!");
+
+        // The `Context.Req` object contains the request data
+        if (Context.Req.Method == "GET") {
+            // Send a response with the res object helpers
+            // `Context.Res.Text()` dispatches a string back to the client
+            return Context.Res.Text("Hello, World!");
+        }
+
+        // `Context.Res.Json()` is a handy helper for sending JSON
+        return Context.Res.Json(new Dictionary()
+        {
+            { "motto", "The open-source cloud for agents and developers_" },
+            { "learn", "https://appwrite.io/docs" },
+            { "connect", "https://appwrite.io/discord" },
+            { "getInspired", "https://builtwith.appwrite.io" },
+        });
+    }
+}
+```
+```rust
+use openruntimes::{Context, Response};
+use serde_json::json;
+
+// This is your Appwrite function
+// It's executed each time we get a request
+pub fn main(context: Context) -> Response {
+    // Why not try the Appwrite SDK?
+    //
+    // Set project and set API key
+    // let client = appwrite::Client::new()
+    //     .set_endpoint(std::env::var("APPWRITE_FUNCTION_API_ENDPOINT").unwrap_or_default())
+    //     .set_project(std::env::var("APPWRITE_FUNCTION_PROJECT_ID").unwrap_or_default())
+    //     .set_key(context.req.headers.get("x-appwrite-key").cloned().unwrap_or_default());
+
+    // You can log messages to the console
+    context.log("Hello, Logs!");
+
+    // If something goes wrong, log an error
+    context.error("Hello, Errors!");
+
+    // The `context.req` object contains the request data
+    if context.req.method == "GET" {
+        // Send a response with the res object helpers
+        // `context.res.text()` dispatches a string back to the client
+        return context.res.text("Hello, World!", None, None);
+    }
+
+    // `context.res.json()` is a handy helper for sending JSON
+    context.res.json(
+        json!({
+            "motto": "The open-source cloud for agents and developers_",
+            "learn": "https://appwrite.io/docs",
+            "connect": "https://appwrite.io/discord",
+            "getInspired": "https://builtwith.appwrite.io",
+        }),
+        None,
+        None,
+    )
+}
+```
+{% /multicode %}
+
+If you prefer to learn through more examples like this, explore the [examples page](/docs/products/functions/examples).
+
+# Context object {% #context-object %}
+Context is an object passed into every function to handle communication to both the end users, and logging to the Appwrite Console.
+All input, output, and logging **must be handled through the context object** passed in.
+
+You'll find these properties in the context object.
+
+| Property | Description                                                                                                              |
+|----------|--------------------------------------------------------------------------------------------------------------------------|
+| req      | Contains request information like method, body, and headers. See full examples [in the request section](#request).                                     |
+| res      | Contains methods to build a response and return information. See full examples [in the response section](#response).                                     |
+| log()    | Method to log information to the Appwrite Console, end users will not be able to see these logs. See full examples [in the logging section](#logging). |
+| error()  | Method to log errors to the Appwrite Console, end users will not be able to see these errors. See full examples [in the logging section](#logging).    |
+
+{% info title="Depreciation notice" %}
+Use `req.bodyText` instead of `req.bodyRaw`. Use `res.text` instead of `res.send`. Use `req.bodyText` or `req.bodyJson` instead of `req.body` depending on the expected input data type.
+{% /info %}
+
+### Destructuring assignment {% #destructuring %}
+Some languages, namely JavaScript, support destructuring.
+You'll see us use destructuring in examples, which has the following syntax.
+
+[Learn more about destructuring assignment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment).
+{% multicode %}
+```server-nodejs
+// before destructuring
+export default async function (context) {
+    context.log("This is a log!");
+    return context.res.text("This is a response!");
+}
+
+// after destructuring
+export default async function ({ req, res, log, error }) {
+    log("This is a log!");
+    return res.text("This is a response!");
+}
+```
+```deno
+// before destructuring
+export default async function (context: any) {
+    context.log("This is a log!");
+    return context.res.text("This is a response!");
+}
+
+// after destructuring
+export default async function ({ req, res, log, error }: any) {
+    log("This is a log!");
+    return res.text("This is a response!");
+}
+```
+{% /multicode %}
+
+## Request {% #request %}
+
+If you pass data into an Appwrite Function, it'll be found in the request object.
+This includes all invocation inputs from Appwrite SDKs, HTTP calls, Appwrite events, or browsers visiting the configured domain.
+Explore the request object with the following function, which logs all request params to the Appwrite Console.
+
+### Request types {% #request-types %}
+
+{% table %}
+* Request
+* Description
+---
+* `req.bodyText`
+* Returns text that has been converted from binary data.
+---
+* `req.bodyJson`
+* Parses the body text as JSON.
+---
+* `req.bodyBinary`
+* Returns the binary body.
+---
+{% /table %}
+
+{% multicode %}
+```server-nodejs
+export default async ({ req, res, log }) => {
+    log(req.bodyText);                    // Raw request body, contains request data
+    log(JSON.stringify(req.bodyJson));    // Object from parsed JSON request body, otherwise string
+    log(JSON.stringify(req.headers));     // String key-value pairs of all request headers, keys are lowercase
+    log(req.scheme);                      // Value of the x-forwarded-proto header, usually http or https
+    log(req.method);                      // Request method, such as GET, POST, PUT, DELETE, PATCH, etc.
+    log(req.url);                         // Full URL, for example: http://awesome.appwrite.io:8000/v1/hooks?limit=12&offset=50
+    log(req.host);                        // Hostname from the host header, such as awesome.appwrite.io
+    log(req.port);                        // Port from the host header, for example 8000
+    log(req.path);                        // Path part of URL, for example /v1/hooks
+    log(req.queryString);                 // Raw query params string. For example "limit=12&offset=50"
+    log(JSON.stringify(req.query));       // Parsed query params. For example, req.query.limit
+
+    return res.text("All the request parameters are logged to the Appwrite Console.");
+};
+```
+```php
+<?php
+return function ($context) {
+    $context->log(json_encode($context->req->bodyJson));// Object from parsed JSON request body, otherwise string
+    $context->log(json_encode($context->req->headers)); // String key-value pairs of all request headers, keys are lowercase
+    $context->log($context->req->scheme);               // Value of the x-forwarded-proto header, usually http or https
+    $context->log($context->req->method);               // Request method, such as GET, POST, PUT, DELETE, PATCH, etc.
+    $context->log($context->req->url);                  // Full URL, for example: http://awesome.appwrite.io:8000/v1/hooks?limit=12&offset=50
+    $context->log($context->req->host);                 // Hostname from the host header, such as awesome.appwrite.io
+    $context->log($context->req->port);                 // Port from the host header, for example 8000
+    $context->log($context->req->path);                 // Path part of URL, for example /v1/hooks
+    $context->log($context->req->queryString);          // Raw query params string. For example "limit=12&offset=50"
+    $context->log(json_encode($context->req->query));   // Parsed query params. For example, req.query.limit
+
+    return $context->res->text("All the request parameters are logged to the Appwrite Console.");
+}
+```
+```python
+import json
+
+def main(context):
+    context.log(context.req.body_text)             # Raw request body, contains request data
+    context.log(json.dumps(context.req.body_json)) # Object from parsed JSON request body, otherwise string
+    context.log(json.dumps(context.req.headers))   # String key-value pairs of all request headers, keys are lowercase
+    context.log(context.req.scheme)                # Value of the x-forwarded-proto header, usually http or https
+    context.log(context.req.method)                # Request method, such as GET, POST, PUT, DELETE, PATCH, etc.
+    context.log(context.req.url)                   # Full URL, for example: http://awesome.appwrite.io:8000/v1/hooks?limit=12&offset=50
+    context.log(context.req.host)                  # Hostname from the host header, such as awesome.appwrite.io
+    context.log(context.req.port)                  # Port from the host header, for example 8000
+    context.log(context.req.path)                  # Path part of URL, for example /v1/hooks
+    context.log(context.req.query_string)          # Raw query params string. For example "limit=12&offset=50"
+    context.log(json.dumps(context.req.query))     # Parsed query params. For example, req.query.limit
+
+    return context.res.text("All the request parameters are logged to the Appwrite Console.")
+```
+```ruby
+require 'json'
+
+def main(context)
+    context.log(context.req.body_text)                #  Raw request body, contains request data
+    context.log(JSON.generate(context.req.body_json)) # Object from parsed JSON request body, otherwise string
+    context.log(JSON.generate(context.req.headers))   # String key-value pairs of all request headers, keys are lowercase
+    context.log(context.req.scheme)                   # Value of the x-forwarded-proto header, usually http or https
+    context.log(context.req.method)                   # Request method, such as GET, POST, PUT, DELETE, PATCH, etc.
+    context.log(context.req.url)                      # Full URL, for example: http://awesome.appwrite.io:8000/v1/hooks?limit=12&offset=50
+    context.log(context.req.host)                     # Hostname from the host header, such as awesome.appwrite.io
+    context.log(context.req.port)                     # Port from the host header, for example 8000
+    context.log(context.req.path)                     # Path part of URL, for example /v1/hooks
+    context.log(context.req.query_string)             # Raw query params string. For example "limit=12&offset=50"
+    context.log(JSON.generate(context.req.query))     # Parsed query params. For example, req.query.limit
+
+    return context.res.text("All the request parameters are logged to the Appwrite Console.")
+end
+```
+```deno
+export default async ({ req, res, log }: any) => {
+    log(req.bodyText);                  // Raw request body, contains request data
+    log(JSON.stringify(req.bodyJson));  // Object from parsed JSON request body, otherwise string
+    log(JSON.stringify(req.headers));   // String key-value pairs of all request headers, keys are lowercase
+    log(req.scheme);                    // Value of the x-forwarded-proto header, usually http or https
+    log(req.method);                    // Request method, such as GET, POST, PUT, DELETE, PATCH, etc.
+    log(req.url);                       // Full URL, for example: http://awesome.appwrite.io:8000/v1/hooks?limit=12&offset=50
+    log(req.host);                      // Hostname from the host header, such as awesome.appwrite.io
+    log(req.port);                      // Port from the host header, for example 8000
+    log(req.path);                      // Path part of URL, for example /v1/hooks
+    log(req.queryString);               // Raw query params string. For example "limit=12&offset=50"
+    log(JSON.stringify(req.query));     // Parsed query params. For example, req.query.limit
+
+    return res.text("All the request parameters are logged to the Appwrite Console.");
+}
+```
+```go
+package handler
+
+import (
+	"encoding/json"
+
+	"github.com/open-runtimes/types-for-go/v4/openruntimes"
+)
+
+func Main(Context openruntimes.Context) openruntimes.Response {
+	Context.Log(Context.Req.BodyText)               // Raw request body, contains request data
+	Context.Log(json.Marshal(Context.Req.BodyJson)) // Object from parsed JSON request body, otherwise string
+	Context.Log(json.Marshal(Context.Req.Headers))  // String key-value pairs of all request headers, keys are lowercase
+	Context.Log(Context.Req.Scheme)                 // Value of the x-forwarded-proto header, usually http or https
+	Context.Log(Context.Req.Method)                 // Request method, such as GET, POST, PUT, DELETE, PATCH, etc.
+	Context.Log(Context.Req.Url)                    // Full URL, for example: http://awesome.appwrite.io:8000/v1/hooks?limit=12&offset=50
+	Context.Log(Context.Req.Host)                   // Hostname from the host header, such as awesome.appwrite.io
+	Context.Log(Context.Req.Port)                   // Port from the host header, for example 8000
+	Context.Log(Context.Req.Path)                   // Path part of URL, for example /v1/hooks
+	Context.Log(Context.Req.QueryString)            // Raw query params string. For example "limit=12&offset=50"
+	Context.Log(json.Marshal(Context.Req.Query))    // Parsed query params. For example, req.query.limit
+
+	return Context.Res.Text("All the request parameters are logged to the Appwrite Console.")
+}
+```
+```dart
+import 'dart:async';
+import 'dart:convert';
+
+Future<dynamic> main(final context) async {
+    context.log(context.req.bodyText);               // Raw request body, contains request data
+    context.log(json.encode(context.req.bodyJson));  // Object from parsed JSON request body, otherwise string
+    context.log(json.encode(context.req.headers));   // String key-value pairs of all request headers, keys are lowercase
+    context.log(context.req.scheme);                 // Value of the x-forwarded-proto header, usually http or https
+    context.log(context.req.method);                 // Request method, such as GET, POST, PUT, DELETE, PATCH, etc.
+    context.log(context.req.url);                    // Full URL, for example: http://awesome.appwrite.io:8000/v1/hooks?limit=12&offset=50
+    context.log(context.req.host);                   // Hostname from the host header, such as awesome.appwrite.io
+    context.log(context.req.port);                   // Port from the host header, for example 8000
+    context.log(context.req.path);                   // Path part of URL, for example /v1/hooks
+    context.log(context.req.queryString);            // Raw query params string. For example "limit=12&offset=50"
+    context.log(json.encode(context.req.query));     // Parsed query params. For example, req.query.limit
+
+    return context.res.text("All the request parameters are logged to the Appwrite Console.");
+}
+```
+```swift
+import Foundation
+import Foundation
+
+func main(context: RuntimeContext) async throws -> RuntimeOutput {
+    context.log(context.req.bodyJson)                                                      // Raw request body, contains request data
+    context.log(NSJSONSerialization.jsonObject(with: context.req.bodyJson, options: [])!)  // Object from parsed JSON request body, otherwise string
+    context.log(NSJSONSerialization.jsonObject(with: context.req.headers, options: [])!)   // String key-value pairs of all request headers, keys are lowercase
+    context.log(context.req.scheme)                                                        // Value of the x-forwarded-proto header, usually http or https
+    context.log(context.req.method)                                                        // Request method, such as GET, POST, PUT, DELETE, PATCH, etc.
+    context.log(context.req.url)                                                           // Full URL, for example: http://awesome.appwrite.io:8000/v1/hooks?limit=12&offset=50
+    context.log(context.req.host)                                                          // Hostname from the host header, such as awesome.appwrite.io
+    context.log(context.req.port)                                                          // Port from the host header, for example 8000
+    context.log(context.req.path)                                                          // Path part of URL, for example /v1/hooks
+    context.log(context.req.queryString)                                                   // Raw query params string. For example "limit=12&offset=50"
+    context.log(NSJSONSerialization.jsonObject(with: context.req.query, options: [])!)     // Parsed query params. For example, req.query.limit
+
+    return context.res.text("All the request parameters are logged to the Appwrite Console.")
+}
+```
+```csharp
+namespace DotNetRuntime;
+
+using System.Text.Json;
+
+public class Handler {
+    public async Task<RuntimeOutput> Main(RuntimeContext Context)
+    {
+        Context.Log(JsonSerializer.Serialize<object>(Context.Req.BodyJson));             // Object from parsed JSON request body, otherwise string
+        Context.Log(JsonSerializer.Serialize<object>(Context.Req.Headers));              // String key-value pairs of all request headers, keys are lowercase
+        Context.Log(Context.Req.Scheme);                                                 // Value of the x-forwarded-proto header, usually http or https
+        Context.Log(Context.Req.Method);                                                 // Request method, such as GET, POST, PUT, DELETE, PATCH, etc.
+        Context.Log(Context.Req.Url);                                                    // Full URL, for example: http://awesome.appwrite.io:8000/v1/hooks?limit=12&offset=50
+        Context.Log(Context.Req.Host);                                                   // Hostname from the host header, such as awesome.appwrite.io
+        Context.Log(Context.Req.Port);                                                   // Port from the host header, for example 8000
+        Context.Log(Context.Req.Path);                                                   // Path part of URL, for example /v1/hooks
+        Context.Log(Context.Req.QueryString);                                            // Raw query params string. For example "limit=12&offset=50"
+        Context.Log(JsonSerializer.Serialize<object>(Context.Req.Query));                // Parsed query params. For example, req.query.limit
+
+        return Context.Res.Text("All the request parameters are logged to the Appwrite Console.");
+    }
+}
+```
+```kotlin
+package io.openruntimes.kotlin.src
+
+import io.openruntimes.kotlin.RuntimeContext
+import io.openruntimes.kotlin.RuntimeOutput
+import com.google.gson.Gson
+
+class Main {
+    fun main(context: RuntimeContext): RuntimeOutput {
+        val gson = Gson()
+
+        context.log(context.req.bodyJson)                 // Raw request body, contains request data
+        context.log(gson.toString(context.req.bodyJson))  // Object from parsed JSON request body, otherwise string
+        context.log(gson.toString(context.req.headers))   // String key-value pairs of all request headers, keys are lowercase
+        context.log(context.req.scheme)                   // Value of the x-forwarded-proto header, usually http or https
+        context.log(context.req.method)                   // Request method, such as GET, POST, PUT, DELETE, PATCH, etc.
+        context.log(context.req.url)                      // Full URL, for example: http://awesome.appwrite.io:8000/v1/hooks?limit=12&offset=50
+        context.log(context.req.host)                     // Hostname from the host header, such as awesome.appwrite.io
+        context.log(context.req.port)                     // Port from the host header, for example 8000
+        context.log(context.req.path)                     // Path part of URL, for example /v1/hooks
+        context.log(context.req.queryString)              // Raw query params string. For example "limit=12&offset=50"
+        context.log(gson.toString(context.req.query))     // Parsed query params. For example, req.query.limit
+
+        return context.res.text("All the request parameters are logged to the Appwrite Console.")
+    }
+}
+```
+```java
+package io.openruntimes.java;
+
+import com.google.gson.Gson;
+import io.openruntimes.java.models.RuntimeContext;
+import io.openruntimes.java.models.RuntimeOutput;
+
+public class Main {
+    public RuntimeOutput main(RuntimeContext context) {
+        Gson gson = new Gson();
+
+        context.log(gson.toString(context.getReq().getBody()));    // Object from parsed JSON request body, otherwise string
+        context.log(gson.toString(context.getReq().getHeaders())); // String key-value pairs of all request headers, keys are lowercase
+        context.log(context.getReq().getScheme());                 // Value of the x-forwarded-proto header, usually http or https
+        context.log(context.getReq().getMethod());                 // Request method, such as GET, POST, PUT, DELETE, PATCH, etc.
+        context.log(context.getReq().getUrl());                    // Full URL, for example: http://awesome.appwrite.io:8000/v1/hooks?limit=12&offset=50
+        context.log(context.getReq().getHost());                   // Hostname from the host header, such as awesome.appwrite.io
+        context.log(context.getReq().getPort());                   // Port from the host header, for example 8000
+        context.log(context.getReq().getPath());                   // Path part of URL, for example /v1/hooks
+        context.log(context.getReq().getQueryString());            // Raw query params string. For example "limit=12&offset=50"
+        context.log(gson.toString(context.getReq().getQuery()));   // Parsed query params. For example, req.query.limit
+
+        return context.getRes().text("All the request parameters are logged to the Appwrite Console.");
+    }
+}
+```
+```rust
+use openruntimes::{Context, Response};
+use serde_json::{json, Value};
+
+pub fn main(mut context: Context) -> Response {
+    let body_json: Value = context.req.body_json().unwrap_or(Value::Null);
+
+    context.log(context.req.body_text());                       // Raw request body, contains request data
+    context.log(body_json.to_string());                         // Object from parsed JSON request body, otherwise string
+    context.log(json!(&context.req.headers).to_string());       // String key-value pairs of all request headers, keys are lowercase
+    context.log(context.req.scheme.as_str());                   // Value of the x-forwarded-proto header, usually http or https
+    context.log(context.req.method.as_str());                   // Request method, such as GET, POST, PUT, DELETE, PATCH, etc.
+    context.log(context.req.url.as_str());                      // Full URL, for example: http://awesome.appwrite.io:8000/v1/hooks?limit=12&offset=50
+    context.log(context.req.host.as_str());                     // Hostname from the host header, such as awesome.appwrite.io
+    context.log(context.req.port as i32);                       // Port from the host header, for example 8000
+    context.log(context.req.path.as_str());                     // Path part of URL, for example /v1/hooks
+    context.log(context.req.query_string.as_str());             // Raw query params string. For example "limit=12&offset=50"
+    context.log(json!(&context.req.query).to_string());         // Parsed query params. For example, req.query.limit
+
+    context.res.text(
+        "All the request parameters are logged to the Appwrite Console.",
+        None,
+        None,
+    )
+}
+```
+{% /multicode %}
+
+### Headers {% #headers %}
+
+Appwrite Functions will always receive a set of headers that provide meta data about the function execution.
+These are provided alongside any custom headers sent to the function.
+
+| Variable                  | Description                                                                                                                                          |
+|---------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `x-appwrite-trigger`        |  Describes how the function execution was invoked. Possible values are `http`, `schedule` or `event`.                                                      |
+| `x-appwrite-event`          |  If the function execution was triggered by an event, describes the triggering event.                                                                |
+| `x-appwrite-key`            |  The ephemeral API key is used for server authentication. [Learn more about ephemeral API keys](/docs/products/functions/develop#ephemeral-api-key). |
+| `x-appwrite-user-id`        |  If the function execution was invoked by an authenticated user, display the user ID. This doesn't apply to Appwrite Console users or API keys.      |
+| `x-appwrite-user-jwt`       |  JWT token generated from the invoking user's session. Used to authenticate Server SDKs to respect access permissions. [Learn more about JWT tokens](/docs/products/auth/jwt).  |
+| `x-appwrite-country-code`   |  Displays the country code of the configured locale.                                                                                                 |
+| `x-appwrite-continent-code` |  Displays the continent code of the configured locale.                                                                                               |
+| `x-appwrite-continent-eu`   |  Describes if the configured local is within the EU.                                                                                                 |
+| `x-appwrite-client-ip`       |  Displays the IP of the client creating the execution.                                                                                                |
+| `x-appwrite-execution-id`   |  Displays the ID of the current execution.                                                                                                            |
+
+## Response {% #response %}
+Use the response object to send a response to the function caller. This could be a user, client app, or an integration.
+The response information **will not be logged** to the Appwrite Console.
+There are several possible ways to send a response, explore them in the following Appwrite Function.
+
+### Response types {% #response-types %}
+
+{% table %}
+* Response
+* Description
+---
+* `empty`
+* Sends a response with a `code 204 No Content` status.
+---
+* `json`
+* Converts the data into a JSON string and sets the content-type header to `application/json`.
+---
+* `binary`
+* Packages binary bytes, the status code, and the headers into an object.
+---
+* `redirect`
+* Redirects the client to the specified URL link.
+---
+* `text`
+* Converts the body using UTF-8 encoding into a binary Buffer.
+{% /table %}
+
+{% multicode %}
+```server-nodejs
+const fs = require('fs');
+
+export default async ({ req, res, log }) => {
+
+    switch (req.query.type) {
+        case 'empty':
+            return res.empty();
+        case 'json':
+            return res.json({"type": "This is a JSON response"});
+        case 'binary':
+            const bytes = await fs.readFile('file.png');
+            return res.binary(bytes);
+        case 'redirect':
+            return res.redirect("https://appwrite.io", 301);
+        case 'html':
+            return res.text(
+                "<h1>This is an HTML response</h1>", 200, {
+                    "content-type": "text/html"
+                });
+        default:
+            return res.text("This is a text response");
+    }
+}
+```
+```php
+<?php
+
+return function ($context) {
+    switch ($context->req->query['type']) {
+        case 'empty':
+            return $context->res->empty();
+        case 'json':
+            return $context->res->json(["type" => "This is a JSON response"]);
+        case 'binary':
+            $fileContent = file_get_contents('file.png');
+            return $context->res->binary($fileContent);
+        case 'redirect':
+            return $context->res->redirect("https://appwrite.io", 301);
+        case 'html':
+            return $context->res->text("<h1>This is an HTML response</h1>", 200, [
+                "content-type" => "text/html"
+                ]);
+        default:
+            return $context->res->text("This is a text response");
+    }
+};
+```
+```python
+
+def main(context):
+    type = context.req.query['type']
+
+    if type == 'empty':
+        return context.res.empty()
+    elif type == 'json':
+        return context.res.json({"type": "This is a JSON response"})
+    elif type == 'binary':
+        with open('file.png', 'rb') as file:
+            file_contents = file.read()
+        return context.res.binary(file_contents)
+    elif type == 'redirect':
+        return context.res.redirect("https://appwrite.io", 301)
+    elif type == 'html':
+        return context.res.text("<h1>This is an HTML response</h1>", 200, {
+            "content-type": "text/html"
+        })
+    else:
+        return context.res.text("This is a text response")
+```
+```ruby
+def main(context)
+    case context.req.query['type']
+        when 'empty'
+            return context.res.empty()
+        when 'json'
+            return context.res.json({"type": "This is a JSON response"})
+        when 'binary'
+            file_contents = File.binread('file.png')
+            return context.res.binary(file_contents)
+        when 'redirect'
+            return context.res.redirect("https://appwrite.io", 301)
+        when 'html'
+            return context.res.text("<h1>This is an HTML response</h1>", 200, {
+                "content-type": "text/html"
+            })
+        else
+            return context.res.text("This is a text response")
+    end
+end
+```
+```deno
+export default async ({ req, res, log }) => {
+
+    switch (req.query.type) {
+        case 'empty':
+            return res.empty();
+        case 'json':
+            return res.json({type: "This is a JSON response"});
+        case 'binary':
+            const fileContents = await Deno.readFile('file.png');
+            return res.binary(fileContents);
+        case 'redirect':
+            return res.redirect("https://appwrite.io", 301);
+        case 'html':
+            return res.text(
+                "<h1>This is an HTML response</h1>", 200, {
+                    "content-type": "text/html"
+                });
+        default:
+            return res.text("This is a text response");
+    }
+}
+```
+```go
+package handler
+
+import (
+	"io"
+	"os"
+	"embed"
+	"github.com/open-runtimes/types-for-go/v4/openruntimes"
+)
+
+//go:embed images/*.png
+var images embed.FS
+
+func Main(Context openruntimes.Context) openruntimes.Response {
+	switch Context.Req.Query["type"] {
+	case "empty":
+		return Context.Res.Empty()
+	case "json":
+		return Context.Res.Json(map[string]string{"type": "This is a JSON response"})
+	case "binary":
+		imageData, _ := images.ReadFile("file.png")
+		return Context.Res.Binary(imageData)
+	case "redirect":
+		return Context.Res.Redirect("https://appwrite.io")
+	case "html":
+		return Context.Res.Text("<h1>This is an HTML response</h1>")
+	default:
+		return Context.Res.Text("This is a text response")
+	}
+}
+```
+```dart
+import 'dart:io';
+import 'dart:async';
+
+Future<dynamic> main(final context) async {
+    switch (context.req.query['type']) {
+        case 'empty':
+            return context.res.empty();
+        case 'json':
+            return context.res.json({'type': 'This is a JSON response'});
+        case 'binary':
+            final file = File('file.png');
+            final fileContents = await file.readAsBytes();
+            return context.res.binary(fileContents);
+        case 'redirect':
+            return context.res.redirect('https://appwrite.io', 301);
+        case 'html':
+            return context.res.text('<h1>This is an HTML response</h1>',
+                200, {'content-type': 'text/html'});
+        default:
+            return context.res.text('This is a text response');
+  }
+}
+```
+```swift
+import Foundation
+
+func main(context: RuntimeContext) async throws -> RuntimeOutput {
+    switch context.req.query["type"] {
+    case "empty":
+        return context.res.empty()
+    case "json":
+        return context.res.text(["type": "This is a JSON response"])
+    case "binary":
+        let fileContents = FileManager.default.contents(atPath: "file.png")
+        return context.res.binary(fileContents)
+    case "redirect":
+        return context.res.redirect("https://appwrite.io", 301)
+    case "html":
+        return context.res.text("<h1>This is an HTML response</h1>", 200, [
+            "content-type": "text/html"
+            ])
+    default:
+        return context.res.text("This is a text response")
+    }
+}
+```
+```csharp
+public class Handler {
+    public async Task<RuntimeOutput> Main(RuntimeContext Context)
+    {
+        switch (Context.Request.Query["type"])
+        {
+            case "empty":
+                return Context.Res.Empty();
+            case "json":
+                return Context.Res.Text(new Dictionary<string, object>() { { "type", "This is a JSON response" } });
+            case "binary":
+                return Context.Res.Binary(File.ReadAllBytes("file.png"));
+            case "redirect":
+                return Context.Res.Redirect("https://appwrite.io", 301);
+            case "html":
+                return Context.Res.Text("<h1>This is an HTML response</h1>", 200, new Dictionary<string, string>() {
+                    { "content-type", "text/html" }
+                });
+            default:
+                return Context.Res.Text("This is a text response");
+        }
+    }
+}
+```
+```kotlin
+package io.openruntimes.kotlin.src
+
+import io.openruntimes.kotlin.RuntimeContext
+import io.openruntimes.kotlin.RuntimeOutput
+
+class Main {
+    fun main(context: RuntimeContext): RuntimeOutput {
+        when (context.req.query["type"]) {
+            "empty" -> return context.res.empty()
+            "json" -> return context.res.text(mapOf("type" to "This is a JSON response"))
+            "binary" -> return context.res.binary(File("file.png").readBytes())
+            "redirect" -> return context.res.redirect("https://appwrite.io", 301)
+            "html" -> return context.res.text("<h1>This is an HTML response</h1>", 200, mapOf("content-type" to "text/html"))
+            else -> return context.res.text("This is a text response")
+        }
+    }
+}
+```
+```java
+package io.openruntimes.java.src;
+
+import io.openruntimes.java.RuntimeContext;
+import io.openruntimes.java.RuntimeOutput;
+import java.util.Map;
+import java.util.HashMap;
+
+public class Main {
+    public RuntimeOutput main(RuntimeContext context) throws Exception {
+        switch (context.getReq().getQuery()["type"]) {
+            case "text":
+                return context.getRes().empty();
+            case "json":
+                HashMap<String, Object> data = new HashMap<>();
+                data.put("type", "This is a JSON response");
+                return context.getRes().text(data);
+            case "binary"
+                return context.getRes().binary(Files.readAllBytes(Paths.get("file.png")));
+            case "redirect":
+                return context.getRes().redirect("https://appwrite.io", 301);
+            case "html":
+                return context.getRes().text("<h1>This is an HTML response</h1>", 200, Map.of("content-type", "text/html"));
+            default:
+                return context.getRes().text("This is a text response");
+        }
+    }
+}
+```
+```cpp
+#include "../RuntimeResponse.h"
+#include "../RuntimeRequest.h"
+#include "../RuntimeOutput.h"
+#include "../RuntimeContext.h"
+
+namespace runtime {
+  class Handler {
+    public:
+      static RuntimeOutput main(RuntimeContext &context) {
+        std::string type = context.req.query["type"];
+
+        if (type == "empty") {
+          return context.res.empty();
+        } else if (type == "json") {
+          Json::Value data;
+          data["type"] = "This is a JSON response";
+          return context.res.text(data);
+        } else if (type == "binary") {
+          std::vector<char> buffer(std::istreambuf_iterator<char>(std::ifstream("file.png", std::ios::binary)), {});
+          return context.res.binary(buffer)
+        } else if (type == "redirect") {
+          return context.res.redirect("https://appwrite.io", 301);
+        } else if (type == "html") {
+          Json::Value headers;
+          headers["content-type"] = "text/html";
+          return context.res.text("<h1>This is an HTML response</h1>", 200, headers);
+        } else {
+          return context.res.text("This is a text response");
+        }
+      }
+  };
+}
+```
+```rust
+use openruntimes::{Context, Response};
+use serde_json::json;
+use std::collections::HashMap;
+
+pub fn main(context: Context) -> Response {
+    match context.req.query.get("type").map(|s| s.as_str()) {
+        Some("empty") => context.res.empty(),
+        Some("json") => context.res.json(
+            json!({ "type": "This is a JSON response" }),
+            None,
+            None,
+        ),
+        Some("redirect") => {
+            let mut headers = HashMap::new();
+            headers.insert("location".to_string(), "https://appwrite.io".to_string());
+            context.res.text("", Some(301), Some(headers))
+        }
+        Some("html") => {
+            let mut headers = HashMap::new();
+            headers.insert("content-type".to_string(), "text/html".to_string());
+            context
+                .res
+                .text("<h1>This is an HTML response</h1>", Some(200), Some(headers))
+        }
+        _ => context.res.text("This is a text response", None, None),
+    }
+}
+```
+{% /multicode %}
+
+To get the different response types, set one of the following query parameters in the [generated domain](/docs/products/functions/domains) of your function.
+
+| Type     | Query Param     | Example                                                     |
+|----------|-----------------|-------------------------------------------------------------|
+| `text`     | `/?type=text`     | `https://64d4d22db370ae41a32e.fra.appwrite.run/?type=text`     |
+| `json`     | `/?type=json`     | `https://64d4d22db370ae41a32e.fra.appwrite.run/?type=json`     |
+| `redirect` | `/?type=redirect` | `https://64d4d22db370ae41a32e.fra.appwrite.run/?type=redirect` |
+| `html`     | `/?type=html`     | `https://64d4d22db370ae41a32e.fra.appwrite.run/?type=html`     |
+| `empty`    | `/`               | `https://64d4d22db370ae41a32e.fra.appwrite.run/`               |
+
+## Logging {% #logging %}
+To protect user privacy, the request and response objects are not logged to the Appwrite Console by default.
+
+We support the spread operator across most of the languages, meaning you can write code that is more concise and flexible.
+
+This means, to see logs or debug function executions you need to use the `log()` and `error()` methods.
+These logs are only visible to developers with access to the Appwrite Console.
+
+Here's an example of using logs and errors.
+
+{% multicode %}
+```server-nodejs
+export default async ({ req, res, log, error }) => {
+    const message = "This is a log, use for logging information to console";
+    log("Message: ", message);
+    log(`This function was called with ${req.method} method`);
+    const errorMessage = "This is an error, use for logging errors to console"
+    error("Error: ", errorMessage);
+
+    return res.text("Check the Appwrite Console to see logs and errors!");
+};
+```
+```php
+<?php
+
+return function ($context) {
+    $message = "This is a log, use for logging information to console";
+    $context->log("Message: ", message);
+    $context->log("This function was called with " . $context->req->method . " method");
+    $errorMessage = "Check the Appwrite Console to see logs and errors!"
+    $context->error("Error: ", errorMessage);
+
+    return $context->text("Check the Appwrite Console to see logs and errors!");
+};
+```
+```python
+def main(context):
+    message = "This is a log, use for logging information to console"
+    context.log("Message: ", message)
+    context.log(f"This function was called with {context.req.method} method")
+    errorMessage = "This is an error, use for logging errors to console"
+    context.error("Error: ", errorMessage)
+
+    return context.res.text("Check the Appwrite Console to see logs and errors!")
+```
+```ruby
+def main(context)
+    message = "This is a log, use for logging information to console"
+    context.log("Message: ", message)
+    context.log("This function was called with #{context.req.method} method")
+    errorMessage = "This is an error, use for logging errors to console"
+    context.error("Error: ", errorMessage)
+
+    return context.res.text("Check the Appwrite Console to see logs and errors!")
+end
+```
+```deno
+export default async ({ res, log, error }: any) => {
+    let message = "This is a log, use for logging information to console";
+    log("Message: ", message);
+    log(`This function was called with ${context.req.method} method`);
+    let errorMessage = "This is an error, use for logging errors to console";
+    error("Error: ", errorMessage);
+
+    return res.text("Check the Appwrite Console to see logs and errors!");
+};
+```
+```go
+package handler
+
+import (
+	"fmt"
+
+	"github.com/open-runtimes/types-for-go/v4/openruntimes"
+)
+
+func Main(Context openruntimes.Context) openruntimes.Response {
+	message := "This is a log, use for logging information to console"
+	Context.Log("Message: ", message)
+	Context.Log(fmt.Sprintf("This function was called with %s method", Context.Req.Method))
+	errorMessage := "This is an error, use for logging errors to console"
+	Context.Error("Error: ", errorMessage)
+
+	return Context.Res.Text("Check the Appwrite Console to see logs and errors!")
+}
+```
+```dart
+import 'dart:async';
+
+Future<dynamic> main(final context) async {
+    var message = "This is a log, use for logging information to console";
+    context.log("message: ", var);
+    context.log("This function was called with ${context.req.method} method");
+    var errorMessage = "This is an error, use for logging errors to console";
+    context.error("Error: ", errorMessage);
+
+    return context.res.text("Check the Appwrite Console to see logs and errors!");
+}
+```
+```swift
+import Foundation
+
+func main(context: RuntimeContext) async throws -> RuntimeOutput {
+    var message: String = "This is a log, use for logging information to console"
+    context.log("Message: ", message)
+    context.log("This function was called with \(context.req.method) method")
+    var message: String = "This is an error, use for logging errors to console"
+    context.error("Error: ", message)
+
+    return context.res.text("Check the Appwrite Console to see logs and errors!")
+}
+```
+```csharp
+namespace DotNetRuntime;
+
+public class Handler {
+    public async Task<RuntimeOutput> Main(RuntimeContext Context)
+    {
+        string message = "This is a log, use for logging information to console";
+        Context.Log("Message: ", message);
+        Context.Log($"This function was called with {Context.Req.Method} method");
+        string errorMessage = "This is an error, use for logging errors to console";
+        Context.Error("Error: ", errorMessage);
+
+        return Context.Res.Text("Check the Appwrite Console to see logs and errors!");
+    }
+}
+```
+```kotlin
+package io.openruntimes.kotlin.src
+
+import io.openruntimes.kotlin.RuntimeContext
+import io.openruntimes.kotlin.RuntimeOutput
+
+class Main {
+    fun main(context: RuntimeContext): RuntimeOutput {
+        var message: String = "This is a log, use for logging information to console"
+        context.log("Message: ", message)
+        context.log("This function was called with ${context.req.method} method")
+        var errorMessage: String = "This is an error, use for logging errors to console"
+        context.error("Error: ", errorMessage)
+
+        return context.res.text("Check the Appwrite Console to see logs and errors!")
+    }
+}
+```
+```java
+package io.openruntimes.java.src;
+
+import io.openruntimes.java.RuntimeContext;
+import io.openruntimes.java.RuntimeOutput;
+
+public class Main {
+    public RuntimeOutput main(RuntimeContext context) throws Exception {
+        String message = "This is a log, use for logging information to console";
+        context.log("Message: ", message);
+        context.log("This function was called with " + context.req.method + " method");
+        string errorMessage = "This is an error, use for logging errors to console";
+        context.error("Error: ", errorMessage);
+
+        return context.getRes().text("Check the Appwrite Console to see logs and errors!");
+    }
+}
+```
+```cpp
+#include "../RuntimeResponse.h"
+#include "../RuntimeRequest.h"
+#include "../RuntimeOutput.h"
+#include "../RuntimeContext.h"
+
+namespace runtime {
+  class Handler {
+    public:
+      static RuntimeOutput main(RuntimeContext &context) {
+        const std::string message = "This is a log, use for logging information to console";
+        context.log("Message: ", message);
+        context.log("This function was called with " + context.req.method + " method");
+        const std::string errorMessage = "This is an error, use for logging errors to console";
+        context.error("Error: ", errorMessage);
+
+        return context.res.text("Check the Appwrite Console to see logs and errors!");
+      }
+  };
+}
+```
+```rust
+use openruntimes::{Context, Response};
+
+pub fn main(context: Context) -> Response {
+    let message = "This is a log, use for logging information to console";
+    context.log(format!("Message: {}", message));
+    context.log(format!(
+        "This function was called with {} method",
+        context.req.method
+    ));
+
+    let error_message = "This is an error, use for logging errors to console";
+    context.error(format!("Error: {}", error_message));
+
+    context
+        .res
+        .text("Check the Appwrite Console to see logs and errors!", None, None)
+}
+```
+{% /multicode %}
+
+You can access these logs through the following steps.
+
+1. In Appwrite Console, navigate to Functions.
+2. Click to open a function you wish to inspect.
+3. Under the Executions tab, click on an execution.
+4. In the Response section, you'll be able to view logs under the Logs and Errors tabs.
+
+# Environment variables {% #environment-variables %}
+
+Pass constants and secrets into your function with environment variables, and read them inside your function using your runtime's standard environment lookup.
+
+{% arrow_link href="/docs/products/functions/environment-variables" %}
+Manage and read environment variables
+{% /arrow_link %}
+
+# Dependencies {% #dependencies %}
+To install your dependencies before your function is built,
+you should add the relevant install command to the top your function's **Build setting** > **Commands**.
+You can find this setting under **Functions** > your function > **Settings** > **Configuration** > **Build settings**.
+
+Make sure to include dependency files like `package.json`, `composer.json`, `requirements.txt`, etc. in your function's configured [root directory](/docs/products/functions/deploy-from-git#root-directory).
+Do not include the dependency folders like `node_modules`, `vendor`, etc. in your function's root directory.
+The dependencies installed for your local OS may not work in the executor environments
+
+Your function's dependencies should be managed by the package manager of each language.
+By default, we include the following package managers in each runtime.
+
+{% table %}
+* &nbsp; {% width=80 %}
+* Language
+* Package Manager
+* Commands
+---
+* {% only_dark %}{% icon_image src="/images/platforms/dark/node.svg" alt="Node.js logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/node.svg" alt="Node.js logo" size="m" /%}{% /only_light %}
+* Node.js
+* NPM
+* `npm install`
+---
+* {% only_dark %}{% icon_image src="/images/platforms/dark/php.svg" alt="PHP logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/php.svg" alt="PHP logo" size="m" /%}{% /only_light %}
+* PHP
+* Composer
+* `composer install`
+---
+* {% only_dark %}{% icon_image src="/images/platforms/dark/python.svg" alt="Python logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/python.svg" alt="Python logo" size="m" /%}{% /only_light %}
+* Python
+* pip
+* `pip install -r requirements.txt`
+---
+* {% only_dark %}{% icon_image src="/images/platforms/dark/ruby.svg" alt="Ruby logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/ruby.svg" alt="Ruby logo" size="m" /%}{% /only_light %}
+* Ruby
+* Bundler
+* `bundle install`
+---
+* {% only_dark %}{% icon_image src="/images/platforms/dark/deno.svg" alt="Deno logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/deno.svg" alt="Deno logo" size="m" /%}{% /only_light %}
+* Deno
+* deno
+* `deno cache <ENTRYPOINT_FILE>`
+---
+* {% only_dark %}{% icon_image src="/images/platforms/dark/go.svg" alt="Go logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/go.svg" alt="Go logo" size="m" /%}{% /only_light %}
+* Go
+* Go Modules
+* N/A
+---
+* {% only_dark %}{% icon_image src="/images/platforms/dark/dart.svg" alt="Dart logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/dart.svg" alt="Dart logo" size="m" /%}{% /only_light %}
+* Dart
+* pub
+* `pub get`
+---
+* {% only_dark %}{% icon_image src="/images/platforms/dark/swift.svg" alt="Swift logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/swift.svg" alt="Swift logo" size="m" /%}{% /only_light %}
+* Swift
+* Swift Package Manager
+* `swift package resolve`
+---
+* {% only_dark %}{% icon_image src="/images/platforms/dark/dotnet.svg" alt=".NET logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/dotnet.svg" alt=".NET logo" size="m" /%}{% /only_light %}
+* .NET
+* NuGet
+* `dotnet restore`
+---
+* {% only_dark %}{% icon_image src="/images/platforms/dark/bun.svg" alt="Bun logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/bun.svg" alt="Bun logo" size="m" /%}{% /only_light %}
+* Bun
+* bun
+* `bun install`
+---
+* {% only_dark %}{% icon_image src="/images/platforms/dark/kotlin.svg" alt="Kotlin logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/kotlin.svg" alt="Kotlin logo" size="m" /%}{% /only_light %}
+* Kotlin
+* Gradle
+* N/A
+---
+* {% only_dark %}{% icon_image src="/images/platforms/dark/java.svg" alt="Java logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/java.svg" alt="Java logo" size="m" /%}{% /only_light %}
+* Java
+* Gradle
+* N/A
+---
+* {% only_dark %}{% icon_image src="/images/platforms/dark/c.svg" alt="C++ logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/c.svg" alt="C++ logo" size="m" /%}{% /only_light %}
+* C++
+* None
+* N/A
+---
+* {% only_dark %}{% icon_image src="/images/platforms/dark/rust.svg" alt="Rust logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/rust.svg" alt="Rust logo" size="m" /%}{% /only_light %}
+* Rust
+* Cargo
+* `cargo build --release`
+{% /table %}
+
+# Using Appwrite in a function {% #using-appwrite %}
+Appwrite can be used in your functions by adding the relevant SDK to your function's dependencies.
+Authenticating with Appwrite is done via an ephemeral API key or a JWT token.
+
+## Ephemeral API key {% #ephemeral-api-key %}
+Ephemeral API keys are the same as [API keys](/docs/partners/project/api-keys) but are automatically generated.
+They are generated in your functions per execution.
+However, you can only use ephemeral API keys inside Appwrite Functions and [Appwrite Sites](/docs/products/sites/develop#ephemeral-api-key).
+
+During the build process, ephemeral API keys are automatically provided as the environment variable `APPWRITE_FUNCTION_API_KEY`. This environment variable doesn't need to be initialized.
+
+During execution, ephemeral API keys are automatically provided in the `x-appwrite-key` [header](#headers).
+
+Ephemeral API keys grant access and operate without sessions.
+They allow your function to act as an admin-type role instead of acting on behalf of a user.
+Update the function settings to configure the scopes of the function.
+
+1. In Appwrite Console, navigate to **Functions**.
+2. Click to open a function you wish to configure.
+3. Under the **Settings** tab, navigate to **Scopes**.
+4. Select the scopes you want to grant the ephemeral key.
+5. It is best practice to allow only necessary permissions.
+
+{% multicode %}
+```server-nodejs
+import { Client, TablesDB, ID } from 'node-appwrite';
+
+export default async ({ req, res, log, error }) => {
+    // Set project and set API key
+    const client = new Client()
+       .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+       .setKey(req.headers['x-appwrite-key']);
+
+    const tablesDB = new TablesDB(client);
+
+    try {
+        await tablesDB.createRow({
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            rowId: ID.unique(),
+            data: {}
+        })
+    } catch (e) {
+        error("Failed to create row: " + e.message)
+        return res.text("Failed to create row")
+    }
+
+    return res.text("Row created")
+}
+```
+```php
+<?php
+
+require(__DIR__ . '/../vendor/autoload.php');
+
+use Appwrite\Client;
+use Appwrite\Exception;
+use Appwrite\Services\TablesDB;
+use Appwrite\ID;
+
+return function ($context) {
+    // Set project and set API key
+    $client = (new Client())
+        ->setProject(getenv('APPWRITE_FUNCTION_PROJECT_ID'))
+        ->setKey($context->req->headers['x-appwrite-key']);
+
+    $tablesDB = new TablesDB($client);
+
+    try {
+        $tablesDB->createRow(
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            rowId: ID::unique(),
+            data: []
+        );
+    } catch (Exception $e) {
+        $context->error("Failed to create row: " . $e->getMessage());
+        return $context->res->text("Failed to create row");
+    }
+
+    return $context->res->text("Row created");
+};
+```
+```python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+from appwrite.id import ID
+
+import os
+
+def main(context):
+    # Set project and set API key
+    client = (
+        Client()
+            .set_project(os.environ["APPWRITE_FUNCTION_PROJECT_ID"])
+            .set_key(context.req.headers["x-appwrite-key"])
+    )
+
+    tablesDB = TablesDB(client)
+
+    try:
+        tablesDB.create_row(
+            database_id="<DATABASE_ID>",
+            table_id="<TABLE_ID>",
+            row_id=ID.unique(),
+            data={}
+        )
+    except Exception as e:
+        context.error("Failed to create row: " + e.message)
+        return context.response.text("Failed to create row")
+
+    return context.response.text("Row created")
+```
+```ruby
+require "appwrite"
+
+include Appwrite
+
+def main(context)
+    # Set project and set API key
+    client = Appwrite::Client.new
+      .set_project(ENV['APPWRITE_FUNCTION_PROJECT_ID'])
+      .set_key(context.req.headers['x-appwrite-key'])
+
+    tablesDB = Appwrite::TablesDB.new(client)
+
+    begin
+        tablesDB.create_row(
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            rowId: ID.unique(),
+            data: {}
+        )
+    rescue Exception => e
+        context.error("Failed to create row: " + e.message)
+        return context.response.text("Failed to create row")
+    end
+
+    return context.response.text("Row created")
+end
+```
+```deno
+import { Client, TablesDB, ID } from "npm:node-appwrite";
+
+export default function ({req, res, error}: any){
+    // Set project and set API key
+    const client = new Client()
+       .setProject(Deno.env.get("APPWRITE_FUNCTION_PROJECT_ID"))
+       .setKey(req.headers["x-appwrite-key"] || "");
+
+    const tablesDB = new TablesDB(client);
+
+    try {
+        tablesDB.createRow({
+            databaseId: "<DATABASE_ID>",
+            tableId: "<TABLE_ID>",
+            rowId: ID.unique(),
+            data: {}
+        });
+    } catch (e) {
+        error("Failed to create row: " + e.message);
+        return res.text("Failed to create row");
+    }
+
+    return res.text("Row created");
+}
+```
+```go
+package handler
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/appwrite/sdk-for-go/appwrite"
+	"github.com/appwrite/sdk-for-go/id"
+	"github.com/open-runtimes/types-for-go/v4/openruntimes"
+)
+
+func Main(Context openruntimes.Context) openruntimes.Response {
+	// Set project and set API key
+	client := appwrite.NewClient(
+		appwrite.WithProject(os.Getenv("APPWRITE_FUNCTION_PROJECT_ID")),
+		appwrite.WithKey(Context.Req.Headers["x-appwrite-key"]),
+	)
+
+	databases := appwrite.NewTablesDB(client)
+
+	_, err := databases.createRow(
+		"<DATABASE_ID>",
+		"<TABLE_ID>",
+		id.Unique(),
+		map[string]interface{}{},
+	)
+
+	if err != nil {
+		Context.Log(fmt.Sprintf("Failed to create row: %v", err))
+		return Context.Res.Text("Failed to create row")
+	}
+
+	return Context.Res.Text("Row created")
+}
+```
+```dart
+import 'dart:io';
+import 'dart:async';
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Future<dynamic> main(final context) async {
+    // Set project and set API key
+    final client = Client()
+       .setProject(Platform.environment['APPWRITE_FUNCTION_PROJECT_ID'])
+       .setKey(context.req.headers['x-appwrite-key']);
+
+    final tablesDB = TablesDB(client);
+
+    try {
+        await tablesDB.createRow(
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            rowId: ID.unique(),
+            data: {}
+        );
+    } catch (e) {
+        context.error("Failed to create row: " + e.message);
+        return context.res.text("Failed to create row");
+    }
+
+    return context.res.text("Row created");
+}
+```
+```swift
+import Appwrite
+import AppwriteModels
+import Foundation
+
+func main(context: RuntimeContext) async throws -> RuntimeOutput {
+    // Set project and set API key
+    let client = Client()
+       .setProject(ProcessInfo.processInfo.environment["APPWRITE_FUNCTION_PROJECT_ID"])
+       .setKey(context.req.headers["x-appwrite-key"] ?? "")
+
+    let tablesDB = TablesDB(client: client)
+
+    do {
+        try await tablesDB.createRow(
+            databaseId: "<DATABASE_ID>",
+            tableId: "<TABLE_ID>",
+            rowId: ID.unique(),
+            data: [:]
+        )
+    } catch {
+        context.error("Failed to create row: \(error.localizedDescription)")
+        return context.res.text("Failed to create row")
+    }
+
+    return context.res.text("Row created")
+}
+```
+```csharp
+using Appwrite;
+using Appwrite.Services;
+using Appwrite.Models;
+
+namespace DotNetRuntime
+{
+    public class Handler
+    {
+        public async Task Main(RuntimeContext Context)
+        {
+            // Set API
+            var client = new Client()
+                .SetProject(Environment.GetEnvironmentVariable("APPWRITE_FUNCTION_PROJECT_ID"))
+                .SetKey(Context.Req.Headers["x-appwrite-key"]);
+
+            var tablesDB = new TablesDB(client);
+
+            try {
+                await databases.createRow(
+                    databaseId: "<DATABASE_ID>",
+                    tableId: "<TABLE_ID>",
+                    rowId: ID.Unique(),
+                    data: new Dictionary<string, object>());
+            } catch (Exception e) {
+                Context.Error("Failed to create row: " + e.Message);
+                return Context.Response.Text("Failed to create row");
+            }
+
+            return Context.Response.Text("Row created");
+        }
+    }
+}
+```
+```kotlin
+package io.openruntimes.kotlin.src
+
+import io.openruntimes.kotlin.RuntimeContext
+import io.openruntimes.kotlin.RuntimeOutput
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+import io.appwrite.ID
+import java.util.HashMap
+
+class Main {
+    fun main(context: RuntimeContext): RuntimeOutput {
+        // Set project and set API key
+        val client = Client()
+           .setProject(System.getenv("APPWRITE_FUNCTION_PROJECT_ID"))
+           .setKey(context.req.headers["x-appwrite-key"])
+
+        val tablesDB = TablesDB(client)
+
+        try {
+            tablesDB.createRow(
+                databaseId = "<DATABASE_ID>",
+                tableId = "<TABLE_ID>",
+                rowId = ID.unique()
+                data = mapOf()
+            )
+        } catch (e: Exception) {
+            context.error("Failed to create row: " + e.message)
+            return context.res.text("Failed to create row")
+        }
+
+        return context.res.text("Row created")
+    }
+}
+```
+```java
+package io.openruntimes.java.src;
+
+import io.openruntimes.java.RuntimeContext;
+import io.openruntimes.java.RuntimeOutput;
+import java.util.HashMap;
+import io.appwrite.Client;
+
+public class Main {
+    public RuntimeOutput main(RuntimeContext context) throws Exception {
+        // Set project and set API key
+        Client client = new Client();
+             .setProject(System.getenv("APPWRITE_FUNCTION_PROJECT_ID"))
+             .setKey(context.getReq().getHeaders().get("x-appwrite-key"));
+
+        Databases tablesDB = new TablesDB(client);
+
+        try {
+            tablesDB.createRow(
+                "<DATABASE_ID>",
+                "<TABLE_ID>",
+                ID.unique(),
+                new HashMap<>()
+            );
+        } catch (Exception e) {
+            context.error("Failed to create row: " + e.getMessage());
+            return context.res.text("Failed to create row");
+        }
+
+        return context.res.text("Row created");
+    }
+}
+```
+```rust
+use appwrite::id::ID;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::Client;
+use openruntimes::{Context, Response};
+use serde_json::json;
+use std::env;
+
+pub fn main(context: Context) -> Response {
+    // Set project and set API key
+    let client = Client::new()
+        .set_endpoint(env::var("APPWRITE_FUNCTION_API_ENDPOINT").unwrap_or_default())
+        .set_project(env::var("APPWRITE_FUNCTION_PROJECT_ID").unwrap_or_default())
+        .set_key(
+            context
+                .req
+                .headers
+                .get("x-appwrite-key")
+                .cloned()
+                .unwrap_or_default(),
+        );
+
+    let tables_db = TablesDB::new(&client);
+
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+
+    let result = runtime.block_on(async move {
+        tables_db
+            .create_row(
+                "<DATABASE_ID>",
+                "<TABLE_ID>",
+                ID::unique(),
+                json!({}),
+                None,
+                None,
+            )
+            .await
+    });
+
+    match result {
+        Ok(_) => context.res.text("Row created", None, None),
+        Err(e) => {
+            context.error(format!("Failed to create row: {}", e));
+            context.res.text("Failed to create row", None, None)
+        }
+    }
+}
+```
+{% /multicode %}
+
+## Using with JWT {% #using-jwt %}
+JWTs allow you to act on behalf of an user in your Appwrite Function.
+When using JWTs, you will be able to access and change **only** the resources with the same permissions as the user account that signed the JWT.
+This preserves the permissions you configured on each resource.
+
+If the Appwrite Function is invoked by an authenticated user, the `x-appwrite-user-jwt` header is automatically passed in.
+
+{% multicode %}
+
+```server-nodejs
+import { Client, TablesDB, ID } from 'node-appwrite';
+
+export default async ({ req, res, log }) => {
+    const client = new Client()
+        .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+
+    if (req.headers['x-appwrite-user-jwt']) {
+        client.setJWT(req.headers['x-appwrite-user-jwt'])
+    } else {
+        return res.text("Access denied: This function requires authentication. Please sign in to continue.");
+    }
+
+    const tablesDB = new TablesDB(client);
+
+    try {
+        await tablesDB.createRow({
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            rowId: ID.unique(),
+            data: {}
+        })
+    } catch (e) {
+        log("Failed to create row: " + e.message)
+        return res.text("Failed to create row")
+    }
+
+    return res.text("Row created")
+}
+```
+```php
+<?php
+
+require(__DIR__ . '/../vendor/autoload.php');
+
+use Appwrite\Client;
+use Appwrite\Exception;
+use Appwrite\Services\TablesDB;
+use Appwrite\ID;
+
+return function ($context) {
+    $client = new (Client())
+        ->setProject(getenv('APPWRITE_FUNCTION_PROJECT_ID'))
+
+    if (isset($context->req->headers['x-appwrite-user-jwt'])) {
+        $client->setJWT($context->req->headers['x-appwrite-user-jwt']);
+    } else {
+        return $context->res->text("Access denied: This function requires authentication. Please sign in to continue.");
+    }
+
+    $tablesDB = new TablesDB($client);
+
+    try {
+        $tablesDB->createRow(
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            rowId: ID::unique(),
+            data: []
+        );
+    } catch (Exception $e) {
+        $context->error("Failed to create row: " . $e->getMessage());
+        return $context->res->text("Failed to create row");
+    }
+
+    return $context->res->text("Row created");
+};
+```
+```python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+from appwrite.id import ID
+
+import os
+
+def main(context):
+    client = (
+        Client()
+            .set_project(os.environ["APPWRITE_FUNCTION_PROJECT_ID"])
+    )
+
+    if "x-appwrite-user-jwt" in context.req.headers:
+        client.set_jwt(context.req.headers["x-appwrite-user-jwt"])
+    else:
+        return context.res.text("Access denied: This function requires authentication. Please sign in to continue.")
+
+    tablesDB = TablesDB(client)
+
+    try:
+        tablesDB.create_row(
+            database_id="<DATABASE_ID>",
+            table_id="<TABLE_ID>",
+            row_id=ID.unique(),
+            data={}
+        )
+    except Exception as e:
+        context.error("Failed to create row: " + e.message)
+        return context.response.text("Failed to create row")
+
+    return context.response.text("Row created")
+```
+```ruby
+require "appwrite"
+
+include Appwrite
+
+def main(context)
+    client = Client.new
+        .set_project(ENV['APPWRITE_FUNCTION_PROJECT_ID'])
+
+    if context.request.headers['x-appwrite-user-jwt']
+        client.set_jwt(context.request.headers['x-appwrite-user-jwt'])
+    else
+        return context.response.text("Access denied: This function requires authentication. Please sign in to continue.")
+    end
+
+    tablesDB = Appwrite::TablesDB.new(client)
+
+    begin
+        tablesDB.create_row(database_id: '<DATABASE_ID>', table_id: '<TABLE_ID>', row_id: Appwrite::ID.unique(), data: {})
+    rescue Appwrite::Exception => e
+        context.error("Failed to create row: " + e.message)
+        return context.response.text("Failed to create row")
+    end
+
+    return context.response.text("Row created")
+end
+```
+```deno
+import { Client, TablesDB, ID } from "npm:node-appwrite";
+
+export default function ({req, res, error}: any){
+    const client = new Client()
+        .setProject(Deno.env.get("APPWRITE_FUNCTION_PROJECT_ID") || "")
+
+    if (req.headers["x-appwrite-user-jwt"]) {
+        client.setJWT(req.headers["x-appwrite-user-jwt"]);
+    } else {
+        return res.text("Access denied: This function requires authentication. Please sign in to continue.");
+    }
+
+    const tablesDB = new TablesDB(client);
+
+    try {
+        tablesDB.createRow({
+            databaseId: "<DATABASE_ID>",
+            tableId: "<TABLE_ID>",
+            rowId: ID.unique(),
+            data: {}
+        });
+    } catch (e) {
+        error("Failed to create row: " + e.message)
+        return res.text("Failed to create row");
+    }
+
+    return res.text("Row created");
+}
+```
+```go
+package handler
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/appwrite/sdk-for-go/appwrite"
+	"github.com/appwrite/sdk-for-go/id"
+	"github.com/open-runtimes/types-for-go/v4/openruntimes"
+)
+
+func Main(Context openruntimes.Context) openruntimes.Response {
+	client := appwrite.NewClient(
+		appwrite.WithProject("APPWRITE_FUNCTION_PROJECT_ID"),
+	)
+
+	jwt, exists := Context.Req.Headers["x-appwrite-user-jwt"]
+	if !exists || len(jwt) == 0 {
+		appwrite.WithJWT(Context.Req.Headers["x-appwrite-user-jwt"])
+	} else {
+		return Context.Res.Text("Access denied: This function requires authentication. Please sign in to continue.")
+	}
+
+	databases := appwrite.NewTablesDB(client)
+
+	_, err := databases.createRow(
+		"<DATABASE_ID>",
+		"<TABLE_ID>",
+		id.Unique(),
+		map[string]interface{}{},
+	)
+
+	if err != nil {
+        Context.Log(fmt.Sprintf("Failed to create row: %v", err))
+		return Context.Res.Text(str)
+	}
+
+	return Context.Res.Text("Row created")
+}
+```
+```dart
+import 'dart:io';
+import 'dart:async';
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Future<dynamic> main(final context) async {
+    final client = Client()
+        .setProject(Platform.environment['APPWRITE_FUNCTION_PROJECT_ID'])
+
+    if (context.req.headers['x-appwrite-user-jwt'] != null) {
+        client.setJWT(context.req.headers['x-appwrite-user-jwt']);
+    } else {
+        return context.res.text("Access denied: This function requires authentication. Please sign in to continue.");
+    }
+
+    final tablesDB = TablesDB(client);
+
+    try {
+        await tablesDB.createRow(
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            rowId: ID.unique(),
+            data: {}
+        );
+    } catch (e) {
+        context.error("Failed to create row: " + e.message);
+        return context.res.text("Failed to create row");
+    }
+
+    return context.res.text("Row created");
+}
+```
+```swift
+import Appwrite
+import AppwriteModels
+import Foundation
+
+func main(context: RuntimeContext) async throws -> RuntimeOutput {
+    let client = Client()
+       .setProject(ProcessInfo.processInfo.environment["APPWRITE_FUNCTION_PROJECT_ID"])
+
+    if let jwt = context.req.headers["x-appwrite-user-jwt"] {
+        client.setJWT(jwt)
+    } else {
+        return context.res.text("Access denied: This function requires authentication. Please sign in to continue.")
+    }
+
+    let tablesDB = TablesDB(client: client)
+
+    do {
+        try await tablesDB.createRow(
+            databaseId: "<DATABASE_ID>",
+            tableId: "<TABLE_ID>",
+            rowId: ID.unique()
+            data: [:]
+        )
+    } catch {
+        context.error("Failed to create row: \(error.localizedDescription)")
+        return context.res.text("Failed to create row")
+    }
+
+    return context.res.text("Row created")
+}
+```
+```csharp
+using Appwrite;
+using Appwrite.Services;
+using Appwrite.Models;
+
+namespace DotNetRuntime
+{
+    public class Handler
+    {
+        public async Task Main(RuntimeContext Context)
+        {
+            var client = new Client()
+               .SetProject(Environment.GetEnvironmentVariable("APPWRITE_FUNCTION_PROJECT_ID"))
+
+            if (Context.Req.Headers.ContainsKey("x-appwrite-user-jwt")) {
+                client.SetJWT(Context.Req.Headers["x-appwrite-user-jwt"]);
+            } else {
+                return Context.Res.Text("Access denied: This function requires authentication. Please sign in to continue");
+            }
+
+            var tablesDB = new TablesDB(client);
+
+            try {
+                await databases.createRow(
+                    databaseId: "<DATABASE_ID>",
+                    tableId: "<TABLE_ID>",
+                    rowId: ID.Unique(),
+                    data: new Dictionary<string, object>());
+            } catch (Exception e) {
+                Context.Error("Failed to create row: " + e.Message);
+                return Context.Res.Text("Failed to create row");
+            }
+
+            return Context.Res.Text("Row created");
+        }
+    }
+}
+```
+```kotlin
+package io.openruntimes.kotlin.src
+
+import io.openruntimes.kotlin.RuntimeContext
+import io.openruntimes.kotlin.RuntimeOutput
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+import io.appwrite.ID
+import java.util.HashMap
+
+class Main {
+    fun main(context: RuntimeContext): RuntimeOutput {
+        val client = Client()
+           .setProject(System.getenv("APPWRITE_FUNCTION_PROJECT_ID"))
+
+        if (context.req.headers["x-appwrite-user-jwt"] != null) {
+            client.setJWT(context.req.headers["x-appwrite-user-jwt"])
+        } else {
+            return context.res.text("Access denied: This function requires authentication. Please sign in to continue.")
+        }
+
+        val tablesDB = TablesDB(client)
+
+        try {
+            tablesDB.createRow(
+                databaseId = "<DATABASE_ID>",
+                tableId = "<TABLE_ID>",
+                rowId = ID.unique(),
+                data = mapOf()
+            )
+        } catch (e: Exception) {
+            context.error("Failed to create row: " + e.message)
+            return context.res.text("Failed to create row")
+        }
+
+        return context.res.text("Row created")
+    }
+}
+```
+```java
+package io.openruntimes.java.src;
+
+import io.openruntimes.java.RuntimeContext;
+import io.openruntimes.java.RuntimeOutput;
+import java.util.HashMap;
+import io.appwrite.Client;
+
+public class Main {
+    public RuntimeOutput main(RuntimeContext context) throws Exception {
+        Client client = new Client()
+            .setProject(System.getenv("APPWRITE_FUNCTION_PROJECT_ID"))
+
+        if (context.req.headers.containsKey("x-appwrite-user-jwt")) {
+            client.setJWT(context.req.headers.get("x-appwrite-user-jwt"));
+        } else {
+            return context.res.text("Access denied: This function requires authentication. Please sign in to continue.");
+        }
+
+        Databases tablesDB = new TablesDB(client);
+
+        try {
+            tablesDB.createRow(
+                "<DATABASE_ID>",
+                "<TABLE_ID>",
+                ID.unique(),
+                new HashMap<>()
+            );
+        } catch (Exception e) {
+            context.error("Failed to create row: " + e.getMessage());
+            return context.res.text("Failed to create row");
+        }
+
+        return context.res.text("Row created");
+
+    }
+}
+```
+```rust
+use appwrite::id::ID;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::Client;
+use openruntimes::{Context, Response};
+use serde_json::json;
+use std::env;
+
+pub fn main(context: Context) -> Response {
+    let client = Client::new()
+        .set_endpoint(env::var("APPWRITE_FUNCTION_API_ENDPOINT").unwrap_or_default())
+        .set_project(env::var("APPWRITE_FUNCTION_PROJECT_ID").unwrap_or_default());
+
+    let client = match context.req.headers.get("x-appwrite-user-jwt") {
+        Some(jwt) => client.set_jwt(jwt.clone()),
+        None => {
+            return context.res.text(
+                "Access denied: This function requires authentication. Please sign in to continue.",
+                None,
+                None,
+            );
+        }
+    };
+
+    let tables_db = TablesDB::new(&client);
+
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+
+    let result = runtime.block_on(async move {
+        tables_db
+            .create_row(
+                "<DATABASE_ID>",
+                "<TABLE_ID>",
+                ID::unique(),
+                json!({}),
+                None,
+                None,
+            )
+            .await
+    });
+
+    match result {
+        Ok(_) => context.res.text("Row created", None, None),
+        Err(e) => {
+            context.error(format!("Failed to create row: {}", e));
+            context.res.text("Failed to create row", None, None)
+        }
+    }
+}
+```
+{% /multicode %}
+
+# Code structure {% #code-structure %}
+
+As your functions grow, you may find yourself needing to split your code into multiple files. This helps you keep your codebase maintainable and easy to read. Here's how you can accomplish code splitting.
+
+{% tabs %}
+{% tabsitem #nodejs title="Node.js" %}
+```server-nodejs
+// src/utils.js
+export function add(a, b) {
+    return a + b;
+}
+```
+```server-nodejs
+// src/main.js
+import { add } from './utils.js';
+
+export default function ({ res }) {
+    return res.text(add(1, 2));
+}
+```
+{% /tabsitem %}
+
+{% tabsitem #php title="PHP" %}
+```php
+<?php
+// src/utils.php
+function add($a, $b) {
+    return $a + $b;
+}
+```
+```php
+<?php
+// src/main.php
+require_once(__DIR__ . '/utils.php');
+
+return function ($context) {
+    return $context->res->text(add(1, 2));
+};
+```
+{% /tabsitem %}
+
+{% tabsitem #python title="Python" %}
+```python
+# src/utils.py
+def add(a, b):
+    return a + b
+```
+```python
+# src/main.py
+from .utils import add
+
+def main(context):
+    return context.res.text(add(1, 2))
+```
+{% /tabsitem %}
+
+{% tabsitem #ruby title="Ruby" %}
+```ruby
+# lib/utils.rb
+def add(a, b)
+    return a + b
+end
+```
+```ruby
+# lib/main.rb
+require_relative 'utils'
+
+def main(context)
+    return context.res.text(add(1, 2))
+end
+```
+{% /tabsitem %}
+
+{% tabsitem #deno title="Deno" %}
+```deno
+// src/utils.ts
+export function add(a: number, b: number): number {
+    return a + b;
+}
+```
+```deno
+// src/main.ts
+import { add } from './utils.ts';
+
+export default function ({res}: {res: any}) {
+    return res.text(add(1, 2));
+}
+```
+{% /tabsitem %}
+
+{% tabsitem #go title="Go" %}
+```go
+// src/utils/go.mod
+module example.com/utils
+
+go 1.23.0
+```
+```go
+// src/utils/utils.go
+package utils
+
+func Add(a int, b int) int {
+	return a + b
+}
+```
+```go
+// src/main/go.mod
+module example.com/main
+
+go 1.23.0
+
+replace example.com/utils => ../utils // Run go mod edit -replace example.com/go=../go
+
+require example.com/utils v0.0.0-00010101000000-000000000000 // Run go mod tidy
+```
+```go
+// src/main/main.go
+package main
+
+import "example.com/utils"
+
+func main() {
+	// Get a greeting message and print it.
+	message := utils.Add(5, 4)
+	print(message)
+}
+```
+{% /tabsitem %}
+
+{% tabsitem #dart title="Dart" %}
+```dart
+// lib/utils.dart
+int add(int a, int b) {
+    return a + b;
+}
+```
+```dart
+// lib/main.dart
+import 'dart:async';
+
+import 'package:package_name/utils.dart';
+
+Future<dynamic> main(final context) async {
+    return context.res.text(add(1, 2));
+}
+```
+{% /tabsitem %}
+
+{% tabsitem #swift title="Swift" %}
+```swift
+// Sources/utils.swift
+func add(_ a: Int, _ b: Int) -> Int {
+    return a + b
+}
+```
+```swift
+// Sources/index.swift
+import Foundation
+
+func main(context: RuntimeContext) async throws -> RuntimeOutput {
+    return context.res.text(add(1, 2))
+}
+```
+{% /tabsitem %}
+
+{% tabsitem #dotnet title=".NET" %}
+```csharp
+// src/Utils.cs
+namespace DotNetRuntime
+{
+    public static class Utils
+    {
+        public static int Add(int a, int b)
+        {
+            return a + b;
+        }
+    }
+}
+```
+```csharp
+// src/Index.cs
+namespace DotNetRuntime
+{
+    public class Handler {
+        public async Task<RuntimeOutput> Main(RuntimeContext Context)
+        {
+            return Context.Res.Text(Utils.Add(1, 2));
+        }
+    }
+}
+```
+{% /tabsitem %}
+
+{% tabsitem #kotlin title="Kotlin" %}
+```kotlin
+// src/Utils.kt
+package io.openruntimes.kotlin.src
+
+object Utils {
+    fun add(a: Int, b: Int): Int {
+        return a + b
+    }
+}
+```
+```kotlin
+// src/Main.kt
+package io.openruntimes.kotlin.src
+
+import io.openruntimes.kotlin.RuntimeContext
+import io.openruntimes.kotlin.RuntimeOutput
+import io.openruntimes.kotlin.Utils
+
+class Main {
+    fun main(context: RuntimeContext): RuntimeOutput {
+        return context.res.text(Utils.add(1, 2))
+    }
+}
+```
+{% /tabsitem %}
+
+{% tabsitem #java title="Java" %}
+```java
+// src/Utils.java
+package io.openruntimes.java.src;
+
+class Utils {
+    public static int add(int a, int b) {
+        return a + b;
+    }
+}
+```
+```java
+package io.openruntimes.java.src;
+
+import io.openruntimes.java.RuntimeContext;
+import io.openruntimes.java.RuntimeOutput;
+import io.openruntimes.java.Utils;
+
+public class Main {
+    public RuntimeOutput main(RuntimeContext context) throws Exception {
+        return context.res.text(Utils.add(1, 2));
+    }
+}
+```
+{% /tabsitem %}
+
+{% tabsitem #rust title="Rust" %}
+```rust
+// utils/mod.rs
+pub fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+```
+```rust
+// lib.rs
+use openruntimes::{Context, Response};
+
+mod utils;
+
+pub fn main(context: Context) -> Response {
+    context
+        .res
+        .text(utils::add(1, 2).to_string(), None, None)
+}
+```
+{% /tabsitem %}
+
+{% /tabs %}

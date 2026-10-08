@@ -1,0 +1,79 @@
+---
+layout: article
+title: Sign in with Appwrite
+description: Build apps that access your users' Appwrite projects and organizations with consent-based, scoped OAuth2 tokens instead of pasted API keys.
+back: /docs
+---
+
+Appwrite is an **OAuth 2.1 and OpenID Connect provider**. Your app can send any Appwrite user to a consent screen, ask for access to the projects and organizations they choose, and receive tokens that call their project APIs directly. This is **Sign in with Appwrite**: the same consent flow users know from "Sign in with Google", pointed at their Appwrite account and backend.
+
+Before this, a tool that worked with a user's Appwrite project asked them to create an API key and paste it in. The key carried whatever scopes and expiry the user picked at creation, worked for one project only, and lived outside their control once pasted. With Sign in with Appwrite, the user approves once, picks the projects your app can reach, and can revoke everything from their account page at any time.
+
+{% info title="Building your own provider?" %}
+This section is for apps that build on top of Appwrite itself. To make your own product an OAuth2 provider so that third parties can offer "Sign in with your product", see the [OAuth2 server](/docs/products/auth/oauth-server) documentation.
+{% /info %}
+
+# What you can build {% #what-you-can-build %}
+
+Your app authenticates the user once and then acts on their Appwrite resources with the scopes they granted.
+
+- **Dashboards and monitors** that read usage, logs, and data across the projects a user selects.
+- **Deployment tools** that push functions and sites into a customer's project without holding a key.
+- **CLIs and devices** that sign in with a short user code instead of a browser redirect.
+- **AI agents and MCP clients** that operate under scopes the user can narrow to read-only.
+
+# How it works {% #how-it-works %}
+
+{% only_dark %}
+![Your app sends the user through the Appwrite consent screen and calls their projects with the issued tokens](/images/docs/partners/apps/dark/diagram-overview.avif)
+{% /only_dark %}
+{% only_light %}
+![Your app sends the user through the Appwrite consent screen and calls their projects with the issued tokens](/images/docs/partners/apps/diagram-overview.avif)
+{% /only_light %}
+
+Sign in with Appwrite is the authorization code flow from OAuth 2.1, served by Appwrite.
+
+1. **Your app redirects the user** to the Appwrite authorization endpoint with the scopes it needs.
+2. **Appwrite shows the consent screen.** The user sees your app's name and logo, reviews the requested permissions, and picks which projects and organizations they apply to. They can grant fewer projects than you asked for, or decline entirely.
+3. **Your app receives an authorization code** at its redirect URI and exchanges it for an access token, a refresh token, and an ID token.
+4. **Your app calls Appwrite APIs** with the access token as a bearer token, on any of the granted projects, in any region.
+
+Because the provider is spec-compliant, any OAuth2 or OIDC library works against the discovery document without Appwrite-specific code:
+
+```text
+https://cloud.appwrite.io/v1/oauth2/console/.well-known/openid-configuration
+```
+
+Users stay in control after the redirect too. Every authorization appears on their account's applications page, where they see the scopes your app holds and the tokens issued under it, and can revoke a token family or the whole authorization at any time.
+
+# Explore {% #explore %}
+
+{% cards %}
+{% cards_item href="/docs/partners/apps/quick-start" title="Quick start" %}
+Register an app and run the full flow, from consent to your first authorized API call.
+{% /cards_item %}
+{% cards_item href="/docs/partners/apps/registration" title="Registration" %}
+Register your app in the Console and shape its consent screen listing.
+{% /cards_item %}
+{% cards_item href="/docs/partners/apps/scopes" title="Scopes" %}
+The scope catalog and how grants target specific projects and organizations.
+{% /cards_item %}
+{% cards_item href="/docs/partners/apps/consent" title="Consent" %}
+What users see, what they can change, and what your app receives.
+{% /cards_item %}
+{% cards_item href="/docs/partners/apps/tokens" title="Tokens" %}
+Use, refresh, and revoke the tokens Appwrite issues to your app.
+{% /cards_item %}
+{% cards_item href="/docs/partners/apps/dashboards" title="Dashboards" %}
+Build a read-only dashboard over the projects a user selects.
+{% /cards_item %}
+{% cards_item href="/docs/partners/apps/deployments" title="Deployments" %}
+Deploy functions and sites into a user's project with write scopes.
+{% /cards_item %}
+{% cards_item href="/docs/partners/apps/device-flow" title="Device flow" %}
+Sign in from CLIs and devices with a short user code.
+{% /cards_item %}
+{% cards_item href="/docs/partners/apps/agents" title="Agents" %}
+Connect AI agents and MCP clients to your users' projects.
+{% /cards_item %}
+{% /cards %}
