@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 
@@ -57,7 +58,7 @@ class Get extends Action
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $target = $user->find('$id', $targetId, 'targets');
+        $target = \array_find($user->getAttribute('targets', []), static fn (Document $candidate): bool => $candidate->getId() === $targetId);
 
         if (empty($target)) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);

@@ -163,9 +163,9 @@ class User extends Document
      */
     public function sessionActive(string $sessionId): bool
     {
-        $session = $this->find('$id', $sessionId, 'sessions');
+        $session = $this->getSession($sessionId);
 
-        if (empty($session)) {
+        if ($session === null) {
             return false;
         }
 
@@ -182,13 +182,18 @@ class User extends Document
      */
     public function getSessionExpiry(string $sessionId): ?int
     {
-        $session = $this->find('$id', $sessionId, 'sessions');
+        $session = $this->getSession($sessionId);
 
-        if (empty($session) || !$session->isSet('expire')) {
+        if ($session === null || !$session->isSet('expire')) {
             return null;
         }
 
         return (new \DateTime($session->getAttribute('expire')))->getTimestamp();
+    }
+
+    private function getSession(string $sessionId): ?Document
+    {
+        return \array_find($this->getAttribute('sessions', []), static fn (Document $session): bool => $session->getId() === $sessionId);
     }
 
     public static function invalidateAuthentication(Database $dbForProject, Document $user, ?string $keepSessionId = null): void

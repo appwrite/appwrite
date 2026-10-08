@@ -36,8 +36,8 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Role;
 use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
@@ -178,26 +178,15 @@ Http::init()
             if (\in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_ORGANIZATION, API_KEY_ACCOUNT])) {
                 $dbKey = null;
                 $keyOwnerInternalId = '';
+                $secret = $request->getHeaderLine('x-appwrite-key', '');
                 if (! empty($apiKey->getProjectId())) {
-                    $dbKey = $project->find(
-                        key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
-                        subject: 'keys'
-                    );
+                    $dbKey = \array_find($project->getAttribute('keys', []), static fn (Document $key): bool => $key->getAttribute('secret') === $secret);
                     $keyOwnerInternalId = (string) ($project->getSequence() ?: $project->getId());
                 } elseif (! empty($apiKey->getUserId())) {
-                    $dbKey = $user->find(
-                        key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
-                        subject: 'keys'
-                    );
+                    $dbKey = \array_find($user->getAttribute('keys', []), static fn (Document $key): bool => $key->getAttribute('secret') === $secret);
                     $keyOwnerInternalId = (string) ($user->getSequence() ?: $user->getId());
                 } elseif (! empty($apiKey->getTeamId())) {
-                    $dbKey = $team->find(
-                        key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
-                        subject: 'keys'
-                    );
+                    $dbKey = \array_find($team->getAttribute('keys', []), static fn (Document $key): bool => $key->getAttribute('secret') === $secret);
                     $keyOwnerInternalId = (string) ($team->getSequence() ?: $team->getId());
                 }
 

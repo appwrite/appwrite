@@ -3862,7 +3862,7 @@ Http::patch('/v1/account/email')
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-            $oldTarget = $user->find('identifier', $oldEmail, 'targets');
+            $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $oldEmail);
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
@@ -3984,7 +3984,7 @@ Http::patch('/v1/account/phone')
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-            $oldTarget = $user->find('identifier', $oldPhone, 'targets');
+            $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $oldPhone);
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
