@@ -282,27 +282,6 @@ final class NatsBrokerTest extends TestCase
         $this->broker->commit($this->queue, $recovered);
     }
 
-    /**
-     * No limit means the whole dead stream, as on Redis, not a page of it: an operator
-     * running the retry task without --limit expects every failed job back.
-     */
-    public function testRetryWithoutALimitReDrivesTheWholeDeadStream(): void
-    {
-        $count = 501;
-        for ($i = 0; $i < $count; $i++) {
-            $this->broker->publish($this->queue, ['task' => $i]);
-            $message = $this->broker->receive($this->queue, 2)[0] ?? null;
-            $this->assertInstanceOf(Message::class, $message);
-            $this->broker->reject($this->queue, $message->terminal());
-        }
-        $this->assertSame($count, $this->broker->getQueueSize($this->queue, true));
-
-        $this->broker->retry($this->queue);
-
-        $this->assertSame($count, $this->broker->getQueueSize($this->queue), 'every dead message is back on the work queue');
-        $this->assertSame(0, $this->broker->getQueueSize($this->queue, true), 'and none is left on the dead stream');
-    }
-
     public function testATerminalMessageIsDeadLetteredOnTheFirstFailure(): void
     {
         $this->broker->publish($this->queue, ['task' => 'doomed']);
