@@ -44,10 +44,19 @@ $matches = function (string $filter, string $topic): bool {
     return count($f) === count($t);
 };
 
-$adapter = new Adapter\Swoole([
+$transports = [
     new Adapter\Swoole\WebSocket('127.0.0.1', 18831),
     new Adapter\Swoole\Tcp('127.0.0.1', 18830),
-], workers: 1);
+];
+
+// A TLS-wrapped listener (18832), added when e2e.sh provides a self-signed cert.
+$tlsCert = \getenv('MQTT_TLS_CERT') ?: '';
+$tlsKey = \getenv('MQTT_TLS_KEY') ?: '';
+if ($tlsCert !== '' && $tlsKey !== '') {
+    $transports[] = new Adapter\Swoole\Tls(new Adapter\Swoole\Tcp('127.0.0.1', 18832), $tlsCert, $tlsKey);
+}
+
+$adapter = new Adapter\Swoole($transports, workers: 1);
 
 $adapter
     ->onStart(fn (): int => print("mqtt broker started\n"))
