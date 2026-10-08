@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Docker\Compose;
+use Appwrite\Docker\Compose\Files;
 use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
 use Appwrite\Installer\Report;
@@ -1315,9 +1316,11 @@ class Install extends Action
             'compose',
             '--env-file',
             $envFile,
-            '-f',
-            $composeFile,
         ];
+        foreach ((new Files($this->path, $this->getComposeFileName()))->names() as $name) {
+            $command[] = '-f';
+            $command[] = $composePath . '/' . $name;
+        }
 
         if ($isLocalInstall) {
             $command[] = '--project-name';
