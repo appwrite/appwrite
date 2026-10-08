@@ -3,7 +3,6 @@
 namespace Appwrite\Databases;
 
 use Utopia\Database\RelationshipDeleteAction;
-use Utopia\Query\Schema\ForeignKeyAction;
 
 /**
  * An option an update leaves out, or sends as null, keeps its stored value on both sides.
@@ -28,7 +27,7 @@ final readonly class RelationshipUpdate
 
     public function onDelete(): ?RelationshipDeleteAction
     {
-        return isset($this->options['onDelete']) ? ForeignKeyAction::from($this->options['onDelete']) : null;
+        return isset($this->options['onDelete']) ? RelationshipDeleteAction::from($this->options['onDelete']) : null;
     }
 
     /**
