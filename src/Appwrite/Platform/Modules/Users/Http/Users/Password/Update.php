@@ -23,8 +23,8 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator;
 use Utopia\Validator\AllOf;
+use Utopia\Validator\Validator;
 
 class Update extends Action
 {

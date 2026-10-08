@@ -2,14 +2,12 @@
 
 namespace Utopia\Validator;
 
-use Utopia\Validator;
-
 /**
- * Ensure all of the validators from a list passed the check
+ * Ensure no validators from a list passed the check
  *
  * @package Utopia\Validator
  */
-class AllOf extends Validator
+class NoneOf extends Validator
 {
     protected ?Validator $failedRule = null;
 
@@ -30,7 +28,6 @@ class AllOf extends Validator
         if (!(\is_null($this->failedRule))) {
             return $this->failedRule->getDescription();
         }
-
         return $this->validators[0]->getDescription();
     }
 
@@ -44,7 +41,7 @@ class AllOf extends Validator
         foreach ($this->validators as $rule) {
             $valid = $rule->isValid($value);
 
-            if (!$valid) {
+            if ($valid) {
                 $this->failedRule = $rule;
                 return false;
             }

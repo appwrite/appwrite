@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Utopia\Validator;
 
-use Utopia\Validator;
-
-class HexColor extends Validator
+class JSON extends Validator
 {
     public function getDescription(): string
     {
-        return 'Value must be a valid Hex color code';
+        return 'Value must be a valid JSON string';
     }
 
     /**
@@ -26,15 +24,25 @@ class HexColor extends Validator
     /**
      * Get Type
      *
-     * Returns validator type.
+     * Returns validator type
      */
     public function getType(): string
     {
-        return self::TYPE_STRING;
+        return self::TYPE_OBJECT;
     }
 
     public function isValid(mixed $value): bool
     {
-        return \is_string($value) && preg_match('/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $value);
+        if (\is_array($value)) {
+            return true;
+        }
+
+        if (\is_string($value)) {
+            json_decode($value);
+
+            return json_last_error() === JSON_ERROR_NONE;
+        }
+
+        return false;
     }
 }

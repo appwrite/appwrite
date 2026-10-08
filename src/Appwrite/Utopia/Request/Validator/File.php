@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia\Request\Validator;
 
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 /**
  * Placeholder for binary file parameters, used only to surface the

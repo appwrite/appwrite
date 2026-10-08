@@ -2,7 +2,7 @@
 
 namespace Appwrite\Realtime\Message\Validators;
 
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class UnsubscribePayload extends Validator
 {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Validator\JSON;
 
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 /**
  * Validate Google service account credentials used with the FCM HTTP v1 API.
