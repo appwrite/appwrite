@@ -488,6 +488,9 @@ abstract class Action extends DatabasesAction
         $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
 
         foreach ($documents as $document) {
+            $document->removeAttribute('$collection');
+            $document->removeAttribute('$tenant');
+
             $queueForEvents
                 ->setParam('documentId', $document->getId())
                 ->setParam('rowId', $document->getId())
