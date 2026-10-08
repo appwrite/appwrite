@@ -81,6 +81,21 @@ final class GeneratorTest extends TestCase
         }
     }
 
+    public function testForwardsConnectionsMax(): void
+    {
+        $compose = $this->render([
+            'topology' => 'separate',
+        ]);
+
+        foreach ($compose['services'] as $name => $service) {
+            if (!\str_starts_with($service['image'] ?? '', '${_APP_IMAGE:-appwrite/appwrite}')) {
+                continue;
+            }
+
+            $this->assertContains('_APP_CONNECTIONS_MAX=${_APP_CONNECTIONS_MAX:-151}', $service['environment'], $name);
+        }
+    }
+
     public function testKeepsMongoInitFiles(): void
     {
         $compose = $this->render([
