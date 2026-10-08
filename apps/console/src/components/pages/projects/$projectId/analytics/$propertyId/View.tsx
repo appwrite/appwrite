@@ -586,6 +586,7 @@ export function View({
             activeSeries={activeSeries}
             onActiveSeriesChange={setActiveSeries}
             fallbackStats={isDefaultRange ? initialData?.stats : undefined}
+            fallbackSeries={isDefaultRange ? initialData?.series : undefined}
             compareMode={compareMode}
             comparisonRange={comparisonRange}
             onRefresh={handleRefresh}
