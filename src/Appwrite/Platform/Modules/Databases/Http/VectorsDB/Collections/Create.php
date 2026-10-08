@@ -127,12 +127,10 @@ class Create extends CollectionAction
         }
 
         $collections = (Config::getParam('collections', [])['vectorsdb'] ?? [])['collections'] ?? [];
-        $attributes = \array_map(
-            static fn (Attribute $attribute): Attribute => $attribute->key === 'embeddings'
-                ? Attribute::vector($attribute->key, dimensions: $dimension, required: $attribute->required)
-                : $attribute,
-            $collections['defaultAttributes'],
-        );
+        $attributes = [
+            Attribute::vector('embeddings', dimensions: $dimension, required: true),
+            ...$collections['defaultAttributes'],
+        ];
         $indexes = $collections['defaultIndexes'];
         try {
             // Bootstrap the database metadata without a separate existence
@@ -163,7 +161,7 @@ class Create extends CollectionAction
                 permissions: $permissions,
                 documentSecurity: $documentSecurity,
             ));
-            $attributeDocuments = \array_map(function (Attribute $attribute) use ($database, $collection, $databaseId, $collectionId, $dimension) {
+            $attributeDocuments = \array_map(function (Attribute $attribute) use ($database, $collection, $databaseId, $collectionId) {
                 return new Document([
                     '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $attribute->key),
                     'key' => $attribute->key,
@@ -173,7 +171,7 @@ class Create extends CollectionAction
                     'collectionId' => $collectionId,
                     'type' => $attribute->type->value,
                     'status' => 'available',
-                    'size' => $dimension,
+                    'size' => $attribute->size ?? 0,
                     'required' => $attribute->required,
                     'signed' => $attribute->signed,
                     'default' => $attribute->default,
@@ -183,7 +181,7 @@ class Create extends CollectionAction
                     'filters' => $attribute->filters,
                     'options' => $attribute->toDocument()->getAttribute('options', []),
                 ]);
-            }, $collections['defaultAttributes']);
+            }, $attributes);
             $dbForProject->createDocuments('attributes', $attributeDocuments);
 
             $indexDocuments = \array_map(function (Index $index) use ($database, $collection, $databaseId, $collectionId) {

@@ -8,6 +8,8 @@ use Appwrite\Event\Event;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Create;
 use Appwrite\Utopia\Response;
 use PHPUnit\Framework\TestCase;
+use Utopia\Config\Config;
+use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -21,6 +23,27 @@ final class VectorsCollectionCreateTest extends TestCase
 {
     private const string DATABASE_ID = 'vectors';
     private const int DIMENSION = 384;
+
+    /**
+     * @var array<string, mixed>
+     */
+    private array $collections;
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        $this->collections = Config::getParam('collections', []);
+
+        $collections = $this->collections;
+        $collections['vectorsdb']['collections']['defaultAttributes'] = [Attribute::object(key: 'metadata', default: [])];
+        Config::setParam('collections', $collections);
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        Config::setParam('collections', $this->collections);
+    }
 
     public function testEmbeddingsTakeTheRequestedDimension(): void
     {
@@ -83,10 +106,12 @@ final class VectorsCollectionCreateTest extends TestCase
         $this->assertTrue($attributes['embeddings']->required);
         $this->assertSame(ColumnType::Object, $attributes['metadata']->type);
 
+        $this->assertCount(2, $created->attributes());
+
         $this->assertSame(
-            [['embeddings', ColumnType::Vector->value, []], ['metadata', ColumnType::Object->value, []]],
+            [['embeddings', ColumnType::Vector->value, self::DIMENSION, []], ['metadata', ColumnType::Object->value, 0, []]],
             \array_map(
-                static fn (Document $document): array => [$document->getAttribute('key'), $document->getAttribute('type'), $document->getAttribute('options')],
+                static fn (Document $document): array => [$document->getAttribute('key'), $document->getAttribute('type'), $document->getAttribute('size'), $document->getAttribute('options')],
                 $metadata['attributes'],
             ),
         );
