@@ -3,7 +3,7 @@
 namespace Appwrite\Auth;
 
 use Utopia\Auth\Proofs\Token;
-use Utopia\Console;
+use Utopia\Console\Console;
 
 final class EncryptionKey
 {
