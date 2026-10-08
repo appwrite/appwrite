@@ -7,6 +7,7 @@ import {
 } from 'react'
 import { AnalyticsDimension, type Models } from '@appwrite.io/console'
 import { AnalyticsValueMenu } from './AnalyticsValueMenu'
+import { ANALYTICS_HUMAN_COLOR } from '@/lib/analytics/palette'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { CountryFlag } from './BreakdownRow'
@@ -154,8 +155,8 @@ function useCountryShapes(): WorldShapes | null {
 
 // ─── Map ────────────────────────────────────────────────────────────────────
 
-/** Brand purple, same as the humans segment. */
-const FILL_COLOR = '#7c67fe'
+/** Brand purple, same as the humans segment (lib/analytics/palette). */
+const FILL_COLOR = ANALYTICS_HUMAN_COLOR
 
 /**
  * Fill strength for a country. Square-root scale so one dominant country

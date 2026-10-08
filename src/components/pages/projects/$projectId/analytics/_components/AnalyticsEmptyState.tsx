@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Code2, Globe, MousePointerClick, Users } from 'lucide-react'
 import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
+import { ANALYTICS_HUMAN_COLOR } from '@/lib/analytics/palette'
 import {
   ProductEmptyStateCreateButton,
   ProductEmptyStateHero,
@@ -30,8 +31,8 @@ const STEPS: ProductEmptyStateStep[] = [
   },
 ]
 
-/** Brand purple, as on the property page's charts and humans bar. */
-const ACCENT = '#7c67fe'
+/** Brand purple, as on the humans bar and map (lib/analytics/palette). */
+const ACCENT = ANALYTICS_HUMAN_COLOR
 
 /** Smooth-ish visitors line for the illustration (viewBox 0 0 240 64). */
 const SPARK_PATH =

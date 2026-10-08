@@ -7,6 +7,11 @@ import {
 } from '@/components/pages/projects/$projectId/analytics/_components/format'
 import { isCustomAnalyticsEvent } from '@/lib/react-query/hooks'
 import { isKnownBreakdownValue } from '@/lib/analytics/breakdown-values'
+import {
+  ANALYTICS_BOT_FALLBACK_COLOR,
+  ANALYTICS_HUMAN_COLOR,
+  analyticsBotColor,
+} from '@/lib/analytics/palette'
 import { PdfDocument, hex, tint, type DocumentFonts, type Rgb } from './pdf'
 import type { AnalyticsExportData, ExportBreakdown } from './collect'
 
@@ -14,7 +19,6 @@ import type { AnalyticsExportData, ExportBreakdown } from './collect'
 
 const COLORS = {
   pink: '#FD366E',
-  purple: '#7C67FE',
   ink: '#19191C',
   muted: '#6C6C71',
   subtle: '#97979B',
@@ -23,7 +27,8 @@ const COLORS = {
   good: '#0E9F6E',
   bad: '#D97706',
 }
-const BOT_COLORS = ['#F59E0B', '#14B8A6', '#F97316', '#EC4899', '#64748B']
+/** Same brand palette as the console card: humans purple, bot types peach, mint, pink, then grey. */
+const HUMAN_COLOR = ANALYTICS_HUMAN_COLOR
 
 /**
  * Full Appwrite logo (public/appwrite-light.svg, viewBox 0 0 132 24): the
@@ -335,7 +340,7 @@ function drawTrafficSplit(doc: PdfDocument, data: AnalyticsExportData, y: number
   sectionTitle(doc, 'Humans and bots', MARGIN, y + 10)
   const humanShare = (totals.human / total) * 100
   const botShare = (totals.bot / total) * 100
-  doc.text(`Humans ${humanShare.toFixed(1)}%`, MARGIN, y + 30, { size: 9, font: 'bold', color: c(COLORS.purple) })
+  doc.text(`Humans ${humanShare.toFixed(1)}%`, MARGIN, y + 30, { size: 9, font: 'bold', color: c(HUMAN_COLOR) })
   doc.text(`Bots ${botShare.toFixed(1)}%`, MARGIN + width, y + 30, {
     size: 9,
     font: 'bold',
@@ -344,7 +349,7 @@ function drawTrafficSplit(doc: PdfDocument, data: AnalyticsExportData, y: number
   })
 
   const segments: { label: string; value: number; color: string }[] = [
-    { label: 'Humans', value: totals.human, color: COLORS.purple },
+    { label: 'Humans', value: totals.human, color: HUMAN_COLOR },
   ]
   let assigned = 0
   ;(categories?.rows ?? [])
@@ -357,11 +362,11 @@ function drawTrafficSplit(doc: PdfDocument, data: AnalyticsExportData, y: number
       segments.push({
         label: humanizeCategory(row.value!),
         value: amount,
-        color: BOT_COLORS[index % BOT_COLORS.length],
+        color: analyticsBotColor(index),
       })
     })
   if (totals.bot - assigned > 0) {
-    segments.push({ label: 'Other bots', value: totals.bot - assigned, color: '#94A3B8' })
+    segments.push({ label: 'Other bots', value: totals.bot - assigned, color: ANALYTICS_BOT_FALLBACK_COLOR })
   }
 
   const barTop = y + 38

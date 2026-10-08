@@ -6,18 +6,10 @@ import {
 } from '@/lib/react-query/hooks'
 import { resolveCountryDisplayName } from '@/lib/locale/country-lookups'
 import { BreakdownPanel, type BreakdownTab } from './BreakdownPanel'
-import { BrowserIcon, CountryFlag, RowDot, SourceFavicon } from './BreakdownRow'
+import { BrowserIcon, ChannelIcon, CountryFlag, SourceFavicon } from './BreakdownRow'
 
-/** Chart palette, reused so categorical panels stay consistent. */
-const SERIES_COLORS = [
-  'var(--chart-1)',
-  'var(--chart-2)',
-  'var(--chart-3)',
-  'var(--chart-4)',
-  'var(--chart-5)',
-]
-
-const colorAt = (index: number) => SERIES_COLORS[index % SERIES_COLORS.length]
+// Bars stay neutral (the BreakdownRow default), like Usage's breakdowns:
+// rows are told apart by their icon and label, not a colour per rank.
 
 type PanelProps = {
   projectId: string
@@ -74,15 +66,14 @@ export function TrafficSourcesPanel(props: PanelProps) {
           ? `https://${bareHost(value)}`
           : undefined
       }
-      renderLeading={(entry, index, tabId) =>
+      renderLeading={(entry, _index, tabId) =>
         tabId === 'channels' ? (
-          <RowDot color={colorAt(index)} />
+          <ChannelIcon value={entry.value} />
         ) : tabId === 'sources' || tabId === 'utm-sources' ? (
           // Referrer and utm_source values are mostly domains or site names.
           <SourceFavicon value={entry.value} />
         ) : undefined
       }
-      rowColor={(_entry, index) => colorAt(index)}
     />
   )
 }
@@ -211,7 +202,6 @@ export function TechnologyPanel(props: PanelProps) {
       renderLeading={(entry, _index, tabId) =>
         tabId === 'browsers' ? <BrowserIcon name={entry.value} /> : undefined
       }
-      rowColor={(_entry, index) => colorAt(index)}
     />
   )
 }

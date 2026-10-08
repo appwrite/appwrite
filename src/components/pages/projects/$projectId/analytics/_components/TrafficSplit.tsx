@@ -35,6 +35,7 @@ import { useAnalyticsFilters } from './analytics-filters-context'
 import { isKnownBreakdownValue } from '@/lib/analytics/breakdown-values'
 import { formatNumber } from './format'
 import { BreakdownSkeleton } from './BreakdownPanel'
+import { ANALYTICS_HUMAN_COLOR, analyticsBotColor } from '@/lib/analytics/palette'
 
 type SplitMeasure = 'visitors' | 'events'
 const SPLIT_MEASURES: readonly SplitMeasure[] = ['visitors', 'events']
@@ -50,23 +51,38 @@ const KIND_ACTIVE_CLASS = 'bg-muted/60 ring-1 ring-border'
 const KIND_STATIC_CLASS =
   '-m-1.5 flex min-w-0 cursor-default items-center gap-3 rounded-lg p-1.5 text-start'
 
-/**
- * Humans use the Appwrite brand purple (same value as `--network-globe-edge`),
- * solid. The hatched bot segments use the chart palette so the two sides read
- * as different kinds of traffic at a glance.
- */
-const HUMAN_COLOR = '#7c67fe'
-const HUMAN_ICON_COLOR = HUMAN_COLOR
-/**
- * Fixed bot palette, deliberately without purple or blue: the theme chart
- * palette has purple/blue hues in dark mode that would blur into the humans
- * segment.
- */
-const BOT_COLORS = ['#f59e0b', '#14b8a6', '#f97316', '#ec4899', '#64748b']
+/** Headline share: the console's stat size, not a hero number. */
+const FIGURE_CLASS =
+  'text-[24px] font-semibold leading-none tracking-tight tabular-nums text-foreground'
 
-/** Diagonal hatching marks machine traffic; people stay solid. */
-const BOT_HATCH =
-  'repeating-linear-gradient(135deg, rgba(255,255,255,0.22) 0 4px, transparent 4px 8px)'
+/** Small legend label above each figure: swatch, icon and name. */
+function KindLabel({
+  color,
+  icon: Icon,
+  label,
+  align = 'start',
+}: {
+  color: string
+  icon: typeof User
+  label: string
+  align?: 'start' | 'end'
+}) {
+  return (
+    <p
+      className={cn(
+        'mb-2 flex items-center gap-1.5 text-[12px] text-muted-foreground',
+        align === 'end' && 'justify-end',
+      )}
+    >
+      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: color }} aria-hidden />
+      <Icon className="h-3.5 w-3.5" aria-hidden />
+      {label}
+    </p>
+  )
+}
+
+/** Brand palette (see lib/analytics/palette): humans purple, bot types peach, mint, pink, then grey. */
+const HUMAN_COLOR = ANALYTICS_HUMAN_COLOR
 
 type Segment = {
   key: string
@@ -241,7 +257,7 @@ export function TrafficSplit({
         key: `bot-${row.value}`,
         label: humanizeCategory(row.value),
         value: amount,
-        color: BOT_COLORS[index % BOT_COLORS.length],
+        color: analyticsBotColor(index),
         kind: 'bot',
         category: row.value,
       })
@@ -252,7 +268,7 @@ export function TrafficSplit({
         key: 'bot-other',
         label: named.length > 0 ? t('Other bots') : t('Bots'),
         value: remainder,
-        color: BOT_COLORS[named.length % BOT_COLORS.length],
+        color: analyticsBotColor(named.length),
         kind: 'bot',
       })
     }
@@ -359,20 +375,12 @@ export function TrafficSplit({
             trafficKind === 'human' && KIND_ACTIVE_CLASS,
           )}
         >
-          <span
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg"
-            style={{
-              backgroundColor: `color-mix(in oklch, ${HUMAN_COLOR} 14%, transparent)`,
-            }}
-          >
-            <User className="h-5 w-5" style={{ color: HUMAN_ICON_COLOR }} />
-          </span>
           <div className="min-w-0">
-            <p className="mb-1 text-[12px] text-muted-foreground">{t('Humans')}</p>
+            <KindLabel color={HUMAN_COLOR} icon={User} label={t('Humans')} />
             <p className="flex items-baseline gap-2">
               <span
                 className={cn(
-                  'text-[30px] font-semibold leading-none tabular-nums text-foreground',
+                  FIGURE_CLASS,
                   hasData && USAGE_CHART_FADE_IN_CLASS_NAME,
                 )}
               >
@@ -430,7 +438,12 @@ export function TrafficSplit({
           )}
         >
           <div className="min-w-0">
-            <p className="mb-1 text-[12px] text-muted-foreground">{t('Bots')}</p>
+            <KindLabel
+              color={analyticsBotColor(0)}
+              icon={Bot}
+              label={t('Bots')}
+              align="end"
+            />
             <p className="flex items-baseline justify-end gap-2">
               {hasData ? (
                 <span className="text-[12px] tabular-nums text-muted-foreground">
@@ -439,7 +452,7 @@ export function TrafficSplit({
               ) : null}
               <span
                 className={cn(
-                  'text-[30px] font-semibold leading-none tabular-nums text-foreground',
+                  FIGURE_CLASS,
                   hasData && USAGE_CHART_FADE_IN_CLASS_NAME,
                 )}
               >
@@ -447,9 +460,6 @@ export function TrafficSplit({
               </span>
             </p>
           </div>
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-muted">
-            <Bot className="h-5 w-5 text-muted-foreground" />
-          </span>
         </button>
         </TrafficKindMenu>
       </div>
@@ -457,7 +467,7 @@ export function TrafficSplit({
       {/* The bar */}
       <TooltipProvider delayDuration={0}>
         <div
-          className="relative flex h-5 w-full gap-[3px] overflow-hidden rounded-full bg-muted"
+          className="relative flex h-2.5 w-full gap-[2px] overflow-hidden rounded-full bg-muted"
           role="img"
           aria-label={
             hasData
@@ -489,15 +499,13 @@ export function TrafficSplit({
                               : undefined
                         }
                         className={cn(
-                          'h-full min-w-[3px] transition-[width] duration-700 ease-out first:rounded-s-full last:rounded-e-full hover:brightness-110 motion-reduce:transition-none',
+                          'h-full min-w-[2px] transition-[width,opacity] duration-700 ease-out first:rounded-s-full last:rounded-e-full hover:opacity-80 motion-reduce:transition-none',
                           (segment.category || trafficFilterEnabled) &&
                             'cursor-pointer',
                         )}
                         style={{
                           width: `${width}%`,
                           backgroundColor: segment.color,
-                          backgroundImage:
-                            segment.kind === 'bot' ? BOT_HATCH : undefined,
                           opacity: segment.kind === 'unclassified' ? 0.4 : 1,
                         }}
                       />
@@ -536,11 +544,12 @@ export function TrafficSplit({
                   value={segment.value}
                   share={share(segment.value, total)}
                   barPercent={share(segment.value, maxSegment)}
-                  color={segment.color}
+                  // Neutral bar like every other card; the swatch ties the
+                  // row to its segment in the bar above.
                   leading={
                     <span
-                      className="h-2.5 w-2.5 shrink-0 rounded-sm"
-                      style={{ backgroundColor: segment.color, backgroundImage: BOT_HATCH }}
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: segment.color }}
                     />
                   }
                   // "Other bots" has no single category value to filter on.
@@ -596,7 +605,6 @@ export function TrafficSplit({
                       value={value}
                       share={share(value, total)}
                       barPercent={share(value, maxAgent)}
-                      mono
                       onClick={() => addEqualFilter('botName', name)}
                       active={active}
                       actionTitle={active ? t('Remove filter') : t('Filter by this bot')}

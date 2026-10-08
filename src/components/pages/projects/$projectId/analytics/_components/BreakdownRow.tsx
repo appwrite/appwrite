@@ -1,6 +1,16 @@
 import { useState, type KeyboardEvent, type ReactNode } from 'react'
 import { Browser } from '@appwrite.io/console'
-import { ExternalLink, Globe, Link2 } from 'lucide-react'
+import {
+  ExternalLink,
+  Globe,
+  Link2,
+  Mail,
+  Megaphone,
+  Search,
+  Sparkles,
+  Users,
+  type LucideIcon,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -138,14 +148,28 @@ export function BreakdownRow({
   )
 }
 
-/** Coloured dot used by the categorical panels (channels, composition). */
-export function RowDot({ color }: { color: string }) {
+/**
+ * Channel names are free text from the API ("Organic Search", "Direct",
+ * "AI"...). Matched loosely by keyword; anything unrecognised gets a globe.
+ */
+const CHANNEL_ICONS: [RegExp, LucideIcon][] = [
+  [/\bai\b|assistant|llm/i, Sparkles],
+  [/direct|none/i, Link2],
+  [/search|organic/i, Search],
+  [/social/i, Users],
+  [/mail|newsletter/i, Mail],
+  [/paid|ads?\b|cpc|display/i, Megaphone],
+  [/referr/i, ExternalLink],
+]
+
+/** Neutral icon for a traffic channel, in the same 16px slot as favicons. */
+export function ChannelIcon({ value }: { value: string | null | undefined }) {
+  const Icon =
+    CHANNEL_ICONS.find(([pattern]) => pattern.test(value ?? ''))?.[1] ?? Globe
   return (
-    <span
-      className="h-2.5 w-2.5 shrink-0 rounded-full"
-      style={{ backgroundColor: color }}
-      aria-hidden
-    />
+    <span className="flex h-4 w-4 shrink-0 items-center justify-center" aria-hidden>
+      <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+    </span>
   )
 }
 
