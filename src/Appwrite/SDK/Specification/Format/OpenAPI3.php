@@ -10,6 +10,7 @@ use Appwrite\SDK\Response;
 use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\Operation;
+use Appwrite\Utopia\Database\Validator\Queries\Restricted;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
 use Utopia\Database\Database;
@@ -816,9 +817,21 @@ class OpenAPI3 extends Format
                         // utopia-php/waf is not a dependency here, so the class is named rather than referenced.
                     case 'Utopia\WAF\Validator\Conditions':
                         $node['schema']['type'] = 'array';
-                        $node['schema']['items'] = [
+                                                $node['schema']['items'] = [
                             'type' => 'string',
                         ];
+
+                        // Publish what a restricted validator accepts so generators need not
+                        // parse it out of the description. Unrestricted validators emit nothing.
+                        if ($validator instanceof Restricted) {
+                            $queries = [];
+                            $allowedAttributes = $validator->getAllowedAttributes();
+                            if ($allowedAttributes !== null) {
+                                $queries['attributes'] = $allowedAttributes;
+                            }
+                            $queries['methods'] = $validator->getAllowedMethods();
+                            $node['x-appwrite']['queries'] = $queries;
+                        }
                         break;
                     case \Utopia\Validator\Multiple::class:
                         // Its rules check the whole value, so an array-typed Multiple declares no
@@ -1138,6 +1151,10 @@ class OpenAPI3 extends Format
                                     $body['content'][$consumes[0]]['schema']['properties'][$name][$key] = $node['schema'][$key];
                                 }
                             }
+                        }
+
+                        if (isset($node['x-appwrite'])) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-appwrite'] = $node['x-appwrite'];
                         }
 
                         if (isset($node['schema']['x-appwrite'])) {

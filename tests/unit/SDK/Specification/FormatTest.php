@@ -1373,6 +1373,41 @@ final class FormatTest extends TestCase
         }
     }
 
+        public function testRestrictedQueriesPublishAllowedAttributesAndMethods(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/queries'))
+            ->desc('List tests')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'listTests',
+                description: 'List tests.',
+                auth: [AuthType::ADMIN],
+                responses: [],
+            ))
+            ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Queries.', true)
+            ->param('repositoryQueries', [], new VcsRepositories(), 'Repository queries.', true);
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
+
+        $parameters = \array_column($openApi['paths']['/tests/queries']['get']['parameters'], null, 'name');
+
+        // A validator that cannot describe itself emits nothing, so existing output is unchanged.
+        $this->assertArrayNotHasKey('x-appwrite', $parameters['queries']);
+
+        // VcsRepositories accepts limit, offset and a single equal("namespace") filter.
+        $this->assertSame(
+            [
+                'attributes' => ['namespace'],
+                'methods' => ['limit', 'offset', 'equal'],
+            ],
+            $parameters['repositoryQueries']['x-appwrite']['queries']
+        );
+    }
+
     public function testZeroIsKeptAsADeclaredExample(): void
     {
         Method::$processed = [];
