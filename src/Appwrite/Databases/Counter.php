@@ -3,10 +3,11 @@
 namespace Appwrite\Databases;
 
 use Appwrite\Extend\Exception;
-use Utopia\Database\Attribute;
+use Appwrite\Utopia\Database\Attribute as AttributeDefinition;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\BigInt;
+use Utopia\Query\Schema\ColumnType;
 
 final readonly class Counter
 {
@@ -16,11 +17,11 @@ final readonly class Counter
 
     public static function of(Database $database, string $collection, string $attribute): self
     {
-        $definition = $database->silent(fn () => $database->getCollection($collection));
+        $definition = $database->silent(fn () => $database->findCollection($collection));
 
-        foreach ($definition->getDeclaredAttributes() as $declared) {
-            if ($declared->getKey() === $attribute) {
-                return new self(!$declared->isArray() && Attribute::isIntegerType($declared->getType()));
+        foreach ($definition?->attributes() ?? [] as $declared) {
+            if ($declared->key === $attribute) {
+                return new self(!$declared->array && $declared->isInteger());
             }
         }
 
@@ -34,8 +35,9 @@ final readonly class Counter
         foreach ($attributes as $declared) {
             if ($declared->getAttribute('key') === $attribute) {
                 $type = $declared->getAttribute('type', '');
+                $columnType = \is_string($type) ? AttributeDefinition::columnType($type) : null;
 
-                return new self(!$declared->getAttribute('array', false) && \is_string($type) && Attribute::isIntegerType($type));
+                return new self(!$declared->getAttribute('array', false) && \in_array($columnType, [ColumnType::Integer, ColumnType::BigInteger], true));
             }
         }
 
