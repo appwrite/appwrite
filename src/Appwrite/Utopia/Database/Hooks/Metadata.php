@@ -6,6 +6,7 @@ use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Adapter\Pool;
 use Closure;
 use Override;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Event;
@@ -249,7 +250,7 @@ class Metadata implements Decorator
     {
         if (!isset($this->relationshipCache[$collectionId])) {
             if ($collection === null && $this->tenant !== null) {
-                $collection = $this->tenant->silent(fn (): Document => $this->tenant->getCollection($collectionId));
+                $collection = $this->tenant->silent(fn (): ?Collection => $this->tenant->findCollection($collectionId));
             }
             if ($collection === null) {
                 return [];

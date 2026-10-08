@@ -111,8 +111,8 @@ class Create extends Action
         }
 
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
-        $collection = $dbForDatabases->getCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
-        if ($collection->isEmpty()) {
+        $collection = $dbForDatabases->findCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+        if ($collection === null) {
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
