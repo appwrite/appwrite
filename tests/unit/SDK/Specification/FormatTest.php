@@ -1434,21 +1434,37 @@ final class FormatTest extends TestCase
         );
 
         // The execution query metadata is published in the same shape as the restricted validator.
-        $this->assertSame(
+               $this->assertSame(
             [
-                'attributes' => [...Executions::ALLOWED_ATTRIBUTES, '$id', '$createdAt', '$updatedAt', '$sequence'],
-                'methods' => [
-                    Query::TYPE_LIMIT,
-                    Query::TYPE_OFFSET,
-                    Query::TYPE_CURSOR_AFTER,
-                    Query::TYPE_CURSOR_BEFORE,
-                    Query::TYPE_EQUAL,
-                    Query::TYPE_NOT_EQUAL,
-                    Query::TYPE_ORDER_ASC,
-                    Query::TYPE_ORDER_DESC,
-                ],
+                Query::TYPE_LIMIT,
+                Query::TYPE_OFFSET,
+                Query::TYPE_CURSOR_AFTER,
+                Query::TYPE_CURSOR_BEFORE,
+                // Filter validates per attribute type, not per method, so every filter method is published.
+                Query::TYPE_EQUAL,
+                Query::TYPE_NOT_EQUAL,
+                Query::TYPE_LESSER,
+                Query::TYPE_LESSER_EQUAL,
+                Query::TYPE_GREATER,
+                Query::TYPE_GREATER_EQUAL,
+                Query::TYPE_SEARCH,
+                Query::TYPE_NOT_SEARCH,
+                Query::TYPE_IS_NULL,
+                Query::TYPE_IS_NOT_NULL,
+                Query::TYPE_BETWEEN,
+                Query::TYPE_NOT_BETWEEN,
+                Query::TYPE_STARTS_WITH,
+                Query::TYPE_NOT_STARTS_WITH,
+                Query::TYPE_ENDS_WITH,
+                Query::TYPE_NOT_ENDS_WITH,
+                Query::TYPE_CONTAINS,
+                Query::TYPE_NOT_CONTAINS,
+                Query::TYPE_AND,
+                Query::TYPE_OR,
+                Query::TYPE_ORDER_ASC,
+                Query::TYPE_ORDER_DESC,
             ],
-            $parameters['executionQueries']['x-appwrite']['queries']
+            $executions['methods']
         );
     }
 
