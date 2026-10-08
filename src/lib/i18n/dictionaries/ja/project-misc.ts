@@ -708,8 +708,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Could not copy to clipboard': 'クリップボードにコピーできませんでした',
   'Add the snippet, then wait for the first event.':
     'スニペットを追加し、最初のイベントを待ちます。',
-  'Daily boundaries use your current timezone. You can change every value later in settings.':
-    '日次の区切りには現在のタイムゾーンを使用します。すべての値は後から設定で変更できます。',
+  'Daily totals are bucketed in UTC. You can change every value later in settings.':
+    '日次の集計は UTC で区切られます。すべての値は後から設定で変更できます。',
   'Add tracking to your app': 'アプリに計測を追加',
   'Add tracking to your site or app to start collecting events.':
     'サイトやアプリに計測を追加して、イベントの収集を開始します。',

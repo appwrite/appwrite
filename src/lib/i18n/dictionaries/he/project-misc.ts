@@ -1070,8 +1070,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Could not copy to clipboard': 'לא ניתן היה להעתיק ללוח',
   'Add the snippet, then wait for the first event.':
     'הוסיפו את הסניפט, ואז המתינו לאירוע הראשון.',
-  'Daily boundaries use your current timezone. You can change every value later in settings.':
-    'גבולות היום נקבעים לפי אזור הזמן הנוכחי שלכם. אפשר לשנות כל ערך מאוחר יותר בהגדרות.',
+  'Daily totals are bucketed in UTC. You can change every value later in settings.':
+    'הסיכומים היומיים מחושבים לפי UTC. אפשר לשנות כל ערך מאוחר יותר בהגדרות.',
   'Add tracking to your app': 'הוספת מעקב לאפליקציה שלכם',
   'Add tracking to your site or app to start collecting events.':
     'הוסיפו מעקב לאתר או לאפליקציה שלכם כדי להתחיל לאסוף אירועים.',
