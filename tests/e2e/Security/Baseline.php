@@ -150,26 +150,9 @@ final class Baseline
      */
     public static function write(array $routes, array $findings, string $path = self::PATH): void
     {
-        $existing = self::load($path);
-        $reasons = $existing->findings();
-        $kept = [];
-        foreach ($existing->rawFindings() as $entry) {
-            $key = (new Finding(
-                attack: (string) ($entry['attack'] ?? ''),
-                method: (string) ($entry['method'] ?? ''),
-                path: (string) ($entry['path'] ?? ''),
-                probe: (string) ($entry['probe'] ?? ''),
-                detail: (string) ($entry['detail'] ?? ''),
-                severity: (string) ($entry['severity'] ?? Finding::ERROR),
-            ))->key();
-            $kept[$key] = $entry;
-        }
-
+        $reasons = self::load($path)->findings();
         $rows = [];
-        $seen = [];
         foreach ($findings as $finding) {
-            $seen[$finding->key()] = true;
-            $previous = $kept[$finding->key()] ?? [];
             $rows[] = [
                 'attack' => $finding->attack,
                 'method' => $finding->method,
@@ -177,22 +160,7 @@ final class Baseline
                 'probe' => $finding->probe,
                 'severity' => $finding->severity,
                 'detail' => $finding->detail,
-                'reason' => (string) ($reasons[$finding->key()]['reason'] ?? $previous['reason'] ?? ''),
-            ];
-        }
-
-        foreach ($kept as $key => $entry) {
-            if (isset($seen[$key])) {
-                continue;
-            }
-            $rows[] = [
-                'attack' => (string) ($entry['attack'] ?? ''),
-                'method' => (string) ($entry['method'] ?? ''),
-                'path' => (string) ($entry['path'] ?? ''),
-                'probe' => (string) ($entry['probe'] ?? ''),
-                'severity' => (string) ($entry['severity'] ?? Finding::ERROR),
-                'detail' => (string) ($entry['detail'] ?? ''),
-                'reason' => (string) ($entry['reason'] ?? ''),
+                'reason' => (string) ($reasons[$finding->key()]['reason'] ?? ''),
             ];
         }
 

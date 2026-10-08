@@ -63,7 +63,7 @@ final class BaselineTest extends TestCase
         }
     }
 
-    public function testWriteKeepsFindingsTheRunDidNotEmit(): void
+    public function testWriteDropsFindingsTheRunDidNotEmit(): void
     {
         $path = \sys_get_temp_dir() . '/security-baseline-' . \bin2hex(\random_bytes(4)) . '.json';
         try {
@@ -82,13 +82,10 @@ final class BaselineTest extends TestCase
             ], $path);
 
             $rows = Baseline::load($path)->rawFindings();
-            $reasons = [];
-            foreach ($rows as $row) {
-                $reasons[$row['attack']] = $row['reason'];
-            }
+            $attacks = \array_map(static fn (array $row): string => (string) $row['attack'], $rows);
 
-            $this->assertSame('guest listing is public', $reasons['guest-access']);
-            $this->assertSame('stored url only', $reasons['ssrf-url']);
+            $this->assertSame(['ssrf-url'], $attacks);
+            $this->assertSame('stored url only', $rows[0]['reason']);
         } finally {
             if (\is_file($path)) {
                 \unlink($path);

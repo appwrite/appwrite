@@ -68,7 +68,7 @@ Local compose mounts `./tests` via `docker-compose.override.yml`, so that write 
 docker compose cp appwrite:/storage/cache/security-baseline.json tests/e2e/Security/baseline.json
 ```
 
-Update refuses to write if `World::boot()` failed or if any attack class did not run (`--filter` is not a full update). Findings the run did not emit keep their existing rows and reasons.
+Update refuses to write if `World::boot()` failed or if any attack class did not run (`--filter` is not a full update). A completed update replaces the findings list: rows that did not fire are dropped so a later recurrence is not still allowlisted. Reasons on findings that still fire are kept.
 
 4. Open the `baseline.json` diff. Keep the new `routes` row. New finding rows come through with an empty `reason` — fill one in or the next `check` run fails. Commit the inventory change with the endpoint.
 
