@@ -1297,6 +1297,51 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Password not checked against known data breaches':
     'הסיסמה לא נבדקה מול דליפות מידע ידועות',
   'breached password': 'סיסמה שדלפה',
+
+  // Passkey relying party policy and auth method
+  Passkey: 'מפתח גישה',
+  Passkeys: 'מפתחות גישה',
+  'Relying party': 'צד מסתמך',
+  'Passkeys are bound to the domain of your app. Users can only sign in with a passkey once a relying party ID and at least one origin are set, and the Passkey auth method is enabled.':
+    'מפתחות גישה קשורים לדומיין של האפליקציה שלכם. משתמשים יכולים להתחבר עם מפתח גישה רק לאחר שהוגדרו מזהה צד מסתמך ולפחות מקור אחד, ושיטת האימות מפתח גישה מופעלת.',
+  'Relying party ID': 'מזהה צד מסתמך',
+  'The domain of the app where users sign in, not your Appwrite endpoint. Use localhost for local development.':
+    'הדומיין של האפליקציה שבה המשתמשים מתחברים, ולא נקודת הקצה של Appwrite. השתמשו ב-localhost לפיתוח מקומי.',
+  'Allowed origins': 'מקורות מורשים',
+  'The exact origins your app is served from, on the relying party ID or one of its subdomains.':
+    'המקורות המדויקים שמהם האפליקציה שלכם מוגשת, על מזהה הצד המסתמך או על אחד מתת-הדומיינים שלו.',
+  'Origin URL': 'כתובת מקור',
+  'This origin is already in the list.': 'המקור הזה כבר נמצא ברשימה.',
+  'The relying party ID must be a domain, not an IP address.':
+    'מזהה הצד המסתמך חייב להיות דומיין ולא כתובת IP.',
+  'Add origin': 'הוספת מקור',
+  'Remove origin': 'הסרת מקור',
+  'Enter a domain without a scheme or path, like example.com.':
+    'הזינו דומיין ללא סכמה או נתיב, כמו example.com.',
+  'The relying party ID must be lowercase.':
+    'מזהה הצד המסתמך חייב להיות באותיות קטנות.',
+  'The relying party ID cannot include a port.':
+    'מזהה הצד המסתמך אינו יכול לכלול פורט.',
+  'Enter a domain like example.com, or localhost.':
+    'הזינו דומיין כמו example.com, או localhost.',
+  'Enter a full origin, like https://example.com.':
+    'הזינו מקור מלא, כמו https://example.com.',
+  'Origins must use https://, or http:// on localhost.':
+    'מקורות חייבים להשתמש ב-https://, או ב-http:// ב-localhost.',
+  'Origins cannot include credentials.': 'מקורות אינם יכולים לכלול פרטי גישה.',
+  'Origins cannot include a path, query or fragment.':
+    'מקורות אינם יכולים לכלול נתיב, שאילתה או מקטע.',
+  'Origins must be on the relying party ID or one of its subdomains.':
+    'מקורות חייבים להיות על מזהה הצד המסתמך או על אחד מתת-הדומיינים שלו.',
+  'Updated passkey settings': 'הגדרות מפתחות הגישה עודכנו',
+  'Passkey auth method': 'שיטת האימות מפתח גישה',
+  'The Passkey auth method is enabled. Without a relying party ID and at least one origin, users cannot sign in with a passkey.':
+    'שיטת האימות מפתח גישה מופעלת. ללא מזהה צד מסתמך ולפחות מקור אחד, משתמשים לא יוכלו להתחבר עם מפתח גישה.',
+  'Failed to update passkey settings': 'עדכון הגדרות מפתחות הגישה נכשל',
+  'Set a relying party ID and origins in passkey policies to enable.':
+    'כדי להפעיל, הגדירו מזהה צד מסתמך ומקורות במדיניות מפתחות הגישה.',
+  'Passkey policies': 'מדיניות מפתחות גישה',
+  'Membership policies': 'מדיניות חברות בצוותים',
   '1 to 30 minutes. Default: 10 minutes when empty.': 'בין דקה ל-30 דקות. ברירת מחדל: 10 דקות כשהשדה ריק.',
   '6 to 12 characters, excluding the separator. Default: 8 when empty.': 'בין 6 ל-12 תווים, לא כולל תו ההפרדה. ברירת מחדל: 8 כשהשדה ריק.',
   'Add a type and press Enter': 'הוסיפו סוג ולחצו Enter',

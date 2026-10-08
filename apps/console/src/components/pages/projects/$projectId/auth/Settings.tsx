@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { ProjectAuthMethodId } from '@appwrite.io/console'
 import {
@@ -7,26 +8,59 @@ import {
   useUpdateAuthMethod,
 } from '@/lib/react-query/hooks'
 import { authMethodsRecordFromProject } from '@/lib/project-settings'
+import { isPasskeyPolicyConfigured } from '@/lib/passkey-policy'
+import { usePasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Loader2, Mail, Key, Smartphone, UserPlus, Lock } from 'lucide-react'
+import {
+  Fingerprint,
+  Loader2,
+  Mail,
+  Key,
+  Smartphone,
+  UserPlus,
+  Lock,
+  Settings,
+  type LucideIcon,
+} from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { RESOURCE_CARD_GRID_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
-import {
-  MockPhoneNumbersCard,
-  useAuthSecuritySnapshot,
-} from './Security'
+import { MockPhoneNumbersCard, useAuthSecuritySnapshot } from './Security'
 
 interface AuthSettingsProps {
   projectId: string
 }
 
-const AUTH_METHODS = [
+type AuthMethodPolicy = {
+  to:
+    | '/projects/$projectId/auth/policies/passwords'
+    | '/projects/$projectId/auth/policies/emails'
+    | '/projects/$projectId/auth/policies/memberships'
+    | '/projects/$projectId/auth/policies/passkeys'
+  label: string
+}
+
+const AUTH_METHODS: ReadonlyArray<{
+  key: ProjectAuthMethodId
+  label: string
+  icon: LucideIcon
+  policy?: AuthMethodPolicy
+}> = [
   {
     key: ProjectAuthMethodId.Emailpassword,
     label: 'Email/Password',
     icon: Mail,
+    policy: {
+      to: '/projects/$projectId/auth/policies/passwords',
+      label: 'Password policies',
+    },
   },
   {
     key: ProjectAuthMethodId.Phone,
@@ -37,11 +71,19 @@ const AUTH_METHODS = [
     key: ProjectAuthMethodId.Magicurl,
     label: 'Magic URL',
     icon: Key,
+    policy: {
+      to: '/projects/$projectId/auth/policies/emails',
+      label: 'Email policies',
+    },
   },
   {
     key: ProjectAuthMethodId.Emailotp,
     label: 'Email OTP',
     icon: Mail,
+    policy: {
+      to: '/projects/$projectId/auth/policies/emails',
+      label: 'Email policies',
+    },
   },
   {
     key: ProjectAuthMethodId.Anonymous,
@@ -52,13 +94,26 @@ const AUTH_METHODS = [
     key: ProjectAuthMethodId.Invites,
     label: 'Team Invites',
     icon: UserPlus,
+    policy: {
+      to: '/projects/$projectId/auth/policies/memberships',
+      label: 'Membership policies',
+    },
   },
   {
     key: ProjectAuthMethodId.Jwt,
     label: 'JWT',
     icon: Lock,
   },
-] as const
+  {
+    key: ProjectAuthMethodId.Passkey,
+    label: 'Passkey',
+    icon: Fingerprint,
+    policy: {
+      to: '/projects/$projectId/auth/policies/passkeys',
+      label: 'Passkey policies',
+    },
+  },
+]
 
 export function AuthSettings({ projectId }: AuthSettingsProps) {
   const t = useT()
@@ -66,6 +121,16 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   const { data: projectData } = useQuery(projectQueryOptions(projectId))
   const security = useAuthSecuritySnapshot(projectId)
   const mockNumbers = security.authMockNumbers ?? []
+  const passkeyConfigured = isPasskeyPolicyConfigured(security.authPasskey)
+  const passkeysAllowed = usePasskeysAllowed()
+  const visibleAuthMethods = useMemo(
+    () =>
+      AUTH_METHODS.filter(
+        (method) =>
+          passkeysAllowed || method.key !== ProjectAuthMethodId.Passkey,
+      ),
+    [passkeysAllowed],
+  )
 
   const [optimisticAuthMethods, setOptimisticAuthMethods] = useState<
     Record<string, boolean>
@@ -83,8 +148,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   useEffect(() => {
     Object.keys(lastSubmittedAuthMethods.current).forEach((method) => {
       const expectedValue = lastSubmittedAuthMethods.current[method]
-      const serverValue =
-        baseAuthMethods[method as keyof typeof baseAuthMethods]
+      const serverValue = baseAuthMethods[method as ProjectAuthMethodId]
 
       if (serverValue === expectedValue) {
         setOptimisticAuthMethods((prev) => {
@@ -108,7 +172,10 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
 
   const updateAuthMethodMutation = useUpdateAuthMethod(projectId)
 
-  const handleAuthMethodToggle = (method: string, checked: boolean) => {
+  const handleAuthMethodToggle = (
+    method: ProjectAuthMethodId,
+    checked: boolean,
+  ) => {
     setOptimisticAuthMethods((prev) => ({ ...prev, [method]: checked }))
     setUpdatingAuthMethods((prev) => new Set(prev).add(method))
     lastSubmittedAuthMethods.current[method] = checked
@@ -158,10 +225,17 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
             {t('Enable the authentication methods you wish to use.')}
           </p>
           <div className={RESOURCE_CARD_GRID_CLASSNAME}>
-            {AUTH_METHODS.map((method) => {
+            {visibleAuthMethods.map((method) => {
               const Icon = method.icon
               const isUpdating = updatingAuthMethods.has(method.key)
               const enabled = authMethods[method.key] ?? false
+              // Passkeys fail closed without a relying party, so enabling waits on
+              // the policy; turning an enabled method off always stays possible.
+              const needsPasskeySetup =
+                method.key === ProjectAuthMethodId.Passkey &&
+                !passkeyConfigured &&
+                !enabled
+              const setupHintId = `${method.key}-setup-hint`
 
               return (
                 <div
@@ -181,6 +255,27 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                       >
                         {t(method.label)}
                       </Label>
+                      {method.policy && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Link
+                                to={method.policy.to}
+                                params={{ projectId }}
+                                aria-label={t(method.policy.label)}
+                                className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+                              >
+                                <Settings className="h-3.5 w-3.5" />
+                              </Link>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">
+                                {t(method.policy.label)}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {isUpdating && (
@@ -192,10 +287,30 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                         onCheckedChange={(checked) =>
                           handleAuthMethodToggle(method.key, checked)
                         }
-                        disabled={isUpdating}
+                        disabled={isUpdating || needsPasskeySetup}
+                        aria-describedby={
+                          needsPasskeySetup ? setupHintId : undefined
+                        }
                       />
                     </div>
                   </div>
+                  {needsPasskeySetup && method.policy && (
+                    <p
+                      id={setupHintId}
+                      className="mt-2 text-[12px] text-muted-foreground"
+                    >
+                      {t(
+                        'Set a relying party ID and origins in passkey policies to enable.',
+                      )}{' '}
+                      <Link
+                        to={method.policy.to}
+                        params={{ projectId }}
+                        className="link-neutral"
+                      >
+                        {t('Configure')}
+                      </Link>
+                    </p>
+                  )}
                 </div>
               )
             })}

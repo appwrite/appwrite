@@ -287,6 +287,7 @@ import { Route as PublicProjectsProjectIdAuthOauth2ServerAppsRouteImport } from 
 import { Route as PublicProjectsProjectIdAuthOauth2ServerSettingsRouteImport } from './routes/_public/projects.$projectId.auth.oauth2-server.settings'
 import { Route as PublicProjectsProjectIdAuthPoliciesEmailsRouteImport } from './routes/_public/projects.$projectId.auth.policies.emails'
 import { Route as PublicProjectsProjectIdAuthPoliciesMembershipsRouteImport } from './routes/_public/projects.$projectId.auth.policies.memberships'
+import { Route as PublicProjectsProjectIdAuthPoliciesPasskeysRouteImport } from './routes/_public/projects.$projectId.auth.policies.passkeys'
 import { Route as PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport } from './routes/_public/projects.$projectId.auth.policies.passwords'
 import { Route as PublicProjectsProjectIdAuthPoliciesSessionsRouteImport } from './routes/_public/projects.$projectId.auth.policies.sessions'
 import { Route as PublicProjectsProjectIdAuthPoliciesUsersRouteImport } from './routes/_public/projects.$projectId.auth.policies.users'
@@ -2017,6 +2018,12 @@ const PublicProjectsProjectIdAuthPoliciesMembershipsRoute =
     path: '/memberships',
     getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
   } as any)
+const PublicProjectsProjectIdAuthPoliciesPasskeysRoute =
+  PublicProjectsProjectIdAuthPoliciesPasskeysRouteImport.update({
+    id: '/passkeys',
+    path: '/passkeys',
+    getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
+  } as any)
 const PublicProjectsProjectIdAuthPoliciesPasswordsRoute =
   PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport.update({
     id: '/passwords',
@@ -3597,6 +3604,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/auth/oauth2-server/settings': typeof PublicProjectsProjectIdAuthOauth2ServerSettingsRoute
   '/projects/$projectId/auth/policies/emails': typeof PublicProjectsProjectIdAuthPoliciesEmailsRoute
   '/projects/$projectId/auth/policies/memberships': typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
+  '/projects/$projectId/auth/policies/passkeys': typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   '/projects/$projectId/auth/policies/passwords': typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
   '/projects/$projectId/auth/policies/sessions': typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   '/projects/$projectId/auth/policies/users': typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
@@ -4017,6 +4025,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/auth/oauth2-server/settings': typeof PublicProjectsProjectIdAuthOauth2ServerSettingsRoute
   '/projects/$projectId/auth/policies/emails': typeof PublicProjectsProjectIdAuthPoliciesEmailsRoute
   '/projects/$projectId/auth/policies/memberships': typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
+  '/projects/$projectId/auth/policies/passkeys': typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   '/projects/$projectId/auth/policies/passwords': typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
   '/projects/$projectId/auth/policies/sessions': typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   '/projects/$projectId/auth/policies/users': typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
@@ -4462,6 +4471,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/auth/oauth2-server/settings': typeof PublicProjectsProjectIdAuthOauth2ServerSettingsRoute
   '/_public/projects/$projectId/auth/policies/emails': typeof PublicProjectsProjectIdAuthPoliciesEmailsRoute
   '/_public/projects/$projectId/auth/policies/memberships': typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
+  '/_public/projects/$projectId/auth/policies/passkeys': typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   '/_public/projects/$projectId/auth/policies/passwords': typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
   '/_public/projects/$projectId/auth/policies/sessions': typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   '/_public/projects/$projectId/auth/policies/users': typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
@@ -4920,6 +4930,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/oauth2-server/settings'
     | '/projects/$projectId/auth/policies/emails'
     | '/projects/$projectId/auth/policies/memberships'
+    | '/projects/$projectId/auth/policies/passkeys'
     | '/projects/$projectId/auth/policies/passwords'
     | '/projects/$projectId/auth/policies/sessions'
     | '/projects/$projectId/auth/policies/users'
@@ -5340,6 +5351,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/oauth2-server/settings'
     | '/projects/$projectId/auth/policies/emails'
     | '/projects/$projectId/auth/policies/memberships'
+    | '/projects/$projectId/auth/policies/passkeys'
     | '/projects/$projectId/auth/policies/passwords'
     | '/projects/$projectId/auth/policies/sessions'
     | '/projects/$projectId/auth/policies/users'
@@ -5784,6 +5796,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/auth/oauth2-server/settings'
     | '/_public/projects/$projectId/auth/policies/emails'
     | '/_public/projects/$projectId/auth/policies/memberships'
+    | '/_public/projects/$projectId/auth/policies/passkeys'
     | '/_public/projects/$projectId/auth/policies/passwords'
     | '/_public/projects/$projectId/auth/policies/sessions'
     | '/_public/projects/$projectId/auth/policies/users'
@@ -7964,6 +7977,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesMembershipsRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
     }
+    '/_public/projects/$projectId/auth/policies/passkeys': {
+      id: '/_public/projects/$projectId/auth/policies/passkeys'
+      path: '/passkeys'
+      fullPath: '/projects/$projectId/auth/policies/passkeys'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesPasskeysRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
+    }
     '/_public/projects/$projectId/auth/policies/passwords': {
       id: '/_public/projects/$projectId/auth/policies/passwords'
       path: '/passwords'
@@ -9744,6 +9764,7 @@ const PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren =
 interface PublicProjectsProjectIdAuthPoliciesRouteChildren {
   PublicProjectsProjectIdAuthPoliciesEmailsRoute: typeof PublicProjectsProjectIdAuthPoliciesEmailsRoute
   PublicProjectsProjectIdAuthPoliciesMembershipsRoute: typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
+  PublicProjectsProjectIdAuthPoliciesPasskeysRoute: typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   PublicProjectsProjectIdAuthPoliciesPasswordsRoute: typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
   PublicProjectsProjectIdAuthPoliciesSessionsRoute: typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   PublicProjectsProjectIdAuthPoliciesUsersRoute: typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
@@ -9755,6 +9776,8 @@ const PublicProjectsProjectIdAuthPoliciesRouteChildren: PublicProjectsProjectIdA
       PublicProjectsProjectIdAuthPoliciesEmailsRoute,
     PublicProjectsProjectIdAuthPoliciesMembershipsRoute:
       PublicProjectsProjectIdAuthPoliciesMembershipsRoute,
+    PublicProjectsProjectIdAuthPoliciesPasskeysRoute:
+      PublicProjectsProjectIdAuthPoliciesPasskeysRoute,
     PublicProjectsProjectIdAuthPoliciesPasswordsRoute:
       PublicProjectsProjectIdAuthPoliciesPasswordsRoute,
     PublicProjectsProjectIdAuthPoliciesSessionsRoute:

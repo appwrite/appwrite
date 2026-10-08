@@ -328,23 +328,23 @@ When a resource has both a context menu and a row ⋯ menu, **use the same icons
 
 Common icon mapping:
 
-| Action | Icon |
-| ------ | ---- |
-| Update | `Pencil` |
-| Delete / Remove | `Trash2` |
-| Copy (submenu or item) | `Copy` |
-| Copy link | `Link2` |
-| Copy as JSON | `FileJson` |
-| Open in new tab | `ExternalLink` |
-| Open in new window | `Square` |
-| Settings | `Settings` |
-| Logs | `FileText` or `ScrollText` |
-| Retry / Redeploy | `RefreshCw` |
-| DNS Records | `Globe` |
-| Activate | `Play` |
-| Cancel build | `XCircle` |
-| Secret | `Lock` |
-| Unmark secret | `Eye` |
+| Action                 | Icon                       |
+| ---------------------- | -------------------------- |
+| Update                 | `Pencil`                   |
+| Delete / Remove        | `Trash2`                   |
+| Copy (submenu or item) | `Copy`                     |
+| Copy link              | `Link2`                    |
+| Copy as JSON           | `FileJson`                 |
+| Open in new tab        | `ExternalLink`             |
+| Open in new window     | `Square`                   |
+| Settings               | `Settings`                 |
+| Logs                   | `FileText` or `ScrollText` |
+| Retry / Redeploy       | `RefreshCw`                |
+| DNS Records            | `Globe`                    |
+| Activate               | `Play`                     |
+| Cancel build           | `XCircle`                  |
+| Secret                 | `Lock`                     |
+| Unmark secret          | `Eye`                      |
 
 **Destructive action styling:**
 
@@ -1080,35 +1080,35 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 
 ## Quick Reference
 
-| Task                   | Pattern                                                                                                                                                                                                                                                                                                                 |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fetch data             | Extract query function, use in hook + route loader                                                                                                                                                                                                                                                                      |
-| Pagination             | requestedPage + displayedPage; use displayed data/total for list and Pagination until new page loads                                                                                                                                                                                                                    |
-| Filters                | FiltersPopover + URL `query`; `placeholderData: keepPreviousData` on list query; no loading state when filters change; different empty state for "no items" vs "no results for filters" (see "Filters (table/list)")                                                                                                    |
-| Delete resource        | Use `refetchQueries` (not `invalidateQueries`) in onSuccess so list updates without reload                                                                                                                                                                                                                              |
-| Create resource        | Form resets and closes dialog on success                                                                                                                                                                                                                                                                                |
-| Update resource        | Use "Update" terminology, not "Edit"                                                                                                                                                                                                                                                                                    |
-| Button during action   | Keep text, use `disabled` state                                                                                                                                                                                                                                                                                         |
-| Unavailable action     | Disable button with tooltip, don't hide                                                                                                                                                                                                                                                                                 |
-| Text buttons           | No tooltip when button has a text label (tooltips only for icon-only buttons)                                                                                                                                                                                                                                           |
-| Em dashes              | Never use the Unicode em dash (U+2014); use `-` for empty/N/A cells, or a period, comma, colon, or parentheses in prose                                                                                                                                                                                                  |
-| Service avatar         | `bg-muted text-muted-foreground` (never colored)                                                                                                                                                                                                                                                                        |
-| Badge style            | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                                                                                                                                                                               |
-| Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                                                                                                                                                                                                   |
-| Date display           | Always include DateTooltip                                                                                                                                                                                                                                                                                              |
-| Route prefetch         | All crucial data at route level                                                                                                                                                                                                                                                                                         |
-| List/tab loading flash | Never set `pendingComponent` on list/tab/detail routes that prefetch (it shows "Loading…" instead of keeping the current page). Match query keys exactly between loader and View - same shared constant for default limit/sort/search/filter normalization. See "Loading & Navigation" → "Why 'Loading rows…' appears". |
-| Detail page (no flash) | Loader returns data; route passes `initialData` to View; View uses `initialData` for first paint (see "Detail page: no loading flash")                                                                                                                                                                                  |
-| Models types           | Always `Models.*` from `@appwrite.io/console`                                                                                                                                                                                                                                                                           |
-| Table header           | `hover:bg-transparent border-b border-border` on row, `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider` on head                                                                                                                                                                      |
-| Actions column         | Never use "Actions" as title - use empty `TableHead`                                                                                                                                                                                                                                                                    |
-| Table cells            | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed)                                                                                                                                                                                                                                    |
-| Long-running progress  | One panel per scope; flat list of cards (no wrapper per type); same card style + ProgressBarRow; per-card dismiss; auto-action only on status transition to completed                                                                                                                                                   |
-| Row actions menu (⋯)   | `RowActionsMenuTrigger` + `DropdownMenuItem` with `MenuItemContent` / `MenuItemIcon`; same icons and ordering as the resource context menu. See "Context menu and row actions menus".                                                                                                                                   |
-| Delete styling         | No red text on menu/row delete actions. Red `variant="destructive"` only in delete cards, dialog confirm buttons, and bulk delete bars. See "Context menu and row actions menus" → "Destructive action styling".                                                                                                        |
-| RBAC (roles)           | Use **feature check methods** from `@/lib/console-access-checks` only; never check `access.isOwner` or `access.canWrite*` directly. Use `canAccess*` from `console-rbac-loader` in route loaders. See "Role-based access control (RBAC)".                                                                               |
-| Blog/changelog covers | Min 1200px wide (Google Discover); run `bun run generate:cover-manifest` after adding covers; fix undersized with `bun run generate:content-covers`. See "Blog and changelog content (SEO / Google Discover)". |
-| User-facing copy (i18n) | Wrap ALL new user-facing strings in `t('...')` (`useT()` from `@/lib/i18n/translate`) and add an entry keyed by the exact English string to the matching `src/lib/i18n/dictionaries/<lang>/*.ts` file for each supported language. English inline is the source of truth. Apply each language's glossary; keep `Appwrite …` compounds and sub-brands in Latin unless that language's block says otherwise. Run `bun run i18n:audit:<lang>` before merging dictionary changes. See "Internationalization (i18n)".                                    |
+| Task                    | Pattern                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fetch data              | Extract query function, use in hook + route loader                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Pagination              | requestedPage + displayedPage; use displayed data/total for list and Pagination until new page loads                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Filters                 | FiltersPopover + URL `query`; `placeholderData: keepPreviousData` on list query; no loading state when filters change; different empty state for "no items" vs "no results for filters" (see "Filters (table/list)")                                                                                                                                                                                                                                                                                             |
+| Delete resource         | Use `refetchQueries` (not `invalidateQueries`) in onSuccess so list updates without reload                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Create resource         | Form resets and closes dialog on success                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Update resource         | Use "Update" terminology, not "Edit"                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Button during action    | Keep text, use `disabled` state                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Unavailable action      | Disable button with tooltip, don't hide                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Text buttons            | No tooltip when button has a text label (tooltips only for icon-only buttons)                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Em dashes               | Never use the Unicode em dash (U+2014); use `-` for empty/N/A cells, or a period, comma, colon, or parentheses in prose                                                                                                                                                                                                                                                                                                                                                                                          |
+| Service avatar          | `bg-muted text-muted-foreground` (never colored)                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Badge style             | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                                                                                                                                                                                                                                                                                                                                                                        |
+| Icon spacing            | `mr-1.5` or `gap-1.5`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Date display            | Always include DateTooltip                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Route prefetch          | All crucial data at route level                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| List/tab loading flash  | Never set `pendingComponent` on list/tab/detail routes that prefetch (it shows "Loading…" instead of keeping the current page). Match query keys exactly between loader and View - same shared constant for default limit/sort/search/filter normalization. See "Loading & Navigation" → "Why 'Loading rows…' appears".                                                                                                                                                                                          |
+| Detail page (no flash)  | Loader returns data; route passes `initialData` to View; View uses `initialData` for first paint (see "Detail page: no loading flash")                                                                                                                                                                                                                                                                                                                                                                           |
+| Models types            | Always `Models.*` from `@appwrite.io/console`                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Table header            | `hover:bg-transparent border-b border-border` on row, `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider` on head                                                                                                                                                                                                                                                                                                                                                               |
+| Actions column          | Never use "Actions" as title - use empty `TableHead`                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Table cells             | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed)                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Long-running progress   | One panel per scope; flat list of cards (no wrapper per type); same card style + ProgressBarRow; per-card dismiss; auto-action only on status transition to completed                                                                                                                                                                                                                                                                                                                                            |
+| Row actions menu (⋯)    | `RowActionsMenuTrigger` + `DropdownMenuItem` with `MenuItemContent` / `MenuItemIcon`; same icons and ordering as the resource context menu. See "Context menu and row actions menus".                                                                                                                                                                                                                                                                                                                            |
+| Delete styling          | No red text on menu/row delete actions. Red `variant="destructive"` only in delete cards, dialog confirm buttons, and bulk delete bars. See "Context menu and row actions menus" → "Destructive action styling".                                                                                                                                                                                                                                                                                                 |
+| RBAC (roles)            | Use **feature check methods** from `@/lib/console-access-checks` only; never check `access.isOwner` or `access.canWrite*` directly. Use `canAccess*` from `console-rbac-loader` in route loaders. See "Role-based access control (RBAC)".                                                                                                                                                                                                                                                                        |
+| Blog/changelog covers   | Min 1200px wide (Google Discover); run `bun run generate:cover-manifest` after adding covers; fix undersized with `bun run generate:content-covers`. See "Blog and changelog content (SEO / Google Discover)".                                                                                                                                                                                                                                                                                                   |
+| User-facing copy (i18n) | Wrap ALL new user-facing strings in `t('...')` (`useT()` from `@/lib/i18n/translate`) and add an entry keyed by the exact English string to the matching `src/lib/i18n/dictionaries/<lang>/*.ts` file for each supported language. English inline is the source of truth. Apply each language's glossary; keep `Appwrite …` compounds and sub-brands in Latin unless that language's block says otherwise. Run `bun run i18n:audit:<lang>` before merging dictionary changes. See "Internationalization (i18n)". |
 
 ---
 
@@ -1176,7 +1176,7 @@ These flags do not grant backend permissions. Curl cannot call this browser API.
 - Default is **post-event, no banner** (`getInitMockCurrentDayDefault()` in `src/lib/init/mock-current-day.ts` → `getInitMockDayBannerExpired()`, recap mode with all days unlocked and the org promo banner hidden).
 - Advance the day from debug menu → Init → **Day** (slider: Before → Day 1–5 → After → Banner off).
 - When ready for a new default for everyone, change `getInitMockCurrentDayDefault()` to the day you want unlocked.
-**Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
+  **Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
 
 **Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` for flags that still vary by profile or env (e.g. `features.billing`, `features.compliance`, `features.databaseBackups`, `features.databaseSpecifications`, `features.nativeDbsMongo`, `features.accountApplications`, `features.agent`, `features.notifications`, `features.cookieBanner`). Prefer adding a flag over a bare profile check: every cloud/self-hosted difference should be a row in the debug Compare profiles table. Cloud-only surfaces that shipped during Init (domains, marketplace, firewall, storage S3, OAuth2 server, OAuth apps, dedicated/product/native Postgres and MySQL databases) no longer have profile flags; gate them with `isCloudProfile()` from `@/lib/console-profiles` or helpers such as `isCloudDedicatedDatabasesEnabled()` from `@/lib/database-routes`.
 
@@ -1355,7 +1355,7 @@ Example:
 ```tsx
 import { analyticsAttrs } from '@/lib/analytics-actions'
 
-<button {...analyticsAttrs('project-switcher')} type="button">
+;<button {...analyticsAttrs('project-switcher')} type="button">
   {/* trigger content may include the project name; event name stays fixed */}
 </button>
 ```
@@ -1412,6 +1412,8 @@ Console uses **team** (organization) and **user** (account) preferences to store
 2. Provide `parse*` / `build*` helpers that read from `prefs[key]` and return a merged `prefs` object for updates.
 3. Register the key in `src/lib/prefs-catalog.ts` (`PREFS_CATALOG`) with scope, description, and category so the debug Prefs panel can classify it as known (green) vs unknown (red).
 4. Document the key in this section if it is a shared convention (e.g. `console.pinnedProjectIds`).
+
+**Cloud flags**: Cloud's `task-manage-flags` writes `flags-<name>: true` to team or account prefs. The console reads `flags-passkeys` (see `USER_PREFS_KEY_PASSKEYS_FLAG`) from the signed-in user's prefs to show project passkey settings, only on the Cloud profile. It hides UI only; the server does not gate on it.
 
 **Catalog**: `src/lib/prefs-catalog.ts` is the single enumeration of managed account/team preference keys. Exact keys and dynamic prefixes (e.g. `console.savedFilters.<scope>`) both belong there. The debug menu Prefs structured view reads from this catalog.
 
@@ -1492,12 +1494,12 @@ When two dictionaries define the same key, the merge order in the language's `di
 
 Appwrite product names follow two rules depending on whether the English source includes the `Appwrite` brand prefix:
 
-| English source | Rule | Example |
-| --- | --- | --- |
-| `Appwrite …` compound | Keep the **full string** in Latin script in every language | `Appwrite Network` stays `Appwrite Network` |
+| English source                                             | Rule                                                            | Example                                                                  |
+| ---------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `Appwrite …` compound                                      | Keep the **full string** in Latin script in every language      | `Appwrite Network` stays `Appwrite Network`                              |
 | Standalone product name (nav, tabs, menus, section titles) | **Translate** using that language's standalone product glossary | `Sites` → Hebrew `אתרים`; French would use that language's glossary form |
-| Sub-brand proper nouns | Always Latin, regardless of language or context | TablesDB, Command Center, Magic URL |
-| Generic usage in sentences | Natural phrasing in the target language | "your databases" → natural possessive/plural in that language |
+| Sub-brand proper nouns                                     | Always Latin, regardless of language or context                 | TablesDB, Command Center, Magic URL                                      |
+| Generic usage in sentences                                 | Natural phrasing in the target language                         | "your databases" → natural possessive/plural in that language            |
 
 When the same product word appears both standalone and inside an `Appwrite …` compound, they are **different translation keys** (`Sites` vs `Appwrite Sites`). Never reuse a standalone translation inside a branded compound string.
 
@@ -1528,16 +1530,16 @@ Translate **meaning and domain terminology**, not English words one-by-one. If a
 
 **Cross-language pitfalls** (watch in every language; each language block documents local forms):
 
-| English concept | Pitfall | What to do instead |
-| --- | --- | --- |
-| social login / Social providers | Literal "social" + "login" calque (sounds like social media) | Use the domain term: OAuth, identity providers, or the glossary form for that language |
-| multi-tenancy / tenant | Literal "tenant" as renter/resident | Model as customers, organizations, or workspaces; keep `Multi-tenancy` as a label if the locale uses the English term |
-| Credentials (DB, API, S3) | Same word as user login/password | Distinguish access credentials from auth sign-in copy (glossary per language) |
-| Credentials (auth password/MFA) | Same word as API keys | Use auth-specific phrasing (e.g. account security, verification) |
-| encryption at rest | Word-for-word "at rest" | Use the established security phrasing in that language |
-| Execution (function run) | Same word as session or generic "run" | Use the Functions glossary term (e.g. execution / invocation), not session wording |
-| Please (UI copy) | Over-formal filler | Drop or use direct imperative; follow that language's voice/register rules |
-| Scale (growth) | Translating the product name "Scale" like growth | Plan name `Scale` stays Latin; growth/scaling uses natural phrasing, not a borrowed English calque |
+| English concept                 | Pitfall                                                      | What to do instead                                                                                                    |
+| ------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| social login / Social providers | Literal "social" + "login" calque (sounds like social media) | Use the domain term: OAuth, identity providers, or the glossary form for that language                                |
+| multi-tenancy / tenant          | Literal "tenant" as renter/resident                          | Model as customers, organizations, or workspaces; keep `Multi-tenancy` as a label if the locale uses the English term |
+| Credentials (DB, API, S3)       | Same word as user login/password                             | Distinguish access credentials from auth sign-in copy (glossary per language)                                         |
+| Credentials (auth password/MFA) | Same word as API keys                                        | Use auth-specific phrasing (e.g. account security, verification)                                                      |
+| encryption at rest              | Word-for-word "at rest"                                      | Use the established security phrasing in that language                                                                |
+| Execution (function run)        | Same word as session or generic "run"                        | Use the Functions glossary term (e.g. execution / invocation), not session wording                                    |
+| Please (UI copy)                | Over-formal filler                                           | Drop or use direct imperative; follow that language's voice/register rules                                            |
+| Scale (growth)                  | Translating the product name "Scale" like growth             | Plan name `Scale` stays Latin; growth/scaling uses natural phrasing, not a borrowed English calque                    |
 
 **Terms that usually stay in Latin script** (unless a language block explicitly localizes them):
 
@@ -1590,26 +1592,26 @@ English is not translated; it IS the source. Rules for writing it:
 
 **Hebrew anti-calque reference** (enforced by `i18n:audit:he`):
 
-| English | Never use | Use instead |
-| --- | --- | --- |
-| Logs | יומנים | לוגים |
-| Token | אסימון | טוקן |
-| Session | הפעלות | סשן / סשנים |
-| Bucket | דלי | באקט |
-| Scale (growth) | סקייל / סקיילינג | צמיחה / קנה מידה |
-| Execution (function run) | הפעלה / הפעלות | הרצה / הרצות |
-| Please (UI copy) | אנא | (drop; start with verb: אשרו, פנו, הזינו) |
+| English                  | Never use        | Use instead                               |
+| ------------------------ | ---------------- | ----------------------------------------- |
+| Logs                     | יומנים           | לוגים                                     |
+| Token                    | אסימון           | טוקן                                      |
+| Session                  | הפעלות           | סשן / סשנים                               |
+| Bucket                   | דלי              | באקט                                      |
+| Scale (growth)           | סקייל / סקיילינג | צמיחה / קנה מידה                          |
+| Execution (function run) | הפעלה / הפעלות   | הרצה / הרצות                              |
+| Please (UI copy)         | אנא              | (drop; start with verb: אשרו, פנו, הזינו) |
 
-| English concept | Awkward calque | Natural Hebrew |
-| --- | --- | --- |
-| social login / Social providers | התחברות חברתית, ספקי התחברות חברתית | OAuth, ספקי OAuth |
-| multi-tenancy / tenant | ריבוי דיירים, דייר, לדייר | Multi-tenancy (label), ריבוי לקוחות, ללקוח / לארגון, בידוד בין לקוחות |
-| Credentials (DB, API, S3) | פרטי התחברות | פרטי גישה |
-| Credentials (auth password/MFA) | פרטי התחברות | פרטי אימות |
-| OAuth provider setup | פרטי התחברות | פרטי OAuth |
-| second sign-in method (MFA) | שיטת התחברות שנייה | אימות דו-שלבי |
-| encryption at rest | הצפנה במנוחה | הצפנה במצב מנוחה |
-| sign in / sign up (auth pages) | (varies) | התחברות / הרשמה are fine; do not use התחברות for API credentials |
+| English concept                 | Awkward calque                      | Natural Hebrew                                                        |
+| ------------------------------- | ----------------------------------- | --------------------------------------------------------------------- |
+| social login / Social providers | התחברות חברתית, ספקי התחברות חברתית | OAuth, ספקי OAuth                                                     |
+| multi-tenancy / tenant          | ריבוי דיירים, דייר, לדייר           | Multi-tenancy (label), ריבוי לקוחות, ללקוח / לארגון, בידוד בין לקוחות |
+| Credentials (DB, API, S3)       | פרטי התחברות                        | פרטי גישה                                                             |
+| Credentials (auth password/MFA) | פרטי התחברות                        | פרטי אימות                                                            |
+| OAuth provider setup            | פרטי התחברות                        | פרטי OAuth                                                            |
+| second sign-in method (MFA)     | שיטת התחברות שנייה                  | אימות דו-שלבי                                                         |
+| encryption at rest              | הצפנה במנוחה                        | הצפנה במצב מנוחה                                                      |
+| sign in / sign up (auth pages)  | (varies)                            | התחברות / הרשמה are fine; do not use התחברות for API credentials      |
 
 **When "social" is correct in Hebrew:** social **media** examples, OG **social preview**, marketing **Social** category → רשתות חברתיות is fine. Auth **social login** must not become התחברות חברתית.
 
@@ -1632,15 +1634,15 @@ English is not translated; it IS the source. Rules for writing it:
 
 **Japanese anti-calque reference** (enforced by `i18n:audit:ja`):
 
-| English | Never use | Use instead |
-| --- | --- | --- |
-| Social providers | ソーシャルログイン, ソーシャルプロバイダー | OAuth プロバイダー |
-| Logs | 日誌 | ログ |
-| Token | 証票, 代金トークン | トークン |
-| Bucket | 桶, バケツ | バケット |
-| tenant (user-facing) | テナント | 顧客, 組織, Multi-tenancy (label) |
-| Credentials (DB, API) | ログイン情報 | アクセス資格情報 |
-| Scale (plan name) | スケールプラン | Scale (Latin) |
+| English               | Never use                                  | Use instead                       |
+| --------------------- | ------------------------------------------ | --------------------------------- |
+| Social providers      | ソーシャルログイン, ソーシャルプロバイダー | OAuth プロバイダー                |
+| Logs                  | 日誌                                       | ログ                              |
+| Token                 | 証票, 代金トークン                         | トークン                          |
+| Bucket                | 桶, バケツ                                 | バケット                          |
+| tenant (user-facing)  | テナント                                   | 顧客, 組織, Multi-tenancy (label) |
+| Credentials (DB, API) | ログイン情報                               | アクセス資格情報                  |
+| Scale (plan name)     | スケールプラン                             | Scale (Latin)                     |
 
 ### Adding a new language
 

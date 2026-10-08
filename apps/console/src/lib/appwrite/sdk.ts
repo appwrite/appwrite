@@ -297,6 +297,13 @@ function installSetProjectWithHeader(client: Client) {
 installSetProjectWithHeader(clientConsole)
 installSetProjectWithHeader(clientProject)
 
+// The SDK asks for the 2.3.0 response format, which leaves `passkey` out of
+// `project.authMethods` for clients that predate it. This console knows the
+// passkey method, so it asks for 2.4.0; servers without passkeys ignore it.
+for (const client of [clientConsole, clientProject]) {
+  client.headers['X-Appwrite-Response-Format'] = '2.4.0'
+}
+
 // Configure Console client
 clientConsole.setEndpoint(endpoint).setProject('console')
 

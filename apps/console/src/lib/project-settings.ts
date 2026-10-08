@@ -13,6 +13,11 @@ import {
   DEFAULT_PASSWORD_STRENGTH_POLICY,
   type PasswordStrengthPolicy,
 } from '@/lib/password-strength'
+import {
+  DEFAULT_PASSKEY_POLICY,
+  parsePasskeyPolicy,
+  type PasskeyPolicy,
+} from '@/lib/passkey-policy'
 
 type ProjectPolicy = Models.PolicyList['policies'][number]
 
@@ -49,6 +54,7 @@ export type ProjectAuthSecuritySnapshot = {
   authDenyAliasedEmail: boolean
   authDenyDisposableEmail: boolean
   authDenyCorporateEmail: boolean
+  authPasskey: PasskeyPolicy
   authMockNumbers: Array<{ phone: string; otp: string }>
   membershipsPrivacy: {
     userName: boolean
@@ -81,6 +87,7 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
   authDenyAliasedEmail: false,
   authDenyDisposableEmail: false,
   authDenyCorporateEmail: false,
+  authPasskey: DEFAULT_PASSKEY_POLICY,
   authMockNumbers: [],
   membershipsPrivacy: {
     userName: true,
@@ -94,7 +101,9 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
 
 function policyById(
   policies: ProjectPolicy[] | undefined,
-  id: ProjectPolicyId | (typeof AuthEmailPolicyId)[keyof typeof AuthEmailPolicyId],
+  id:
+    | ProjectPolicyId
+    | (typeof AuthEmailPolicyId)[keyof typeof AuthEmailPolicyId],
 ): ProjectPolicy | undefined {
   return policies?.find((p) => p.$id === id)
 }
@@ -139,15 +148,9 @@ export function parseProjectAuthSecurity(
   mockNumbers: Models.MockNumber[] | undefined,
 ): ProjectAuthSecuritySnapshot {
   const userLimit = policyById(policies, ProjectPolicyId.Userlimit)
-  const sessionDuration = policyById(
-    policies,
-    ProjectPolicyId.Sessionduration,
-  )
+  const sessionDuration = policyById(policies, ProjectPolicyId.Sessionduration)
   const sessionLimit = policyById(policies, ProjectPolicyId.Sessionlimit)
-  const passwordHistory = policyById(
-    policies,
-    ProjectPolicyId.Passwordhistory,
-  )
+  const passwordHistory = policyById(policies, ProjectPolicyId.Passwordhistory)
   const passwordStrength = policyById(
     policies,
     ProjectPolicyId.Passwordstrength,
@@ -184,6 +187,9 @@ export function parseProjectAuthSecurity(
     policies,
     AuthEmailPolicyId.DenyCorporateEmail,
   )
+  const passkey = policyById(policies, ProjectPolicyId.Passkey) as
+    | Models.PolicyPasskey
+    | undefined
 
   return {
     authLimit: parsePolicyCountLimit(userLimit, 0),
@@ -223,6 +229,7 @@ export function parseProjectAuthSecurity(
     authDenyAliasedEmail: parsePolicyEnabled(denyAliasedEmail, false),
     authDenyDisposableEmail: parsePolicyEnabled(denyDisposableEmail, false),
     authDenyCorporateEmail: parsePolicyEnabled(denyCorporateEmail, false),
+    authPasskey: parsePasskeyPolicy(passkey),
     authMockNumbers: (mockNumbers ?? []).map((n) => ({
       phone: n.number,
       otp: n.otp,
@@ -270,10 +277,7 @@ export async function fetchProjectAuthSecurity(
     projectSdk.project.listPolicies({ total: true }).catch(() => null),
     projectSdk.project.listMockPhones({ total: true }).catch(() => null),
   ])
-  return parseProjectAuthSecurity(
-    policiesRes?.policies,
-    mockRes?.mockNumbers,
-  )
+  return parseProjectAuthSecurity(policiesRes?.policies, mockRes?.mockNumbers)
 }
 
 /**
@@ -298,7 +302,9 @@ export function projectAuthSecurityQueryOptions(
 }
 
 /** Fetch a project via the project-scoped API (replaces console `projects.get`). */
-export async function fetchProjectById(projectId: string): Promise<Models.Project> {
+export async function fetchProjectById(
+  projectId: string,
+): Promise<Models.Project> {
   if (!projectId) {
     throw new Error('Project ID is required')
   }
@@ -313,7 +319,9 @@ export async function fetchProjectById(projectId: string): Promise<Models.Projec
     const { fetchOrganizations } = await import(
       '@/lib/react-query/hooks/organizations'
     )
-    const orgs = await fetchOrganizations().catch(() => ({ teams: [] as Array<{ $id: string }> }))
+    const orgs = await fetchOrganizations().catch(() => ({
+      teams: [] as Array<{ $id: string }>,
+    }))
     let stub: Models.Project | undefined
     for (const org of orgs.teams ?? []) {
       try {
@@ -357,6 +365,8 @@ export function authMethodsRecordFromProject(
     [ProjectAuthMethodId.Anonymous]: false,
     [ProjectAuthMethodId.Invites]: false,
     [ProjectAuthMethodId.Jwt]: false,
+    // Response formats before 2.4.0 omit passkey from authMethods
+    [ProjectAuthMethodId.Passkey]: false,
   }
   if (!project?.authMethods?.length) {
     return defaults
