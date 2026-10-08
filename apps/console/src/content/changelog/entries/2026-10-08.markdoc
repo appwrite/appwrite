@@ -6,7 +6,7 @@ cover: /images/changelog/2026-10-08.avif
 tags: auth, messaging, console, security, infrastructure
 ---
 
-Appwrite 2.4 is now available for self-hosting.
+Appwrite 2.4 is now available for self-hosting. This version includes important security updates. We strongly recommend upgrading your instance to apply these fixes.
 
 This release includes:
 
@@ -21,7 +21,7 @@ This release includes:
 
 The Appwrite Assistant is retired in this release. Before upgrading, check the [upgrade notes](https://github.com/appwrite/appwrite/releases/tag/2.4.0) if you run behind a public load balancer, use the GitHub integration, or reach private hosts for OAuth2, webhooks or messaging.
 
-Head over to our [migration guide](/docs/advanced/self-hosting/production/updates#upgrading-to-latest) to upgrade your instance.
+See the [migration guide](/docs/advanced/self-hosting/production/updates#upgrading-to-latest) to upgrade your instance.
 
 For the complete list of updates and fixes, check out the [release notes](https://github.com/appwrite/appwrite/releases/tag/2.4.0) on GitHub.
 

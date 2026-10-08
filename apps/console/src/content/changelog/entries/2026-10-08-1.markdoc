@@ -1,0 +1,33 @@
+---
+layout: changelog
+title: Announcing Appwrite 1.9.7 for self-hosted deployments
+date: 2026-10-08
+cover: /images/changelog/2026-10-08-1.avif
+tags: auth, functions, console, security, infrastructure
+---
+
+Appwrite 1.9.7 is now available for self-hosting. This is a security patch for the 1.9 line. We strongly recommend upgrading your instance to apply these fixes. If you are running 2.x, this release does not apply. Upgrade to 2.4 instead.
+
+This release includes:
+
+- Appwrite to Appwrite migrations that reject source endpoints that are not public http(s) addresses, and pin every source request to the addresses that were validated. To migrate from a source on a private network, list it in `_APP_MIGRATIONS_ALLOWED_HOSTS`
+- A source API key check before a local migration reads another project on the same instance
+- JWTs that stop working once the session they were created from has expired
+- Quoted build directories passed to `tar`, so roots with spaces or quotes build correctly
+- Appwrite Console 8.7.37, which fixes the row editor rendering every array column as a string input
+
+Upgrading from 1.9.6 needs no migration changes. If you migrate from a private host, set `_APP_MIGRATIONS_ALLOWED_HOSTS` before you upgrade.
+
+For the complete list of updates and fixes, check out the [release notes](https://github.com/appwrite/appwrite/releases/tag/1.9.7) on GitHub.
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/1.9.7" %}
+Install Appwrite 1.9.7
+{% /arrow_link %}
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/1.9.7" %}
+Upgrade your self-hosted instance
+{% /arrow_link %}
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/1.9.7" %}
+View the release notes on GitHub
+{% /arrow_link %}
