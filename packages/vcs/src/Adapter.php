@@ -6,7 +6,7 @@ use Exception;
 use Psr\Http\Client\ClientExceptionInterface;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Command;
+use Utopia\Console\Command;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Psr7\Stream\Factory as StreamFactory;
 

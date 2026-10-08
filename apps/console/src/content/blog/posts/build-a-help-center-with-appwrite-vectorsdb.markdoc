@@ -1,0 +1,328 @@
+---
+layout: post
+title: Build a help center with semantic search using Appwrite VectorsDB
+description: Create a vector collection in the Appwrite Console, embed help articles as they are published, and rank answers by meaning in a TanStack Start app.
+date: 2026-09-02
+cover: /images/blog/build-a-help-center-with-appwrite-vectorsdb/cover.avif
+timeToRead: 11
+author: atharva
+category: tutorials
+featured: false
+faqs:
+  - question: "How is semantic search different from keyword search in a help center?"
+    answer: "Keyword search matches the words in the question against the words in the article. Semantic search compares meaning instead. A reader who asks about a rejected card finds the article about a declined payment, even though the two phrases share no words."
+  - question: "Does VectorsDB generate the embeddings, or is a separate service necessary?"
+    answer: "Appwrite generates the embeddings. Send an array of strings to Appwrite and it returns one vector for each string. A separate embedding provider is not necessary, and vectors from an external provider also work if their dimension matches the dimension of the collection."
+  - question: "Which embedding model should a help center use?"
+    answer: "The Console lists nomic-embed-text and embedding-gemma at 768 components, and all-minilm and bge-small at 384. More components capture finer distinctions, and fewer components use less storage and keep search faster. A help center of a few hundred short articles in one language is well served by a 384 component model such as all-minilm."
+  - question: "What does the distance value on a search result mean?"
+    answer: "A vector query adds a $distance field to each document. For a cosine query, the value is the cosine distance between the query vector and the stored vector. Lower is closer, so subtract it from 1 to get a similarity between 0 and 1."
+  - question: "Is an index required for vector search?"
+    answer: "A collection accepts documents and answers queries without an index, but the search then reads every document. Create an HNSW index on the embeddings field with the metric the queries use, such as hnsw_cosine, so search stays fast as the collection grows."
+  - question: "Where do the title and body of an article live in a vector collection?"
+    answer: "A VectorsDB collection has a fixed shape of an embeddings vector and a metadata object. Application fields such as title, body, and category go inside metadata as JSON, and the vector holds the meaning of the text."
+---
+
+Someone's card just got declined. They open your help center, type "my card got rejected", and get nothing back. The answer they need is sitting right there, filed under "What to do when a card payment is declined". Keyword search never connects the two, because the two phrases have no words in common.
+
+Vector search closes that gap. Each article becomes a vector that holds its meaning, and the question becomes a vector in the same space. The database ranks articles by distance, so the reader stops having to guess your wording. This tutorial builds that help center on Appwrite VectorsDB with a TanStack Start front end. It covers an authoring screen for publishing articles and a search page that shows how close each answer is.
+
+![A help center with articles grouped by category](/images/blog/build-a-help-center-with-appwrite-vectorsdb/browse.avif)
+
+# Prerequisites
+
+- An Appwrite project
+- Node.js 22 or later
+- An API key for the project with these scopes:
+
+| Scope | Used for |
+| --- | --- |
+| `embeddings.write` | Turning text into vectors |
+| `vectorsdb.documents.read` | Reading and searching articles |
+| `vectorsdb.documents.write` | Publishing, editing, and deleting articles |
+| `vectorsdb.indexes.write` | Creating the vector index |
+| `sessions.write` | Signing an author in from the server |
+
+# Create the vector database
+
+Open your project, go to **Databases**, and select **Create database**. The wizard lists the Appwrite databases alongside the native SQL engines. Choose **VectorsDB**.
+
+![The create database wizard with VectorsDB among the available database types](/images/blog/build-a-help-center-with-appwrite-vectorsdb/console-choose-type.avif)
+
+Name the database, then select your preferred tier. The summary panel on the right confirms the type and the monthly cost before anything is created.
+
+![Naming the database and selecting a specification tier](/images/blog/build-a-help-center-with-appwrite-vectorsdb/console-name-database.avif)
+
+Select **Create database** to finish.
+
+# Create the collection
+
+Open the database and select **Create collection**. A vector collection does not ask for columns. It asks for an embedding model, because the model decides how many components every vector holds.
+
+![The create collection dialog with the all-minilm embedding model selected](/images/blog/build-a-help-center-with-appwrite-vectorsdb/console-create-collection.avif)
+
+The dropdown offers four models:
+
+| Model | Components | Notes |
+| --- | --- | --- |
+| `nomic-embed-text` | 768 | General-purpose English embeddings with an 8K context window |
+| `all-minilm` | 384 | Lightweight English embeddings for constrained workloads |
+| `embedding-gemma` (coming soon) | 768 | Multilingual embeddings for more than 100 languages |
+| `bge-small` (coming soon) | 384 | Compact English embeddings with strong retrieval quality |
+
+Choose **all-minilm**. More components capture finer distinctions, and fewer components use less storage and keep search faster as the collection grows. A help center holds a few hundred short articles in one language, which 384 components describe well.
+
+`all-minilm` reads 256 tokens, around 190 English words, and drops the rest. Keep each article near that length, or split a longer one into sections and store each section as its own document.
+
+Name the collection `Articles` and select **Create**.
+
+Every document in the collection now has a fixed shape. The article text lives in `metadata`, and the vector lives in `embeddings`.
+
+| Field | Type | Contents |
+| --- | --- | --- |
+| `embeddings` | vector | 384 numbers that represent the meaning of the article |
+| `metadata` | object | `title`, `body`, `category`, and `updatedAt` |
+
+![The Articles collection with the embeddings and metadata columns](/images/blog/build-a-help-center-with-appwrite-vectorsdb/console-collection.avif)
+
+# Add the vector index
+
+Similarity search works without an index, but it then reads every document. An HNSW index keeps it fast as the collection grows.
+
+The index type must match the query metric, so a cosine query needs `hnsw_cosine`.
+
+```ts
+import { Client, VectorsDB, VectorsDBIndexType } from 'node-appwrite'
+
+const client = new Client()
+  .setEndpoint('https://fra.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>')
+  .setKey('<YOUR_API_KEY>')
+
+await new VectorsDB(client).createIndex({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  key: 'embeddings_cosine',
+  type: VectorsDBIndexType.HnswCosine,
+  attributes: ['embeddings'],
+})
+```
+
+# Set up the application
+
+{% info title="Full source code" %}
+The complete source code for this project is available on [GitHub](https://github.com/appwrite-community/help-center-article).
+{% /info %}
+
+Install the dependencies in a TanStack Start project.
+
+```bash
+npm install @tanstack/react-router @tanstack/react-start node-appwrite react react-dom dotenv
+npm install -D @tailwindcss/vite @vitejs/plugin-react tailwindcss typescript vite vite-tsconfig-paths @types/node @types/react @types/react-dom
+```
+
+Put the connection details in `.env`. The API key stays on the server, so no value uses a `VITE_` prefix.
+
+```bash
+APPWRITE_ENDPOINT=https://fra.cloud.appwrite.io/v1
+APPWRITE_PROJECT_ID=<PROJECT_ID>
+APPWRITE_API_KEY=<YOUR_API_KEY>
+APPWRITE_DATABASE_ID=<DATABASE_ID>
+APPWRITE_COLLECTION_ID=<COLLECTION_ID>
+SESSION_SECRET=<A_LONG_RANDOM_STRING>
+```
+
+Collect the settings in one module, `src/lib/config.ts`.
+
+```ts
+export const ENDPOINT = process.env.APPWRITE_ENDPOINT ?? 'https://fra.cloud.appwrite.io/v1'
+export const PROJECT_ID = process.env.APPWRITE_PROJECT_ID ?? ''
+export const API_KEY = process.env.APPWRITE_API_KEY ?? ''
+
+export const DATABASE_ID = process.env.APPWRITE_DATABASE_ID ?? ''
+export const COLLECTION_ID = process.env.APPWRITE_COLLECTION_ID ?? ''
+
+export const EMBEDDING_MODEL = 'all-minilm'
+```
+
+# Turn text into a vector
+
+The embeddings service takes an array of strings and returns one vector for each string. Ask for the same model the collection was created with, and the length always matches.
+
+One thing to watch: a failed embedding still comes back with status 200. The vector is empty and the reason sits in an `error` field on that entry, so check it before using the vector.
+
+```ts
+import { Client, Embeddings, ID, Query, VectorsDB } from 'node-appwrite'
+import {
+  API_KEY, COLLECTION_ID, DATABASE_ID, EMBEDDING_MODEL,
+  ENDPOINT, PROJECT_ID,
+} from './config'
+
+const client = new Client()
+  .setEndpoint(ENDPOINT)
+  .setProject(PROJECT_ID)
+  .setKey(API_KEY)
+
+const embeddings = new Embeddings(client)
+const vectorsDB = new VectorsDB(client)
+
+const collection = { databaseId: DATABASE_ID, collectionId: COLLECTION_ID }
+
+export async function embed(texts: string[]): Promise<number[][]> {
+  const { embeddings: results } = await embeddings.createTextEmbeddings({
+    texts,
+    model: EMBEDDING_MODEL,
+  })
+
+  return results.map((entry) => {
+    if (entry.error) throw new Error(entry.error)
+    return entry.embedding
+  })
+}
+```
+
+# Publish an article
+
+An article becomes one document. Embed the title and the body together, because both carry meaning. Write the text itself into `metadata`.
+
+```ts
+export async function createArticle(input: {
+  title: string
+  body: string
+  category: string
+}) {
+  const [vector] = await embed([`${input.title}\n\n${input.body}`])
+
+  return vectorsDB.createDocument({
+    ...collection,
+    documentId: ID.unique(),
+    data: {
+      embeddings: vector,
+      metadata: {
+        title: input.title,
+        body: input.body,
+        category: input.category,
+        updatedAt: new Date().toISOString(),
+      },
+    },
+  })
+}
+```
+
+The article is searchable as soon as the write completes, because the HNSW index accepts the new vector directly.
+
+# Search by meaning
+
+Embed the question with the same helper. Then rank the collection with `Query.vectorCosine`. Use `createQuery`, which sends the queries in the request body rather than the URL.
+
+```ts
+export async function searchArticles(question: string, limit = 6) {
+  const [vector] = await embed([question])
+
+  const result = await vectorsDB.createQuery({
+    ...collection,
+    queries: [Query.vectorCosine('embeddings', vector), Query.limit(limit)],
+    total: false,
+  })
+
+  return result.documents.map((document) => ({
+    id: document.$id,
+    metadata: document.metadata,
+    distance: document.$distance,
+  }))
+}
+```
+
+Each result carries a `$distance` field. For a cosine query, a lower value means a closer match, so `1 - distance` gives a similarity between 0 and 1. The search page plots every result on one fixed scale, which shows the gap between the best answer and the rest.
+
+![Search results ranked by cosine similarity on a fixed scale](/images/blog/build-a-help-center-with-appwrite-vectorsdb/search-results.avif)
+
+The question "my card got rejected when paying" shares no words with "What to do when a card payment is declined". That article still ranks first with a similarity of 0.709, and the next result sits at 0.566. Keyword search returns nothing useful for the same question.
+
+# Rank related articles
+
+An article page can use the same query to suggest related articles. Search with the title of the current article. Then drop the article itself from the results.
+
+Use the title rather than the complete body. A long body produces a vector close to the average of all articles, and every article then scores about the same.
+
+```ts
+const related = (await searchArticles(article.metadata.title, 4)).filter(
+  (candidate) => candidate.id !== article.id,
+)
+```
+
+![An article page with the closest related answers](/images/blog/build-a-help-center-with-appwrite-vectorsdb/article.avif)
+
+# Add the authoring screen
+
+Readers search without an account, and authors sign in. Appwrite returns a session secret only to a client that holds an API key. The sign in call therefore runs on the server, and the secret never reaches the browser. The `adminSession` helper below wraps the encrypted cookie session from TanStack Start.
+
+```ts
+export async function signIn(email: string, password: string) {
+  const account = new Account(
+    new Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID).setKey(API_KEY),
+  )
+  const created = await account.createEmailPasswordSession({ email, password })
+
+  const session = await adminSession()
+  await session.update({ secret: created.secret, email })
+}
+```
+
+To confirm the author on later requests, build a client with `setSession` and read the account.
+
+```ts
+export async function currentAuthor() {
+  const session = await adminSession()
+  if (!session.data.secret) return null
+
+  try {
+    const client = new Client()
+      .setEndpoint(ENDPOINT)
+      .setProject(PROJECT_ID)
+      .setSession(session.data.secret)
+    const account = await new Account(client).get()
+    return { email: account.email, name: account.name }
+  } catch {
+    await session.clear()
+    return null
+  }
+}
+```
+
+The authoring screen writes the title, the category, and the body, then calls `createArticle`. Every save embeds the text again, so an edit updates the vector and the ranking at the same time.
+
+![The authoring screen with a draft article and the published list](/images/blog/build-a-help-center-with-appwrite-vectorsdb/authoring.avif)
+
+# Run the demo
+
+Start the development server and open the help center.
+
+```bash
+npm run dev
+```
+
+Publish an article from the authoring screen. Then search for it in words that do not appear in the text. An article titled "Pausing a retainer for a month" answers "can I pause billing for a client temporarily" at a similarity of 0.743, because the ranking compares meaning and not spelling.
+
+# Deploy to Appwrite Sites
+
+Push the project to a GitHub repository. In your Appwrite project, open **Sites**, select **Create site**, and choose **Connect a repository**.
+
+Select the repository, then confirm the build settings. TanStack Start builds to `dist`, so the defaults are:
+
+| Setting | Value |
+| --- | --- |
+| Install command | `npm install` |
+| Build command | `npm run build` |
+| Output directory | `./dist` |
+
+Add the same variables you put in `.env` under the site's environment variables. The API key is read on the server, so it stays out of the browser bundle.
+
+Select **Deploy**. When the deployment finishes, select **Visit site** to open the help center.
+
+# Where to go from here
+
+- Filter results by category with an `equal` query on `metadata.category`. Metadata is JSON, so pass the value as a string.
+- Show the similarity score to readers only during development. The score helps while you tune the article set, and it distracts a reader who wants an answer.
+- Re-embed every article after a model change. Vectors from two models are not comparable, so a switch needs a full rewrite of the collection.
+- Feed the top results into an answer model for retrieval augmented generation. The same query returns the passages that ground the answer.

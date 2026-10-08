@@ -9,7 +9,7 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\ID;
 use Tests\E2E\Client;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 use Utopia\Validator\Text;

@@ -54,6 +54,7 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 - **src/Appwrite/Platform/** -- HTTP modules, workers, CLI tasks. Register modules in `src/Appwrite/Platform/Appwrite.php`. See [Modules](#modules).
 - **src/Executor/** -- Open Runtimes executor HTTP client (create/run/delete function and site runtimes)
 - **packages/** -- Utopia libraries absorbed into this repository and autoloaded directly (`agents`, `bus`); each is an independent Composer package mirrored to `utopia-php/<name>`, managed with `bin/monorepo`. See [rfc/monorepo.md](rfc/monorepo.md)
+- **apps/** -- deployable applications with their own runtime, image, and release (`console`: the web Console, Bun + TanStack Start, shipped as `appwrite/new`). Not Utopia packages: no Composer autoload, no split mirror. Do not confuse with `app/`, the PHP server. See [apps/README.md](apps/README.md)
 - **app/config/** -- static product config (collections, locales, SDKs, runtimes, scopes, errors, OAuth, storage)
 - **app/assets/** -- bundled data (fonts, common-password dictionary)
 - **app/views/** -- server-side templates (installer, errors, proxy)

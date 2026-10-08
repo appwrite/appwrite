@@ -21,11 +21,12 @@ const BANNED = ['pint.json', 'psalm.xml', 'phpcs.xml', '.travis.yml', '.gitpod.y
 
 /**
  * Packages that still declare the bare `Utopia\` prefix because a class lives
- * at its root (`Utopia\Console`), mapped to the namespace segment the rest
- * of their classes and their tests use. Step B (rfc/monorepo.md, phase 6)
- * renames those classes and removes the package from this list.
+ * at its root, mapped to the namespace segment the rest of their classes and
+ * their tests use. Step B (rfc/monorepo.md, phase 6) renames those classes and
+ * removes the package from this list; `validators` and `console` have, so it
+ * is empty and `validate` rejects the bare prefix for every package.
  */
-const BARE = ['console' => 'Console'];
+const BARE = [];
 
 /**
  * Packages whose namespace segment does not spell the package name: namespaces

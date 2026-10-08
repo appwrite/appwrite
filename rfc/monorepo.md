@@ -181,7 +181,7 @@ Two steps with very different cost. Step A rides inside each absorb PR; step B i
 | Package | Today | Standard | Appwrite files |
 |---|---|---|---|
 | `validators` | `Utopia\Validator` (base class), `Utopia\Validator\*`, `Utopia\PHPStan` | `Utopia\Validator\Validator`, `Utopia\Validator\PHPStan\*` | 39 |
-| `console` | `Utopia\Console` | `Utopia\Console\Console` | 77 |
+| `console` | `Utopia\Console`, `Utopia\Command` | `Utopia\Console\Console`, `Utopia\Console\Command` | 96 (done; ships as `console/0.3.0`) |
 | `client` | `Utopia\Client`, `Utopia\Psr18\*` | `Utopia\Client\Client`, `Utopia\Client\Psr18\*` | 2 |
 
 Each ships as a major on its mirror with a one-major `class_alias` shim for the old name (`src/compat.php`, autoloaded via `files`), so external consumers upgrade at their own pace. Appwrite and Cloud are updated in the same PR. When the last of the three lands, the bare `Utopia\` list leaves the root autoload for good.
@@ -260,6 +260,8 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
 ### Phase 6. Standardise the breaking part of the shape
 
 `validators` and `console` (step B); `client` did it as `0.5.0` before its absorb. One PR per package: rename, `class_alias` shim, major release on the mirror, Appwrite call sites updated in the same PR. Remove the bare `Utopia\` list from the root map with the last one. Cloud follows through `server-ce`.
+
+Done: `console` in #14261 and `validators` in #14263. The root autoload no longer declares the bare `Utopia\` prefix, and `BARE` in `bin/monorepo` is empty, so `validate` rejects that prefix for every package.
 
 ### Phase 7. Retire the old homes and move Cloud
 

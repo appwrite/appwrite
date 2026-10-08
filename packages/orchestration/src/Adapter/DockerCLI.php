@@ -2,8 +2,8 @@
 
 namespace Utopia\Orchestration\Adapter;
 
-use Utopia\Command;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
 use Utopia\Orchestration\Container\Stats;

@@ -3,8 +3,8 @@
 namespace Appwrite\Migration\Infrastructure\Version;
 
 use Appwrite\Migration\Infrastructure\Migration;
-use Utopia\Command;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\System\System;
 
 /**

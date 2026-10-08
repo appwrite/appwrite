@@ -1,0 +1,797 @@
+---
+layout: article
+title: Team invites
+description: Learn how to manage team invites in Appwrite. Implement both client-side email invites and server-side custom flows for team memberships.
+---
+
+Appwrite provides two approaches for adding members to teams: client-side email invites and server-side custom flows. Each approach serves different use cases and offers unique benefits.
+
+# Invite client-side
+
+Client-side email invites are perfect for implementing user-to-user invitations, allowing your users to invite others to join their teams, organizations, or shared resources. When creating a membership, Appwrite:
+1. Creates a new user account if one doesn't exist for the email address
+2. Sends an automated email invitation to the user
+3. Creates a pending membership
+4. Activates the membership when the user accepts
+
+Client-side invites are ideal when you want a simple, automated process that lets your users manage their own team invitations.
+Appwrite handles the email delivery with built-in templates and localization support, making it easy to implement a standard invite acceptance flow with email verification.
+
+{% multicode %}
+```client-web
+import { Client, Teams } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const teams = new Teams(client);
+
+// Create membership with email invite
+const membership = await teams.createMembership({
+    teamId: '<TEAM_ID>',
+    roles: ['developer'],
+    email: 'user@example.com',
+    url: 'https://yourapp.com/accept-invite'
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final teams = Teams(client);
+
+// Create membership with email invite
+final membership = await teams.createMembership(
+    teamId: '<TEAM_ID>',
+    roles: ['developer'],
+    email: 'user@example.com',
+    url: 'https://yourapp.com/accept-invite' // redirect after email click
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+
+let teams = Teams(client)
+
+// Create membership with email invite
+let membership = try await teams.createMembership(
+    teamId: "<TEAM_ID>",
+    roles: ["developer"],
+    email: "user@example.com",
+    url: "https://yourapp.com/accept-invite" // redirect after email click
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client(context)
+    .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+
+val teams = Teams(client)
+
+// Create membership with email invite
+val response = teams.createMembership(
+    teamId = "<TEAM_ID>",
+    roles = listOf("developer"),
+    email = "user@example.com",
+    url = "https://yourapp.com/accept-invite" // redirect after email click
+)
+```
+{% /multicode %}
+
+## Accept invitations
+
+For client-side email invites, users must accept the invitation to join the team. The acceptance flow:
+1. User receives an email with an invitation link containing a secret token
+2. Clicking the link redirects to your app
+3. Your app calls the acceptance endpoint
+4. Upon success, the user gains immediate access
+
+{% multicode %}
+```client-web
+import { Client, Teams } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const teams = new Teams(client);
+
+// Accept the invitation using the membership ID and secret
+const response = await teams.updateMembershipStatus({
+    teamId: '<TEAM_ID>',
+    membershipId: '<MEMBERSHIP_ID>',
+    userId: '<USER_ID>',
+    secret: '<SECRET>'
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final teams = Teams(client);
+
+// Accept the invitation using the membership ID and secret
+final response = await teams.updateMembershipStatus(
+    teamId: '<TEAM_ID>',
+    membershipId: '<MEMBERSHIP_ID>',
+    userId: '<USER_ID>',
+    secret: '<SECRET>'
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let teams = Teams(client)
+
+// Accept the invitation using the membership ID and secret
+let response = try await teams.updateMembershipStatus(
+    teamId: "<TEAM_ID>",
+    membershipId: "<MEMBERSHIP_ID>",
+    userId: "<USER_ID>",
+    secret: "<SECRET>"
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client(context)
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val teams = Teams(client)
+
+// Accept the invitation using the membership ID and secret
+val response = teams.updateMembershipStatus(
+    teamId = "<TEAM_ID>",
+    membershipId = "<MEMBERSHIP_ID>",
+    userId = "<USER_ID>",
+    secret = "<SECRET>"
+)
+```
+{% /multicode %}
+
+# Server-side custom flows
+
+Server-side membership creation bypasses the email invitation process, allowing direct member addition. This approach:
+1. Creates an active membership immediately
+2. Doesn't require user acceptance
+3. Gives you complete control over the invitation workflow
+
+This makes them perfect for scenarios requiring custom workflows, such as bulk user management, automated team assignments, or integration with external systems.
+Since memberships are created directly, users gain immediate access without waiting for email acceptance.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const teams = new sdk.Teams(client);
+
+// Create membership directly with userId
+const membership = await teams.createMembership({
+    teamId: '<TEAM_ID>',
+    roles: ['developer'],
+    userId: '<USER_ID>',
+    name: 'John Doe' // optional
+});
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.teams import Teams
+
+client = Client()
+client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+teams = Teams(client)
+
+# Create membership directly with userId
+membership = teams.create_membership(
+    team_id='<TEAM_ID>',
+    roles=['developer'],
+    user_id='<USER_ID>',
+    name='John Doe'  # optional
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+    .setKey("<API_KEY>") // Your secret API key
+
+let teams = Teams(client)
+
+// Create membership directly with userId
+let membership = try await teams.createMembership(
+    teamId: "<TEAM_ID>",
+    roles: ["developer"],
+    userId: "<USER_ID>",
+    name: "John Doe" // optional
+)
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+    .setKey("<API_KEY>") // Your secret API key
+
+val teams = Teams(client)
+
+// Create membership directly with userId
+val response = teams.createMembership(
+    teamId = "<TEAM_ID>",
+    roles = listOf("developer"),
+    userId = "<USER_ID>",
+    name = "John Doe" // optional
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::teams::Teams;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<API_KEY>");
+
+    let teams = Teams::new(&client);
+
+    // Create membership directly with userId
+    let membership = teams.create_membership(
+        "<TEAM_ID>",                                 // teamId
+        vec!["developer"],                           // roles
+        None,                                        // email (optional)
+        Some("<USER_ID>"),                           // userId (optional)
+        None,                                        // phone (optional)
+        None,                                        // url (optional)
+        Some("John Doe"),                            // name (optional)
+    ).await?;
+
+    println!("{:?}", membership);
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Manage memberships
+
+Once team memberships are created, you'll need to manage their lifecycle. This includes checking status, updating roles, and removing members when necessary.
+
+## Check membership status
+
+Before performing actions on team memberships, you often need to verify a user's current status within a team. The process differs between client-side and server-side implementations.
+
+### Client-side
+To check membership status client-side, first list the teams and then get the memberships for a specific team:
+
+{% multicode %}
+```client-web
+import { Client, Teams } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const teams = new Teams(client);
+
+// Get list of teams the user is part of
+const teamsList = await teams.list();
+
+// For a specific team, get all memberships
+const response = await teams.listMemberships({
+    teamId: '<TEAM_ID>'
+});
+
+// Find membership for specific user
+const userMembership = response.memberships.find(
+    membership => membership.userId === '<USER_ID>'
+);
+
+if (userMembership) {
+    console.log(userMembership.confirm); // false = invited, true = joined
+    console.log(userMembership.roles); // ['developer', etc]
+}
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final teams = Teams(client);
+
+// Get list of teams the user is part of
+final teamsList = await teams.list();
+
+// For a specific team, get all memberships
+final response = await teams.listMemberships(
+    teamId: '<TEAM_ID>'
+);
+
+// Find membership for specific user
+final userMembership = response.memberships.firstWhere(
+    (membership) => membership.userId == '<USER_ID>',
+    orElse: () => null
+);
+
+if (userMembership != null) {
+    print(userMembership.confirm); // false = invited, true = joined
+    print(userMembership.roles); // ['developer', etc]
+}
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let teams = Teams(client)
+
+// Get list of teams the user is part of
+let teamsList = try await teams.list()
+
+// For a specific team, get all memberships
+let response = try await teams.listMemberships(
+    teamId: "<TEAM_ID>"
+)
+
+// Find membership for specific user
+if let userMembership = response.memberships.first(where: { $0.userId == "<USER_ID>" }) {
+    print(userMembership.confirm) // false = invited, true = joined
+    print(userMembership.roles) // ['developer', etc]
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client(context)
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val teams = Teams(client)
+
+// Get list of teams the user is part of
+val teamsList = teams.list()
+
+// For a specific team, get all memberships
+val response = teams.listMemberships(
+    teamId = "team_id"
+)
+
+// Find membership for specific user
+val userMembership = response.memberships.find {
+    it.userId == "<USER_ID>"
+}
+
+userMembership?.let {
+    println(it.confirm) // false = invited, true = joined
+    println(it.roles) // ['developer', etc]
+}
+```
+{% /multicode %}
+
+### Server-side
+Server-side requires iterating through teams and memberships since the data isn't filtered for a specific user:
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const teams = new sdk.Teams(client);
+
+// Get all teams
+const teamsList = await teams.list();
+
+// Iterate through teams to find memberships
+for (const team of teamsList.teams) {
+    const response = await teams.listMemberships({
+        teamId: team.$id
+    });
+
+    // Find membership for specific user
+    const userMembership = response.memberships.find(
+        membership => membership.userId === '<USER_ID>'
+    );
+
+    if (userMembership) {
+        console.log(`Team: ${team.name}`);
+        console.log(`Joined: ${userMembership.joined}`); // null if invited, timestamp if joined
+        console.log(`Roles: ${userMembership.roles}`);
+    }
+}
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.teams import Teams
+
+client = Client()
+client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+teams = Teams(client)
+
+// Get all teams
+teams_list = teams.list()
+
+// Iterate through teams to find memberships
+for team in teams_list['teams']:
+    response = teams.list_memberships(team_id=team['$id'])
+
+    // Find membership for specific user
+    user_membership = next(
+        (m for m in response['memberships'] if m['userId'] == '<USER_ID>'),
+        None
+    )
+
+    if user_membership:
+        print(f"Team: {team['name']}")
+        print(f"Joined: {user_membership['joined']}") # null if invited, timestamp if joined
+        print(f"Roles: {user_membership['roles']}")
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let teams = Teams(client)
+
+// Get all teams
+let teamsList = try await teams.list()
+
+// Iterate through teams to find memberships
+for team in teamsList.teams {
+    let response = try await teams.listMemberships(
+        teamId: team.$id
+    )
+
+    // Find membership for specific user
+    if let userMembership = response.memberships.first(where: { $0.userId == "<USER_ID>" }) {
+        print("Team: \(team.name)")
+        print("Joined: \(userMembership.joined)") # null if invited, timestamp if joined
+        print("Roles: \(userMembership.roles)")
+    }
+}
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val teams = Teams(client)
+
+// Get all teams
+val teamsList = teams.list()
+
+// Iterate through teams to find memberships
+teamsList.teams.forEach { team ->
+    val response = teams.listMemberships(teamId = team.$id)
+
+    // Find membership for specific user
+    val userMembership = response.memberships.find {
+        it.userId == "<USER_ID>"
+    }
+
+    userMembership?.let {
+        println("Team: ${team.name}")
+        println("Joined: ${it.joined}") # null if invited, timestamp if joined
+        println("Roles: ${it.roles}")
+    }
+}
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::teams::Teams;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<API_KEY>");
+
+    let teams = Teams::new(&client);
+
+    // Get all teams
+    let teams_list = teams.list(
+        None,                                        // queries (optional)
+        None,                                        // search (optional)
+        None,                                        // total (optional)
+    ).await?;
+
+    // Iterate through teams to find memberships
+    for team in &teams_list.teams {
+        let response = teams.list_memberships(
+            &team.id,                                // teamId
+            None,                                    // queries (optional)
+            None,                                    // search (optional)
+            None,                                    // total (optional)
+        ).await?;
+
+        // Find membership for specific user
+        if let Some(membership) = response.memberships.iter().find(|m| m.user_id == "<USER_ID>") {
+            println!("Team: {}", team.name);
+            println!("Joined: {:?}", membership.joined); // None if invited, timestamp if joined
+            println!("Roles: {:?}", membership.roles);
+        }
+    }
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Remove members
+
+Team owners can remove members or users can leave teams:
+
+{% multicode %}
+```client-web
+import { Client, Teams } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const teams = new Teams(client);
+
+await teams.deleteMembership({
+    teamId: '<TEAM_ID>',
+    membershipId: '<MEMBERSHIP_ID>'
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final teams = Teams(client);
+
+await teams.deleteMembership(
+    teamId: '<TEAM_ID>',
+    membershipId: '<MEMBERSHIP_ID>'
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let teams = Teams(client)
+
+try await teams.deleteMembership(
+    teamId: "<TEAM_ID>",
+    membershipId: "<MEMBERSHIP_ID>"
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client(context)
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val teams = Teams(client)
+
+teams.deleteMembership(
+    teamId = "<TEAM_ID>",
+    membershipId = "<MEMBERSHIP_ID>"
+)
+```
+{% /multicode %}
+
+# Manage team permissions
+
+Teams in Appwrite use a role-based access control (RBAC) system. Each team member can be assigned one or more roles that define their permissions within the team.
+
+## Update roles
+
+You can assign roles when creating a membership or update them later. Note that only team members with the owner role can update other members' roles:
+
+{% multicode %}
+```client-web
+import { Client, Teams } from "appwrite"
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+
+const teams = new Teams(client)
+
+// Update member roles
+await teams.updateMembership({
+    teamId: '<TEAM_ID>',
+    membershipId: '<MEMBERSHIP_ID>',
+    roles: ['admin', 'developer']
+})
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart'
+
+final client = Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+
+final teams = Teams(client)
+
+// Update member roles
+await teams.updateMembership(
+    teamId: '<TEAM_ID>',
+    membershipId: '<MEMBERSHIP_ID>',
+    roles: ['admin', 'developer']
+)
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let teams = Teams(client)
+
+// Update member roles
+try await teams.updateMembership(
+    teamId: "<TEAM_ID>",
+    membershipId: "<MEMBERSHIP_ID>",
+    roles: ["admin", "developer"]
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client(context)
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val teams = Teams(client)
+
+// Update member roles
+teams.updateMembership(
+    teamId = "<TEAM_ID>",
+    membershipId = "<MEMBERSHIP_ID>",
+    roles = listOf("admin", "developer")
+)
+```
+{% /multicode %}
+
+## Check role access
+
+You can verify if a user has specific roles:
+
+{% multicode %}
+```client-web
+import { Client, Teams } from "appwrite"
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+
+const teams = new Teams(client)
+
+// Get team memberships
+const response = await teams.listMemberships({
+    teamId: '<TEAM_ID>'
+});
+
+// Check if user has specific role
+const membership = response.memberships.find(m => m.userId === '<USER_ID>')
+const isAdmin = membership?.roles.includes('admin') ?? false
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart'
+
+final client = Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+
+final teams = Teams(client)
+
+// Get team memberships
+final response = await teams.listMemberships(
+    teamId: '<TEAM_ID>'
+)
+
+// Check if user has specific role
+final membership = response.memberships.firstWhere(
+    (m) => m.userId == '<USER_ID>',
+    orElse: () => null
+)
+final isAdmin = membership?.roles.contains('admin') ?? false
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let teams = Teams(client)
+
+// Get team memberships
+let response = try await teams.listMemberships(
+    teamId: "<TEAM_ID>"
+)
+
+// Check if user has specific role
+let membership = response.memberships.first { $0.userId == "<USER_ID>" }
+let isAdmin = membership?.roles.contains("admin") ?? false
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Teams
+
+val client = Client(context)
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val teams = Teams(client)
+
+// Get team memberships
+val response = teams.listMemberships(
+    teamId = "<TEAM_ID>"
+)
+
+// Check if user has specific role
+val membership = response.memberships.find { it.userId == "<USER_ID>" }
+val isAdmin = membership?.roles?.contains("admin") ?: false
+```
+{% /multicode %}
+
+See how to grant row and file access to team roles in the [permissions](/docs/advanced/security/permissions#example-2-team-roles) guide.
+
+{% arrow_link href="/docs/products/auth/teams" %}
+Learn more about team management
+{% /arrow_link %}

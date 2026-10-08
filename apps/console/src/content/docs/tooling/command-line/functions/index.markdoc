@@ -1,0 +1,190 @@
+---
+layout: article
+title: Functions
+description: Efficiently deploy your Appwrite functions using the Command-Line Tool (CLI).
+---
+
+{% partial file="cli-disclaimer.md" /%}
+
+The CLI handles the creation, deployment, and execution of Appwrite Functions, as well as the configuration of the variables. You can also [develop your function locally](/docs/products/functions/develop-locally) using CLI commands.
+
+# Initialize function {% #initialize-function %}
+
+Create a new function using the following command:
+
+```sh
+appwrite init functions
+```
+
+# Pull function {% #pull-function %}
+
+You can also pull your existing Appwrite Functions from the Appwrite Console using the `pull` command in the folder containing your `appwrite.config.json` file.
+
+```sh
+appwrite pull functions
+```
+
+# appwrite.config.json {% #appwritejson %}
+
+After [initializing](/docs/tooling/command-line/installation#initialization) your Appwrite project and pulling your existing functions, your `appwrite.config.json` file should look similar to the following:
+
+```json
+{
+    "projectId": "<PROJECT_ID>",
+    "endpoint": "https://<REGION>.cloud.appwrite.io/v1",
+    "functions": [
+        {
+            "$id": "<FUNCTION_ID>",
+            "$createdAt": "2024-04-22T22:29:31.427+00:00",
+            "$updatedAt": "2024-06-26T19:08:26.582+00:00",
+            "execute": [
+                "any"
+            ],
+            "name": "userAuth",
+            "enabled": true,
+            "live": true,
+            "logging": true,
+            "runtime": "node-18.0",
+            "deployment": "<PROJECT_ID>",
+            "vars": [
+                {
+                    "$id": "eyJhbGciOiJIUzI1N",
+                    "$createdAt": "2024-04-22T22:51:51.745+00:00",
+                    "$updatedAt": "2024-04-23T00:13:10.886+00:00",
+                    "key": "<X_Appwrite_Key>",
+                    "value": "<API_KEY>",
+                    "resourceType": "function",
+                    "resourceId": "eyJhbGciOiJIUzI1N"
+                },
+                {
+                    "$id": "N1IzUIJiOicGbhJye",
+                    "$createdAt": "2024-04-22T23:32:12.901+00:00",
+                    "$updatedAt": "2024-04-22T23:32:12.901+00:00",
+                    "key": "<DATABASE_ID>",
+                    "value": "<DATABASE_ID>",
+                    "resourceType": "function",
+                    "resourceId": "N1IzUIJiOicGbhJye"
+                },
+                {
+                    "$id": "OicGbhJyeN1IzUIJi",
+                    "$createdAt": "2024-04-22T23:32:12.910+00:00",
+                    "$updatedAt": "2024-04-22T23:32:12.910+00:00",
+                    "key": "<PROJECT_ID>",
+                    "value": "<PROJECT_ID>",
+                    "resourceType": "function",
+                    "resourceId": "OicGbhJyeN1IzUIJi"
+                },
+                {
+                    "$id": "bhJyIJiON1IzUicGe",
+                    "$createdAt": "2024-04-22T23:32:12.912+00:00",
+                    "$updatedAt": "2024-04-22T23:32:12.912+00:00",
+                    "key": "<TABLE_USERS_ID>",
+                    "value": "<TABLE_ID>",
+                    "resourceType": "function",
+                    "resourceId": "bhJyIJiON1IzUicGe"
+                }
+            ],
+            "events": [],
+            "schedule": "",
+            "timeout": 15,
+            "entrypoint": "userAuth.js",
+            "commands": "npm install",
+            "version": "v3",
+            "installationId": "a0e499a8",
+            "providerRepositoryId": "7389",
+            "providerBranch": "user-appwrite-funcs",
+            "providerRootDirectory": "functions",
+            "providerSilentMode": false,
+            "path": "functions/49dbf3"
+        }
+    ]
+}
+```
+
+You can also move the `functions` array into a separate JSON file with the `includes` field. When functions are loaded from an included file, each function `path` is resolved relative to that included file.
+
+{% arrow_link href="/docs/tooling/command-line/installation#multi-file-configuration" %}
+Learn more about multi-file configuration
+{% /arrow_link %}
+
+# Push function {% #push-function %}
+
+{% partial file="cli-push-command.md" /%}
+
+```sh
+appwrite push functions
+```
+
+# Commands {% #commands %}
+
+The functions command lets you view, create, and manage your Appwrite Functions. Appwrite functions CLI commands generally follow the following syntax:
+
+```sh
+appwrite functions [COMMAND] [OPTIONS]
+```
+
+{% table %}
+* Command
+* Description
+---
+* `list [options]`
+* Get a list of all the project's functions. You can use the query params to filter your results.
+---
+* `create [options]`
+* Create a new function. You can pass a list of [permissions](https://appwrite.io/docs/permissions) to allow different project users or teams with access to execute the function using the client API.
+---
+* `list-runtimes`
+* Get a list of all runtimes that are currently active on your instance.
+---
+* `get [options]`
+* Get a function by its unique ID.
+---
+* `update [options]`
+* Update function by its unique ID.
+---
+* `delete [options]`
+* Delete a function by its unique ID.
+---
+* `list-deployments [options]`
+* Get a list of all the project's code deployments. You can use the query params to filter your results.
+---
+* `create-deployment [options]`
+* Create a new function code deployment. Use this endpoint to upload a new version of your code function. To execute your newly uploaded code, you'll need to update the function's deployment to use your new deployment UID. This endpoint accepts a tar.gz file compressed with your code. Make sure to include any dependencies your code has within the compressed file. You can learn more about code packaging in the [Appwrite Cloud Functions tutorial](https://appwrite.io/docs/functions). Use the "command" param to set the entrypoint used to execute your code.
+---
+* `get-deployment [options]`
+* Get a code deployment by its unique ID.
+---
+* `update-deployment [options]`
+* Update the function code deployment ID using the unique function ID. Use this endpoint to switch the code deployment that should be executed by the execution endpoint.
+---
+* `delete-deployment [options]`
+* Delete a code deployment by its unique ID.
+---
+* `download-deployment [options]`
+* Get a Deployment's contents by its unique ID. This endpoint supports range requests for partial or streaming file download.
+---
+* `list-executions [options]`
+* Get a list of all the current user function execution logs. You can use the query params to filter your results.
+---
+* `create-execution [options]`
+* Trigger a function execution.
+---
+* `get-execution [options]`
+* Get a function execution log by its unique ID.
+---
+* `list-variables [options]`
+* Get a list of all variables of a specific function.
+---
+* `create-variable [options]`
+* Create a new function environment variable. These variables can be accessed in the function at runtime as environment variables.
+---
+* `get-variable [options]`
+* Get a variable by its unique ID.
+---
+* `update-variable [options]`
+* Update a variable by its unique ID.
+---
+* `delete-variable [options]`
+* Delete a variable by its unique ID.
+---
+{% /table %}

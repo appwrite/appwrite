@@ -1,0 +1,867 @@
+---
+layout: article
+title: Atomic numeric operations
+description: Safely increment and decrement numeric fields without race conditions. Perfect for counters, quotas, inventory, and usage metrics in high-concurrency applications.
+---
+
+Atomic numeric operations allow you to safely increase or decrease numeric fields without fetching the full document. This eliminates race conditions and reduces bandwidth usage when updating any numeric values that need to be modified atomically, such as counters, scores, balances, and other fast-moving numeric data.
+
+These operations work on numeric document fields, whether the value is an integer or a floating-point number.
+
+# How atomic operations work {% #how-atomic-operations-work %}
+
+Instead of the traditional read-modify-write pattern, atomic numeric operations use dedicated methods to modify values directly on the server. The server applies the change atomically under concurrency control and returns the new value.
+
+**Traditional approach:**
+1. Fetch document → `{ likes: 42 }`
+2. Update client-side → `likes: 43`
+3. Write back → `{ likes: 43 }`
+
+**Atomic approach:**
+1. Call `incrementDocumentAttribute()` with the attribute key and the value to increment by
+2. Server applies atomically → `likes: 43`
+
+# When to use atomic operations {% #when-to-use-atomic-operations %}
+
+Atomic numeric operations work well for:
+
+- **Social features**: Likes, follows, comment counts
+- **Usage metering**: API credits, storage quotas, request limits
+- **Game state**: Scores, lives, currency, experience points
+- **E-commerce**: Stock counts, inventory levels
+- **Workflow tracking**: Retry counts, progress indicators
+- **Rate limiting**: Request counters, usage tracking
+
+# Perform atomic operations {% #perform-atomic-operations %}
+
+Use the `incrementDocumentAttribute` and `decrementDocumentAttribute` methods to perform atomic numeric operations. The server will apply these changes atomically under concurrency control.
+
+## Increment a field {% #increment-field %}
+
+{% multicode %}
+```client-web
+import { Client, DocumentsDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const documentsDB = new DocumentsDB(client);
+
+const result = await documentsDB.incrementDocumentAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: 'likes', // attribute
+    value: 1 // value
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final documentsDB = DocumentsDB(client);
+
+final document = await documentsDB.incrementDocumentAttribute(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: 'likes',
+    value: 1
+);
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let documentsDB = DocumentsDB(client)
+
+let document = try await documentsDB.incrementDocumentAttribute(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
+    attribute: "likes",
+    value: 1
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.DocumentsDB
+
+val client = Client(applicationContext)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val documentsDB = DocumentsDB(client)
+
+val document = documentsDB.incrementDocumentAttribute(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    documentId = "<DOCUMENT_ID>",
+    attribute = "likes",
+    value = 1
+)
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+    .setKey('<API_KEY>'); // Your secret API key
+
+const documentsDB = new sdk.DocumentsDB(client);
+
+const result = await documentsDB.incrementDocumentAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: 'likes', // attribute
+    value: 1 // value
+});
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.documents_db import DocumentsDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<PROJECT_ID>') # Your project ID
+client.set_key('<API_KEY>') # Your secret API key
+
+documents_db = DocumentsDB(client)
+
+result = documents_db.increment_document_attribute(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    document_id = '<DOCUMENT_ID>',
+    attribute = 'likes', # attribute
+    value = 1 # value
+)
+```
+```rust
+use appwrite::Client;
+use appwrite::services::documents_db::DocumentsDB;
+
+let client = Client::new()
+    .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .set_project("<PROJECT_ID>")
+    .set_key("<API_KEY>");
+
+let documents_db = DocumentsDB::new(&client);
+
+let result = documents_db.increment_document_attribute(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "<DOCUMENT_ID>",
+    "likes",       // attribute
+    Some(1.0),     // value
+    None,          // max
+    None,          // transaction_id
+).await?;
+```
+```graphql
+mutation {
+    documentsDBIncrementDocumentAttribute(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
+        documentId: "<DOCUMENT_ID>",
+        attribute: "likes",
+        value: 1
+    ) {
+        _id
+        _collectionId
+        _databaseId
+        _createdAt
+        _updatedAt
+        _permissions
+        data
+    }
+}
+```
+{% /multicode %}
+
+## Decrement a field {% #decrement-field %}
+
+Use the `decrementDocumentAttribute` method to decrease numeric fields:
+
+{% multicode %}
+```client-web
+import { Client, DocumentsDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const documentsDB = new DocumentsDB(client);
+
+const result = await documentsDB.decrementDocumentAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: 'credits', // attribute
+    value: 5 // value
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final documentsDB = DocumentsDB(client);
+
+final document = await documentsDB.decrementDocumentAttribute(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: 'credits',
+    value: 5
+);
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let documentsDB = DocumentsDB(client)
+
+let document = try await documentsDB.decrementDocumentAttribute(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
+    attribute: "credits",
+    value: 5
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.DocumentsDB
+
+val client = Client(applicationContext)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val documentsDB = DocumentsDB(client)
+
+val document = documentsDB.decrementDocumentAttribute(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    documentId = "<DOCUMENT_ID>",
+    attribute = "credits",
+    value = 5
+)
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+    .setKey('<API_KEY>'); // Your secret API key
+
+const documentsDB = new sdk.DocumentsDB(client);
+
+const result = await documentsDB.decrementDocumentAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: 'credits', // attribute
+    value: 5 // value
+});
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.documents_db import DocumentsDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<PROJECT_ID>') # Your project ID
+client.set_key('<API_KEY>') # Your secret API key
+
+documents_db = DocumentsDB(client)
+
+result = documents_db.decrement_document_attribute(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    document_id = '<DOCUMENT_ID>',
+    attribute = 'credits', # attribute
+    value = 5 # value
+)
+```
+```rust
+use appwrite::Client;
+use appwrite::services::documents_db::DocumentsDB;
+
+let client = Client::new()
+    .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .set_project("<PROJECT_ID>")
+    .set_key("<API_KEY>");
+
+let documents_db = DocumentsDB::new(&client);
+
+let result = documents_db.decrement_document_attribute(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "<DOCUMENT_ID>",
+    "credits",     // attribute
+    Some(5.0),     // value
+    None,          // min
+    None,          // transaction_id
+).await?;
+```
+```graphql
+mutation {
+    documentsDBDecrementDocumentAttribute(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
+        documentId: "<DOCUMENT_ID>",
+        attribute: "credits",
+        value: 5
+    ) {
+        _id
+        _collectionId
+        _databaseId
+        _createdAt
+        _updatedAt
+        _permissions
+        data
+    }
+}
+```
+{% /multicode %}
+
+# Set constraints and bounds {% #set-constraints-and-bounds %}
+
+You can set minimum and maximum bounds for individual operations to prevent invalid values. Use the optional `min` and `max` parameters to ensure the final value stays within acceptable limits. If an operation would move the value past the bound, the request is rejected.
+
+## Example with constraints {% #example-with-constraints %}
+
+{% multicode %}
+```client-web
+// Increment with maximum constraint
+const result = await documentsDB.incrementDocumentAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: 'credits', // attribute
+    value: 100, // value
+    max: 1000 // max (optional)
+});
+
+// Decrement with minimum constraint
+const result2 = await documentsDB.decrementDocumentAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: 'credits', // attribute
+    value: 50, // value
+    min: 0 // min (optional)
+});
+```
+```client-flutter
+// Increment with maximum constraint
+final document = await documentsDB.incrementDocumentAttribute(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: 'credits',
+    value: 100,
+    max: 1000
+);
+
+// Decrement with minimum constraint
+final document2 = await documentsDB.decrementDocumentAttribute(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: 'credits',
+    value: 50,
+    min: 0
+);
+```
+```client-apple
+// Increment with maximum constraint
+let document = try await documentsDB.incrementDocumentAttribute(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
+    attribute: "credits",
+    value: 100,
+    max: 1000
+)
+
+// Decrement with minimum constraint
+let document2 = try await documentsDB.decrementDocumentAttribute(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
+    attribute: "credits",
+    value: 50,
+    min: 0
+)
+```
+```client-android-kotlin
+// Increment with maximum constraint
+val document = documentsDB.incrementDocumentAttribute(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    documentId = "<DOCUMENT_ID>",
+    attribute = "credits",
+    value = 100,
+    max = 1000
+)
+
+// Decrement with minimum constraint
+val document2 = documentsDB.decrementDocumentAttribute(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    documentId = "<DOCUMENT_ID>",
+    attribute = "credits",
+    value = 50,
+    min = 0
+)
+```
+```server-nodejs
+// Increment with maximum constraint
+const result = await documentsDB.incrementDocumentAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: 'credits', // attribute
+    value: 100, // value
+    max: 1000 // max (optional)
+});
+
+// Decrement with minimum constraint
+const result2 = await documentsDB.decrementDocumentAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: 'credits', // attribute
+    value: 50, // value
+    min: 0 // min (optional)
+});
+```
+```server-python
+# Increment with maximum constraint
+result = documents_db.increment_document_attribute(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    document_id = '<DOCUMENT_ID>',
+    attribute = 'credits', # attribute
+    value = 100, # value
+    max = 1000 # max (optional)
+)
+
+# Decrement with minimum constraint
+result2 = documents_db.decrement_document_attribute(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    document_id = '<DOCUMENT_ID>',
+    attribute = 'credits', # attribute
+    value = 50, # value
+    min = 0 # min (optional)
+)
+```
+```rust
+// Increment with maximum constraint
+let result = documents_db.increment_document_attribute(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "<DOCUMENT_ID>",
+    "credits",       // attribute
+    Some(100.0),     // value
+    Some(1000.0),    // max (optional)
+    None,            // transaction_id
+).await?;
+
+// Decrement with minimum constraint
+let result2 = documents_db.decrement_document_attribute(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "<DOCUMENT_ID>",
+    "credits",       // attribute
+    Some(50.0),      // value
+    Some(0.0),       // min (optional)
+    None,            // transaction_id
+).await?;
+```
+{% /multicode %}
+
+# Follow best practices {% #follow-best-practices %}
+
+## Use for high-concurrency scenarios {% #use-for-high-concurrency-scenarios %}
+
+Atomic numeric operations are most beneficial when multiple users or processes might update the same numeric field simultaneously.
+
+## Combine with regular updates {% #combine-with-regular-updates %}
+
+For complex updates that include both atomic operations and regular field changes, you'll need to use separate API calls:
+
+{% multicode %}
+```client-web
+// First, increment the likes atomically
+const likeResult = await documentsDB.incrementDocumentAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: 'likes', // attribute
+    value: 1 // value
+});
+
+// Then, update other fields
+const updateResult = await documentsDB.updateDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    data: {
+        lastLikedBy: userId,
+        lastLikedAt: new Date().toISOString()
+    }
+});
+```
+```client-flutter
+// First, increment the likes atomically
+final likeResult = await documentsDB.incrementDocumentAttribute(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: 'likes',
+    value: 1
+);
+
+// Then, update other fields
+final updateResult = await documentsDB.updateDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    data: {
+        'lastLikedBy': userId,
+        'lastLikedAt': DateTime.now().toIso8601String()
+    }
+);
+```
+```client-apple
+// First, increment the likes atomically
+let likeResult = try await documentsDB.incrementDocumentAttribute(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
+    attribute: "likes",
+    value: 1
+)
+
+// Then, update other fields
+let updateResult = try await documentsDB.updateDocument(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
+    data: [
+        "lastLikedBy": userId,
+        "lastLikedAt": ISO8601DateFormatter().string(from: Date())
+    ]
+)
+```
+```client-android-kotlin
+// First, increment the likes atomically
+val likeResult = documentsDB.incrementDocumentAttribute(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    documentId = "<DOCUMENT_ID>",
+    attribute = "likes",
+    value = 1
+)
+
+// Then, update other fields
+val updateResult = documentsDB.updateDocument(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    documentId = "<DOCUMENT_ID>",
+    data = mapOf(
+        "lastLikedBy" to userId,
+        "lastLikedAt" to Instant.now().toString()
+    )
+)
+```
+```server-nodejs
+// First, increment the likes atomically
+const likeResult = await documentsDB.incrementDocumentAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    attribute: 'likes', // attribute
+    value: 1 // value
+});
+
+// Then, update other fields
+const updateResult = await documentsDB.updateDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    data: {
+        lastLikedBy: userId,
+        lastLikedAt: new Date().toISOString()
+    }
+});
+```
+```server-python
+# First, increment the likes atomically
+like_result = documents_db.increment_document_attribute(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    document_id = '<DOCUMENT_ID>',
+    attribute = 'likes', # attribute
+    value = 1 # value
+)
+
+# Then, update other fields
+update_result = documents_db.update_document(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    document_id = '<DOCUMENT_ID>',
+    data = {
+        'lastLikedBy': user_id,
+        'lastLikedAt': datetime.now().isoformat()
+    }
+)
+```
+```rust
+use serde_json::json;
+
+// First, increment the likes atomically
+let like_result = documents_db.increment_document_attribute(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "<DOCUMENT_ID>",
+    "likes",       // attribute
+    Some(1.0),     // value
+    None,          // max
+    None,          // transaction_id
+).await?;
+
+// Then, update other fields
+let update_result = documents_db.update_document(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "<DOCUMENT_ID>",
+    Some(json!({
+        "lastLikedBy": user_id,
+        "lastLikedAt": chrono::Utc::now().to_rfc3339()
+    })),
+    None,          // permissions
+    None,          // transaction_id
+).await?;
+```
+{% /multicode %}
+
+# Use transactions {% #use-transactions %}
+
+Atomic numeric operations accept `transactionId`. When provided, increments/decrements are staged and applied on commit.
+
+{% multicode %}
+```client-web
+await documentsDB.incrementDocumentAttribute({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  attribute: 'likes',
+  value: 1,
+  transactionId: '<TRANSACTION_ID>'
+});
+```
+```client-flutter
+await documentsDB.incrementDocumentAttribute(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  attribute: 'likes',
+  value: 1,
+  transactionId: '<TRANSACTION_ID>'
+);
+```
+```client-apple
+try await documentsDB.incrementDocumentAttribute(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documentId: "<DOCUMENT_ID>",
+  attribute: "likes",
+  value: 1,
+  transactionId: "<TRANSACTION_ID>"
+)
+```
+```client-android-kotlin
+documentsDB.incrementDocumentAttribute(
+  databaseId = "<DATABASE_ID>",
+  collectionId = "<COLLECTION_ID>",
+  documentId = "<DOCUMENT_ID>",
+  attribute = "likes",
+  value = 1,
+  transactionId = "<TRANSACTION_ID>"
+)
+```
+```client-android-java
+documentsDB.incrementDocumentAttribute(
+  "<DATABASE_ID>",
+  "<COLLECTION_ID>",
+  "<DOCUMENT_ID>",
+  "likes",
+  1,
+  "<TRANSACTION_ID>",
+  new CoroutineCallback<>((result, error) -> {
+    if (error != null) {
+      error.printStackTrace();
+      return null;
+    }
+    System.out.println(result);
+    return null;
+  })
+);
+```
+```client-react-native
+await documentsDB.incrementDocumentAttribute({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  attribute: 'likes',
+  value: 1,
+  transactionId: '<TRANSACTION_ID>'
+});
+```
+```server-nodejs
+await documentsDB.incrementDocumentAttribute({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  attribute: 'likes',
+  value: 1,
+  transactionId: '<TRANSACTION_ID>'
+});
+```
+```server-deno
+await documentsDB.incrementDocumentAttribute({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  attribute: 'likes',
+  value: 1,
+  transactionId: '<TRANSACTION_ID>'
+});
+```
+```server-python
+documents_db.increment_document_attribute(
+  database_id = '<DATABASE_ID>',
+  collection_id = '<COLLECTION_ID>',
+  document_id = '<DOCUMENT_ID>',
+  attribute = 'likes',
+  value = 1,
+  transaction_id = '<TRANSACTION_ID>'
+)
+```
+```rust
+documents_db.increment_document_attribute(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "<DOCUMENT_ID>",
+    "likes",
+    Some(1.0),
+    None,                          // max
+    Some("<TRANSACTION_ID>"),      // transaction_id
+).await?;
+```
+```server-php
+$documentsDB->incrementDocumentAttribute(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  attribute: 'likes',
+  value: 1,
+  transactionId: '<TRANSACTION_ID>'
+);
+```
+```server-ruby
+documents_db.increment_document_attribute(
+  database_id: '<DATABASE_ID>',
+  collection_id: '<COLLECTION_ID>',
+  document_id: '<DOCUMENT_ID>',
+  attribute: 'likes',
+  value: 1,
+  transaction_id: '<TRANSACTION_ID>'
+)
+```
+```server-dotnet
+await documentsDB.IncrementDocumentAttribute(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documentId: "<DOCUMENT_ID>",
+  attribute: "likes",
+  value: 1,
+  transactionId: "<TRANSACTION_ID>"
+);
+```
+```server-dart
+await documentsDB.incrementDocumentAttribute(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  attribute: 'likes',
+  value: 1,
+  transactionId: '<TRANSACTION_ID>'
+);
+```
+```server-swift
+try await documentsDB.incrementDocumentAttribute(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documentId: "<DOCUMENT_ID>",
+  attribute: "likes",
+  value: 1,
+  transactionId: "<TRANSACTION_ID>"
+)
+```
+```server-kotlin
+documentsDB.incrementDocumentAttribute(
+  databaseId = "<DATABASE_ID>",
+  collectionId = "<COLLECTION_ID>",
+  documentId = "<DOCUMENT_ID>",
+  attribute = "likes",
+  value = 1,
+  transactionId = "<TRANSACTION_ID>"
+)
+```
+```server-java
+documentsDB.incrementDocumentAttribute(
+  "<DATABASE_ID>",
+  "<COLLECTION_ID>",
+  "<DOCUMENT_ID>",
+  "likes",
+  1,
+  "<TRANSACTION_ID>",
+  new CoroutineCallback<>((result, error) -> {
+    if (error != null) {
+      error.printStackTrace();
+      return null;
+    }
+    System.out.println(result);
+    return null;
+  })
+);
+```
+{% /multicode %}
+
+## Explore related features
+
+- [Bulk operations](/docs/products/databases/documentsdb/bulk-operations) - Update multiple documents at once
+- [Permissions](/docs/products/databases/documentsdb/permissions) - Control access to documents
+- [Queries](/docs/products/databases/documentsdb/queries) - Find documents to update

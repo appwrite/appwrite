@@ -39,6 +39,7 @@
             "Utopia\\Client\\": "packages/client/src",
             "Utopia\\Compression\\": "packages/compression/src",
             "Utopia\\Config\\": "packages/config/src",
+            "Utopia\\Console\\": "packages/console/src",
             "Utopia\\Detector\\": "packages/detector/src",
             "Utopia\\DI\\": "packages/di/src",
             "Utopia\\DNS\\": "packages/dns/src",
@@ -71,12 +72,10 @@
             "Utopia\\UserAgent\\": "packages/user-agent/src",
             "Utopia\\Validator\\": "packages/validators/src",
             "Utopia\\VCS\\": "packages/vcs/src",
-            "Utopia\\WebSocket\\": "packages/websocket/src",
-            "Utopia\\": [
-                "packages/console/src"
-            ]
+            "Utopia\\WebSocket\\": "packages/websocket/src"
         },
         "files": [
+            "packages/console/src/compat.php",
             "packages/validators/src/compat.php"
         ]
     },

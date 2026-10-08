@@ -15,8 +15,11 @@
     },
     "autoload": {
         "psr-4": {
-            "Utopia\\": "src/"
-        }
+            "Utopia\\Console\\": "src/"
+        },
+        "files": [
+            "src/compat.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
@@ -25,7 +28,7 @@
     },
     "require": {
         "php": ">=8.5",
-        "utopia-php/validators": "^1.0 || ^2.0"
+        "utopia-php/validators": "^2.0"
     },
     "minimum-stability": "dev"
 }
