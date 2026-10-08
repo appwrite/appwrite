@@ -504,6 +504,71 @@ final class NatsBrokerTest extends TestCase
         $broker->close();
     }
 
+    /**
+     * A bounded stream that discards old messages accepts every publish by evicting
+     * the oldest stored one, so a requeue there would be acknowledged while silently
+     * deleting a job another handler is still holding. The hand-back must leave every
+     * stored job where it is.
+     */
+    public function testAReleaseNeverEvictsAnotherJob(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $broker = new Nats(Connection::connect($url), ackWait: 2.0, maxDeliver: 3, maxMsgs: 2, releaseDelay: 0.5);
+
+        $broker->publish($queue, ['task' => 'running']);
+        $broker->publish($queue, ['task' => 'returned']);
+        [$running, $returned] = $broker->receive($queue, 2, 2);
+        $this->assertSame('running', $running->getPayload()['task']);
+
+        $broker->release($queue, $returned);
+
+        $js = Connection::connect($url)->jetStream();
+        $state = $js->getStreamInfo('Q_' . strtoupper($queue->name))->state;
+        $this->assertSame($running->getSequence(), $state->firstSeq, 'the job still being worked is still stored');
+        $this->assertSame(2, $state->messages);
+
+        $broker->commit($queue, $running);
+        $again = $broker->receive($queue, 3)[0] ?? null;
+        $this->assertInstanceOf(Message::class, $again, 'the returned job was kept');
+        $this->assertSame('returned', $again->getPayload()['task']);
+        $broker->commit($queue, $again);
+
+        $broker->close();
+    }
+
+    /**
+     * release() runs while a worker is stopping, where nothing can handle a throw, and
+     * a broken connection fails the requeue and the fallback NAK alike. It reports
+     * both and returns; the server redelivers the job after ackWait.
+     */
+    public function testAReleaseOnABrokenConnectionReportsAndReturns(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $reported = [];
+        $connection = Connection::connect($url);
+        $broker = new Nats($connection, ackWait: 1.0, maxDeliver: 3, onError: function (\Throwable $error) use (&$reported): void {
+            $reported[] = $error;
+        });
+
+        $broker->publish($queue, ['task' => 'keep']);
+        $message = $broker->receive($queue, 2)[0] ?? null;
+        $this->assertInstanceOf(Message::class, $message);
+
+        $connection->close();
+        $broker->release($queue, $message);
+
+        $this->assertNotSame([], $reported, 'the failure is reported, not thrown');
+
+        $next = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 3);
+        $again = $next->receive($queue, 3)[0] ?? null;
+        $this->assertInstanceOf(Message::class, $again, 'the server redelivers the job after ackWait');
+        $this->assertSame('keep', $again->getPayload()['task']);
+        $next->commit($queue, $again);
+        $next->close();
+    }
+
     public function testMessagesSurviveClientReconnect(): void
     {
         // Durability: unlike the ephemeral Dragonfly store, JetStream persists jobs

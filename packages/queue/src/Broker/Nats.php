@@ -837,52 +837,84 @@ class Nats implements Synchronous, Consumer, Bounded
      * requeue retried after an ambiguous publish still stores one copy.
      *
      * Acknowledged only once the requeue is stored, so a failure between the two
-     * leaves a duplicate, never a loss. If the requeue itself fails, the message
-     * falls back to a NAK after releaseDelay, which costs the attempt but keeps the
-     * work.
+     * leaves a duplicate, never a loss. Otherwise the message falls back to a NAK
+     * after releaseDelay, which costs the attempt but keeps the work: when the
+     * requeue is refused, and on a bounded stream that discards old messages, where
+     * a requeue is accepted by evicting the oldest stored job -- another worker's,
+     * silently.
      *
      * The requeue joins the back of the queue and is deliverable at once, so a worker
      * that is also stopping may fetch it and hand it back again. Each round costs a
-     * publish, not an attempt.
+     * publish, not an attempt. The stream's maxAge counts from the requeue.
+     *
+     * Never throws: a stopping worker has nowhere to handle it, and one message that
+     * cannot be handed back must not keep the rest of the batch from it. Whatever is
+     * neither requeued nor NAK'd is redelivered by the server after ackWait.
      */
     public function release(Queue $queue, Message ...$messages): void
     {
-        $this->command(function () use ($queue, $messages): void {
-            foreach ($messages as $message) {
-                $pid = $message->getPid();
-                $jsMessage = $this->inFlight[$pid] ?? null;
-                if (!$jsMessage instanceof JetStreamMessage) {
-                    continue;
-                }
-                unset($this->inFlight[$pid]);
-
-                $onCommands = $this->onCommands($jsMessage);
-                try {
-                    // The message's own Content-Type, as in park(): the bytes go back unread.
-                    $headers = new Headers();
-                    $contentType = $jsMessage->getHeaders()?->get(self::CONTENT_TYPE);
-                    if ($contentType !== null) {
-                        $headers->set(self::CONTENT_TYPE, $contentType);
+        try {
+            $this->command(function () use ($queue, $messages): void {
+                $requeue = null;
+                foreach ($messages as $message) {
+                    $pid = $message->getPid();
+                    $jsMessage = $this->inFlight[$pid] ?? null;
+                    if (!$jsMessage instanceof JetStreamMessage) {
+                        continue;
                     }
-                    $this->commandsJs()->publish(
-                        $this->workSubject($queue),
-                        $jsMessage->getData(),
-                        headers: $headers,
-                        msgId: $pid . '.released.' . $jsMessage->metadata()->streamSequence,
-                    );
-                } catch (\Throwable $error) {
-                    $this->report($error);
-                    $onCommands->nak($this->releaseDelay > 0 ? $this->releaseDelay : null);
+                    unset($this->inFlight[$pid]);
 
-                    continue;
+                    $stored = false;
+                    try {
+                        // Read from the server, not from this broker's arguments: a broker
+                        // that adopted the stream did not choose its limits.
+                        $requeue ??= (function () use ($queue): bool {
+                            $config = $this->commandsJs()->getStreamInfo($this->workStream($queue))->config;
+
+                            return $config->discard === DiscardPolicy::New
+                                || ($config->maxMsgs === -1 && $config->maxBytes === -1 && $config->maxMsgsPerSubject === -1);
+                        })();
+
+                        if ($requeue) {
+                            // The message's own Content-Type, as in park(): the bytes go back unread.
+                            $headers = new Headers();
+                            $contentType = $jsMessage->getHeaders()?->get(self::CONTENT_TYPE);
+                            if ($contentType !== null) {
+                                $headers->set(self::CONTENT_TYPE, $contentType);
+                            }
+                            $this->commandsJs()->publish(
+                                $this->workSubject($queue),
+                                $jsMessage->getData(),
+                                headers: $headers,
+                                msgId: $pid . '.released.' . $jsMessage->metadata()->streamSequence,
+                            );
+                            $stored = true;
+                            $this->onCommands($jsMessage)->ack();
+
+                            continue;
+                        }
+                    } catch (\Throwable $error) {
+                        $this->report($error);
+                        if ($stored) {
+                            // The copy is safe; a NAK now would queue the job twice.
+                            continue;
+                        }
+                    }
+
+                    try {
+                        $this->onCommands($jsMessage)->nak($this->releaseDelay > 0 ? $this->releaseDelay : null);
+                    } catch (\Throwable $error) {
+                        $this->report($error);
+                    }
                 }
-                $onCommands->ack();
-            }
-        });
-
-        // A stopping worker may never receive() again, so what went wrong is handed
-        // over here rather than left for the next receive to flush.
-        $this->flushReports();
+            });
+        } catch (\Throwable $error) {
+            $this->report($error);
+        } finally {
+            // A stopping worker may never receive() again, so what went wrong is handed
+            // over here rather than left for the next receive to flush.
+            $this->flushReports();
+        }
     }
 
     /**
