@@ -92,7 +92,11 @@ import {
   withPageTitleNameContext,
 } from '@/lib/utils/page-title'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
-import { getSeoRobotsMetaTags } from '@/lib/seo/indexing'
+import {
+  getSeoRobotsMetaTags,
+  NOINDEX_ROBOTS_META,
+} from '@/lib/seo/indexing'
+import { isSearchNonIndexablePath } from '@/lib/seo/non-indexable-paths'
 import { I18nProvider } from '@/lib/i18n'
 import { isMarketingPage } from '@/lib/marketing/is-marketing-page'
 import { MarketingSiteLayoutGate } from '@/lib/marketing/MarketingSiteLayoutGate'
@@ -216,7 +220,13 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   errorComponent: ({ error, info, reset }) => (
     <ErrorComponent error={error} info={info} reset={reset} />
   ),
-  head: () => ({
+  head: ({ matches }) => {
+    const pathname = matches.at(-1)?.pathname ?? '/'
+    const robotsMeta = isSearchNonIndexablePath(pathname)
+      ? [NOINDEX_ROBOTS_META]
+      : getSeoRobotsMetaTags(getRequestSiteOrigin())
+
+    return {
     meta: [
       {
         name: 'viewport',
@@ -226,7 +236,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       {
         title: 'Appwrite Console',
       },
-      ...getSeoRobotsMetaTags(getRequestSiteOrigin()),
+      ...robotsMeta,
     ],
     links: [
       {
@@ -261,7 +271,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         : []),
     ],
     scripts: [...scripts],
-  }),
+    }
+  },
 
   shellComponent: RootDocument,
 })

@@ -1,3 +1,4 @@
+import { analyticsProductContent } from '@/lib/products/content/analytics'
 import { authProductContent } from '@/lib/products/content/auth'
 import { databasesProductContent } from '@/lib/products/content/databases'
 import { firewallProductContent } from '@/lib/products/content/firewall'
@@ -18,6 +19,7 @@ const PRODUCT_CONTENT: Record<ProductId, ProductPageContent> = {
   messaging: messagingProductContent,
   realtime: realtimeProductContent,
   sites: sitesProductContent,
+  analytics: analyticsProductContent,
   firewall: firewallProductContent,
 }
 

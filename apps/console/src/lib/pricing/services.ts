@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import {
   Database,
   Folder,
@@ -31,6 +32,7 @@ const ALL_PRICING_SERVICES: readonly PricingService[] = [
   { name: 'Network', icon: Globe2 },
   { name: 'Firewall', icon: Shield },
   { name: 'Advisor', icon: ScanSearch },
+  { name: 'Analytics', icon: ANALYTICS_PRODUCT_ICON },
 ]
 
 function isPricingServiceComingSoon(name: string) {

@@ -68,6 +68,13 @@ export const PRODUCT_THEMES: Record<ProductId, ProductTheme> = {
     heroLayout: 'centered',
     featureStyle: 'rail',
   },
+  analytics: {
+    tone: 'purple',
+    secondaryTone: 'mint',
+    // Wide traffic-flow hero art, like Realtime and Firewall.
+    heroLayout: 'centered',
+    featureStyle: 'alternate',
+  },
   firewall: {
     tone: 'orange',
     secondaryTone: 'purple',

@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { DOCS_PAGES } from '@/lib/docs/generated/manifest'
 import { getLegacyRedirectTarget } from '@/lib/seo/legacy-redirects'
+import { PRODUCT_IDS } from '@/lib/products/registry'
 
 const docsSlugs = new Set(DOCS_PAGES.map((page) => page.slug))
 
@@ -34,8 +35,18 @@ describe('legacy redirects that already existed', () => {
     expect(target('/sign-in')).toBeNull()
     expect(target('/account/sessions')).toBeNull()
     expect(target('/products/sites')).toBeNull()
+    expect(target('/products/analytics')).toBeNull()
+  })
+
+  test('never redirects a live product page', () => {
+    // LIVE_PRODUCTS in inbound-redirects.ts must list every product page, or
+    // full page loads 301 to `/` (and signed-in users bounce to the console).
+    for (const id of PRODUCT_IDS) {
+      expect(target(`/products/${id}`)).toBeNull()
+    }
     expect(target('/docs/tooling/command-line/installation')).toBeNull()
     expect(target('/docs/partners/project/key-rotation.md')).toBeNull()
+    expect(target('/docs/llms.txt')).toBeNull()
   })
 })
 

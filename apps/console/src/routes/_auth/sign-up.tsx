@@ -15,7 +15,10 @@ import { fetchConsoleAccount } from '@/lib/console-account-get'
 import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
 import { AppwriteException, ID } from '@appwrite.io/console'
 import { toast } from 'sonner'
-import { setLastLoginMethod, type OAuthLoginMethod } from '@/lib/utils/auth-storage'
+import {
+  setLastLoginMethod,
+  type OAuthLoginMethod,
+} from '@/lib/utils/auth-storage'
 import {
   CONSOLE_OAUTH_PROVIDERS,
   OAUTH_LOGIN_ERROR,
@@ -190,7 +193,10 @@ function SignUpPage() {
       }
 
       if (account?.$id) {
-        measureOpenAiAdsRegistrationCompleted(account.$id)
+        measureOpenAiAdsRegistrationCompleted(account.$id, {
+          email: account.email,
+          phone: account.phone,
+        })
       }
 
       try {

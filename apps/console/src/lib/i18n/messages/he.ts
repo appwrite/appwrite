@@ -154,6 +154,7 @@ export const heCatalog: EnCatalog = {
           hosting: 'אירוח',
           domains: 'דומיינים',
           network: 'רשת',
+          analytics: 'אנליטיקה',
           firewall: 'Firewall',
         },
         learn: {
@@ -201,6 +202,8 @@ export const heCatalog: EnCatalog = {
           vsClerk: 'Appwrite מול Clerk', // pragma: allowlist secret
           vsAmplify: 'Appwrite מול AWS Amplify', // pragma: allowlist secret
           vsPlanetScale: 'Appwrite מול PlanetScale', // pragma: allowlist secret
+          vsPostHog: 'Appwrite מול PostHog', // pragma: allowlist secret
+          vsPlausible: 'Appwrite מול Plausible', // pragma: allowlist secret
           nextjsHosting: 'אירוח Next.js',
           reactHosting: 'אירוח React',
           vueHosting: 'אירוח Vue.js',
@@ -379,6 +382,7 @@ export const heCatalog: EnCatalog = {
         functions: 'פונקציות',
         messaging: 'הודעות',
         sites: 'אתרים',
+        analytics: 'אנליטיקה',
       },
       explore: {
         ...enCatalog.website.products.explore,
@@ -397,6 +401,7 @@ export const heCatalog: EnCatalog = {
           build: 'פיתוח',
           deploy: 'פריסה',
           protect: 'הגנה',
+          observeAndProtect: 'ניטור והגנה',
         },
         items: {
           ...enCatalog.website.products.navigation.items,
@@ -413,6 +418,7 @@ export const heCatalog: EnCatalog = {
           agentTagline: 'צ׳אט לבדיקת הפרויקט וביצוע פעולות מאושרות.',
           domainsName: 'Domains',
           domainsTagline: 'חיפוש, רכישה, העברה וניהול דומיינים.',
+          analyticsTagline: 'אנליטיקה לאתרים ואפליקציות ללא עוגיות, כולל בוטים ו-AI.',
           firewallName: 'חומת אש',
           firewallTagline: 'כללי פרויקט לחסימה, הגבלת קצב והפניית תעבורה.',
           advisorName: 'יועץ',

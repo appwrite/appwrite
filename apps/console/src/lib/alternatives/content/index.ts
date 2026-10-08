@@ -7,6 +7,8 @@ import { firebaseAlternativeContent } from '@/lib/alternatives/content/firebase'
 import { neonAlternativeContent } from '@/lib/alternatives/content/neon'
 import { netlifyAlternativeContent } from '@/lib/alternatives/content/netlify'
 import { planetscaleAlternativeContent } from '@/lib/alternatives/content/planetscale'
+import { plausibleAlternativeContent } from '@/lib/alternatives/content/plausible'
+import { posthogAlternativeContent } from '@/lib/alternatives/content/posthog'
 import { supabaseAlternativeContent } from '@/lib/alternatives/content/supabase'
 import { vercelAlternativeContent } from '@/lib/alternatives/content/vercel'
 import type { AlternativeContent, AlternativeId } from '@/lib/alternatives/types'
@@ -23,6 +25,8 @@ export const ALTERNATIVE_CONTENT: Record<AlternativeId, AlternativeContent> = {
   clerk: clerkAlternativeContent,
   amplify: amplifyAlternativeContent,
   planetscale: planetscaleAlternativeContent,
+  posthog: posthogAlternativeContent,
+  plausible: plausibleAlternativeContent,
 }
 
 export function getAlternativeContent(id: AlternativeId): AlternativeContent {

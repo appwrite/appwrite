@@ -18,9 +18,38 @@ import {
   isLocalDevelopmentHost,
   isLocalDevelopmentServerEnv,
 } from './environment-shared.ts'
+import { unhandledServerErrorFromConsoleArgs } from './unhandled-http-error.ts'
 
 let initAttempted = false
 let sentryActive = false
+let consoleErrorReportingInstalled = false
+let reportingConsoleError = false
+const reportedConsoleErrors = new WeakSet<object>()
+
+function installConsoleErrorReporting(): void {
+  if (consoleErrorReportingInstalled) return
+  consoleErrorReportingInstalled = true
+
+  const originalConsoleError = console.error.bind(console)
+  console.error = (...args: unknown[]) => {
+    originalConsoleError(...args)
+    if (reportingConsoleError || !sentryActive) return
+
+    const found = unhandledServerErrorFromConsoleArgs(args)
+    if (!found || reportedConsoleErrors.has(found.error)) return
+
+    reportedConsoleErrors.add(found.error)
+    reportingConsoleError = true
+    try {
+      captureServerException(found.error, {
+        source: 'h3-unhandled',
+        ...(found.status !== undefined ? { status: found.status } : {}),
+      })
+    } finally {
+      reportingConsoleError = false
+    }
+  }
+}
 
 function getServerSentryEnvironment(): string {
   const explicit = process.env.SENTRY_ENVIRONMENT?.trim()
@@ -92,6 +121,7 @@ export function initSentryServer(): boolean {
   })
 
   sentryActive = true
+  installConsoleErrorReporting()
   return true
 }
 

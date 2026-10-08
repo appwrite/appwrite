@@ -191,6 +191,7 @@ export const startComparisonOverrides: Record<string, ComparisonCell> = {
   'Concurrent connections': '350',
   'Realtime:Messages': '3.5M',
   Screenshots: '500 / month',
+  'Analytics:Events': '50K / month',
   'Firewall rules': '15 per project',
   'Organization roles': '-',
   'SOC-2, HIPAA, and BAA': '-',

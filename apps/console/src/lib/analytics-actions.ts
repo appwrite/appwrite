@@ -203,6 +203,7 @@ export const ANALYTICS_ACTIONS = {
   'marketing-product-realtime': 'Marketing Product Realtime Clicked',
   'marketing-product-sites': 'Marketing Product Sites Clicked',
   'marketing-product-domains': 'Marketing Product Domains Clicked',
+  'marketing-product-analytics': 'Marketing Product Analytics Clicked',
   'marketing-product-firewall': 'Marketing Product Firewall Clicked',
   'marketing-product-advisor': 'Marketing Product Advisor Clicked',
   'marketing-product-agent': 'Marketing Product Agent Clicked',
@@ -295,7 +296,7 @@ export const ANALYTICS_ACTIONS = {
   'restore-pitr': 'Restore PITR Clicked',
   'import-data': 'Import Data Clicked',
   'create-marketplace-app': 'Create Marketplace App Clicked',
-  'add-website': 'Add Website Clicked',
+  'create-analytics-property': 'Create Analytics Property Clicked',
 } as const
 
 export type AnalyticsActionId = keyof typeof ANALYTICS_ACTIONS
@@ -335,6 +336,7 @@ const MARKETING_PRODUCT_ACTIONS: Record<string, AnalyticsActionId> = {
   realtime: 'marketing-product-realtime',
   sites: 'marketing-product-sites',
   domains: 'marketing-product-domains',
+  analytics: 'marketing-product-analytics',
   firewall: 'marketing-product-firewall',
   advisor: 'marketing-product-advisor',
   agent: 'marketing-product-agent',

@@ -32,6 +32,7 @@ export const MARKETING_PAGE_PATHS = [
   '/products/messaging',
   '/products/realtime',
   '/products/sites',
+  '/products/analytics',
   '/products/firewall',
   ...ALTERNATIVE_PAGE_PATHS,
   ...SECRET_CAMPAIGN_PATHS,

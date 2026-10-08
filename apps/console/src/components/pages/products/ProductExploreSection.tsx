@@ -13,6 +13,7 @@ import {
 import type { ProductId, ProductNavItemId } from '@/lib/products/types'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 type ProductExploreSectionProps = {
   currentProductId: ProductId
@@ -33,6 +34,7 @@ type ProductNavigationItemsCopy = {
   sitesTagline: string
   domainsName: string
   domainsTagline: string
+  analyticsTagline: string
   firewallName: string
   firewallTagline: string
 }
@@ -64,6 +66,7 @@ function getExploreNavItemTagline(
     realtime: navigationItemsCopy.realtimeTagline,
     sites: navigationItemsCopy.sitesTagline,
     domains: navigationItemsCopy.domainsTagline,
+    analytics: navigationItemsCopy.analyticsTagline,
     firewall: navigationItemsCopy.firewallTagline,
   }
   return taglineById[navItemId] ?? PRODUCT_NAV_REGISTRY[navItemId].tagline
@@ -139,6 +142,11 @@ export function ProductExploreSection({ currentProductId }: ProductExploreSectio
   const exploreCopy = catalog.website.products.explore
   const productNamesCopy = catalog.website.products.productNames
   const productNavigationItemsCopy = catalog.website.products.navigation.items
+  const { features } = useConsoleProfile()
+  // Analytics is listed only once its feature flag is on, including on its own page.
+  const exploreIds = PRODUCT_PAGE_EXPLORE_NAV_ITEM_IDS.filter(
+    (id) => id !== 'analytics' || features.analytics,
+  )
 
   return (
     <section className="border-t border-border bg-muted/20 py-16 sm:py-20">
@@ -150,7 +158,7 @@ export function ProductExploreSection({ currentProductId }: ProductExploreSectio
         />
 
         <div className="mt-10 flex flex-wrap justify-center gap-3">
-          {PRODUCT_PAGE_EXPLORE_NAV_ITEM_IDS.map((navItemId) => (
+          {exploreIds.map((navItemId) => (
             <div
               key={navItemId}
               className="w-full sm:w-[calc((100%-0.75rem)/2)] lg:w-[calc((100%-1.5rem)/3)]"

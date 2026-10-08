@@ -12,6 +12,8 @@ export const ALTERNATIVE_IDS = [
   'clerk',
   'amplify',
   'planetscale',
+  'posthog',
+  'plausible',
 ] as const satisfies readonly AlternativeId[]
 
 /** Month the competitor facts on these pages were last checked against public sources. */
@@ -148,6 +150,30 @@ export const ALTERNATIVE_REGISTRY: Record<AlternativeId, AlternativeMeta> = {
     tone: 'mint',
     secondaryTone: 'purple',
     focusProduct: 'postgres',
+  },
+  posthog: {
+    id: 'posthog',
+    name: 'PostHog',
+    category: 'Product analytics suite',
+    metaTitle: 'Appwrite Analytics vs PostHog: a cookieless PostHog alternative',
+    metaDescription:
+      'Compare Appwrite Analytics and PostHog for web analytics. No cookies, no stored IP addresses, daily-rotating visitor IDs, bot and AI traffic built in, and your backend and hosting in the same project.',
+    summary: 'Web analytics that are private by default.',
+    tone: 'purple',
+    secondaryTone: 'orange',
+    focusProduct: 'analytics',
+  },
+  plausible: {
+    id: 'plausible',
+    name: 'Plausible',
+    category: 'Privacy-friendly web analytics',
+    metaTitle: 'Appwrite Analytics vs Plausible: a privacy-first Plausible alternative',
+    metaDescription:
+      'Compare Appwrite Analytics and Plausible. The same cookieless privacy model, plus a free plan, custom properties on every plan, labeled bot and AI traffic, and analytics next to your hosting and backend.',
+    summary: 'Cookieless analytics with a free plan and bots in view.',
+    tone: 'purple',
+    secondaryTone: 'mint',
+    focusProduct: 'analytics',
   },
 }
 

@@ -975,6 +975,159 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Same period last year': 'אותה תקופה בשנה שעברה',
   'Same dates, one year ago': 'אותם תאריכים, לפני שנה',
 
+  // Analytics properties
+  Property: 'נכס',
+  properties: 'נכסים',
+  'Property ID': 'מזהה נכס',
+  'Snippet ID': 'מזהה סניפט',
+  'No properties yet': 'אין נכסים עדיין',
+  'Create your first property to start tracking analytics for a website or app':
+    'צרו את הנכס הראשון שלכם כדי להתחיל לעקוב אחר נתוני אנליטיקה של אתר או אפליקציה',
+  'Search properties...': 'חיפוש נכסים...',
+  'Create property': 'יצירת נכס',
+  'Property created': 'הנכס נוצר',
+  'Failed to create property': 'יצירת הנכס נכשלה',
+  'Property not found': 'הנכס לא נמצא',
+  'This analytics property no longer exists.': 'נכס האנליטיקה הזה כבר לא קיים.',
+  'Track a website or application. Daily boundaries use your current timezone.':
+    'עקבו אחר אתר או אפליקציה. גבולות היום נקבעים לפי אזור הזמן הנוכחי שלכם.',
+  'Enter property name': 'הזינו שם נכס',
+  'Optional for native apps.': 'אופציונלי עבור אפליקציות נייטיב.',
+  'example.com': 'example.com',
+  "You don't have permission to create analytics properties.":
+    'אין לכם הרשאה ליצור נכסי אנליטיקה.',
+  'Could not load analytics properties': 'לא ניתן לטעון את נכסי האנליטיקה',
+  'Could not load analytics data': 'לא ניתן לטעון את נתוני האנליטיקה',
+  'Something went wrong': 'משהו השתבש',
+  'No domain': 'ללא דומיין',
+  'Tracking is disabled': 'המעקב מושבת',
+  Tracking: 'מעקב',
+  'Public stats': 'סטטיסטיקות ציבוריות',
+  Private: 'פרטי',
+  'Allowed origins': 'מקורות מורשים',
+  'Configuration for this property. These values are read-only in the Console.':
+    'ההגדרות של הנכס הזה. הערכים האלה הם לקריאה בלבד בקונסולה.',
+  Pageviews: 'צפיות בדפים',
+  'Views per visit': 'צפיות לביקור',
+  'Scroll depth': 'עומק גלילה',
+  Engagement: 'מעורבות',
+  Count: 'כמות',
+  'Distinct events recorded in the selected range':
+    'אירועים ייחודיים שנרשמו בטווח הנבחר',
+  'No events recorded in this range': 'לא נרשמו אירועים בטווח הזה',
+  'Data appears once the property receives its first event.':
+    'הנתונים יופיעו לאחר שהנכס יקבל את האירוע הראשון שלו.',
+  'Custom range': 'טווח מותאם אישית',
+
+  // Analytics property settings
+  'Property name': 'שם הנכס',
+  "Update this property's display name.": 'עדכנו את שם התצוגה של הנכס הזה.',
+  'Name updated': 'השם עודכן',
+  'Property details': 'פרטי הנכס',
+  'Control whether this property accepts events.': 'קבעו אם הנכס הזה מקבל אירועים.',
+  'Tracking enabled': 'המעקב הופעל',
+  'Tracking disabled': 'המעקב הושבת',
+  'Tracking is enabled': 'המעקב פעיל',
+  'Primary domain being tracked. Optional for native apps.':
+    'הדומיין הראשי שנמצא במעקב. אופציונלי עבור אפליקציות נייטיב.',
+  'Domain updated': 'הדומיין עודכן',
+  'Origins allowed to send tracking events. Use * to allow all origins.':
+    'מקורות שמורשים לשלוח אירועי מעקב. השתמשו ב-* כדי לאפשר את כל המקורות.',
+  'https://example.com': 'https://example.com',
+  'Allowed origins updated': 'המקורות המורשים עודכנו',
+  'Delete property': 'מחיקת נכס',
+  'Property deleted': 'הנכס נמחק',
+  'Type the property name to confirm': 'הקלידו את שם הנכס כדי לאשר',
+  'Permanently delete this property and every event and session collected for it. This action cannot be undone.':
+    'מחיקה לצמיתות של הנכס הזה ושל כל אירוע וסשן שנאספו עבורו. לא ניתן לבטל את הפעולה הזו.',
+  'This permanently deletes the property and every event and session collected for it. This action cannot be undone.':
+    'פעולה זו מוחקת לצמיתות את הנכס ואת כל אירוע וסשן שנאספו עבורו. לא ניתן לבטל את הפעולה הזו.',
+
+  // Analytics add-property wizard and integration snippets
+  'Add analytics property': 'הוספת נכס אנליטיקה',
+  'Add another property': 'הוספת נכס נוסף',
+  'Create and continue': 'יצירה והמשך',
+  'Pick where you are tracking from. You can change this later.':
+    'בחרו מהיכן אתם עוקבים. אפשר לשנות את זה מאוחר יותר.',
+  'Pick where you are tracking from.': 'בחרו מהיכן אתם עוקבים.',
+  'Name and domain for the site or app.': 'שם ודומיין עבור האתר או האפליקציה.',
+  'Install tracking': 'התקנת מעקב',
+  'No events in the last 24 hours': 'אין אירועים ב-24 השעות האחרונות',
+  'Tracking may not be installed yet, or it stopped sending. Add the snippet to your app and load a page.':
+    'ייתכן שהמעקב עדיין לא הותקן, או שהוא הפסיק לשלוח. הוסיפו את הסניפט לאפליקציה וטענו דף.',
+  'Tracking is live': 'המעקב פעיל',
+  'Listening for events': 'מאזינים לאירועים',
+  'Latest event': 'האירוע האחרון',
+  'Events are reaching Appwrite.': 'אירועים מגיעים ל-Appwrite.',
+  'Install the code and load a page. Checks every few seconds.':
+    'התקינו את הקוד וטענו דף. הבדיקה מתבצעת כל כמה שניות.',
+  'Prompt copied': 'הנחיה הועתקה',
+  'Could not copy to clipboard': 'לא ניתן היה להעתיק ללוח',
+  'Add the snippet, then wait for the first event.':
+    'הוסיפו את הסניפט, ואז המתינו לאירוע הראשון.',
+  'Daily totals are bucketed in UTC. You can change every value later in settings.':
+    'הסיכומים היומיים מחושבים לפי UTC. אפשר לשנות כל ערך מאוחר יותר בהגדרות.',
+  'Add tracking to your app': 'הוספת מעקב לאפליקציה שלכם',
+  'Add tracking to your site or app to start collecting events.':
+    'הוסיפו מעקב לאתר או לאפליקציה שלכם כדי להתחיל לאסוף אירועים.',
+  'Add this to your app, then load a page so the first event reaches Appwrite.':
+    'הוסיפו את זה לאפליקציה שלכם, ואז טענו דף כדי שהאירוע הראשון יגיע ל-Appwrite.',
+  'Verify the first event': 'אימות האירוע הראשון',
+  'Waiting for the first event from your site…':
+    'ממתין לאירוע הראשון מהאתר שלכם…',
+  'Event received': 'התקבל אירוע',
+  'Your site sends events to the analytics endpoint using this property ID.':
+    'האתר שלכם שולח אירועים לנקודת הקצה של האנליטיקה באמצעות מזהה הנכס הזה.',
+  'Keep this tab open and load a page on your site. Events usually appear within a few seconds.':
+    'השאירו את הכרטיסייה הזו פתוחה וטענו דף באתר שלכם. אירועים מופיעים בדרך כלל תוך שניות ספורות.',
+  'Loading property...': 'טוען נכס...',
+  'Do Not Track is respected by default. Pass { respectDoNotTrack: false } to the constructor options to opt out. Automatic events are named pageview, outbound_link, file_download, scroll_depth and engagement_time.':
+    'ברירת המחדל היא כיבוד Do Not Track. העבירו { respectDoNotTrack: false } לאפשרויות הבנאי כדי לבטל. האירועים האוטומטיים נקראים pageview, outbound_link, file_download, scroll_depth ו-engagement_time.',
+  'Automatic events are named screen_view, app_backgrounded and app_foregrounded.':
+    'האירועים האוטומטיים נקראים screen_view, app_backgrounded ו-app_foregrounded.',
+  // Analytics dimension panels
+  'Top pages': 'דפים מובילים',
+  'Entry pages': 'דפי כניסה',
+  'Exit pages': 'דפי יציאה',
+  'Where visitors came from': 'מהיכן הגיעו המבקרים',
+  'Most visited paths': 'הנתיבים הנצפים ביותר',
+  'Where visitors are browsing from': 'מהיכן המבקרים גולשים',
+  'What visitors are browsing with': 'באיזה כלים המבקרים גולשים',
+  'Human visitors versus bots': 'מבקרים אנושיים מול בוטים',
+  'AI agents and crawlers': 'סוכני AI וסורקים',
+  Agents: 'סוכנים',
+  'Named bots seen in this range, as classified by the API':
+    'בוטים מזוהים שנצפו בטווח הזה, לפי הסיווג של ה-API',
+  'No bot traffic in this range': 'אין תנועת בוטים בטווח הזה',
+  'No data in this range': 'אין נתונים בטווח הזה',
+  'Returning visitors were also seen in the preceding 180 days':
+    'מבקרים חוזרים נצפו גם ב-180 הימים שקדמו',
+  'unique visitors in total': 'מבקרים ייחודיים בסך הכל',
+  'Event over time': 'אירוע לאורך זמן',
+  'Daily series for a single event. Property totals are in the summary below.':
+    'סדרה יומית עבור אירוע יחיד. סך הכל של הנכס מופיע בסיכום שלמטה.',
+  'Totals across every event in the selected range':
+    'סך הכל עבור כל האירועים בטווח הנבחר',
+  Visits: 'ביקורים',
+  'Engagement time': 'זמן מעורבות',
+  'This endpoint is public, so no API key is needed for client-side tracking. Only the server-side override fields (userId, ip, userAgent) require an API key with the analytics.write scope.':
+    'נקודת הקצה הזו ציבורית, ולכן לא נדרש מפתח API למעקב בצד הלקוח. רק שדות הדריסה בצד השרת (userId, ip, userAgent) דורשים מפתח API עם ההרשאה analytics.write.',
+  Flutter: 'Flutter',
+  REST: 'REST',
+  'Browser apps and static sites.': 'אפליקציות דפדפן ואתרים סטטיים.',
+  'iOS, Android, web and desktop from one codebase.':
+    'iOS, Android, web ודסקטופ מבסיס קוד אחד.',
+  'Any language, straight against the HTTP API.':
+    'כל שפה, ישירות מול ה-API של HTTP.',
+  'Install the SDK': 'התקנת ה-SDK',
+  'Initialize tracking': 'אתחול המעקב',
+  'Turn on automatic tracking': 'הפעלת מעקב אוטומטי',
+  'Send your own events': 'שליחת אירועים משלכם',
+  'Add the package': 'הוספת החבילה',
+  'Track route changes': 'מעקב אחר שינויי ניתוב',
+  'Send an event': 'שליחת אירוע',
+  'Send a custom event with properties': 'שליחת אירוע מותאם עם מאפיינים',
+
   // Realtime
   Realtime: 'Realtime',
   Connected: 'מחובר',

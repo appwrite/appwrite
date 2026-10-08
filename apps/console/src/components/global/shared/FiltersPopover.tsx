@@ -3,7 +3,7 @@
  * Use with table-filters URL state; parent provides filterMap and navigate callbacks.
  */
 
-import { Filter } from 'lucide-react'
+import { Filter, X } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import type {
@@ -79,7 +79,12 @@ export function FiltersPopover({
   triggerClassName,
 }: FiltersPopoverProps) {
   const t = useT()
+  const hasFilters = filterMap.size > 0
   return (
+    // Split button while filters are active: [ Filters 2 | × ]. The clear
+    // control sits beside the trigger (not inside it) because buttons can't
+    // be nested.
+    <div className="inline-flex shrink-0 items-stretch">
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
         <Button
@@ -89,6 +94,7 @@ export function FiltersPopover({
           className={cn(
             'border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground',
             serviceHeaderFiltersButton,
+            hasFilters && 'rounded-e-none',
             triggerClassName,
           )}
         >
@@ -130,5 +136,24 @@ export function FiltersPopover({
         ) : null}
       </PopoverContent>
     </Popover>
+    {hasFilters ? (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          onClearAll()
+          onOpenChange(false)
+        }}
+        aria-label={t('Clear filters')}
+        title={t('Clear filters')}
+        className={cn(
+          'h-auto w-9 shrink-0 rounded-s-none border-s-0 border-border bg-transparent p-0 text-muted-foreground hover:bg-accent hover:text-foreground',
+        )}
+      >
+        <X className="h-3.5 w-3.5" />
+      </Button>
+    ) : null}
+    </div>
   )
 }

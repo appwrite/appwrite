@@ -3,6 +3,34 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "android-sdk-r8-support",
+    "href": "/blog/post/android-sdk-r8-support",
+    "title": "R8 code shrinking now works with the Appwrite Android SDK",
+    "description": "Appwrite Android SDK 29.0.0 works with R8 full mode, fixing queries, Realtime, and saved sessions in release builds ahead of Google Play's 2027 DEX rule.",
+    "date": "2026-10-07",
+    "lastUpdated": "2026-10-07",
+    "timeToRead": 7,
+    "author": "chirag-aggarwal",
+    "category": "products, announcements",
+    "featured": false,
+    "cover": "/images/blog/android-sdk-r8-support/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "faster-list-caching-binary-format",
+    "href": "/blog/post/faster-list-caching-binary-format",
+    "title": "Cached list queries now use up to 69% less memory and serve up to 29% more requests",
+    "description": "Appwrite now serializes key-value cache entries in a binary format instead of JSON. Cached list responses consume up to 69% less memory, and cached list throughput increases by up to 29%.",
+    "date": "2026-10-07",
+    "lastUpdated": "2026-10-07",
+    "timeToRead": 5,
+    "author": "luke-silver",
+    "category": "announcements, performance",
+    "featured": false,
+    "cover": "/images/blog/faster-list-caching-binary-format/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "build-a-living-ai-town-appwrite-functions-realtime",
     "href": "/blog/post/build-a-living-ai-town-appwrite-functions-realtime",
     "title": "Build a living AI town with Appwrite Functions, TablesDB, and Realtime",
@@ -2313,8 +2341,8 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "claude-vs-gpt-vs-gemini-for-developers-who-wins-in-2026",
     "href": "/blog/post/claude-vs-gpt-vs-gemini-for-developers-who-wins-in-2026",
-    "title": "Claude vs GPT vs Gemini for developers: Who wins in 2026?",
-    "description": "Compare Claude, GPT, and Gemini through a developer lens. We break down how each model performs in real workflows, from debugging and code review to UI generation and multimodal tasks, so you know which one to use and when.",
+    "title": "Claude vs GPT vs Gemini: Best for developers?",
+    "description": "Compare Claude, GPT, and Gemini for developers. See how they perform across coding, debugging, UI generation, multimodal tasks, and more.",
     "date": "2026-04-30",
     "lastUpdated": "2026-04-30",
     "timeToRead": 5,

@@ -123,6 +123,17 @@ export function canCreateFunction(
   return whenOrgRoles(access, features, access.canWriteFunctions)
 }
 
+/**
+ * Analytics properties are project-level configuration and the API does not
+ * expose a dedicated analytics scope yet, so they follow `projects.write`.
+ */
+export function canCreateAnalyticsProperty(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteProjects)
+}
+
 export function canCreateSite(
   access: ConsoleAccess,
   features: AccessCheckFeatures,

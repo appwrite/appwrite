@@ -38,6 +38,7 @@ import {
   getSidebarNavAnalyticsAction,
 } from '@/lib/analytics-actions'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
+import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import {
   LayoutDashboard,
   Database,
@@ -57,7 +58,6 @@ import {
   ScanSearch,
   Package,
   FileText,
-  BarChart2,
   AlertTriangle,
   Radio,
   ListTree,
@@ -240,16 +240,22 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
       label: sidebarCopy.sections.observe,
       items: [
         {
-          id: 'activity',
-          label: sidebarCopy.items.activity,
-          icon: Activity,
-          path: `/projects/${projectId}/activity`,
+          id: 'analytics',
+          label: sidebarCopy.items.analytics,
+          icon: ANALYTICS_PRODUCT_ICON,
+          path: `/projects/${projectId}/analytics`,
         },
         {
           id: 'realtime',
           label: sidebarCopy.items.realtime,
           icon: Radio,
           path: `/projects/${projectId}/realtime`,
+        },
+        {
+          id: 'activity',
+          label: sidebarCopy.items.activity,
+          icon: Activity,
+          path: `/projects/${projectId}/activity`,
         },
         {
           id: 'logs',
@@ -263,13 +269,6 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           label: sidebarCopy.items.usage,
           icon: BarChart3,
           path: `/projects/${projectId}/usage`,
-        },
-        {
-          id: 'analytics',
-          label: sidebarCopy.items.analytics,
-          icon: BarChart2,
-          path: `/projects/${projectId}/analytics`,
-          comingSoon: true,
         },
         {
           id: 'errors',
@@ -360,6 +359,11 @@ export function ConsoleSidebar({
             return features.activity && canSeeActivityNav(access, features)
           if (item.id === 'firewall')
             return isCloud && canSeeProjectNavItem(access, features, item.id)
+          if (item.id === 'analytics')
+            return (
+              features.analytics &&
+              canSeeProjectNavItem(access, features, item.id)
+            )
           if (item.id === 'videos')
             return (
               features.videos && canSeeProjectNavItem(access, features, item.id)

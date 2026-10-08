@@ -11,6 +11,17 @@ export const HOSTS_REDIRECT_TO_CANONICAL = [
   'new.appwrite.io',
 ] as const
 
+/**
+ * Hosts that 301 to another host, keeping path and query.
+ * Production aliases go to the apex. The staging alias stays on staging.
+ */
+const HOST_REDIRECT_TARGETS: Record<string, string> = {
+  ...Object.fromEntries(
+    HOSTS_REDIRECT_TO_CANONICAL.map((host) => [host, CANONICAL_HOST]),
+  ),
+  'new.staging.appwrite.io': 'staging.appwrite.io',
+}
+
 /** Set to false to allow indexing on all hosts (no noindex headers or blocking robots.txt). */
 export const BLOCK_NON_PRODUCTION_SEO = true
 
@@ -38,36 +49,45 @@ export const INDEXABLE_ROBOTS_META = {
 export const NOINDEX_ROBOTS_HEADER = 'noindex, nofollow'
 
 const SEO_INDEXABLE_HOST_SET = new Set<string>(SEO_INDEXABLE_HOSTS)
-const HOSTS_REDIRECT_TO_CANONICAL_SET = new Set<string>(
-  HOSTS_REDIRECT_TO_CANONICAL,
-)
 
 export function normalizeRequestHost(host: string): string {
   return host.trim().toLowerCase().split(':')[0] ?? ''
 }
 
+/** Target host for a permanent redirect, or null when this host should be served. */
+export function getHostRedirectTarget(host: string): string | null {
+  return HOST_REDIRECT_TARGETS[normalizeRequestHost(host)] ?? null
+}
+
 export function shouldRedirectToCanonicalHost(host: string): boolean {
-  return HOSTS_REDIRECT_TO_CANONICAL_SET.has(normalizeRequestHost(host))
+  return getHostRedirectTarget(host) !== null
 }
 
 /**
- * Build a permanent redirect URL to the apex host with the same path and query.
+ * Build a permanent redirect URL to `targetHost` with the same path and query.
  */
-export function getCanonicalHostRedirectUrl(requestUrl: string): string {
+export function getCanonicalHostRedirectUrl(
+  requestUrl: string,
+  targetHost: string = CANONICAL_HOST,
+): string {
   const incoming = new URL(requestUrl)
   return new URL(
     `${incoming.pathname}${incoming.search}`,
-    `https://${CANONICAL_HOST}`,
+    `https://${targetHost}`,
   ).toString()
 }
 
-/** 301 to the apex host, or null when this request is already canonical. */
+/** 301 to the mapped host, or null when this request should be served as-is. */
 export function getCanonicalHostRedirectResponse(
   request: Request,
 ): Response | null {
   const host = getRequestHostFromHeaders(request.headers, request.url)
-  if (!shouldRedirectToCanonicalHost(host)) return null
-  return Response.redirect(getCanonicalHostRedirectUrl(request.url), 301)
+  const targetHost = getHostRedirectTarget(host)
+  if (!targetHost) return null
+  return Response.redirect(
+    getCanonicalHostRedirectUrl(request.url, targetHost),
+    301,
+  )
 }
 
 export function isSeoIndexableHost(host: string): boolean {

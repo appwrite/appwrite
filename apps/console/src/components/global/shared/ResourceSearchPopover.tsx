@@ -13,6 +13,7 @@ import {
 } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import type { LucideIcon } from 'lucide-react'
+import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import {
   Database,
   FolderOpen,
@@ -44,6 +45,7 @@ import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
+  analyticsPropertiesQueryOptions,
   bucketsQueryOptions,
   consoleDatabasesQueryOptions,
   functionsQueryOptions,
@@ -73,6 +75,7 @@ export type ResourceSearchKind =
   | 'provider'
   | 'domain'
   | 'video'
+  | 'analyticsProperty'
 
 export type ResourceSearchListItem = {
   id: string
@@ -160,6 +163,7 @@ const SEARCH_PLACEHOLDERS: Record<ResourceSearchKind, string> = {
   provider: 'Search providers by name or ID...',
   domain: 'Search domains by name or ID...',
   video: 'Search videos by name...',
+  analyticsProperty: 'Search properties by name or ID...',
 }
 
 const RESOURCE_ICONS: Record<ResourceSearchKind, LucideIcon> = {
@@ -174,6 +178,7 @@ const RESOURCE_ICONS: Record<ResourceSearchKind, LucideIcon> = {
   provider: Mail,
   domain: Globe,
   video: Video,
+  analyticsProperty: ANALYTICS_PRODUCT_ICON,
 }
 
 function ResourceSearchListSkeleton({
@@ -291,6 +296,11 @@ function useResourceSearchList(
     enabled: enabled && kind === 'domain' && !!organizationId,
     placeholderData: keepPreviousData,
   })
+  const analyticsPropertyQuery = useQuery({
+    ...analyticsPropertiesQueryOptions(projectId, 0, PICK_LIMIT, search),
+    enabled: enabled && kind === 'analyticsProperty' && !!projectId,
+    placeholderData: keepPreviousData,
+  })
 
   return useMemo(() => {
     switch (kind) {
@@ -392,6 +402,16 @@ function useResourceSearchList(
           })),
           isFetching: videoQuery.isFetching,
         }
+      case 'analyticsProperty':
+        return {
+          items: (analyticsPropertyQuery.data?.properties ?? []).map(
+            (item) => ({
+              id: item.$id,
+              label: item.name || item.domain || item.$id,
+            }),
+          ),
+          isFetching: analyticsPropertyQuery.isFetching,
+        }
       default:
         return { items: [] as ResourceSearchListItem[], isFetching: false }
     }
@@ -419,6 +439,8 @@ function useResourceSearchList(
     domainQuery.isFetching,
     videoQuery.data,
     videoQuery.isFetching,
+    analyticsPropertyQuery.data,
+    analyticsPropertyQuery.isFetching,
   ])
 }
 
