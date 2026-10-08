@@ -312,14 +312,15 @@ final class VideosCustomServerTest extends Scope
 
         $this->assertGreaterThan(0, $body['duration'], 'Video was not probed by the timeline job');
         $this->assertGreaterThan(0, $body['width']);
-        $this->assertFileDoesNotExist($this->tmpSourcePath($videoId));
+        // Probe runs mid-timeline; jobs/ cleanup is asserted after the job ends
+        // (testTmpSourceRemovedAfterTimeline, rendition tests).
 
         return $videoId;
     }
 
     /**
-     * Each timeline job downloads into its own directory and deletes it in
-     * finally — the shared videos-tmp/.../source path must stay absent.
+     * Each timeline job downloads into its own jobs/ folder and deletes it in
+     * finally — no leftover folder for this video may remain under jobs/.
      */
     public function testTmpSourceRemovedAfterTimeline(): void
     {
@@ -336,7 +337,7 @@ final class VideosCustomServerTest extends Scope
         $video = $this->waitForVideoProbed($videoId);
         $this->assertGreaterThan(0, $video['duration']);
         $this->assertGreaterThan(0, $video['width']);
-        $this->assertFileDoesNotExist($this->tmpSourcePath($videoId));
+        $this->assertSame([], $this->videoTmpJobs($videoId), 'Probe left video tmp jobs behind');
     }
 
     #[Depends('testCreateVideo')]
@@ -635,7 +636,7 @@ final class VideosCustomServerTest extends Scope
 
         $video = $this->waitForVideoProbed($videoId);
         $this->assertGreaterThan(0, $video['duration']);
-        $this->assertFileDoesNotExist($this->tmpSourcePath($videoId));
+        $this->assertSame([], $this->videoTmpJobs($videoId), 'Probe left video tmp jobs behind');
     }
 
     /**
@@ -656,7 +657,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(202, $first['headers']['status-code']);
         $firstBody = $this->waitForRenditionTerminalState($videoId, $first['body']['$id']);
         $this->assertEquals('ready', $firstBody['status']);
-        $this->assertFileDoesNotExist($this->tmpSourcePath($videoId));
+        $this->assertSame([], $this->videoTmpJobs($videoId), 'First rendition left video tmp jobs behind');
 
         $second = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $profile['$id'],
@@ -667,7 +668,7 @@ final class VideosCustomServerTest extends Scope
 
         $body = $this->waitForRenditionTerminalState($videoId, $second['body']['$id']);
         $this->assertEquals('ready', $body['status'], 'Second rendition did not finish');
-        $this->assertFileDoesNotExist($this->tmpSourcePath($videoId));
+        $this->assertSame([], $this->videoTmpJobs($videoId), 'Second rendition left video tmp jobs behind');
     }
 
     #[Depends('testVideoIsProbedByJob')]

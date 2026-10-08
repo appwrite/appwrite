@@ -532,21 +532,38 @@ trait VideoCustom
         return $body;
     }
 
-    public function tmpJobPath(string $videoId, string $renditionId): string
+    public function tmpJobsRoot(): string
     {
         $root = \defined('APP_STORAGE_VIDEOS_TMP') ? APP_STORAGE_VIDEOS_TMP : '/storage/videos-tmp';
 
-        return \rtrim($root, '/')
-            . '/app-' . $this->getProject()['$id']
-            . '/' . $videoId
-            . '/jobs/' . $renditionId;
+        return \rtrim($root, '/') . '/jobs';
     }
 
-    public function tmpSourcePath(string $videoId): string
+    /**
+     * Job folders for a video: `{stamp}~{projectId}~{videoId}~…` under jobs/.
+     *
+     * @return list<string>
+     */
+    public function videoTmpJobs(string $videoId): array
     {
-        $root = \defined('APP_STORAGE_VIDEOS_TMP') ? APP_STORAGE_VIDEOS_TMP : '/storage/videos-tmp';
+        $jobsRoot = $this->tmpJobsRoot();
+        if (!\is_dir($jobsRoot)) {
+            return [];
+        }
 
-        return \rtrim($root, '/') . '/app-' . $this->getProject()['$id'] . '/' . $videoId . '/source';
+        $needle = '~' . $this->getProject()['$id'] . '~' . $videoId . '~';
+        $matches = [];
+
+        foreach (\scandir($jobsRoot) ?: [] as $name) {
+            if ($name[0] === '.') {
+                continue;
+            }
+            if (\str_contains($name, $needle)) {
+                $matches[] = $jobsRoot . '/' . $name;
+            }
+        }
+
+        return $matches;
     }
 
     public function videoStoragePath(string $videoId, string $suffix = ''): string

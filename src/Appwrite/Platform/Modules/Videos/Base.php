@@ -142,21 +142,73 @@ abstract class Base extends UtopiaAction
     public const STATUS_ERROR = 'error';
     public const STATUS_ABORTED = 'aborted';
 
-    /** Root of a video's working directory on the shared videos-tmp volume. */
-    public static function tmpPath(string $projectId, string $videoId): string
+    /** Orphaned job folders under videos-tmp/jobs are swept after this many seconds. */
+    public const TMP_TTL = 86400;
+
+    public const JOB_RENDITION = 'rendition';
+    public const JOB_TIMELINE = 'timeline';
+    public const JOB_CAPTION = 'caption';
+
+    /** Flat root for all video worker scratch directories on the shared volume. */
+    public static function tmpJobsRoot(): string
     {
-        return \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/app-' . $projectId . '/' . $videoId;
+        return \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/jobs';
     }
 
     /**
-     * Per-job directory under `{tmpPath}/jobs/{jobId}/`.
+     * Per-job directory: `{tmpJobsRoot()}/{YmdHi}~{projectId}~{videoId}~{type}-{jobId}`.
      *
-     * Encode jobs use the rendition id so each workspace is isolated from a
-     * sibling rendition (or timeline) still writing under the same video.
+     * The leading 12-character UTC minute stamp sorts as text so a maintenance
+     * sweep can drop leftovers older than TMP_TTL without reading file times.
+     * Encode jobs use the rendition id; timeline and caption jobs use a uniqid.
      */
-    public static function tmpJobPath(string $projectId, string $videoId, string $jobId): string
+    public static function tmpJobPath(
+        string $projectId,
+        string $videoId,
+        string $type,
+        string $jobId
+    ): string {
+        $stamp = \gmdate('YmdHi');
+
+        return self::tmpJobsRoot()
+            . '/' . $stamp
+            . '~' . $projectId
+            . '~' . $videoId
+            . '~' . $type
+            . '-' . $jobId;
+    }
+
+    /**
+     * True when a job folder name is older than `$cutoff` (`gmdate('YmdHi', …)`).
+     *
+     * Requires a 12-digit stamp followed by `~` so accidental entries under
+     * jobs/ are left alone.
+     */
+    public static function jobExpired(string $name, string $cutoff): bool
     {
-        return self::tmpPath($projectId, $videoId) . '/jobs/' . $jobId;
+        if (\strlen($name) < 13) {
+            return false;
+        }
+
+        if ($name[12] !== '~') {
+            return false;
+        }
+
+        $stamp = \substr($name, 0, 12);
+
+        if (!\ctype_digit($stamp)) {
+            return false;
+        }
+
+        return $stamp < $cutoff;
+    }
+
+    /**
+     * Legacy per-video root. Kept for Deletes.php of older trees only.
+     */
+    public static function tmpPath(string $projectId, string $videoId): string
+    {
+        return \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/app-' . $projectId . '/' . $videoId;
     }
 
     /**

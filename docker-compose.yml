@@ -749,6 +749,7 @@ services:
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
       - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
     environment:
       - _APP_ENV
       - _APP_USAGE_PASS

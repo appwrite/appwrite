@@ -55,4 +55,33 @@ final class BaseTest extends TestCase
         $this->assertSame(Base::CODEC_H264, Base::normalizeCodec(''));
         $this->assertSame(Base::CODEC_HEVC, Base::normalizeCodec('HEVC'));
     }
+
+    public function testTmpJobPathShape(): void
+    {
+        if (!\defined('APP_STORAGE_VIDEOS_TMP')) {
+            \define('APP_STORAGE_VIDEOS_TMP', '/storage/videos-tmp');
+        }
+
+        $path = Base::tmpJobPath('proj1', 'vid1', Base::JOB_RENDITION, 'ren1');
+        $name = \basename($path);
+
+        $this->assertSame(Base::tmpJobsRoot() . '/' . $name, $path);
+        $this->assertSame(12, \strpos($name, '~'));
+        $this->assertTrue(\ctype_digit(\substr($name, 0, 12)));
+        $this->assertStringEndsWith('~proj1~vid1~rendition-ren1', $name);
+    }
+
+    public function testJobExpiredByStamp(): void
+    {
+        $now = \gmdate('YmdHi');
+        $old = \gmdate('YmdHi', \time() - Base::TMP_TTL - 120);
+        $cutoff = \gmdate('YmdHi', \time() - Base::TMP_TTL);
+
+        $this->assertTrue(Base::jobExpired($old . '~proj~vid~rendition-a', $cutoff));
+        $this->assertFalse(Base::jobExpired($cutoff . '~proj~vid~rendition-edge', $cutoff));
+        $this->assertFalse(Base::jobExpired($now . '~proj~vid~timeline-b', $cutoff));
+        $this->assertFalse(Base::jobExpired('not-a-stamp', $cutoff));
+        $this->assertFalse(Base::jobExpired('2026100617xx~proj~vid~caption-c', $cutoff));
+        $this->assertFalse(Base::jobExpired('202610061759', $cutoff));
+    }
 }

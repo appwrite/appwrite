@@ -168,7 +168,12 @@ class Videos extends Action
     ): void {
         $video = $videoMessage->video;
         $projectId = $videoMessage->project->getId();
-        $workspace = $this->jobWorkspace($projectId, $video->getId());
+        $workspace = $this->jobWorkspace(
+            $projectId,
+            $video->getId(),
+            Base::JOB_TIMELINE,
+            \uniqid('', true)
+        );
         $permissions = $this->sourceReadPermissions($dbForProject, $project, $video);
 
         try {
@@ -324,7 +329,12 @@ class Videos extends Action
         if ($video->isEmpty()) {
             $video = $videoMessage->video;
         }
-        $workspace = $this->workspace($videoMessage->project->getId(), $video->getId());
+        $workspace = $this->jobWorkspace(
+            $videoMessage->project->getId(),
+            $video->getId(),
+            Base::JOB_CAPTION,
+            \uniqid('', true)
+        );
         $permissions = $this->sourceReadPermissions($dbForProject, $project, $video);
 
         try {
@@ -491,7 +501,12 @@ class Videos extends Action
                 $permissions
             );
 
-            $workspace = $this->jobWorkspace($projectId, $videoId, $rendition->getId());
+            $workspace = $this->jobWorkspace(
+                $projectId,
+                $videoId,
+                Base::JOB_RENDITION,
+                $rendition->getId()
+            );
             [$video, $inPath] = $this->prepareSource(
                 $dbForProject,
                 $deviceForFiles,
@@ -1245,24 +1260,23 @@ class Videos extends Action
         }
     }
 
-    private function getTmpPath(string $projectId, string $videoId): string
-    {
-        return Base::tmpPath($projectId, $videoId);
-    }
-
     /**
-     * Per-job directories under `{videoId}/jobs/{jobId}/in/` and `.../out/`.
+     * Per-job directories under `videos-tmp/jobs/{stamp}~…~{type}-{jobId}/in|out/`.
      *
      * Encode passes the rendition id so each workspace is isolated. Call only
      * after this run has claimed the rendition (pending→started): cleanup is
      * keyed by the same id, and a no-op redelivery must not mkdir+rm the tree
-     * an in-flight encode is writing. Timeline omits `$jobId` and gets a uniqid.
+     * an in-flight encode is writing. Timeline and caption jobs pass a uniqid.
      *
      * @return array{basePath: string, inDir: string, outDir: string}
      */
-    private function jobWorkspace(string $projectId, string $videoId, ?string $jobId = null): array
-    {
-        $basePath = Base::tmpJobPath($projectId, $videoId, $jobId ?? \uniqid('', true));
+    private function jobWorkspace(
+        string $projectId,
+        string $videoId,
+        string $type,
+        string $jobId
+    ): array {
+        $basePath = Base::tmpJobPath($projectId, $videoId, $type, $jobId);
         $inDir = $basePath . '/in/';
         $outDir = $basePath . '/out/';
 
@@ -1371,30 +1385,6 @@ class Videos extends Action
         }
 
         return [$video, $inPath];
-    }
-
-    /**
-     * @return array{basePath: string, inDir: string, outDir: string}
-     */
-    private function workspace(string $projectId, string $videoId): array
-    {
-        $root = $this->getTmpPath($projectId, $videoId);
-        $basePath = $root . '/' . \uniqid('', true);
-        $inDir = $basePath . '/in/';
-        $outDir = $basePath . '/out/';
-
-        if (!\mkdir($inDir, 0755, true) && !\is_dir($inDir)) {
-            throw new \Exception('Failed to create temp input directory');
-        }
-        if (!\mkdir($outDir, 0755, true) && !\is_dir($outDir)) {
-            throw new \Exception('Failed to create temp output directory');
-        }
-
-        return [
-            'basePath' => $basePath,
-            'inDir' => $inDir,
-            'outDir' => $outDir,
-        ];
     }
 
     private function cleanup(string $basePath): void

@@ -12,6 +12,7 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Videos\Base as VideosBase;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
@@ -350,6 +351,9 @@ class Deletes extends Action
                 break;
             case DELETE_TYPE_CSV_EXPORTS:
                 $this->deleteOldCSVExports($dbForPlatform, $deviceForFiles);
+                break;
+            case DELETE_TYPE_VIDEOS_TMP:
+                $this->deleteOldVideoTmp();
                 break;
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
@@ -1350,6 +1354,51 @@ class Deletes extends Action
                 Console::success('Deleted CSV file: ' . $file->getAttribute('name'));
             }
         });
+    }
+
+    /**
+     * Remove orphaned videos-tmp job folders older than VideosBase::TMP_TTL.
+     *
+     * Folder names are `{YmdHi}~{projectId}~{videoId}~{type}-{jobId}`; the
+     * leading stamp is compared as text so this never stats the filesystem.
+     */
+    private function deleteOldVideoTmp(): void
+    {
+        $root = VideosBase::tmpJobsRoot();
+        $tmpRoot = \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/';
+
+        if (!\is_dir($root)) {
+            return;
+        }
+
+        $cutoff = \gmdate('YmdHi', \time() - VideosBase::TMP_TTL);
+        Console::info('Deleting video tmp jobs older than ' . $cutoff);
+
+        foreach (\scandir($root) ?: [] as $name) {
+            if ($name[0] === '.') {
+                continue;
+            }
+
+            if (!VideosBase::jobExpired($name, $cutoff)) {
+                continue;
+            }
+
+            $path = $root . '/' . $name;
+            if (!\str_starts_with($path, $tmpRoot)) {
+                continue;
+            }
+
+            $stdout = '';
+            $stderr = '';
+            $code = Console::execute('rm -rf ' . \escapeshellarg($path), '', $stdout, $stderr, 30);
+
+            if ($code !== 0) {
+                Console::error('Failed removing video tmp [' . $path . ']: ' . $stderr);
+                continue;
+            }
+
+            Console::info('Removing video tmp [' . $path . ']');
+        }
     }
 
     /**
