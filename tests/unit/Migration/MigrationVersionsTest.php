@@ -22,7 +22,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Query\Schema\ColumnType;
 use Utopia\Registry\Registry;
 
 final class MigrationVersionsTest extends TestCase
@@ -526,10 +525,23 @@ final class MigrationVersionsTest extends TestCase
         $database = new class (new Memory(), new Cache(new NoCache())) extends Database {
             private bool $interleave = true;
 
+            private bool $timestamped = false;
+
+            #[\Override]
+            public function withRequestTimestamp(?\DateTime $requestTimestamp, callable $callback): mixed
+            {
+                $this->timestamped = $requestTimestamp !== null;
+                try {
+                    return parent::withRequestTimestamp($requestTimestamp, $callback);
+                } finally {
+                    $this->timestamped = false;
+                }
+            }
+
             #[\Override]
             public function updateDocument(string $collection, string $id, Document $document, ?int $expectedVersion = null): Document
             {
-                if ($this->interleave && $collection === 'migrations' && $this->timestamp !== null) {
+                if ($this->interleave && $collection === 'migrations' && $this->timestamped) {
                     $this->interleave = false;
                     parent::updateDocument($collection, $id, new Document([
                         'attemptId' => 'attempt-retry',
@@ -728,39 +740,15 @@ final class MigrationVersionsTest extends TestCase
             ));
         }
 
-        $string = fn (string $id, int $size): Document => new Document([
-            '$id' => $id,
-            'type' => ColumnType::String->value,
-            'format' => '',
-            'size' => $size,
-            'signed' => true,
-            'required' => false,
-            'default' => null,
-            'array' => false,
-            'filters' => [],
-        ]);
-
-        $boolean = fn (string $id): Document => new Document([
-            '$id' => $id,
-            'type' => ColumnType::Boolean->value,
-            'format' => '',
-            'size' => 0,
-            'signed' => true,
-            'required' => false,
-            'default' => null,
-            'array' => false,
-            'filters' => [],
-        ]);
-
         $database->createCollection(Collection::create(id: 'users', attributes: [
-            $string('name', 256),
-            $string('email', 320),
-            $string('phone', 16),
-            $boolean('status'),
-            $boolean('emailVerification'),
-            $boolean('phoneVerification'),
-            $boolean('reset'),
-            $boolean('mfa'),
+            Attribute::string('name', size: 256),
+            Attribute::string('email', size: 320),
+            Attribute::string('phone', size: 16),
+            Attribute::boolean('status'),
+            Attribute::boolean('emailVerification'),
+            Attribute::boolean('phoneVerification'),
+            Attribute::boolean('reset'),
+            Attribute::boolean('mfa'),
         ]));
 
         $migration = new V25();
