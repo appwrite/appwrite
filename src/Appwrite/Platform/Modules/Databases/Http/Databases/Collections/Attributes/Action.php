@@ -23,8 +23,11 @@ use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
+use Utopia\Database\Format;
 use Utopia\Database\Id;
 use Utopia\Database\RelationshipSide;
+use Utopia\Database\RelationshipUpdate as DatabaseRelationshipUpdate;
+use Utopia\Database\Unchanged;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Structure;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
@@ -242,7 +245,7 @@ abstract class Action extends DatabasesAction
     {
         $isCollections = $this->isCollectionsAPI();
 
-        return match (Attribute::tryNormalizeType($type)) {
+        return match (AttributeDefinition::columnType($type)) {
             ColumnType::Boolean => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_BOOLEAN
                 : UtopiaResponse::MODEL_COLUMN_BOOLEAN,
@@ -356,7 +359,9 @@ abstract class Action extends DatabasesAction
         }
 
         if (!empty($format)) {
-            if (!Structure::hasFormat($format, Attribute::typeFromStored($type))) {
+            $columnType = AttributeDefinition::columnType($type);
+
+            if ($columnType === null || !Structure::hasFormat($format, $columnType)) {
                 throw new Exception($this->getFormatUnsupportedException(), "Format $format not available for $type columns.");
             }
         }
@@ -412,7 +417,7 @@ abstract class Action extends DatabasesAction
                     throw new StructureException('Failed to add required spatial column: existing rows present. Make the column optional.');
                 }
             }
-            $dbForDatabases->checkAttribute($collection->getId(), Attribute::fromArray([
+            $dbForDatabases->checkAttribute('database_' . $db->getSequence() . '_collection_' . $collection->getSequence(), Attribute::fromArray([
                 'key' => $key,
                 'type' => $type,
                 'size' => $size,
@@ -468,7 +473,7 @@ abstract class Action extends DatabasesAction
                     'options' => $options,
                 ]);
 
-                $dbForDatabases->checkAttribute($relatedCollection->getId(), Attribute::fromArray([
+                $dbForDatabases->checkAttribute('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence(), Attribute::fromArray([
                     'key' => $twoWayKey,
                     'type' => $type,
                     'size' => $size,
@@ -588,6 +593,8 @@ abstract class Action extends DatabasesAction
             $attribute->setAttribute('size', $size);
         }
 
+        $format = Unchanged::Value;
+
         switch ($attribute->getAttribute('format')) {
             case APP_DATABASE_ATTRIBUTE_INT_RANGE:
             case APP_DATABASE_ATTRIBUTE_BIGINT_RANGE:
@@ -618,6 +625,7 @@ abstract class Action extends DatabasesAction
                     'max' => $max
                 ];
                 $attribute->setAttribute('formatOptions', $options);
+                $format = new Format($attribute->getAttribute('format'), $options);
 
                 break;
             case APP_DATABASE_ATTRIBUTE_ENUM:
@@ -640,6 +648,7 @@ abstract class Action extends DatabasesAction
                 ];
 
                 $attribute->setAttribute('formatOptions', $options);
+                $format = new Format($attribute->getAttribute('format'), $options);
 
                 break;
         }
@@ -652,8 +661,8 @@ abstract class Action extends DatabasesAction
                 $dbForDatabases->updateRelationship(
                     collection: $collectionId,
                     key: $key,
-                    update: new \Utopia\Database\RelationshipUpdate(
-                        key: $newKey,
+                    update: new DatabaseRelationshipUpdate(
+                        key: $newKey ?: null,
                         onDelete: $update->onDelete(),
                     ),
                 );
@@ -679,25 +688,17 @@ abstract class Action extends DatabasesAction
             }
         } else {
             try {
-                $definition = $dbForDatabases->updateAttribute(
+                $dbForDatabases->updateAttribute(
                     collection: $collectionId,
                     key: $key,
-                    size: $size,
-                    required: $required,
-                    default: $default,
-                    formatOptions: $options,
-                    newKey: $newKey ?? null
+                    update: new AttributeUpdate(
+                        size: $size,
+                        required: $required,
+                        default: $default,
+                        format: $format,
+                        key: $newKey ?: null,
+                    ),
                 );
-
-                // updateAttribute() keeps the stored default when given null,
-                // but the API uses null to clear it.
-                if ($default === null && $definition->default !== null) {
-                    $dbForDatabases->updateAttribute(
-                        collection: $collectionId,
-                        key: $definition->key,
-                        update: new AttributeUpdate(default: null)
-                    );
-                }
             } catch (DuplicateException) {
                 throw new Exception($this->getDuplicateException(), params: [$key]);
             } catch (IndexException $e) {
