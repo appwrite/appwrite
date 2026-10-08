@@ -16,7 +16,7 @@ final class AttacksTest extends TestCase
         $attacks = Attacks::all();
         $names = \array_map(static fn (Attack $attack): string => $attack::getName(), $attacks);
 
-        $this->assertSame(\count($names), \count(\array_unique($names)));
+        $this->assertCount(\count(\array_unique($names)), $names);
         $this->assertContains('guest-access', $names);
         $this->assertContains('cross-tenant', $names);
         $this->assertContains('idor', $names);

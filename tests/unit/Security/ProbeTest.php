@@ -42,6 +42,6 @@ final class ProbeTest extends TestCase
         ]));
         $this->assertFalse($probe->isSuccess(['headers' => ['status-code' => 404], 'body' => []]));
         $this->assertSame(0, $probe->status(['headers' => []]));
-        $this->assertSame($route->method, 'GET');
+        $this->assertSame('GET', $route->method);
     }
 }

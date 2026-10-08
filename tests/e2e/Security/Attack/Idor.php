@@ -57,7 +57,7 @@ final class Idor implements Attack
     private function leaksVictim(array $response, World $world): bool
     {
         $encoded = \json_encode($response['body'] ?? []);
-        if (! \is_string($encoded) || $encoded === '') {
+        if ($encoded === false) {
             return false;
         }
 

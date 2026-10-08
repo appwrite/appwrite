@@ -44,10 +44,6 @@ final class Catalog
 
         foreach ($router as $method => $routes) {
             foreach ($routes as $route) {
-                if (! $route instanceof Route) {
-                    continue;
-                }
-
                 $path = $route->getPath();
                 $id = \strtoupper((string) $method) . ' ' . $path;
                 if (isset($seen[$id])) {
@@ -81,7 +77,7 @@ final class Catalog
     {
         foreach (Http::getRoutes() as $routes) {
             foreach ($routes as $route) {
-                if ($route instanceof Route && \str_starts_with($route->getPath(), '/v1')) {
+                if (\str_starts_with($route->getPath(), '/v1')) {
                     return;
                 }
             }

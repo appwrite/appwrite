@@ -63,7 +63,7 @@ That rewrites `baseline.json`. Review the diff like code. New finding rows come 
 
 ## CI
 
-Job `Tests / E2E / Security` in `.github/workflows/ci.yml`. One stack (default PostgreSQL, dedicated tables), sequential PHPUnit. Attack classes share one fixture world (two projects, two users, a least-privilege key, a console developer). ParaTest would rebuild that world per process and cost more than it saves; the request loop is the cheap part.
+Job `Tests / E2E / Security` in `.github/workflows/ci.yml`. One stack (default PostgreSQL, dedicated tables), sequential PHPUnit. Attack classes share one fixture world (one console organization, two projects, two users, a least-privilege key, a console developer). Self-hosted allows only one organization, so both projects share that team. ParaTest would rebuild that world per process and cost more than it saves; the request loop is the cheap part.
 
 ## Trade-offs
 

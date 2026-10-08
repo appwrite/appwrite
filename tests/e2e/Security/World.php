@@ -53,15 +53,18 @@ final class World
 
         $probe = new Probe($client);
         $owner = self::createConsoleUser($client);
-        $projectA = self::createProject($client, $owner['session'], 'Security Project A');
-        $projectB = self::createProject($client, $owner['session'], 'Security Project B');
+        // Self-hosted instances allow one console organization. Both
+        // isolation projects live on that team so boot does not 403.
+        $organizationId = self::createOrganization($client, $owner['session']);
+        $projectA = self::createProject($client, $owner['session'], 'Security Project A', $organizationId);
+        $projectB = self::createProject($client, $owner['session'], 'Security Project B', $organizationId);
         $fullKeyA = self::createKey($client, $owner['session'], $projectA['id'], self::broadScopes());
         $fullKeyB = self::createKey($client, $owner['session'], $projectB['id'], self::broadScopes());
         $limitedKeyA = self::createKey($client, $owner['session'], $projectA['id'], ['locale.read']);
         $userA = self::createProjectUser($client, $projectA['id']);
         $userB = self::createProjectUser($client, $projectA['id']);
         $teamA = self::createUserTeam($client, $projectA['id'], $userA['session']);
-        $developer = self::createDeveloper($client, $owner, $projectA['teamId']);
+        $developer = self::createDeveloper($client, $owner, $organizationId);
 
         return new self(
             client: $client,
@@ -76,7 +79,7 @@ final class World
             userB: $userB,
             teamA: $teamA,
             developer: $developer,
-            organizationId: $projectA['teamId'],
+            organizationId: $organizationId,
         );
     }
 
@@ -220,10 +223,7 @@ final class World
         ];
     }
 
-    /**
-     * @return array{id: string, teamId: string}
-     */
-    private static function createProject(Client $client, string $ownerSession, string $name): array
+    private static function createOrganization(Client $client, string $ownerSession): string
     {
         $headers = [
             'origin' => 'http://localhost',
@@ -232,11 +232,11 @@ final class World
             'x-appwrite-project' => 'console',
         ];
 
-        $team = null;
+        $team = ['headers' => [], 'body' => []];
         for ($attempt = 0; $attempt < 8; $attempt++) {
             $team = $client->call(Client::METHOD_POST, '/teams', $headers, [
                 'teamId' => ID::unique(),
-                'name' => $name . ' Team',
+                'name' => 'Security Org',
             ]);
             $status = (int) ($team['headers']['status-code'] ?? 0);
             if (\in_array($status, [200, 201], true)) {
@@ -248,15 +248,31 @@ final class World
             }
             break;
         }
-        $team = self::must($team ?? [], [200, 201], 'organization');
 
-        $project = null;
+        $team = self::must($team, [200, 201], 'organization');
+
+        return (string) $team['body']['$id'];
+    }
+
+    /**
+     * @return array{id: string, teamId: string}
+     */
+    private static function createProject(Client $client, string $ownerSession, string $name, string $teamId): array
+    {
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $ownerSession,
+            'x-appwrite-project' => 'console',
+        ];
+
+        $project = ['headers' => [], 'body' => []];
         for ($attempt = 0; $attempt < 5; $attempt++) {
             $project = $client->call(Client::METHOD_POST, '/projects', $headers, [
                 'projectId' => ID::unique(),
                 'region' => System::getEnv('_APP_REGION', 'default'),
                 'name' => $name,
-                'teamId' => $team['body']['$id'],
+                'teamId' => $teamId,
                 'description' => $name,
                 'url' => 'https://appwrite.io',
             ]);
@@ -266,11 +282,11 @@ final class World
             \usleep(400_000);
         }
 
-        $project = self::must($project ?? [], 201, 'project');
+        $project = self::must($project, 201, 'project');
 
         return [
             'id' => (string) $project['body']['$id'],
-            'teamId' => (string) $team['body']['$id'],
+            'teamId' => $teamId,
         ];
     }
 
@@ -476,8 +492,8 @@ final class World
             \parse_str(\html_entity_decode(\substr($link, $queryStart + 1)), $queryParams);
             $tokens = [];
             foreach ($queryParams as $key => $value) {
-                if (\is_string($value) || \is_int($value)) {
-                    $tokens[(string) $key] = (string) $value;
+                if (\is_string($value)) {
+                    $tokens[(string) $key] = $value;
                 }
             }
 

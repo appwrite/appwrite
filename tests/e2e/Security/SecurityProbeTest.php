@@ -49,7 +49,7 @@ final class SecurityProbeTest extends TestCase
         $this->assertGreaterThan(50, \count(self::$routes), 'Catalog is too small to be the live route table.');
 
         $ids = Catalog::ids(self::$routes);
-        $this->assertSame(\count($ids), \count(\array_unique($ids)), 'Catalog contains duplicate method+path ids.');
+        $this->assertCount(\count(\array_unique($ids)), $ids, 'Catalog contains duplicate method+path ids.');
     }
 
     public function testRouteInventory(): void
