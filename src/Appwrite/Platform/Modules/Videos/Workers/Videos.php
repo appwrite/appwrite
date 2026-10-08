@@ -255,6 +255,9 @@ class Videos extends Action
             foreach ($sheet->images() as $localFile) {
                 $fileName = \basename($localFile);
                 $fullPath = $timelineDir . $fileName;
+                $data = (new Local('/'))->read($localFile);
+                // Retained bytes. StatsResources sums this column into the videos.storage gauge.
+                $bytes = $data->getSize() ?? (\filesize($localFile) ?: 0);
 
                 $preview = $dbForProject->createDocument('videos_previews', new Document([
                     'videoId' => $video->getId(),
@@ -262,11 +265,12 @@ class Videos extends Action
                     'type' => 'sprite',
                     'name' => $fileName,
                     'path' => $fullPath,
+                    'size' => $bytes,
                 ]));
 
                 $deviceForVideos->write(
                     $fullPath,
-                    (new Local('/'))->read($localFile),
+                    $data,
                     'image/jpeg'
                 );
 
@@ -900,10 +904,14 @@ class Videos extends Action
             'duration' => $duration,
         ]));
 
+        $data = (new Local('/'))->read($vttPath);
+        // Retained bytes. StatsResources sums this column into the videos.storage gauge.
+        $bytes = $data->getSize() ?? (\filesize($vttPath) ?: 0);
+
         Console::info('Uploading ' . $fileName);
         $deviceForVideos->write(
             $fullPath,
-            (new Local('/'))->read($vttPath),
+            $data,
             'text/vtt'
         );
 
@@ -914,6 +922,7 @@ class Videos extends Action
                 'targetDuration' => $duration,
                 'status' => Base::STATUS_READY,
                 'path' => $fullPath,
+                'size' => $bytes,
             ])
         );
         $this->notify(

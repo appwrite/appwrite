@@ -505,12 +505,19 @@ final class MigrationVersionsTest extends TestCase
         \sort($names);
         $this->assertSame(['1080p', '2160p', '360p', '480p', '576p', '720p'], $names);
 
-        $renditionAttributes = [];
-        foreach ($database->getCollection('videos_renditions')->getAttribute('attributes', []) as $attribute) {
-            $id = $attribute instanceof Document ? $attribute->getId() : ($attribute['$id'] ?? '');
-            $renditionAttributes[$id] = $attribute;
+        foreach (['videos_renditions', 'videos_captions', 'videos_previews'] as $collectionId) {
+            $attributeIds = [];
+            foreach ($database->getCollection($collectionId)->getAttribute('attributes', []) as $attribute) {
+                $attributeIds[] = $attribute instanceof Document ? $attribute->getId() : ($attribute['$id'] ?? '');
+            }
+            $this->assertContains('size', $attributeIds, "Expected \"{$collectionId}\" to store retained bytes");
         }
-        $this->assertArrayHasKey('size', $renditionAttributes);
+
+        $previewAttributeIds = [];
+        foreach ($database->getCollection('videos_previews')->getAttribute('attributes', []) as $attribute) {
+            $previewAttributeIds[] = $attribute instanceof Document ? $attribute->getId() : ($attribute['$id'] ?? '');
+        }
+        $this->assertNotContains('second', $previewAttributeIds);
     }
 
     public function testV26SkipsConsoleProject(): void

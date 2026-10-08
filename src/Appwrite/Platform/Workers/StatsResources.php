@@ -294,9 +294,9 @@ class StatsResources extends Action
     }
 
     /**
-     * Current bytes of packaged renditions. Summed from each rendition's stored
-     * size so a retry or a deletion replaces the total. The per-encode event is
-     * skipped in StatsUsage.
+     * Current bytes of packaged renditions, captions, and preview images.
+     * Summed from each row's stored size so a retry or a deletion replaces
+     * the total. The per-encode event is skipped in StatsUsage.
      *
      * @return array<int, array<string, mixed>>
      */
@@ -304,7 +304,7 @@ class StatsResources extends Action
     {
         try {
             $gauges = [
-                ['metric' => METRIC_VIDEOS_STORAGE, 'value' => (int) $dbForProject->sum('videos_renditions', 'size'), 'service' => 'videos', 'resourceType' => 'project', 'resourceId' => $project->getId()],
+                ['metric' => METRIC_VIDEOS_STORAGE, 'value' => $this->videoStorage($dbForProject), 'service' => 'videos', 'resourceType' => 'project', 'resourceId' => $project->getId()],
             ];
         } catch (\Throwable $th) {
             Console::warning("Failed to measure videos for {$project->getId()}: " . $th->getMessage());
@@ -313,7 +313,7 @@ class StatsResources extends Action
 
         $this->foreachDocument($dbForProject, 'videos', [], function (Document $video) use ($dbForProject, &$gauges): void {
             try {
-                $storage = (int) $dbForProject->sum('videos_renditions', 'size', [
+                $storage = $this->videoStorage($dbForProject, [
                     Query::equal('videoInternalId', [$video->getSequence()]),
                 ]);
             } catch (\Throwable $th) {
@@ -325,6 +325,21 @@ class StatsResources extends Action
         });
 
         return $gauges;
+    }
+
+    /**
+     * Bytes retained for one video, or for the project when no query is passed.
+     *
+     * @param array<int, Query> $queries
+     */
+    private function videoStorage(Database $dbForProject, array $queries = []): int
+    {
+        $storage = 0;
+        foreach (['videos_renditions', 'videos_captions', 'videos_previews'] as $collection) {
+            $storage += (int) $dbForProject->sum($collection, 'size', $queries);
+        }
+
+        return $storage;
     }
 
     /**
