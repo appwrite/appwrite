@@ -1,0 +1,6 @@
+{
+    "version": 1,
+    "notes": "Empty routes means the inventory is not locked yet. After the first green run, populate it with _APP_SECURITY_BASELINE=update so new routes fail CI until they are reviewed.",
+    "routes": [],
+    "findings": []
+}
