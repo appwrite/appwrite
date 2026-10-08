@@ -322,7 +322,7 @@ return [
     ],
 
     'providers' => [
-        '$collection' => Id::custom(DATABASE::METADATA),
+        '$collection' => Id::custom(Database::METADATA),
         '$id' => Id::custom('providers'),
         'name' => 'Providers',
         'attributes' => [
@@ -343,7 +343,7 @@ return [
     ],
 
     'messages' => [
-        '$collection' => Id::custom(DATABASE::METADATA),
+        '$collection' => Id::custom(Database::METADATA),
         '$id' => Id::custom('messages'),
         'name' => 'Messages',
         'attributes' => [
@@ -367,7 +367,7 @@ return [
     ],
 
     'pushLedger' => [
-        '$collection' => Id::custom(DATABASE::METADATA),
+        '$collection' => Id::custom(Database::METADATA),
         '$id' => Id::custom('pushLedger'),
         'name' => 'MQTT Messages',
         'attributes' => [
@@ -387,7 +387,7 @@ return [
     ],
 
     'topics' => [
-        '$collection' => Id::custom(DATABASE::METADATA),
+        '$collection' => Id::custom(Database::METADATA),
         '$id' => Id::custom('topics'),
         'name' => 'Topics',
         'attributes' => [
@@ -416,7 +416,7 @@ return [
     ],
 
     'subscribers' => [
-        '$collection' => Id::custom(DATABASE::METADATA),
+        '$collection' => Id::custom(Database::METADATA),
         '$id' => Id::custom('subscribers'),
         'name' => 'Subscribers',
         'attributes' => [
@@ -442,7 +442,7 @@ return [
     ],
 
     'targets' => [
-        '$collection' => Id::custom(DATABASE::METADATA),
+        '$collection' => Id::custom(Database::METADATA),
         '$id' => Id::custom('targets'),
         'name' => 'Targets',
         'attributes' => [
