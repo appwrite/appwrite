@@ -1080,6 +1080,16 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('bytes 0-' . $last . '/' . $segmentSize, $partial['headers']['content-range'] ?? '');
         $this->assertSame($segmentSize, \strlen($partial['body']));
 
+        // An explicit end past EOF is clamped to the last byte. Players send a
+        // window such as bytes=0-2000000; that span is under the read buffer,
+        // so it must return the segment rather than a range error.
+        $partial = $this->client->call(Client::METHOD_GET, $segmentPath, \array_merge($this->headers(), [
+            'range' => 'bytes=0-' . ($segmentSize + 500),
+        ]));
+        $this->assertEquals(206, $partial['headers']['status-code']);
+        $this->assertEquals('bytes 0-' . $last . '/' . $segmentSize, $partial['headers']['content-range'] ?? '');
+        $this->assertSame($cmafSegment['body'], $partial['body']);
+
         // A range starting past the end is not satisfiable.
         $invalid = $this->client->call(Client::METHOD_GET, $segmentPath, \array_merge($this->headers(), [
             'range' => 'bytes=' . $segmentSize . '-' . $segmentSize,

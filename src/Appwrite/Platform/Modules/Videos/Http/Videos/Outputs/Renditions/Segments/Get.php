@@ -122,13 +122,18 @@ class Get extends Base
             $unit = $request->getRangeUnit();
 
             if ($end === null || $end - $start > APP_STORAGE_READ_BUFFER) {
-                $end = \min(($start + MAX_OUTPUT_CHUNK_SIZE - 1), ($size - 1));
+                $end = $start + MAX_OUTPUT_CHUNK_SIZE - 1;
             }
+
+            // RFC 9110: a last-byte-pos past the end of the file is clamped, not
+            // rejected. Players request a window such as bytes=0-2000000 against
+            // a much smaller segment; that span stays under the read buffer.
+            $end = \min($end, $size - 1);
 
             // `>` not `>=`: a single byte range (bytes=0-0, or the file's final
             // byte) has start === end and is valid. Players probe segments that
             // way before fetching the rest.
-            if ($unit !== 'bytes' || $start > $end || $end >= $size) {
+            if ($unit !== 'bytes' || $start > $end) {
                 throw new Exception(Exception::STORAGE_INVALID_RANGE);
             }
 
