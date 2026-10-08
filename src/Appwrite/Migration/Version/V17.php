@@ -49,7 +49,7 @@ class V17 extends Migration
             $id = "bucket_{$bucket->getSequence()}";
 
             try {
-                $this->dbForProject->updateAttribute($id, 'mimeType', new AttributeUpdate(type: ColumnType::String, size: 255, required: true, default: false));
+                $this->dbForProject->updateAttribute($id, 'mimeType', new AttributeUpdate(type: ColumnType::String, size: 255, required: true));
                 $this->dbForProject->purgeCachedCollection($id);
             } catch (\Throwable $th) {
                 Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
@@ -89,7 +89,7 @@ class V17 extends Migration
                         /**
                          * Update 'mimeType' attribute size (127->255)
                          */
-                        $this->dbForProject->updateAttribute($id, 'mimeType', new AttributeUpdate(type: ColumnType::String, size: 255, required: true, default: false));
+                        $this->dbForProject->updateAttribute($id, 'mimeType', new AttributeUpdate(type: ColumnType::String, size: 255, required: true));
                         $this->dbForProject->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
