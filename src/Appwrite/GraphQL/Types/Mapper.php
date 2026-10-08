@@ -317,7 +317,13 @@ class Mapper
             case \Utopia\Database\Validator\Queries::class:
             case \Utopia\Database\Validator\Queries\Documents::class:
             case \Utopia\Database\Validator\Roles::class:
+            case \Utopia\WAF\Validator\Conditions::class:
                 $type = Type::listOf(Type::string());
+                break;
+            case \Utopia\Validator\Multiple::class:
+                $type = $validator->getType() === Validator::TYPE_ARRAY
+                    ? Type::listOf(Type::string())
+                    : Type::string();
                 break;
             case \Utopia\Validator\Boolean::class:
                 $type = Type::boolean();
