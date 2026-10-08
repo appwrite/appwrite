@@ -9,6 +9,8 @@ use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Telemetry\Histogram;
 use Utopia\Telemetry\UpDownCounter;
 use Utopia\Validator;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 
 class Http
 {
@@ -882,12 +884,13 @@ class Http
      * Validate Param
      *
      * Creates an validator instance and validate given value with given rules.
+     * On success, loose boolean strings are coerced via {@see coerce()}.
      *
      * @param  array<string, mixed>  $param
      *
      * @throws Exception
      */
-    protected function validate(string $key, array $param, mixed $value): void
+    protected function validate(string $key, array $param, mixed &$value): void
     {
         if ($param['optional'] && \is_null($value)) {
             return;
@@ -902,6 +905,38 @@ class Http
         if (!$validator->isValid($value)) {
             throw new Exception('Invalid `' . $key . '` param: ' . $validator->getDescription(), 400);
         }
+
+        $value = $this->coerce($validator, $value);
+    }
+
+    /**
+     * Coerce a validated loose boolean string to a real bool.
+     *
+     * `Boolean(loose: true)` accepts "true", "false", "1", and "0" but leaves
+     * them as strings. A typed `bool` parameter then casts every non-empty
+     * string except "0" to true, so "false" becomes true. Validators only
+     * check values, so the conversion happens here, as in `CLI::coerce()`.
+     *
+     * Non-strings pass through. The empty string stays empty because
+     * `filter_var` would turn it into false.
+     */
+    protected function coerce(Validator $validator, mixed $value): mixed
+    {
+        if (!\is_string($value) || $value === '') {
+            return $value;
+        }
+
+        while ($validator instanceof Nullable) {
+            $validator = $validator->getValidator();
+        }
+
+        if (!$validator instanceof Boolean) {
+            return $value;
+        }
+
+        $coerced = \filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+        return $coerced ?? $value;
     }
 
     /**
