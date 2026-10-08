@@ -23,7 +23,6 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       console: ${{ steps.changes.outputs.console }}
-      e2e: ${{ steps.e2e.outputs.e2e }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -38,24 +37,6 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
           BEFORE: ${{ github.event.before }}
         run: bash .github/scripts/changes.sh
-
-      # E2E signs in to a live backend with the shared test account, so it needs
-      # repository secrets: same-repository pull requests only, once configured.
-      - name: Check E2E prerequisites
-        id: e2e
-        env:
-          CONSOLE: ${{ steps.changes.outputs.console }}
-          SAME_REPOSITORY: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
-          CONFIGURED: ${{ secrets.CONSOLE_E2E_TEST_EMAIL != '' && secrets.CONSOLE_VITE_APPWRITE_ENDPOINT != '' }}
-        run: |
-          if [ "$CONSOLE" = true ] && [ "$SAME_REPOSITORY" = true ] && [ "$CONFIGURED" != true ]; then
-            echo '::warning::Console E2E skipped: the CONSOLE_E2E_* and CONSOLE_VITE_* secrets are not configured.'
-          fi
-          e2e=false
-          if [ "$CONSOLE" = true ] && [ "$SAME_REPOSITORY" = true ] && [ "$CONFIGURED" = true ]; then
-            e2e=true
-          fi
-          echo "e2e=$e2e" >> "$GITHUB_OUTPUT"
 
   checks:
     name: Console / Checks
@@ -112,10 +93,15 @@ jobs:
           VITE_APPWRITE_ENDPOINT: http://appwrite.test/v1
           PUBLIC_APPWRITE_ENDPOINT: http://appwrite.test/v1
 
+  # E2E runs against a live backend with the shared test account, so it needs
+  # repository secrets: same-repository pull requests only.
   session:
     name: Console / E2E / Session
     needs: changes
-    if: needs.changes.outputs.e2e == 'true'
+    if: >-
+      needs.changes.outputs.console == 'true'
+      && github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: gcrunner=${{ github.run_id }}-console-e2e-session/runner=small
     timeout-minutes: 5
     outputs:
