@@ -601,6 +601,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'To date': '期間累計',
   'Week to date': '週初から今日まで',
   'Month to date': '月初から今日まで',
+  'Longer periods': '長期間',
+  'Last 90 days': '過去 90 日',
+  'Last 12 months': '過去 12 か月',
+  'All time': '全期間',
   'No comparison': '比較なし',
   'Show only current period': '現在の期間のみ表示',
   'Previous period': '前期間',
@@ -697,6 +701,23 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Tracking is live': '計測は稼働中です',
   'Listening for events': 'イベントを待っています',
   'Latest event': '最新のイベント',
+  "Events go through a small proxy on your own domain, so ad blockers don't drop them.":
+    'イベントは自社ドメイン上の小さなプロキシを経由するため、広告ブロッカーに止められません。',
+  'Choose it when many visitors use ad blockers. It needs a server route and an API key.':
+    '広告ブロッカーを使う訪問者が多い場合に選択してください。サーバーのルートと API キーが必要です。',
+  'Ad blockers': '広告ブロッカー',
+  'Ad blockers can stop requests to analytics services, so some visits are never counted. Serving tracking from a domain you own recovers most of them.':
+    '広告ブロッカーはアナリティクスサービスへのリクエストを止めることがあり、一部の訪問はカウントされません。自社ドメインからトラッキングを配信すると、その大半を取り戻せます。',
+  'Custom domain': 'カスタムドメイン',
+  'Serve the Appwrite API on your own domain and use it as the endpoint in your tracking code. Visitor locations stay accurate with no extra setup.':
+    'Appwrite の API を自社ドメインで提供し、トラッキングコードのエンドポイントとして使用します。追加の設定なしで訪問者の地域は正確に保たれます。',
+  'Forward events through a small proxy on your site. Requests never leave your domain, so it holds up best against blocking.':
+    'サイト上の小さなプロキシ経由でイベントを転送します。リクエストが自社ドメインの外に出ないため、ブロックに最も強い方法です。',
+  'Set up proxy': 'プロキシを設定',
+  'Identifiers and timestamps for this property.':
+    'このプロパティの識別子とタイムスタンプ。',
+  'Property ID:': 'プロパティ ID:',
+  'Snippet ID:': 'スニペット ID:',
   'Events are reaching Appwrite.': 'イベントが Appwrite に届いています。',
   'Install the code and load a page. Checks every few seconds.':
     'コードを導入してページを読み込んでください。数秒ごとに確認します。',

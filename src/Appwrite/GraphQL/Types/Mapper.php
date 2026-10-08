@@ -11,8 +11,8 @@ use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\UnionType;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
-use Utopia\Validator;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Validator;
 
 class Mapper
 {

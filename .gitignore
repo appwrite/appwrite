@@ -33,3 +33,5 @@ tests/playwright/screenshots
 auth.json
 .pi/
 src/Appwrite/Platform/Modules/Databases/_semgrep_prove/
+/packages/*/composer.linked.json
+/packages/*/composer.linked.lock

@@ -20,10 +20,10 @@ use Utopia\OpenAPI\Model\Composition;
 use Utopia\OpenAPI\Model\ParameterLocation;
 use Utopia\Platform\Enum;
 use Utopia\Query\Schema\ColumnType;
-use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
+use Utopia\Validator\Validator;
 use Utopia\Validator\WhiteList;
 
 class OpenAPI3 extends Format
@@ -615,7 +615,7 @@ class OpenAPI3 extends Format
                 }
 
                 /**
-                 * @var \Utopia\Validator $validator
+                 * @var \Utopia\Validator\Validator $validator
                  */
                 $validator = $this->getValidator($param);
 

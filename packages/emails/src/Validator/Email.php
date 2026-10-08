@@ -3,7 +3,7 @@
 namespace Utopia\Emails\Validator;
 
 use Utopia\Emails\Email as EmailParser;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 /**
  * Email

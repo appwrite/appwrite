@@ -64,7 +64,6 @@ use Utopia\OpenAPI\Model\Discriminator;
 use Utopia\OpenAPI\Parser;
 use Utopia\Platform\Enum;
 use Utopia\Query\Schema\ColumnType;
-use Utopia\Validator;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
@@ -78,6 +77,7 @@ use Utopia\Validator\Multiple;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 use Utopia\Validator\WhiteList;
 
 class TestFormat extends Format
@@ -103,7 +103,7 @@ class TestFormat extends Format
     }
 }
 
-class MixedValidator extends \Utopia\Validator
+class MixedValidator extends \Utopia\Validator\Validator
 {
     public function getDescription(): string
     {

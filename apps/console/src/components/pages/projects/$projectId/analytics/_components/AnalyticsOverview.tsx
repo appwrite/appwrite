@@ -1,4 +1,4 @@
-import { useMemo, type KeyboardEvent, type ReactNode } from 'react'
+import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { useQueries } from '@tanstack/react-query'
 import type { DateRange } from 'react-day-picker'
 import {
@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
 import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
+import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
 import {
@@ -64,6 +65,12 @@ import {
 const CURRENT_COLOR = 'var(--chart-brand)'
 const PREVIOUS_COLOR = 'var(--muted-foreground)'
 const GRADIENT_ID = 'analyticsOverviewGradient'
+const SKELETON_GRADIENT_ID = 'analyticsOverviewSkeletonGradient'
+const SKELETON_CHART_STROKE = 'hsl(var(--muted-foreground) / 0.4)'
+const SKELETON_CHART_FILL = 'hsl(var(--muted-foreground))'
+const SKELETON_WAVE = [
+  0.42, 0.58, 0.51, 0.68, 0.59, 0.72, 0.64, 0.7, 0.55, 0.74, 0.62, 0.69,
+] as const
 
 /** Every overview metric; each one can drive the chart. */
 export type AnalyticsChartMetric =
@@ -264,6 +271,8 @@ type AnalyticsOverviewProps = {
   onActiveSeriesChange: (series: AnalyticsChartMetric) => void
   /** Loader-prefetched aggregate for the default window, if any. */
   fallbackStats?: Models.AnalyticsMetric
+  /** Loader-prefetched series for the default window, if any. */
+  fallbackSeries?: { points: Models.AnalyticsMetric[]; total: number }
   compareMode: AnalyticsCompareMode
   /** Resolved comparison window; `null` when comparison is off. */
   comparisonRange: AnalyticsRange | null
@@ -289,11 +298,13 @@ export function AnalyticsOverview({
   activeSeries,
   onActiveSeriesChange,
   fallbackStats,
+  fallbackSeries,
   compareMode,
   comparisonRange,
   onRefresh,
 }: AnalyticsOverviewProps) {
   const t = useT()
+  const [hasRevealed, setHasRevealed] = useState(false)
   const isComparing = comparisonRange !== null
   // Hooks can't be conditional: with comparison off, pass a null property ID
   // so the comparison queries stay disabled, and any range as a placeholder.
@@ -334,7 +345,7 @@ export function AnalyticsOverview({
       : requestedMetric
 
   const {
-    data: seriesData,
+    data: seriesFromHook,
     isLoading: seriesLoading,
     error: seriesError,
   } = useAnalyticsEventMetrics(
@@ -345,6 +356,9 @@ export function AnalyticsOverview({
     interval,
     filters,
   )
+  // The loader's prefetch is unfiltered, so only use it without filters.
+  const seriesData =
+    seriesFromHook ?? (filters.length === 0 ? fallbackSeries : undefined)
   const { data: comparisonSeriesData } = useAnalyticsEventMetrics(
     projectId,
     comparePropertyId,
@@ -449,7 +463,40 @@ export function AnalyticsOverview({
   const windowsSettled =
     windowResults.length > 0 &&
     windowResults.every((result) => result.data !== undefined || result.isError)
+  const comparisonWindowsSettled =
+    comparisonWindowResults.length === 0 ||
+    comparisonWindowResults.every(
+      (result) => result.data !== undefined || result.isError,
+    )
   const windowsError = windowResults.find((result) => result.isError)?.error
+
+  const hasSeries =
+    activeMetric.source === 'aggregate'
+      ? windowsSettled
+      : (activeMetric.key === 'pageviews' ? pageviewSeriesData : seriesData) !==
+        undefined
+  const comparisonReady =
+    !isComparing ||
+    (activeMetric.source === 'aggregate'
+      ? comparisonWindowsSettled
+      : activeMetric.key === 'pageviews'
+        ? comparisonPageviewData !== undefined
+        : previousSeriesData !== undefined)
+  // First paint waits for the current series and, when compare is on (the
+  // default), the comparison series too. Otherwise the dashed previous-period
+  // line lands from cache first, then the area remounts onto the full series.
+  const bothReady = hasSeries && comparisonReady
+  if (bothReady && !hasRevealed) {
+    setHasRevealed(true)
+  }
+  const revealed = hasRevealed || bothReady
+  const loadError =
+    activeMetric.source === 'aggregate'
+      ? (windowsError ?? statsError)
+      : (statsError ?? (activeMetric.key === 'pageviews' ? pageviewError : seriesError))
+  const showError = !!loadError && !hasSeries
+  const showSkeleton = !showError && !revealed
+  const showComparisonLine = isComparing && comparisonReady && !showSkeleton
 
   // The comparison window is aligned by bucket index, so the dashed line sits
   // under the matching hour / day of the current window. A custom window of a
@@ -464,7 +511,7 @@ export function AnalyticsOverview({
           (point, index) =>
             bucketValue(metricKey as SeriesMetric, point, pageviewPoints[index]) ?? 0,
         )
-  const previousValues: (number | null)[] = !isComparing
+  const previousValues: (number | null)[] = !showComparisonLine
     ? []
     : activeMetric.source === 'aggregate'
       ? windowValues(
@@ -480,8 +527,10 @@ export function AnalyticsOverview({
         )
   const chartData = chartPoints.map((point, index) => ({
     ...point,
-    value: currentValues[index] ?? null,
-    previous: isComparing ? (previousValues[index] ?? null) : undefined,
+    value: showSkeleton
+      ? SKELETON_WAVE[index % SKELETON_WAVE.length]
+      : (currentValues[index] ?? null),
+    previous: showComparisonLine ? (previousValues[index] ?? null) : undefined,
     previousFullDate: (previousPoints[index] ?? comparisonGrid[index])?.fullDate,
   }))
 
@@ -506,17 +555,8 @@ export function AnalyticsOverview({
     return undefined // bounce rate / duration only exist on the aggregate
   }
 
-  const hasSeries =
-    activeMetric.source === 'aggregate'
-      ? windowsSettled
-      : (activeMetric.key === 'pageviews' ? pageviewSeriesData : seriesData) !== undefined
-  const loadError =
-    activeMetric.source === 'aggregate'
-      ? (windowsError ?? statsError)
-      : (statsError ?? (activeMetric.key === 'pageviews' ? pageviewError : seriesError))
-  const showError = !!loadError && !hasSeries
   const isEmpty =
-    hasSeries && chartData.every((point) => !point.value)
+    !showSkeleton && hasSeries && chartData.every((point) => !point.value)
 
   // ── Chart helpers ──
   const brushPoints = useMemo(
@@ -620,7 +660,7 @@ export function AnalyticsOverview({
                 {activeSeriesLabel}
               </span>
             </div>
-            {isComparing ? (
+            {showComparisonLine ? (
               <div className="flex items-center gap-1.5">
                 <span
                   className="h-0 w-3 border-t-2 border-dashed"
@@ -657,16 +697,20 @@ export function AnalyticsOverview({
             </div>
           ) : (
             <div
-              key={hasSeries ? 'data' : 'empty'}
+              key={showSkeleton ? 'skeleton' : 'data'}
               className={cn(
                 surfaceClassName,
                 'relative',
-                hasSeries && USAGE_CHART_FADE_IN_CLASS_NAME,
+                showSkeleton && 'pointer-events-none',
+                !showSkeleton && USAGE_CHART_FADE_IN_CLASS_NAME,
               )}
+              aria-busy={showSkeleton || undefined}
               aria-label={
-                canSelect
-                  ? t('Drag on the chart to select a date range')
-                  : undefined
+                showSkeleton
+                  ? t('Loading analytics data')
+                  : canSelect
+                    ? t('Drag on the chart to select a date range')
+                    : undefined
               }
             >
               <ResponsiveContainer
@@ -679,24 +723,45 @@ export function AnalyticsOverview({
                   {...chartProps}
                 >
                   <defs>
-                    <linearGradient
-                      id={GRADIENT_ID}
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="0%"
-                        stopColor={CURRENT_COLOR}
-                        stopOpacity={0.2}
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor={CURRENT_COLOR}
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
+                    {showSkeleton ? (
+                      <linearGradient
+                        id={SKELETON_GRADIENT_ID}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor={SKELETON_CHART_FILL}
+                          stopOpacity={0.14}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor={SKELETON_CHART_FILL}
+                          stopOpacity={0.02}
+                        />
+                      </linearGradient>
+                    ) : (
+                      <linearGradient
+                        id={GRADIENT_ID}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor={CURRENT_COLOR}
+                          stopOpacity={0.2}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor={CURRENT_COLOR}
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    )}
                   </defs>
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -717,10 +782,15 @@ export function AnalyticsOverview({
                     ]}
                   />
                   <Tooltip
-                    isAnimationActive={false}
-                    cursor={!isSelecting}
+                    {...CHART_ANIMATION_DISABLED}
+                    cursor={!showSkeleton && !isSelecting}
                     content={({ active, payload }) => {
-                      if (isSelecting || !active || !payload?.length) {
+                      if (
+                        showSkeleton ||
+                        isSelecting ||
+                        !active ||
+                        !payload?.length
+                      ) {
                         return null
                       }
                       const point = payload[0]?.payload as
@@ -741,7 +811,7 @@ export function AnalyticsOverview({
                               {point.value == null ? '–' : activeMetric.format(point.value)}
                             </span>
                           </div>
-                          {isComparing && point.previous != null ? (
+                          {showComparisonLine && point.previous != null ? (
                             <>
                               <div className="mt-1 flex items-center justify-between gap-6">
                                 <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -770,7 +840,7 @@ export function AnalyticsOverview({
                       )
                     }}
                   />
-                  {isComparing ? (
+                  {showComparisonLine ? (
                     <Line
                       type="monotone"
                       dataKey="previous"
@@ -781,7 +851,7 @@ export function AnalyticsOverview({
                       strokeDasharray="4 4"
                       dot={false}
                       activeDot={false}
-                      isAnimationActive={false}
+                      {...CHART_ANIMATION_DISABLED}
                     />
                   ) : null}
                   <Area
@@ -789,16 +859,25 @@ export function AnalyticsOverview({
                     dataKey="value"
                     // Grouped aggregate windows leave gaps between points.
                     connectNulls
-                    stroke={CURRENT_COLOR}
+                    stroke={showSkeleton ? SKELETON_CHART_STROKE : CURRENT_COLOR}
                     strokeWidth={2}
-                    fill={`url(#${GRADIENT_ID})`}
+                    fill={
+                      showSkeleton
+                        ? `url(#${SKELETON_GRADIENT_ID})`
+                        : `url(#${GRADIENT_ID})`
+                    }
                     dot={false}
-                    activeDot={{
-                      r: 4,
-                      fill: CURRENT_COLOR,
-                      stroke: 'var(--background)',
-                      strokeWidth: 2,
-                    }}
+                    activeDot={
+                      showSkeleton
+                        ? false
+                        : {
+                            r: 4,
+                            fill: CURRENT_COLOR,
+                            stroke: 'var(--background)',
+                            strokeWidth: 2,
+                          }
+                    }
+                    {...CHART_ANIMATION_DISABLED}
                   />
                   <UsageChartBrushReferenceArea
                     left={brushLeft}

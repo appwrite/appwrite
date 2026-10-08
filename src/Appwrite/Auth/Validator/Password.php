@@ -2,7 +2,7 @@
 
 namespace Appwrite\Auth\Validator;
 
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 /**
  * Password.

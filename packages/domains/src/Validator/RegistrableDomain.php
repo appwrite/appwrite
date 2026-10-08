@@ -3,8 +3,8 @@
 namespace Utopia\Domains\Validator;
 
 use Utopia\Domains\Domain;
-use Utopia\Validator;
 use Utopia\Validator\Domain as DomainName;
+use Utopia\Validator\Validator;
 
 /**
  * Validate that a value is a lowercase domain name under a known public suffix, such as `example.com`

@@ -1,4 +1,5 @@
 import {
+  addDays,
   differenceInCalendarDays,
   endOfDay,
   isSameDay,
@@ -7,6 +8,7 @@ import {
   startOfWeek,
   subDays,
   subHours,
+  subYears,
 } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 
@@ -28,10 +30,21 @@ function isCalendarDateOnlyRange(from: Date, to: Date): boolean {
   )
 }
 
+/**
+ * What a preset may need beyond "now". `since` anchors open-ended presets
+ * ("All time") to the resource's start, e.g. an analytics property's
+ * creation date.
+ */
+export type UsageDateRangePresetContext = {
+  since?: Date
+}
+
 export type UsageDateRangePreset = {
   label: string
   value: string
-  getRange: () => { from: Date; to: Date }
+  getRange: (context?: UsageDateRangePresetContext) => { from: Date; to: Date }
+  /** True when the preset can't resolve without `context.since`. */
+  requiresSince?: boolean
 }
 
 export type UsageDateRangePresetGroup = {
@@ -132,7 +145,62 @@ export const USAGE_DATE_RANGE_PRESET_GROUPS: UsageDateRangePresetGroup[] = [
   },
 ]
 
-export const USAGE_DATE_RANGE_PRESETS = USAGE_DATE_RANGE_PRESET_GROUPS.flatMap(
+/**
+ * Longer windows, shown only where data is kept long enough to make them
+ * useful (Analytics). Usage and Monitor keep the shorter list.
+ */
+export const LONG_DATE_RANGE_PRESET_GROUP: UsageDateRangePresetGroup = {
+  title: 'Longer periods',
+  presets: [
+    {
+      label: 'Last 90 days',
+      value: '90d',
+      getRange: () => ({
+        from: startOfDay(subDays(new Date(), 89)),
+        to: endOfDay(new Date()),
+      }),
+    },
+    {
+      label: 'Last 12 months',
+      value: '12mo',
+      getRange: () => {
+        const now = new Date()
+        // Same day last year, exclusive: today plus the 364/365 days before.
+        return {
+          from: startOfDay(addDays(subYears(now, 1), 1)),
+          to: endOfDay(now),
+        }
+      },
+    },
+    {
+      label: 'All time',
+      value: 'all',
+      requiresSince: true,
+      getRange: (context) => {
+        const now = new Date()
+        // Without an anchor there is no "beginning"; callers only offer this
+        // preset with `since`, so today is just a safe fallback.
+        const since = context?.since ?? now
+        return {
+          from: startOfDay(since.getTime() > now.getTime() ? now : since),
+          to: endOfDay(now),
+        }
+      },
+    },
+  ],
+}
+
+export const ANALYTICS_DATE_RANGE_PRESET_GROUPS: UsageDateRangePresetGroup[] = [
+  ...USAGE_DATE_RANGE_PRESET_GROUPS,
+  LONG_DATE_RANGE_PRESET_GROUP,
+]
+
+/**
+ * Every known preset, for lookups by id and matching. Includes the long
+ * presets so a saved analytics selection ("Last 12 months") resolves; pickers
+ * decide which groups they show.
+ */
+export const USAGE_DATE_RANGE_PRESETS = ANALYTICS_DATE_RANGE_PRESET_GROUPS.flatMap(
   (group) => group.presets,
 )
 
@@ -156,6 +224,9 @@ const CALENDAR_USAGE_DATE_RANGE_PRESET_VALUES = [
   '30d',
   'wtd',
   'mtd',
+  '90d',
+  '12mo',
+  'all',
 ] as const
 
 const MATCH_TOLERANCE_MS = 60_000
@@ -217,10 +288,13 @@ export function inferRollingPresetByDuration(
 export function dateRangeMatchesUsagePreset(
   range: DateRange | undefined,
   preset: UsageDateRangePreset,
+  context?: UsageDateRangePresetContext,
 ): boolean {
   if (!range?.from || !range?.to) return false
+  // "All time" without an anchor would match "Today"; never guess.
+  if (preset.requiresSince && !context?.since) return false
 
-  const presetRange = preset.getRange()
+  const presetRange = preset.getRange(context)
 
   if (
     (CALENDAR_USAGE_DATE_RANGE_PRESET_VALUES as readonly string[]).includes(
@@ -256,11 +330,14 @@ export function dateRangeMatchesUsagePreset(
 
 export function findMatchingUsageDateRangePreset(
   range: DateRange | undefined,
+  context?: UsageDateRangePresetContext,
 ): UsageDateRangePreset | null {
   if (!range?.from || !range?.to) return null
 
+  // Shorter presets come first, so a property created today keeps reading as
+  // "Today" rather than "All time".
   for (const preset of USAGE_DATE_RANGE_PRESETS) {
-    if (dateRangeMatchesUsagePreset(range, preset)) {
+    if (dateRangeMatchesUsagePreset(range, preset, context)) {
       return preset
     }
   }
