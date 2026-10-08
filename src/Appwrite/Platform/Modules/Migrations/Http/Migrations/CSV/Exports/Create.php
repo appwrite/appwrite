@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Adapter\Profile;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
@@ -137,11 +138,18 @@ class Create extends Action
         // Schemaless databases (DocumentsDB, VectorsDB) allow queries on dynamic fields
         $isSchemaless = \in_array($databaseType, [DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORSDB]);
 
+        $profile = $dbForProject->profile();
         $validator = new Documents(
             attributes: $collection->getAttribute('attributes', []),
             indexes: $collection->getAttribute('indexes', []),
-            idAttributeType: $dbForProject->getAdapter()->limits()->idType,
-            supportForAttributes: !$isSchemaless,
+            profile: new Profile(
+                limits: $profile->limits,
+                capabilities: $profile->capabilities,
+                features: $profile->features,
+                sharedTables: $profile->sharedTables,
+                migrating: $profile->migrating,
+                definedAttributes: static fn (): bool => !$isSchemaless,
+            ),
         );
 
         if (!$validator->isValid($parsedQueries)) {
