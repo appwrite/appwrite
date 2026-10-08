@@ -178,8 +178,8 @@ class Create extends CollectionAction
                     'signed' => $attribute->signed,
                     'default' => $attribute->default,
                     'array' => $attribute->array,
-                    'format' => $attribute->format?->name ?? '',
-                    'formatOptions' => $attribute->format?->options ?? [],
+                    'format' => $attribute->format->name ?? '',
+                    'formatOptions' => $attribute->format->options ?? [],
                     'filters' => $attribute->filters,
                     'options' => $attribute->toDocument()->getAttribute('options', []),
                 ]);
