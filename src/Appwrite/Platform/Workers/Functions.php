@@ -239,7 +239,7 @@ class Functions extends Action
                             user: $user,
                             jwt: null,
                             event: $events[0],
-                            eventData: \json_encode($eventData) ?: null,
+                            eventData: $data !== '' ? $data : (\json_encode($eventData) ?: null),
                             executionId: null,
                         );
                         $handled[] = $function->getId();

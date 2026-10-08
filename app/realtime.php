@@ -804,6 +804,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 // fan-out burst, against 2.8% at rest.
                 $data = $event['data'];
                 unset($data['subscriptions']);
+                // Decoding into arrays turns objects such as `prefs: {}` into `[]`, so when that
+                // changed the published JSON, the payload is re-read as objects for the frame.
+                if ($receivers !== [] && \json_encode($event) !== $payload) {
+                    $data['payload'] = \json_decode($payload)->data->payload ?? $data['payload'];
+                }
                 $tail = $data === [] ? '' : ',' . substr(json_encode($data), 1, -1);
 
                 $now = \time();
