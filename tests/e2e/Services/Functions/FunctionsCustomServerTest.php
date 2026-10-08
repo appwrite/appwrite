@@ -2493,6 +2493,64 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(404, $deployment['headers']['status-code']);
     }
 
+    public function testDeleteDeploymentWithMissingSource(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Delete Deployment With Missing Source',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+        ]);
+
+        $folderPath = realpath(__DIR__ . '/../../../resources/functions') . '/large';
+        $code = \sys_get_temp_dir() . '/appwrite-function-large-' . \uniqid('', true) . '.tar.gz';
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($code)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
+
+        $totalSize = \filesize($code);
+        $chunkSize = 5 * 1024 * 1024;
+        $this->assertGreaterThan($chunkSize, $totalSize, 'Test file must span at least 2 chunks');
+
+        $handle = fopen($code, 'rb');
+        $this->assertNotFalse($handle);
+        $firstChunk = fread($handle, $chunkSize);
+        fclose($handle);
+        unlink($code);
+
+        // Only the first chunk is uploaded, so the source file is never assembled.
+        $mimeType = 'application/x-gzip';
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($chunkSize - 1) . '/' . $totalSize,
+        ], $this->getHeaders()), [
+            'entrypoint' => 'index.js',
+            'code' => new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode($firstChunk), $mimeType, 'large-fx.tar.gz'),
+            'activate' => 'false',
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $deploymentId = $deployment['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $deployment = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $deployment['headers']['status-code']);
+
+        $this->cleanupFunction($functionId);
+    }
+
     public function testDeleteFunction(): void
     {
         // Create fresh function for this test since we delete it

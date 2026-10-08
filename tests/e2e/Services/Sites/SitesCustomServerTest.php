@@ -2483,6 +2483,74 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(404, $deployment['headers']['status-code']);
     }
 
+    public function testDeleteDeploymentWithMissingSource(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Delete Deployment With Missing Source',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $tempDir = sys_get_temp_dir() . '/appwrite-test-site-' . uniqid();
+        mkdir($tempDir, 0777, true);
+        file_put_contents($tempDir . '/index.html', '<html><body>Hello World</body></html>');
+        file_put_contents($tempDir . '/large.bin', random_bytes(6 * 1024 * 1024));
+
+        $codePath = $tempDir . '/code.tar.gz';
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->flag('-czf')
+            ->argument($codePath)
+            ->option('-C', $tempDir)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
+
+        $totalSize = filesize($codePath);
+        $chunkSize = 5 * 1024 * 1024;
+        $this->assertGreaterThan($chunkSize, $totalSize, 'Test file must span at least 2 chunks');
+
+        $handle = fopen($codePath, 'rb');
+        $this->assertNotFalse($handle);
+        $firstChunk = fread($handle, $chunkSize);
+        fclose($handle);
+
+        unlink($codePath);
+        unlink($tempDir . '/index.html');
+        unlink($tempDir . '/large.bin');
+        rmdir($tempDir);
+
+        // Only the first chunk is uploaded, so the source file is never assembled.
+        $mimeType = 'application/x-gzip';
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($chunkSize - 1) . '/' . $totalSize,
+        ], $this->getHeaders()), [
+            'code' => new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode($firstChunk), $mimeType, 'code.tar.gz'),
+            'activate' => 'false',
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $deploymentId = $deployment['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $deployment = $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $deployment['headers']['status-code']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testDeleteSite(): void
     {
         $siteId = $this->setupSite([
