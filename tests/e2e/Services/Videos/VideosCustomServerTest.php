@@ -1535,7 +1535,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $playlist['headers']['status-code']);
         $this->assertSame(1, \substr_count($playlist['body'], '#EXT-X-MEDIA-SEQUENCE'));
         $this->assertStringContainsString('#EXT-X-MEDIA-SEQUENCE:0', (string) $playlist['body']);
-        $this->assertMatchesRegularExpression('/#EXTINF:[0-9.]+,\R/', $playlist['body']);
+        $this->assertCommaTerminatedExtinf((string) $playlist['body']);
         $this->assertStringContainsString('#EXT-X-ENDLIST', (string) $playlist['body']);
 
         // The CMAF rendition from the extracted track must publish this upload
@@ -1711,6 +1711,33 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
+     * A VOD captions playlist carries a duration-only EXTINF: `#EXTINF:<seconds>,`
+     * with the comma at the end of the line.
+     */
+    private function assertCommaTerminatedExtinf(string $playlist): void
+    {
+        $playlist = \str_replace(["\r\n", "\r"], "\n", $playlist);
+
+        foreach (\explode("\n", $playlist) as $line) {
+            if (!\str_starts_with($line, '#EXTINF:')) {
+                continue;
+            }
+
+            $value = \substr($line, \strlen('#EXTINF:'));
+            if ($value === '' || !\str_ends_with($value, ',')) {
+                continue;
+            }
+
+            $duration = \substr($value, 0, -1);
+            if ($duration !== '' && \strspn($duration, '0123456789.') === \strlen($duration)) {
+                return;
+            }
+        }
+
+        $this->fail('Playlist is missing a comma-terminated EXTINF duration');
+    }
+
+    /**
      * Follow the subtitle URLs published by both CMAF masters.
      *
      * CMAF-DASH addresses WebVTT at `/outputs/cmaf/captions/{id}/manifest`.
@@ -1729,7 +1756,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertStringContainsString('application/x-mpegurl', (string) ($playlist['headers']['content-type'] ?? ''));
         $this->assertSame(1, \substr_count((string) $playlist['body'], '#EXT-X-MEDIA-SEQUENCE'));
         $this->assertStringContainsString('#EXT-X-MEDIA-SEQUENCE:0', (string) $playlist['body']);
-        $this->assertMatchesRegularExpression('/#EXTINF:[0-9.]+,\R/', (string) $playlist['body']);
+        $this->assertCommaTerminatedExtinf((string) $playlist['body']);
         $this->assertStringContainsString('#EXT-X-ENDLIST', (string) $playlist['body']);
 
         $dash = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/cmaf/master.mpd', $this->headers());
