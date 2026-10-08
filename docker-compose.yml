@@ -402,6 +402,8 @@ services:
       - traefik.http.services.appwrite_mqtt_ws.loadbalancer.server.port=8083
     networks:
       - appwrite
+    volumes:
+      - appwrite-certificates:/storage/certificates:ro
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
