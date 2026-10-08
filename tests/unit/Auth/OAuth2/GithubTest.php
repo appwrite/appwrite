@@ -106,6 +106,32 @@ final class GithubTest extends TestCase
         }
     }
 
+    public function testMissingUser(): void
+    {
+        $github = $this->getMockBuilder(Github::class)
+            ->setConstructorArgs([new Client(new CurlAdapter()), 'client-id', 'client-secret', 'https://example.com/callback'])
+            ->onlyMethods(['request'])
+            ->getMock();
+
+        $github
+            ->expects($this->once())
+            ->method('request')
+            ->with(
+                'GET',
+                'https://api.github.com/user',
+                ['Authorization: token ' . \urlencode('access-token')],
+            )
+            ->willReturn('null');
+
+        try {
+            $github->getUserID('access-token');
+            $this->fail('Expected a missing GitHub user to fail OAuth2 sign-in.');
+        } catch (Exception $exception) {
+            $this->assertSame(AppwriteException::USER_OAUTH2_BAD_REQUEST, $exception->getType());
+            $this->assertSame('GitHub did not return valid user information.', $exception->getMessage());
+        }
+    }
+
     public function testMissingAccessToken(): void
     {
         $github = $this->createGithub('{}');

@@ -1358,7 +1358,7 @@ return [
             ],
             [
                 'name' => '_APP_BUILDS_VOLUME',
-                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage, attached to jobs-service build workers so they write output directly onto it. Must match the storage the "builds" device is backed by.',
+                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage. Jobs-service build workers attach only the current project\'s subdirectory (`app-<projectId>`) so they write output directly onto it without seeing other projects. Must match the storage the "builds" device is backed by.',
                 'introduction' => '1.9.0',
                 'default' => 'appwrite-builds',
                 'required' => false,
@@ -2031,21 +2031,6 @@ return [
                 'name' => '_APP_MIGRATIONS_ALLOWED_HOSTS',
                 'description' => 'Comma-separated hostnames, IP addresses and CIDR ranges (IPv4 or IPv6, for example 10.0.0.0/8 or fd00::/8) that Appwrite migration source endpoints may use even when they are not public. Hostnames match exactly, ignoring case and a trailing dot, with no wildcard or suffix matching. Addresses and ranges match an IP endpoint and every address a hostname resolves to; a malformed range is an error. Appwrite migration sources also accept the addresses and ranges of _APP_ALLOWED_INTERNAL_ADDRESSES. Empty by default, which allows public sources only.',
                 'introduction' => '2.3.1',
-                'default' => '',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ]
-        ]
-    ],
-    [
-        'category' => 'Assistant',
-        'description' => '',
-        'variables' => [
-            [
-                'name' => '_APP_ASSISTANT_OPENAI_API_KEY',
-                'description' => 'OpenAI API key. You can find it in your OpenAI application settings.',
-                'introduction' => '1.4.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',

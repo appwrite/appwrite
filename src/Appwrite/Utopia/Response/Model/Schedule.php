@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Schedule extends Model
 {
@@ -61,8 +62,8 @@ class Schedule extends Model
             ->addRule('data', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Schedule data used to store resource-specific context needed for execution.',
-                'default' => [],
-                'example' => [],
+                'default' => new \stdClass(),
+                'example' => new \stdClass(),
             ])
             ->addRule('active', [
                 'type' => self::TYPE_BOOLEAN,
@@ -77,6 +78,16 @@ class Schedule extends Model
                 'example' => 'fra',
             ])
         ;
+    }
+
+    public function filter(Document $document): Document
+    {
+        $data = $document->getAttribute('data');
+        if (\is_array($data) && empty($data)) {
+            $document->setAttribute('data', new \stdClass());
+        }
+
+        return $document;
     }
 
     /**

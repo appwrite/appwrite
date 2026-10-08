@@ -85,7 +85,6 @@ const API_SCOPES = [
     'migrations.write',
     'vcs.read',
     'vcs.write',
-    'assistant.read',
     'tokens.read',
     'tokens.write',
     'platforms.read',

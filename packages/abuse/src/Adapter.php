@@ -2,94 +2,45 @@
 
 namespace Utopia\Abuse;
 
-abstract class Adapter
+abstract readonly class Adapter
 {
     /**
-     * @var array<string, string>
+     * @param  array<string, string>  $params
      */
-    protected array $params = [];
-
-    /**
-     * @var string
-     */
-    protected string $key = '';
-
-    /**
-     * Check
-     *
-     * Checks if number of counts is bigger or smaller than current limit
-     *
-     * @return bool
-     */
-    abstract public function check(): bool;
-
-    /**
-    * Set Param
-    *
-    * Set custom param for key pattern parsing
-    *
-    * @param  string  $key
-    * @param  string  $value
-    * @return $this
-    */
-    public function setParam(string $key, string $value): self
-    {
-        $this->params[$key] = $value;
-
-        return $this;
+    public function __construct(
+        protected string $key,
+        protected array $params = [],
+    ) {
     }
 
     /**
-    * Get Params
-    *
-    * Return array of all key params
-    *
-    * @return array<string, string>
-    */
-    protected function getParams(): array
+     * @param  array<string, string>  $params
+     */
+    public function withParams(array $params): static
     {
-        return $this->params;
+        return clone($this, ['params' => [...$this->params, ...$params]]);
     }
 
-    /**
-    * Parse key with all custom attached params
-    *
-    * @return string
-    */
-    protected function parseKey(): string
+    public function withParam(string $name, string $value): static
     {
-        foreach ($this->getParams() as $key => $value) {
-            $this->key = \str_replace($key, $value, $this->key);
-        }
-
-        return $this->key;
+        return $this->withParams([$name => $value]);
     }
 
+    public function key(): string
+    {
+        return \strtr($this->key, $this->params);
+    }
+
+    abstract public function check(): Result;
+
+    abstract public function peek(): Result;
+
+    abstract public function reset(): void;
+
     /**
-     * Get abuse logs
-     *
-     * Return logs with an offset and limit
-     *
-     * @param  int|null  $offset
-     * @param  int|null  $limit
-     * @return array<string, mixed>
+     * @return array<mixed>
      */
     abstract public function getLogs(?int $offset = null, ?int $limit = 25): array;
 
-    /**
-     * Delete all logs older than $datetime
-     *
-     * @param  int  $timestamp
-     * @return bool
-     */
     abstract public function cleanup(int $timestamp): bool;
-
-    /**
-     * Reset
-     *
-     * Reset the count to 0
-     *
-     * @return void
-     */
-    abstract public function reset(): void;
 }

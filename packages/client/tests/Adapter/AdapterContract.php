@@ -450,6 +450,36 @@ abstract class AdapterContract extends TestCase
         });
     }
 
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function bodylessMethods(): array
+    {
+        return [
+            'POST' => [Method::POST, '0'],
+            'PUT' => [Method::PUT, '0'],
+            'PATCH' => [Method::PATCH, '0'],
+            'GET' => [Method::GET, 'none'],
+        ];
+    }
+
+    /**
+     * An HTTP/1.1 origin may refuse a body-carrying method that declares no
+     * length: Google's OAuth token endpoint answers 411 Length Required.
+     */
+    #[DataProvider('bodylessMethods')]
+    public function testItDeclaresAZeroLengthForAnEmptyBodyOnMethodsThatCarryOne(string $method, string $expected): void
+    {
+        Http::serve(function (int $port) use ($method, $expected): void {
+            $request = new Request\Factory()->createRequest($method, 'http://127.0.0.1:' . $port . '/content-length');
+
+            $response = $this->send($this->createAdapter(), $request);
+
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame($expected, (string) $response->getBody());
+        });
+    }
+
     public function testItSendsARawBodyWithoutAContentTypeItDidNotSet(): void
     {
         Http::serve(function (int $port): void {

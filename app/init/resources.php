@@ -34,7 +34,7 @@ use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
-use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -365,12 +365,9 @@ $container->set('locks', fn (Group $pools) => fn (string $key, int $ttl, callabl
     }
 ), ['pools']);
 
-// The lease spans the whole callback because a TimeLimit issues several round
-// trips (remaining, limit, check, reset) and must hold one connection for all of
-// them. Do not throw from the callback: the pool treats that as a failed lease
-// and reconnects the socket before returning it.
-$container->set('timelimit', fn (Group $pools) => fn (string $key, int $limit, int $time, callable $callback): mixed => $pools->get('abuse')->use(
-    fn (\Redis $redis): mixed => $callback(new TimeLimitRedis($key, $limit, $time, $redis))
+// The lease spans the callback; throwing from it makes the pool reconnect the socket.
+$container->set('timelimit', fn (Group $pools) => fn (string $key, int $limit, int $seconds, callable $callback): mixed => $pools->get('abuse')->use(
+    fn (\Redis $redis): mixed => $callback(new TimeLimitRedis($key, $limit, $seconds, $redis))
 ), ['pools']);
 
 $container->set('deviceForLocal', fn (Telemetry $telemetry) => new Device\Telemetry($telemetry, new Local()), ['telemetry']);
