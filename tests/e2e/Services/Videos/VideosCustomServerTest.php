@@ -427,7 +427,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertMatchesRegularExpression('/previews\/[a-zA-Z0-9]+#xywh=\d+,\d+,\d+,\d+/', $response['body']);
 
         $xywh = \explode(',', \explode("\n", \explode('#xywh=', (string) $response['body'], 2)[1], 2)[0]);
-        $this->assertEquals(480, (int) $xywh[2], 'timeline thumbnails should be 480px wide');
+        $this->assertSame(480, (int) $xywh[2], 'timeline thumbnails should be 480px wide');
     }
 
     // --------------------------------------------------------------- captions
@@ -1264,7 +1264,7 @@ final class VideosCustomServerTest extends Scope
             $lastList = $list['body'] ?? [];
             foreach ($lastList['captions'] ?? [] as $caption) {
                 $fileId = $caption['fileId'] ?? '';
-                if ($fileId === null || $fileId === '') {
+                if ($fileId === '') {
                     $embedded = $caption;
                     if (($caption['status'] ?? '') === 'ready') {
                         break 2;

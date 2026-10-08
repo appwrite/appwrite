@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Platform\Modules\Videos;
 
 use Appwrite\Platform\Modules\Videos\Base;
@@ -21,23 +23,21 @@ final class BaseTest extends TestCase
     }
 
     /**
-     * @return array<string, array{0: string, 1: string, 2: bool}>
+     * @return \Iterator<string, array{string, string, bool}>
      */
-    public static function codecOutputMatrix(): array
+    public static function codecOutputMatrix(): \Iterator
     {
-        return [
-            'h264 hls' => [Base::CODEC_H264, Base::OUTPUT_HLS, true],
-            'h264 dash' => [Base::CODEC_H264, Base::OUTPUT_DASH, true],
-            'h264 cmaf' => [Base::CODEC_H264, Base::OUTPUT_CMAF, true],
-            'hevc hls' => [Base::CODEC_HEVC, Base::OUTPUT_HLS, true],
-            'hevc dash' => [Base::CODEC_HEVC, Base::OUTPUT_DASH, true],
-            'hevc cmaf' => [Base::CODEC_HEVC, Base::OUTPUT_CMAF, true],
-            'vp9 dash' => [Base::CODEC_VP9, Base::OUTPUT_DASH, true],
-            'vp9 hls' => [Base::CODEC_VP9, Base::OUTPUT_HLS, false],
-            'vp9 cmaf' => [Base::CODEC_VP9, Base::OUTPUT_CMAF, false],
-            'unknown codec' => ['av1', Base::OUTPUT_HLS, false],
-            'unknown output' => [Base::CODEC_H264, 'mkv', false],
-        ];
+        yield 'h264 hls' => [Base::CODEC_H264, Base::OUTPUT_HLS, true];
+        yield 'h264 dash' => [Base::CODEC_H264, Base::OUTPUT_DASH, true];
+        yield 'h264 cmaf' => [Base::CODEC_H264, Base::OUTPUT_CMAF, true];
+        yield 'hevc hls' => [Base::CODEC_HEVC, Base::OUTPUT_HLS, true];
+        yield 'hevc dash' => [Base::CODEC_HEVC, Base::OUTPUT_DASH, true];
+        yield 'hevc cmaf' => [Base::CODEC_HEVC, Base::OUTPUT_CMAF, true];
+        yield 'vp9 dash' => [Base::CODEC_VP9, Base::OUTPUT_DASH, true];
+        yield 'vp9 hls' => [Base::CODEC_VP9, Base::OUTPUT_HLS, false];
+        yield 'vp9 cmaf' => [Base::CODEC_VP9, Base::OUTPUT_CMAF, false];
+        yield 'unknown codec' => ['av1', Base::OUTPUT_HLS, false];
+        yield 'unknown output' => [Base::CODEC_H264, 'mkv', false];
     }
 
     public function testEnabledCodecsOmitsDisabled(): void

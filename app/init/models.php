@@ -240,10 +240,10 @@ use Appwrite\Utopia\Response\Model\VcsContent;
 use Appwrite\Utopia\Response\Model\VcsNamespace;
 use Appwrite\Utopia\Response\Model\VectorsDBCollection;
 use Appwrite\Utopia\Response\Model\Video;
+use Appwrite\Utopia\Response\Model\VideoCaption;
 use Appwrite\Utopia\Response\Model\VideoCodec;
 use Appwrite\Utopia\Response\Model\VideoProfile;
 use Appwrite\Utopia\Response\Model\VideoRendition;
-use Appwrite\Utopia\Response\Model\VideoCaption;
 use Appwrite\Utopia\Response\Model\Webhook;
 
 // General

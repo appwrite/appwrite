@@ -464,7 +464,7 @@ trait VideoCustom
 
             foreach ($response['body']['captions'] ?? [] as $caption) {
                 $fileId = $caption['fileId'] ?? '';
-                if (($caption['status'] ?? '') === 'ready' && ($fileId === null || $fileId === '')) {
+                if (($caption['status'] ?? '') === 'ready' && $fileId === '') {
                     return $caption;
                 }
             }
@@ -494,7 +494,7 @@ trait VideoCustom
             $embedded = [];
             foreach ($response['body']['captions'] ?? [] as $caption) {
                 $fileId = $caption['fileId'] ?? '';
-                if (($caption['status'] ?? '') === 'ready' && ($fileId === null || $fileId === '')) {
+                if (($caption['status'] ?? '') === 'ready' && $fileId === '') {
                     $embedded[] = $caption;
                 }
             }
@@ -666,7 +666,7 @@ trait VideoCustom
     {
         \preg_match_all('#previews/([A-Za-z0-9]+)#', $vtt, $matches);
 
-        return $matches[1] ?? [];
+        return $matches[1];
     }
 
     /**

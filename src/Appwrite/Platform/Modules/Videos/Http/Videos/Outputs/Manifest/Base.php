@@ -61,7 +61,8 @@ abstract class Base extends VideosAction
             return $byCodec[self::CODEC_H264];
         }
 
-        return \reset($byCodec) ?: [];
+        // $renditions was non-empty, so a codec bucket exists.
+        return \reset($byCodec);
     }
 
     /**

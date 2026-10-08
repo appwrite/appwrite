@@ -251,25 +251,23 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @return array<string, array{0: string, 1: array{0: ?string, 1: ?int, 2: ?int}}>
+     * @return \Iterator<string, array{string, array{(string | null), (int | null), (int | null)}}>
      */
-    public static function ranges(): array
+    public static function ranges(): \Iterator
     {
-        return [
-            // RFC 9110 bounds are inclusive, so start === end asks for one byte.
-            'first byte' => ['bytes=0-0', ['bytes', 0, 0]],
-            'last byte' => ['bytes=511-511', ['bytes', 511, 511]],
-            'closed' => ['bytes=100-199', ['bytes', 100, 199]],
-            'open ended' => ['bytes=100-', ['bytes', 100, null]],
-            'other unit' => ['items=0-1', ['items', 0, 1]],
-            'reversed' => ['bytes=200-100', [null, null, null]],
-            'suffix' => ['bytes=-500', [null, null, null]],
-            'multiple' => ['bytes=0-99,200-299', [null, null, null]],
-            'not a number' => ['bytes=a-b', [null, null, null]],
-            'no bounds' => ['bytes=', [null, null, null]],
-            'no unit' => ['=0-99', [null, null, null]],
-            'empty' => ['', [null, null, null]],
-        ];
+        // RFC 9110 bounds are inclusive, so start === end asks for one byte.
+        yield 'first byte' => ['bytes=0-0', ['bytes', 0, 0]];
+        yield 'last byte' => ['bytes=511-511', ['bytes', 511, 511]];
+        yield 'closed' => ['bytes=100-199', ['bytes', 100, 199]];
+        yield 'open ended' => ['bytes=100-', ['bytes', 100, null]];
+        yield 'other unit' => ['items=0-1', ['items', 0, 1]];
+        yield 'reversed' => ['bytes=200-100', [null, null, null]];
+        yield 'suffix' => ['bytes=-500', [null, null, null]];
+        yield 'multiple' => ['bytes=0-99,200-299', [null, null, null]];
+        yield 'not a number' => ['bytes=a-b', [null, null, null]];
+        yield 'no bounds' => ['bytes=', [null, null, null]];
+        yield 'no unit' => ['=0-99', [null, null, null]];
+        yield 'empty' => ['', [null, null, null]];
     }
 
     public function testGetHeadersSynthesizesCookieHeaderFromCookieJar(): void

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Platform\Workers\Deletes;
-use Utopia\Cdn\Certificates\Provider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
+use Utopia\Cdn\Certificates\Provider;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;

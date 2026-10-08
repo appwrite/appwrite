@@ -2,10 +2,16 @@
 
 namespace Appwrite\Platform\Modules\Videos\Services;
 
+use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Create as CreateCaption;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Delete as DeleteCaption;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Update as UpdateCaption;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\XList as ListCaptions;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Codecs\XList as ListCodecs;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Create as CreateVideo;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Delete as DeleteVideo;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Get as GetVideo;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Captions\Manifest\Get as GetCaptionManifest;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Captions\Segments\Get as GetCaptionSegment;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\CMAF\DASH\Manifest\Get as GetCmafDashManifest;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\CMAF\HLS\Manifest\Get as GetCmafHlsManifest;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\CMAF\Renditions\Streams\Manifest\Get as GetCmafStreamManifest;
@@ -13,17 +19,11 @@ use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\DASH\Manifest\Get as Ge
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\HLS\Manifest\Get as GetHlsManifest;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Renditions\Segments\Get as GetSegment;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Renditions\Streams\Manifest\Get as GetStreamManifest;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Captions\Manifest\Get as GetCaptionManifest;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Captions\Segments\Get as GetCaptionSegment;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Previews\Get as GetPreview;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Create as CreateRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Delete as DeleteRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Get as GetRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\XList as ListRenditions;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Create as CreateCaption;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Delete as DeleteCaption;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Update as UpdateCaption;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\XList as ListCaptions;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Timeline\Get as GetTimeline;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Update as UpdateVideo;
 use Appwrite\Platform\Modules\Videos\Http\Videos\XList as ListVideos;
