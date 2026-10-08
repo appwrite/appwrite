@@ -492,6 +492,15 @@ function install(string $package, bool $linked): array
                 'options' => ['symlink' => false, 'versions' => $versions],
             ]], $manifest['repositories'] ?? []);
             file_put_contents("{$directory}/composer.linked.json", json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n");
+            // A path package's reference is the checkout's commit, so Composer
+            // keeps an installed copy through uncommitted edits. Drop the lock
+            // and the copies so every linked run installs the working tree.
+            @unlink("{$directory}/composer.linked.lock");
+            foreach (array_keys($versions) as $sibling) {
+                if (is_dir("{$directory}/vendor/{$sibling}")) {
+                    rm("{$directory}/vendor/{$sibling}");
+                }
+            }
             $environment = ($rootVersion === null ? '' : "COMPOSER_ROOT_VERSION={$rootVersion} ")
                 . 'COMPOSER=composer.linked.json ';
             out('linked: ' . implode(', ', array_keys($versions)));
@@ -931,9 +940,12 @@ switch ($command) {
 
             // A package's own dependencies (stubs such as swoole/ide-helper
             // above all) are what its phpstan.neon scans, so resolve them the
-            // way `test` does before analysing a fresh checkout.
-            if (!is_dir("{$directory}/vendor")) {
-                [$code] = install($package, isset($options['linked']));
+            // way `test` does before analysing a fresh checkout. --linked
+            // always resolves, since an existing vendor/ may hold registry
+            // copies of the siblings it is meant to replace.
+            $linked = isset($options['linked']);
+            if ($linked || !is_dir("{$directory}/vendor")) {
+                [$code] = install($package, $linked);
                 if ($code !== 0) {
                     $failed[] = "{$package} (composer)";
                     continue;
