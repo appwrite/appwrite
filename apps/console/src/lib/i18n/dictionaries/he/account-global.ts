@@ -1392,6 +1392,8 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Add passkey': 'הוספת מפתח גישה',
   'Passkeys are not supported in this browser.':
     'מפתחות גישה אינם נתמכים בדפדפן הזה.',
+  'Failed to load passkeys': 'טעינת מפתחות הגישה נכשלה',
+  'Try again': 'נסו שוב',
   'No passkeys yet': 'אין עדיין מפתחות גישה',
   'Add a passkey to sign in without your password.':
     'הוסיפו מפתח גישה כדי להתחבר בלי הסיסמה שלכם.',

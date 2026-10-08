@@ -1391,6 +1391,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Add passkey': 'パスキーを追加',
   'Passkeys are not supported in this browser.':
     'このブラウザーはパスキーに対応していません。',
+  'Failed to load passkeys': 'パスキーの読み込みに失敗しました',
+  'Try again': '再試行',
   'No passkeys yet': 'パスキーはまだありません',
   'Add a passkey to sign in without your password.':
     'パスキーを追加すると、パスワードなしでサインインできます。',

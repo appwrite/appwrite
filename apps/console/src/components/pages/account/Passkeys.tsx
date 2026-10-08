@@ -42,7 +42,13 @@ export function PasskeysSection({
 } = {}) {
   const t = useT()
   const { signOut } = useAuth()
-  const { data: passkeysFromHook, isFetched } = useAccountPasskeys()
+  const {
+    data: passkeysFromHook,
+    isFetched,
+    isError,
+    isRefetching,
+    refetch,
+  } = useAccountPasskeys()
   const data = passkeysFromHook ?? initialData
   const createPasskey = useCreateAccountPasskey()
   const updatePasskey = useUpdateAccountPasskey()
@@ -160,7 +166,24 @@ export function PasskeysSection({
         )}
       </div>
       <div className="border-t border-border" />
-      {!isFetched && !initialData ? null : passkeys.length === 0 ? (
+      {!isFetched && !initialData ? null : isError && !data ? (
+        <div className="px-6 py-4">
+          <div className="rounded-lg border border-border bg-muted/30 p-6 text-center">
+            <p className="text-[14px] font-medium text-foreground mb-3">
+              {t('Failed to load passkeys')}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-[13px]"
+              onClick={() => void refetch()}
+              disabled={isRefetching}
+            >
+              {t('Try again')}
+            </Button>
+          </div>
+        </div>
+      ) : passkeys.length === 0 ? (
         <div className="px-6 py-4">
           <div className="rounded-lg border border-border bg-muted/30 p-6 text-center">
             <p className="text-[14px] font-medium text-foreground mb-1">
