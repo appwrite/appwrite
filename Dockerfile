@@ -9,14 +9,9 @@ WORKDIR /usr/local/src/
 COPY composer.lock /usr/local/src/
 COPY composer.json /usr/local/src/
 
-RUN apk add --no-cache git openssh-client \
-    && mkdir -p -m 0700 /root/.ssh \
-    && ssh-keyscan github.com >> /root/.ssh/known_hosts
-
-RUN --mount=type=ssh composer install --ignore-platform-reqs --optimize-autoloader \
-        --prefer-source \
-        --no-plugins --no-scripts \
-        `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
+RUN composer install --ignore-platform-reqs --optimize-autoloader \
+    --no-plugins --no-scripts --prefer-dist \
+    `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
 FROM appwrite/base:2.0.0 AS ffmpeg
 
