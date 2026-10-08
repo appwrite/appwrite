@@ -195,8 +195,8 @@ final class Release
         if ($problems !== []) {
             $this->fail("{$version} is not ready:\n  " . implode("\n  ", $problems));
         }
-        // Advisory only: a newer console release never makes a consistent
-        // release fail the check.
+        // Advisory only: a newer console release, or a failed lookup, never
+        // makes a consistent release fail the check.
         $console = $this->pinned($reference);
         $latest = $this->consoles()[0] ?? null;
         if ($latest !== null && $latest !== $console) {
@@ -354,13 +354,22 @@ final class Release
     }
 
     /**
+     * Whether a tag is a plain X.Y.Z version, with no pre-release suffix or empty component.
+     */
+    private function plain(string $tag): bool
+    {
+        $parts = explode('.', $tag);
+
+        return count($parts) === 3 && array_filter($parts, ctype_digit(...)) === $parts;
+    }
+
+    /**
      * Highest stable tag lower than the given version.
      */
     private function previous(string $version): string
     {
         foreach (explode(PHP_EOL, $this->sh('git tag --list --sort=-v:refname')) as $tag) {
-            $parts = explode('.', $tag);
-            if (count($parts) !== 3 || !ctype_digit(implode('', $parts))) {
+            if (!$this->plain($tag)) {
                 continue;
             }
             if (version_compare($tag, $version, '<')) {
@@ -421,18 +430,22 @@ final class Release
     }
 
     /**
-     * Console versions released from apps/console/<version> tags on origin, newest first.
+     * Console versions released from apps/console/<version> tags on origin,
+     * newest first, or null when origin cannot be listed.
      *
-     * @return string[]
+     * @return string[]|null
      */
-    private function consoles(): array
+    private function consoles(): ?array
     {
+        exec('git ls-remote --tags --refs origin ' . escapeshellarg('refs/tags/' . self::CONSOLE_TAG . '*') . ' 2> /dev/null', $rows, $code);
+        if ($code !== 0) {
+            return null;
+        }
         $versions = [];
-        foreach (explode("\n", $this->sh('git ls-remote --tags --refs origin ' . escapeshellarg('refs/tags/' . self::CONSOLE_TAG . '*'))) as $row) {
+        foreach ($rows as $row) {
             $reference = explode("\t", $row)[1] ?? '';
             $version = substr($reference, strlen('refs/tags/' . self::CONSOLE_TAG));
-            $parts = explode('.', $version);
-            if (count($parts) === 3 && ctype_digit(implode('', $parts))) {
+            if ($this->plain($version)) {
                 $versions[] = $version;
             }
         }
@@ -447,7 +460,8 @@ final class Release
      */
     private function latestConsole(): string
     {
-        foreach (array_slice($this->consoles(), 0, 10) as $version) {
+        $versions = $this->consoles() ?? $this->fail('could not list ' . self::CONSOLE_TAG . '<version> tags on origin');
+        foreach (array_slice($versions, 0, 10) as $version) {
             if ($this->published(self::CONSOLE_IMAGE, $version . self::CONSOLE_SUFFIX)) {
                 return $version;
             }
