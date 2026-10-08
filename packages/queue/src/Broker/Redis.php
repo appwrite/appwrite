@@ -62,7 +62,8 @@ class Redis implements Synchronous, Consumer
         private readonly ?int $reapMaxAttempts = null,
         // Sweep claims published longer ago than this go to the dead queue
         // instead of replaying; null is unbounded. A requeue republishes and
-        // restarts this clock, so only $reapMaxAttempts bounds a crash loop.
+        // restarts this clock, so only $reapMaxAttempts bounds a handler that
+        // keeps crashing.
         private readonly ?int $reapMaxAge = null,
     ) {
     }
