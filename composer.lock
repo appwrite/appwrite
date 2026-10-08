@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1b76dd5d71b5194b06f667ca5ee47cd3",
+    "content-hash": "508b3e633843d61eb24f864fd8832db0",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4243,16 +4243,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-feat/source-request-controls-1.14.x",
+            "version": "1.14.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "d61353d81676b41c89216d7ec365be90de0f636b"
+                "reference": "25eba0d065bc2e0b3a870b232e66e91c8c09e9e5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/d61353d81676b41c89216d7ec365be90de0f636b",
-                "reference": "d61353d81676b41c89216d7ec365be90de0f636b",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/25eba0d065bc2e0b3a870b232e66e91c8c09e9e5",
+                "reference": "25eba0d065bc2e0b3a870b232e66e91c8c09e9e5",
                 "shasum": ""
             },
             "require": {
@@ -4292,9 +4292,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/feat/source-request-controls-1.14.x"
+                "source": "https://github.com/utopia-php/migration/tree/1.14.2"
             },
-            "time": "2026-10-01T09:41:34+00:00"
+            "time": "2026-10-08T15:23:53+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8276,18 +8276,10 @@
             "time": "2026-05-30T17:09:26+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/migration",
-            "version": "dev-feat/source-request-controls-1.14.x",
-            "alias": "1.14.2",
-            "alias_normalized": "1.14.2.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/http": 5,
-        "utopia-php/migration": 20,
         "utopia-php/platform": 5
     },
     "prefer-stable": true,
