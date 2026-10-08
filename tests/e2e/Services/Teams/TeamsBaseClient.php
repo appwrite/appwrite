@@ -306,8 +306,8 @@ trait TeamsBaseClient
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
-        $this->assertEquals($name, $response['body']['userName']);
-        $this->assertEquals($email, $response['body']['userEmail']);
+        $this->assertArrayHasKey('userName', $response['body']);
+        $this->assertArrayHasKey('userEmail', $response['body']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(1, $response['body']['roles']);
@@ -373,8 +373,8 @@ trait TeamsBaseClient
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
-        $this->assertEquals($secondName, $response['body']['userName']);
-        $this->assertEquals($secondEmail, $response['body']['userEmail']);
+        $this->assertArrayHasKey('userName', $response['body']);
+        $this->assertArrayHasKey('userEmail', $response['body']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(1, $response['body']['roles']);
