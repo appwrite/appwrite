@@ -186,7 +186,7 @@ Two steps with very different cost. Step A rides inside each absorb PR; step B i
 
 Each ships as a major on its mirror with a one-major `class_alias` shim for the old name (`src/compat.php`, autoloaded via `files`), so external consumers upgrade at their own pace. Appwrite and Cloud are updated in the same PR. When the last of the three lands, the bare `Utopia\` list leaves the root autoload for good.
 
-`client` took step B in `utopia-php/monorepo` and released it as `0.5.0` before its absorb, so it never joined the bare `Utopia\` list. Packages here are not installed by Composer, so `bin/monorepo autoload` copies each package's `autoload.files` into the root, which is how the shim loads in Appwrite. The shim registers its aliases up front and guarded: PHP never autoloads a name while checking a declared type, and a package's test run loads both the root and the package autoloader.
+`client` took step B in `utopia-php/monorepo` and released it as `0.5.0` before its absorb, so it never joined the bare `Utopia\` list. `validators` took step B here as `2.0.0`. Its siblings moved to the new base-class name in the same PR and require `^2.0`, so until 2.0.0 is on Packagist they install only `--linked`, which `check` now takes as `test` does. Packages here are not installed by Composer, so `bin/monorepo autoload` copies each package's `autoload.files` into the root, which is how the shim loads in Appwrite. The shim registers its aliases up front and guarded: PHP never autoloads a name while checking a declared type, and a package's test run loads both the root and the package autoloader.
 
 ## Phases
 
