@@ -271,7 +271,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
                 $sessionExists = false;
                 $jwtSessionId = $payload['sessionId'] ?? '';
-                if (!empty($jwtSessionId) && !empty($user->find('$id', $jwtSessionId, 'sessions'))) {
+                if (!empty($jwtSessionId) && \array_any($user->getAttribute('sessions', []), static fn (Document $session): bool => $session->getId() === $jwtSessionId)) {
                     $sessionExists = true;
                 }
 
@@ -279,10 +279,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 if (!$project->isEmpty() && !$user->isEmpty()) {
                     $teamId = $project->getAttribute('teamId', '');
-                    $membership = $user->find('teamId', $teamId, 'memberships');
-                    if (!empty($membership)) {
-                        $membershipExists = true;
-                    }
+                    $membershipExists = \array_any($user->getAttribute('memberships', []), static fn (Document $membership): bool => $membership->getAttribute('teamId') === $teamId);
                 }
 
                 if ($userExists && $sessionExists && $membershipExists) {
