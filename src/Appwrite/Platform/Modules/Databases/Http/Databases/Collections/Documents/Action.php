@@ -9,8 +9,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Appwrite\Utopia\Response\Model\Document as DocumentModel;
-use Appwrite\Utopia\Response\Model\Row as RowModel;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -489,17 +487,14 @@ abstract class Action extends DatabasesAction
         $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
         $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
 
-        $model = $this->isCollectionsAPI() ? new DocumentModel() : new RowModel();
-        $oppositeId = $this->isCollectionsAPI() ? '$tableId' : '$collectionId';
-
         foreach ($documents as $document) {
-            $payload = clone $document;
-            $payload->removeAttribute($oppositeId);
+            $document->removeAttribute('$collection');
+            $document->removeAttribute('$tenant');
 
             $queueForEvents
                 ->setParam('documentId', $document->getId())
                 ->setParam('rowId', $document->getId())
-                ->setPayload($model->filter($payload)->getArrayCopy());
+                ->setPayload($document->getArrayCopy());
 
             $queueForRealtime
                 ->from($queueForEvents)
