@@ -123,7 +123,8 @@ final class JoinsTest extends TestCase
 
         $resolved = $this->joins()->resolve([Query::join('shared', 'ord', [Query::on('orders', '$id')])], $customers);
 
-        $this->assertSame(['$id', '=', 'customer', 'ord'], $resolved[0]->getValues(), 'a one-to-many relationship is stored on the related side, in its two-way key');
+        $this->assertSame('ord', $resolved[0]->getAlias());
+        $this->assertSame(['$id', '=', 'customer'], self::condition($resolved[0]), 'a one-to-many relationship is stored on the related side, in its two-way key');
     }
 
     public function testJoinOnAManyToOneRelationshipKeepsItsColumns(): void
@@ -132,7 +133,20 @@ final class JoinsTest extends TestCase
 
         $resolved = $this->joins()->resolve([Query::join('shared', 'reg', [Query::on('region', '$id')])], $customers);
 
-        $this->assertSame(['region', '=', '$id', 'reg'], $resolved[0]->getValues());
+        $this->assertSame('reg', $resolved[0]->getAlias());
+        $this->assertSame(['region', '=', '$id'], self::condition($resolved[0]));
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    private static function condition(Query $join): array
+    {
+        $values = $join->getValues();
+        self::assertCount(1, $values);
+        self::assertInstanceOf(Query::class, $values[0]);
+
+        return $values[0]->getValues();
     }
 
     private function joins(bool $privileged = false, string $notFound = Exception::COLLECTION_NOT_FOUND): Joins
