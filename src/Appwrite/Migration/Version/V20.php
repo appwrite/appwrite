@@ -7,6 +7,7 @@ use Exception;
 use PDOException;
 use Throwable;
 use Utopia\Console\Console;
+use Utopia\Database\Attribute;
 use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -15,6 +16,7 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Id;
+use Utopia\Database\Index;
 use Utopia\Database\Query;
 
 class V20 extends Migration
@@ -63,6 +65,61 @@ class V20 extends Migration
         $this->forEachDocument([$this, 'fixDocument']);
     }
 
+    protected function migrateArrayAttribute(Document $attribute): void
+    {
+        $collectionId = "database_{$attribute['databaseInternalId']}_collection_{$attribute['collectionInternalId']}";
+        $key = $attribute->getAttribute('key');
+
+        foreach (
+            $this->documentsIterator('indexes', [
+                Query::equal('databaseInternalId', [$attribute['databaseInternalId']]),
+                Query::equal('collectionInternalId', [$attribute['collectionInternalId']]),
+            ]) as $index
+        ) {
+            if (!\in_array($key, $index->getAttribute('attributes', []), true)) {
+                continue;
+            }
+
+            try {
+                $this->dbForProject->deleteIndex($collectionId, $index->getAttribute('key'));
+            } catch (Throwable $th) {
+                Console::warning("Failed to delete index: {$th->getMessage()}");
+            }
+            try {
+                $this->dbForProject->deleteDocument('indexes', $index->getId());
+            } catch (Throwable $th) {
+                Console::warning("Failed to remove index: {$th->getMessage()}");
+            }
+        }
+
+        $this->dbForProject->updateAttribute($collectionId, $key, new AttributeUpdate(type: Attribute::typeFromStored($attribute->getAttribute('type'))));
+    }
+
+    /**
+     * @param list<Attribute> $attributes
+     * @param list<Index> $indexes
+     */
+    protected function migrateConfiguredArrayAttributes(string $collectionId, array $attributes, array $indexes): void
+    {
+        foreach ($attributes as $attribute) {
+            if (!$attribute->array) {
+                continue;
+            }
+
+            foreach ($indexes as $index) {
+                if (\in_array($attribute->key, $index->attributes, true)) {
+                    $this->dbForProject->deleteIndex($collectionId, $index->key);
+                }
+            }
+
+            try {
+                $this->dbForProject->updateAttribute($collectionId, $attribute->key, new AttributeUpdate(type: $attribute->type));
+            } catch (Throwable $th) {
+                Console::warning("'{$attribute->key}' from {$collectionId}: {$th->getMessage()}");
+            }
+        }
+    }
+
     /**
      * Migrate Collections.
      *
@@ -77,36 +134,9 @@ class V20 extends Migration
             default => 'projects',
         };
 
-        // Support database array type migration (user collections)
         if ($collectionType === 'projects') {
-            foreach (
-                $this->documentsIterator('attributes', [
-                    Query::equal('array', [true]),
-                ]) as $attribute
-            ) {
-                $collectionId = "database_{$attribute['databaseInternalId']}_collection_{$attribute['collectionInternalId']}";
-
-                foreach (
-                    $this->documentsIterator('indexes', [
-                        Query::equal('databaseInternalId', [$attribute['databaseInternalId']]),
-                        Query::equal('collectionInternalId', [$attribute['collectionInternalId']]),
-                    ]) as $index
-                ) {
-                    if (\in_array($attribute->getAttribute('key'), $index->getAttribute('attributes'))) {
-                        try {
-                            $this->dbForProject->deleteIndex($collectionId, $index->getAttribute('key'));
-                        } catch (Throwable $th) {
-                            Console::warning("Failed to delete index: {$th->getMessage()}");
-                        }
-                        try {
-                            $this->dbForProject->deleteDocument('indexes', $index->getId());
-                        } catch (Throwable $th) {
-                            Console::warning("Failed to remove index: {$th->getMessage()}");
-                        }
-                    }
-                }
-
-                $this->dbForProject->updateAttribute($collectionId, $attribute['key'], new AttributeUpdate(type: $attribute['type']));
+            foreach ($this->documentsIterator('attributes', [Query::equal('array', [true])]) as $attribute) {
+                $this->migrateArrayAttribute($attribute);
             }
         }
 
@@ -118,22 +148,7 @@ class V20 extends Migration
 
             $this->dbForProject->setNamespace("_$internalProjectId");
 
-            // Support database array type migration
-            foreach ($collection['attributes'] ?? [] as $attribute) {
-                if ($attribute['array'] === true) {
-                    foreach ($collection['indexes'] ?? [] as $index) {
-                        if (\in_array($attribute['$id'], $index['attributes'])) {
-                            $this->dbForProject->deleteIndex($id, $index['$id']);
-                        }
-                    }
-
-                    try {
-                        $this->dbForProject->updateAttribute($id, $attribute['$id'], new AttributeUpdate(type: $attribute['type']));
-                    } catch (Throwable $th) {
-                        Console::warning("'{$attribute['$id']}' from {$id}: {$th->getMessage()}");
-                    }
-                }
-            }
+            $this->migrateConfiguredArrayAttributes($id, $collection['attributes'] ?? [], $collection['indexes'] ?? []);
 
             switch ($id) {
                 case '_metadata':
