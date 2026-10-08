@@ -56,15 +56,15 @@ class Swoole extends Adapter
 
         // A WebSocket\Server dispatches its 'message' event only on its own primary port,
         // so a WebSocket transport must be the master; raw MQTT is added as a TCP listener.
-        \usort($transports, fn (Transport $a, Transport $b): int => ($b instanceof WebSocket) <=> ($a instanceof WebSocket));
+        \usort($transports, fn (Transport $a, Transport $b): int => ($b->isWebSocket()) <=> ($a->isWebSocket()));
 
         $master = $transports[0];
-        if ($master instanceof WebSocket) {
+        if ($master->isWebSocket()) {
             $length = $master->getSettings()['package_max_length'] ?? 0;
             $this->maxPacketLength = \is_int($length) ? $length : 0;
         }
 
-        $this->server = $master instanceof WebSocket
+        $this->server = $master->isWebSocket()
             ? new WebSocketServer($master->host, $master->port, SWOOLE_BASE, $master->getSockType())
             : new Server($master->host, $master->port, SWOOLE_BASE, $master->getSockType());
         $this->server->set($master->getSettings() + [

@@ -24,4 +24,9 @@ class WebSocket extends Transport
             'package_max_length' => $this->maxPacketSize,
         ];
     }
+
+    public function isWebSocket(): bool
+    {
+        return true;
+    }
 }

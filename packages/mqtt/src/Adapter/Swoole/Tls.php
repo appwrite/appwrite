@@ -5,27 +5,28 @@ namespace Utopia\Mqtt\Adapter\Swoole;
 class Tls extends Transport
 {
     public function __construct(
-        string $host = '0.0.0.0',
-        int $port = 8883,
-        private readonly string $cert = '',
-        private readonly string $key = '',
-        private readonly int $maxPacketSize = 64000,
+        private readonly Transport $transport,
+        private readonly string $cert,
+        private readonly string $key,
     ) {
-        parent::__construct($host, $port);
+        parent::__construct($transport->host, $transport->port);
     }
 
     public function getSockType(): int
     {
-        return SWOOLE_SOCK_TCP | SWOOLE_SSL;
+        return $this->transport->getSockType() | SWOOLE_SSL;
     }
 
     public function getSettings(): array
     {
-        return [
-            'open_mqtt_protocol' => true,
-            'package_max_length' => $this->maxPacketSize,
+        return $this->transport->getSettings() + [
             'ssl_cert_file' => $this->cert,
             'ssl_key_file' => $this->key,
         ];
+    }
+
+    public function isWebSocket(): bool
+    {
+        return $this->transport->isWebSocket();
     }
 }
