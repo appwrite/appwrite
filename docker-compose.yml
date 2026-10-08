@@ -431,6 +431,9 @@ services:
       - _APP_MQTT_REPLAY_DEPTH
       - _APP_MQTT_WS_PORT
       - _APP_MQTT_MAX_PACKET_SIZE
+      - _APP_MQTT_TLS_CERT
+      - _APP_MQTT_TLS_KEY
+      - _APP_MQTT_TLS_PORT
 
   appwrite-worker:
     entrypoint: worker

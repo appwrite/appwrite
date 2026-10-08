@@ -836,6 +836,33 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_MQTT_TLS_CERT',
+                'description' => 'Path to the TLS certificate file the broker uses to terminate MQTT over TLS (mqtts) itself. Set it, with _APP_MQTT_TLS_KEY, to let a load balancer reach the broker directly without a TLS-terminating proxy. Leave empty to terminate TLS upstream. Default value is an empty string.',
+                'introduction' => '2.3.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MQTT_TLS_KEY',
+                'description' => 'Path to the TLS private key file that pairs with _APP_MQTT_TLS_CERT. Required when the broker terminates MQTT over TLS itself. Leave empty to terminate TLS upstream. Default value is an empty string.',
+                'introduction' => '2.3.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MQTT_TLS_PORT',
+                'description' => 'Port the broker listens on for broker-terminated MQTT over TLS (mqtts). Used only when _APP_MQTT_TLS_CERT and _APP_MQTT_TLS_KEY are set. Default value is: \'8883\'.',
+                'introduction' => '2.3.0',
+                'default' => '8883',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [

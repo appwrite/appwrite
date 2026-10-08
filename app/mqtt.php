@@ -215,10 +215,23 @@ $registerConnectionResources($container);
 $telemetry = $container->get('telemetry');
 
 $maxPacketSize = (int) System::getEnv('_APP_MQTT_MAX_PACKET_SIZE', '64000');
-$adapter = new Adapter\Swoole([
+
+$transports = [
     new Adapter\Swoole\Tcp('0.0.0.0', 1883, $maxPacketSize),
     new Adapter\Swoole\WebSocket('0.0.0.0', (int) System::getEnv('_APP_MQTT_WS_PORT', '8083'), $maxPacketSize),
-], workers: 1);
+];
+
+$tlsCert = System::getEnv('_APP_MQTT_TLS_CERT', '');
+$tlsKey = System::getEnv('_APP_MQTT_TLS_KEY', '');
+if ($tlsCert !== '' && $tlsKey !== '') {
+    $transports[] = new Adapter\Swoole\Tls(
+        new Adapter\Swoole\Tcp('0.0.0.0', (int) System::getEnv('_APP_MQTT_TLS_PORT', '8883'), $maxPacketSize),
+        $tlsCert,
+        $tlsKey,
+    );
+}
+
+$adapter = new Adapter\Swoole($transports, workers: 1);
 
 $mqtt = new Mqtt($telemetry, new PubSubPool($register->get('pools')->get('pubsub')));
 
