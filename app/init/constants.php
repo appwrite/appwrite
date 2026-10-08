@@ -210,6 +210,7 @@ const TOKEN_TYPE_GENERIC = 8;
 const TOKEN_TYPE_EMAIL = 9; // OTP
 const TOKEN_TYPE_VERIFICATION_OTP = 10;
 const TOKEN_TYPE_RECOVERY_OTP = 11;
+const TOKEN_TYPE_PASSKEY = 12;
 
 /**
  * Session Providers.
@@ -221,6 +222,7 @@ const SESSION_PROVIDER_PHONE = 'phone';
 const SESSION_PROVIDER_OAUTH2 = 'oauth2';
 const SESSION_PROVIDER_TOKEN = 'token';
 const SESSION_PROVIDER_SERVER = 'server';
+const SESSION_PROVIDER_PASSKEY = 'passkey';
 
 /**
  * Actor that performed the request (user, admin, guest, or API key).
@@ -243,6 +245,9 @@ const ONBOARDING_STATUS_SKIPPED = 'skipped';
  * MFA
  */
 const MFA_RECENT_DURATION = 1800; // 30 mins
+const PASSKEY_TOKEN_DURATION = 60;
+const APP_LIMIT_USER_PASSKEYS = 10;
+const SESSION_RECENT_DURATION = 600; // 10 mins
 
 
 // Database name

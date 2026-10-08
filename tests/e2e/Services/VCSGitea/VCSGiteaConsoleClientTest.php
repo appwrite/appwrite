@@ -250,7 +250,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->gitHelper("git clone {$remote} {$workdir}", \sys_get_temp_dir());
         \file_put_contents($workdir . '/package.json', "{\"name\": \"dotenv\", \"main\": \"index.js\"}\n");
         $this->writeFunctionHelper($workdir, 'dotenv');
-        \file_put_contents($workdir . '/.env', "# Defaults\nPLAIN=value # inline comment\nQUOTED=\"keeps # inside quotes\"\nUNSET=null\n");
+        \file_put_contents($workdir . '/.env', "# Defaults\nPLAIN=value # inline comment\nQUOTED=\"keeps # inside quotes\"\nUNSET=null\nSECRET=pa#ss\nexport EXPORTED=yes\n");
         $this->gitHelper('git add . && git commit -m "Add function with .env"', $workdir);
         $this->gitHelper('git push origin main', $workdir);
 
@@ -263,8 +263,10 @@ final class VCSGiteaConsoleClientTest extends Scope
         $variables = \array_column($detection['body']['variables'], 'value', 'name');
         \ksort($variables);
         $this->assertSame([
+            'EXPORTED' => 'yes',
             'PLAIN' => 'value',
             'QUOTED' => 'keeps # inside quotes',
+            'SECRET' => 'pa#ss',
             'UNSET' => 'null',
         ], $variables);
     }

@@ -173,7 +173,8 @@
         "psr/container": "^2.0",
         "appwrite/appwrite": "^27.1",
         "utopia-php/video": "0.0.1",
-        "captioning/captioning": "^3.0"
+        "captioning/captioning": "^3.0",
+        "web-auth/webauthn-lib": "^5.3"
     },
     "require-dev": {
         "ext-fileinfo": "*",
