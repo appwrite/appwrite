@@ -152,7 +152,6 @@ abstract class Migration
         $this->getProjectDB = $getProjectDB;
 
         $authorization->disable();
-        $authorization->setDefaultStatus(false);
 
         return $this;
     }

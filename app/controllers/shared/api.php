@@ -159,7 +159,7 @@ Http::init()
                 // Disable authorization checks for project API keys
                 // Dynamic supported for backwards compatibility
                 if (($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_EPHEMERAL || $apiKey->getType() === 'dynamic') && $apiKey->getProjectId() === $project->getId()) {
-                    $authorization->setDefaultStatus(false);
+                    $authorization->setStatus(false);
                 }
 
                 $user = new User([
@@ -327,10 +327,10 @@ Http::init()
              * Enabling authorization restricts admin user to the projects they have access to.
              */
             if ($project->getId() === 'console' && ($route->getPath() === '/v1/projects' || $route->getPath() === '/v1/projects/:projectId')) {
-                $authorization->setDefaultStatus(true);
+                $authorization->setStatus(true);
             } else {
                 // Otherwise, disable authorization checks.
-                $authorization->setDefaultStatus(false);
+                $authorization->setStatus(false);
             }
         }
 
@@ -372,7 +372,7 @@ Http::init()
             && $apiKey->getRole() === User::ROLE_OWNER;
 
         if ($isAdminProjectRequest && $isOAuthAdminKey) {
-            $authorization->setDefaultStatus(false);
+            $authorization->setStatus(false);
         }
 
         if (!$impersonatorUser->isEmpty() && !$targetUser->isEmpty()) {

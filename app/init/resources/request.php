@@ -456,7 +456,7 @@ return function (Container $context): void {
          *    overwriting the previous value.
          * 7. If account API key is passed, use user of the account API key as long as user ID header matches too
          */
-        $authorization->setDefaultStatus(true);
+        $authorization->setStatus(true);
 
         $store->setKey('a_session_' . $project->getId());
 
