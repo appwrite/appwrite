@@ -180,16 +180,14 @@ export function PropertySettings({
           </div>
         </div>
 
-        {/* Tracking and visibility */}
+        {/* Tracking */}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
               {t('Tracking')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              {t(
-                'Control whether this property accepts events and who can see its stats.',
-              )}
+              {t('Control whether this property accepts events.')}
             </p>
           </div>
           <div className="border-t border-border" />
@@ -213,29 +211,6 @@ export function PropertySettings({
                 {property.enabled
                   ? t('Tracking is enabled')
                   : t('Tracking is disabled')}
-              </Label>
-            </div>
-            <div className="flex items-center gap-3">
-              <Switch
-                id="property-public"
-                checked={property.public}
-                disabled={isBusy}
-                onCheckedChange={(checked) =>
-                  applyUpdate(
-                    { xpublic: checked },
-                    checked
-                      ? t('Stats are now public')
-                      : t('Stats are now private'),
-                  )
-                }
-              />
-              <Label
-                htmlFor="property-public"
-                className="text-[13px] text-foreground"
-              >
-                {property.public
-                  ? t('Stats are publicly viewable')
-                  : t('Stats are private')}
               </Label>
             </div>
           </div>

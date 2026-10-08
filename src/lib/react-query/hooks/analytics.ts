@@ -1145,8 +1145,6 @@ export type UpdateAnalyticsPropertyInput = {
   name?: string
   domain?: string
   enabled?: boolean
-  /** Maps to the API's `xpublic` (public stats visibility). */
-  xpublic?: boolean
   allowedOrigins?: string[]
 }
 
@@ -1164,7 +1162,6 @@ export function useUpdateAnalyticsProperty(
         ...(input.name !== undefined && { name: input.name }),
         ...(input.domain !== undefined && { domain: input.domain }),
         ...(input.enabled !== undefined && { enabled: input.enabled }),
-        ...(input.xpublic !== undefined && { xpublic: input.xpublic }),
         ...(input.allowedOrigins !== undefined && {
           allowedOrigins: input.allowedOrigins,
         }),

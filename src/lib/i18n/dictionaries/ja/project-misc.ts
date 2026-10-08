@@ -662,15 +662,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このプロパティの表示名を更新します。',
   'Name updated': '名前を更新しました',
   'Property details': 'プロパティの詳細',
-  'Control whether this property accepts events and who can see its stats.':
-    'このプロパティがイベントを受け付けるかどうか、また統計を誰が閲覧できるかを設定します。',
+  'Control whether this property accepts events.':
+    'このプロパティがイベントを受け付けるかどうかを設定します。',
   'Tracking enabled': '計測を有効にしました',
   'Tracking disabled': '計測を無効にしました',
   'Tracking is enabled': '計測は有効です',
-  'Stats are now public': '統計を公開しました',
-  'Stats are now private': '統計を非公開にしました',
-  'Stats are publicly viewable': '統計は一般に公開されています',
-  'Stats are private': '統計は非公開です',
   'Primary domain being tracked. Optional for native apps.':
     '計測対象の主要ドメインです。ネイティブアプリの場合は任意です。',
   'Domain updated': 'ドメインを更新しました',

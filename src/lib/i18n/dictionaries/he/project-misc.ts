@@ -1024,15 +1024,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "Update this property's display name.": 'עדכנו את שם התצוגה של הנכס הזה.',
   'Name updated': 'השם עודכן',
   'Property details': 'פרטי הנכס',
-  'Control whether this property accepts events and who can see its stats.':
-    'קבעו אם הנכס הזה מקבל אירועים ומי יכול לראות את הסטטיסטיקות שלו.',
+  'Control whether this property accepts events.': 'קבעו אם הנכס הזה מקבל אירועים.',
   'Tracking enabled': 'המעקב הופעל',
   'Tracking disabled': 'המעקב הושבת',
   'Tracking is enabled': 'המעקב פעיל',
-  'Stats are now public': 'הסטטיסטיקות ציבוריות כעת',
-  'Stats are now private': 'הסטטיסטיקות פרטיות כעת',
-  'Stats are publicly viewable': 'הסטטיסטיקות ניתנות לצפייה ציבורית',
-  'Stats are private': 'הסטטיסטיקות פרטיות',
   'Primary domain being tracked. Optional for native apps.':
     'הדומיין הראשי שנמצא במעקב. אופציונלי עבור אפליקציות נייטיב.',
   'Domain updated': 'הדומיין עודכן',
