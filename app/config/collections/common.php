@@ -122,9 +122,14 @@ return [
             Attribute::string(key: 'type'),
             Attribute::boolean(key: 'verified', default: false),
             Attribute::string(key: 'data', size: 65535, default: [], filters: ['json', 'encrypt']),
+            Attribute::string(key: 'identifier', size: 64),
+            Attribute::string(key: 'name', size: 128),
+            Attribute::datetime(key: 'accessedAt', signed: false, filters: ['datetime']),
         ],
         'indexes' => [
             Index::key(key: '_key_userInternalId', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),
+            Index::unique(key: '_key_identifier', attributes: ['identifier'], orders: [Order::Asc]),
+            Index::key(key: '_key_accessedAt', attributes: ['accessedAt']),
         ],
     ],
 
@@ -140,6 +145,8 @@ return [
             Attribute::string(key: 'token', size: 512, filters: ['encrypt']),
             Attribute::string(key: 'code', size: 512, filters: ['encrypt']),
             Attribute::datetime(key: 'expire', signed: false, filters: ['datetime']),
+            // JSON is fine here: only read by ID once, then deleted, never queried
+            Attribute::string(key: 'passkey', size: 16384, filters: ['json', 'encrypt']),
         ],
         'indexes' => [
             Index::key(key: '_key_user', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: [Order::Asc]),

@@ -1,0 +1,1343 @@
+---
+layout: article
+title: Backups
+description: Scheduled backups, manual backups, restores, and point-in-time recovery for your PostgreSQL database.
+---
+
+Native databases are backed up automatically. Backups are stored off the database instance and restorable from the API. For finer recovery granularity than scheduled backups, enable point-in-time recovery.
+
+# Automatic backups {% #automatic %}
+
+{% only_dark %}
+![Backups page with policies and completed backups](/images/docs/products/databases/postgresql/dark/backups-tab.avif)
+{% /only_dark %}
+{% only_light %}
+![Backups page with policies and completed backups](/images/docs/products/databases/postgresql/backups-tab.avif)
+{% /only_light %}
+
+Every database gets a default backup policy when it is provisioned, so you have scheduled backups from day one. You can adjust the default policy, or add more policies with different schedules and retention windows.
+
+# Backup policies {% #policies %}
+
+{% only_dark %}
+![Create backup policy dialog](/images/docs/products/databases/postgresql/dark/backups-create-policy.avif)
+{% /only_dark %}
+{% only_light %}
+![Create backup policy dialog](/images/docs/products/databases/postgresql/backups-create-policy.avif)
+{% /only_light %}
+
+A policy defines a schedule and a retention period in days. In the Console, open your database's **Backups** page and click **Create policy**, then pick a preset schedule or add a custom policy with its own schedule and retention.
+
+Your plan decides how many policies you can create, which schedules they can run on, and how long they can retain backups:
+
+| Plan  | Policies  | Schedule          | Retention   |
+|-------|-----------|-------------------|-------------|
+| Pro   | 1         | Daily             | 7 days      |
+| Scale | Unlimited | Any cron schedule | 1-36500 days |
+
+On the Pro plan the values are fixed, so the default daily policy created with the database is the only one you get. Requesting a different schedule or retention returns an error.
+
+You can also create a policy with a Server SDK:
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.createBackupPolicy({
+    databaseId: '<DATABASE_ID>',
+    policyId: 'hourly',
+    name: 'Hourly',
+    schedule: '0 * * * *',
+    retention: 30,
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.createBackupPolicy({
+    databaseId: '<DATABASE_ID>',
+    policyId: 'hourly',
+    name: 'Hourly',
+    schedule: '0 * * * *',
+    retention: 30,
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$postgresql->createBackupPolicy(
+    databaseId: '<DATABASE_ID>',
+    policyId: 'hourly',
+    name: 'Hourly',
+    schedule: '0 * * * *',
+    retention: 30,
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+postgresql.create_backup_policy(
+    database_id='<DATABASE_ID>',
+    policy_id='hourly',
+    name='Hourly',
+    schedule='0 * * * *',
+    retention=30,
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+postgresql.create_backup_policy(
+    database_id: '<DATABASE_ID>',
+    policy_id: 'hourly',
+    name: 'Hourly',
+    schedule: '0 * * * *',
+    retention: 30,
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+await postgresql.CreateBackupPolicy(
+    databaseId: "<DATABASE_ID>",
+    policyId: "hourly",
+    name: "Hourly",
+    schedule: "0 * * * *",
+    retention: 30
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+await postgresql.createBackupPolicy(
+    databaseId: '<DATABASE_ID>',
+    policyId: 'hourly',
+    name: 'Hourly',
+    schedule: '0 * * * *',
+    retention: 30,
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+postgresql.createBackupPolicy(
+    databaseId = "<DATABASE_ID>",
+    policyId = "hourly",
+    name = "Hourly",
+    schedule = "0 * * * *",
+    retention = 30,
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+_ = try await postgresql.createBackupPolicy(
+    databaseId: "<DATABASE_ID>",
+    policyId: "hourly",
+    name: "Hourly",
+    schedule: "0 * * * *",
+    retention: 30
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    _, err := service.CreateBackupPolicy("<DATABASE_ID>", "hourly", "Hourly", "0 * * * *", 30)
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    postgresql.create_backup_policy("<DATABASE_ID>", "hourly", "Hourly", "0 * * * *", 30, None, None).await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X POST \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "policyId": "hourly",
+      "name": "Hourly",
+      "schedule": "0 * * * *",
+      "retention": 30
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/backups/policies
+```
+{% /multicode %}
+
+| Parameter   | Value                              | Description                                  |
+|-------------|-------------------------------------|-----------------------------------------------|
+| `policyId`  | custom ID or `unique()`             | Policy identifier                             |
+| `name`      | text                                | Display name                                  |
+| `schedule`  | cron expression                     | When backups run, for example `0 3 * * *`     |
+| `retention` | 7 days on Pro, 1-36500 on Scale     | How long backups from this policy are kept    |
+
+List, update, and delete policies with `listBackupPolicies`, `updateBackupPolicy`, and `deleteBackupPolicy`. The number of policies you can create depends on your plan.
+
+# Manual backups {% #manual %}
+
+{% only_dark %}
+![Create manual backup dialog](/images/docs/products/databases/postgresql/dark/backups-manual.avif)
+{% /only_dark %}
+{% only_light %}
+![Create manual backup dialog](/images/docs/products/databases/postgresql/backups-manual.avif)
+{% /only_light %}
+
+Take an on-demand backup before a risky change. In the Console, click **Manual backup** on the **Backups** page. Policy backups are pruned once they pass their retention window. Manual backups are not pruned on that schedule, so remove them yourself when you no longer need them.
+
+You can also take one with a Server SDK:
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const backup = await postgresql.createBackup({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const backup = await postgresql.createBackup({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$backup = $postgresql->createBackup(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+backup = postgresql.create_backup(
+    database_id='<DATABASE_ID>',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+backup = postgresql.create_backup(
+    database_id: '<DATABASE_ID>',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+var backup = await postgresql.CreateBackup(
+    databaseId: "<DATABASE_ID>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+final backup = await postgresql.createBackup(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+val backup = postgresql.createBackup(
+    databaseId = "<DATABASE_ID>",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+let backup = try await postgresql.createBackup(
+    databaseId: "<DATABASE_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    result, err := service.CreateBackup("<DATABASE_ID>")
+    if err != nil {
+        panic(err)
+    }
+    _ = result
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    let backup = postgresql.create_backup("<DATABASE_ID>", None).await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X POST \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/backups
+```
+{% /multicode %}
+
+The backup runs asynchronously with status `pending` until it completes. List backups and check their status with `listBackups`, or fetch one with `getBackup`.
+
+# Restore from a backup {% #restore %}
+
+{% only_dark %}
+![Restore backup confirmation dialog](/images/docs/products/databases/postgresql/dark/backups-restore.avif)
+{% /only_dark %}
+{% only_light %}
+![Restore backup confirmation dialog](/images/docs/products/databases/postgresql/backups-restore.avif)
+{% /only_light %}
+
+Restoring replaces the database's current data with the backup's contents. The database status moves to `restoring` and returns to `ready` when the restore completes; connections are unavailable during the restore.
+
+In the Console, open the **Actions** menu on a backup row, click **Restore**, then acknowledge that the current data will be replaced. You can also restore with a Server SDK:
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.createRestoration({
+    databaseId: '<DATABASE_ID>',
+    type: 'backup',
+    backupId: '<BACKUP_ID>',
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.createRestoration({
+    databaseId: '<DATABASE_ID>',
+    type: 'backup',
+    backupId: '<BACKUP_ID>',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$postgresql->createRestoration(
+    databaseId: '<DATABASE_ID>',
+    type: 'backup',
+    backupId: '<BACKUP_ID>',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+postgresql.create_restoration(
+    database_id='<DATABASE_ID>',
+    type='backup',
+    backup_id='<BACKUP_ID>',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+postgresql.create_restoration(
+    database_id: '<DATABASE_ID>',
+    type: 'backup',
+    backup_id: '<BACKUP_ID>',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+await postgresql.CreateRestoration(
+    databaseId: "<DATABASE_ID>",
+    type: "backup",
+    backupId: "<BACKUP_ID>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+await postgresql.createRestoration(
+    databaseId: '<DATABASE_ID>',
+    type: 'backup',
+    backupId: '<BACKUP_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+postgresql.createRestoration(
+    databaseId = "<DATABASE_ID>",
+    type = "backup",
+    backupId = "<BACKUP_ID>",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+_ = try await postgresql.createRestoration(
+    databaseId: "<DATABASE_ID>",
+    type: "backup",
+    backupId: "<BACKUP_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/postgresql"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    _, err := service.CreateRestoration(
+        "<DATABASE_ID>",
+        postgresql.WithCreateRestorationType("backup"),
+        postgresql.WithCreateRestorationBackupId("<BACKUP_ID>"),
+    )
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    postgresql.create_restoration("<DATABASE_ID>", Some("backup"), Some("<BACKUP_ID>"), None).await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X POST \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "type": "backup",
+      "backupId": "<BACKUP_ID>"
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/restorations
+```
+{% /multicode %}
+
+Track progress with `getRestoration` or the database status.
+
+{% info title="Restores overwrite current data" %}
+Everything written after the backup was taken is lost when you restore it. If you need the current state too, take a manual backup first, or use a [branch](/docs/products/databases/postgresql/branches) to inspect data without touching the live database.
+{% /info %}
+
+# Point-in-time recovery {% #pitr %}
+
+{% only_dark %}
+![Point-in-time recovery settings](/images/docs/products/databases/postgresql/dark/settings-pitr.avif)
+{% /only_dark %}
+{% only_light %}
+![Point-in-time recovery settings](/images/docs/products/databases/postgresql/settings-pitr.avif)
+{% /only_light %}
+
+Scheduled backups recover to fixed snapshots. Point-in-time recovery (PITR) continuously archives the write-ahead log, so you can restore to any moment inside the retention window, for example the second before a bad migration ran.
+
+Enable PITR when creating the database, from **Settings** > **PITR** in the Console, or through the API:
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.update({
+    databaseId: '<DATABASE_ID>',
+    pitr: true,
+    pitrRetentionDays: 7,
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.update({
+    databaseId: '<DATABASE_ID>',
+    pitr: true,
+    pitrRetentionDays: 7,
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$postgresql->update(
+    databaseId: '<DATABASE_ID>',
+    pitr: true,
+    pitrRetentionDays: 7,
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+postgresql.update(
+    database_id='<DATABASE_ID>',
+    pitr=True,
+    pitr_retention_days=7,
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+postgresql.update(
+    database_id: '<DATABASE_ID>',
+    pitr: true,
+    pitr_retention_days: 7,
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+await postgresql.Update(
+    databaseId: "<DATABASE_ID>",
+    pitr: true,
+    pitrRetentionDays: 7
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+await postgresql.update(
+    databaseId: '<DATABASE_ID>',
+    pitr: true,
+    pitrRetentionDays: 7,
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+postgresql.update(
+    databaseId = "<DATABASE_ID>",
+    pitr = true,
+    pitrRetentionDays = 7,
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+_ = try await postgresql.update(
+    databaseId: "<DATABASE_ID>",
+    pitr: true,
+    pitrRetentionDays: 7
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/postgresql"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    _, err := service.Update(
+        "<DATABASE_ID>",
+        postgresql.WithUpdatePitr(true),
+        postgresql.WithUpdatePitrRetentionDays(7),
+    )
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    postgresql.update("<DATABASE_ID>", None, None, None, None, None, None, None, None, Some(true), Some(7), None, None, None, None, None, None, None, None, None, None).await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X PATCH \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "pitr": true,
+      "pitrRetentionDays": 7
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>
+```
+{% /multicode %}
+
+`pitrRetentionDays` accepts 1 to 35 days. PITR is billed as an add-on on top of your specification; see [pricing](/pricing).
+
+## Check the recovery window {% #pitr-windows %}
+
+You can retrieve the time range you can restore to, as an earliest and latest pair. Right after enabling PITR the call returns an error rather than an empty window, because continuous archiving has not captured its first segment yet.
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const windows = await postgresql.getPitr({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const windows = await postgresql.getPitr({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$windows = $postgresql->getPitr(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+windows = postgresql.get_pitr(
+    database_id='<DATABASE_ID>',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+windows = postgresql.get_pitr(
+    database_id: '<DATABASE_ID>',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+var windows = await postgresql.GetPitr(
+    databaseId: "<DATABASE_ID>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+final windows = await postgresql.getPitr(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+val windows = postgresql.getPitr(
+    databaseId = "<DATABASE_ID>",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+let windows = try await postgresql.getPitr(
+    databaseId: "<DATABASE_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    result, err := service.GetPitr("<DATABASE_ID>")
+    if err != nil {
+        panic(err)
+    }
+    _ = result
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    let windows = postgresql.get_pitr("<DATABASE_ID>").await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X GET \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/pitr
+```
+{% /multicode %}
+
+## Restore to a point in time {% #pitr-restore %}
+
+Pass an ISO 8601 datetime inside the recovery window:
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.createRestoration({
+    databaseId: '<DATABASE_ID>',
+    type: 'pitr',
+    targetTime: '2026-01-01T00:00:00.000+00:00',
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.createRestoration({
+    databaseId: '<DATABASE_ID>',
+    type: 'pitr',
+    targetTime: '2026-01-01T00:00:00.000+00:00',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$postgresql->createRestoration(
+    databaseId: '<DATABASE_ID>',
+    type: 'pitr',
+    targetTime: '2026-01-01T00:00:00.000+00:00',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+postgresql.create_restoration(
+    database_id='<DATABASE_ID>',
+    type='pitr',
+    target_time='2026-01-01T00:00:00.000+00:00',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+postgresql.create_restoration(
+    database_id: '<DATABASE_ID>',
+    type: 'pitr',
+    target_time: '2026-01-01T00:00:00.000+00:00',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+await postgresql.CreateRestoration(
+    databaseId: "<DATABASE_ID>",
+    type: "pitr",
+    targetTime: "2026-01-01T00:00:00.000+00:00"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+await postgresql.createRestoration(
+    databaseId: '<DATABASE_ID>',
+    type: 'pitr',
+    targetTime: '2026-01-01T00:00:00.000+00:00',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+postgresql.createRestoration(
+    databaseId = "<DATABASE_ID>",
+    type = "pitr",
+    targetTime = "2026-01-01T00:00:00.000+00:00",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+_ = try await postgresql.createRestoration(
+    databaseId: "<DATABASE_ID>",
+    type: "pitr",
+    targetTime: "2026-01-01T00:00:00.000+00:00"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/postgresql"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    _, err := service.CreateRestoration(
+        "<DATABASE_ID>",
+        postgresql.WithCreateRestorationType("pitr"),
+        postgresql.WithCreateRestorationTargetTime("2026-01-01T00:00:00.000+00:00"),
+    )
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    postgresql.create_restoration("<DATABASE_ID>", Some("pitr"), None, Some("2026-01-01T00:00:00.000+00:00")).await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X POST \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "type": "pitr",
+      "targetTime": "2026-01-01T00:00:00.000+00:00"
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/restorations
+```
+{% /multicode %}
+
+Like a backup restore, a PITR restore is in-place: the database is unavailable while restoring and everything after the target time is discarded.
+
+# Limits {% #limits %}
+
+| Limit            | Value          |
+|------------------|-----------------|
+| Backup retention | 7 days on Pro, 1-36500 days on Scale |
+| PITR retention   | 1 - 35 days     |
+| Backup policies  | 1 on Pro, unlimited on Scale |

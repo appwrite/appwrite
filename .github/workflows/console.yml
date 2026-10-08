@@ -1,0 +1,263 @@
+name: Console
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - '*.x'
+  workflow_dispatch:
+
+# Every e2e run signs the shared test account in, and the console keeps only the
+# newest sessions per user. Superseded runs would sign out the current one.
+concurrency:
+  group: console-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Console / Changes
+    runs-on: ubuntu-24.04
+    outputs:
+      console: ${{ steps.changes.outputs.console }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Compute changes
+        id: changes
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: bash .github/scripts/changes.sh
+
+  checks:
+    name: Console / Checks
+    needs: changes
+    if: needs.changes.outputs.console == 'true'
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}-console-checks/runner=standard', github.run_id)
+      || 'ubuntu-24.04' }}
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/console
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Check deployment scripts
+        working-directory: .github/scripts/console
+        run: |
+          bash -n extract-assets.sh
+          sh -n publish-assets.sh
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check connect snippet line width
+        run: bun run lint:snippets
+
+      - name: Check content for hidden Unicode
+        run: bun run lint:content
+
+      - name: Check for links to removed blog posts
+        run: bun run lint:removed-blog-links
+
+      - name: Check for native browser dialogs
+        run: bun run lint:native-dialogs
+
+      - name: Check for preview SDK pins
+        run: bun run lint:sdk-pins
+
+      - name: Unit tests
+        run: bun run test:unit
+
+      - name: Build
+        run: bun run build
+        env:
+          VITE_APPWRITE_ENDPOINT: http://appwrite.test/v1
+          PUBLIC_APPWRITE_ENDPOINT: http://appwrite.test/v1
+
+  # E2E runs against a live backend with the shared test account, so it needs
+  # repository secrets: same-repository pull requests only.
+  session:
+    name: Console / E2E / Session
+    needs: changes
+    if: >-
+      needs.changes.outputs.console == 'true'
+      && github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: gcrunner=${{ github.run_id }}-console-e2e-session/runner=small
+    timeout-minutes: 5
+    outputs:
+      session: ${{ steps.create.outputs.session }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create console session
+        id: create
+        env:
+          VITE_APPWRITE_ENDPOINT: ${{ secrets.CONSOLE_VITE_APPWRITE_ENDPOINT }}
+          E2E_TEST_EMAIL: ${{ secrets.CONSOLE_E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.CONSOLE_E2E_TEST_PASSWORD }}
+        run: bash .github/scripts/console/create-session.sh
+
+  e2e:
+    name: Console / E2E / ${{ matrix.project }}
+    needs: session
+    if: ${{ !cancelled() && needs.session.result != 'skipped' }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: ${{ matrix.timeout }}
+    defaults:
+      run:
+        working-directory: apps/console
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: website
+            args: --project=website
+            timeout: 15
+            runner: gcrunner=${{ github.run_id }}-console-e2e-website/runner=e2e
+          - project: console-mocked
+            args: --project=console-mocked
+            timeout: 15
+            runner: gcrunner=${{ github.run_id }}-console-e2e-mocked/runner=e2e
+          - project: console
+            args: --project=console
+            auth: true
+            timeout: 20
+            runner: gcrunner=${{ github.run_id }}-console-e2e-console/runner=e2e
+          - project: console-usage
+            args: --project=console-usage
+            auth: true
+            timeout: 20
+            runner: gcrunner=${{ github.run_id }}-console-e2e-usage/runner=e2e
+          # Each database suite is one serial chain on a single worker, so they
+          # only get faster by running on separate machines. A lane holds a
+          # dedicated database open until it finishes, so it stays off spot.
+          - project: console-mysql
+            args: --project=console-mysql
+            auth: true
+            timeout: 40
+            runner: gcrunner=${{ github.run_id }}-console-e2e-mysql/runner=e2e-long
+          - project: console-postgres
+            args: --project=console-postgres
+            auth: true
+            timeout: 40
+            runner: gcrunner=${{ github.run_id }}-console-e2e-postgres/runner=e2e-long
+          - project: console-tablesdb
+            args: --project=console-tablesdb
+            auth: true
+            timeout: 40
+            runner: gcrunner=${{ github.run_id }}-console-e2e-tablesdb/runner=e2e-long
+          - project: console-documentsdb
+            args: --project=console-documentsdb
+            auth: true
+            timeout: 40
+            runner: gcrunner=${{ github.run_id }}-console-e2e-documentsdb/runner=e2e-long
+          - project: console-vectorsdb
+            args: --project=console-vectorsdb
+            auth: true
+            timeout: 40
+            runner: gcrunner=${{ github.run_id }}-console-e2e-vectorsdb/runner=e2e-long
+    steps:
+      - name: Check console session
+        if: matrix.auth && needs.session.outputs.session == ''
+        run: |
+          echo '::error::The session job did not create a console session'
+          exit 1
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('apps/console/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      # System libraries live outside the cached browser directory.
+      - name: Install Playwright system dependencies
+        run: bunx playwright install-deps chromium
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: bunx playwright install chromium
+
+      - name: E2E tests
+        env:
+          VITE_APPWRITE_ENDPOINT: ${{ secrets.CONSOLE_VITE_APPWRITE_ENDPOINT }}
+          PUBLIC_CONSOLE_MODE: ${{ vars.PUBLIC_CONSOLE_MODE }}
+          PUBLIC_APPWRITE_MULTI_REGION: ${{ vars.PUBLIC_APPWRITE_MULTI_REGION }}
+          VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.CONSOLE_VITE_STRIPE_PUBLISHABLE_KEY }}
+          # Required to resume paused free-plan projects (baked into the webServer build).
+          VITE_CONSOLE_FINGERPRINT_KEY: ${{ secrets.CONSOLE_VITE_CONSOLE_FINGERPRINT_KEY }}
+          E2E_TEST_EMAIL: ${{ secrets.CONSOLE_E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.CONSOLE_E2E_TEST_PASSWORD }}
+          E2E_TEST_SESSION_SECRET: ${{ secrets.CONSOLE_E2E_TEST_SESSION_SECRET }}
+          E2E_ORG_ID: ${{ secrets.CONSOLE_E2E_ORG_ID }}
+          E2E_PROJECT_ID: ${{ secrets.CONSOLE_E2E_PROJECT_ID }}
+          SESSION: ${{ matrix.auth && needs.session.outputs.session || '' }}
+        run: |
+          if [ -n "$SESSION" ]; then
+            E2E_FALLBACK_COOKIES=$(printf '%s\n' "$SESSION" | openssl enc -d -aes-256-cbc -pbkdf2 -a -A -pass env:E2E_TEST_PASSWORD)
+            echo "::add-mask::$E2E_FALLBACK_COOKIES"
+            export E2E_FALLBACK_COOKIES
+          fi
+          bun run e2e -- ${{ matrix.args }}
+
+      # Prints the page snapshot of each failure into the log rather than
+      # uploading artifacts.
+      - name: Print failure context
+        if: failure()
+        run: |
+          find test-results -name error-context.md 2>/dev/null | while read -r file; do
+            echo "::group::$file"
+            cat "$file"
+            echo '::endgroup::'
+          done
+
+  session-cleanup:
+    name: Console / E2E / Session cleanup
+    needs: [session, e2e]
+    if: ${{ always() && needs.session.outputs.session != '' }}
+    runs-on: gcrunner=${{ github.run_id }}-console-e2e-session-cleanup/runner=small
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Delete console session
+        env:
+          VITE_APPWRITE_ENDPOINT: ${{ secrets.CONSOLE_VITE_APPWRITE_ENDPOINT }}
+          E2E_TEST_PASSWORD: ${{ secrets.CONSOLE_E2E_TEST_PASSWORD }}
+          SESSION: ${{ needs.session.outputs.session }}
+        run: bash .github/scripts/console/delete-session.sh

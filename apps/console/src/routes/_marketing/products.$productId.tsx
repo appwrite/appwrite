@@ -1,0 +1,104 @@
+import { createFileRoute, notFound } from '@tanstack/react-router'
+import { ProductPageLayout } from '@/components/pages/products/ProductPageLayout'
+import { getProductContent } from '@/lib/products/content'
+import { isProductId, PRODUCT_REGISTRY } from '@/lib/products/registry'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
+import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
+import {
+  marketingSiteTemplatesQueryOptions,
+  siteFrameworksQueryOptions,
+} from '@/lib/react-query/hooks/sites'
+import { MARKETING_SITE_TEMPLATES_PROJECT_ID } from '@/lib/sites/site-template-wizard'
+import { pageTitle } from '@/lib/utils/page-title'
+import { translate } from '@/lib/i18n/translate'
+import { stringifyJsonLd } from '@/lib/seo/json-ld'
+
+export const Route = createFileRoute('/_marketing/products/$productId')({
+  ...marketingRouteLifetime,
+  staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
+  ssr: true,
+  beforeLoad: ({ params }) => {
+    if (!isProductId(params.productId)) {
+      throw notFound()
+    }
+  },
+  head: ({ params }) => {
+    if (!isProductId(params.productId)) {
+      return { meta: [{ title: pageTitle('Product') }] }
+    }
+
+    const content = getProductContent(params.productId)
+    const product = PRODUCT_REGISTRY[params.productId]
+    const pageName = content.metaTitle
+      ? translate(content.metaTitle)
+      : product.name
+    const metaDescription = translate(content.metaDescription)
+    const ogImageSubtitle =
+      content.metaDescription.trim() !== product.name.trim()
+        ? metaDescription
+        : translate(product.tagline)
+
+    return {
+      ...getMarketingRouteHead({
+        canonicalPath: `/products/${params.productId}`,
+        pageName,
+        description: metaDescription,
+        ogImageEyebrow: 'Products',
+        ogImageTitle: pageName,
+        ogImageSubtitle,
+      }),
+      scripts: content.faq.length
+        ? [
+            {
+              type: 'application/ld+json',
+              children: stringifyJsonLd({
+                '@context': 'https://schema.org',
+                '@type': 'FAQPage',
+                mainEntity: content.faq.map((faq) => ({
+                  '@type': 'Question',
+                  name: translate(faq.question),
+                  acceptedAnswer: {
+                    '@type': 'Answer',
+                    text: translate(faq.answer),
+                  },
+                })),
+              }),
+            },
+          ]
+        : [],
+    }
+  },
+  loader: async ({ params, context }) => {
+
+    if (typeof window !== 'undefined' && params.productId === 'sites') {
+      const { queryClient } = context
+      await Promise.all([
+        queryClient
+          .ensureQueryData(
+            siteFrameworksQueryOptions(MARKETING_SITE_TEMPLATES_PROJECT_ID),
+          )
+          .catch(() => {}),
+        queryClient.ensureQueryData(marketingSiteTemplatesQueryOptions()).catch(
+          () => {},
+        ),
+      ])
+    }
+  },
+  component: ProductPage,
+})
+
+function ProductPage() {
+  const { productId } = Route.useParams()
+
+  if (!isProductId(productId)) {
+    throw notFound()
+  }
+
+  const content = getProductContent(productId)
+
+  return (<ProductPageLayout content={content} />
+    )
+}

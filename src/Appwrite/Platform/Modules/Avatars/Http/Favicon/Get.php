@@ -90,7 +90,7 @@ class Get extends Action
         $client = $clientForAvatars->withTimeout(15);
 
         try {
-            $pageResponse = $this->safeFetch($url, $userAgent, $publicURL, $client);
+            $pageResponse = $this->safeFetch($url, $userAgent, $publicURL, $client, $pageUrl);
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
@@ -112,7 +112,7 @@ class Get extends Action
             $href = $link->getAttribute('href');
             $rel = $link->getAttribute('rel');
             $sizes = $link->getAttribute('sizes');
-            $absolute = URLParse::resolveLocation($url, $href);
+            $absolute = URLParse::resolveLocation($pageUrl, $href);
 
             switch (\strtolower($rel)) {
                 case 'icon':
@@ -149,9 +149,7 @@ class Get extends Action
         }
 
         if (empty($outputHref) || empty($outputExt)) {
-            $default = \parse_url($url);
-
-            $outputHref = $default['scheme'] . '://' . $default['host'] . '/favicon.ico';
+            $outputHref = URLParse::resolveLocation($pageUrl, '/favicon.ico');
             $outputExt = 'ico';
         }
 
@@ -210,11 +208,12 @@ class Get extends Action
     /**
      * Follows redirects one hop at a time so every target passes the validator (scheme,
      * known public domain, allowed addresses) before it is requested; the client then
-     * checks the address it actually connects to.
+     * checks the address it actually connects to. The last requested URL is written to
+     * $finalUrl.
      *
      * @throws Exception
      */
-    protected function safeFetch(string $url, string $userAgent, PublicURL $validator, ClientInterface $client): ResponseInterface
+    protected function safeFetch(string $url, string $userAgent, PublicURL $validator, ClientInterface $client, ?string &$finalUrl = null): ResponseInterface
     {
         $requestFactory = new RequestFactory();
 
@@ -222,6 +221,8 @@ class Get extends Action
             if (!$validator->isValid($url)) {
                 throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $validator->getDescription());
             }
+
+            $finalUrl = $url;
 
             $response = $client->sendRequest(
                 $requestFactory

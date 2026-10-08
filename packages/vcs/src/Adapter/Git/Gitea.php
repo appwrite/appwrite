@@ -4,7 +4,7 @@ namespace Utopia\VCS\Adapter\Git;
 
 use Exception;
 use Utopia\Cache\Cache;
-use Utopia\Command;
+use Utopia\Console\Command;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\FileNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
@@ -781,9 +781,8 @@ class Gitea extends Git
     {
         $allFiles = [];
         $limit = 30;
-        $maxPages = 100;
 
-        for ($currentPage = 1; $currentPage <= $maxPages; $currentPage++) {
+        foreach (\range(1, 100) as $currentPage) {
             $url = "/repos/{$owner}/{$repositoryName}/pulls/{$pullRequestNumber}/files?page={$currentPage}&limit={$limit}";
 
             $response = $this->call(self::METHOD_GET, $url, ['Authorization' => "token $this->accessToken"]);
@@ -795,6 +794,10 @@ class Gitea extends Git
             }
 
             $files = $response['body'] ?? [];
+            if (!\is_array($files)) {
+                throw new Exception("Failed to get pull request files: HTTP {$responseHeadersStatusCode} returned a non-JSON body");
+            }
+
             $allFiles = array_merge($allFiles, $files);
 
             if (\count($files) < $limit) {
@@ -834,9 +837,8 @@ class Gitea extends Git
     {
         $allBranches = [];
         $perPage = 50;
-        $maxPages = 100;
 
-        for ($currentPage = 1; $currentPage <= $maxPages; $currentPage++) {
+        foreach (\range(1, 100) as $currentPage) {
             $url = "/repos/{$owner}/{$repositoryName}/branches?page={$currentPage}&limit={$perPage}";
 
             $response = $this->call(self::METHOD_GET, $url, ['Authorization' => "token $this->accessToken"], decode: false);
@@ -889,9 +891,8 @@ class Gitea extends Git
     {
         $allTags = [];
         $perPage = 50;
-        $maxPages = 100;
 
-        for ($currentPage = 1; $currentPage <= $maxPages; $currentPage++) {
+        foreach (\range(1, 100) as $currentPage) {
             $url = "/repos/{$owner}/{$repositoryName}/tags?page={$currentPage}&limit={$perPage}";
 
             $response = $this->call(self::METHOD_GET, $url, ['Authorization' => "token $this->accessToken"], decode: false);

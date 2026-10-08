@@ -317,7 +317,7 @@ class Create extends Action
             }
         };
 
-        $finalizeUpload = function (int $chunksUploaded) use ($buildTimeout, $activate, $authorization, $bus, $commands, &$chunks, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForSites, $fileSize, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $queueForEvents, $response, &$site, $type): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($buildTimeout, $activate, $authorization, $bus, $commands, &$chunks, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForSites, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $queueForEvents, $response, &$site, $type): void {
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
             $uploaded = 0;
 

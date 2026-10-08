@@ -1,9 +1,10 @@
 <?php
 
-namespace Utopia;
+namespace Utopia\Console;
 
 use InvalidArgumentException;
 use Stringable;
+use Utopia\Validator;
 use Utopia\Validator\Text;
 
 class Command implements Stringable

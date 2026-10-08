@@ -1,0 +1,36 @@
+rules:
+  - id: php.appwrite.guest-write-without-abuse-limit
+    message: >
+      State-changing route (POST/PUT/PATCH/DELETE) reachable with a
+      ROLE_GUESTS scope has no ->label('abuse-limit', ...). The shared
+      api hook defaults the limit to 0 (no limit). Add an abuse-limit and
+      abuse-key, or narrow the scope. Allowlisted: mock routes and VCS
+      provider webhook receivers (/v1/vcs/*/events), which verify a
+      provider signature instead.
+    languages: [php]
+    severity: WARNING
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/Modules/**"
+        - "**/app/controllers/**"
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern: $ROUTE->callback(...)
+              - metavariable-regex:
+                  metavariable: $ROUTE
+                  regex: (?s).*HTTP_REQUEST_METHOD_(?:POST|PUT|PATCH|DELETE)
+          - patterns:
+              - pattern: $ROUTE->action(...)
+              - metavariable-regex:
+                  metavariable: $ROUTE
+                  regex: (?s)^\\?(?:Utopia\\Http\\)?Http::(?:post|put|patch|delete)\(
+      - metavariable-regex:
+          metavariable: $ROUTE
+          regex: (?s).*->label\(\s*['"]scope['"]\s*,\s*['"](?:public|avatars\.(?:read|write)|sessions\.write|documents(?:db\.documents)?\.(?:read|write)|vectorsdb\.documents\.(?:read|write)|rows\.(?:read|write)|files\.(?:read|write)|embeddings\.write|locale\.read|executions\.write)['"]
+      - pattern-not-regex: ->label\(\s*['"]abuse-limit['"]
+      - pattern-not-regex: ->groups\(\s*\[[^\]]*['"]mock['"]
+      - pattern-not-regex: setHttpPath\(\s*['"]/v1/vcs/[a-z]+/events['"]

@@ -738,7 +738,7 @@ class Nats implements Synchronous, Consumer, Bounded
         $spare = $this->spareDelivery[$key] ?? null;
 
         foreach ($deliveries as $jsMessage) {
-            // The server allows one delivery past maxDeliver (see provision()), and it
+            // The server allows one delivery past maxDeliver (see provisionOnce()), and it
             // only reaches here when no attempt before it ended in reject() -- a worker
             // died holding each one. Dead-lettered on this delivery rather than by the
             // advisory, which nobody receives while no broker is subscribed.
@@ -1017,6 +1017,12 @@ class Nats implements Synchronous, Consumer, Bounded
     /**
      * Re-drive dead-lettered messages back onto the work queue, up to $limit.
      *
+     * A null $limit means every message on the dead stream when the sweep starts, as
+     * Broker\Redis::retry() reads it. The bound is taken from the retry consumer's
+     * pending count up front rather than looping until the stream is empty: a message
+     * re-driven by this sweep can fail again and land back on the dead stream before
+     * the sweep ends, and must not be picked up a second time by the same run.
+     *
      * $maxAttempts and $newerThan exist only for signature compatibility with
      * Broker\Redis::retry() (cloud calls it with them); they are not applied here.
      * In the JetStream model attempts are capped server-side by maxDeliver before a
@@ -1048,7 +1054,7 @@ class Nats implements Synchronous, Consumer, Bounded
                 filterSubject: $this->deadSubject($queue),
             ));
 
-            $remaining = $limit ?? 500;
+            $remaining = $limit ?? $consumer->info(true)->numPending;
             while ($remaining > 0) {
                 $jsMessage = $this->fetch($consumer, 1, 1.0, false)[0] ?? null;
                 if (!$jsMessage instanceof JetStreamMessage) {
@@ -1184,6 +1190,26 @@ class Nats implements Synchronous, Consumer, Bounded
         }
     }
 
+    /**
+     * Provision this queue's streams and work consumer now, without publishing or
+     * receiving anything.
+     *
+     * Otherwise the first publish() or receive() does it, and until one happens the
+     * queue does not exist for anything watching it from outside. That is the normal
+     * state of a worker that scales from zero: no pod runs to receive, so the work
+     * consumer is created only by the first enqueue, and a KEDA nats-jetstream trigger
+     * pointed at it reports "consumer not found" until then. Called from a deploy step,
+     * this creates the queue with the configuration its own producer and consumer
+     * would write, before the trigger first looks.
+     *
+     * Under {@see Provisioning::Require} it writes nothing and refuses a queue that is
+     * not provisioned, so the same call checks a queue instead of creating it.
+     */
+    public function provision(Queue $queue): void
+    {
+        $this->synchronize(fn () => $this->ensure($queue));
+    }
+
     public function close(): void
     {
         $this->connection?->close();
@@ -1231,7 +1257,9 @@ class Nats implements Synchronous, Consumer, Bounded
      * election at all. So a later attempt is not a rerun of the same race.
      *
      * This path is the first pod that ever touches a queue, not a scale-up: a KEDA 0->N
-     * expansion runs against a stream that already exists and is the cheap case above.
+     * expansion runs against a stream that already exists and is the cheap case above --
+     * provided something created it first, which for a queue that scales from zero is
+     * {@see self::provision()}.
      *
      * Reading the current config first, to skip a no-op write, was tried and made this
      * worse: the extra round trips spend the same 5s budget, taking 8 concurrent cold
@@ -1253,7 +1281,7 @@ class Nats implements Synchronous, Consumer, Bounded
         $attempt = 0;
         while (true) {
             try {
-                $this->provision($queue, $key);
+                $this->provisionOnce($queue, $key);
 
                 return;
             } catch (TimeoutException $e) {
@@ -1269,7 +1297,7 @@ class Nats implements Synchronous, Consumer, Bounded
     }
 
     /** One provisioning attempt. See ensure() for why this is retried. */
-    private function provision(Queue $queue, string $key): void
+    private function provisionOnce(Queue $queue, string $key): void
     {
         $this->guardStreamName($queue, $key);
 
@@ -1363,7 +1391,7 @@ class Nats implements Synchronous, Consumer, Bounded
     /**
      * Take up a queue that is already provisioned, without sending any configuration.
      *
-     * The counterpart to provision() under {@see Provisioning::Require}: the streams and
+     * The counterpart to provisionOnce() under {@see Provisioning::Require}: the streams and
      * the two worker consumers must exist, and this broker's own settings are never
      * written to them. That is the whole guarantee — a maintenance process built with a
      * different ackWait, replica count or dead-letter TTL can use the queue without
@@ -1404,7 +1432,7 @@ class Nats implements Synchronous, Consumer, Bounded
             $this->report(new \RuntimeException('NATS consumer "' . self::CONSUMER_WORK . "\" on stream \"{$this->workStream($queue)}\" allows no delivery past max_deliver {$allowed}, so a message exhausted while no broker is subscribed is left on the work stream; reprovision it from the queue's owner."));
         }
 
-        // Same advisory subscription provision() takes: a core subscription carries no
+        // Same advisory subscription provisionOnce() takes: a core subscription carries no
         // configuration, and a broker consuming a pre-provisioned queue still owes its
         // exhausted messages a dead letter.
         $this->advisories[$key] = $this->connection()->subscribe(

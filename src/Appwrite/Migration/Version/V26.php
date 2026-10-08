@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Appwrite\Migration\Version;
 
 use Exception;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;

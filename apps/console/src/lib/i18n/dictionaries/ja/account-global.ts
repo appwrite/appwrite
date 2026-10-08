@@ -1,0 +1,1408 @@
+/**
+ * Japanese translations for account global.
+ * Keys are the exact English source strings (English is the source of truth).
+ */
+export const jaAccountGlobalDictionary: Record<string, string> = {
+  // Account pages
+  'Join an organization': '組織に参加する',
+  'No organizations for this account': 'このアカウントに組織がありません',
+  'This account is not a member of any organization. Ask an organization owner to invite you, or use Account in the menu to manage your profile.':
+    'このアカウントはどの組織のメンバーでもありません。組織のオーナーに招待を依頼するか、メニューの Account からプロフィールを管理してください。',
+  'This account is not a member of any organization. Exit impersonation to return to your operator session, or ask an organization owner to invite this user.':
+    'このアカウントはどの組織のメンバーでもありません。なりすましを終了してオペレーターセッションに戻るか、組織オーナーにこのユーザーを招待してもらってください。',
+  'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.':
+    'アカウントの準備ができました。組織のオーナーに招待を依頼し、メールで届いた招待を承認すると、既存のプロジェクトにアクセスできます。',
+  '123 Main St': '大手町 1-1-1',
+  'Account ID': 'アカウント ID',
+  'Account was deleted': 'アカウントを削除しました',
+  'Add a billing address to get started': '請求先住所を追加して開始',
+  'Add a payment method to get started': '支払い方法を追加して開始',
+  'Add billing address': '請求先住所を追加',
+  'Add payment method': '支払い方法を追加',
+  'Address Line 2': '住所 2 行目',
+  'All sessions have been deleted': 'すべてのセッションを削除しました',
+  'Apt, suite, etc. (optional)': '部屋番号など (任意)',
+  Application: 'アプリケーション',
+  'Application access has been revoked':
+    'アプリケーションのアクセスを取り消しました',
+  Applications: 'アプリケーション',
+  "Applications you've authorized to access your Appwrite account.":
+    'Appwrite アカウントへのアクセスを許可したアプリケーションです。',
+  Affiliates: 'アフィリエイト',
+  'Affiliates program': 'アフィリエイトプログラム',
+  'Affiliate link created': 'アフィリエイトリンクを作成しました',
+  'Affiliate link deleted': 'アフィリエイトリンクを削除しました',
+  'Attributed accounts': 'アトリビューション済みアカウント',
+  'Clicks are tracked automatically. Signups are attributed for 180 days.':
+    'クリックは自動で計測されます。登録のアトリビューションは 180 日間有効です。',
+  'Create an invite link': '招待リンクを作成',
+  'Create invite link': '招待リンクを作成',
+  'Credits added to your organization for each Pro upgrade':
+    'Pro へのアップグレードごとに Organization に付与されるクレジット',
+  'Earn credits by referring developers': '開発者を紹介してクレジットを獲得',
+  'Earn Pro credits': 'Pro クレジットを獲得',
+  'Generate a shareable link with an optional name for each campaign or channel.':
+    'キャンペーンやチャネルごとに、任意の名前付きの共有リンクを作成します。',
+  'How rewards work': '報酬の仕組み',
+  'Only referrals who upgrade to Pro generate a reward':
+    'Pro にアップグレードした紹介のみが報酬対象です',
+  'Share with developers': '開発者と共有',
+  Step: 'ステップ',
+  'The Affiliates program rewards you when people you invite join Appwrite and upgrade to Pro. Create a link to get started.':
+    'アフィリエイトプログラムでは、招待した人が Appwrite に参加して Pro にアップグレードすると報酬を受け取れます。リンクを作成して始めましょう。',
+  'Time after signup during which a Pro upgrade still counts for you':
+    '登録後、Pro へのアップグレードがあなたに紐付く期間',
+  'When a referred user upgrades to Pro, you receive $15 in organization credits.':
+    '紹介したユーザーが Pro にアップグレードすると、$15 の Organization クレジットを受け取れます。',
+  'All links': 'すべてのリンク',
+  'Attribution window': 'アトリビューション期間',
+  Attributed: 'アトリビューション日',
+  Claim: '受取',
+  Claimed: '受取済み',
+  'Claim credits': 'クレジットを受け取る',
+  Clicks: 'クリック',
+  clicks: 'クリック',
+  'Choose an organization you own to receive these affiliate credits.':
+    'これらのアフィリエイトクレジットを受け取る、所有している Organization を選択してください。',
+  'Could not load affiliate analytics':
+    'アフィリエイト分析を読み込めませんでした',
+  Converted: 'コンバート済み',
+  Conversions: 'コンバージョン',
+  conversions: 'コンバージョン',
+  'Copy invite': '招待をコピー',
+  'Create link': 'リンクを作成',
+  'Create a shareable invite link. The link ID is your referral code.':
+    '共有可能な招待リンクを作成します。リンク ID が紹介コードになります。',
+  'Create or join an organization you own to claim credits.':
+    'クレジットを受け取るには、所有する Organization を作成するか参加してください。',
+  'Create shareable links and earn $15 in credits when a referred user upgrades to Pro. Attribution lasts 180 days.':
+    '共有可能なリンクを作成し、紹介ユーザーが Pro にアップグレードすると $15 のクレジットを獲得できます。アトリビューションは 180 日間有効です。',
+  'Create your first invite link to start referring users.':
+    '最初の招待リンクを作成してユーザーの紹介を始めましょう。',
+  'Credits claimed for organization':
+    'Organization 向けにクレジットを受け取りました',
+  '1 pending reward': '保留中の報酬 1 件',
+  'Credits earned from converted referrals. Claim pending rewards to an organization you own.':
+    'コンバートされた紹介から獲得したクレジットです。保留中の報酬を、所有している Organization で受け取れます。',
+  'Delete link': 'リンクを削除',
+  'Existing referrals and rewards keep their history. New visits to this invite URL will stop working.':
+    '既存の紹介と報酬の履歴は残ります。この招待 URL への新規アクセスは機能しなくなります。',
+  'Expires at': '有効期限',
+  'Failed to claim credits': 'クレジットの受け取りに失敗しました',
+  'Failed to copy invite link': '招待リンクのコピーに失敗しました',
+  'Failed to create affiliate link': 'アフィリエイトリンクの作成に失敗しました',
+  'Failed to delete affiliate link': 'アフィリエイトリンクの削除に失敗しました',
+  'Funnel over time': 'ファネルの推移',
+  'Invite link': '招待リンク',
+  'Invite link copied': '招待リンクをコピーしました',
+  'Invite link visits': '招待リンクへのアクセス',
+  'Leave blank to auto-generate': '空白のままにすると自動生成されます',
+  'Link ID': 'リンク ID',
+  Link: 'リンク',
+  Links: 'リンク',
+  links: '件のリンク',
+  'Loading links...': 'リンクを読み込み中...',
+  'Loading referrals...': '紹介を読み込み中...',
+  'Loading rewards...': '報酬を読み込み中...',
+  'No affiliate activity in this date range':
+    'この期間にアフィリエイトのアクティビティはありません',
+  'No links yet': 'まだリンクはありません',
+  'No referrals yet': 'まだ紹介はありません',
+  'No rewards yet': 'まだ報酬はありません',
+  'Not claimed': '未請求',
+  'Conversion rate': 'コンバージョン率',
+  'Conversion rate is the share of attributed signups that upgraded to Pro in the selected date range.':
+    'コンバージョン率は、選択した期間にアトリビューションされた登録のうち Pro にアップグレードした割合です。',
+  'Optional name': '任意の名前',
+  'Pro upgrades': 'Pro へのアップグレード',
+  'Signup rate': '登録率',
+  'Signup rate is the share of invite link clicks that resulted in a new account in the selected date range.':
+    '登録率は、選択した期間に招待リンクのクリックのうち新規アカウントにつながった割合です。',
+  Referrals: '紹介',
+  referrals: '件の紹介',
+  'pending rewards': '件の保留中の報酬',
+  'ready to claim': '受け取り可能',
+  Reward: '報酬',
+  Rewards: '報酬',
+  rewards: '件の報酬',
+  'Rewards appear here after a referral upgrades to Pro.':
+    '紹介が Pro にアップグレードすると、ここに報酬が表示されます。',
+  'Share an invite link to start attributing signups.':
+    '招待リンクを共有して登録のアトリビューションを始めましょう。',
+  'Share invite links to attribute signups. Clicks are tracked automatically.':
+    '招待リンクを共有して登録を紐付けます。クリックは自動で計測されます。',
+  'Signups attributed to your invite links. Converted referrals earn you credits.':
+    '招待リンクに紐付いた登録です。コンバートされた紹介でクレジットを獲得できます。',
+  Signups: '登録',
+  signups: '登録',
+  Untitled: '無題',
+  'Application access has been revoked for all authorizations':
+    'すべての承認についてアプリケーションのアクセスを取り消しました',
+  'Are you sure you want to revoke access for this application? You may need to authorize it again to use it.':
+    'このアプリケーションのアクセスを取り消してもよろしいですか? 再度使用するには、もう一度許可が必要になる場合があります。',
+  Authorized: '許可日',
+  authorizations: '件の承認',
+  'authorizations. You may need to authorize it again to use it.':
+    '件の承認が削除されます。再度使用するには、もう一度許可が必要になる場合があります。',
+  'Client ID': 'クライアント ID',
+  'Hide authorizations': '承認を非表示',
+  'Revoke all': 'すべて取り消し',
+  'Revoking will remove all': '取り消すと、すべての',
+  'Show authorizations': '承認を表示',
+  'Some authorizations could not be revoked. Please try again.':
+    '一部の承認を取り消せませんでした。もう一度お試しください。',
+  'This application has been authorized multiple times, likely because it registers a new OAuth client on each connection.':
+    'このアプリケーションは複数回承認されています。接続のたびに新しい OAuth クライアントを登録している可能性があります。',
+  'Authentication method': '認証方法',
+  'Authenticator app': '認証アプリ',
+  'Authenticator app has been connected': '認証アプリを接続しました',
+  'Authenticator app has been deleted': '認証アプリを削除しました',
+  'Billing address created': '請求先住所を作成しました',
+  'Billing address deleted': '請求先住所を削除しました',
+  'Billing address updated': '請求先住所を更新しました',
+  'Billing addresses': '請求先住所',
+  'Created At': '作成日時',
+  'Delete account': 'アカウントを削除',
+  'Delete identity': 'ID を削除',
+  'Delete all sessions': 'すべてのセッションを削除',
+  'Delete authenticator app': '認証アプリを削除',
+  'Delete billing address': '請求先住所を削除',
+  'Delete payment method': '支払い方法を削除',
+  'Device & Auth': 'デバイスと認証',
+  'Device flow': 'Device flow',
+  'Each code can only be used once.': '各コードは 1 回のみ使用できます。',
+  'Email has been updated': 'メールアドレスを更新しました',
+  'Enter verification code': '確認コードを入力',
+  'Expiring soon': 'まもなく期限切れ',
+  'Expiry Date': '有効期限',
+  'Failed to create authenticator': '認証アプリの作成に失敗しました',
+  'Failed to create challenge': 'チャレンジの作成に失敗しました',
+  'Failed to create recovery codes': 'リカバリーコードの作成に失敗しました',
+  'Failed to delete account': 'アカウントの削除に失敗しました',
+  'Failed to delete authenticator': '認証アプリの削除に失敗しました',
+  'Failed to delete billing address': '請求先住所の削除に失敗しました',
+  'Failed to delete identity': 'ID の削除に失敗しました',
+  'Failed to delete payment method': '支払い方法の削除に失敗しました',
+  'Failed to delete session': 'セッションの削除に失敗しました',
+  'Failed to revoke application access':
+    'アプリケーションのアクセス取り消しに失敗しました',
+  'Failed to delete sessions': 'セッションの削除に失敗しました',
+  'Failed to get recovery codes': 'リカバリーコードの取得に失敗しました',
+  'Failed to regenerate recovery codes':
+    'リカバリーコードの再生成に失敗しました',
+  'Failed to save billing address': '請求先住所の保存に失敗しました',
+  'Failed to update email': 'メールアドレスの更新に失敗しました',
+  'Failed to update MFA': 'MFA の更新に失敗しました',
+  'Failed to update name': '名前の更新に失敗しました',
+  'Failed to update password': 'パスワードの更新に失敗しました',
+  'Failed to update payment method': '支払い方法の更新に失敗しました',
+  'Failed to verify authenticator': '認証アプリの検証に失敗しました',
+  'Failed to verify code': 'コードの検証に失敗しました',
+  'Identity has been deleted': 'ID を削除しました',
+  'IP Address': 'IP アドレス',
+  'Last used': '最終使用',
+  'Linked Organizations': 'リンク済みの組織',
+  'Linked To': 'リンク先',
+  'Linked to:': 'リンク先:',
+  'Loading addresses...': '住所を読み込み中...',
+  'Loading applications...': 'アプリケーションを読み込み中...',
+  'Loading identities...': 'ID を読み込み中...',
+  'Loading payment methods...': '支払い方法を読み込み中...',
+  'Loading sessions...': 'セッションを読み込み中...',
+  'Logout from all devices': 'すべてのデバイスからログアウト',
+  'Logout from device': 'このデバイスからログアウト',
+  'Manual entry code': '手動入力用コード',
+  'MFA is currently disabled': 'MFA は現在無効です',
+  'MFA is currently enabled': 'MFA は現在有効です',
+  'MFA QR Code': 'MFA QR コード',
+  'Multi-factor authentication': '多要素認証',
+  'Multi-factor authentication has been disabled': '多要素認証を無効化しました',
+  'Multi-factor authentication has been enabled': '多要素認証を有効化しました',
+  'Name has been updated': '名前を更新しました',
+  'Name must be at least 2 characters': '名前は 2 文字以上必要です',
+  'New password': '新しいパスワード',
+  'No active sessions': 'アクティブなセッションがありません',
+  'No applications connected': '接続されたアプリケーションはありません',
+  'When you authorize an application through OAuth, it will appear here.':
+    'OAuth でアプリケーションを許可すると、ここに表示されます。',
+  'No billing addresses': '請求先住所がありません',
+  'No country found.': '国が見つかりません。',
+  'No identities are currently available.': '利用可能な ID がありません。',
+  'No payment methods': '支払い方法がありません',
+  'Not linked': '未リンク',
+  'Old password': '現在のパスワード',
+  'One-time codes will be sent to:': 'ワンタイムコードの送信先:',
+  'Password has been updated': 'パスワードを更新しました',
+  'Payment method deleted': '支払い方法を削除しました',
+  'Payment method updated': '支払い方法を更新しました',
+  'Payment methods': '支払い方法',
+  'Please fill in all required fields': '必須項目をすべて入力してください',
+  'Please select a state': '都道府県を選択してください',
+  'Please select expiration month and year':
+    '有効期限の月と年を選択してください',
+  'Postal Code': '郵便番号',
+  'Recovery code': 'リカバリーコード',
+  'Recovery codes': 'リカバリーコード',
+  'Recovery codes copied': 'リカバリーコードをコピーしました',
+  'Regenerate recovery codes': 'リカバリーコードを再生成',
+  'Revoke session': 'セッションを取り消し',
+  Revoke: '取り消し',
+  'Revoke application access': 'アプリケーションのアクセスを取り消し',
+  'Scan QR code': 'QR コードをスキャン',
+  'Search countries...': '国を検索...',
+  'Select a country': '国を選択',
+  'Select a state': '都道府県を選択',
+  'Session has been deleted': 'セッションを削除しました',
+  'State/Province': '都道府県',
+  'Street Address': '住所',
+  'This billing address is linked to': 'この請求先住所は次にリンクされています',
+  'This payment method is linked to': 'この支払い方法は次にリンクされています',
+  'Two-factor authentication': '二要素認証',
+  'Unknown device': '不明なデバイス',
+  'Update billing address': '請求先住所を更新',
+  'Update email': 'メールを更新',
+  'Update name': '名前を更新',
+  'Update password': 'パスワードを更新',
+  'Update payment method': '支払い方法を更新',
+  'Update your account display name.': 'アカウントの表示名を更新します。',
+  'Update your billing address information.': '請求先住所の情報を更新します。',
+  'Use a recovery code instead': 'リカバリーコードを使用',
+  'Use recovery code': 'リカバリーコードを使用',
+  'Your email': 'メールアドレス',
+  'Your name': 'お名前',
+  'Your password': 'パスワード',
+  'Already have an account?': '既にアカウントをお持ちですか?',
+  'Already verified?': '既に確認済みですか?',
+  'Authorizing…': '承認中…',
+  'Back to sign in': 'サインインに戻る',
+  'Check your email': 'メールを確認してください',
+  'Confirm Password': 'パスワードの確認',
+  'Create an account': 'アカウントを作成',
+  "Don't have an account?": 'アカウントをお持ちでないですか?',
+  'Email verification': 'メール確認',
+  'Enter email': 'メールアドレスを入力',
+  'Enter name': '名前を入力',
+  'Enter password': 'パスワードを入力',
+  'Enter recovery code': 'リカバリーコードを入力',
+  'Enter your new password below.':
+    '新しいパスワードを以下に入力してください。',
+  'Failed to authorize the application': 'アプリケーションの承認に失敗しました',
+  'Failed to send verification email': '確認メールの送信に失敗しました',
+  'Forgot your password?': 'パスワードをお忘れですか?',
+  'Go to console': 'コンソールへ',
+  'Login to your account': 'アカウントにログイン',
+  'Login with Bitbucket': 'Bitbucket でログイン',
+  'Login with GitHub': 'GitHub でログイン',
+  'Login with GitLab': 'GitLab でログイン',
+  'Login with Google': 'Google でログイン',
+  'New Password': '新しいパスワード',
+  'Or continue with': 'または次で続行',
+  'Password is required': 'パスワードは必須です',
+  'Password reset': 'パスワードのリセット',
+  "Passwords don't match": 'パスワードが一致しません',
+  'Phone verification': '電話番号の確認',
+  'Please confirm your password': 'パスワードを確認してください',
+  'Please enter a valid email address':
+    '有効なメールアドレスを入力してください',
+  'Preparing verification...': '確認の準備中...',
+  'Privacy Policy': 'プライバシーポリシー',
+  'Remember your password?': 'パスワードを覚えていますか?',
+  'Requested resources': '要求されたリソース',
+  'Resend verification email': '確認メールを再送信',
+  'Reset password': 'パスワードをリセット',
+  'Reset your password': 'パスワードをリセット',
+  'Send recovery link': 'リカバリーリンクを送信',
+  'Sign in': 'サインイン',
+  'Sign up': 'サインアップ',
+  'Sign up with Bitbucket': 'Bitbucket でサインアップ',
+  'Sign up with GitHub': 'GitHub でサインアップ',
+  'Sign up with GitLab': 'GitLab でサインアップ',
+  'Sign up with Google': 'Google でサインアップ',
+  'Signed in as': 'サインイン:',
+  "You're signed in as": 'サインイン中のアカウント',
+  'Terms of Service': '利用規約',
+  'This will allow': 'これにより',
+  'to:': 'が次を実行できます:',
+  'Verification code': '確認コード',
+  'Verification email has been sent': '確認メールを送信しました',
+  'Verify your email': 'メールアドレスを確認',
+  'Verifying your email': 'メールアドレスを確認中',
+  'Welcome back': 'おかえりなさい',
+  "You'll be redirected to": '次へリダイレクトされます',
+  // Account access blocked screen
+  'Account access blocked': 'アカウントアクセスがブロックされました',
+  // OAuth2 consent scopes (translated at render site from src/lib/oauth2/scopes.ts)
+  'Full access to your account': 'アカウントへのフルアクセス',
+  'Verify your identity': '本人確認',
+  'View your profile': 'プロフィールを表示',
+  'Read your name and profile details.':
+    '名前とプロフィールの詳細を読み取ります。',
+  'View your email address': 'メールアドレスを表示',
+  'Dismiss all': 'すべて閉じる',
+  'Open in new window': '新しいウィンドウで開く',
+  'Open in docs': 'ドキュメントで開く',
+  'Close documentation preview': 'ドキュメントプレビューを閉じる',
+  'Loading documentation...': 'ドキュメントを読み込み中...',
+  'Notifications enabled': '通知を有効にしました',
+  'Reloading to apply…': '反映のため再読み込み中…',
+  'Notifications blocked': '通知がブロックされています',
+  'Get notified when builds finish': 'ビルド完了時に通知を受け取る',
+  'Not now': '後で',
+  'Browser alerts': 'ブラウザ通知',
+  'Receive desktop alerts from the Console when this tab is in the background or another app has focus.':
+    'このタブがバックグラウンドにあるとき、または別のアプリがフォーカスされているときに、コンソールからデスクトップ通知を受け取ります。',
+  'You will receive desktop alerts from the Console while this tab is in the background.':
+    'このタブがバックグラウンドの間、コンソールからデスクトップ通知を受け取ります。',
+  'Browser alerts are turned off in the Console.':
+    'コンソールでブラウザ通知がオフになっています。',
+  'Console alerts': 'コンソール通知',
+  'Included alerts': '含まれる通知',
+  'Build completion': 'ビルド完了',
+  'Site and function builds that finish while you are away.':
+    '離席中に完了したサイトまたは Functions のビルド。',
+  'Browser alerts test': 'ブラウザ通知のテスト',
+  'If you can read this, browser alerts are working correctly.':
+    'このメッセージが表示されれば、ブラウザ通知は正常に動作しています。',
+  'Send test notification': 'テスト通知を送信',
+  'Test notification sent': 'テスト通知を送信しました',
+  'Could not send a test notification. Check browser permissions.':
+    'テスト通知を送信できませんでした。ブラウザの権限を確認してください。',
+  'Allow notifications for this site in your browser settings, then return here.':
+    'ブラウザ設定でこのサイトの通知を許可してから、ここに戻ってください。',
+  'Browser permission': 'ブラウザの権限',
+  'Console preference': 'コンソールの設定',
+  'Waiting for browser permission': 'ブラウザの権限待ち',
+  'Not supported': '非対応',
+  'Open your browser settings, find notification permissions for this site, allow notifications, then refresh this page.':
+    'ブラウザ設定を開き、このサイトの通知権限を見つけて許可し、このページを更新してください。',
+  'This browser does not support desktop notifications.':
+    'このブラウザはデスクトップ通知に対応していません。',
+  'Notifications are blocked by your browser. Allow them in browser settings for this site.':
+    'ブラウザによって通知がブロックされています。このサイトのブラウザ設定で通知を許可してください。',
+  'Turn on alerts and allow notifications when your browser prompts you.':
+    '通知をオンにし、ブラウザから求められたら通知を許可してください。',
+  'If no banner appeared, check your system notification center or Do Not Disturb settings.':
+    'バナーが表示されない場合は、システムの通知センターまたはおやすみモードの設定を確認してください。',
+  // Build notification titles/bodies (dynamic combinations)
+  'Site build ready': 'サイトのビルドが完了しました',
+  'Site build failed': 'サイトのビルドに失敗しました',
+  'Site build timed out': 'サイトのビルドがタイムアウトしました',
+  'Site build canceled': 'サイトのビルドをキャンセルしました',
+  'Function build ready': '関数のビルドが完了しました',
+  'Function build failed': '関数のビルドに失敗しました',
+  'Function build timed out': '関数のビルドがタイムアウトしました',
+  'Function build canceled': '関数のビルドをキャンセルしました',
+  'build completed successfully.': 'ビルドが正常に完了しました。',
+  'build failed.': 'ビルドに失敗しました。',
+  'build timed out.': 'ビルドがタイムアウトしました。',
+  'build was canceled.': 'ビルドがキャンセルされました。',
+  // Promo banner mock content
+  'Introducing Imagine': 'Imagine をご紹介',
+  'The most complete AI builder to date':
+    'これまでで最も完成度の高い AI ビルダー',
+  'Try it now': '今すぐ試す',
+  'Edge Functions': 'エッジ Functions',
+  'Learn more': '詳細',
+  'New Database Regions': '新しいデータベースリージョン',
+  'See regions': 'リージョンを表示',
+  'New Feature Available': '新機能が利用可能',
+  // AI chat
+  'Add a follow-up': 'フォローアップを追加',
+  'Add to queue': 'キューに追加',
+  'Attach files': 'ファイルを添付',
+  'Voice input': '音声入力',
+  'Stop voice input': '音声入力を停止',
+  'Listening...': '聞いています...',
+  'Listening... Say "submit now" to submit':
+    '聞いています... 「今すぐ送信」と言うと送信',
+  'Sending soon. Cancel to keep editing':
+    'まもなく送信します。キャンセルして編集を続ける',
+  'Sending in': '送信まで',
+  'Microphone permission denied': 'マイクの許可が拒否されました',
+  'Voice input is not supported in this browser':
+    'このブラウザでは音声入力はサポートされていません',
+  'Could not start voice input': '音声入力を開始できませんでした',
+  'attachment selected': '件の添付ファイルを選択',
+  'attachments selected': '件の添付ファイルを選択',
+  'Collapse chat': 'チャットを折りたたむ',
+  'Close sidebar': 'サイドバーを閉じる',
+  'Open sidebar': 'サイドバーを開く',
+  'Copy message': 'メッセージをコピー',
+  'Read message aloud': 'メッセージを読み上げ',
+  'Stop reading aloud': '読み上げを停止',
+  'Text to speech is not supported in this browser':
+    'このブラウザはテキスト読み上げに対応していません',
+  'Failed to read message aloud': 'メッセージの読み上げに失敗しました',
+  'Thumbs up': '高評価',
+  'Thumbs down': '低評価',
+  'Edit queued message': 'キューのメッセージを編集',
+  Archive: 'アーカイブ',
+  'Archive agent': 'エージェントをアーカイブ',
+  'Agent archived': 'エージェントをアーカイブしました',
+  'Agent deleted': 'エージェントを削除しました',
+  'Agent updated': 'エージェントを更新しました',
+  'Agent title': 'エージェントのタイトル',
+  'Update agent': 'エージェントを更新',
+  'Change the title for this agent.':
+    'このエージェントのタイトルを変更します。',
+  'This permanently deletes the agent and its messages.':
+    'これによりエージェントとそのメッセージが完全に削除されます。',
+  'Failed to archive agent': 'エージェントのアーカイブに失敗しました',
+  'Failed to update agent': 'エージェントの更新に失敗しました',
+  'Delete agent': 'エージェントを削除',
+  'Expand chat': 'チャットを拡大',
+  'Edit and resend message': 'メッセージを編集して再送信',
+  'Edit message...': 'メッセージを編集...',
+  'Editing message': 'メッセージを編集中',
+  'Failed to copy message': 'メッセージのコピーに失敗しました',
+  'Failed to score message': 'メッセージの評価に失敗しました',
+  'Failed to create agent': 'エージェントの作成に失敗しました',
+  'Failed to delete agent': 'エージェントの削除に失敗しました',
+  'Failed to send message': 'メッセージの送信に失敗しました',
+  'Fit image to screen': '画像を画面に合わせる',
+  'How can I help you?': '何をお手伝いしましょうか?',
+  'What should we do next?': '次に何をしましょうか?',
+  'Sign in to use the agent': 'Agent を使うにはサインイン',
+  'Create an account or sign in to chat with the Appwrite Agent about your projects.':
+    'アカウントを作成するかサインインして、Appwrite Agent とプロジェクトについてチャットできます。',
+  'Sign in to chat with the agent...': 'サインインして Agent とチャット...',
+  'Back to Appwrite': 'Appwrite に戻る',
+  'MCP ready': 'MCP 準備完了',
+  'Load older messages': '以前のメッセージを読み込む',
+  'Loading agents...': 'エージェントを読み込み中...',
+  'Loading image...': '画像を読み込み中...',
+  'Loading older messages...': '以前のメッセージを読み込み中...',
+  Older: 'それ以前',
+  'Previous 7 days': '過去 7 日',
+  'Previous 30 days': '過去 30 日',
+  'Toggle agent': 'エージェントの表示を切り替え',
+  'New agent': '新しいエージェント',
+  'Focus prompt': 'プロンプトにフォーカス',
+  'New automation': '新しいオートメーション',
+  Agent: 'エージェント',
+  Today: '今日',
+  Yesterday: '昨日',
+  'Next image': '次の画像',
+  'No agents yet.': 'エージェントはまだありません。',
+  'No agents match your search.': '検索に一致するエージェントはありません。',
+  'No active agents.': 'アクティブなエージェントはありません。',
+  'No active agents match your search.':
+    '検索に一致するアクティブなエージェントはありません。',
+  'Resources changed': '変更されたリソース',
+  updated: '更新',
+  'Search agents...': 'エージェントを検索...',
+  'Previous image': '前の画像',
+  'Select values for placeholders': 'プレースホルダーの値を選択',
+  Confirm: '確認',
+  'Thinking...': '考え中...',
+  'Answering...': '回答中...',
+  'Running...': '実行中...',
+  'Working...': '処理中...',
+  Stop: '停止',
+  'Failed to stop response': '応答の停止に失敗しました',
+  'Failed to retry response': '応答の再試行に失敗しました',
+  Input: '入力',
+  'No tool calls': 'ツール呼び出しはありません',
+  'tool call': 'ツール呼び出し',
+  'tool calls': 'ツール呼び出し',
+  'Jump to latest': '最新へ移動',
+  Subagent: 'サブエージェント',
+  'Routed to': 'ルーティング先',
+  Supervisor: 'Supervisor',
+  Researcher: 'Researcher',
+  Worker: 'Worker',
+  'Supervisor agent': 'Supervisor エージェント',
+  'Researcher agent': 'Researcher エージェント',
+  'Worker agent': 'Worker エージェント',
+  'Platform agent': 'Platform エージェント',
+  'Planner agent': 'Planner エージェント',
+  'Appwrite agent': 'Appwrite エージェント',
+  'Untitled agent': '無題のエージェント',
+  'Upload failed': 'アップロードに失敗しました',
+  'Uploading...': 'アップロード中...',
+  'Zoom in': '拡大',
+  'Zoom out': '縮小',
+  MCP: 'MCP',
+  'MCP connections': 'MCP 接続',
+  'No MCP connections': 'MCP 接続はありません',
+  'Connect Appwrite MCP to give the agent tools for your projects.':
+    'Appwrite MCP を接続すると、Agent がプロジェクト向けのツールを利用できます。',
+  'Servers available to the agent': 'Agent が利用できるサーバー',
+  'Appwrite MCP': 'Appwrite MCP',
+  'Let the agent take actions in your Appwrite projects through the hosted MCP server.':
+    'ホストされた MCP サーバー経由で、Agent が Appwrite プロジェクトで操作できるようにします。',
+  'Open MCP settings': 'MCP 設定を開く',
+  'Select an automation': 'オートメーションを選択',
+  'Choose an automation from the list, or create a new one to run on a schedule.':
+    'リストからオートメーションを選ぶか、スケジュール実行用の新しいオートメーションを作成します。',
+  'Add custom LLM providers and API keys for the Appwrite Agent.':
+    'Appwrite Agent 用のカスタム LLM プロバイダーと API キーを追加します。',
+  'Sign in to manage models.': 'モデルを管理するにはサインインしてください。',
+  'Sign in to manage MCP connections.':
+    'MCP 接続を管理するにはサインインしてください。',
+  'No custom models yet. The Appwrite default model is always available.':
+    'カスタムモデルはまだありません。Appwrite のデフォルトモデルは常に利用できます。',
+  'This permanently deletes the model credentials.':
+    'この操作によりモデルのアクセス資格情報が完全に削除されます。',
+  'Delete model': 'モデルを削除',
+  'Model deleted': 'モデルを削除しました',
+  'Failed to delete model': 'モデルの削除に失敗しました',
+  'Failed to resolve project': 'プロジェクトの解決に失敗しました',
+  'Appwrite MCP connected': 'Appwrite MCP を接続しました',
+  'Appwrite MCP disconnected': 'Appwrite MCP を切断しました',
+  'MCP disconnected': 'MCP を切断しました',
+  'Failed to connect Appwrite MCP': 'Appwrite MCP の接続に失敗しました',
+  'Failed to disconnect Appwrite MCP': 'Appwrite MCP の切断に失敗しました',
+  'Failed to disconnect MCP': 'MCP の切断に失敗しました',
+  'Failed to update MCP connection': 'MCP 接続の更新に失敗しました',
+  'Not connected': '未接続',
+  Reconnect: '再接続',
+  'Enable MCP': 'MCP を有効化',
+  'OAuth required': 'OAuth が必要です',
+  'Refresh OAuth credentials': 'OAuth アクセス資格情報を更新',
+  'Connect with Appwrite OAuth': 'Appwrite OAuth で接続',
+  'MCP connection failed': 'MCP 接続に失敗しました',
+  'MCP connected': 'MCP を接続しました',
+  'Connecting MCP...': 'MCP を接続中...',
+  'You can close this window and return to the console.':
+    'このウィンドウを閉じてコンソールに戻ってください。',
+  'Connecting MCP': 'MCP を接続中',
+  // AI chat placeholder labels
+  'Appwrite endpoint': 'Appwrite エンドポイント',
+  'Project ID': 'プロジェクト ID',
+  'Project name': 'プロジェクト名',
+  'Team ID': 'チーム ID',
+  'Organization ID': '組織 ID',
+  'User ID': 'ユーザー ID',
+  // AI chat suggested questions
+  'How do I create a new database?': '新しいデータベースを作成するには?',
+  'How do I set up authentication?': '認証を設定するには?',
+  'How do I upload files to storage?':
+    'ストレージにファイルをアップロードするには?',
+  'How do I deploy a function?': '関数をデプロイするには?',
+  'List the databases and tables in this project':
+    'このプロジェクトのデータベースとテーブルを一覧表示',
+  'Show me Auth users created this week': '今週作成された Auth ユーザーを表示',
+  'What storage buckets do I have?': 'ストレージバケットはどれがありますか?',
+  'Create a todos table with title and done columns':
+    'title と done カラム付きの todos テーブルを作成',
+  // API explorer
+  'Act as': '次のユーザーとして操作',
+  'Active key': 'アクティブなキー',
+  'Add array': '配列を追加',
+  'Add item': '項目を追加',
+  'Add object': 'オブジェクトを追加',
+  'Add to draft': '下書きに追加',
+  'API key': 'API キー',
+  'API platform': 'API プラットフォーム',
+  'API services': 'API サービス',
+  'API specification unavailable.': 'API 仕様は利用できません。',
+  'Apply query': 'クエリを適用',
+  'Build permission': '権限を構築',
+  'Cancelling…': 'キャンセル中…',
+  'Clear all': 'すべてクリア',
+  'Clear method search': 'メソッド検索をクリア',
+  'Client API': 'クライアント API',
+  'Collapse key scopes': 'キースコープを折りたたむ',
+  'Copied headers': 'ヘッダーをコピーしました',
+  'Copy all': 'すべてコピー',
+  'Copy as cURL': 'cURL としてコピー',
+  'Copy as JSON': 'JSON としてコピー',
+  'Copy ID': 'ID をコピー',
+  'Copy link': 'リンクをコピー',
+  'Copy name': '名前をコピー',
+  'Copy page': 'ページをコピー',
+  'cURL copied': 'cURL をコピーしました',
+  'Deprecated endpoint': '非推奨のエンドポイント',
+  'Download .txt': '.txt をダウンロード',
+  'Endpoint copied': 'エンドポイントをコピーしました',
+  'Enter value': '値を入力',
+  'Expand key scopes': 'キースコープを展開',
+  'Failed to cancel the request': 'リクエストのキャンセルに失敗しました',
+  'Failed to copy cURL': 'cURL のコピーに失敗しました',
+  'Failed to copy endpoint': 'エンドポイントのコピーに失敗しました',
+  'Failed to download OpenAPI spec': 'OpenAPI 仕様のダウンロードに失敗しました',
+  'Failed to generate API key': 'API キーの生成に失敗しました',
+  'Failed to load API specification': 'API 仕様の読み込みに失敗しました',
+  'Generate key': 'キーを生成',
+  'Hide API key': 'API キーを非表示',
+  'Hide password': 'パスワードを非表示',
+  'Invalid JSON in request body.': 'リクエストボディの JSON が無効です。',
+  'Invalid request body': 'リクエストボディが無効です',
+  'Key scopes': 'キースコープ',
+  'Link copied': 'リンクをコピーしました',
+  'Loading API specification…': 'API 仕様を読み込み中…',
+  'Loading users…': 'ユーザーを読み込み中…',
+  'Match endpoint': 'エンドポイントに一致',
+  'Missing required field:': '必須フィールドがありません:',
+  'Missing scopes': 'スコープが不足しています',
+  'No body fields for this endpoint.':
+    'このエンドポイントにボディフィールドはありません。',
+  'No methods available.': '利用可能なメソッドがありません。',
+  'No methods match your search.': '検索に一致するメソッドがありません。',
+  'No object': 'オブジェクトなし',
+  'No permissions': '権限なし',
+  'No queries': 'クエリなし',
+  'No response headers': 'レスポンスヘッダーがありません',
+  'No services available for this API.':
+    'この API で利用可能なサービスがありません。',
+  'No users found': 'ユーザーが見つかりません',
+  'No value needed': '値は不要',
+  'OpenAPI spec': 'OpenAPI 仕様',
+  'Paste a project API key': 'プロジェクト API キーを貼り付け',
+  'Query parameters': 'クエリパラメータ',
+  'Rate limit': 'レート制限',
+  'Regenerate key': 'キーを再生成',
+  'Request failed': 'リクエストに失敗しました',
+  'Request is running.': 'リクエストを実行中です。',
+  'Required scopes': '必要なスコープ',
+  'Response preview': 'レスポンスプレビュー',
+  'Search methods': 'メソッドを検索',
+  'Search methods...': 'メソッドを検索…',
+  'Select a project user': 'プロジェクトユーザーを選択',
+  'selected for the next key': '次のキー用に選択済み',
+  'Send delete request': '削除リクエストを送信',
+  'Send request': 'リクエストを送信',
+  'Send update request': '更新リクエストを送信',
+  'Server API': 'サーバー API',
+  'Server API key source': 'サーバー API キーのソース',
+  'Session authentication': 'セッション認証',
+  'Set parent ID': '親 ID を設定',
+  'Set parent resource IDs first': '先に親リソース ID を設定してください',
+  'Show API key': 'API キーを表示',
+  'Show password': 'パスワードを表示',
+  'Remove item': '項目を削除',
+  'Choose file': 'ファイルを選択',
+  'Clear file': 'ファイルをクリア',
+  // CLI shell / terminal
+  'Clear output': '出力をクリア',
+  'Close search': '検索を閉じる',
+  'Close terminal search': 'ターミナル検索を閉じる',
+  'Copy all output': 'すべての出力をコピー',
+  'Copy last command': '最後のコマンドをコピー',
+  'Copy selection': '選択範囲をコピー',
+  'Delete terminal': 'ターミナルを削除',
+  'Download output': '出力をダウンロード',
+  'Exit full screen': '全画面表示を終了',
+  'Failed to copy': 'コピーに失敗しました',
+  'Full screen': '全画面表示',
+  'last command': '最後のコマンド',
+  'Minimize shell': 'シェルを最小化',
+  'New terminal': '新しいターミナル',
+  'Next match': '次の一致',
+  'No results': '結果がありません',
+  'Nothing to copy for': 'コピーする内容がありません:',
+  'Nothing to export.': 'エクスポートする内容がありません。',
+  'Open terminal': 'ターミナルを開く',
+  'Output actions': '出力アクション',
+  'Previous match': '前の一致',
+  'Rename terminal session': 'ターミナルセッションの名前を変更',
+  'Resize terminal': 'ターミナルのサイズを変更',
+  'Retry setup': 'セットアップを再試行',
+  'Search output...': '出力を検索',
+  'Search terminal output': 'ターミナル出力を検索',
+  'Setting up CLI': 'CLI をセットアップ中',
+  'Split terminal': 'ターミナルを分割',
+  'terminal output': 'ターミナル出力',
+  'Terminal output downloaded': 'ターミナル出力をダウンロードしました',
+  'Terminal sessions': 'ターミナルセッション',
+  'terminal sessions.': 'ターミナルセッション。',
+  'Export completed': 'エクスポートが完了しました',
+  'Export failed': 'エクスポートに失敗しました',
+  'Exporting...': 'エクスポート中...',
+  'Import completed to': 'インポート完了:',
+  'Import error details': 'インポートエラーの詳細',
+  'Import failed to': 'インポート失敗:',
+  'Importing to': 'インポート中:',
+  'Preparing CSV for import...': 'インポート用 CSV を準備中...',
+  'Preparing export...': 'エクスポートを準備中...',
+  'rows exported': '行をエクスポートしました',
+  'View details': '詳細を表示',
+  // Auth route pages (join, sign-in, sign-up, recovery, verify-email, reset)
+  'Successfully joined the organization!': '組織に参加しました',
+  'Failed to accept invitation': '招待の承認に失敗しました',
+  'Welcome to the organization!': '組織へようこそ',
+  'Unable to accept invitation': '招待を承認できません',
+  'Go to Sign In': 'サインインへ',
+  "You're signed in with a different account":
+    '別のアカウントでサインインしています',
+  'This invitation was sent to a different account.':
+    'この招待は別のアカウント宛てに送信されました。',
+  "You're currently signed in as": '現在サインイン中のアカウント:',
+  'Switch to the account the invitation was sent to in order to accept it.':
+    '招待を承認するには、招待が送信されたアカウントに切り替えてください。',
+  'Switch account': 'アカウントを切り替え',
+  'Use a different account': '別のアカウントを使用',
+  'Could not sign out. Try switching accounts again.':
+    'サインアウトできませんでした。もう一度アカウントを切り替えてください。',
+  'Signing out...': 'サインアウト中...',
+  'Go to dashboard': 'ダッシュボードへ',
+  'Invalid invitation link': '招待リンクが無効です',
+  'Accept invitation': '招待を承認',
+  "You've been invited to join": '次の組織への参加に招待されています',
+  'Accept the invitation to get started.': '招待を承認して開始してください。',
+  'By continuing, you agree to our': '続行すると、次に同意したことになります',
+  'Failed to initiate Bitbucket login':
+    'Bitbucket ログインの開始に失敗しました',
+  'Failed to initiate GitHub login': 'GitHub ログインの開始に失敗しました',
+  'Failed to initiate GitLab login': 'GitLab ログインの開始に失敗しました',
+  'Failed to initiate Google login': 'Google ログインの開始に失敗しました',
+  'Could not open MFA verification': 'MFA 確認を開けませんでした',
+  'Failed to sign in': 'サインインに失敗しました',
+  'Failed to sign up': 'サインアップに失敗しました',
+  'Recovery email sent': 'リカバリーメールを送信しました',
+  'Failed to send recovery email': 'リカバリーメールの送信に失敗しました',
+  'Email verified successfully': 'メールアドレスを確認しました',
+  'Verification email sent': '確認メールを送信しました',
+  'Password reset successfully': 'パスワードをリセットしました',
+  'Failed to reset password': 'パスワードのリセットに失敗しました',
+  'Invalid reset link': 'リセットリンクが無効です',
+  'Request new reset link': '新しいリセットリンクを要求',
+  'Continue to sign in': 'サインインに進む',
+  'Could not start authorization.': '承認を開始できませんでした。',
+  'Authorization failed': '承認に失敗しました',
+  'Could not verify that code.': 'そのコードを確認できませんでした。',
+  'Confirm your code': 'コードを確認',
+  'Connect a device': 'デバイスを接続',
+  'Device code': 'デバイスコード',
+  'Verifying…': '確認中…',
+  'Device connected': 'デバイスを接続しました',
+  "You've authorized": '承認しました',
+  'the application': 'アプリケーション',
+  'Request cancelled': 'リクエストをキャンセルしました',
+  'Scheduled maintenance is in progress.': '定期メンテナンスを実施中です。',
+  'View Status': 'ステータスを表示',
+  // Paused project curtain
+  'Project resumed successfully': 'プロジェクトを再開しました',
+  'Failed to resume project.': 'プロジェクトの再開に失敗しました。',
+  'Project paused': 'プロジェクトは一時停止中です',
+  'Project blocked': 'プロジェクトはブロックされています',
+  'This project is temporarily unavailable. Access has been restricted, which may include a Terms of Service violation. For questions about this restriction or to request a review, contact support.':
+    'このプロジェクトは一時的に利用できません。利用規約違反などにより、アクセスが制限されている可能性があります。この制限についてのご質問や再審査のご依頼は、サポートまでお問い合わせください。',
+  'This project is temporarily unavailable. Access has been restricted.':
+    'このプロジェクトは一時的に利用できません。アクセスが制限されています。',
+  '(Blocked)': '(ブロック済み)',
+  'Resuming…': '再開中…',
+  'Restore project': 'プロジェクトを復元',
+  'Budget limit reached': '予算上限に達しました',
+  'Back to organization': '組織に戻る',
+  'Back to console': 'コンソールに戻る',
+  // Global shell
+  'Skip to content': 'コンテンツへスキップ',
+  'Loading wizard...': 'ウィザードを読み込み中...',
+  'Add a new billing address to your account.':
+    'アカウントに新しい請求先住所を追加します。',
+  'Are you sure you want to delete this billing address? This action cannot be undone.':
+    'この請求先住所を削除してもよろしいですか? この操作は元に戻せません。',
+  'Are you sure you want to delete this identity?':
+    'この ID を削除してもよろしいですか?',
+  'Are you sure you want to delete this payment method? This action cannot be undone.':
+    'この支払い方法を削除してもよろしいですか? この操作は元に戻せません。',
+  'Are you sure you want to delete your account? This action cannot be undone.':
+    'アカウントを削除してもよろしいですか? この操作は元に戻せません。',
+  'Are you sure you want to logout from all devices? You will need to sign in again to access your account from any device.':
+    'すべてのデバイスからログアウトしてもよろしいですか? どのデバイスからアカウントにアクセスするにも、再度サインインする必要があります。',
+  'Are you sure you want to logout from this device? You will be redirected to the sign-in page and will need to sign in again to access your account.':
+    'このデバイスからログアウトしてもよろしいですか? サインインページにリダイレクトされ、アカウントにアクセスするには再度サインインする必要があります。',
+  'Are you sure you want to logout from this device? You will need to sign in again to access your account from this device.':
+    'このデバイスからログアウトしてもよろしいですか? このデバイスからアカウントにアクセスするには、再度サインインする必要があります。',
+  'Are you sure you want to regenerate all recovery codes? All previously generated recovery codes will become invalid.':
+    'すべてのリカバリーコードを再生成してもよろしいですか? 以前に生成されたリカバリーコードはすべて無効になります。',
+  'Billing address has been added to your organization':
+    '請求先住所が組織に追加されました',
+  'Change your account password. Includes link to password recovery if forgotten.':
+    'アカウントのパスワードを変更します。パスワードを忘れた場合のリカバリーリンクも含まれます。',
+  'Deleting it will remove it from those organizations.':
+    '削除すると、それらの組織からも削除されます。',
+  "Enhance your account's security by requiring a second sign-in method":
+    '2 つ目のサインイン方法を必須にして、アカウントのセキュリティを強化できます',
+  'Enter the 6-digit one-time code generated by the app.':
+    'アプリで生成された 6 桁のワンタイムコードを入力してください。',
+  'Install an authenticator app on your mobile device, open it and scan the provided QR code or enter it manually.':
+    'モバイルデバイスに認証アプリをインストールし、アプリを開いて表示された QR コードをスキャンするか、コードを手動で入力してください。',
+  'Manage your billing addresses for invoices and payments.':
+    '請求書と支払いのための請求先住所を管理します。',
+  'Manage your payment methods and billing information.':
+    '支払い方法と請求情報を管理します。',
+  'Manually enter the following code into the authenticator app':
+    '以下のコードを認証アプリに手動で入力してください',
+  "Once you sign in via GitHub, you'll see it here.":
+    'GitHub でサインインすると、ここに表示されます。',
+  'Password must be at least 8 characters':
+    'パスワードは 8 文字以上で入力してください',
+  "Save these recovery codes now. They won't be shown again.":
+    '今すぐこれらのリカバリーコードを保存してください。二度と表示されません。',
+  'This removes authenticator app codes from your account.':
+    'この操作により、アカウントから認証アプリのコードが削除されます。',
+  'To continue, verify your identity with a one-time code.':
+    '続行するには、ワンタイムコードで本人確認を行ってください。',
+  'Verification is required to view your recovery codes.':
+    'リカバリーコードを表示するには本人確認が必要です。',
+  'Update the expiration date for this payment method.':
+    'この支払い方法の有効期限を更新します。',
+  'Update your account email address. Requires password verification when changing email.':
+    'アカウントのメールアドレスを更新します。メールアドレスの変更にはパスワードによる確認が必要です。',
+  'Use an authentication app to generate two-factor authentication codes.':
+    '認証アプリを使って二要素認証コードを生成します。',
+  "Use in case you can't receive two-factor authentication codes.":
+    '二要素認証コードを受け取れない場合に使用してください。',
+  'Use these codes to access your account if you lose your authenticator.':
+    '認証アプリを紛失した場合は、これらのコードを使ってアカウントにアクセスできます。',
+  'Use this ID when integrating with the Appwrite API or SDKs. Support may also ask for this ID when assisting with issues.':
+    'Appwrite の API や SDK と連携する際は、この ID を使用してください。サポートが問題対応の際にこの ID を尋ねる場合もあります。',
+  "You don't have any active sessions at the moment.":
+    '現在アクティブなセッションはありません。',
+  'Your account will be permanently deleted and access will be lost to any of your teams and data. This action is irreversible.':
+    'アカウントは完全に削除され、すべてのチームとデータへのアクセスを失います。この操作は取り消せません。',
+  'A 6-digit verification code was sent to your email. Enter it below.':
+    '6 桁の確認コードをメールに送信しました。以下に入力してください。',
+  'A 6-digit verification code was sent to your phone. Enter it below.':
+    '6 桁の確認コードを電話に送信しました。以下に入力してください。',
+  'After authorizing, return to your device.':
+    '承認後、デバイスに戻ってください。',
+  'Enter a 6-digit one-time code from your authenticator app.':
+    '認証アプリに表示された 6 桁のワンタイムコードを入力してください。',
+  'Enter one of the recovery codes you received when enabling MFA.':
+    'MFA を有効化した際に受け取ったリカバリーコードのいずれかを入力してください。',
+  'Enter your details to create a new account':
+    '新しいアカウントを作成するには情報を入力してください',
+  "Enter your email address and we'll send you a link to reset your password.":
+    'メールアドレスを入力すると、パスワードをリセットするためのリンクをお送りします。',
+  'No verification methods are available for this account. Contact support if you need help signing in.':
+    'このアカウントで利用できる確認方法がありません。サインインでお困りの場合はサポートにお問い合わせください。',
+  'Please wait while we confirm your email address.':
+    'メールアドレスを確認していますので、しばらくお待ちください。',
+  'Verified but could not open the console':
+    '確認は完了しましたが、コンソールを開けませんでした',
+  'wants to access your Appwrite account.':
+    'があなたの Appwrite アカウントへのアクセスを求めています。',
+  "We'll send a recovery link to this email address.":
+    'このメールアドレスにリカバリーリンクを送信します。',
+  "We've sent a password recovery link to your email address.":
+    'パスワードのリカバリーリンクをメールアドレスに送信しました。',
+  "We've sent a verification link to your email address. Click the link to verify your account and access the console.":
+    '確認リンクをメールアドレスに送信しました。リンクをクリックしてアカウントを確認し、コンソールにアクセスしてください。',
+  'Your password has been successfully reset. You can now sign in with your new password.':
+    'パスワードが正常にリセットされました。新しいパスワードでサインインできます。',
+  'This account cannot use the Appwrite Console - access is blocked or restricted, which may include a Terms of Service violation. For questions about this restriction or to request a review of your account, contact support@appwrite.io.':
+    'このアカウントは Appwrite Console を利用できません。利用規約違反などにより、アクセスがブロックまたは制限されている可能性があります。この制限についてのご質問や、アカウントの再審査をご希望の場合は、support@appwrite.io までお問い合わせください。',
+  'Manage your organizations, projects, and all their resources on your behalf.':
+    'あなたに代わって、組織、プロジェクト、およびそれらのすべてのリソースを管理します。',
+  'Confirm who you are using your Appwrite account.':
+    'Appwrite アカウントを使ってご本人であることを確認します。',
+  'Read the email address associated with your account.':
+    'アカウントに関連付けられたメールアドレスを読み取ります。',
+  'You have file uploads in progress. Are you sure you want to leave?':
+    'ファイルのアップロードが進行中です。このページを離れてもよろしいですか?',
+  'Could not load this documentation page.':
+    'このドキュメントページを読み込めませんでした。',
+  'You can re-enable them anytime from your browser settings.':
+    'ブラウザの設定からいつでも再度有効にできます。',
+  'Allow browser notifications to hear about build completion even when this tab is in the background.':
+    'ブラウザの通知を許可すると、このタブがバックグラウンドにあってもビルドの完了を知ることができます。',
+  'Deploy serverless functions at the edge for ultra-low latency':
+    'エッジでサーバーレス関数をデプロイし、超低遅延を実現',
+  "We've expanded to 12 new regions worldwide":
+    '世界中に新たに 12 のリージョンを追加しました',
+  'Check out our latest updates and improvements to enhance your development experience.':
+    '開発体験を向上させる最新のアップデートと改善をご確認ください。',
+  'Attachments upload in background. Sending waits until they are ready.':
+    '添付ファイルはバックグラウンドでアップロードされます。準備が整うまで送信は待機します。',
+  'I can inspect your project, explain issues, suggest next steps, and run approved actions.':
+    'プロジェクトを確認し、問題を説明し、次のステップを提案し、承認されたアクションを実行できます。',
+  'No accessible project found to create an agent.':
+    'エージェントを作成できるアクセス可能なプロジェクトが見つかりません。',
+  'No accessible project found to start a new agent.':
+    '新しいエージェントを開始できるアクセス可能なプロジェクトが見つかりません。',
+  'Press Enter to queue, Shift+Enter for new line':
+    'キューに追加するには Enter、改行するには Shift+Enter を押してください',
+  Queued: 'キュー',
+  Running: '実行中',
+  Stopped: '停止',
+  Archived: 'アーカイブ済み',
+  'Remove from queue': 'キューから削除',
+  'Send next': '次に送信',
+  'Press Enter to send, Shift+Enter for new line':
+    '送信するには Enter、改行するには Shift+Enter を押してください',
+  'Some attachments failed to upload. Remove them and try again.':
+    '一部の添付ファイルのアップロードに失敗しました。削除してもう一度お試しください。',
+  'Add one Appwrite Query condition for this entry.':
+    'このエントリに Appwrite Query の条件を 1 つ追加します。',
+  'Build a permission string for this entry. Changes apply when you click Done.':
+    'このエントリの権限文字列を構築します。変更は完了をクリックすると適用されます。',
+  'This endpoint is deprecated and may be removed in a future version.':
+    'このエンドポイントは非推奨であり、将来のバージョンで削除される可能性があります。',
+  'Draft scopes already match this endpoint.':
+    '下書きのスコープは、すでにこのエンドポイントと一致しています。',
+  'Ephemeral API key generated (expires in 1 hour)':
+    '一時的な API キーを生成しました (1 時間で期限切れ)',
+  'Expires in 1 hour. Regenerate after editing scopes below.':
+    '1 時間で期限切れになります。下のスコープを編集した後に再生成してください。',
+  'Invalid JSON. Fix the payload before switching to form view.':
+    'JSON が無効です。フォーム表示に切り替える前にペイロードを修正してください。',
+  'No session or JWT is sent on the request.':
+    'リクエストにセッションや JWT は送信されません。',
+  'A JWT is created for this user when you send the request.':
+    'リクエストを送信すると、このユーザー用の JWT が作成されます。',
+  'Paste a project API key (optional)':
+    'プロジェクトの API キーを貼り付け (任意)',
+  'Provide an API key or generate an ephemeral key.':
+    'API キーを入力するか、一時的なキーを生成してください。',
+  'Reset draft scopes to the scopes required by this endpoint.':
+    '下書きのスコープを、このエンドポイントに必要なスコープにリセットします。',
+  'Reused across methods. Stored locally in this browser.':
+    'すべてのメソッドで再利用されます。このブラウザにローカル保存されます。',
+  'Search by name, email, phone, or ID...':
+    '名前、メール、電話番号、ID で検索…',
+  'Select a method': 'メソッドを選択',
+  'Select a method to inspect and send a request.':
+    '確認してリクエストを送信するメソッドを選択してください。',
+  'Select a service': 'サービスを選択',
+  'Select a user to act as, or choose Guest.':
+    '操作するユーザーを選択するか、Guest を選んでください。',
+  'Select at least one scope for the ephemeral key.':
+    '一時的なキーには、少なくとも 1 つのスコープを選択してください。',
+  'Send a request to see the response here.':
+    'リクエストを送信すると、ここにレスポンスが表示されます。',
+  'Request and response': 'リクエストとレスポンス',
+  Methods: 'メソッド',
+  Request: 'リクエスト',
+  "You've successfully joined. Redirecting you now...":
+    '参加が完了しました。移動しています...',
+  'This invitation link is missing required parameters. Please use the link from your invitation email.':
+    'この招待リンクには必要なパラメーターが含まれていません。招待メールに記載されたリンクをご利用ください。',
+  "You've been invited to join an organization. Accept the invitation to get started.":
+    '組織への参加に招待されています。招待を承認して始めましょう。',
+  'By clicking continue, you agree to our':
+    '続行をクリックすると、次に同意したことになります:',
+  'Signed in but could not open the console':
+    'サインインは完了しましたが、コンソールを開けませんでした',
+  'Account created but verification email could not be sent':
+    'アカウントは作成されましたが、確認メールを送信できませんでした',
+  'Account created but could not open the console':
+    'アカウントは作成されましたが、コンソールを開けませんでした',
+  'Verification link is invalid or has expired.':
+    '確認リンクが無効か、有効期限が切れています。',
+  'This password reset link is invalid or has expired. Please request a new one.':
+    'このパスワードリセットリンクは無効か、有効期限が切れています。新しいリンクをリクエストしてください。',
+  'This authorization request is invalid or has expired.':
+    'この承認リクエストは無効か、有効期限が切れています。',
+  'Missing authorization request. Open this page from an application sign-in.':
+    '承認リクエストが見つかりません。アプリケーションのサインインからこのページを開いてください。',
+  'That code is invalid or has expired. Check your device and try again.':
+    'そのコードは無効か、有効期限が切れています。デバイスを確認してもう一度お試しください。',
+  'Make sure this matches the code shown on your device, then continue.':
+    'デバイスに表示されているコードと一致することを確認してから、続行してください。',
+  'Enter the code shown on your device to continue.':
+    '続行するには、デバイスに表示されているコードを入力してください。',
+  'You can return to your device, it will continue automatically.':
+    'デバイスに戻っていただければ、自動的に続行されます。',
+  'No access was granted. You can close this page.':
+    'アクセスは許可されませんでした。このページを閉じても構いません。',
+  'Some Appwrite Cloud services are temporarily unavailable.':
+    '一部の Appwrite Cloud サービスが一時的に利用できません。',
+  'We’re experiencing issues with some services.':
+    '一部のサービスで問題が発生しています。',
+  'You may have trouble accessing some services. We’re working to restore full access.':
+    '一部のサービスにアクセスしにくい状況が発生する可能性があります。全面復旧に向けて対応中です。',
+  'A subset of Appwrite Cloud services is degraded.':
+    '一部の Appwrite Cloud サービスでパフォーマンスが低下しています。',
+  'Failed to resume project. Please try again.':
+    'プロジェクトの再開に失敗しました。もう一度お試しください。',
+  'This project has been paused due to inactivity. Your data is safe and will remain intact.':
+    'このプロジェクトは非アクティブのため一時停止されています。データは安全に保持されています。',
+  'Upgrade your plan to avoid pausing, or restore the project to continue using it now.':
+    '一時停止を避けるにはプランをアップグレードするか、プロジェクトを復元して今すぐ利用を続けられます。',
+  Account: 'アカウント',
+  Active: 'アクティブ',
+  Add: '追加',
+  Address: '住所',
+  Cancel: 'キャンセル',
+  Card: 'カード',
+  Cardholder: 'カード名義',
+  City: '市区町村',
+  Country: '国',
+  Created: '作成日',
+  Current: '現在',
+  Delete: '削除',
+  Email: 'メール',
+  Expired: '期限切れ',
+  Expires: '期限',
+  Failed: '失敗',
+  General: '全般',
+  Identities: 'ID',
+  Location: 'ロケーション',
+  Logout: 'ログアウト',
+  Month: '月',
+  Name: '名前',
+  organization: '組織',
+  organizations: '組織',
+  Password: 'パスワード',
+  Provider: 'プロバイダー',
+  Regenerate: '再生成',
+  Remove: '削除',
+  Security: 'セキュリティ',
+  Sessions: 'セッション',
+  State: '州/都道府県',
+  Status: 'ステータス',
+  Unknown: '不明',
+  unverified: '未検証',
+  Update: '更新',
+  verified: '検証済み',
+  View: '表示',
+  Year: '年',
+  Authorize: '承認',
+  connected: '接続済み',
+  Continue: '続行',
+  Login: 'ログイン',
+  or: 'または',
+  Phone: '電話',
+  Verify: '検証',
+  more: 'その他',
+  Docs: 'ドキュメント',
+  Enable: '有効化',
+  Explore: '探索',
+  Attachment: '添付ファイル',
+  'Appwrite Agent': 'Appwrite Agent',
+  Agents: 'エージェント',
+  Automations: 'オートメーション',
+  Automation: 'オートメーション',
+  'Back to automation': 'オートメーションに戻る',
+  'Create agent': 'エージェントを作成',
+  'No automations yet.': 'オートメーションはまだありません。',
+  'Search automations...': 'オートメーションを検索...',
+  'No automations match your search.':
+    '検索に一致するオートメーションはありません。',
+  'Create automation': 'オートメーションを作成',
+  'Update automation': 'オートメーションを更新',
+  'Automation created': 'オートメーションを作成しました',
+  'Automation updated': 'オートメーションを更新しました',
+  'Automation deleted': 'オートメーションを削除しました',
+  'Delete automation': 'オートメーションを削除',
+  'This permanently deletes the automation.':
+    'このオートメーションは完全に削除されます。',
+  'Failed to create automation': 'オートメーションの作成に失敗しました',
+  'Failed to update automation': 'オートメーションの更新に失敗しました',
+  'Failed to delete automation': 'オートメーションの削除に失敗しました',
+  'Untitled automation': '無題のオートメーション',
+  'Custom model': 'カスタムモデル',
+  'Last run': '前回の実行',
+  Runs: '実行履歴',
+  runs: '実行',
+  'Run history': '実行履歴',
+  Triggers: 'トリガー',
+  'Agent instructions': 'エージェント指示',
+  By: '作成者',
+  Succeeded: '成功',
+  Scheduled: 'スケジュール',
+  Trigger: 'トリガー',
+  Triggered: '実行日時',
+  Duration: '所要時間',
+  'Successful · 24h': '成功 · 24時間',
+  'Failed · 24h': '失敗 · 24時間',
+  'Successful · 7d': '成功 · 7日',
+  'Failed · 7d': '失敗 · 7日',
+  'Automation enabled': 'オートメーションを有効にしました',
+  'Automation paused': 'オートメーションを一時停止しました',
+  'No runs yet.': 'まだ実行がありません。',
+  'Runs appear here after this automation executes.':
+    'このオートメーションが実行されると、ここに表示されます。',
+  'Run a prompt on a schedule. Each run creates a new agent conversation.':
+    'スケジュールでプロンプトを実行します。実行ごとに新しいエージェント会話が作成されます。',
+  'Automation will not run on a schedule':
+    'オートメーションはスケジュールで実行されません',
+  'Weekly project review': '週次プロジェクトレビュー',
+  Prompt: 'プロンプト',
+  'Summarize project activity and suggest next steps.':
+    'プロジェクトのアクティビティをまとめ、次のステップを提案してください。',
+  'Schedule (cron)': 'スケジュール (cron)',
+  'Example: 0 9 * * 1 runs every Monday at 09:00 UTC.':
+    '例: 0 9 * * 1 は毎週月曜 09:00 UTC に実行されます。',
+  'Title prefix (optional)': 'タイトル接頭辞（任意）',
+  'Weekly review': '週次レビュー',
+  'Manage models': 'モデルを管理',
+  'Search models...': 'モデルを検索...',
+  'Run this automation on its schedule.':
+    'このオートメーションをスケジュールどおりに実行します。',
+  Models: 'モデル',
+  models: 'モデル',
+  memories: 'メモリ',
+  'Add model': 'モデルを追加',
+  'Update model': 'モデルを更新',
+  'Add your own LLM providers and API keys for Agents.':
+    'Agents 用に独自の LLM プロバイダーと API キーを追加します。',
+  'Configure the provider, model ID, and API key.':
+    'プロバイダー、モデル ID、API キーを設定します。',
+  'No custom models': 'カスタムモデルはありません',
+  'Add your own provider and API key to choose a different model.':
+    '別のモデルを選ぶには、独自のプロバイダーと API キーを追加してください。',
+  'Select a model': 'モデルを選択',
+  'Custom model ID': 'カスタムモデル ID',
+  'Display name': '表示名',
+  'Model created': 'モデルを作成しました',
+  'Model updated': 'モデルを更新しました',
+  'Failed to create model': 'モデルの作成に失敗しました',
+  'Failed to update model': 'モデルの更新に失敗しました',
+  'My OpenAI key': '自分の OpenAI キー',
+  'Model ID': 'モデル ID',
+  'Enter API key': 'API キーを入力',
+  'Leave blank to keep the existing key.':
+    '既存のキーを保持するには空白のままにします。',
+  'Base URL (optional)': 'Base URL（任意）',
+  'Allow this model in the agent composer.':
+    'エージェントの入力欄でこのモデルを選択できるようにします。',
+  'Add memory': 'メモリを追加',
+  'Update memory': 'メモリを更新',
+  'Preferences, instructions, and facts the Appwrite Agent can reuse across conversations.':
+    'Appwrite Agent が会話をまたいで再利用できる設定、指示、事実。',
+  'Sign in to manage memory.': 'サインインしてメモリを管理。',
+  'No memories': 'メモリはありません',
+  'Add preferences, instructions, or facts for the agent to remember.':
+    'エージェントが記憶する設定、指示、事実を追加します。',
+  Preference: '好み',
+  Instruction: '指示',
+  Fact: '事実',
+  'Memory created': 'メモリを作成しました',
+  'Memory updated': 'メモリを更新しました',
+  'Memory deleted': 'メモリを削除しました',
+  'Failed to create memory': 'メモリの作成に失敗しました',
+  'Failed to update memory': 'メモリの更新に失敗しました',
+  'Failed to delete memory': 'メモリの削除に失敗しました',
+  'Key cannot be changed after creation.': '作成後にキーは変更できません。',
+  'A stable key for this memory within your account.':
+    'アカウント内でこのメモリを識別する安定したキー。',
+  'What should the agent remember?': 'エージェントに何を覚えてもらいますか?',
+  'Higher values are kept first when space is limited.':
+    '容量が限られている場合、値が高いものが優先して保持されます。',
+  'Include this memory when the agent runs.':
+    'エージェント実行時にこのメモリを含めます。',
+  'Delete memory': 'メモリを削除',
+  'This permanently deletes the memory.': 'このメモリは完全に削除されます。',
+  File: 'ファイル',
+  Open: '開く',
+  Ready: '準備完了',
+  Region: 'リージョン',
+  APIs: 'API',
+  Attribute: '属性',
+  Authentication: '認証',
+  Body: '本文',
+  Build: 'ビルド',
+  Condition: '条件',
+  Description: '説明',
+  Done: '完了',
+  Endpoint: 'エンドポイント',
+  Ephemeral: '一時的',
+  Form: 'フォーム',
+  Generate: '生成',
+  Guest: 'ゲスト',
+  Headers: 'ヘッダー',
+  Key: 'キー',
+  Manual: '手動',
+  Needs: '必要',
+  Operator: '演算子',
+  Parameters: 'パラメーター',
+  Path: 'パス',
+  Preview: 'プレビュー',
+  Project: 'プロジェクト',
+  Required: '必須',
+  Reset: 'リセット',
+  Response: 'レスポンス',
+  Select: '選択',
+  scope: 'スコープ',
+  scopes: 'スコープ',
+  User: 'ユーザー',
+  Value: '値',
+  Change: '変更',
+  Copied: 'コピー済み',
+  Copy: 'コピー',
+  Maximum: '最大',
+  Output: '出力',
+  Reorder: '並べ替え',
+  selection: '選択',
+  Split: '分割',
+  Terminal: 'ターミナル',
+  Close: '閉じる',
+  Dismiss: '閉じる',
+  Download: 'ダウンロード',
+
+  // Notification center
+  'Mark all as read': 'すべて既読にする',
+  'Loading notifications...': '通知を読み込み中...',
+  'No notifications yet': '通知はまだありません',
+  'We will notify you here when something needs your attention.':
+    '対応が必要なときは、ここにお知らせします。',
+  'Stay updated on your projects and resources.':
+    'プロジェクトとリソースの更新をここで確認できます。',
+  '1 unread notification': '未読の通知が 1 件',
+  'unread notifications': '件の未読通知',
+  Unread: '未読',
+  'Refreshing...': '更新中...',
+
+  // Agent console protocol surfaces
+  '1 result': '1 件の結果',
+  results: '件の結果',
+  'Filter...': 'フィルター...',
+  'No results match your filter': 'フィルターに一致する結果はありません',
+  Showing: '表示中',
+  of: '/',
+  'View all': 'すべて表示',
+  'View usage': '使用量を表示',
+  'No chart data': 'チャートデータがありません',
+  'Search docs': 'ドキュメントを検索',
+  'Contact support': 'サポートに問い合わせ',
+  'Connect MCP': 'MCP に接続',
+  'Open in Console': 'コンソールで開く',
+  'Open docs': 'ドキュメントを開く',
+  'Open agent': 'エージェントを開く',
+  'Close panel': 'パネルを閉じる',
+  'Switch to dark mode': 'ダークモードに切り替え',
+  'Switch to light mode': 'ライトモードに切り替え',
+  'Use system theme': 'システムテーマを使用',
+
+  // GitHub Education program sign-up flow (/education/join)
+  'Appwrite and GitHub': 'Appwrite と GitHub',
+  'Join the Appwrite Education Program': 'Appwrite Education Program に参加',
+  'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.':
+    'GitHub Student Developer Pack の特典として、学生の間は Appwrite Cloud を無料でご利用いただけます。',
+  'Read about the program': 'プログラムについて読む',
+  'Checking your account...': 'アカウントを確認しています...',
+  'Setting up your Education plan organization...':
+    'Education プランの組織を設定しています...',
+  'Continue to Appwrite': 'Appwrite に進む',
+  'GitHub did not complete the sign in. Try again to join the program.':
+    'GitHub でのサインインが完了しませんでした。もう一度お試しのうえ、プログラムにご参加ください。',
+  "It looks like you're not currently eligible for the GitHub Student Developer Pack.":
+    '現在、GitHub Student Developer Pack の対象ではないようです。',
+  'You can still use Appwrite without an Education plan.':
+    'Education プランがなくても、引き続き Appwrite をご利用いただけます。',
+  "You've already joined the Education program.":
+    'すでに Education プログラムに参加しています。',
+  'Continue to Appwrite, then use the organization switcher to find your Education plan.':
+    'Appwrite に進み、組織の切り替えメニューから Education プランを探してください。',
+  "You've already used the Education program.":
+    'すでに Education プログラムを利用済みです。',
+  'Each account can join once. Choose a plan to keep building with Appwrite.':
+    '各アカウントの参加は 1 回限りです。プランを選択して、Appwrite での開発を続けましょう。',
+  'Choose a plan': 'プランを選択',
+  'We could not check your GitHub connection':
+    'GitHub との接続を確認できませんでした',
+  'We could not set up your Education plan':
+    'Education プランを設定できませんでした',
+  'We could not reach GitHub': 'GitHub に接続できませんでした',
+  'Try again in a moment, or sign in and explore Appwrite.':
+    '少し時間をおいてもう一度お試しいただくか、サインインして Appwrite をご覧ください。',
+  'Signing you in': 'サインインしています',
+  'Please wait while we confirm your magic URL.':
+    'Magic URL を確認しています。しばらくお待ちください。',
+  'Unable to sign you in': 'サインインできませんでした',
+  'Go to sign in': 'サインインへ',
+  'Access granted': 'アクセスが許可されました',
+  'You can close this tab.': 'このタブは閉じて構いません。',
+  "It's safe to close this tab.": 'このタブは安全に閉じることができます。',
+  'Return to your device - it will continue automatically.':
+    'デバイスに戻ってください。処理は自動的に続行されます。',
+  'You can revoke access anytime in your account settings':
+    'アクセスはアカウント設定からいつでも取り消せます',
+  'You will be automatically redirected back to your app shortly.':
+    'まもなくアプリに自動的にリダイレクトされます。',
+  'Login failed': 'ログインに失敗しました',
+  'An error occurred during the OAuth login flow.':
+    'OAuth ログインフローでエラーが発生しました。',
+  'Error type:': 'エラーの種類:',
+  'Missing redirect URL': 'リダイレクト URL がありません',
+  'Preview only': 'プレビューのみ',
+  'Demo credentials filled in. Submit does not sign in here.':
+    'デモ用の認証情報を入力しました。ここでは送信してもサインインされません。',
+  'Creating demo user': 'デモユーザーを作成しています',
+  'Failed to create demo user': 'デモユーザーを作成できませんでした',
+  'MFA verification is disabled on this preview route.':
+    'このプレビュールートでは MFA 認証は無効です。',
+
+  // Console account password breach check result
+  breached: '漏洩',
+  'This password was found in a known data breach. Change it as soon as possible.':
+    'このパスワードは既知のデータ漏洩で見つかりました。できるだけ早く変更してください。',
+
+  // Full-screen curtain for console accounts with a breached password
+  'Your password was found in a data breach':
+    'パスワードがデータ漏洩で見つかりました',
+  'Your security is important to us. We continuously check console passwords against known data breaches, and yours was found in one, which means others may be able to sign in as you.':
+    'お客様のセキュリティは私たちにとって重要です。コンソールのパスワードを既知のデータ漏洩と継続的に照合しており、お客様のパスワードがその中で見つかりました。第三者があなたとしてサインインできる可能性があります。',
+  'Set a new password': '新しいパスワードを設定',
+  "Pick a strong password you don't use anywhere else.":
+    '他の場所で使用していない強力なパスワードを選択してください。',
+  'Turn on multi-factor authentication': '多要素認証を有効にする',
+  'Require a second verification step every time you sign in.':
+    'サインインのたびに追加の認証ステップを求めます。',
+  'Secure account': 'アカウントを保護',
+  'Remind me later': '後で通知',
+
+  // Profile photo
+  'Profile photo': 'プロフィール写真',
+  'Shown next to your name across the Console and to the members of your organizations.':
+    'コンソール全体であなたの名前の横に表示され、所属する組織のメンバーにも表示されます。',
+  'PNG, JPEG, or WebP up to 5MB. Without a photo, the picture from your connected sign-in provider, Gravatar, or your initials is used.':
+    'PNG、JPEG、または WebP（最大 5MB）。写真がない場合は、連携したサインインプロバイダーの画像、Gravatar、またはイニシャルが使用されます。',
+  'Upload photo': '写真をアップロード',
+  'Remove photo': '写真を削除',
+  'Photo must be a PNG, JPEG, or WebP image':
+    '写真は PNG、JPEG、または WebP 形式である必要があります',
+  'Photo must be at most 5MB': '写真のサイズは 5MB 以下である必要があります',
+  'Profile photo updated': 'プロフィール写真を更新しました',
+  'Failed to update profile photo': 'プロフィール写真の更新に失敗しました',
+  'Profile photo removed': 'プロフィール写真を削除しました',
+  'Failed to remove profile photo': 'プロフィール写真の削除に失敗しました',
+  'Remove profile photo': 'プロフィール写真を削除',
+  'Your avatar goes back to the picture from your connected sign-in provider, Gravatar, or your initials. You can upload a new photo at any time.':
+    'アバターは連携したサインインプロバイダーの画像、Gravatar、またはイニシャルに戻ります。新しい写真はいつでもアップロードできます。',
+  // Console passkeys: sign-in and account management
+  'Failed to sign in with a passkey': 'パスキーでのサインインに失敗しました',
+  'Passkeys are not set up for this domain.':
+    'このドメインではパスキーが設定されていません。',
+  'That passkey is not recognized. It may have been removed from your account.':
+    'このパスキーは認識されません。アカウントから削除された可能性があります。',
+  'The passkey sign-in expired. Please try again.':
+    'パスキーでのサインインの有効期限が切れました。もう一度お試しください。',
+  'Passkey sign-in is not available right now.':
+    '現在、パスキーでのサインインは利用できません。',
+  'This account has been blocked.': 'このアカウントはブロックされています。',
+  'Your browser could not use a passkey. Please try again.':
+    'ブラウザーでパスキーを使用できませんでした。もう一度お試しください。',
+  'For your security, sign in again before changing your passkeys.':
+    'セキュリティのため、パスキーを変更する前にもう一度サインインしてください。',
+  'You can add up to 10 passkeys. Remove one to add another.':
+    'パスキーは最大 10 個まで追加できます。追加するには 1 つ削除してください。',
+  'This passkey is already added to your account.':
+    'このパスキーはすでにアカウントに追加されています。',
+  'The passkey could not be verified. Please try again.':
+    'パスキーを検証できませんでした。もう一度お試しください。',
+  'The request expired. Please try again.':
+    'リクエストの有効期限が切れました。もう一度お試しください。',
+  'Passkeys are not available right now.': '現在、パスキーは利用できません。',
+  'Sign in again': 'もう一度サインイン',
+  'Passkey added': 'パスキーを追加しました',
+  'Failed to add passkey': 'パスキーの追加に失敗しました',
+  'Passkey renamed': 'パスキーの名前を変更しました',
+  'Failed to rename passkey': 'パスキーの名前変更に失敗しました',
+  'Passkey deleted': 'パスキーを削除しました',
+  'Failed to delete passkey': 'パスキーの削除に失敗しました',
+  'Sign in with your fingerprint, face or device PIN instead of a password.':
+    'パスワードの代わりに、指紋、顔認証、またはデバイスの PIN でサインインします。',
+  'Add passkey': 'パスキーを追加',
+  'Passkeys are not supported in this browser.':
+    'このブラウザーはパスキーに対応していません。',
+  'Failed to load passkeys': 'パスキーの読み込みに失敗しました',
+  'Try again': '再試行',
+  'No passkeys yet': 'パスキーはまだありません',
+  'Add a passkey to sign in without your password.':
+    'パスキーを追加すると、パスワードなしでサインインできます。',
+  Added: '追加日',
+  'Passkey name': 'パスキー名',
+  'Save name': '名前を保存',
+  'Rename passkey': 'パスキーの名前を変更',
+  'Delete passkey': 'パスキーを削除',
+  'Your browser will ask you to create a passkey on this device or in your password manager.':
+    'ブラウザーから、このデバイスまたはパスワードマネージャーにパスキーを作成するよう求められます。',
+  'You will no longer be able to sign in with this passkey. This action cannot be undone.':
+    'このパスキーではサインインできなくなります。この操作は元に戻せません。',
+}

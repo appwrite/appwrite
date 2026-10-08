@@ -15,7 +15,7 @@ use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;

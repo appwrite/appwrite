@@ -1,0 +1,80 @@
+---
+layout: post
+title: "Announcing Appwrite MCP Server 2.0"
+description: The Appwrite MCP server has been rebuilt with a compact two-tool architecture that uses less context, requires zero configuration flags, and automatically supports all Appwrite services.
+date: 2026-04-13
+cover: /images/blog/announcing-appwrite-mcp-server-2/cover.avif
+timeToRead: 4
+author: chirag-aggarwal
+category: products, announcements
+featured: false
+faqs:
+  - question: "What is the Appwrite MCP server?"
+    answer: "The Appwrite MCP server is a Model Context Protocol server that connects AI coding agents (Claude Code, Cursor, Windsurf, and others) to your Appwrite project. It lets the agent create users, manage [Databases](/docs/products/databases), upload files, deploy [Functions](/docs/products/functions), and call any other Appwrite service from within a chat."
+  - question: "What changed in Appwrite MCP Server 2.0?"
+    answer: "Two big changes. First, no more service flags: the server supports every Appwrite service by default, so configurations no longer need `--users`, `--tablesdb`, `--storage`, and so on. Second, the server now exposes only two tools, `appwrite_search_tools` and `appwrite_call_tool`, instead of registering every operation directly, which keeps the model's context free for your actual prompts."
+  - question: "Why does a two-tool architecture matter?"
+    answer: "Every tool definition registered with an AI model consumes context tokens, even when unused. By keeping the catalog inside the server and exposing a search-then-call pattern, the model only loads details for operations it actually needs. That leaves more context for your code, files, and conversation history."
+  - question: "How do I upgrade to MCP Server 2.0?"
+    answer: "If you are using `uvx`, the latest version is fetched automatically, so the next session uses 2.0. Update your MCP configuration by removing any service flags from the `args` array. Once that is done, restart your agent and the new server takes over."
+  - question: "What is the Model Context Protocol?"
+    answer: "MCP is an open protocol developed by Anthropic that defines how AI clients (editors, agents) talk to context and tool servers. An MCP server advertises a set of tools and resources, and any MCP-compatible client can use them. The Appwrite MCP server speaks MCP, so it works with any MCP-aware AI tool."
+  - question: "Can I use the MCP server with self-hosted Appwrite?"
+    answer: "Yes. The MCP server accepts the same connection settings as the Appwrite SDKs (endpoint, project ID, API key), so you can point it at a self-hosted Appwrite instance. The [MCP server documentation](/docs/tooling/ai/mcp-servers) walks through configuration for both Cloud and self-hosted setups."
+---
+
+When we launched the Appwrite MCP server, connecting your Appwrite project to AI coding agents was already straightforward. But as the number of enabled services grew, so did the number of tool definitions loaded into the model's context, leaving less room for your actual prompts and code.
+
+Today, we are releasing Appwrite MCP Server 2.0, a ground-up rethink of how the server exposes Appwrite's capabilities to AI models.
+
+# No more service flags
+
+The previous version required you to pass flags like `--users`, `--tablesdb`, or `--storage` to enable specific Appwrite services. If you wanted everything, you passed `--all` and hoped the model could handle the tool count.
+
+That is gone. The server now automatically supports all Appwrite services out of the box. Your MCP configuration goes from this:
+
+```json
+{
+  "args": [
+    "mcp-server-appwrite",
+    "--users",
+    "--tablesdb",
+    "--storage",
+    "--functions"
+  ]
+}
+```
+
+To this:
+
+```json
+{
+  "args": [
+    "mcp-server-appwrite"
+  ]
+}
+```
+
+All Appwrite services are available by default.
+
+# Two-tool architecture
+
+Instead of registering dozens of tools directly with the model, the server now exposes exactly two MCP tools:
+
+- **`appwrite_search_tools`**: Searches the full Appwrite tool catalog based on the model's intent.
+- **`appwrite_call_tool`**: Executes a specific Appwrite operation by name.
+
+The full catalog of Appwrite operations stays internal to the server. When the model needs to interact with Appwrite, it searches for the right tool, gets back the relevant operation, and calls it. This means the model's context is no longer filled with tool definitions it may never use.
+
+# How to upgrade
+
+If you are already using the Appwrite MCP server, remove all service flags from the list of arguments from your existing configuration. Using `uvx` automatically fetches the latest version.
+
+A special thanks to [Abid Abdulgafoor](https://www.linkedin.com/in/abidabdulgafoor/) from our community, who suggested the two-tool architecture that shaped this release.
+
+# Resources
+
+- [MCP server documentation](/docs/tooling/ai/mcp-servers)
+- [MCP server on GitHub](https://github.com/appwrite/mcp-for-api)
+- [MCP server on PyPI](https://pypi.org/project/mcp-server-appwrite/)
+- [Discord community](https://appwrite.io/discord)

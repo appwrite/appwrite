@@ -4,7 +4,7 @@ namespace Appwrite\Migration;
 
 use Exception;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
@@ -106,6 +106,7 @@ abstract class Migration
         '2.1.0' => 'V26',
         '2.2.0' => 'V26',
         '2.3.0' => 'V26',
+        '2.4.0' => 'V26',
     ];
 
     /**

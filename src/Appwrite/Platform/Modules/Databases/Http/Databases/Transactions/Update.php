@@ -190,13 +190,26 @@ class Update extends Action
 
             $dbForDatabases = $getDatabasesDB($databaseDoc);
 
-            try {
-                $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
-                    'transactions',
-                    $transactionId,
-                    new Document(['status' => 'committing'])
-                ));
+            $claim = function () use ($dbForProject, $transactionId) {
+                // Re-read under a lock, a concurrent commit of the same transaction must not apply its operations twice
+                $current = $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
 
+                if ($current->getAttribute('status', '') !== 'pending') {
+                    return new Document();
+                }
+
+                return $dbForProject->updateDocument('transactions', $transactionId, new Document(['status' => 'committing']));
+            };
+
+            $transaction = ($isAPIKey || $isPrivilegedUser)
+                ? $authorization->skip(fn () => $dbForProject->withTransaction($claim))
+                : $dbForProject->withTransaction($claim);
+
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_READY);
+            }
+
+            try {
                 $operations = $authorization->skip(fn () => $dbForProject->find('transactionLogs', [
                     Query::equal('transactionInternalId', [$transaction->getSequence()]),
                     Query::orderAsc(),
@@ -502,6 +515,9 @@ class Update extends Action
                 $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
 
                 foreach ($documentsToTrigger as $doc) {
+                    $doc->removeAttribute('$collection');
+                    $doc->removeAttribute('$tenant');
+
                     // Match the key set processDocument() gives every other row and document
                     // event: the synthetic $databaseId, plus whichever of $tableId or
                     // $collectionId belongs to the surface that was called.

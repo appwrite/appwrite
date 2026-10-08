@@ -197,7 +197,24 @@ class ParseTest extends TestCase
         $parsed = Query::parse($json);
         $this->assertSame(Method::Count, $parsed->getMethod());
         $this->assertSame('id', $parsed->getAttribute());
-        $this->assertSame(['total'], $parsed->getValues());
+        $this->assertSame('total', $parsed->getAlias());
+        $this->assertSame([], $parsed->getValues());
+    }
+
+    public function testParseLegacyAggregateAliasAtValueZero(): void
+    {
+        $parsed = Query::parseQuery(['method' => 'sum', 'attribute' => 'price', 'values' => ['revenue']]);
+
+        $this->assertSame('revenue', $parsed->getAlias());
+        $this->assertSame([], $parsed->getValues());
+        $this->assertSame(['method' => 'sum', 'attribute' => 'price', 'alias' => 'revenue', 'values' => []], $parsed->toArray());
+    }
+
+    public function testParseAggregateAliasKeyWinsOverLegacyPosition(): void
+    {
+        $parsed = Query::parseQuery(['method' => 'count', 'attribute' => '*', 'alias' => 'total', 'values' => ['legacy']]);
+
+        $this->assertSame('total', $parsed->getAlias());
     }
 
     public function testRoundTripSum(): void
@@ -238,12 +255,13 @@ class ParseTest extends TestCase
 
     public function testRoundTripJoin(): void
     {
-        $original = Query::join('orders', 'users.id', 'orders.user_id');
+        $original = Query::join('orders', 'o', [Query::on('users.id', 'o.user_id')]);
         $json = $original->toString();
         $parsed = Query::parse($json);
         $this->assertSame(Method::Join, $parsed->getMethod());
         $this->assertSame('orders', $parsed->getAttribute());
-        $this->assertSame(['users.id', '=', 'orders.user_id'], $parsed->getValues());
+        $this->assertSame('o', $parsed->getAlias());
+        $this->assertSame(['users.id', '=', 'o.user_id'], $parsed->getJoinOnQueries()[0]->getValues());
     }
 
     public function testRoundTripNestedJoin(): void
@@ -257,7 +275,7 @@ class ParseTest extends TestCase
         $this->assertSame(Method::LeftJoin, $parsed->getMethod());
         $this->assertSame('orders', $parsed->getAttribute());
         $this->assertTrue($parsed->isNestedJoin());
-        $this->assertSame('ord', $parsed->getJoinAlias());
+        $this->assertSame('ord', $parsed->getAlias());
         $on = $parsed->getJoinOnQueries();
         $this->assertCount(2, $on);
         $this->assertSame(Method::On, $on[0]->getMethod());
@@ -288,17 +306,18 @@ class ParseTest extends TestCase
         ]);
 
         $this->assertTrue($parsed->isNestedJoin());
-        $this->assertSame('ord', $parsed->getJoinAlias());
+        $this->assertSame('ord', $parsed->getAlias());
         $this->assertCount(2, $parsed->getJoinOnQueries());
     }
 
     public function testRoundTripCrossJoin(): void
     {
-        $original = Query::crossJoin('colors');
+        $original = Query::crossJoin('colors', 'c');
         $json = $original->toString();
         $parsed = Query::parse($json);
         $this->assertSame(Method::CrossJoin, $parsed->getMethod());
         $this->assertSame('colors', $parsed->getAttribute());
+        $this->assertSame('c', $parsed->getAlias());
     }
 
     /**
@@ -335,7 +354,7 @@ class ParseTest extends TestCase
         $parsed = Query::parse($json);
         $this->assertSame(Method::Avg, $parsed->getMethod());
         $this->assertSame('score', $parsed->getAttribute());
-        $this->assertSame(['avg_score'], $parsed->getValues());
+        $this->assertSame('avg_score', $parsed->getAlias());
     }
 
     public function testRoundTripMin(): void
@@ -354,7 +373,7 @@ class ParseTest extends TestCase
         $json = $original->toString();
         $parsed = Query::parse($json);
         $this->assertSame(Method::Max, $parsed->getMethod());
-        $this->assertSame(['oldest'], $parsed->getValues());
+        $this->assertSame('oldest', $parsed->getAlias());
     }
 
     public function testRoundTripCountWithoutAlias(): void
@@ -391,17 +410,17 @@ class ParseTest extends TestCase
 
     public function testRoundTripLeftJoin(): void
     {
-        $original = Query::leftJoin('profiles', 'u.id', 'p.uid');
+        $original = Query::leftJoin('profiles', 'p', [Query::on('u.id', 'p.uid')]);
         $json = $original->toString();
         $parsed = Query::parse($json);
         $this->assertSame(Method::LeftJoin, $parsed->getMethod());
         $this->assertSame('profiles', $parsed->getAttribute());
-        $this->assertSame(['u.id', '=', 'p.uid'], $parsed->getValues());
+        $this->assertSame(['u.id', '=', 'p.uid'], $parsed->getJoinOnQueries()[0]->getValues());
     }
 
     public function testRoundTripRightJoin(): void
     {
-        $original = Query::rightJoin('orders', 'u.id', 'o.uid');
+        $original = Query::rightJoin('orders', 'o', [Query::on('u.id', 'o.uid')]);
         $json = $original->toString();
         $parsed = Query::parse($json);
         $this->assertSame(Method::RightJoin, $parsed->getMethod());
@@ -409,10 +428,10 @@ class ParseTest extends TestCase
 
     public function testRoundTripJoinWithSpecialOperator(): void
     {
-        $original = Query::join('t', 'a.val', 'b.val', '!=');
+        $original = Query::join('t', 'b', [Query::on('a.val', 'b.val', '!=')]);
         $json = $original->toString();
         $parsed = Query::parse($json);
-        $this->assertSame(['a.val', '!=', 'b.val'], $parsed->getValues());
+        $this->assertSame(['a.val', '!=', 'b.val'], $parsed->getJoinOnQueries()[0]->getValues());
     }
 
     public function testRoundTripUnionAll(): void
@@ -627,7 +646,8 @@ class ParseTest extends TestCase
         $array = $query->toArray();
         $this->assertSame('count', $array['method']);
         $this->assertSame('id', $array['attribute']);
-        $this->assertSame(['total'], $array['values']);
+        $this->assertSame('total', $array['alias']);
+        $this->assertSame([], $array['values']);
     }
 
     public function testToArrayCountWithoutAlias(): void
@@ -650,17 +670,18 @@ class ParseTest extends TestCase
 
     public function testToArrayJoinPreservesOperator(): void
     {
-        $query = Query::join('t', 'a', 'b', '!=');
+        $query = Query::join('t', 'b', [Query::on('a', 'b', '!=')]);
         $array = $query->toArray();
-        $this->assertSame(['a', '!=', 'b'], $array['values']);
+        $this->assertSame([['method' => 'on', 'values' => ['a', '!=', 'b']]], $array['values']);
     }
 
     public function testToArrayCrossJoin(): void
     {
-        $query = Query::crossJoin('t');
+        $query = Query::crossJoin('t', 'x');
         $array = $query->toArray();
         $this->assertSame('crossJoin', $array['method']);
         $this->assertSame('t', $array['attribute']);
+        $this->assertSame('x', $array['alias']);
         $this->assertSame([], $array['values']);
     }
 
@@ -708,7 +729,7 @@ class ParseTest extends TestCase
             '{"method":"count","attribute":"*","values":["total"]}',
             '{"method":"groupBy","values":["status","country"]}',
             '{"method":"distinct","values":[]}',
-            '{"method":"join","attribute":"orders","values":["u.id","=","o.uid"]}',
+            '{"method":"join","attribute":"orders","alias":"o","values":[{"method":"on","values":["u.id","=","o.uid"]}]}',
         ]);
         $this->assertCount(4, $queries);
         $this->assertSame(Method::Count, $queries[0]->getMethod());

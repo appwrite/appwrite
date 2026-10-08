@@ -1,0 +1,41 @@
+---
+layout: article
+title: OAuth connect
+description: Connect your platform to users' Appwrite accounts with OAuth 2.0. Request consent to manage organizations and projects on their behalf.
+---
+
+OAuth connect lets your platform access a user's Appwrite organizations after they sign in and grant consent. Use it when customers already have Appwrite accounts and want to link them to your product without sharing passwords or API keys.
+
+# How it works {% #how-it-works %}
+
+1. Register an **OAuth app** in your Appwrite organization settings
+2. Redirect users to Appwrite's authorization endpoint with your client ID and requested scopes
+3. After consent, exchange the authorization code for access and refresh tokens on your server
+4. Call Console APIs with the user's delegated access token
+
+Your platform never stores the user's Appwrite password. Access is limited to the scopes the user approved and can be revoked from Appwrite.
+
+# When to use OAuth connect {% #when-to-use-oauth-connect %}
+
+Choose OAuth connect when:
+
+- Users manage their own Appwrite organizations
+- You need explicit consent before accessing org or project data
+- Your product enhances an existing Appwrite workflow rather than provisioning new orgs
+
+For platform-owned provisioning inside your organization, use [Partners keys](/docs/partners/org-api-keys) instead or alongside OAuth connect.
+
+# Getting started {% #getting-started %}
+
+{% cards %}
+{% cards_item href="/docs/partners/oauth-connect/setup" title="Setup" %}
+Register an OAuth app and implement the authorization flow.
+{% /cards_item %}
+{% cards_item href="/docs/partners/oauth-connect/scopes" title="Scopes" %}
+Request the minimum Console scopes your integration needs.
+{% /cards_item %}
+{% /cards %}
+
+# Related {% #related %}
+
+OAuth connect is different from [OAuth2 login](/docs/products/auth/oauth2) in project Auth, which authenticates **end users of your app**. Partner OAuth connect authorizes **your platform** to call Console APIs for a user's organizations.

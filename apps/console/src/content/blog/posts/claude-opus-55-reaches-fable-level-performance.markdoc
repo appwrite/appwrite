@@ -1,0 +1,156 @@
+---
+layout: post
+title: Claude Opus 5.5 reaches Fable-level performance
+description: Claude Opus 5.5 brings Fable 5.1-level performance, 40% lower
+  typical workload costs, faster output, and stronger agentic coding.
+date: 2026-09-23
+timeToRead: 5
+author: aishwari
+category: news
+featured: false
+unlisted: true
+cover: /images/blog/claude-opus-55-reaches-fable-level-performance/cover.avif
+faqs:
+  - question: What is Claude Opus 5.5?
+    answer: Claude Opus 5.5 is Anthropic’s latest Opus model, built for agentic
+      coding, long-running tasks, and knowledge work. It delivers performance
+      comparable to Claude Fable 5.1 on many tasks while running faster and at a
+      lower cost than Claude Opus 5.
+  - question: How much does Claude Opus 5.5 cost?
+    answer: Claude Opus 5.5 costs $4 per million input tokens and $20 per million
+      output tokens. Cache reads cost $0.20 per million tokens. Anthropic says
+      the combination of lower token prices and improved efficiency reduces
+      typical workload costs by roughly 40% compared with Claude Opus 5.
+  - question: What is the Claude Opus 5.5 context window?
+    answer: Claude Opus 5.5 has a 1 million token context window and supports up to
+      128K output tokens. This makes it suitable for large codebases, long
+      documents, research tasks, and agentic workflows that need to maintain
+      substantial context.
+  - question: Is Claude Opus 5.5 better than Claude Opus 5?
+    answer: Claude Opus 5.5 improves on Claude Opus 5 in performance, speed, and
+      cost efficiency. It costs less per token, generates output more than 30%
+      faster, and uses fewer tokens on many agentic and coding tasks.
+  - question: How does Claude Opus 5.5 compare with Claude Fable 5.1?
+    answer: Claude Opus 5.5 performs at roughly the level of Claude Fable 5.1 across
+      many coding and knowledge-work tasks while costing significantly less.
+      Anthropic notes that the real-world performance gap between the two models
+      is relatively small, so the better choice depends on the workload.
+---
+Claude Opus 5.5 is the first model in Anthropic's Claude 5.5 family, and the pitch is unusually simple: it performs at the level of Claude Fable 5.1 on most work while costing 40% less to run than Opus 5. Anthropic [announced Claude Opus 5.5](https://www.anthropic.com/news/claude-opus-5-5) on September 22, 2026. You call it through the Claude API with the model id `claude-opus-5-5`.
+
+For most teams, the interesting number is not a benchmark score. It is that running Opus just got cheaper per token, cheaper per task, and more than 30% faster at generating output. Here is what shipped, how Claude Opus 5.5 compares, and what changes if you build agentic apps on Appwrite.
+
+# What is Claude Opus 5.5?
+
+**Claude Opus 5.5 is Anthropic's new leading model and the successor to** [Claude Opus 5](/blog/post/claude-opus-5-nears-fable-5-intelligence-at-half-the-price)**.** It matches Claude Fable 5.1 on most real work, costs 40% less than Opus 5 on typical workloads, and generates output more than 30% faster. It is available on the Claude Platform, Claude Code, AWS, Google Cloud, and Microsoft Azure.
+
+It is also Anthropic's first release since the company called for pacing the frontier, so it was tested before launch by external evaluators including [METR](https://metr.org/) and Frontier Design. Claude Sonnet 5.5 and Claude Haiku 5.5 follow in the coming weeks with many of the same performance, efficiency, and safety improvements.
+
+## Claude Opus 5.5 benchmarks against Fable 5.1, Opus 5, and GPT-6 Astra
+
+Claude Opus 5.5 leads on agentic coding, computer use, and knowledge work. Anthropic is candid that at this level of capability, benchmark margins have become a weaker guide to real-world differences, and says the gap between Opus 5.5 and Fable 5.1 feels narrower in practice than the table suggests.
+
+| Benchmark                                    | Opus 5.5 | Fable 5.1 | Opus 5 | GPT-6 Astra  | GPT-5.6 Sol  |
+| -------------------------------------------- | -------- | --------- | ------ | ------------ | ------------ |
+| Agentic coding (Terminal-Bench 4.0)          | 66.4%    | 55.8%     | 52.3%  | 57.9%        | 37.3%        |
+| Agentic coding (FrontierCode v1.1 Main)      | 54.4%    | 50.3%     | 48.0%  | 53.3%        | 47.5%        |
+| Agentic coding (CursorBench 4.0)             | 57.8%    | 51.8%     | 46.6%  | Not reported | 41.7%        |
+| Knowledge work (GDPval-AA v2.1)         | 1846     | 1735      | 1708   | 1542         | 1588         |
+| Business workflows (AutomationBench)         | 40.0%    | 31.4%     | 26.9%  | 41.4%        | 28.8%        |
+| Reasoning with tools (Humanity's Last Exam)  | 67.7%    | 65.6%     | 63.6%  | 57.2%        | Not reported |
+| Agentic scientific research (Terminal-Bench-Science 0.1) | 58.7%    | 52.6%     | 29.0%  | 64.6%        | 22.4%        |
+| Computer use (OSWorld 2.0, partial)          | 81.8%    | 80.7%     | 74.0%  | Not reported | Not reported |
+| Visual chart recognition (Chartography)      | 89.0%    | 88.4%     | 83.4%  | Not reported | Not reported |
+
+*Source: Anthropic's* [Claude Opus 5.5 announcement](https://www.anthropic.com/news/claude-opus-5-5). *Results use adaptive thinking at max effort unless noted. Terminal-Bench 4.0 uses xhigh effort for Opus 5.5 and high effort for GPT-6 Astra, each model's highest score.*
+
+Two caveats worth carrying into your own evaluation. Opus 5.5 was benchmarked with production safeguards enabled, so cybersecurity tasks fell back to Opus 4.8, while biology and frontier LLM development tasks fell back to Opus 5 when safeguards intervened. Anthropic says this likely reduces Opus 5.5's performance on these benchmarks. And [AutomationBench](https://zapier.com/) was run by Zapier without fallback models, so every safeguard intervention counted as a failure.
+
+# Claude Opus 5.5 pricing: 40% lower typical workload costs
+
+**Claude Opus 5.5 costs $4 per million input tokens and $20 per million output tokens, 20% less than Opus 5.** Cache reads drop 60% to $0.20 per million tokens, which matters most because cache reads make up the majority of agentic and coding costs.
+
+| Price per 1M tokens | Claude Opus 5.5 | Claude Opus 5 | Change    |
+| ------------------- | --------------- | ------------- | --------- |
+| Cache reads         | $0.20           | $0.50         | 60% lower |
+| Input tokens        | $4              | $5            | 20% lower |
+| Output tokens       | $20             | $25           | 20% lower |
+| Cache writes        | $5              | $6.25         | 20% lower |
+
+Per-token price is only half the story. Opus 5.5 also uses fewer tokens per task, and those two effects compound into a roughly 40% drop in cost on typical workloads. Fast mode is available in Claude Code and on the Claude Platform at up to 2.5x speed for $8 per million input tokens and $40 per million output tokens.
+
+Anthropic also raised five-hour usage limits on Pro, Max, Team, and seat-based Enterprise plans, and gave subscription users a rate limit reset they can save and spend whenever they choose.
+
+# Claude Opus 5.5 for agentic coding and large migrations
+
+Opus 5.5 is particularly well suited to long, sprawling jobs such as codebase-wide migrations and audits. The examples Anthropic published are about duration and token spend as much as correctness:
+
+* **A 680,000-line code migration** completed by an early tester in under a day, work that would have taken an engineering team weeks.
+* **A 200,000-line codebase audit and fix** finished in under three hours, where Opus 5 took over 20 hours and burned 2.5x as many tokens.
+* **A C-to-Rust rewrite of** [HAProxy](https://www.haproxy.org/), the widely used load balancer. Both Opus 5.5 and Fable 5.1 passed nearly all of HAProxy's own regression tests, but Opus 5.5 finished in 9.5 hours against 12, and cost 51% less.
+* **Performance work across a web app.** Asked to cut load times on every page, Opus 5.5 succeeded 39 times out of 40. Opus 5 made smaller improvements that also changed the app's behavior.
+
+The cost-per-task picture is the clearest advantage. At default effort on FrontierCode, Opus 5.5 beats GPT-6 Astra at roughly 20% of the cost per task. On [Terminal-Bench 4.0](https://www.tbench.ai/) it matches Astra for about 40% of the cost, and on CursorBench it beats GPT-5.6 Sol by 11 points for about a third of the cost.
+
+GitHub, which tested it across GitHub Copilot CLI and VS Code, reported that Opus 5.5 used among the fewest tokens and steps it measured, and solved more terminal tasks than Opus 5 in less than half the steps.
+
+# Claude Opus 5.5 safety, alignment, and prompt injection resistance
+
+**Claude Opus 5.5 is the strongest-performing model Anthropic has tested on its automated behavioral audit,** the alignment suite that runs Claude through thousands of simulated scenarios. It is much less likely than recent models to take hard-to-reverse actions or step outside the boundaries it has been given.
+
+For anyone running agents against production infrastructure, three details matter:
+
+* **Prompt injection.** Opus 5.5 matches or beats Opus 5 in every setting tested, including coding, tool use, computer use, and web browsing. On a benchmark run by AI security firm [Gray Swan](https://www.grayswan.ai/), it ties Fable 5.1 for the lowest prompt injection success rate of any model tested.
+* **Action screening.** A classifier screens every action before it runs, backed by an open-source sandbox that security teams can audit and code review that catches vulnerabilities before they merge.
+* **Broader testing.** Anthropic extended alignment testing to cover longer tasks, impossible tasks, and scenarios modeled on real incidents. It still acknowledges limits, and the full evaluation is in the Opus 5.5 System Card.
+
+Because Opus 5.5 is comparable to [Claude Mythos 5.1](/blog/post/anthropic-just-launched-claude-fable-5-and-claude-mythos-5) in biology and cybersecurity, it ships with safeguards similar to Fable 5.1's. Vetted organizations can apply to the Life Sciences Verification Program today, and the Cyber Verification Program expands access for verified cybersecurity practitioners in the coming weeks.
+
+# Claude Opus 5.5 for knowledge work and research
+
+Opus 5.5 scores 1846 Elo on GDPval-AA v2.1, a test of real-world work across 44 occupations, ahead of both Fable 5.1 and Opus 5. At its default medium effort it beats GPT-6 Astra at max effort for about a fifth of the cost per task.
+
+The research result is more telling than the score. Anthropic asked three models to write a report on a company's quarterly performance using a copy of the web where the earnings release was deliberately hard to find, then had an automated grader check every figure and quote against sources. Across effort settings, 16 of Opus 5.5's 18 reports cleared the quality bar, where any invented figure would have failed. Neither Fable 5.1 nor Opus 5 cleared it in a single attempt.
+
+On a merger analysis task, Opus 5.5 and Opus 5 both built a financial model and an executive presentation and reached the same conclusion. Opus 5.5 finished in 63 minutes against 93, cost 50% less, and produced fewer errors. Walleye Capital, an early tester, reported that Opus 5.5 largely solved their evaluation suite on its lowest setting and caught an error in their own evaluation instructions that no previous model had noticed.
+
+# Claude Opus 5.5 communicates more clearly than Opus 5
+
+One of the most common areas of feedback on Opus 5 was its writing. Opus 5.5 puts the most important information up front and early testers described its output as clearer and easier to follow, with one saying "it writes the way I do."
+
+This is a practical improvement, not just a cosmetic one. Anthropic says clearer output makes the model's work easier to follow and check, which it frames as both a practical and a safety improvement.
+
+# Should you switch to Claude Opus 5.5?
+
+Whether you should switch depends on your workload and integration. Anthropic reports lower pricing, faster output, and stronger results across several evaluations, but existing Opus 5 integrations should also account for the model's breaking changes.
+
+* **Switch from Opus 5** if the lower pricing, faster output, and stronger performance on several evaluations make sense for your workload. Review Anthropic's migration guide before moving production workloads, as Opus 5.5 introduces several breaking changes.
+* **Switch from Fable 5.1** if you were paying a premium for frontier quality on coding and knowledge work. Opus 5.5 matches it on most tasks at a fraction of the price.
+* **Compare with Fable 5.1 or Mythos 5.1** on your own evaluation set if you already have workloads tuned for those models. Published benchmarks are useful signals, but your own workload is a better test of whether switching makes sense.
+* **Tune effort before you tune models.** Opus 5.5 at default effort beats several competitors at max effort. Run routine agent steps low and reserve high or max for genuinely hard work.
+
+Benchmark leads at this level are narrow enough that your own evaluation suite is a better signal than any published table. Run it on a representative slice of your workload before you migrate everything.
+
+# What Claude Opus 5.5 means if you build on Appwrite
+
+Opus 5.5's strength is long-horizon autonomous work: migrations, audits, and agents that run for hours without supervision. Production agents often need backend services for things like user authentication, state, file storage, and server-side logic.
+
+[Appwrite](/) is an open source backend that gives an agent all of it in one project: [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Messaging](/docs/products/messaging), and [Sites](/docs/products/sites) for deploying the frontend next to them. Run it on managed Cloud or self-host it.
+
+The [Appwrite plugin for Claude Code](/blog/post/announcing-appwrite-claude-code-plugin) makes the handoff clean. It bundles the Appwrite API MCP server, the Appwrite Docs MCP server, and SDK-specific [Appwrite Skills](/blog/post/announcing-appwrite-skills) into a single install, so your Opus 5.5 agent writes real SDK calls against a backend that already exists instead of guessing at one. The [Claude Code integration guide](/docs/tooling/ai/ai-dev-tools/claude-code) and the [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers) cover setup, and there is a full walkthrough on [adding a backend to apps built with Claude Code](/blog/post/backend-for-claude-code-apps).
+
+Opus 5.5's lower cache read pricing pairs particularly well with this setup. Agentic loops that repeatedly read the same MCP tool definitions and docs context are exactly the workload where a 60% cache read discount compounds.
+
+# Build your Claude Opus 5.5 agent's backend on Appwrite
+
+Spin up the backend your next Opus 5.5 agent needs in minutes. [Create a free Appwrite project](https://cloud.appwrite.io/), install the Claude Code plugin, and point the model id `claude-opus-5-5` at it. Ask it to help build an authentication flow and database schema against your Appwrite project, so you can move from model-generated code to a working backend faster.
+
+# Resources
+
+* [Appwrite plugin for Claude Code](/blog/post/announcing-appwrite-claude-code-plugin)
+* [Claude Code integration guide](/docs/tooling/ai/ai-dev-tools/claude-code)
+* [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers)
+* [Create a free Appwrite project](https://cloud.appwrite.io/)
+* [Appwrite products](/docs/products/)
+* [Appwrite integrations](/integrations)
+* [Join the Appwrite Discord](/discord)

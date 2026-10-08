@@ -19,7 +19,7 @@ use Utopia\Cache\Cache;
 use Utopia\Client\Client;
 use Utopia\Client\Destinations\Anywhere;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;

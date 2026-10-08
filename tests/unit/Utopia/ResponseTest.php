@@ -7,6 +7,7 @@ namespace Tests\Unit\Utopia;
 use Appwrite\Models\Project as GeneratedProject;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V28;
+use Appwrite\Utopia\Response\Filters\V29;
 use Appwrite\Utopia\Response\Model\Project as ProjectModel;
 use Appwrite\Utopia\Response\Model\Provider as ProviderModel;
 use Exception;
@@ -119,7 +120,8 @@ final class ResponseTest extends TestCase
         $this->response->setModel(new ProjectModel());
         $this->response->setModel(new ProviderModel());
 
-        // The generated PHP SDK sends a response format older than 2.3.0, so its responses pass through V28.
+        // The generated PHP SDK sends a response format older than 2.3.0, so its responses pass through V29 and V28.
+        $this->response->addFilter(new V29());
         $this->response->addFilter(new V28());
 
         $document = new Document([
