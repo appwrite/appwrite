@@ -141,6 +141,7 @@ jobs:
                   done
 
     publish-assets:
+        environment: console-staging
         needs: build
         runs-on: gcrunner=${{ github.run_id }}-console-publish-assets/runner=deploy
         timeout-minutes: 25
