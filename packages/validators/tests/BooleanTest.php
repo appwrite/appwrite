@@ -25,7 +25,7 @@ final class BooleanTest extends TestCase
         $this->assertFalse($boolean->isValid('string'));
         $this->assertFalse($boolean->isValid(1.2));
         $this->assertFalse($boolean->isArray());
-        $this->assertSame(\Utopia\Validator::TYPE_BOOLEAN, $boolean->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_BOOLEAN, $boolean->getType());
     }
 
     public function testCanValidateLoosely(): void
@@ -44,6 +44,6 @@ final class BooleanTest extends TestCase
         $this->assertFalse($boolean->isValid('string'));
         $this->assertFalse($boolean->isValid(1.2));
         $this->assertFalse($boolean->isArray());
-        $this->assertSame(\Utopia\Validator::TYPE_BOOLEAN, $boolean->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_BOOLEAN, $boolean->getType());
     }
 }

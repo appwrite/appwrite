@@ -20,7 +20,7 @@ final class IntegerTest extends TestCase
         $this->assertFalse($validator->isValid(true));
         $this->assertFalse($validator->isValid(false));
         $this->assertFalse($validator->isArray());
-        $this->assertSame(\Utopia\Validator::TYPE_INTEGER, $validator->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_INTEGER, $validator->getType());
     }
 
     public function testCanValidateLoosely(): void
@@ -34,7 +34,7 @@ final class IntegerTest extends TestCase
         $this->assertFalse($validator->isValid(true));
         $this->assertFalse($validator->isValid(false));
         $this->assertFalse($validator->isArray());
-        $this->assertSame(\Utopia\Validator::TYPE_INTEGER, $validator->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_INTEGER, $validator->getType());
     }
 
     public function testBitSizeAndSignedness(): void

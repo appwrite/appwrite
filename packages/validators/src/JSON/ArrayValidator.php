@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Validator\JSON;
 
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 /**
  * ArrayValidator

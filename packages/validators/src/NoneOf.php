@@ -2,8 +2,6 @@
 
 namespace Utopia\Validator;
 
-use Utopia\Validator;
-
 /**
  * Ensure no validators from a list passed the check
  *

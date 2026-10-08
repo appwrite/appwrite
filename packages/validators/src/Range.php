@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Utopia\Validator;
 
-use Utopia\Validator;
-
 /**
  * Range
  *

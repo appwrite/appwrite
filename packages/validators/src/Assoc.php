@@ -2,8 +2,6 @@
 
 namespace Utopia\Validator;
 
-use Utopia\Validator;
-
 /**
  * ArrayList
  *
