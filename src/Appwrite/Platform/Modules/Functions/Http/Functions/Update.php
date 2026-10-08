@@ -356,7 +356,7 @@ class Update extends Base
                     'projectId' => $project->getId(),
                     'projectInternalId' => $project->getSequence(),
                     'schedule'  => $function->getAttribute('schedule'),
-                    'interval' => $function->getAttribute('interval'),
+                    'interval' => $function->getAttribute('interval', 0),
                     'active' => false,
                 ]))
             );
@@ -371,7 +371,7 @@ class Update extends Base
             ->setAttribute('projectInternalId', $project->getSequence())
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('interval', $function->getAttribute('interval'))
+            ->setAttribute('interval', $function->getAttribute('interval', 0))
             ->setAttribute('active', (!empty($function->getAttribute('schedule')) || !empty($function->getAttribute('interval'))) && !empty($function->getAttribute('deploymentId')));
         $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 

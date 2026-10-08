@@ -305,7 +305,7 @@ class Create extends Base
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getSequence(),
                 'schedule'  => $function->getAttribute('schedule'),
-                'interval' => $function->getAttribute('interval'),
+                'interval' => $function->getAttribute('interval', 0),
                 'active' => false,
             ]))
         );
