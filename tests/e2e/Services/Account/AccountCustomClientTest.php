@@ -2056,6 +2056,9 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
         $this->assertStringContainsStringIgnoringCase('Reset your ' . $this->getProject()['name'] . ' password using the link.', $lastEmail['text']);
+        // Spam filters count direction marks (U+200E, U+200F) in the preview padding as hidden text
+        $this->assertStringContainsString('&#x200C;&nbsp;', (string) $lastEmail['html']);
+        $this->assertDoesNotMatchRegularExpression('/&#x200[EF];/i', $lastEmail['html']);
         $this->assertStringNotContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
 
 
