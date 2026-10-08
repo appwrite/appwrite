@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Auth\JobsSecret;
 use Appwrite\ClamAV\Network;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Storage\Bytes;
@@ -88,6 +89,12 @@ class Doctor extends Action
             Console::log('🔴 Not using a unique secret key for encryption');
         } else {
             Console::log('🟢 Using a unique secret key for encryption');
+        }
+
+        if (JobsSecret::isInsecure(System::getEnv('_APP_JOBS_SECRET'))) {
+            Console::log('🔴 Not using a unique secret key for jobs callbacks');
+        } else {
+            Console::log('🟢 Using a unique secret key for jobs callbacks');
         }
 
         if (System::getEnv('_APP_ENV', 'development') !== 'production') {

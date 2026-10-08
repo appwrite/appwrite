@@ -1386,12 +1386,12 @@ return [
             ],
             [
                 'name' => '_APP_JOBS_SECRET',
-                'description' => 'The secret used to authenticate with the jobs-service and to sign/verify job callback (HMAC) requests. Make sure to change this.',
+                'description' => 'The secret used to authenticate with the jobs-service and to sign/verify job callback (HMAC) requests. The installer generates a unique value. `/v1/jobs/event` rejects signatures when this is empty or the public `your-secret-key` placeholder. **Keep it a secret**.',
                 'introduction' => '1.9.0',
-                'default' => 'your-secret-key',
+                'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => 'token'
             ],
             [
                 'name' => '_APP_JOBS_ENDPOINT',
