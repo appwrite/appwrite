@@ -208,8 +208,8 @@ final class QueryTest extends TestCase
         yield 'TYPE_ORDER_RANDOM' => [Query::TYPE_ORDER_RANDOM, '', [], Query::orderRandom()];
         yield 'TYPE_LIMIT' => [Query::TYPE_LIMIT, '', [25], Query::limit(25)];
         yield 'TYPE_OFFSET' => [Query::TYPE_OFFSET, '', [50], Query::offset(50)];
-        yield 'TYPE_CURSOR_AFTER' => [Query::TYPE_CURSOR_AFTER, '', ['log1'], Query::cursorAfter('log1')];
-        yield 'TYPE_CURSOR_BEFORE' => [Query::TYPE_CURSOR_BEFORE, '', ['log2'], Query::cursorBefore('log2')];
+        yield 'TYPE_CURSOR_AFTER' => [Query::TYPE_CURSOR_AFTER, '', [['$id' => 'log1']], Query::cursorAfter(['$id' => 'log1'])];
+        yield 'TYPE_CURSOR_BEFORE' => [Query::TYPE_CURSOR_BEFORE, '', [['$id' => 'log2']], Query::cursorBefore(['$id' => 'log2'])];
     }
 
     /**
