@@ -181,7 +181,7 @@ Two steps with very different cost. Step A rides inside each absorb PR; step B i
 | Package | Today | Standard | Appwrite files |
 |---|---|---|---|
 | `validators` | `Utopia\Validator` (base class), `Utopia\Validator\*`, `Utopia\PHPStan` | `Utopia\Validator\Validator`, `Utopia\Validator\PHPStan\*` | 39 |
-| `console` | `Utopia\Console` | `Utopia\Console\Console` | 77 |
+| `console` | `Utopia\Console`, `Utopia\Command` | `Utopia\Console\Console`, `Utopia\Console\Command` | 96 (done; ships as `console/0.3.0`) |
 | `client` | `Utopia\Client`, `Utopia\Psr18\*` | `Utopia\Client\Client`, `Utopia\Client\Psr18\*` | 2 |
 
 Each ships as a major on its mirror with a one-major `class_alias` shim for the old name (`src/compat.php`, autoloaded via `files`), so external consumers upgrade at their own pace. Appwrite and Cloud are updated in the same PR. When the last of the three lands, the bare `Utopia\` list leaves the root autoload for good.

@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Message\ProjectContext;
 use Appwrite\Usage\Connection;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Usage\Accumulator;

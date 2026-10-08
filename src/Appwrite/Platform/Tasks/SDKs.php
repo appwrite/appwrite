@@ -28,7 +28,7 @@ use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
 use CzProject\GitPhp\Git;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\OpenAPI\Parser;
 use Utopia\Platform\Action;
 use Utopia\Validator\Nullable;
