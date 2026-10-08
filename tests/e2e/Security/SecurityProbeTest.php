@@ -29,6 +29,11 @@ final class SecurityProbeTest extends TestCase
      */
     private static array $findings = [];
 
+    /**
+     * @var list<string>
+     */
+    private static array $ran = [];
+
     public static function setUpBeforeClass(): void
     {
         self::$world = World::boot();
@@ -38,9 +43,10 @@ final class SecurityProbeTest extends TestCase
     public static function tearDownAfterClass(): void
     {
         if (System::getEnv('_APP_SECURITY_BASELINE') === 'update') {
-            Baseline::write(Catalog::ids(self::$routes), self::$findings);
+            self::writeBaseline();
         }
         self::$world = null;
+        self::$ran = [];
     }
 
     public function testCatalogEnumeratesApiRoutes(): void
@@ -62,7 +68,9 @@ final class SecurityProbeTest extends TestCase
             $partition['fresh'],
             \count($partition['fresh']) . " new route(s) are not in tests/e2e/Security/baseline.json.\n"
             . "They were probed automatically. Accept them with:\n"
-            . "  _APP_SECURITY_BASELINE=update docker compose exec appwrite test tests/e2e/Security --group=security\n"
+            . "  docker compose exec -e _APP_SECURITY_BASELINE=update appwrite test tests/e2e/Security --group=security\n"
+            . "If tests/ is not bind-mounted, copy the cache file out:\n"
+            . "  docker compose cp appwrite:/storage/cache/security-baseline.json tests/e2e/Security/baseline.json\n"
             . "then review the routes list.\n"
             . \implode("\n", \array_slice($partition['fresh'], 0, 30))
         );
@@ -132,6 +140,8 @@ final class SecurityProbeTest extends TestCase
         $http = $world->probe;
         $findings = [];
         $applicable = 0;
+        self::$ran[] = $attack::getName();
+        self::$ran = \array_values(\array_unique(self::$ran));
 
         foreach (self::$routes as $route) {
             if (! $attack->applies($route)) {
@@ -176,5 +186,29 @@ final class SecurityProbeTest extends TestCase
         }
 
         return self::$world;
+    }
+
+    private static function writeBaseline(): void
+    {
+        if (self::$world === null || self::$routes === []) {
+            \fwrite(STDERR, "Refusing to write security baseline: world did not boot.\n");
+
+            return;
+        }
+
+        $expected = \array_map(static fn (Attack $attack): string => $attack::getName(), Attacks::all());
+        $missing = \array_values(\array_diff($expected, self::$ran));
+        if ($missing !== []) {
+            \fwrite(
+                STDERR,
+                "Refusing to write security baseline: attacks not executed: "
+                . \implode(', ', $missing)
+                . ".\n_APP_SECURITY_BASELINE=update must run the full suite, not --filter.\n"
+            );
+
+            return;
+        }
+
+        Baseline::write(Catalog::ids(self::$routes), self::$findings);
     }
 }

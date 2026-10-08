@@ -27,7 +27,7 @@ final class SensitiveFields implements Attack
 
     public function applies(RouteTarget $route): bool
     {
-        return $route->method === 'GET' && ! $this->returnsSecretByDesign($route);
+        return $route->method === 'GET';
     }
 
     public function probe(RouteTarget $route, World $world, Probe $http): array
@@ -53,17 +53,6 @@ final class SensitiveFields implements Attack
             probe: 'user-session',
             detail: 'User session response exposed sensitive fields: ' . \implode(', ', $hits),
         )];
-    }
-
-    private function returnsSecretByDesign(RouteTarget $route): bool
-    {
-        foreach (['/sessions', '/tokens', '/keys', '/recovery', '/verification'] as $create) {
-            if (\str_contains($route->path, $create) && $route->method !== 'GET') {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**

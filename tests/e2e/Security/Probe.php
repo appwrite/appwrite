@@ -30,7 +30,7 @@ final class Probe
     ): array {
         $path = $this->fillPath($route->path, $ids);
         $path = $this->toClientPath($path);
-        $payload = $params === [] ? $this->dummyParams($route) : $params;
+        $payload = $this->params($route, $params);
 
         try {
             return $this->client->call(
@@ -107,6 +107,17 @@ final class Probe
     public function isMissingRoute(array $response): bool
     {
         return $this->status($response) === 404 && $this->type($response) === 'general_route_not_found';
+    }
+
+    /**
+     * Required dummy fields, with $overrides winning on name clashes.
+     *
+     * @param array<string, mixed> $overrides
+     * @return array<string, mixed>
+     */
+    public function params(RouteTarget $route, array $overrides = []): array
+    {
+        return \array_merge($this->dummyParams($route), $overrides);
     }
 
     /**

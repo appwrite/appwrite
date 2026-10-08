@@ -44,4 +44,22 @@ final class ProbeTest extends TestCase
         $this->assertSame(0, $probe->status(['headers' => []]));
         $this->assertSame('GET', $route->method);
     }
+
+    public function testParamsMergeOverridesOntoRequiredDummies(): void
+    {
+        $probe = new Probe(new Client());
+        $route = new RouteTarget('POST', '/v1/migrations/firebase/report', ['api'], ['migrations.write'], [
+            'endpoint' => ['optional' => false],
+            'resourceId' => ['optional' => false],
+            'serviceAccount' => ['optional' => false],
+        ], true, false, true);
+
+        $params = $probe->params($route, ['endpoint' => 'http://127.0.0.1']);
+
+        $this->assertSame('http://127.0.0.1', $params['endpoint']);
+        $this->assertArrayHasKey('resourceId', $params);
+        $this->assertArrayHasKey('serviceAccount', $params);
+        $this->assertNotSame('', $params['resourceId']);
+        $this->assertNotSame('', $params['serviceAccount']);
+    }
 }

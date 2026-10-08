@@ -62,6 +62,14 @@ docker compose exec -e _APP_SECURITY_BASELINE=update \
   appwrite test tests/e2e/Security --group=security
 ```
 
+Local compose mounts `./tests` via `docker-compose.override.yml`, so that write lands in the repo. Without a tests bind-mount (CI image, or compose without the override), the same command also writes `/storage/cache/security-baseline.json` — copy it out:
+
+```bash
+docker compose cp appwrite:/storage/cache/security-baseline.json tests/e2e/Security/baseline.json
+```
+
+Update refuses to write if `World::boot()` failed or if any attack class did not run (`--filter` is not a full update). Findings the run did not emit keep their existing rows and reasons.
+
 4. Open the `baseline.json` diff. Keep the new `routes` row. New finding rows come through with an empty `reason` — fill one in or the next `check` run fails. Commit the inventory change with the endpoint.
 
 Do not hand-edit a route id unless you are matching `Catalog::ids()` (`METHOD` + primary path). `httpAlias` paths are not listed separately.

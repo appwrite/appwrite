@@ -12,6 +12,8 @@ final class Baseline
 {
     public const string PATH = __DIR__ . '/baseline.json';
 
+    public const string CACHE_PATH = '/storage/cache/security-baseline.json';
+
     /**
      * @param array<string, mixed> $document
      */
@@ -148,10 +150,26 @@ final class Baseline
      */
     public static function write(array $routes, array $findings, string $path = self::PATH): void
     {
-        $existing = self::load($path)->findings();
+        $existing = self::load($path);
+        $reasons = $existing->findings();
+        $kept = [];
+        foreach ($existing->rawFindings() as $entry) {
+            $key = (new Finding(
+                attack: (string) ($entry['attack'] ?? ''),
+                method: (string) ($entry['method'] ?? ''),
+                path: (string) ($entry['path'] ?? ''),
+                probe: (string) ($entry['probe'] ?? ''),
+                detail: (string) ($entry['detail'] ?? ''),
+                severity: (string) ($entry['severity'] ?? Finding::ERROR),
+            ))->key();
+            $kept[$key] = $entry;
+        }
+
         $rows = [];
+        $seen = [];
         foreach ($findings as $finding) {
-            $previous = $existing[$finding->key()]['reason'] ?? '';
+            $seen[$finding->key()] = true;
+            $previous = $kept[$finding->key()] ?? [];
             $rows[] = [
                 'attack' => $finding->attack,
                 'method' => $finding->method,
@@ -159,7 +177,22 @@ final class Baseline
                 'probe' => $finding->probe,
                 'severity' => $finding->severity,
                 'detail' => $finding->detail,
-                'reason' => $previous,
+                'reason' => (string) ($reasons[$finding->key()]['reason'] ?? $previous['reason'] ?? ''),
+            ];
+        }
+
+        foreach ($kept as $key => $entry) {
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $rows[] = [
+                'attack' => (string) ($entry['attack'] ?? ''),
+                'method' => (string) ($entry['method'] ?? ''),
+                'path' => (string) ($entry['path'] ?? ''),
+                'probe' => (string) ($entry['probe'] ?? ''),
+                'severity' => (string) ($entry['severity'] ?? Finding::ERROR),
+                'detail' => (string) ($entry['detail'] ?? ''),
+                'reason' => (string) ($entry['reason'] ?? ''),
             ];
         }
 
@@ -173,7 +206,39 @@ final class Baseline
             'routes' => \array_values($routes),
             'findings' => $rows,
         ];
+        $json = \json_encode($document, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
 
-        \file_put_contents($path, \json_encode($document, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+        if (\file_put_contents($path, $json) === false) {
+            throw new \RuntimeException('Could not write security baseline: ' . $path);
+        }
+
+        if ($path === self::PATH && \is_dir('/storage/cache') && \is_writable('/storage/cache')) {
+            \file_put_contents(self::CACHE_PATH, $json);
+            \fwrite(
+                STDOUT,
+                'Also wrote ' . self::CACHE_PATH . ". If tests/ is not bind-mounted, copy it out:\n"
+                . '  docker compose cp appwrite:' . self::CACHE_PATH . " tests/e2e/Security/baseline.json\n"
+            );
+        }
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function rawFindings(): array
+    {
+        $entries = $this->document['findings'] ?? [];
+        if (! \is_array($entries)) {
+            return [];
+        }
+
+        $rows = [];
+        foreach ($entries as $entry) {
+            if (\is_array($entry)) {
+                $rows[] = $entry;
+            }
+        }
+
+        return $rows;
     }
 }
