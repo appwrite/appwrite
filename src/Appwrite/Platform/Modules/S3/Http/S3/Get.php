@@ -78,7 +78,6 @@ class Get extends Base
                 return;
             }
 
-            // iterate() treats the limit as its page size and follows cursors until every file is loaded.
             $files = $dbForProject->getAuthorization()->skip(fn () => \iterator_to_array($dbForProject->cursor('bucket_' . $bucket->getSequence(), [
                 Query::orderAsc('$sequence'),
             ], batchSize: 1000), false));

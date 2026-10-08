@@ -71,21 +71,24 @@ class Maintenance extends Action
             $before30days = (new DateTime())->sub($dateInterval);
 
             $dbForPlatform->skipFilters(
-                fn () => $dbForPlatform->foreach(
-                    'projects',
-                    function (Document $project) use ($publisherForDeletes) {
+                function () use ($dbForPlatform, $publisherForDeletes, $before30days): void {
+                    $projects = $dbForPlatform->cursor(
+                        'projects',
+                        [
+                            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                            Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
+                            Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
+                        ],
+                        batchSize: 1000,
+                    );
+
+                    foreach ($projects as $project) {
                         $publisherForDeletes->enqueue(new DeleteMessage(
                             project: $project,
                             type: DELETE_TYPE_MAINTENANCE,
                         ));
-                    },
-                    [
-                        Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
-                        Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
-                        Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
-                        Query::limit(1000),
-                    ]
-                ),
+                    }
+                },
                 APP_PROJECTS_SUBQUERIES
             );
 

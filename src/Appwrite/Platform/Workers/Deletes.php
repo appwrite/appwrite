@@ -1740,7 +1740,7 @@ class Deletes extends Action
         $count = 0;
         $start = \microtime(true);
 
-        foreach ($database->iterate($collection, [Query::limit(1000), ...$queries]) as $document) {
+        foreach ($database->cursor($collection, $queries, batchSize: 1000) as $document) {
             if ($callback !== null) {
                 $callback($document);
             }
