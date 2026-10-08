@@ -2,8 +2,9 @@ import { createMiddleware } from '@tanstack/react-start'
 import { getCanonicalHostRedirectResponse } from '@/lib/seo/indexing'
 
 /**
- * Permanent (301) redirects from www.appwrite.io and new.appwrite.io to
- * appwrite.io, preserving path and query string.
+ * Permanent (301) redirects from alias hosts, preserving path and query:
+ * www.appwrite.io and new.appwrite.io to appwrite.io, and
+ * new.staging.appwrite.io to staging.appwrite.io.
  */
 export const hostCanonicalMiddleware = createMiddleware({
   type: 'request',

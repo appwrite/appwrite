@@ -1,4 +1,5 @@
 import { resolveCategorySlug } from '@/lib/blog/category-slugs'
+import { getInboundRedirect } from '@/lib/seo/inbound-redirects'
 
 /**
  * Legacy URL redirects ported from the old website (appwrite/website
@@ -12,6 +13,8 @@ import { resolveCategorySlug } from '@/lib/blog/category-slugs'
  *   `/blog/categories/customer-stories`, legacy generic databases docs ->
  *   their TablesDB equivalents, `/products/sites/offer-300` ->
  *   `/products/sites`).
+ * - Legacy URLs whose target post is now marked `removed: true` point at
+ *   `/home`, matching the removed post's own redirect.
  * - Query-string source variants (e.g. `?sdk=web-default`) are dropped;
  *   matching is by pathname and the incoming query string is preserved on
  *   redirect.
@@ -75,6 +78,8 @@ const LEGACY_REDIRECTS: Record<string, string> = {
   '/docs/events': '/docs/apis/events',
   '/docs/queries': '/docs/products/databases/tablesdb/queries',
   '/docs/pagination': '/docs/products/databases/tablesdb/pagination',
+  '/docs/products/databases/spatial':
+    '/docs/products/databases/tablesdb/geo-queries#spatial-columns',
   '/docs/webhooks': '/docs/apis/webhooks',
   '/docs/custom-domains': '/docs/products/network/custom-domains',
   '/docs/email-and-sms-templates': '/docs/products/auth/message-templates',
@@ -177,11 +182,11 @@ const LEGACY_REDIRECTS: Record<string, string> = {
   '/blog/post/case-study-open-mind': '/blog/post/customer-stories-open-mind',
   '/blog/post/case-study-langx': '/blog/post/customer-stories-langx',
   '/blog/post/case-study-undo': '/blog/post/customer-stories-undo',
-  '/blog/post/top-5-tips-to-build-an-AI-agent-startup': '/blog/post/ai-agent-startup-tips',
+  '/blog/post/top-5-tips-to-build-an-AI-agent-startup': '/home',
   '/blog/post/5-MCP-startup-ideas-to-build-in-2025': '/blog/post/mcp-startup-ideas',
   '/blog/post/10-open-source-alternatives-to-popular-software-for-startups': '/blog/post/open-source-startup-tools',
-  '/blog/post/the-shift-from-SaaS-to-Vertical-AI-what-startup-founders-need-to-know': '/blog/post/saas-to-vertical-ai',
-  '/blog/post/how-can-you-rapidly-build-an-mvp-for-your-startup': '/blog/post/startup-mvp-guide',
+  '/blog/post/the-shift-from-SaaS-to-Vertical-AI-what-startup-founders-need-to-know': '/home',
+  '/blog/post/how-can-you-rapidly-build-an-mvp-for-your-startup': '/home',
   '/docs/tooling/command-line/collections': '/docs/tooling/command-line/tables',
   '/docs/tooling/terraform/databases': '/docs/tooling/terraform/resources/databases',
   '/docs/tooling/mcp/mcp-for-docs': '/docs/tooling/ai/mcp-servers',
@@ -268,30 +273,111 @@ const LEGACY_REDIRECTS: Record<string, string> = {
   '/docs/advanced/platform/environment-variables': '/docs/partners/project/environment-variables',
   '/docs/advanced/security/environment-variables': '/docs/partners/project/environment-variables',
   '/docs/advanced/integration': '/docs/apis/rest',
+  '/contact-us': '/enterprise',
+}
+
+/** First path segment under `/docs/products/databases/` that is a real docs tree. */
+const DATABASES_ENGINE_SEGMENTS = new Set([
+  'tablesdb',
+  'documentsdb',
+  'vectorsdb',
+  'mysql',
+  'postgresql',
+])
+
+/** Old flat database doc slugs that were renamed in TablesDB. */
+const DATABASES_FLAT_SLUG_ALIASES: Record<string, string> = {
+  documents: 'rows',
+  collections: 'tables',
+}
+
+const DATABASES_DOCS_PREFIX = '/docs/products/databases/'
+
+/**
+ * Pre-TablesDB docs lived at `/docs/products/databases/{topic}`; they now live
+ * under `/docs/products/databases/tablesdb/{topic}` (or renamed slugs).
+ */
+function getLegacyDatabasesDocsRedirect(pathname: string): string | null {
+  if (!pathname.startsWith(DATABASES_DOCS_PREFIX)) {
+    return null
+  }
+
+  const rest = pathname.slice(DATABASES_DOCS_PREFIX.length)
+  if (!rest) {
+    return null
+  }
+
+  const firstSegment = rest.split('/')[0]
+  if (DATABASES_ENGINE_SEGMENTS.has(firstSegment)) {
+    return null
+  }
+
+  const aliased = DATABASES_FLAT_SLUG_ALIASES[rest]
+  if (aliased) {
+    return `${DATABASES_DOCS_PREFIX}tablesdb/${aliased}`
+  }
+
+  return `${DATABASES_DOCS_PREFIX}tablesdb/${rest}`
+}
+
+const RETIRED_BLOG_CATEGORIES = new Set(['engineering'])
+
+function blogCategoryTarget(slug: string): string | null {
+  const resolved = resolveCategorySlug(slug)
+  if (RETIRED_BLOG_CATEGORIES.has(resolved)) return '/blog'
+  return `/blog/categories/${resolved}`
 }
 
 /**
  * Returns the redirect target (pathname, optionally with `#hash`) for a legacy
  * URL pathname, or null when the path has no legacy redirect. Matching strips
- * trailing slashes; query strings are the caller's responsibility to preserve.
+ * trailing slashes. `search` is the raw query string (`?a=b`), used when an
+ * auth email link should land on `/reset` or `/verify-email`.
  */
-export function getLegacyRedirectTarget(pathname: string): string | null {
-  const normalized = pathname.replace(/\/+$/, '') || '/'
+export function getLegacyRedirectTarget(
+  pathname: string,
+  search = '',
+): string | null {
+  let normalized = pathname
+  try {
+    normalized = decodeURIComponent(pathname)
+  } catch {
+    normalized = pathname
+  }
+  normalized = normalized.replace(/\/+$/, '') || '/'
+  return resolveLegacyRedirect(normalized, search, 0)
+}
+
+function resolveLegacyRedirect(
+  normalized: string,
+  search: string,
+  depth: number,
+): string | null {
+  if (depth > 5) return null
+
   const exact = LEGACY_REDIRECTS[normalized]
   if (exact) return exact
 
+  const databasesDocsTarget = getLegacyDatabasesDocsRedirect(normalized)
+  if (databasesDocsTarget) return databasesDocsTarget
+
   const legacyCategoryMatch = normalized.match(/^\/blog\/category\/(.+)$/)
-  if (legacyCategoryMatch) {
-    return `/blog/categories/${resolveCategorySlug(legacyCategoryMatch[1])}`
+  if (legacyCategoryMatch?.[1]) {
+    return blogCategoryTarget(legacyCategoryMatch[1])
   }
 
   const singularCategorySlugMatch = normalized.match(/^\/blog\/categories\/(.+)$/)
-  if (singularCategorySlugMatch) {
+  if (singularCategorySlugMatch?.[1]) {
     const resolved = resolveCategorySlug(singularCategorySlugMatch[1])
+    if (RETIRED_BLOG_CATEGORIES.has(resolved)) return '/blog'
     if (resolved !== singularCategorySlugMatch[1]) {
       return `/blog/categories/${resolved}`
     }
   }
 
-  return null
+  const inbound = getInboundRedirect(normalized, depth === 0 ? search : '')
+  if (!inbound || inbound === normalized) return null
+
+  const followed = resolveLegacyRedirect(inbound.split('#')[0] || inbound, '', depth + 1)
+  return followed ?? inbound
 }

@@ -76,3 +76,30 @@ export function sortFirewallTrafficSeriesByValueAsc(
     )
   })
 }
+
+export function isFirewallTrafficSeriesKey(
+  key: string,
+): key is FirewallTrafficSeriesKey {
+  return FIREWALL_TRAFFIC_SERIES.some((series) => series.key === key)
+}
+
+export function firewallTrafficSeriesValue(
+  point: FirewallTrafficPoint | undefined,
+  key: unknown,
+): number {
+  if (!point || key == null || typeof key === 'function') return 0
+  const seriesKey = String(key)
+  if (!isFirewallTrafficSeriesKey(seriesKey)) return 0
+  return point[seriesKey] ?? 0
+}
+
+/** Tallest single series at a point. Series are drawn independently, not stacked. */
+export function firewallTrafficPointPeak(point: FirewallTrafficPoint): number {
+  return Math.max(
+    point.requests,
+    point.denied,
+    point.challenged,
+    point.rateLimited,
+    point.redirected,
+  )
+}

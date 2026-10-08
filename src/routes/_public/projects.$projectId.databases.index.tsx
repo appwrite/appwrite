@@ -3,7 +3,6 @@ import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/databases/View'
 import {
   consoleDatabasesQueryOptions,
-  databasesQueryOptions,
   dedicatedDatabasesQueryOptions,
   productDatabasesQueryOptions,
   projectQueryOptions,
@@ -89,9 +88,9 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
               ),
             )
           : Promise.resolve(),
-        // Merged total across product APIs for plan limit check
+        // Unfiltered unified list total (includes native Postgres/MySQL)
         queryClient.ensureQueryData(
-          databasesQueryOptions(
+          consoleDatabasesQueryOptions(
             projectId,
             0,
             ROWS_DEFAULT_PAGE_SIZE,

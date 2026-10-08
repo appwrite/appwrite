@@ -1,6 +1,11 @@
 import { useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute, redirect, useNavigate, useSearch } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  redirect,
+  useNavigate,
+  useSearch,
+} from '@tanstack/react-router'
 import { z } from 'zod'
 import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
 import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
@@ -23,6 +28,7 @@ import {
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
+import { measureOpenAiAdsRegistrationCompleted } from '@/lib/openai-ads'
 import { useRouter } from '@tanstack/react-router'
 
 const searchSchema = z.object({
@@ -77,7 +83,8 @@ export const Route = createFileRoute('/_auth/verify-email')({
     if (params) return
 
     if (!account) {
-      const pendingRedirect = (location.search as { redirect?: string }).redirect
+      const pendingRedirect = (location.search as { redirect?: string })
+        .redirect
       throw redirect({
         to: '/sign-in',
         search: {
@@ -118,10 +125,17 @@ function VerifyEmailPage() {
         secret: params.secret,
       })
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
       toast.success(t('Email verified successfully'))
       try {
         const account = await refreshConsoleAccountAfterAuth(queryClient)
+        measureOpenAiAdsRegistrationCompleted(
+          account?.$id ?? variables.userId,
+          {
+            email: account?.email,
+            phone: account?.phone,
+          },
+        )
         await prefetchPostAuthDestination(queryClient, account, search.redirect)
         await router.invalidate()
 
@@ -142,6 +156,7 @@ function VerifyEmailPage() {
           replace: true,
         })
       } catch {
+        measureOpenAiAdsRegistrationCompleted(variables.userId)
         navigate({ to: CONSOLE_ENTRY_PATH })
       }
     },
@@ -155,6 +170,10 @@ function VerifyEmailPage() {
           const account = await refreshConsoleAccountAfterAuth(queryClient)
           if (account?.emailVerification) {
             toast.success(t('Email verified successfully'))
+            measureOpenAiAdsRegistrationCompleted(account.$id, {
+              email: account.email,
+              phone: account.phone,
+            })
             await router.invalidate()
             const targetRedirect = resolvePostAuthRedirect(search.redirect)
             if (targetRedirect) {

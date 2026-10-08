@@ -91,6 +91,15 @@ export type ConsoleProfileFeatures = {
    * instead of 404ing. Preview-only: keep off for public deployments.
    */
   blogDrafts: boolean
+  /** Product analytics: tracked properties, visitor stats, and per-event metrics */
+  analytics: boolean
+  /**
+   * Clicking Humans / Bots in analytics filters the page. `trafficType` isn't
+   * a query attribute, so this filters on an empty vs non-empty
+   * `botCategory`, which depends on how the backend stores human events.
+   * Off until that's confirmed.
+   */
+  analyticsTrafficFilter: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -128,6 +137,8 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   affiliates: 'Affiliates',
   cookieBanner: 'Cookie banner',
   blogDrafts: 'Blog drafts',
+  analytics: 'Analytics',
+  analyticsTrafficFilter: 'Analytics humans/bots filter',
 }
 
 export type ConsoleProfile = {
@@ -177,6 +188,9 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       affiliates: true,
       cookieBanner: true,
       blogDrafts: false,
+      // Off until launch; enable from Debug → Feature flags.
+      analytics: false,
+      analyticsTrafficFilter: false,
     },
   },
   'self-hosted': {
@@ -214,6 +228,8 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       affiliates: false,
       cookieBanner: false,
       blogDrafts: false,
+      analytics: false,
+      analyticsTrafficFilter: false,
     },
   },
 }

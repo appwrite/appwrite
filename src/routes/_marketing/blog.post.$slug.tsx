@@ -13,7 +13,7 @@ import {
   getBlogFaqSchema,
   getBlogPostSchema,
 } from '@/lib/blog/seo'
-import { getBlogPostRouteMetaTags } from '@/lib/blog/route-meta'
+import { getBlogPostRouteHead } from '@/lib/blog/route-meta'
 import { renderBlogPostBodies } from '@/lib/blog/render-blog-markdoc-html'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import {
@@ -106,13 +106,16 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
       })
     }
 
+    const seo = getBlogPostRouteHead(loaderData.post, authors, seoOptions)
+
     return {
       meta: [
-        ...getBlogPostRouteMetaTags(loaderData.post, authors, seoOptions),
+        ...seo.meta,
         // Draft pages only render with the blogDrafts flag on; never index them.
         ...(loaderData.post.draft ? [NOINDEX_ROBOTS_META] : []),
       ],
       links: [
+        ...seo.links,
         ...(loaderData.post.cover
           ? [
               {

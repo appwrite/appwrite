@@ -16,6 +16,7 @@ import { SheetClose } from '@/components/ui/sheet'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   getMarketingProductMenuCategories,
+  isObserveAndProtectCategory,
   PRODUCT_NAV_REGISTRY,
   isProductId,
   type ProductNavCategory,
@@ -58,6 +59,7 @@ type ProductNavigationItemsCopy = {
   agentTagline: string
   domainsName: string
   domainsTagline: string
+  analyticsTagline: string
   firewallName: string
   firewallTagline: string
   advisorName: string
@@ -68,6 +70,7 @@ type ProductNavigationCategoriesCopy = {
   build: string
   deploy: string
   protect: string
+  observeAndProtect: string
 }
 
 type ProductNavigationCopy = {
@@ -83,17 +86,22 @@ function useVisibleMarketingProductNavCategories(): ProductNavCategory[] {
   const { features } = useConsoleProfile()
 
   return useMemo(
-    () => getMarketingProductMenuCategories({ agent: features.agent }),
-    [features.agent],
+    () =>
+      getMarketingProductMenuCategories({
+        agent: features.agent,
+        analytics: features.analytics,
+      }),
+    [features.agent, features.analytics],
   )
 }
 
 function getLocalizedCategoryLabel(
-  categoryId: 'build' | 'deploy' | 'protect',
+  category: ProductNavCategory,
   categoriesCopy: ProductNavigationCategoriesCopy,
 ): string {
-  if (categoryId === 'build') return categoriesCopy.build
-  if (categoryId === 'deploy') return categoriesCopy.deploy
+  if (category.id === 'build') return categoriesCopy.build
+  if (category.id === 'deploy') return categoriesCopy.deploy
+  if (isObserveAndProtectCategory(category)) return categoriesCopy.observeAndProtect
   return categoriesCopy.protect
 }
 
@@ -113,6 +121,7 @@ function getLocalizedProductNavItemName(
   if (navItemId === 'realtime') return productNamesCopy.realtime
   if (navItemId === 'agent') return navigationItemsCopy.agentName
   if (navItemId === 'domains') return navigationItemsCopy.domainsName
+  if (navItemId === 'analytics') return productNamesCopy.analytics
   if (navItemId === 'firewall') return navigationItemsCopy.firewallName
   if (navItemId === 'advisor') return navigationItemsCopy.advisorName
   return fallbackName
@@ -133,6 +142,7 @@ function getLocalizedProductNavItemTagline(
   if (navItemId === 'realtime') return navigationItemsCopy.realtimeTagline
   if (navItemId === 'agent') return navigationItemsCopy.agentTagline
   if (navItemId === 'domains') return navigationItemsCopy.domainsTagline
+  if (navItemId === 'analytics') return navigationItemsCopy.analyticsTagline
   if (navItemId === 'firewall') return navigationItemsCopy.firewallTagline
   if (navItemId === 'advisor') return navigationItemsCopy.advisorTagline
   return fallbackTagline
@@ -348,7 +358,7 @@ function DesktopProductsNavPanel({
         {categories.map((category) => (
           <ProductsNavCategorySection
             key={category.id}
-            label={getLocalizedCategoryLabel(category.id, navigationCopy.categories)}
+            label={getLocalizedCategoryLabel(category, navigationCopy.categories)}
             navItemIds={category.productIds}
             activeNavItemId={activeNavItemId}
             onNavigate={onNavigate}
@@ -380,7 +390,7 @@ function MobileProductsNavPanel({
       {categories.map((category) => (
         <ProductsNavCategorySection
           key={category.id}
-          label={getLocalizedCategoryLabel(category.id, navigationCopy.categories)}
+          label={getLocalizedCategoryLabel(category, navigationCopy.categories)}
           navItemIds={category.productIds}
           activeNavItemId={activeNavItemId}
           productNamesCopy={productNamesCopy}

@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useState, type MouseEvent } from 'react'
+import { useEffect, useMemo, useState, type MouseEvent } from 'react'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { withAnalyticsComparison } from '@/lib/pricing/analytics'
 import {
   PolicySidebarSection,
   policySidebarLinkClassName,
@@ -15,13 +17,19 @@ import {
 } from '@/lib/layout/app-header-height'
 import { cn } from '@/lib/utils'
 
-const pricingPageSections = [
-  { id: PRICING_DATABASE_ANCHOR_ID, label: 'Database pricing' },
-  ...comparisonPageSections,
-] as const
-
 export function CompareToc({ className }: { className?: string }) {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const pricingPageSections = useMemo(
+    () => [
+      { id: PRICING_DATABASE_ANCHOR_ID, label: 'Database pricing' },
+      ...withAnalyticsComparison(
+        comparisonPageSections.map((section) => ({ ...section, title: section.label })),
+        features.analytics,
+      ),
+    ],
+    [features.analytics],
+  )
   const [activeId, setActiveId] = useState(pricingPageSections[0]?.id ?? '')
 
   useEffect(() => {
@@ -48,7 +56,7 @@ export function CompareToc({ className }: { className?: string }) {
     }
 
     return () => observer.disconnect()
-  }, [])
+  }, [pricingPageSections])
 
   const handleClick = (
     event: MouseEvent<HTMLAnchorElement>,

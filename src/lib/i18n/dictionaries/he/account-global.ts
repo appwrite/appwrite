@@ -1284,6 +1284,11 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'כבר הצטרפתם לתוכנית Education.',
   'Continue to Appwrite, then use the organization switcher to find your Education plan.':
     'המשיכו אל Appwrite והשתמשו בבורר הארגונים כדי למצוא את תוכנית Education שלכם.',
+  "You've already used the Education program.":
+    'כבר השתמשתם בתוכנית Education.',
+  'Each account can join once. Choose a plan to keep building with Appwrite.':
+    'כל חשבון יכול להצטרף פעם אחת. בחרו תוכנית כדי להמשיך לבנות עם Appwrite.',
+  'Choose a plan': 'בחירת תוכנית',
   'We could not check your GitHub connection':
     'לא הצלחנו לבדוק את החיבור שלכם ל-GitHub',
   'We could not set up your Education plan':

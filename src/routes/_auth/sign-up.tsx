@@ -15,7 +15,10 @@ import { fetchConsoleAccount } from '@/lib/console-account-get'
 import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
 import { AppwriteException, ID } from '@appwrite.io/console'
 import { toast } from 'sonner'
-import { setLastLoginMethod, type OAuthLoginMethod } from '@/lib/utils/auth-storage'
+import {
+  setLastLoginMethod,
+  type OAuthLoginMethod,
+} from '@/lib/utils/auth-storage'
 import {
   CONSOLE_OAUTH_PROVIDERS,
   OAUTH_LOGIN_ERROR,
@@ -30,6 +33,10 @@ import {
   navigateToConsoleMfaAfterSession,
   isConsoleMfaRequiredError,
 } from '@/lib/react-query/hooks/auth'
+import {
+  markOpenAiAdsRegistrationIntent,
+  measureOpenAiAdsRegistrationCompleted,
+} from '@/lib/openai-ads'
 import {
   isValidRelativeRedirect,
   prefetchPostAuthDestination,
@@ -98,6 +105,7 @@ function SignUpPage() {
       const failureUrl = `${window.location.origin}/sign-up${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
 
       setLastLoginMethod(provider)
+      markOpenAiAdsRegistrationIntent()
 
       const url = await sdk.forConsole.account.createOAuth2Session({
         provider: CONSOLE_OAUTH_PROVIDERS[provider],
@@ -182,6 +190,13 @@ function SignUpPage() {
           search: search.redirect ? { redirect: search.redirect } : undefined,
         })
         return
+      }
+
+      if (account?.$id) {
+        measureOpenAiAdsRegistrationCompleted(account.$id, {
+          email: account.email,
+          phone: account.phone,
+        })
       }
 
       try {

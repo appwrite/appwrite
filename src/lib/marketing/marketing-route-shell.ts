@@ -27,6 +27,7 @@ const CONSOLE_AUTH_EXACT_PATHS = new Set([
   '/sign-up',
   '/sign-out',
   '/recovery',
+  '/reset',
   '/join',
   '/mfa',
   '/verify-email',

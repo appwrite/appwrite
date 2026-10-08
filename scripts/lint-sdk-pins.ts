@@ -51,9 +51,10 @@ async function main() {
     }
     const lines = (await Bun.file(path).text()).split('\n')
     lines.forEach((text, index) => {
-      if (text.includes(PREVIEW_HOST)) {
-        findings.push({ file, line: index + 1, text: text.trim() })
+      if (!text.includes(PREVIEW_HOST)) {
+        return
       }
+      findings.push({ file, line: index + 1, text: text.trim() })
     })
   }
 

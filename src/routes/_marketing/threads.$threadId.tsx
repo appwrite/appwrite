@@ -4,9 +4,10 @@ import {
   getRelatedThreads,
   getThread,
   getThreadMessages,
+  getThreadPublicId,
   resolveThreadMentionLookup,
 } from '@/lib/threads/content'
-import { getThreadsThreadRouteMetaTags } from '@/lib/threads/route-meta'
+import { getThreadsThreadRouteHead } from '@/lib/threads/route-meta'
 import {
   getDiscussionForumPageSchema,
   getThreadsBreadcrumbSchema,
@@ -31,17 +32,37 @@ export const Route = createFileRoute('/_marketing/threads/$threadId')({
       throw notFound()
     }
 
-    const [messages, related] = await Promise.all([
-      getThreadMessages(params.threadId),
-      getRelatedThreads(thread),
-    ])
+    let messages: Awaited<ReturnType<typeof getThreadMessages>> = []
+    let related: Awaited<ReturnType<typeof getRelatedThreads>> = []
+    let mentionLookup: Awaited<
+      ReturnType<typeof resolveThreadMentionLookup>
+    > = { users: {}, channels: {} }
 
-    const mentionLookup = await resolveThreadMentionLookup(
-      messages.map((message) => message.message),
-      messages,
+    try {
+      ;[messages, related] = await Promise.all([
+        getThreadMessages(params.threadId),
+        getRelatedThreads(thread),
+      ])
+    } catch {
+      try {
+        messages = await getThreadMessages(params.threadId)
+      } catch {
+        // Thread metadata still renders for crawlers when replies fail to load.
+      }
+    }
+
+    try {
+      mentionLookup = await resolveThreadMentionLookup(
+        messages.map((message) => message.message),
+        messages,
+      )
+    } catch {
+      // Mention labels fall back to raw Discord markup.
+    }
+
+    const canonicalUrl = getThreadsCanonicalUrl(
+      `/threads/${getThreadPublicId(thread)}`,
     )
-
-    const canonicalUrl = getThreadsCanonicalUrl(`/threads/${params.threadId}`)
 
     return {
       thread,
@@ -57,7 +78,7 @@ export const Route = createFileRoute('/_marketing/threads/$threadId')({
     const { thread, messages, canonicalUrl } = loaderData
 
     return {
-      meta: getThreadsThreadRouteMetaTags(thread, canonicalUrl),
+      ...getThreadsThreadRouteHead(thread, canonicalUrl),
       scripts: [
         {
           type: 'application/ld+json',
@@ -74,7 +95,10 @@ export const Route = createFileRoute('/_marketing/threads/$threadId')({
           children: stringifyJsonLd(
             getThreadsBreadcrumbSchema([
               { name: 'Threads', path: '/threads' },
-              { name: thread.title, path: `/threads/${thread.discord_id}` },
+              {
+                name: thread.title,
+                path: `/threads/${getThreadPublicId(thread)}`,
+              },
             ]),
           ),
         },

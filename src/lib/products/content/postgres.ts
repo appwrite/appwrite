@@ -68,7 +68,7 @@ export const postgresProductContent: ProductPageContent = {
     {
       question: 'How do specifications and pricing work?',
       answer:
-        'PostgreSQL uses the same dedicated compute tiers as pricing: reserved CPU, memory, and connections, from $10/mo per database. Reads and writes are included in the tier. High availability replicas are +50% of base per replica, and point-in-time recovery is +20% of base. Extra storage and bandwidth are usage-based overage. Managed databases need a paid plan.',
+        'PostgreSQL uses the same dedicated compute tiers as pricing: reserved CPU, memory, and connections, from $10/mo per database. Reads and writes are included in the tier. High availability replicas are billed at the full compute tier price per replica, and point-in-time recovery is +20% of base. Extra storage and bandwidth are usage-based overage. Managed databases need a paid plan.',
       links: [
         { label: 'Pricing', href: '/pricing' },
         {
@@ -80,7 +80,7 @@ export const postgresProductContent: ProductPageContent = {
     {
       question: 'How many connections can I open, and when do I need the pooler?',
       answer:
-        'The limit comes from your specification, from 100 on the smallest tier up to a platform cap of 10,000. Since PostgreSQL spends a backend process per connection, point runtime traffic at the pooler, where many short-lived clients share a small pool. Keep migrations and long administrative sessions on a direct connection.',
+        'The limit comes from your specification, from 100 on the smallest tier up to a platform cap of 10,000. Since PostgreSQL spends a backend process per connection, point runtime traffic at the pooler, where many clients share a small pool of server connections. Keep migrations and long administrative sessions on a direct connection.',
       links: [
         {
           label: 'Connection pooling docs',

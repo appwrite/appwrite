@@ -14,6 +14,8 @@ export type PageSeoOptions = {
   canonical?: string
   ogType?: string
   ogImage?: string
+  ogImageWidth?: number
+  ogImageHeight?: number
   ogImageParams?: OgImageParams
   siteName?: string
   siteOrigin?: string
@@ -45,16 +47,13 @@ export function getPageMetaTags(options: PageSeoOptions) {
     { property: 'og:type', content: options.ogType ?? 'website' },
     ...(options.canonical ? [{ property: 'og:url', content: options.canonical }] : []),
     { property: 'og:image', content: ogImage },
-    { property: 'og:image:width', content: String(OG_IMAGE_WIDTH) },
-    { property: 'og:image:height', content: String(OG_IMAGE_HEIGHT) },
+    { property: 'og:image:width', content: String(options.ogImageWidth ?? OG_IMAGE_WIDTH) },
+    { property: 'og:image:height', content: String(options.ogImageHeight ?? OG_IMAGE_HEIGHT) },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: options.title },
     ...(options.description
       ? [{ name: 'twitter:description', content: options.description }]
       : []),
     { name: 'twitter:image', content: ogImage },
-    ...(options.canonical
-      ? [{ tag: 'link', rel: 'canonical', href: options.canonical }]
-      : []),
   ] as const
 }

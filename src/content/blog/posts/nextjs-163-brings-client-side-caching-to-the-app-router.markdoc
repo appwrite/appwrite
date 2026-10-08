@@ -253,5 +253,4 @@ Upgrade your `next` dependency, run your test suite, and deploy. If you want to 
 * [Server-side rendering on Appwrite Sites](/docs/products/sites/rendering/ssr)
 * [Migrate from Vercel to Appwrite Sites](/docs/products/sites/migrations/vercel)
 * [Everything new in Next.js 16](/blog/post/everything-new-in-nextjs16)
-* [Next.js standalone builds on Appwrite Sites](/blog/post/nextjs-standalone-support-in-appwrite-sites)
 * [Join the Appwrite Discord](https://appwrite.io/discord)

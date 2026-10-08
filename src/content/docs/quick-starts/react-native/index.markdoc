@@ -8,7 +8,6 @@ back: /docs/quick-starts
 ---
 
 Learn how to setup your first React Native project powered by Appwrite.
-The React Native SDK is still in `beta`. Proceed with caution if you plan to use this SDK in production.
 
 {% info title="React for web" %}
 Looking to start with React for web?

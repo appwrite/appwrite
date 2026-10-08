@@ -8,6 +8,7 @@ timeToRead: 5
 author: aditya-oberai
 category: hackathons
 featured: false
+removed: true
 faqs:
   - question: "When did the Appwrite Hacktoberfest 2024 Hackathon run?"
     answer: "The hackathon ran for the entire month of October 2024, from October 1st through October 31st. Teams had four weeks to design, build, and submit a brand-new project."

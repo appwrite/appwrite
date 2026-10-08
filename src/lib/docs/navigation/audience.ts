@@ -33,8 +33,12 @@ function withoutHref(
   return navigation.flatMap((entry) => {
     if (isNavGroup(entry)) {
       const items = entry.items.filter((item) => !isHiddenHref(item.href))
-      if (items.length === 0) return []
-      return [{ ...entry, items }]
+      const footerLink =
+        entry.footerLink && !isHiddenHref(entry.footerLink.href)
+          ? entry.footerLink
+          : undefined
+      if (items.length === 0 && !footerLink) return []
+      return [{ ...entry, items, footerLink }]
     }
     if (isHiddenHref(entry.href)) return []
     return [entry]

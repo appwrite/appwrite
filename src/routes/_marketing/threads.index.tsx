@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/threads/View'
 import { getThreads } from '@/lib/threads/content'
-import { getThreadsIndexRouteMetaTags } from '@/lib/threads/route-meta'
+import { getThreadsIndexRouteHead } from '@/lib/threads/route-meta'
 import { getThreadsIndexPageSchema } from '@/lib/threads/seo'
 import { parseThreadsTags, threadsSearchSchema } from '@/lib/threads/search'
 import {
@@ -21,20 +21,31 @@ export const Route = createFileRoute('/_marketing/threads/')({
     const tags = parseThreadsTags(search.tags)
     const q = search.q?.trim() || undefined
 
-    const result = await getThreads({
-      q,
-      tags,
-      allTags: true,
-    })
+    try {
+      const result = await getThreads({
+        q,
+        tags,
+        allTags: true,
+      })
 
-    return {
-      ...result,
-      q: q ?? '',
-      tags,
+      return {
+        ...result,
+        q: q ?? '',
+        tags,
+      }
+    } catch {
+      return {
+        threads: [],
+        hasMore: false,
+        nextCursor: undefined,
+        total: 0,
+        q: q ?? '',
+        tags,
+      }
     }
   },
   head: () => ({
-    meta: getThreadsIndexRouteMetaTags(),
+    ...getThreadsIndexRouteHead(),
     scripts: [
       {
         type: 'application/ld+json',

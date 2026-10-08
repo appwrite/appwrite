@@ -18,6 +18,7 @@ export const enCatalog = {
         openWebsiteNavigation: 'Open website navigation',
         create: 'Create',
         connect: 'Connect',
+        docs: 'Docs',
         assistant: 'Agent',
         upgrade: 'Upgrade',
         signIn: 'Sign in',
@@ -137,6 +138,7 @@ export const enCatalog = {
           hosting: 'Hosting',
           domains: 'Domains',
           network: 'Network',
+          analytics: 'Analytics',
           firewall: 'Firewall',
         },
         learn: {
@@ -176,6 +178,12 @@ export const enCatalog = {
           vsNetlify: 'Appwrite vs. Netlify', // pragma: allowlist secret
           vsCloudinary: 'Appwrite vs. Cloudinary', // pragma: allowlist secret
           vsAuth0: 'Appwrite vs. Auth0', // pragma: allowlist secret
+          vsConvex: 'Appwrite vs. Convex', // pragma: allowlist secret
+          vsClerk: 'Appwrite vs. Clerk', // pragma: allowlist secret
+          vsAmplify: 'Appwrite vs. AWS Amplify', // pragma: allowlist secret
+          vsPlanetScale: 'Appwrite vs. PlanetScale', // pragma: allowlist secret
+          vsPostHog: 'Appwrite vs. PostHog', // pragma: allowlist secret
+          vsPlausible: 'Appwrite vs. Plausible', // pragma: allowlist secret
           nextjsHosting: 'Next.js hosting',
           reactHosting: 'React hosting',
           vueHosting: 'Vue.js hosting',
@@ -371,6 +379,7 @@ export const enCatalog = {
         messaging: 'Messaging',
         realtime: 'Realtime',
         sites: 'Sites',
+        analytics: 'Analytics',
         firewall: 'Firewall',
       },
       explore: {
@@ -387,6 +396,7 @@ export const enCatalog = {
           build: 'Build',
           deploy: 'Deploy',
           protect: 'Protect',
+          observeAndProtect: 'Observe & protect',
         },
         items: {
           authTagline: 'Email, OAuth, SMS, MFA, teams, and sessions.',
@@ -402,6 +412,7 @@ export const enCatalog = {
           agentTagline: 'Chat to inspect your project and take approved actions.',
           domainsName: 'Domains',
           domainsTagline: 'Search, buy, transfer, and manage domains.',
+          analyticsTagline: 'Cookieless web and app analytics, bots and AI included.',
           firewallName: 'Firewall',
           firewallTagline: 'Project rules to deny, rate limit, and redirect traffic.',
           advisorName: 'Advisor',

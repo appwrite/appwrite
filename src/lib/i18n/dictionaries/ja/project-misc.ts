@@ -609,6 +609,163 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Same dates, previous year': '前年の同じ日付',
   'Same period last year': '昨年同期',
   'Same dates, one year ago': '1 年前の同じ日付',
+
+  // Analytics properties
+  Property: 'プロパティ',
+  properties: 'プロパティ',
+  'Property ID': 'プロパティ ID',
+  'Snippet ID': 'スニペット ID',
+  'No properties yet': 'プロパティがまだありません',
+  'Create your first property to start tracking analytics for a website or app':
+    '最初のプロパティを作成して、ウェブサイトやアプリのアナリティクス計測を開始しましょう',
+  'Search properties...': 'プロパティを検索...',
+  'Create property': 'プロパティを作成',
+  'Property created': 'プロパティを作成しました',
+  'Failed to create property': 'プロパティの作成に失敗しました',
+  'Property not found': 'プロパティが見つかりません',
+  'This analytics property no longer exists.':
+    'このアナリティクスプロパティは存在しません。',
+  'Track a website or application. Daily boundaries use your current timezone.':
+    'ウェブサイトまたはアプリケーションを計測します。日次の区切りには現在のタイムゾーンを使用します。',
+  'Enter property name': 'プロパティ名を入力',
+  'Optional for native apps.': 'ネイティブアプリの場合は任意です。',
+  'example.com': 'example.com',
+  "You don't have permission to create analytics properties.":
+    'アナリティクスプロパティを作成する権限がありません。',
+  'Could not load analytics properties':
+    'アナリティクスプロパティを読み込めませんでした',
+  'Could not load analytics data': 'アナリティクスデータを読み込めませんでした',
+  'Something went wrong': '問題が発生しました',
+  'No domain': 'ドメインなし',
+  'Tracking is disabled': '計測が無効です',
+  Tracking: '計測',
+  'Public stats': '統計の公開',
+  Private: '非公開',
+  'Allowed origins': '許可するオリジン',
+  'Configuration for this property. These values are read-only in the Console.':
+    'このプロパティの設定です。これらの値はコンソールでは読み取り専用です。',
+  Pageviews: 'ページビュー',
+  'Views per visit': '訪問あたりのビュー数',
+  'Scroll depth': 'スクロール深度',
+  Engagement: 'エンゲージメント',
+  Count: '件数',
+  'Distinct events recorded in the selected range':
+    '選択した期間に記録された個別のイベント',
+  'No events recorded in this range': 'この期間に記録されたイベントはありません',
+  'Data appears once the property receives its first event.':
+    'プロパティが最初のイベントを受信すると、データが表示されます。',
+  'Custom range': 'カスタム期間',
+
+  // Analytics property settings
+  'Property name': 'プロパティ名',
+  "Update this property's display name.":
+    'このプロパティの表示名を更新します。',
+  'Name updated': '名前を更新しました',
+  'Property details': 'プロパティの詳細',
+  'Control whether this property accepts events.':
+    'このプロパティがイベントを受け付けるかどうかを設定します。',
+  'Tracking enabled': '計測を有効にしました',
+  'Tracking disabled': '計測を無効にしました',
+  'Tracking is enabled': '計測は有効です',
+  'Primary domain being tracked. Optional for native apps.':
+    '計測対象の主要ドメインです。ネイティブアプリの場合は任意です。',
+  'Domain updated': 'ドメインを更新しました',
+  'Origins allowed to send tracking events. Use * to allow all origins.':
+    '計測イベントの送信を許可するオリジンです。* を指定するとすべてのオリジンを許可します。',
+  'https://example.com': 'https://example.com',
+  'Allowed origins updated': '許可するオリジンを更新しました',
+  'Delete property': 'プロパティを削除',
+  'Property deleted': 'プロパティを削除しました',
+  'Type the property name to confirm': '確認のためプロパティ名を入力してください',
+  'Permanently delete this property and every event and session collected for it. This action cannot be undone.':
+    'このプロパティと、収集されたすべてのイベントおよびセッションを完全に削除します。この操作は取り消せません。',
+  'This permanently deletes the property and every event and session collected for it. This action cannot be undone.':
+    'プロパティと、収集されたすべてのイベントおよびセッションが完全に削除されます。この操作は取り消せません。',
+
+  // Analytics add-property wizard and integration snippets
+  'Add analytics property': 'アナリティクスプロパティを追加',
+  'Add another property': '別のプロパティを追加',
+  'Create and continue': '作成して続行',
+  'Pick where you are tracking from. You can change this later.':
+    'どこから計測するかを選択します。後から変更できます。',
+  'Pick where you are tracking from.': 'どこから計測するかを選択します。',
+  'Name and domain for the site or app.': 'サイトまたはアプリの名前とドメイン。',
+  'Install tracking': '計測を導入',
+  'No events in the last 24 hours': '過去24時間にイベントがありません',
+  'Tracking may not be installed yet, or it stopped sending. Add the snippet to your app and load a page.':
+    '計測がまだ導入されていないか、送信が止まっています。スニペットをアプリに追加してページを読み込んでください。',
+  'Tracking is live': '計測は稼働中です',
+  'Listening for events': 'イベントを待っています',
+  'Latest event': '最新のイベント',
+  'Events are reaching Appwrite.': 'イベントが Appwrite に届いています。',
+  'Install the code and load a page. Checks every few seconds.':
+    'コードを導入してページを読み込んでください。数秒ごとに確認します。',
+  'Prompt copied': 'プロンプトをコピーしました',
+  'Could not copy to clipboard': 'クリップボードにコピーできませんでした',
+  'Add the snippet, then wait for the first event.':
+    'スニペットを追加し、最初のイベントを待ちます。',
+  'Daily totals are bucketed in UTC. You can change every value later in settings.':
+    '日次の集計は UTC で区切られます。すべての値は後から設定で変更できます。',
+  'Add tracking to your app': 'アプリに計測を追加',
+  'Add tracking to your site or app to start collecting events.':
+    'サイトやアプリに計測を追加して、イベントの収集を開始します。',
+  'Add this to your app, then load a page so the first event reaches Appwrite.':
+    'アプリに追加してページを読み込むと、最初のイベントが Appwrite に届きます。',
+  'Verify the first event': '最初のイベントを確認',
+  'Waiting for the first event from your site…':
+    'サイトからの最初のイベントを待っています…',
+  'Event received': 'イベントを受信しました',
+  'Your site sends events to the analytics endpoint using this property ID.':
+    'サイトはこのプロパティ ID を使ってアナリティクスのエンドポイントにイベントを送信します。',
+  'Keep this tab open and load a page on your site. Events usually appear within a few seconds.':
+    'このタブを開いたままサイトのページを読み込んでください。イベントは通常数秒で表示されます。',
+  'Loading property...': 'プロパティを読み込んでいます...',
+  'Do Not Track is respected by default. Pass { respectDoNotTrack: false } to the constructor options to opt out. Automatic events are named pageview, outbound_link, file_download, scroll_depth and engagement_time.':
+    'Do Not Track はデフォルトで尊重されます。無効にするにはコンストラクタのオプションに { respectDoNotTrack: false } を渡します。自動イベントの名前は pageview、outbound_link、file_download、scroll_depth、engagement_time です。',
+  'Automatic events are named screen_view, app_backgrounded and app_foregrounded.':
+    '自動イベントの名前は screen_view、app_backgrounded、app_foregrounded です。',
+  // Analytics dimension panels
+  'Top pages': '人気のページ',
+  'Entry pages': '入口ページ',
+  'Exit pages': '出口ページ',
+  'Where visitors came from': '訪問者の流入元',
+  'Most visited paths': '最も閲覧されたパス',
+  'Where visitors are browsing from': '訪問者の閲覧地域',
+  'What visitors are browsing with': '訪問者の利用環境',
+  'Human visitors versus bots': '人間の訪問者とボットの比較',
+  'AI agents and crawlers': 'AI エージェントとクローラー',
+  Agents: 'エージェント',
+  'Named bots seen in this range, as classified by the API':
+    'この期間に検出された既知のボット (API の分類による)',
+  'No bot traffic in this range': 'この期間にボットのトラフィックはありません',
+  'No data in this range': 'この期間のデータはありません',
+  'Returning visitors were also seen in the preceding 180 days':
+    'リピート訪問者は過去 180 日間にも訪問しています',
+  'unique visitors in total': 'ユニーク訪問者の合計',
+  'Event over time': 'イベントの推移',
+  'Daily series for a single event. Property totals are in the summary below.':
+    '単一イベントの日次データです。プロパティ全体の合計は下の概要にあります。',
+  'Totals across every event in the selected range':
+    '選択した期間のすべてのイベントの合計',
+  Visits: '訪問数',
+  'Engagement time': 'エンゲージメント時間',
+  'This endpoint is public, so no API key is needed for client-side tracking. Only the server-side override fields (userId, ip, userAgent) require an API key with the analytics.write scope.':
+    'このエンドポイントは公開されているため、クライアント側の計測に API キーは不要です。サーバー側の上書きフィールド (userId、ip、userAgent) のみ、analytics.write スコープを持つ API キーが必要です。',
+  Flutter: 'Flutter',
+  REST: 'REST',
+  'Browser apps and static sites.': 'ブラウザアプリと静的サイト。',
+  'iOS, Android, web and desktop from one codebase.':
+    '1 つのコードベースから iOS、Android、web、デスクトップへ。',
+  'Any language, straight against the HTTP API.':
+    '任意の言語から HTTP API を直接呼び出します。',
+  'Install the SDK': 'SDK をインストール',
+  'Initialize tracking': '計測を初期化',
+  'Turn on automatic tracking': '自動計測を有効化',
+  'Send your own events': '独自のイベントを送信',
+  'Add the package': 'パッケージを追加',
+  'Track route changes': 'ルート変更を計測',
+  'Send an event': 'イベントを送信',
+  'Send a custom event with properties': 'プロパティ付きのカスタムイベントを送信',
   'Connection failed': '接続に失敗しました',
   'WebSocket URL copied': 'WebSocket URL をコピーしました',
   'Connection status': '接続ステータス',

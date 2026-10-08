@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { filterSpecByPlatform } from '@/lib/api-explorer/filter-spec'
 import type { OpenApiSpec } from '@/lib/api-explorer/types'
 import {
   getSpecFilename,
@@ -12,6 +13,7 @@ import { ReferenceNotFoundError } from '@/lib/docs/references/errors'
 import { getSpecsPackageRoot } from './specs-path'
 
 const specCache = new Map<string, OpenApiSpec>()
+const filteredSpecCache = new Map<string, OpenApiSpec>()
 
 function resolveSpecFilePath(
   specDir: string,
@@ -51,12 +53,19 @@ export async function loadReferenceOpenApiSpec(
   return loadSpecByPath(specDir, mode)
 }
 
+/** The spec as one platform's SDK sees it, for download. */
 export async function loadReferenceOpenApiSpecByMode(
   version: ReferenceVersion,
   mode: 'client' | 'server' | 'console',
 ): Promise<OpenApiSpec> {
   const { specDir } = resolveSpecVersionDirs(version)
-  return loadSpecByPath(specDir, mode)
+  const cacheKey = `${specDir}/${mode}`
+  const cached = filteredSpecCache.get(cacheKey)
+  if (cached) return cached
+
+  const spec = filterSpecByPlatform(await loadSpecByPath(specDir, mode), mode)
+  filteredSpecCache.set(cacheKey, spec)
+  return spec
 }
 
 export async function loadReferenceConsoleSpec(

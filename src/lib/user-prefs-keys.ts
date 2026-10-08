@@ -3763,7 +3763,20 @@ export function isUsageChartIntervalPref(
 export function parseUsageChartDateRangeFromPrefs(
   prefs: UserPrefs | null | undefined,
 ): SerializedUsageChartDateRange | null {
-  const raw = prefs?.[USER_PREFS_KEY_USAGE_CHART_DATE_RANGE]
+  return parseSerializedChartDateRange(
+    prefs?.[USER_PREFS_KEY_USAGE_CHART_DATE_RANGE],
+  )
+}
+
+/**
+ * Parse a stored chart date range (JSON `{ preset }` or `{ from, to }`).
+ * Shared by every chart-range pref so they validate and normalise the same
+ * way: unknown presets and inverted or invalid bounds are rejected, and
+ * absolute ranges that match a preset are upgraded to it.
+ */
+function parseSerializedChartDateRange(
+  raw: unknown,
+): SerializedUsageChartDateRange | null {
   if (typeof raw !== 'string' || !raw.trim()) return null
   try {
     const parsed = JSON.parse(raw) as {
@@ -3825,6 +3838,95 @@ export function mergeUsageChartFiltersIntoPrefs(
     [USER_PREFS_KEY_USAGE_CHART_DATE_RANGE]:
       JSON.stringify(serializedDateRange),
     [USER_PREFS_KEY_USAGE_CHART_INTERVAL]: chartInterval,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Analytics chart date range + interval (account prefs; one setting for all
+// analytics properties, independent of the usage chart range)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.analytics.dateRange` - JSON `{ preset }` or `{ from, to }` ISO strings. */
+export const USER_PREFS_KEY_ANALYTICS_CHART_DATE_RANGE =
+  'console.analytics.dateRange'
+
+/** Full key: `console.analytics.interval` - `"1h"` or `"1d"`. */
+export const USER_PREFS_KEY_ANALYTICS_CHART_INTERVAL =
+  'console.analytics.interval'
+
+export type AnalyticsChartIntervalPref = '1h' | '1d'
+
+export function parseAnalyticsChartDateRangeFromPrefs(
+  prefs: UserPrefs | null | undefined,
+): SerializedUsageChartDateRange | null {
+  return parseSerializedChartDateRange(
+    prefs?.[USER_PREFS_KEY_ANALYTICS_CHART_DATE_RANGE],
+  )
+}
+
+export function parseAnalyticsChartIntervalFromPrefs(
+  prefs: UserPrefs | null | undefined,
+): AnalyticsChartIntervalPref | null {
+  const raw = prefs?.[USER_PREFS_KEY_ANALYTICS_CHART_INTERVAL]
+  return raw === '1h' || raw === '1d' ? raw : null
+}
+
+export function mergeAnalyticsChartFiltersIntoPrefs(
+  prefs: UserPrefs,
+  serializedDateRange: SerializedUsageChartDateRange,
+  chartInterval: AnalyticsChartIntervalPref,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_ANALYTICS_CHART_DATE_RANGE]:
+      JSON.stringify(serializedDateRange),
+    [USER_PREFS_KEY_ANALYTICS_CHART_INTERVAL]: chartInterval,
+  }
+}
+
+/**
+ * Full key: `console.analytics.cardTabs` - JSON `{ [cardId]: tabId }`, the
+ * last tab picked on each analytics breakdown card (all properties).
+ */
+export const USER_PREFS_KEY_ANALYTICS_CARD_TABS = 'console.analytics.cardTabs'
+
+const ANALYTICS_CARD_TAB_ID_PATTERN = /^[a-z0-9-]{1,40}$/
+
+export function parseAnalyticsCardTabsFromPrefs(
+  prefs: UserPrefs | null | undefined,
+): Record<string, string> {
+  const raw = prefs?.[USER_PREFS_KEY_ANALYTICS_CARD_TABS]
+  if (typeof raw !== 'string') return {}
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {}
+    const out: Record<string, string> = {}
+    for (const [card, tab] of Object.entries(parsed as Record<string, unknown>)) {
+      if (
+        ANALYTICS_CARD_TAB_ID_PATTERN.test(card) &&
+        typeof tab === 'string' &&
+        ANALYTICS_CARD_TAB_ID_PATTERN.test(tab)
+      ) {
+        out[card] = tab
+      }
+    }
+    return out
+  } catch {
+    return {}
+  }
+}
+
+export function mergeAnalyticsCardTabIntoPrefs(
+  prefs: UserPrefs,
+  cardId: string,
+  tabId: string,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_ANALYTICS_CARD_TABS]: JSON.stringify({
+      ...parseAnalyticsCardTabsFromPrefs(prefs),
+      [cardId]: tabId,
+    }),
   }
 }
 

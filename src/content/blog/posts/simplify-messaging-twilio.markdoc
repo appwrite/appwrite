@@ -9,6 +9,7 @@ timeToRead: 7
 author: aditya-oberai
 category: integrations
 featured: false
+removed: true
 faqs:
   - question: "What does Twilio Programmable Messaging do?"
     answer: "It is Twilio's API for sending and receiving SMS, MMS, and WhatsApp messages over a single REST endpoint. It also includes content templates, link shortening, scheduled sends, and delivery insights, so you do not have to glue together separate APIs for each channel."

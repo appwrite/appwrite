@@ -25,6 +25,7 @@ export const jaCatalog: EnCatalog = {
         openWebsiteNavigation: 'サイトナビゲーションを開く',
         create: '作成',
         connect: '接続',
+        docs: 'ドキュメント',
         assistant: 'Agent',
         upgrade: 'アップグレード',
         signIn: 'サインイン',
@@ -154,6 +155,7 @@ export const jaCatalog: EnCatalog = {
           hosting: 'ホスティング',
           domains: 'Domains',
           network: 'Network',
+          analytics: 'アナリティクス',
           firewall: 'Firewall',
         },
         learn: {
@@ -197,6 +199,12 @@ export const jaCatalog: EnCatalog = {
           vsNetlify: 'Appwrite vs. Netlify', // pragma: allowlist secret
           vsCloudinary: 'Appwrite vs. Cloudinary', // pragma: allowlist secret
           vsAuth0: 'Appwrite vs. Auth0', // pragma: allowlist secret
+          vsConvex: 'Appwrite vs. Convex', // pragma: allowlist secret
+          vsClerk: 'Appwrite vs. Clerk', // pragma: allowlist secret
+          vsAmplify: 'Appwrite vs. AWS Amplify', // pragma: allowlist secret
+          vsPlanetScale: 'Appwrite vs. PlanetScale', // pragma: allowlist secret
+          vsPostHog: 'Appwrite vs. PostHog', // pragma: allowlist secret
+          vsPlausible: 'Appwrite vs. Plausible', // pragma: allowlist secret
           nextjsHosting: 'Next.js ホスティング',
           reactHosting: 'React ホスティング',
           vueHosting: 'Vue.js ホスティング',
@@ -375,6 +383,7 @@ export const jaCatalog: EnCatalog = {
         functions: 'Functions',
         messaging: 'メッセージング',
         sites: 'サイト',
+        analytics: 'アナリティクス',
       },
       explore: {
         ...enCatalog.website.products.explore,
@@ -393,6 +402,7 @@ export const jaCatalog: EnCatalog = {
           build: '構築',
           deploy: 'デプロイ',
           protect: '保護',
+          observeAndProtect: '監視と保護',
         },
         items: {
           ...enCatalog.website.products.navigation.items,
@@ -409,6 +419,7 @@ export const jaCatalog: EnCatalog = {
           agentTagline: 'チャットでプロジェクトを確認し、承認済みの操作を実行。',
           domainsName: 'Domains',
           domainsTagline: 'ドメインの検索、購入、移管、管理。',
+          analyticsTagline: 'Cookie 不要の Web・アプリ分析。ボットと AI も可視化。',
           firewallName: 'Firewall',
           firewallTagline: 'プロジェクトルールで拒否、レート制限、リダイレクト。',
           advisorName: 'Advisor',

@@ -11,6 +11,8 @@ import { useT } from '@/lib/i18n/translate'
 import { SALES_FORM_ROUTE } from '@/lib/sales/contact-sales'
 import { useStartPlanVisibility } from '@/hooks/use-start-plan-visibility'
 import { getVisiblePricingPlans } from '@/lib/pricing/start-plan'
+import { withAnalyticsPlanFeatures } from '@/lib/pricing/analytics'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import type { ComparisonCell, ComparisonLinkCell, PlanId, PricingPlan } from '@/lib/pricing/types'
 import { cn } from '@/lib/utils'
 import {
@@ -286,7 +288,8 @@ export function PricingPlanCard({
 
 export function PricingCardsGrid() {
   const { ready, showStartPlan } = useStartPlanVisibility()
-  const plans = getVisiblePricingPlans(showStartPlan)
+  const { features } = useConsoleProfile()
+  const plans = withAnalyticsPlanFeatures(getVisiblePricingPlans(showStartPlan), features.analytics)
   const proBadgeLabel = getProPlanBadgeLabel(showStartPlan)
 
   return (

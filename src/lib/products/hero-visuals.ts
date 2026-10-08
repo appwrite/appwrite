@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { AnalyticsHeroArt } from '@/components/pages/products/hero-art/AnalyticsHeroArt'
 import { AuthHeroArt } from '@/components/pages/products/hero-art/AuthHeroArt'
 import { DatabasesHeroArt } from '@/components/pages/products/hero-art/DatabasesHeroArt'
 import { FirewallHeroArt } from '@/components/pages/products/hero-art/FirewallHeroArt'
@@ -21,6 +22,7 @@ export const PRODUCT_HERO_ART: Record<ProductId, ComponentType> = {
   messaging: MessagingHeroArt,
   realtime: RealtimeHeroArt,
   sites: SitesHeroArt,
+  analytics: AnalyticsHeroArt,
   firewall: FirewallHeroArt,
 }
 

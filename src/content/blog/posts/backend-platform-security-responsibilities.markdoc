@@ -9,6 +9,7 @@ author: aditya-oberai
 category: security
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What is the shared responsibility model for backend platforms?"
     answer: "It is a framework, originally formalized by cloud providers like AWS and Azure, that divides security duties between the platform and the customer. The platform secures underlying infrastructure (hardware, networking, hypervisors, managed service software), and you secure your application code, data, access policies, and platform configuration."

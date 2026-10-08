@@ -161,7 +161,7 @@ resource "appwrite_mysql_database" "production" {
 
 # Pausing and idling {% #pausing-and-idling %}
 
-`idle_timeout_minutes` scales the container to zero after a period of inactivity, and `0` keeps it always on. `status` is the desired state. Set it to `paused` to stop a database without deleting its data, and back to `ready` to resume. When you leave it unset, Terraform only reads `status` back from the server.
+`idle_timeout_minutes` sets how long, from 5 to 60 minutes (default 15), the database can sit idle before it scales to zero. It wakes on the next connection. `status` is the desired state. Set it to `paused` to stop a database without deleting its data, and back to `ready` to resume. When you leave it unset, Terraform only reads `status` back from the server.
 
 ```hcl
 resource "appwrite_postgresql_database" "development" {

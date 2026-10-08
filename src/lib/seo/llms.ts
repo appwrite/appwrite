@@ -31,6 +31,7 @@ export const DOCS_MD_PATH = '/docs.md'
 export const BLOG_MD_PATH = '/blog.md'
 export const CHANGELOG_MD_PATH = '/changelog.md'
 export const INTEGRATIONS_MD_PATH = '/integrations.md'
+export const ALTERNATIVES_MD_PATH = '/alternative-to.md'
 
 export const DEFAULT_LLMS_ORIGIN = 'https://appwrite.io'
 
@@ -38,6 +39,7 @@ export const DEFAULT_LLMS_ORIGIN = 'https://appwrite.io'
 export const LLMS_BLOG_EXAMPLE_SLUG = 'appwrite-vs-supabase-ai-apps'
 export const LLMS_CHANGELOG_EXAMPLE_SLUG = '2023-08-30'
 export const LLMS_INTEGRATION_EXAMPLE_SLUG = 'ai-openai'
+export const LLMS_ALTERNATIVE_EXAMPLE_SLUG = 'supabase'
 
 export const FOR_AGENTS_PATH = '/for-agents'
 export const CHATGPT_AGENT_DOCS_PATH = '/docs/tooling/ai/agents/chatgpt'
@@ -157,6 +159,20 @@ export function buildChangelogLlmsSection(
   }
 }
 
+export function buildAlternativesLlmsSection(
+  alternatives: LlmsContentMeta[],
+  origin: string,
+): LlmsSection {
+  return {
+    heading: 'Comparisons',
+    links: alternatives.map((page) => ({
+      title: page.title,
+      url: `${origin}/alternative-to/${page.slug}.md`,
+      description: page.description,
+    })),
+  }
+}
+
 export function buildOptionalLlmsSection(origin: string): LlmsSection {
   return {
     heading: 'Optional',
@@ -210,6 +226,12 @@ export function buildOptionalLlmsSection(origin: string): LlmsSection {
         description: 'Deploy and host static and server-side rendered websites.',
       },
       {
+        title: 'Analytics',
+        url: `${origin}/products/analytics`,
+        description:
+          'Cookieless web and app analytics with custom events, server-side tracking, and bot and AI traffic breakdowns.',
+      },
+      {
         title: 'For coding agents',
         url: `${origin}${FOR_AGENTS_PATH}`,
         description:
@@ -224,6 +246,7 @@ export interface AppwriteLlmsTxtData {
   integrations: LlmsContentMeta[]
   blog: LlmsContentMeta[]
   changelog: LlmsContentMeta[]
+  alternatives: LlmsContentMeta[]
 }
 
 function findMeta(
@@ -248,6 +271,9 @@ export function buildAppwriteLlmsTxt(
   const integrationExample =
     findMeta(data.integrations, LLMS_INTEGRATION_EXAMPLE_SLUG) ??
     data.integrations[0]
+  const alternativeExample =
+    findMeta(data.alternatives, LLMS_ALTERNATIVE_EXAMPLE_SLUG) ??
+    data.alternatives[0]
 
   const sections: LlmsSection[] = [
     {
@@ -444,6 +470,27 @@ export function buildAppwriteLlmsTxt(
                 title: `Example: ${integrationExample.title}`,
                 url: `${origin}/integrations/${integrationExample.slug}.md`,
                 description: integrationExample.description,
+              },
+            ]
+          : []),
+      ],
+    },
+    {
+      heading: 'Comparisons',
+      intro:
+        'Appwrite vs other platforms. Append `.md` to any comparison URL for structured Markdown with feature tables and FAQ.',
+      links: [
+        {
+          title: 'Comparisons index (Markdown)',
+          url: `${origin}${ALTERNATIVES_MD_PATH}`,
+          description: 'Flat list of every Appwrite comparison page.',
+        },
+        ...(alternativeExample
+          ? [
+              {
+                title: `Example: ${alternativeExample.title}`,
+                url: `${origin}/alternative-to/${alternativeExample.slug}.md`,
+                description: alternativeExample.description,
               },
             ]
           : []),
@@ -708,5 +755,18 @@ export function buildIntegrationsMarkdownIndex(
       'Guides for connecting Appwrite to third-party tools and platforms.',
     pathHint: 'integration',
     section: buildIntegrationsLlmsSection(integrations, origin),
+  })
+}
+
+export function buildAlternativesMarkdownIndex(
+  alternatives: LlmsContentMeta[],
+  origin: string = DEFAULT_LLMS_ORIGIN,
+): string {
+  return buildContentIndexMarkdown({
+    title: 'Appwrite comparisons',
+    description:
+      'Structured comparisons of Appwrite with Supabase, Firebase, Vercel, and other platforms.',
+    pathHint: 'comparison',
+    section: buildAlternativesLlmsSection(alternatives, origin),
   })
 }

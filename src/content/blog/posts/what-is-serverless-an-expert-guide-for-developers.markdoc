@@ -9,6 +9,7 @@ author: atharva
 category: architectures
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: Does serverless mean there are no servers?
     answer: No. Servers still run your code. The term means you don't manage them. The cloud provider provisions, scales, and maintains the infrastructure on your behalf.

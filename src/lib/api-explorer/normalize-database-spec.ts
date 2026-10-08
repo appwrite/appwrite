@@ -1,6 +1,6 @@
 import {
-  CONSOLE_ONLY_DATABASE_API_SERVICES,
-  type ConsoleOnlyDatabaseApiService,
+  NATIVE_DATABASE_API_SERVICES,
+  type NativeDatabaseApiService,
 } from './services'
 import type { OpenApiOperation, OpenApiSpec } from './types'
 
@@ -77,7 +77,7 @@ function mergePathItem(
 }
 
 function engineAllowsRewrittenPath(
-  engine: ConsoleOnlyDatabaseApiService,
+  engine: NativeDatabaseApiService,
   path: string,
 ): boolean {
   if (path.includes('/extensions')) return engine === 'postgresql'
@@ -96,7 +96,7 @@ function engineAllowsRewrittenPath(
 
 function rewriteComputePath(
   path: string,
-  engine: ConsoleOnlyDatabaseApiService,
+  engine: NativeDatabaseApiService,
 ): string | null {
   if (path !== COMPUTE_DATABASES_PREFIX && !path.startsWith(`${COMPUTE_DATABASES_PREFIX}/`)) {
     return null
@@ -129,7 +129,7 @@ export function normalizeDatabaseOpenApiSpec(spec: OpenApiSpec): OpenApiSpec {
   if (!paths) return spec
 
   const existingTags = collectOperationTags(spec)
-  const hasNativeEngineTags = CONSOLE_ONLY_DATABASE_API_SERVICES.some((tag) =>
+  const hasNativeEngineTags = NATIVE_DATABASE_API_SERVICES.some((tag) =>
     existingTags.has(tag),
   )
   const hasEmbeddingsTag = existingTags.has('embeddings')
@@ -151,7 +151,7 @@ export function normalizeDatabaseOpenApiSpec(spec: OpenApiSpec): OpenApiSpec {
     }
 
     if (!hasNativeEngineTags && path.startsWith(COMPUTE_DATABASES_PREFIX)) {
-      for (const engine of CONSOLE_ONLY_DATABASE_API_SERVICES) {
+      for (const engine of NATIVE_DATABASE_API_SERVICES) {
         const rewrittenPath = rewriteComputePath(path, engine)
         if (!rewrittenPath) continue
         mergePathItem(

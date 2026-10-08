@@ -4,7 +4,8 @@ import { cn } from '@/lib/utils'
 import { MARKETING_SOCIAL_STATS } from '@/lib/marketing/social-stats'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 
-function GitHubSolidIcon({ className }: { className?: string }) {
+/** Circular GitHub mark, filled with `currentColor`. */
+export function GitHubSolidIcon({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"

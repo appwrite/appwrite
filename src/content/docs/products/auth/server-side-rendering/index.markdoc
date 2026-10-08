@@ -530,12 +530,15 @@ client.add_header("x-forwarded-user-agent", user_agent);
 
 # OAuth2 {% #oauth2 %}
 
-Server-side OAuth2 authentication requires two server endpoints:
+Server-side OAuth2 authentication requires two server endpoints: one that starts the sign-in, and one that receives the user back and creates the session.
 
 Create an initial endpoint that redirects the user to the OAuth2 provider's authentication page using Appwrite's `createOAuth2Token` method. After authenticating with the provider, the user will be redirected to the `success` URL with `userId` and `secret` URL parameters.
 
+Pass a `state` as well: a random value you store in a cookie on your own domain. Appwrite returns it unchanged as a `state` URL parameter on both the `success` and `failure` URLs, so your callback can check that the sign-in it receives is one this browser started. Without that check, anyone can send a user their own success link and sign the user into the sender's account. The `state` can be up to 256 printable ASCII characters.
+
 {% multicode %}
 ```server-nodejs
+import crypto from "node:crypto";
 import { Client, Account, OAuthProvider } from "node-appwrite"; // Using the server SDK
 
 const adminClient = new Client()
@@ -546,10 +549,21 @@ const adminClient = new Client()
 app.get('/oauth', async (req, res) => {
     const account = new Account(adminClient);
 
+    // A random value only this browser will hold
+    const state = crypto.randomBytes(32).toString('hex');
+    res.cookie('oauth_state', state, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax', // Sent on the redirect back from the provider
+        maxAge: 10 * 60 * 1000,
+        path: '/',
+    });
+
     const redirectUrl = await account.createOAuth2Token({
         provider: OAuthProvider.Github,                // Provider
         success: 'https://example.com/oauth/success', // Success URL
         failure: 'https://example.com/oauth/failure', // Failure URL
+        state: state,                                  // Returned on both URLs
     });
 
     res.redirect(redirectUrl);
@@ -568,15 +582,27 @@ $adminClient = (new Client())
 
 $account = new Account($adminClient);
 
+// A random value only this browser will hold
+$state = bin2hex(random_bytes(32));
+setcookie('oauth_state', $state, [
+    'httponly' => true,
+    'secure' => true,
+    'samesite' => 'Lax', // Sent on the redirect back from the provider
+    'expires' => time() + 600,
+    'path' => '/',
+]);
+
 $redirectUrl = $account->createOAuth2Token(
-    OAuthProvider::GITHUB(),
-    'https://example.com/oauth/success', // Success URL
-    'https://example.com/oauth/failure', // Failure URL
+    provider: OAuthProvider::GITHUB(),
+    success: 'https://example.com/oauth/success', // Success URL
+    failure: 'https://example.com/oauth/failure', // Failure URL
+    state: $state,                                // Returned on both URLs
 );
 
-header('Location' . $redirectUrl);
+header('Location: ' . $redirectUrl);
 ```
 ```python
+import secrets
 from appwrite.client import Client
 from appwrite.services.account import Account, OAuthProvider
 from flask import Flask, request ,redirect, make_response, jsonify
@@ -591,13 +617,27 @@ admin_client = (Client()
 def oauth():
     account = Account(admin_client)
 
+    # A random value only this browser will hold
+    state = secrets.token_hex(32)
+
     redirect_url = account.create_o_auth2_token(
         provider=OAuthProvider.Github,
         success='https://example.com/oauth/success',
         failure='https://example.com/oauth/failure',
+        state=state, # Returned on both URLs
     )
 
-    return redirect(redirect_url)
+    res = redirect(redirect_url)
+    res.set_cookie(
+        'oauth_state',
+        state,
+        httponly=True,
+        secure=True,
+        samesite='Lax', # Sent on the redirect back from the provider
+        max_age=600,
+        path='/'
+    )
+    return res
 ```
 ```rust
 use appwrite::Client;
@@ -611,26 +651,40 @@ let admin_client = Client::new()
 
 let account = Account::new(&admin_client);
 
+// A random value only this browser will hold, e.g. 32 random bytes, hex-encoded
+let state = generate_random_hex(32);
+
 let redirect_url = account.create_o_auth2_token(
     OAuthProvider::Github,                            // Provider
     Some("https://example.com/oauth/success"),        // Success URL
     Some("https://example.com/oauth/failure"),        // Failure URL
     None,                                             // Scopes
+    Some(&state),                                     // State, returned on both URLs
 ).await?;
 
-// Redirect the user to redirect_url
+// Use your framework's cookie API to set:
+// name: "oauth_state", value: state
+// httpOnly: true, secure: true, sameSite: lax, maxAge: 10 minutes
+// Then redirect the user to redirect_url
 ```
 {% /multicode %}
 
-Next, create a success callback endpoint that receives the `userId` and `secret` URL parameters, and then calls `createSession` on the server side. This endpoint returns a session object, which you can store in a cookie.
+Next, create a success callback endpoint that receives the `userId`, `secret` and `state` URL parameters. Check that `state` matches the cookie, then call `createSession` on the server side. This endpoint returns a session object, which you can store in a cookie.
 
 {% multicode %}
 ```server-nodejs
 app.get('/oauth/success', async (req, res) => {
     const account = new Account(adminClient);
 
-    // Get the userId and secret from the URL parameters
-    const { userId, secret } = req.query;
+    // Get the userId, secret and state from the URL parameters
+    const { userId, secret, state } = req.query;
+
+    // Only accept a sign-in this browser started
+    const expected = req.cookies.oauth_state; // Parsed by the cookie-parser middleware
+    res.clearCookie('oauth_state', { path: '/' });
+    if (!expected || state !== expected) {
+        return res.status(400).json({ success: false, error: 'OAuth2 state mismatch' });
+    }
 
     try {
         // Create the session using the Appwrite client
@@ -666,9 +720,19 @@ $adminClient = (new Client())
 
 $account = new Account($adminClient);
 
-// Get the userId and secret from the URL parameters
+// Get the userId, secret and state from the URL parameters
 $userId = $_GET['userId'];
 $secret = $_GET['secret'];
+$state = $_GET['state'] ?? '';
+
+// Only accept a sign-in this browser started
+$expected = $_COOKIE['oauth_state'] ?? '';
+setcookie('oauth_state', '', ['expires' => time() - 3600, 'path' => '/']);
+if ($expected === '' || !hash_equals($expected, $state)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'OAuth2 state mismatch']);
+    exit;
+}
 
 try {
     // Create the session using the Appwrite client
@@ -693,9 +757,17 @@ try {
 def oauth_success():
     account = Account(admin_client)
 
-    # Get the userId and secret from the URL parameters
+    # Get the userId, secret and state from the URL parameters
     user_id = request.args.get('userId')
     secret = request.args.get('secret')
+    state = request.args.get('state', '')
+
+    # Only accept a sign-in this browser started
+    expected = request.cookies.get('oauth_state', '')
+    if not expected or not secrets.compare_digest(expected.encode('utf-8'), state.encode('utf-8')):
+        res = make_response(jsonify({'success': False, 'error': 'OAuth2 state mismatch'}), 400)
+        res.delete_cookie('oauth_state', path='/')
+        return res
 
     try:
         # Create the session using the Appwrite client
@@ -703,6 +775,7 @@ def oauth_success():
 
         # Set the session cookie
         res = make_response(jsonify({'success': True}))
+        res.delete_cookie('oauth_state', path='/')
 
         #  Set session cookie
         res.set_cookie(
@@ -731,10 +804,19 @@ let admin_client = Client::new()
 
 let account = Account::new(&admin_client);
 
-// Get the userId and secret from the URL parameters
+// Get the userId, secret and state from the URL parameters
 // This depends on your HTTP framework (e.g. actix-web, axum, rocket)
 let user_id = req.query("userId");
 let secret = req.query("secret");
+let state = req.query("state");
+
+// Only accept a sign-in this browser started:
+// compare state with the "oauth_state" cookie, clear the cookie,
+// and reject the request if they differ or the cookie is missing
+let expected = req.cookie("oauth_state");
+if expected.is_none() || expected.as_deref() != Some(state.as_str()) {
+    // Respond with 400 and stop here
+}
 
 // Create the session using the Appwrite client
 let session = account.create_session(

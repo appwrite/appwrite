@@ -9,6 +9,7 @@ author: aishwari
 category: ai
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: Is vibe coding the same as no-code?
     answer: No. No-code platforms abstract the codebase away entirely. Vibe coding keeps the code at the center. You use AI to generate it, but you still own, read, and deploy real source files.

@@ -7,6 +7,7 @@ cover: /images/blog/valentines-day-sonnet-generator/cover.avif
 timeToRead: 7
 author: aditya-oberai
 category: functions
+removed: true
 faqs:
   - question: "What does this Appwrite Function do?"
     answer: "It accepts a name from the frontend, sends a prompt to OpenAI's GPT-4 API asking for a Shakespearean style sonnet about that person, and returns the generated sonnet. The function is deployed from the Prompt ChatGPT [Appwrite Functions](/docs/products/functions) template."

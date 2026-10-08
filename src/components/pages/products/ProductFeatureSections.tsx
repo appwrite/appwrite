@@ -1,4 +1,5 @@
 import { ProductFeatureSection } from '@/components/pages/products/ProductFeatureSection'
+import { AnalyticsPrivacyCatalog } from '@/components/pages/products/features/analytics/AnalyticsPrivacyCatalog'
 import { DatabasesEnginesCatalog } from '@/components/pages/products/features/databases/DatabasesEnginesCatalog'
 import { DatabasesOrmCatalog } from '@/components/pages/products/features/databases/DatabasesOrmCatalog'
 import { FirewallActionsCatalog } from '@/components/pages/products/features/firewall/FirewallActionsCatalog'
@@ -31,7 +32,9 @@ export function ProductFeatureSections({ productId }: ProductFeatureSectionsProp
       {features.map((feature) => {
         const Visual = getProductFeatureVisual(productId, feature.id)
         const companion =
-          productId === 'databases' && feature.id === 'engines' ? (
+          productId === 'analytics' && feature.id === 'privacy' ? (
+            <AnalyticsPrivacyCatalog />
+          ) : productId === 'databases' && feature.id === 'engines' ? (
             <DatabasesEnginesCatalog />
           ) : (productId === 'databases' || productId === 'postgres') && feature.id === 'tooling' ? (
             <DatabasesOrmCatalog />

@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as PublicRouteImport } from './routes/_public'
+import { Route as AlternativeToDotmdRouteImport } from './routes/alternative-to[.]md'
 import { Route as BlogDotmdRouteImport } from './routes/blog[.]md'
 import { Route as ChangelogDotmdRouteImport } from './routes/changelog[.]md'
 import { Route as DiscordRouteImport } from './routes/discord'
@@ -93,6 +94,7 @@ import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-
 import { Route as AuthEducationJoinRouteImport } from './routes/_auth/education.join'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
 import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
+import { Route as MarketingAlternativeToCompetitorRouteImport } from './routes/_marketing/alternative-to.$competitor'
 import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog.index'
 import { Route as MarketingBlogPageRouteImport } from './routes/_marketing/blog.$page'
 import { Route as MarketingChangelogIndexRouteImport } from './routes/_marketing/changelog.index'
@@ -100,6 +102,7 @@ import { Route as MarketingInitTicketIdRouteImport } from './routes/_marketing/i
 import { Route as MarketingIntegrationsIndexRouteImport } from './routes/_marketing/integrations.index'
 import { Route as MarketingIntegrationsSlugRouteImport } from './routes/_marketing/integrations.$slug'
 import { Route as MarketingProductsProductIdRouteImport } from './routes/_marketing/products.$productId'
+import { Route as MarketingSecretVariantRouteImport } from './routes/_marketing/secret.$variant'
 import { Route as MarketingThreadsIndexRouteImport } from './routes/_marketing/threads.index'
 import { Route as MarketingThreadsThreadIdRouteImport } from './routes/_marketing/threads.$threadId'
 import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
@@ -214,7 +217,8 @@ import { Route as PublicOrganizationsOrgIdSettingsDangerZoneRouteImport } from '
 import { Route as PublicOrganizationsOrgIdSettingsMembersRouteImport } from './routes/_public/organizations.$orgId.settings.members'
 import { Route as PublicOrganizationsOrgIdSettingsOauthAppsRouteImport } from './routes/_public/organizations.$orgId.settings.oauth-apps'
 import { Route as PublicOrganizationsOrgIdSettingsPartnersRouteImport } from './routes/_public/organizations.$orgId.settings.partners'
-import { Route as PublicProjectsProjectIdAnalyticsWebsiteIdRouteImport } from './routes/_public/projects.$projectId.analytics.$websiteId'
+import { Route as PublicProjectsProjectIdAnalyticsPropertyIdRouteImport } from './routes/_public/projects.$projectId.analytics.$propertyId'
+import { Route as PublicProjectsProjectIdAnalyticsAddRouteImport } from './routes/_public/projects.$projectId.analytics.add'
 import { Route as PublicProjectsProjectIdAppsAddRouteImport } from './routes/_public/projects.$projectId.apps.add'
 import { Route as PublicProjectsProjectIdAuthIndexRouteImport } from './routes/_public/projects.$projectId.auth.index'
 import { Route as PublicProjectsProjectIdAuthOauth2ServerRouteImport } from './routes/_public/projects.$projectId.auth.oauth2-server'
@@ -479,6 +483,11 @@ const ProtectedRoute = ProtectedRouteImport.update({
 } as any)
 const PublicRoute = PublicRouteImport.update({
   id: '/_public',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlternativeToDotmdRoute = AlternativeToDotmdRouteImport.update({
+  id: '/alternative-to.md',
+  path: '/alternative-to.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogDotmdRoute = BlogDotmdRouteImport.update({
@@ -884,6 +893,12 @@ const AuthOauth2DeviceRoute = AuthOauth2DeviceRouteImport.update({
   path: '/oauth2/device',
   getParentRoute: () => AuthRoute,
 } as any)
+const MarketingAlternativeToCompetitorRoute =
+  MarketingAlternativeToCompetitorRouteImport.update({
+    id: '/alternative-to/$competitor',
+    path: '/alternative-to/$competitor',
+    getParentRoute: () => MarketingRoute,
+  } as any)
 const MarketingBlogIndexRoute = MarketingBlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
@@ -922,6 +937,11 @@ const MarketingProductsProductIdRoute =
     path: '/products/$productId',
     getParentRoute: () => MarketingRoute,
   } as any)
+const MarketingSecretVariantRoute = MarketingSecretVariantRouteImport.update({
+  id: '/secret/$variant',
+  path: '/secret/$variant',
+  getParentRoute: () => MarketingRoute,
+} as any)
 const MarketingThreadsIndexRoute = MarketingThreadsIndexRouteImport.update({
   id: '/threads/',
   path: '/threads/',
@@ -1578,10 +1598,16 @@ const PublicOrganizationsOrgIdSettingsPartnersRoute =
     path: '/partners',
     getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
   } as any)
-const PublicProjectsProjectIdAnalyticsWebsiteIdRoute =
-  PublicProjectsProjectIdAnalyticsWebsiteIdRouteImport.update({
-    id: '/$websiteId',
-    path: '/$websiteId',
+const PublicProjectsProjectIdAnalyticsPropertyIdRoute =
+  PublicProjectsProjectIdAnalyticsPropertyIdRouteImport.update({
+    id: '/$propertyId',
+    path: '/$propertyId',
+    getParentRoute: () => PublicProjectsProjectIdAnalyticsRoute,
+  } as any)
+const PublicProjectsProjectIdAnalyticsAddRoute =
+  PublicProjectsProjectIdAnalyticsAddRouteImport.update({
+    id: '/add',
+    path: '/add',
     getParentRoute: () => PublicProjectsProjectIdAnalyticsRoute,
   } as any)
 const PublicProjectsProjectIdAppsAddRoute =
@@ -3310,6 +3336,7 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRou
 
 export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
+  '/alternative-to.md': typeof AlternativeToDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -3389,10 +3416,12 @@ export interface FileRoutesByFullPath {
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/alternative-to/$competitor': typeof MarketingAlternativeToCompetitorRoute
   '/blog/$page': typeof MarketingBlogPageRoute
   '/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
   '/products/$productId': typeof MarketingProductsProductIdRoute
+  '/secret/$variant': typeof MarketingSecretVariantRoute
   '/threads/$threadId': typeof MarketingThreadsThreadIdRoute
   '/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/account/applications': typeof PublicAccountApplicationsRoute
@@ -3506,7 +3535,8 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
-  '/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
+  '/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdRoute
+  '/projects/$projectId/analytics/add': typeof PublicProjectsProjectIdAnalyticsAddRoute
   '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
   '/projects/$projectId/auth/policies': typeof PublicProjectsProjectIdAuthPoliciesRouteWithChildren
@@ -3763,6 +3793,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
+  '/alternative-to.md': typeof AlternativeToDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -3838,10 +3869,12 @@ export interface FileRoutesByTo {
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/alternative-to/$competitor': typeof MarketingAlternativeToCompetitorRoute
   '/blog/$page': typeof MarketingBlogPageRoute
   '/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
   '/products/$productId': typeof MarketingProductsProductIdRoute
+  '/secret/$variant': typeof MarketingSecretVariantRoute
   '/threads/$threadId': typeof MarketingThreadsThreadIdRoute
   '/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/account/applications': typeof PublicAccountApplicationsRoute
@@ -3932,7 +3965,8 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
-  '/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
+  '/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdRoute
+  '/projects/$projectId/analytics/add': typeof PublicProjectsProjectIdAnalyticsAddRoute
   '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
   '/projects/$projectId/auth/policies': typeof PublicProjectsProjectIdAuthPoliciesRouteWithChildren
@@ -4168,6 +4202,7 @@ export interface FileRoutesById {
   '/_marketing': typeof MarketingRouteWithChildren
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/alternative-to.md': typeof AlternativeToDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -4248,10 +4283,12 @@ export interface FileRoutesById {
   '/_auth/education/join': typeof AuthEducationJoinRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/_marketing/alternative-to/$competitor': typeof MarketingAlternativeToCompetitorRoute
   '/_marketing/blog/$page': typeof MarketingBlogPageRoute
   '/_marketing/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/_marketing/integrations/$slug': typeof MarketingIntegrationsSlugRoute
   '/_marketing/products/$productId': typeof MarketingProductsProductIdRoute
+  '/_marketing/secret/$variant': typeof MarketingSecretVariantRoute
   '/_marketing/threads/$threadId': typeof MarketingThreadsThreadIdRoute
   '/_public/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/_public/account/applications': typeof PublicAccountApplicationsRoute
@@ -4365,7 +4402,8 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/_public/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/_public/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
-  '/_public/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
+  '/_public/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdRoute
+  '/_public/projects/$projectId/analytics/add': typeof PublicProjectsProjectIdAnalyticsAddRoute
   '/_public/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/_public/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
   '/_public/projects/$projectId/auth/policies': typeof PublicProjectsProjectIdAuthPoliciesRouteWithChildren
@@ -4624,6 +4662,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/alternative-to.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -4703,10 +4742,12 @@ export interface FileRouteTypes {
     | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
+    | '/alternative-to/$competitor'
     | '/blog/$page'
     | '/init/$ticketId'
     | '/integrations/$slug'
     | '/products/$productId'
+    | '/secret/$variant'
     | '/threads/$threadId'
     | '/account/affiliates'
     | '/account/applications'
@@ -4820,7 +4861,8 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/organizations/$orgId/settings/partners'
-    | '/projects/$projectId/analytics/$websiteId'
+    | '/projects/$projectId/analytics/$propertyId'
+    | '/projects/$projectId/analytics/add'
     | '/projects/$projectId/apps/add'
     | '/projects/$projectId/auth/oauth2-server'
     | '/projects/$projectId/auth/policies'
@@ -5077,6 +5119,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/alternative-to.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -5152,10 +5195,12 @@ export interface FileRouteTypes {
     | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
+    | '/alternative-to/$competitor'
     | '/blog/$page'
     | '/init/$ticketId'
     | '/integrations/$slug'
     | '/products/$productId'
+    | '/secret/$variant'
     | '/threads/$threadId'
     | '/account/affiliates'
     | '/account/applications'
@@ -5246,7 +5291,8 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/organizations/$orgId/settings/partners'
-    | '/projects/$projectId/analytics/$websiteId'
+    | '/projects/$projectId/analytics/$propertyId'
+    | '/projects/$projectId/analytics/add'
     | '/projects/$projectId/apps/add'
     | '/projects/$projectId/auth/oauth2-server'
     | '/projects/$projectId/auth/policies'
@@ -5481,6 +5527,7 @@ export interface FileRouteTypes {
     | '/_marketing'
     | '/_protected'
     | '/_public'
+    | '/alternative-to.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -5561,10 +5608,12 @@ export interface FileRouteTypes {
     | '/_auth/education/join'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
+    | '/_marketing/alternative-to/$competitor'
     | '/_marketing/blog/$page'
     | '/_marketing/init/$ticketId'
     | '/_marketing/integrations/$slug'
     | '/_marketing/products/$productId'
+    | '/_marketing/secret/$variant'
     | '/_marketing/threads/$threadId'
     | '/_public/account/affiliates'
     | '/_public/account/applications'
@@ -5678,7 +5727,8 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/settings/members'
     | '/_public/organizations/$orgId/settings/oauth-apps'
     | '/_public/organizations/$orgId/settings/partners'
-    | '/_public/projects/$projectId/analytics/$websiteId'
+    | '/_public/projects/$projectId/analytics/$propertyId'
+    | '/_public/projects/$projectId/analytics/add'
     | '/_public/projects/$projectId/apps/add'
     | '/_public/projects/$projectId/auth/oauth2-server'
     | '/_public/projects/$projectId/auth/policies'
@@ -5939,6 +5989,7 @@ export interface RootRouteChildren {
   MarketingRoute: typeof MarketingRouteWithChildren
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
+  AlternativeToDotmdRoute: typeof AlternativeToDotmdRoute
   BlogDotmdRoute: typeof BlogDotmdRoute
   ChangelogDotmdRoute: typeof ChangelogDotmdRoute
   DiscordRoute: typeof DiscordRoute
@@ -6006,6 +6057,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof PublicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alternative-to.md': {
+      id: '/alternative-to.md'
+      path: '/alternative-to.md'
+      fullPath: '/alternative-to.md'
+      preLoaderRoute: typeof AlternativeToDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog.md': {
@@ -6568,6 +6626,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthOauth2DeviceRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_marketing/alternative-to/$competitor': {
+      id: '/_marketing/alternative-to/$competitor'
+      path: '/alternative-to/$competitor'
+      fullPath: '/alternative-to/$competitor'
+      preLoaderRoute: typeof MarketingAlternativeToCompetitorRouteImport
+      parentRoute: typeof MarketingRoute
+    }
     '/_marketing/blog/': {
       id: '/_marketing/blog/'
       path: '/blog'
@@ -6615,6 +6680,13 @@ declare module '@tanstack/react-router' {
       path: '/products/$productId'
       fullPath: '/products/$productId'
       preLoaderRoute: typeof MarketingProductsProductIdRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/secret/$variant': {
+      id: '/_marketing/secret/$variant'
+      path: '/secret/$variant'
+      fullPath: '/secret/$variant'
+      preLoaderRoute: typeof MarketingSecretVariantRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_marketing/threads/': {
@@ -7415,11 +7487,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsPartnersRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
     }
-    '/_public/projects/$projectId/analytics/$websiteId': {
-      id: '/_public/projects/$projectId/analytics/$websiteId'
-      path: '/$websiteId'
-      fullPath: '/projects/$projectId/analytics/$websiteId'
-      preLoaderRoute: typeof PublicProjectsProjectIdAnalyticsWebsiteIdRouteImport
+    '/_public/projects/$projectId/analytics/$propertyId': {
+      id: '/_public/projects/$projectId/analytics/$propertyId'
+      path: '/$propertyId'
+      fullPath: '/projects/$projectId/analytics/$propertyId'
+      preLoaderRoute: typeof PublicProjectsProjectIdAnalyticsPropertyIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAnalyticsRoute
+    }
+    '/_public/projects/$projectId/analytics/add': {
+      id: '/_public/projects/$projectId/analytics/add'
+      path: '/add'
+      fullPath: '/projects/$projectId/analytics/add'
+      preLoaderRoute: typeof PublicProjectsProjectIdAnalyticsAddRouteImport
       parentRoute: typeof PublicProjectsProjectIdAnalyticsRoute
     }
     '/_public/projects/$projectId/apps/add': {
@@ -9224,10 +9303,12 @@ interface MarketingRouteChildren {
   MarketingStartupsRoute: typeof MarketingStartupsRoute
   MarketingTermsRoute: typeof MarketingTermsRoute
   MarketingIndexRoute: typeof MarketingIndexRoute
+  MarketingAlternativeToCompetitorRoute: typeof MarketingAlternativeToCompetitorRoute
   MarketingBlogPageRoute: typeof MarketingBlogPageRoute
   MarketingInitTicketIdRoute: typeof MarketingInitTicketIdRoute
   MarketingIntegrationsSlugRoute: typeof MarketingIntegrationsSlugRoute
   MarketingProductsProductIdRoute: typeof MarketingProductsProductIdRoute
+  MarketingSecretVariantRoute: typeof MarketingSecretVariantRoute
   MarketingThreadsThreadIdRoute: typeof MarketingThreadsThreadIdRoute
   MarketingBlogIndexRoute: typeof MarketingBlogIndexRoute
   MarketingChangelogIndexRoute: typeof MarketingChangelogIndexRoute
@@ -9258,10 +9339,12 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingStartupsRoute: MarketingStartupsRoute,
   MarketingTermsRoute: MarketingTermsRoute,
   MarketingIndexRoute: MarketingIndexRoute,
+  MarketingAlternativeToCompetitorRoute: MarketingAlternativeToCompetitorRoute,
   MarketingBlogPageRoute: MarketingBlogPageRoute,
   MarketingInitTicketIdRoute: MarketingInitTicketIdRoute,
   MarketingIntegrationsSlugRoute: MarketingIntegrationsSlugRoute,
   MarketingProductsProductIdRoute: MarketingProductsProductIdRoute,
+  MarketingSecretVariantRoute: MarketingSecretVariantRoute,
   MarketingThreadsThreadIdRoute: MarketingThreadsThreadIdRoute,
   MarketingBlogIndexRoute: MarketingBlogIndexRoute,
   MarketingChangelogIndexRoute: MarketingChangelogIndexRoute,
@@ -9629,13 +9712,16 @@ const PublicOrganizationsOrgIdRouteWithChildren =
   )
 
 interface PublicProjectsProjectIdAnalyticsRouteChildren {
-  PublicProjectsProjectIdAnalyticsWebsiteIdRoute: typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
+  PublicProjectsProjectIdAnalyticsPropertyIdRoute: typeof PublicProjectsProjectIdAnalyticsPropertyIdRoute
+  PublicProjectsProjectIdAnalyticsAddRoute: typeof PublicProjectsProjectIdAnalyticsAddRoute
 }
 
 const PublicProjectsProjectIdAnalyticsRouteChildren: PublicProjectsProjectIdAnalyticsRouteChildren =
   {
-    PublicProjectsProjectIdAnalyticsWebsiteIdRoute:
-      PublicProjectsProjectIdAnalyticsWebsiteIdRoute,
+    PublicProjectsProjectIdAnalyticsPropertyIdRoute:
+      PublicProjectsProjectIdAnalyticsPropertyIdRoute,
+    PublicProjectsProjectIdAnalyticsAddRoute:
+      PublicProjectsProjectIdAnalyticsAddRoute,
   }
 
 const PublicProjectsProjectIdAnalyticsRouteWithChildren =
@@ -11110,6 +11196,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingRoute: MarketingRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
+  AlternativeToDotmdRoute: AlternativeToDotmdRoute,
   BlogDotmdRoute: BlogDotmdRoute,
   ChangelogDotmdRoute: ChangelogDotmdRoute,
   DiscordRoute: DiscordRoute,

@@ -102,6 +102,13 @@ export function rewriteLegacyConsolePath(
     return EDUCATION_JOIN_PATH
   }
 
+  if (
+    wasConsolePrefixed &&
+    (path === '/onboarding' || path.startsWith('/onboarding/'))
+  ) {
+    return '/'
+  }
+
   const authSegment = wasConsolePrefixed ? (path.split('/')[1] ?? '') : ''
 
   // Recovery emails link `/console/recover` with `userId` and `secret`, which

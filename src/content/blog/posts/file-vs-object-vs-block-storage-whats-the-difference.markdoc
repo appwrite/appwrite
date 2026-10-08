@@ -91,7 +91,7 @@ Match the storage type to the workload rather than defaulting to whatever's in f
 * **Choose block storage** when you're running a database or an application that needs fast, low-latency disk access on a specific server.
 * **Choose file storage** when an application or team expects a shared file system, such as a content management system or a legacy tool built around file paths.
 
-Many production systems use more than one. A typical setup runs its database on block storage, stores user-uploaded files in object storage, and might mount a file share for an internal tool, each type doing what it's best at. If you want the broader picture of how these fit together, our [cloud storage guide](/blog/post/what-is-cloud-storage-an-expert-guide-for-developers) covers the full landscape.
+Many production systems use more than one. A typical setup runs its database on block storage, stores user-uploaded files in object storage, and might mount a file share for an internal tool, each type doing what it's best at.
 
 # Common questions about file, object, and block storage
 
@@ -116,5 +116,4 @@ You can create a bucket, upload your first file, and wire it into an app in minu
 * [Image transformations with Appwrite Storage](/docs/products/storage/images)
 * [What is object storage? A beginner's guide](/blog/post/what-is-object-storage-a-beginners-guide)
 * [What is a storage bucket?](/blog/post/what-is-a-storage-bucket)
-* [What is cloud storage? An expert guide for developers](/blog/post/what-is-cloud-storage-an-expert-guide-for-developers)
 * [Join the Appwrite Discord](https://appwrite.io/discord)

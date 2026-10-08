@@ -1,4 +1,5 @@
 import { createMiddleware } from '@tanstack/react-start'
+import { getRemovedBlogPostRedirectTarget } from '@/lib/blog/removed-redirect'
 import { getLegacyRedirectTarget } from '@/lib/seo/legacy-redirects'
 
 function resolvePathname(
@@ -15,8 +16,9 @@ function resolvePathname(
 
 /**
  * Permanent (301) redirects for legacy URLs ported from the old website so
- * inbound links and search engine results keep resolving. The incoming query
- * string is preserved on the target URL.
+ * inbound links and search engine results keep resolving, and for blog posts
+ * marked `removed: true` (sent to `/home`). The incoming query string is
+ * preserved on the target URL.
  */
 export const legacyRedirectsMiddleware = createMiddleware({
   type: 'request',
@@ -27,7 +29,16 @@ export const legacyRedirectsMiddleware = createMiddleware({
   }
 
   const path = resolvePathname(pathname, request.url)
-  const target = getLegacyRedirectTarget(path)
+  const search = (() => {
+    try {
+      return new URL(request.url).search
+    } catch {
+      return ''
+    }
+  })()
+  const target =
+    getLegacyRedirectTarget(path, search) ??
+    getRemovedBlogPostRedirectTarget(path)
   if (!target) {
     return next()
   }
@@ -39,5 +50,12 @@ export const legacyRedirectsMiddleware = createMiddleware({
     }
   })
 
-  throw Response.redirect(targetUrl, 301)
+  // Relative Location: behind the TLS-terminating proxy `request.url` is
+  // http://, so an absolute target would add an http hop to every redirect.
+  throw new Response(null, {
+    status: 301,
+    headers: {
+      Location: `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`,
+    },
+  })
 })

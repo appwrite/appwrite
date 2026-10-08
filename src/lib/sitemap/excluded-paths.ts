@@ -28,6 +28,7 @@ export const SITEMAP_EXCLUDED_EXACT_PATHS = [
   '/blog.md',
   '/changelog.md',
   '/integrations.md',
+  '/alternative-to.md',
   '/robots.txt',
   '/cli/install.sh',
   '/cli/install.ps1',
