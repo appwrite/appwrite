@@ -64,6 +64,7 @@ use Utopia\OpenAPI\Model\Composition;
 use Utopia\OpenAPI\Model\Discriminator;
 use Utopia\OpenAPI\Parser;
 use Utopia\Platform\Enum;
+use Utopia\Validator;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
@@ -490,6 +491,53 @@ final class FormatTest extends TestCase
         $this->assertSame([], $schemas['labels']->default);
         $this->assertSame(0, $schemas['count']->default);
         $this->assertFalse($schemas['enabled']->default);
+    }
+
+    public function testCustomArrayValidatorsEmitArraySchemas(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $conditions = new class () extends Validator {
+            public function getDescription(): string
+            {
+                return 'Array of conditions.';
+            }
+
+            public function isArray(): bool
+            {
+                return true;
+            }
+
+            public function isValid($value): bool
+            {
+                return \is_array($value);
+            }
+
+            public function getType(): string
+            {
+                return self::TYPE_ARRAY;
+            }
+        };
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [AuthType::ADMIN],
+                responses: [],
+            ))
+            ->param('conditions', [], $conditions, 'Conditions.', optional: true);
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
+        $schema = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties']['conditions'];
+
+        $this->assertSame('array', $schema['type']);
+        $this->assertSame('{}', \json_encode($schema['items']));
+        $this->assertSame([], $schema['default']);
     }
 
     public function testArrayListItemTypesAreValidOpenApiTypes(): void
