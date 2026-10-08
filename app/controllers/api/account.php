@@ -13,6 +13,8 @@ use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Bus\Events\SessionCreated;
+use Appwrite\Deletes\Identities as DeleteIdentities;
+use Appwrite\Deletes\Targets as DeleteTargets;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -583,7 +585,13 @@ Http::delete('/v1/account')
             }
         }
 
-        $dbForProject->deleteDocument('users', $targetUser->getId());
+        // A failure rolls back to an intact account to retry; the rest is queued only once these rows are gone.
+        $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $targetUser) {
+            $dbForProject->deleteDocument('users', $targetUser->getId());
+            DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
+            DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
+            $dbForProject->deleteDocuments('sessions', [Query::equal('userInternalId', [$targetUser->getSequence()])]);
+        }));
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,
