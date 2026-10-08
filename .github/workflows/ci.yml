@@ -195,6 +195,67 @@ jobs:
       - name: Run Locale check
         run: node .github/workflows/static-analysis/locale/index.js
 
+  static-rules:
+    name: Checks / Rules
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      security-events: write
+      pull-requests: write
+    env:
+      SEMGREP_SEND_METRICS: 'off'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Semgrep
+        run: pipx install semgrep==1.179.0
+
+      - name: Validate rule fixtures
+        run: semgrep test .semgrep
+
+      - name: Prove ERROR classes on scratch snippets
+        run: bash .semgrep/prove.sh
+
+      - name: Run security rules
+        run: >-
+          semgrep scan
+          --config .semgrep
+          --metrics=off
+          --exclude .semgrep
+          --json
+          --output semgrep.json
+          src/Appwrite app/controllers app/init
+
+      - name: Fail on new ERROR findings outside the baseline
+        run: node .semgrep/baseline.js check semgrep.json
+
+      - name: Write security rules SARIF
+        if: always()
+        run: >-
+          semgrep scan
+          --config .semgrep
+          --metrics=off
+          --exclude .semgrep
+          --sarif
+          --output semgrep.sarif
+          src/Appwrite app/controllers app/init
+
+      - name: Comment new findings on the PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const comment = require('./.github/workflows/semgrep-comment.js');
+            await comment({ github, context, core });
+
+      - name: Upload security rules results
+        uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
+        if: always() && hashFiles('semgrep.sarif') != ''
+        with:
+          sarif_file: semgrep.sarif
+          category: 'semgrep-custom'
+
   matrix:
     name: Tests / Matrix
     runs-on: ubuntu-24.04
@@ -555,6 +616,72 @@ jobs:
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
           appwrite test /usr/src/code/tests/e2e/General
 
+      - name: Check for native crashes
+        if: ${{ !cancelled() }}
+        run: .github/scripts/check-native-crashes.sh "${IMAGE}"
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Logs ==="
+          docker compose logs --timestamps
+
+  e2e_security:
+    name: Tests / E2E / Security
+    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
+    timeout-minutes: 25
+    needs: build
+    permissions:
+      contents: read
+      packages: read
+    env:
+      COMPOSE_PROFILES: ''
+    steps:
+      - name: checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - parallel:
+          - name: Pull Docker Image
+            run: |
+              docker pull "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
+              docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}"
+
+          - name: Pull Docker Compose images
+            timeout-minutes: 5
+            run: |
+              for attempt in 1 2 3; do
+                if docker compose pull --quiet --ignore-buildable; then
+                  break
+                elif [ "$attempt" -eq 3 ]; then
+                  echo "::error::docker compose pull failed after 3 attempts; aborting"
+                  exit 1
+                fi
+                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+                sleep 15
+              done
+
+      - name: Load and Start Appwrite
+        timeout-minutes: 5
+        run: docker compose up -d --quiet-pull --wait
+
+      - name: Run Security Tests
+        timeout-minutes: 20
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e/Security --group=security
+
+      - name: Check for native crashes
+        if: ${{ !cancelled() }}
+        run: .github/scripts/check-native-crashes.sh "${IMAGE}"
+
       - name: Failure Logs
         if: failure()
         run: |
@@ -718,7 +845,11 @@ jobs:
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
-            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
+            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --exclude-group queueRetry --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
+
+      - name: Check for native crashes
+        if: ${{ !cancelled() }}
+        run: .github/scripts/check-native-crashes.sh "${IMAGE}"
 
       - name: Failure Logs
         if: failure()
@@ -768,6 +899,15 @@ jobs:
             compose_profiles: s3
             wait: executor
             storage_device: s3
+          # These tests retry a whole queue's failed jobs, as an operator would, so they run
+          # where no other test's jobs are in flight.
+          - label: Queue Retry
+            group: queueRetry
+            path: /usr/src/code/tests/e2e/Services
+            options_abuse: disabled
+            storage_antivirus: disabled
+            compose_profiles: ''
+            wait: executor
     env:
       # Shared tables mode connects every pool at boot, including the MongoDB-only DocumentsDB.
       COMPOSE_PROFILES: ${{ matrix.mode == 'shared' && format('mongodb,{0}', matrix.config.compose_profiles) || matrix.config.compose_profiles }}
@@ -869,6 +1009,10 @@ jobs:
           docker compose exec -T
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
           appwrite test ${{ matrix.config.path }} --group=${{ matrix.config.group }}
+
+      - name: Check for native crashes
+        if: ${{ !cancelled() }}
+        run: .github/scripts/check-native-crashes.sh "${IMAGE}"
 
       - name: Failure Logs
         if: failure()

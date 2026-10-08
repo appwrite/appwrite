@@ -32,3 +32,4 @@ tests/playwright/screenshots
 .phpstan-cache-deadcode
 auth.json
 .pi/
+src/Appwrite/Platform/Modules/Databases/_semgrep_prove/

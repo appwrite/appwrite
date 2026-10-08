@@ -253,30 +253,6 @@ class Install extends Action
 
         // Fall back to CLI mode
         $source = ($interactive === 'Y' && Console::isInteractive()) ? Report::SOURCE_CLI : Report::SOURCE_CLI_HEADLESS;
-        $enableAssistant = false;
-        $assistantExistsInOldCompose = false;
-        if ($existingInstallation) {
-            try {
-                $compose->getService('appwrite-assistant');
-                $assistantExistsInOldCompose = true;
-            } catch (\Throwable) {
-                /* ignore */
-            }
-        }
-
-        if ($interactive === 'Y' && Console::isInteractive()) {
-            $prompt = 'Add Appwrite Assistant? (Y/n)' . ($assistantExistsInOldCompose ? ' [Currently enabled]' : '');
-            $answer = Console::confirm($prompt);
-
-            if (empty($answer)) {
-                $enableAssistant = $assistantExistsInOldCompose;
-            } else {
-                $enableAssistant = \strtolower($answer) === 'y';
-            }
-        } elseif ($assistantExistsInOldCompose) {
-            $enableAssistant = true;
-        }
-
         if (empty($httpPort)) {
             $httpPort = Console::confirm('Choose your server HTTP port: (default: ' . $defaultHttpPort . ')');
             $httpPort = ($httpPort) ?: $defaultHttpPort;
@@ -295,31 +271,6 @@ class Install extends Action
 
         foreach ($vars as $var) {
             if (isset($userInput[$var['name']])) {
-                continue;
-            }
-
-            if ($var['name'] === '_APP_ASSISTANT_OPENAI_API_KEY') {
-                if (!$enableAssistant) {
-                    $userInput[$var['name']] = '';
-                    continue;
-                }
-
-                if (!empty($var['default'])) {
-                    $userInput[$var['name']] = $var['default'];
-                    continue;
-                }
-
-                if (Console::isInteractive() && $interactive === 'Y') {
-                    $userInput[$var['name']] = Console::confirm('Enter your OpenAI API key for Appwrite Assistant:');
-                    if (empty($userInput[$var['name']])) {
-                        Console::warning('No API key provided. Assistant will be disabled.');
-                        $enableAssistant = false;
-                        $userInput[$var['name']] = '';
-                    }
-                } else {
-                    $userInput[$var['name']] = '';
-                }
-
                 continue;
             }
 
@@ -470,7 +421,7 @@ class Install extends Action
 
         // Override with user inputs
         foreach ($userInput as $key => $value) {
-            if ($value !== null && ($value !== '' || $key === '_APP_ASSISTANT_OPENAI_API_KEY')) {
+            if ($value !== null && $value !== '') {
                 $input[$key] = $value;
             }
         }
@@ -669,8 +620,6 @@ class Install extends Action
             $this->hostPath = $this->detectInstallerHostPath($this->path) ?? '';
         }
 
-        $assistantKey = (string) ($input['_APP_ASSISTANT_OPENAI_API_KEY'] ?? '');
-        $enableAssistant = trim($assistantKey) !== '';
         $enabledRuntimes = \array_unique(\array_filter(\array_map(
             'trim',
             \explode(',', ($input['_APP_FUNCTIONS_RUNTIMES'] ?? '') . ',' . ($input['_APP_SITES_RUNTIMES'] ?? ''))
@@ -695,7 +644,6 @@ class Install extends Action
             'version' => $version,
             'database' => $database,
             'hostPath' => $this->hostPath,
-            'enableAssistant' => $enableAssistant,
             'topology' => $this->topology,
         ]);
 
@@ -755,8 +703,8 @@ class Install extends Action
 
             if (!$useExistingConfig && $startIndex <= 1) {
                 $this->copyConfigFiles(match ($database) {
-                    'mongodb' => ['clickhouse-config.xml', 'mongo-entrypoint.sh', 'mongo-init.js'],
-                    default => ['clickhouse-config.xml'],
+                    'mongodb' => ['clickhouse-config.xml', 'clickhouse-init.sh', 'mongo-entrypoint.sh', 'mongo-init.js'],
+                    default => ['clickhouse-config.xml', 'clickhouse-init.sh'],
                 });
             }
 
@@ -1330,6 +1278,8 @@ class Install extends Action
                     $errorMsg = $lastError ? $lastError['message'] : 'Unknown error';
                     throw new \RuntimeException('Failed to copy ' . $file . ' to ' . $target . ': ' . $errorMsg);
                 }
+                // copy() drops the executable bit, which decides how the ClickHouse entrypoint runs its init script.
+                @chmod($target, fileperms($source) & 0777);
             }
         }
     }

@@ -878,6 +878,146 @@ trait TransactionPermissionsBase
     }
 
     /**
+     * Test that update, upsert and record-route staging cannot grant roles the user lacks on a related document
+     */
+    public function testCannotStageUnauthorizedRelatedPermissionsOnUpdate(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ];
+        $userHeaders = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $containerPermissions = [
+            Permission::read(Role::any()),
+            Permission::create(Role::any()),
+            Permission::update(Role::any()),
+        ];
+
+        $parent = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Related Update Parent',
+            'permissions' => $containerPermissions,
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $parent['headers']['status-code']);
+        $parentId = $parent['body']['$id'];
+
+        $child = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Related Update Child',
+            'permissions' => $containerPermissions,
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $child['headers']['status-code']);
+        $childId = $child['body']['$id'];
+
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $childId, 'string'), $keyHeaders, [
+            'key' => 'title',
+            'size' => 255,
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->waitForAttribute($this->getPermissionsDatabase(), $childId, 'title');
+
+        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $parentId, 'relationship'), $keyHeaders, [
+            $this->getRelatedIdParam() => $childId,
+            'type' => 'oneToOne',
+            'key' => 'child',
+        ]);
+        $this->assertEquals(202, $relationship['headers']['status-code']);
+        $this->waitForAttribute($this->getPermissionsDatabase(), $parentId, 'child');
+
+        $recordId = ID::unique();
+        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId), $keyHeaders, [
+            $this->getRecordIdParam() => $recordId,
+            'data' => [
+                'child' => [
+                    '$id' => ID::unique(),
+                    'title' => 'Original',
+                ],
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $record['headers']['status-code']);
+
+        $own = [Permission::read(Role::user($this->getUser()['$id']))];
+        $foreign = [Permission::update(Role::team('adminTeam'))];
+        $data = fn (array $permissions) => [
+            'child' => [
+                '$id' => ID::unique(),
+                '$permissions' => $permissions,
+                'title' => 'Child',
+            ],
+        ];
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $userHeaders);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $stage = fn (string $action, array $permissions) => $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $userHeaders, [
+            'operations' => [[
+                'action' => $action,
+                'databaseId' => $this->getPermissionsDatabase(),
+                $this->getContainerIdParam() => $parentId,
+                $this->getRecordIdParam() => $recordId,
+                'data' => $data($permissions),
+            ]]
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        $staged = $stage('update', $own);
+        $this->assertEquals(201, $staged['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach (['update', 'upsert'] as $action) {
+            $staged = $stage($action, $foreign);
+            $this->assertEquals(401, $staged['headers']['status-code'], "Staged {$action} should not grant foreign roles on a related document");
+            $this->assertStringContainsString('Permissions must be one of', $staged['body']['message']);
+        }
+
+        $routes = [
+            'create' => [Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId), [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => $data($foreign),
+            ]],
+            'update' => [Client::METHOD_PATCH, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId, $recordId), [
+                'data' => $data($foreign),
+            ]],
+            'upsert' => [Client::METHOD_PUT, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId, $recordId), [
+                'data' => $data($foreign),
+            ]],
+        ];
+
+        foreach ($routes as $action => [$method, $url, $params]) {
+            $response = $this->client->call($method, $url, $userHeaders, \array_merge($params, [
+                'transactionId' => $transactionId,
+            ]));
+            $this->assertEquals(401, $response['headers']['status-code'], "Record route {$action} should not stage foreign roles on a related document");
+            $this->assertStringContainsString('Permissions must be one of', $response['body']['message']);
+        }
+
+        $read = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $userHeaders);
+        $this->assertEquals(200, $read['headers']['status-code']);
+        $this->assertEquals(1, $read['body']['operations']);
+    }
+
+    /**
      * Test successful staging when user has the required permissions
      */
     public function testSuccessfulStagingWithProperPermissions(): void
@@ -1623,6 +1763,191 @@ trait TransactionPermissionsBase
         $this->assertEquals(200, $foreignList['headers']['status-code']);
         $this->assertEquals(0, $foreignList['body']['total']);
         $this->assertNotContains($documentId, \array_column($foreignList['body'][$this->getRecordResource()], '$id'));
+    }
+
+    /**
+     * Test that a leaked transaction ID cannot be used to stage writes through the record routes
+     */
+    public function testUserCannotStageRecordsInAnotherUsersTransaction(): void
+    {
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Foreign Staging Test',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            $this->getSecurityParam() => false,
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collectionId, 'string'), $keyHeaders, [
+                'key' => 'title',
+                'size' => 255,
+                'required' => false,
+            ]);
+
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collectionId);
+        }
+
+        $documentId = ID::unique();
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId), $keyHeaders, [
+            $this->getRecordIdParam() => $documentId,
+            'data' => ['title' => 'Original'],
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+
+        $user1 = $this->getUser(true);
+        $user1Headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user1['session'],
+        ];
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $user1Headers);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $user2 = $this->getUser(true);
+        $user2Headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
+        ];
+
+        /**
+         * Test for FAILURE
+         */
+        $requests = [
+            'create' => [Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId), [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => ['title' => 'Injected'],
+            ]],
+            'update' => [Client::METHOD_PATCH, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $documentId), [
+                'data' => ['title' => 'Injected'],
+            ]],
+            'upsert' => [Client::METHOD_PUT, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, ID::unique()), [
+                'data' => ['title' => 'Injected'],
+            ]],
+            'delete' => [Client::METHOD_DELETE, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $documentId), []],
+        ];
+
+        foreach ($requests as $action => [$method, $url, $params]) {
+            $response = $this->client->call($method, $url, $user2Headers, \array_merge($params, [
+                'transactionId' => $transactionId,
+            ]));
+
+            $this->assertEquals(404, $response['headers']['status-code'], "Staging {$action} into another user's transaction should fail");
+        }
+
+        $read = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $user1Headers);
+        $this->assertEquals(200, $read['headers']['status-code']);
+        $this->assertEquals(0, $read['body']['operations']);
+
+        $read = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $documentId), $keyHeaders);
+        $this->assertEquals(200, $read['headers']['status-code']);
+        $this->assertEquals('Original', $read['body']['title']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $own = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $user2Headers);
+        $this->assertEquals(201, $own['headers']['status-code']);
+
+        $staged = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $documentId), $user2Headers, [
+            'data' => ['title' => 'Staged'],
+            'transactionId' => $own['body']['$id'],
+        ]);
+        $this->assertEquals(200, $staged['headers']['status-code']);
+
+        $read = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($own['body']['$id']), $user2Headers);
+        $this->assertEquals(200, $read['headers']['status-code']);
+        $this->assertEquals(1, $read['body']['operations']);
+    }
+
+    /**
+     * Test that bulk operations cannot be staged by a user session
+     */
+    public function testUserCannotStageBulkOperations(): void
+    {
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Bulk Staging Test',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            $this->getSecurityParam() => false,
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $operations = [
+            'bulkCreate' => [
+                ['$id' => ID::unique(), 'title' => 'Bulk'],
+            ],
+            'bulkUpdate' => [
+                'queries' => [],
+                'data' => ['title' => 'Bulk'],
+            ],
+            'bulkUpsert' => [
+                ['$id' => ID::unique(), 'title' => 'Bulk'],
+            ],
+            'bulkDelete' => [
+                'queries' => [],
+            ],
+        ];
+
+        foreach ($operations as $action => $data) {
+            $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+                'operations' => [[
+                    'action' => $action,
+                    'databaseId' => $this->getPermissionsDatabase(),
+                    $this->getContainerIdParam() => $collectionId,
+                    'data' => $data,
+                ]],
+            ]);
+
+            $this->assertEquals(401, $staged['headers']['status-code'], "Staging {$action} as a user should fail");
+        }
+
+        $read = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $headers);
+        $this->assertEquals(200, $read['headers']['status-code']);
+        $this->assertEquals(0, $read['body']['operations']);
     }
 
     /**

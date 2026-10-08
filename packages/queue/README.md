@@ -142,6 +142,12 @@ $maintenance->retry(new Queue('my-queue'));   // moves messages, changes no conf
 
 `Provisioning::Require` uses what is already provisioned and refuses when it is absent. The boundary is stream configuration plus the two worker consumers; the consumer `retry()` reads the dead stream through is still created, because it carries none of the settings a running fleet depends on.
 
+A queue that nothing has published to or received from does not exist on the server yet. For a worker that scales from zero, nothing receives until something is published, so a KEDA `nats-jetstream` trigger on its consumer reports it missing until then. Call `provision()` with the broker the queue's own worker uses, from a deploy step, to create the queue up front without publishing anything. It is idempotent. Under `Provisioning::Require` it creates nothing and throws if the queue is absent, which makes it a check.
+
+```php
+$broker->provision(new Queue('my-queue'));   // streams + work consumer, no message
+```
+
 ### Concurrency
 
 `Broker\Nats` is wired the way `Broker\Redis` is: a connection dedicated to the blocking receive, plus a second, lock-guarded connection carrying the commands. One NATS connection is one socket behind one shared read pump, and driving it from two coroutines does not degrade — Swoole ends the worker on the first overlap:

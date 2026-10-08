@@ -178,4 +178,135 @@ final class UsersCustomServerTest extends Scope
         ]);
         $this->assertSame(401, $client['headers']['status-code']);
     }
+
+    /**
+     * Minting credentials for an existing user takes users.write; a key scoped
+     * to sessions.write cannot reach those routes.
+     */
+    public function testCreateTokenWithSessionsKey(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => 'sessions-key-' . ID::unique() . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $sessionsHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getNewKey(['sessions.write']),
+        ];
+        $usersHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getNewKey(['users.write']),
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $token = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/tokens', $usersHeaders);
+        $this->assertSame(201, $token['headers']['status-code']);
+        $this->assertNotEmpty($token['body']['secret']);
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $usersHeaders);
+        $this->assertSame(201, $jwt['headers']['status-code']);
+        $this->assertNotEmpty($jwt['body']['jwt']);
+
+        /**
+         * Test for FAILURE
+         */
+        $requests = [
+            [Client::METHOD_POST, '/users/' . $userId . '/tokens', []],
+            [Client::METHOD_POST, '/users/' . $userId . '/jwts', []],
+            [Client::METHOD_PATCH, '/users/' . $userId . '/password', ['password' => 'new-password']],
+            [Client::METHOD_PATCH, '/users/' . $userId . '/email', ['email' => 'changed-' . ID::unique() . '@appwrite.io']],
+            [Client::METHOD_GET, '/users/' . $userId . '/mfa/recovery-codes', []],
+            [Client::METHOD_GET, '/account', []],
+            [Client::METHOD_POST, '/account/jwts', []],
+            [Client::METHOD_GET, '/account/sessions', []],
+        ];
+
+        foreach ($requests as [$method, $path, $params]) {
+            $response = $this->client->call($method, $path, $sessionsHeaders, $params);
+            $this->assertSame(401, $response['headers']['status-code'], "{$method} {$path} should need more than sessions.write");
+            $this->assertArrayNotHasKey('secret', $response['body']);
+            $this->assertArrayNotHasKey('jwt', $response['body']);
+        }
+
+        $account = $this->client->call(Client::METHOD_GET, '/users/' . $userId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+        $this->assertSame(200, $account['headers']['status-code']);
+        $this->assertSame($user['body']['email'], $account['body']['email']);
+    }
+
+    /**
+     * Listing sessions does not hand back a secret that signs in as the user.
+     */
+    public function testListSessionsWithoutSecret(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => 'list-sessions-' . ID::unique() . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+        ]);
+        $this->assertSame(200, $account['headers']['status-code']);
+
+        $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getNewKey(['sessions.read']),
+        ]);
+        $this->assertSame(200, $sessions['headers']['status-code']);
+        $this->assertSame(1, $sessions['body']['total']);
+        $this->assertSame($session['body']['$id'], $sessions['body']['sessions'][0]['$id']);
+
+        /**
+         * Test for FAILURE
+         */
+        $listed = $sessions['body']['sessions'][0]['secret'] ?? '';
+        $this->assertNotSame($session['body']['secret'], $listed);
+
+        $replays = [
+            $listed,
+            \base64_encode(\json_encode(['id' => $userId, 'secret' => $listed])),
+        ];
+        foreach ($replays as $replay) {
+            $account = $this->client->call(Client::METHOD_GET, '/account', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-session' => $replay,
+            ]);
+            $this->assertSame(401, $account['headers']['status-code']);
+        }
+    }
 }

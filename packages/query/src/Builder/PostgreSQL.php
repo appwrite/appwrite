@@ -80,6 +80,8 @@ class PostgreSQL extends SQL implements
         upsertSelect as private baseUpsertSelect;
     }
 
+    private const string PLAIN_ARRAY_ELEMENT_CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_';
+
     protected string $wrapChar = '"';
 
     #[\Override]
@@ -124,7 +126,7 @@ class PostgreSQL extends SQL implements
      * @param  array<mixed>  $values
      */
     #[\Override]
-    protected function compileSearchExpr(string $attribute, array $values, bool $not): string
+    protected function compileSearchExpression(string $attribute, array $values, bool $not): string
     {
         /** @var string $term */
         $term = $values[0] ?? '';
@@ -473,7 +475,7 @@ class PostgreSQL extends SQL implements
             }
         }
 
-        $pathArray = '{' . \implode(',', $segments) . '}';
+        $pathArray = '{' . \implode(',', \array_map($this->quoteArrayElement(...), $segments)) . '}';
 
         $this->jsonSets[$column] = new Condition(
             'jsonb_set(' . $this->resolveAndWrap($column) . ', ?, to_jsonb(?::text)::jsonb, true)',
@@ -612,14 +614,47 @@ class PostgreSQL extends SQL implements
 
         $chain = $base;
         foreach ($parts as $key) {
-            $chain .= "->'" . $key . "'";
+            $chain .= '->' . $this->quoteJsonKey($key);
         }
 
-        return $chain . "->>'" . $lastKey . "'";
+        return $chain . '->>' . $this->quoteJsonKey($lastKey);
+    }
+
+    private function quoteArrayElement(string $element): string
+    {
+        $isPlain = $element !== ''
+            && \strspn($element, self::PLAIN_ARRAY_ELEMENT_CHARACTERS) === \strlen($element)
+            && \strcasecmp($element, 'NULL') !== 0;
+
+        if ($isPlain) {
+            return $element;
+        }
+
+        return '"' . \str_replace(['\\', '"'], ['\\\\', '\\"'], $element) . '"';
+    }
+
+    /**
+     * A key without a backslash is emitted as a plain literal, which reads the same whatever
+     * standard_conforming_strings is set to; a key with one uses the E'' form, which always
+     * treats a backslash as an escape.
+     */
+    private function quoteJsonKey(string $key): string
+    {
+        if (\str_contains($key, "\0")) {
+            throw new ValidationException('JSON key contains a NUL byte');
+        }
+
+        $escaped = \str_replace("'", "''", $key);
+
+        if (!\str_contains($key, '\\')) {
+            return "'" . $escaped . "'";
+        }
+
+        return "E'" . \str_replace('\\', '\\\\', $escaped) . "'";
     }
 
     #[\Override]
-    protected function compileVectorOrderExpr(): ?Condition
+    protected function compileVectorOrderExpression(): ?Condition
     {
         if ($this->vectorOrder === null) {
             return null;
@@ -844,7 +879,7 @@ class PostgreSQL extends SQL implements
      * @param  array<mixed>  $values
      */
     #[\Override]
-    protected function compileJsonContainsExpr(string $attribute, array $values, bool $not): string
+    protected function compileJsonContainsExpression(string $attribute, array $values, bool $not): string
     {
         $this->addBinding(\json_encode($values[0]));
         $expr = $attribute . ' @> ?::jsonb';
@@ -856,7 +891,7 @@ class PostgreSQL extends SQL implements
      * @param  array<mixed>  $values
      */
     #[\Override]
-    protected function compileJsonOverlapsExpr(string $attribute, array $values): string
+    protected function compileJsonOverlapsExpression(string $attribute, array $values): string
     {
         /** @var array<mixed> $arr */
         $arr = $values[0];
@@ -874,7 +909,7 @@ class PostgreSQL extends SQL implements
      * @param  array<mixed>  $values
      */
     #[\Override]
-    protected function compileJsonPathExpr(string $attribute, array $values): string
+    protected function compileJsonPathExpression(string $attribute, array $values): string
     {
         /** @var string $path */
         $path = $values[0];

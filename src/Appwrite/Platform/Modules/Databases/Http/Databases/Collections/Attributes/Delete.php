@@ -68,18 +68,21 @@ class Delete extends Action
             ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($db->isEmpty() || $this->isDatabaseTypeMismatch($db)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
+
+        $dbForDatabases = $getDatabasesDB($db);
 
         $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
@@ -93,7 +96,7 @@ class Delete extends Action
 
         $validator = new IndexDependencyValidator(
             $collection->getAttribute('indexes'),
-            $dbForProject->getAdapter()->getSupportForCastIndexArray(),
+            $dbForDatabases->getAdapter()->getSupportForCastIndexArray(),
         );
 
         if (!$validator->isValid($attribute)) {
@@ -106,7 +109,7 @@ class Delete extends Action
         }
 
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
-        $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
+        $dbForDatabases->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
 
         if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
             $options = $attribute->getAttribute('options');
@@ -127,7 +130,7 @@ class Delete extends Action
                 }
 
                 $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $options['relatedCollection']);
-                $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence());
+                $dbForDatabases->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence());
             }
         }
 
