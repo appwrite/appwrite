@@ -127,13 +127,12 @@ class Create extends CollectionAction
         }
 
         $collections = (Config::getParam('collections', [])['vectorsdb'] ?? [])['collections'] ?? [];
-        $attributes = \array_map(function (Attribute $attribute) use ($dimension) {
-            if ($attribute->key === 'embeddings') {
-                $attribute = clone $attribute;
-                $attribute->setAttribute('size', $dimension);
-            }
-            return $attribute;
-        }, $collections['defaultAttributes']);
+        $attributes = \array_map(
+            static fn (Attribute $attribute): Attribute => $attribute->key === 'embeddings'
+                ? Attribute::vector($attribute->key, dimensions: $dimension, required: $attribute->required)
+                : $attribute,
+            $collections['defaultAttributes'],
+        );
         $indexes = $collections['defaultIndexes'];
         try {
             // Bootstrap the database metadata without a separate existence
@@ -182,12 +181,14 @@ class Create extends CollectionAction
                     'format' => $attribute->format?->name ?? '',
                     'formatOptions' => $attribute->format?->options ?? [],
                     'filters' => $attribute->filters,
-                    'options' => $attribute->getOptions() ?? [],
+                    'options' => $attribute->toDocument()->getAttribute('options', []),
                 ]);
             }, $collections['defaultAttributes']);
             $dbForProject->createDocuments('attributes', $attributeDocuments);
 
             $indexDocuments = \array_map(function (Index $index) use ($database, $collection, $databaseId, $collectionId) {
+                $definition = $index->toDocument();
+
                 return new Document([
                     '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $index->key),
                     'key' => $index->key,
@@ -198,8 +199,8 @@ class Create extends CollectionAction
                     'collectionId' => $collectionId,
                     'type' => $index->type->value,
                     'attributes' => $index->attributes,
-                    'lengths' => $index->lengths,
-                    'orders' => $index->orders,
+                    'lengths' => $definition->getAttribute('lengths', []),
+                    'orders' => $definition->getAttribute('orders', []),
                 ]);
             }, $collections['defaultIndexes']);
 
