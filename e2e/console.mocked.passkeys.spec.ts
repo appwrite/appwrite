@@ -136,7 +136,20 @@ const CONFIGURED: PasskeyPolicy = {
 
 const UNCONFIGURED: PasskeyPolicy = { rpId: '', origins: [] }
 
-function project(passkeyEnabled: boolean) {
+/**
+ * Like the server's V29 filter: `passkey` is listed in authMethods only for
+ * the 2.4.0 response format and later, so a console that asks for an older
+ * format never sees the method's real state.
+ */
+function listsPasskey(request: Request): boolean {
+  const format = (request.headers()['x-appwrite-response-format'] ?? '')
+    .split('.')
+    .map(Number)
+  const [major = 0, minor = 0] = format
+  return major > 2 || (major === 2 && minor >= 4)
+}
+
+function project(passkeyEnabled: boolean, request: Request) {
   return {
     $id: PROJECT_ID,
     $createdAt: NOW,
@@ -145,15 +158,16 @@ function project(passkeyEnabled: boolean) {
     teamId: ORGANIZATION.$id,
     region: 'default',
     status: 'active',
-    // The SDK types service ids as enums, so the literals need the cast. Like the
-    // server at the 2.4.0 response format, authMethods includes passkey.
+    // The SDK types service ids as enums, so the literals need the cast.
     services: ALL_SERVICES.map(($id) => ({
       $id,
       enabled: true,
     })) as Models.Project['services'],
     authMethods: [
       ...AUTH_METHODS.map(($id) => ({ $id, enabled: true })),
-      { $id: PASSKEY_ID, enabled: passkeyEnabled },
+      ...(listsPasskey(request)
+        ? [{ $id: PASSKEY_ID, enabled: passkeyEnabled }]
+        : []),
     ] as Models.Project['authMethods'],
   } satisfies Partial<Models.Project>
 }
@@ -219,13 +233,13 @@ async function mockAppwriteApi(
       calls.policyPatches.push(request)
       if (options.patchError) return json(400, options.patchError)
       policy = { ...policy, ...request.postDataJSON() }
-      return json(200, project(passkeyEnabled))
+      return json(200, project(passkeyEnabled, request))
     }
 
     if (apiPath === PASSKEY_METHOD_PATH && request.method() === 'PATCH') {
       calls.methodPatches.push(request)
       passkeyEnabled = request.postDataJSON()?.enabled === true
-      return json(200, project(passkeyEnabled))
+      return json(200, project(passkeyEnabled, request))
     }
 
     if (apiPath === '/account') return json(200, account)
@@ -261,13 +275,16 @@ async function mockAppwriteApi(
     if (apiPath.endsWith('/memberships'))
       return json(200, { total: 0, memberships: [] })
     if (apiPath === '/projects' || apiPath === '/organization/projects')
-      return json(200, { total: 1, projects: [project(passkeyEnabled)] })
+      return json(200, {
+        total: 1,
+        projects: [project(passkeyEnabled, request)],
+      })
     if (
       apiPath === '/project' ||
       apiPath === `/projects/${PROJECT_ID}` ||
       apiPath === `/projects/${PROJECT_ID}/console-access`
     )
-      return json(200, project(passkeyEnabled))
+      return json(200, project(passkeyEnabled, request))
     // `fetchProjectAuthSecurity` swallows failures on both of these, so a
     // mis-pathed mock would read back as the default snapshot, not as an error.
     if (apiPath === '/project/policies')
