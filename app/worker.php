@@ -6,6 +6,7 @@ $registerWorkerMessageResources = require __DIR__ . '/init/worker/message.php';
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Platform\Workers\StatsUsage;
 use Appwrite\Workers\Jobs;
 use Swoole\Runtime;
 use Utopia\Config\Config;
@@ -172,5 +173,12 @@ $worker
         $span = Span::current() ?? Span::init("worker.{$workerName}");
         $span->finish(error: $error);
     });
+
+// A stats-usage job can be acknowledged while its rows are still buffered.
+if (\in_array('stats-usage', $workers, true)) {
+    $worker->workerStop()->action(static function (): void {
+        StatsUsage::flushPending();
+    });
+}
 
 $worker->start();

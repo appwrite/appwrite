@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Message\ProjectContext;
 use Appwrite\Usage\Connection;
+use Swoole\Timer;
 use Utopia\Console;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -14,6 +15,16 @@ use Utopia\UserAgent\UserAgent;
 
 class StatsUsage extends Action
 {
+    private const int FLUSH_THRESHOLD = 500;
+
+    private const float FLUSH_INTERVAL = 1.0;
+
+    private static ?Accumulator $accumulator = null;
+
+    private static ?int $timerId = null;
+
+    private static bool $timerStarted = false;
+
     protected const SITE_NETWORK_METRICS = [
         METRIC_SITES_INBOUND => METRIC_NETWORK_INBOUND,
         METRIC_SITES_OUTBOUND => METRIC_NETWORK_OUTBOUND,
@@ -23,6 +34,11 @@ class StatsUsage extends Action
     public static function getName(): string
     {
         return 'stats-usage';
+    }
+
+    public static function flushPending(): void
+    {
+        self::flushBuffer(force: true);
     }
 
     public function __construct()
@@ -56,7 +72,6 @@ class StatsUsage extends Action
         }
 
         try {
-            $accumulator = new Accumulator($usageConnection->getUsage());
             $projectId = (string) ($payload['project']['$id'] ?? '');
             $timestamp = $this->timestamp($payload, $message);
 
@@ -108,7 +123,7 @@ class StatsUsage extends Action
                 $tags = array_merge($this->resolveUserAgentTags((string) ($metric['userAgent'] ?? '')), $tags);
                 $tags = array_filter($tags, static fn (mixed $value): bool => $value !== '' && $value !== null);
 
-                $accumulator->collect(
+                self::accumulator($usageConnection)->collect(
                     $tenant,
                     $storedKey,
                     $value,
@@ -119,12 +134,73 @@ class StatsUsage extends Action
                 );
             }
 
-            if ($accumulator->count() > 0 && !$accumulator->flush()) {
-                Console::error('Usage event flush returned false');
-            }
+            self::flushBuffer();
         } catch (\Throwable $th) {
             // Usage analytics deliberately remains best-effort and inserts are
             // not retried because the adapter has no durable deduplication key.
+            // Rows already folded in stay for a later flush. The job is still
+            // acknowledged, so a retry would record them again.
+            Console::error('Failed to write usage events: ' . $th->getMessage());
+        }
+    }
+
+    private static function accumulator(Connection $usageConnection): Accumulator
+    {
+        self::ensureFlushTimer();
+
+        return self::$accumulator ??= new Accumulator($usageConnection->getUsage());
+    }
+
+    private static function ensureFlushTimer(): void
+    {
+        if (self::$timerStarted) {
+            return;
+        }
+
+        try {
+            $timerId = Timer::tick((int) (self::FLUSH_INTERVAL * 1000), static function (): void {
+                self::flushBuffer();
+            });
+        } catch (\Throwable) {
+            return;
+        }
+        if (!\is_int($timerId)) {
+            return;
+        }
+
+        self::$timerStarted = true;
+        self::$timerId = $timerId;
+    }
+
+    private static function flushBuffer(bool $force = false): void
+    {
+        if ($force && self::$timerId !== null) {
+            Timer::clear(self::$timerId);
+            self::$timerId = null;
+        }
+
+        $accumulator = self::$accumulator;
+        if ($accumulator === null || $accumulator->count() === 0) {
+            return;
+        }
+        if (
+            !$force
+            && $accumulator->count() < self::FLUSH_THRESHOLD
+            && $accumulator->elapsedSeconds() < self::FLUSH_INTERVAL
+        ) {
+            return;
+        }
+
+        // Detach before flush() yields on HTTP. Collects from the other
+        // coroutines, or the timer, must land in a new buffer. The detached
+        // one is not put back: ClickHouse inserts are not idempotent.
+        self::$accumulator = null;
+
+        try {
+            if (!$accumulator->flush()) {
+                Console::error('Usage event flush returned false');
+            }
+        } catch (\Throwable $th) {
             Console::error('Failed to write usage events: ' . $th->getMessage());
         }
     }
