@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Docker\Compose;
+use Appwrite\Docker\Compose\Files;
 use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
 use Appwrite\Installer\Report;
@@ -18,7 +19,7 @@ use Utopia\Auth\Proofs\Password;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Platform\Action;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
@@ -1307,7 +1308,6 @@ class Install extends Action
         if ($isLocalInstall && $this->hostPath !== '') {
             $composePath = $this->hostPath;
         }
-        $composeFile = $composePath . '/' . $this->getComposeFileName();
         $envFile = $composePath . '/' . $this->getEnvFileName();
 
         $command = [
@@ -1315,9 +1315,11 @@ class Install extends Action
             'compose',
             '--env-file',
             $envFile,
-            '-f',
-            $composeFile,
         ];
+        foreach ((new Files($this->path, $this->getComposeFileName()))->names() as $name) {
+            $command[] = '-f';
+            $command[] = $composePath . '/' . $name;
+        }
 
         if ($isLocalInstall) {
             $command[] = '--project-name';
@@ -1336,6 +1338,10 @@ class Install extends Action
             throw new \RuntimeException('Invalid Docker Compose file', 0, $message !== '' ? new \RuntimeException($message) : null);
         }
 
+        $servicesCommand = $command;
+        $servicesCommand[] = 'config';
+        $servicesCommand[] = '--services';
+
         $command[] = 'up';
         $command[] = '-d';
         $command[] = '--remove-orphans';
@@ -1343,7 +1349,7 @@ class Install extends Action
         $commandLine = $env . implode(' ', array_map(escapeshellarg(...), $command));
 
         if ($progress) {
-            $totalServices = $this->countComposeServices($composeFile);
+            $totalServices = $this->countComposeServices($env . implode(' ', array_map(escapeshellarg(...), $servicesCommand)));
             if ($totalServices > 0) {
                 $verb = $isUpgrade ? 'Restarting' : 'Starting';
                 try {
@@ -1373,14 +1379,17 @@ class Install extends Action
         }
     }
 
-    private function countComposeServices(string $composeFile): int
+    /**
+     * Services in the merged compose configuration, overrides included.
+     */
+    private function countComposeServices(string $commandLine): int
     {
-        $content = @file_get_contents($composeFile);
-        if ($content === false) {
+        \exec($commandLine . ' 2> /dev/null', $services, $exit);
+        if ($exit !== 0) {
             return 0;
         }
-        $count = preg_match_all('/^\s*container_name:/m', $content);
-        return $count !== false ? $count : 0;
+
+        return count(array_filter($services, fn (string $service): bool => trim($service) !== ''));
     }
 
     private function execWithContainerProgress(string $commandLine, int $totalServices, callable $progress, bool $isUpgrade): array

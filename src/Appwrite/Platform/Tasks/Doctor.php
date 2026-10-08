@@ -10,7 +10,7 @@ use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;

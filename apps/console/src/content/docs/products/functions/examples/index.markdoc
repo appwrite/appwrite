@@ -1,0 +1,1110 @@
+---
+layout: article
+title: Examples
+description: Accelerate your serverless development with Appwrite Functions examples. Access a library of code samples and use cases to jumpstart your projects.
+---
+
+
+Appwrite Functions is all about flexibility. Behind the simple workflow hides some useful examples that can help you accomplish your goals faster. Take a look at the following.
+
+{% section #currency-conversion step=1 title="Currency conversion API" %}
+
+Here's a currency conversion API that converts from Euros and Indian Rupees to US Dollars. We'll use an external API to get the latest exchange rates and query it using a dependency specific to each runtime.
+
+## Prerequisites
+
+{% tabs %}
+{% tabsitem #node title="Node.js" %}
+Run the following bash command to create a `package.json` file. This file is used to manage your Node.js project's dependencies.
+```bash
+npm init -y
+```
+Install the `undici` library. This library includes a `fetch` function that you can use to make HTTP requests.
+
+```bash
+npm install undici
+```
+Finally, add `npm install` to your function's build commands in the Appwrite Console.
+{% /tabsitem %}
+
+{% tabsitem #php title="PHP" %}
+Run the following bash command to create a `composer.json` file. This file is used to manage your PHP project's dependencies.
+
+```bash
+composer init -y
+```
+
+Install the `guzzlehttp/guzzle` library. This library includes a `get` function that you can use to make HTTP requests.
+
+```bash
+composer require guzzlehttp/guzzle
+```
+
+Finally, add `composer install` to your function's build commands in the Appwrite Console.
+
+{% /tabsitem %}
+
+{% tabsitem #python title="Python" %}
+
+Run the following bash command to create a `requirements.txt` file. This file is used to manage your Python project's dependencies.
+
+```bash
+touch requirements.txt
+```
+
+Install the `requests` library. This library includes a `get` function that you can use to make HTTP requests.
+
+```bash
+echo "requests" >> requirements.txt
+pip install -r requirements.txt
+```
+
+Finally, add `pip install -r requirements.txt` to your function's build commands in the Appwrite Console.
+
+{% /tabsitem %}
+{% tabsitem #dart title="Dart" %}
+
+Create a `pubspec.yaml` file with the following contents. This file is used to manage your Dart project's dependencies.
+
+```yaml
+name: appwrite_function
+description: Appwrite Function
+version: 1.0.0
+environment:
+  sdk: '>=2.12.0 <3.0.0'
+```
+
+Install the `http` library. This library includes a `get` function that you can use to make HTTP requests.
+
+```bash
+pub install http
+```
+
+Finally, add `pub get` to your function's build commands in the Appwrite Console.
+
+{% /tabsitem %}
+{% tabsitem #ruby title="Ruby" %}
+
+Create a `Gemfile` file with the following contents. This file is used to manage your Ruby project's dependencies.
+
+```ruby
+source 'https://rubygems.org'
+```
+
+Install the `httparty` library. This library includes a `get` function that you can use to make HTTP requests.
+
+```bash
+echo "gem 'httparty'" >> Gemfile
+bundle install
+```
+
+Finally, add `bundle install` to your function's build commands in the Appwrite Console.
+{% /tabsitem %}
+
+{% tabsitem #rust title="Rust" %}
+
+Create a `Cargo.toml` file with the following contents. This file is used to manage your Rust project's dependencies.
+
+```toml
+[package]
+name = "handler"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.83"
+
+[lib]
+name = "handler"
+path = "lib.rs"
+
+[dependencies]
+openruntimes = { version = "1.0", package = "openruntimes-types-for-rust" }
+serde_json = "1.0"
+ureq = { version = "2.10", features = ["json"] }
+appwrite = "0.4"
+tokio = { version = "1", features = ["rt"] }
+urlencoding = "2.1"
+```
+
+`ureq` is the blocking HTTP client used by the currency example. `appwrite` and `tokio` are used by the voting and contact form examples that call the Appwrite SDK. `urlencoding` is used by the contact form example to decode form fields. Cargo picks up `Cargo.toml` automatically, so no extra build command is required.
+{% /tabsitem %}
+
+{% /tabs %}
+
+
+## Code
+{% multicode %}
+```server-nodejs
+import { fetch } from 'undici';
+
+export default async function ({ req, res }) {
+  if (req.path === '/eur') {
+    const amountInEuros = Number(req.query.amount);
+    const response = await fetch('https://api.exchangerate.host/latest?base=EUR&symbols=USD');
+    const data = await response.json();
+    const amountInDollars = amountInEuros * data.rates.USD;
+    return res.text(amountInDollars.toString());
+  }
+
+  if (req.path === '/inr') {
+    const amountInRupees = Number(req.query.amount);
+    const response = await fetch('https://api.exchangerate.host/latest?base=INR&symbols=USD');
+    const data = await response.json();
+    const amountInDollars = amountInRupees * data.rates.USD;
+    return res.text(amountInDollars.toString());
+  }
+
+  return res.text('Invalid path');
+};
+```
+```php
+<?php
+
+require(__DIR__ . '/../vendor/autoload.php');
+
+use Appwrite\Client;
+use Appwrite\Exception;
+use Appwrite\Services\Database;
+use GuzzleHttp\Client as GuzzleClient;
+
+return function ($context) {
+    $client = new GuzzleClient();
+
+    if ($context->req->path === '/eur') {
+        $amountInEuros = floatval($context->req->query['amount']);
+        $response = $client->get('https://api.exchangerate.host/latest?base=EUR&symbols=USD');
+        $data = $response->json();
+        $amountInDollars = $amountInEuros * $data['rates']['USD'];
+        return $context->res->text(strval($amountInDollars));
+    }
+
+    if ($context->req->path === '/inr') {
+        $amountInRupees = floatval($context->req->query['amount']);
+        $response = $client->get('https://api.exchangerate.host/latest?base=INR&symbols=USD');
+        $data = $response->json();
+        $amountInDollars = $amountInRupees * $data['rates']['USD'];
+        return $context->res->text(strval($amountInDollars));
+    }
+
+    return $context->res->text('Invalid path');
+};
+```
+```python
+import requests
+
+def main(context):
+  if context.req.path == '/eur':
+    amount_in_euros = float(context.req.query['amount'])
+    response = requests.get('https://api.exchangerate.host/latest?base=EUR&symbols=USD')
+    data = response.json()
+    amount_in_dollars = amount_in_euros * data['rates']['USD']
+    return context.res.text(str(amount_in_dollars))
+
+  if context.req.path == '/inr':
+    amount_in_rupees = float(context.req.query['amount'])
+    response = requests.get('https://api.exchangerate.host/latest?base=INR&symbols=USD')
+    data = response.json()
+    amount_in_dollars = amount_in_rupees * data['rates']['USD']
+    return context.res.text(str(amount_in_dollars))
+
+  return 'Invalid path'
+```
+```dart
+import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'dart:io';
+
+Future<dynamic> main(final context) async {
+  if (context.req.path == '/eur') {
+    final amountInEuros = double.parse(context.req.query['amount'])
+    final response = await http.get(Uri.parse('https://api.exchangerate.host/latest?base=EUR&symbols=USD'));
+    final data = json.decode(response.body);
+    final amountInDollars = amountInEuros * data['rates']['USD'];
+    return context.res.text(amountInDollars.toString());
+  }
+
+  if (context.req.path == '/inr') {
+    final amountInRupees = double.parse(context.req.query['amount'])
+    final response = await http.get(Uri.parse('https://api.exchangerate.host/latest?base=INR&symbols=USD'));
+    final data = json.decode(response.body);
+    final amountInDollars = amountInRupees * data['rates']['USD'];
+    return context.res.text(amountInDollars.toString());
+  }
+
+  return 'Invalid path';
+}
+```
+```ruby
+require 'httparty'
+
+def main(context)
+  if context.req.path == '/eur'
+    amount_in_euros = context.req.query['amount'].to_f
+    response = HTTParty.get('https://api.exchangerate.host/latest?base=EUR&symbols=USD')
+    data = JSON.parse(response.body)
+    amount_in_dollars = amount_in_euros * data['rates']['USD']
+    return context.res.text(amount_in_dollars.to_s)
+  end
+
+  if context.req.path == '/inr'
+    amount_in_rupees = context.req.query['amount'].to_f
+    response = HTTParty.get('https://api.exchangerate.host/latest?base=INR&symbols=USD')
+    data = JSON.parse(response.body)
+    amount_in_dollars = amount_in_rupees * data['rates']['USD']
+    return context.res.text(amount_in_dollars.to_s)
+  end
+
+  return 'Invalid path'
+end
+```
+```rust
+use openruntimes::{Context, Response};
+use serde_json::Value;
+
+pub fn main(context: Context) -> Response {
+    let path = context.req.path.as_str();
+
+    if path == "/eur" || path == "/inr" {
+        let base = if path == "/eur" { "EUR" } else { "INR" };
+        let amount: f64 = context
+            .req
+            .query
+            .get("amount")
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0.0);
+
+        let url = format!(
+            "https://api.exchangerate.host/latest?base={}&symbols=USD",
+            base
+        );
+
+        let data: Value = ureq::get(&url)
+            .call()
+            .ok()
+            .and_then(|r| r.into_json().ok())
+            .unwrap_or(Value::Null);
+
+        let rate = data
+            .get("rates")
+            .and_then(|r| r.get("USD"))
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0);
+
+        return context.res.text((amount * rate).to_string(), None, None);
+    }
+
+    context.res.text("Invalid path", None, None)
+}
+```
+{% /multicode %}
+
+{% /section %}
+
+{% section #voting-system step=2 title="Voting system" %}
+
+Here's a simple voting system that allows users to vote on various topics. Appwrite Functions and the server SDK are used to enforce voting rules and prevent multiple votes from the same user for a single topic.
+
+## Prerequisites
+
+Create a Topics table with the following columns:
+
+| Name          | Type   | Description                      |
+|---------------|--------|----------------------------------|
+| `title`       | Varchar | The name of the topic            |
+| `description` | Text | Long form description of the topic|
+
+Create a Votes table with the following columns:
+
+| Name          | Type   | Description                              |
+|---------------|--------|------------------------------------------|
+| `userId`      | Varchar | The ID of the user who cast the vote     |
+| `topicId`     | Varchar | The ID of the topic that was voted on    |
+| `vote`        | Varchar | The vote cast by the user. Must be either "yes" or "no" |
+
+
+## Code
+{% multicode %}
+```server-nodejs
+import { Client, TablesDB, Query, ID } from 'node-appwrite';
+
+export default async function ({ req, res }) {
+  const vote = {
+    userId: req.query.userId,
+    topicId: req.query.topicId,
+    vote: req.query.vote
+  };
+
+  if (vote.vote !== 'yes' && vote.vote !== 'no') {
+    return res.json({ ok: false, message: 'You must vote yes or no.' }, 400);
+  }
+
+  // Set project and set API key
+  const client = new Client();
+  client
+    .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+    .setKey(req.headers['x-appwrite-key']);
+
+  const tablesDB = new TablesDB(client);
+
+  const existingVotes = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<VOTES_TABLE_ID>',
+    queries: [
+      Query.equal('userId', vote.userId),
+      Query.equal('topicId', vote.topicId)
+    ]
+  });
+
+  if (existingVotes.total > 0) {
+    return res.json({ ok: false, message: 'You have already voted on this topic.' }, 400);
+  }
+
+  const voteDocument = await tablesDB.createRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<VOTES_TABLE_ID>',
+    rowId: ID.unique(),
+    data: {
+      userId: vote.userId,
+      topicId: vote.topicId,
+      vote: vote.vote,
+    }
+  });
+
+  return res.json({ ok: true, message: 'Vote cast.', vote: voteDocument });
+};
+```
+```python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+from appwrite.query import Query
+from appwrite.id import ID
+import os
+
+def main(context):
+    vote = {
+        'userId': context.req.query['userId'],
+        'topicId': context.req.query['topicId'],
+        'vote': context.req.query['vote']
+    }
+
+    if vote['vote'] != 'yes' and vote['vote'] != 'no':
+        return context.res.json({'ok': False, 'message': 'You must vote yes or no.'}, 400)
+
+    # Set project and set API key
+    client = (
+        Client()
+        .set_project(os.environ['APPWRITE_FUNCTION_PROJECT_ID'])
+        .set_key(context.req.headers['x-appwrite-key'])
+    )
+
+    tablesDB = TablesDB(client)
+
+    existing_votes = tablesDB.list_rows(database_id='<DATABASE_ID>', table_id='<VOTES_TABLE_ID>', queries=[
+        Query.equal('userId', vote['userId']),
+        Query.equal('topicId', vote['topicId'])
+    ])
+
+    if existing_votes['total'] > 0:
+        return context.res.json({
+          'ok': False,
+          'message': 'You have already voted on this topic.'
+        }, 400)
+
+    vote_row = tablesDB.create_row(
+        database_id='<DATABASE_ID>',
+        table_id='<VOTES_TABLE_ID>',
+        row_id=ID.unique(),
+        data={
+            'userId': vote['userId'],
+            'topicId': vote['topicId'],
+            'vote': vote['vote'],
+        }
+    )
+
+    return context.res.json({'ok': True, 'message': 'Vote cast.', 'vote': vote_row})
+```
+```php
+<?php
+
+require(__DIR__ . '/../vendor/autoload.php');
+
+use Appwrite\Client;
+use Appwrite\Exception;
+use Appwrite\Services\TablesDB;
+use Appwrite\ID;
+use Appwrite\Query;
+
+return function ($context) {
+    $vote = [
+        'userId' => $context->req->query['userId'],
+        'topicId' => $context->req->query['topicId'],
+        'vote' => $context->req->query['vote']
+    ];
+
+    if ($vote['vote'] !== 'yes' && $vote['vote'] !== 'no') {
+        return $context->res->json(['ok' => false, 'message' => 'You must vote yes or no.'], 400);
+    }
+
+    // Set project and set API key
+    $client = new Client();
+    $client
+        ->setProject(getenv('APPWRITE_FUNCTION_PROJECT_ID'))
+        ->setKey($context->req->headers['x-appwrite-key']);
+
+    $tablesDB = new TablesDB($client);
+
+    $existingVotes = $tablesDB->listRows(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<VOTES_TABLE_ID>',
+        queries: [
+            Query::equal('userId', $vote['userId']),
+            Query::equal('topicId', $vote['topicId'])
+        ]
+    );
+
+    if ($existingVotes['total'] > 0) {
+        return $context->res->json([
+          'ok' => false,
+          'message' => 'You have already voted on this topic.'
+        ], 400);
+    }
+
+    $voteRow = $tablesDB->createRow(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<VOTES_TABLE_ID>',
+        rowId: ID::unique(),
+        data: [
+            'userId' => $vote['userId'],
+            'topicId' => $vote['topicId'],
+            'vote' => $vote['vote'],
+        ]
+    );
+
+    return $context->res->json([
+      'ok' => true,
+      'message' => 'Vote cast.',
+      'vote' => $voteRow
+    ]);
+};
+```
+```dart
+import 'dart:async';
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'dart:io';
+
+Future main(final context) async {
+    final vote = {
+        'userId': context.req.query['userId'],
+        'topicId': context.req.query['topicId'],
+        'vote': context.req.query['vote']
+    };
+
+    if (vote['vote'] != 'yes' && vote['vote'] != 'no') {
+        return context.res.json({'ok': false, 'message': 'You must vote yes or no.'}, 400);
+    }
+
+    // Set project and set API key
+    final client = Client()
+        .setProject(Platform.environment['APPWRITE_FUNCTION_PROJECT_ID'])
+        .setKey(context.req.headers['x-appwrite-key']);
+
+    final tablesDB = TablesDB(client);
+
+    final existingVotes = await tablesDB.listRows(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<VOTES_TABLE_ID>',
+        queries: [
+            Query.equal('userId', vote['userId']),
+            Query.equal('topicId', vote['topicId'])
+        ]
+    );
+
+    if (existingVotes['total'] > 0) {
+        return context.res.json({
+          'ok': false,
+          'message': 'You have already voted on this topic.'
+        }, 400);
+    }
+
+    final voteRow = await tablesDB.createRow(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<VOTES_TABLE_ID>',
+        rowId: ID.unique(),
+        data: {
+            'userId': vote['userId'],
+            'topicId': vote['topicId'],
+            'vote': vote['vote'],
+        }
+    );
+
+    return context.res.json({
+      'ok': true,
+      'message': 'Vote cast.',
+      'vote': voteRow
+    });
+}
+```
+```ruby
+require "appwrite"
+
+def main(context)
+    vote = {
+        'userId' => context.req.query['userId'],
+        'topicId' => context.req.query['topicId'],
+        'vote' => context.req.query['vote']
+    }
+
+    if vote['vote'] != 'yes' and vote['vote'] != 'no'
+        return context.res.json({'ok': false, 'message': 'You must vote yes or no.'}, 400)
+    end
+
+    # Set project and set API key
+    client = Appwrite::Client.new()
+    client
+        .set_project(ENV['APPWRITE_FUNCTION_PROJECT_ID'])
+        .set_key(context.req.headers['x-appwrite-key'])
+
+    tablesDB = Appwrite::TablesDB.new(client)
+
+    existing_votes = tablesDB.list_rows(
+        database_id: '<DATABASE_ID>',
+        table_id: '<VOTES_TABLE_ID>',
+        queries: [
+            Appwrite::Query.equal('userId', vote['userId']),
+            Appwrite::Query.equal('topicId', vote['topicId'])
+        ]
+    )
+
+    if existing_votes['total'] > 0
+        return context.res.json({
+          'ok': false,
+          'message': 'You have already voted on this topic.'
+        }, 400)
+    end
+
+    vote_row = tablesDB.create_row(
+        database_id: '<DATABASE_ID>',
+        table_id: '<VOTES_TABLE_ID>',
+        row_id: Appwrite::ID.unique(),
+        data: {
+            'userId' => vote['userId'],
+            'topicId' => vote['topicId'],
+            'vote' => vote['vote'],
+        }
+    )
+
+    return context.res.json({
+      'ok': true,
+      'message': 'Vote cast.',
+      'vote': vote_row
+    })
+end
+```
+```rust
+use appwrite::error::AppwriteError;
+use appwrite::id::ID;
+use appwrite::query::Query;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::Client;
+use openruntimes::{Context, Response};
+use serde_json::json;
+use std::env;
+
+pub fn main(context: Context) -> Response {
+    let user_id = context.req.query.get("userId").cloned().unwrap_or_default();
+    let topic_id = context.req.query.get("topicId").cloned().unwrap_or_default();
+    let vote = context.req.query.get("vote").cloned().unwrap_or_default();
+
+    if vote != "yes" && vote != "no" {
+        return context.res.json(
+            json!({ "ok": false, "message": "You must vote yes or no." }),
+            Some(400),
+            None,
+        );
+    }
+
+    // Set project and set API key
+    let client = Client::new()
+        .set_endpoint(env::var("APPWRITE_FUNCTION_API_ENDPOINT").unwrap_or_default())
+        .set_project(env::var("APPWRITE_FUNCTION_PROJECT_ID").unwrap_or_default())
+        .set_key(
+            context
+                .req
+                .headers
+                .get("x-appwrite-key")
+                .cloned()
+                .unwrap_or_default(),
+        );
+
+    let tables_db = TablesDB::new(&client);
+
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+
+    let user_id_q = user_id.clone();
+    let topic_id_q = topic_id.clone();
+
+    let result: Result<Option<serde_json::Value>, AppwriteError> = runtime.block_on(async move {
+        let existing = tables_db
+            .list_rows(
+                "<DATABASE_ID>",
+                "<VOTES_TABLE_ID>",
+                Some(vec![
+                    Query::equal("userId", json!(user_id_q)).to_string(),
+                    Query::equal("topicId", json!(topic_id_q)).to_string(),
+                ]),
+                None,
+                None,
+                None,
+            )
+            .await?;
+
+        if existing.total > 0 {
+            return Ok(None);
+        }
+
+        let row = tables_db
+            .create_row(
+                "<DATABASE_ID>",
+                "<VOTES_TABLE_ID>",
+                ID::unique(),
+                json!({
+                    "userId": user_id,
+                    "topicId": topic_id,
+                    "vote": vote,
+                }),
+                None,
+                None,
+            )
+            .await?;
+
+        Ok(Some(json!(row)))
+    });
+
+    match result {
+        Ok(Some(row)) => context.res.json(
+            json!({ "ok": true, "message": "Vote cast.", "vote": row }),
+            None,
+            None,
+        ),
+        Ok(None) => context.res.json(
+            json!({ "ok": false, "message": "You have already voted on this topic." }),
+            Some(400),
+            None,
+        ),
+        Err(e) => {
+            context.error(format!("Vote failed: {}", e));
+            context.res.text("Vote failed", Some(500), None)
+        }
+    }
+}
+```
+{% /multicode %}
+Use the function by navigating to the function URL in the browser.
+The URL should contain the required parameters.
+For example, `<YOUR_FUNCTION_URL>/?userId=<USER_ID>&topicId=<TOPIC_ID>&vote=yes` to cast a vote.
+{% /section %}
+
+{% section #form-submission step=3 title="HTML contact form" %}
+Here's a simple form page that handles form submissions, and can be used to store a user's message in a table.
+The form is submitted to the function using the `POST` method and the form data is sent as a URL-encoded string in the request body.
+
+## Prerequisites
+Create a Messages table with the following columns:
+
+| Name       | Type   | Description                      |
+|------------|--------|----------------------------------|
+| `name`     | Varchar | The name of the message author   |
+| `email`    | Email | The email of the message author  |
+| `content`  | Text | The content of the message       |
+
+## Code
+
+{% multicode %}
+
+```server-nodejs
+import { Client, TablesDB, Query, ID } from 'node-appwrite';
+import querystring from 'node:querystring';
+
+const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Contact Form</title>
+  </head>
+  <body>
+    <form action="/" method="POST">
+      <input type="text" id="name" name="name" placeholder="Name" required>
+      <input type="email" id="email" name="email" placeholder="Email" required>
+      <textarea id="content" name="content" placeholder="Message" required></textarea>
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>`
+
+export default async function ({ req, res }) {
+  if (req.method === 'GET') {
+    return res.text(html, 200, {'content-type': 'text/html'});
+  }
+
+  if (req.method === 'POST' && req.headers['content-type'] === 'application/x-www-form-urlencoded') {
+    const formData = querystring.parse(req.body);
+
+    const message = {
+      name: formData.name,
+      email: formData.email,
+      content: formData.content
+    };
+
+    // Set project and set API key
+    const client = new Client()
+      .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+      .setKey(req.headers['x-appwrite-key']);
+
+    const tablesDB = new TablesDB(client);
+    const row = await tablesDB.createRow({
+        databaseId: '<DATABASE_ID>',
+        tableId: '<MESSAGES_TABLE_ID>',
+        rowId: ID.unique(),
+        data: message
+    });
+
+    return res.text("Message sent");
+  }
+
+  return res.text('Not found', 404);
+}
+```
+
+```python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+from appwrite.query import Query
+from urllib.parse import parse_qs
+import os
+
+html = '''<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Contact Form</title>
+  </head>
+  <body>
+    <form action="/" method="POST">
+      <input type="text" id="name" name="name" placeholder="Name" required>
+      <input type="email" id="email" name="email" placeholder="Email" required>
+      <textarea id="content" name="content" placeholder="Message" required></textarea>
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>
+'''
+
+def main(context):
+    if context.req.method == 'GET':
+        return context.res.text(html, 200, {'content-type': 'text/html'})
+
+    if context.req.method == 'POST' and context.req.headers['content-type'] == 'application/x-www-form-urlencoded':
+        formData = parse_qs(context.req.body)
+
+        message = {
+            'name': formData['name'][0],
+            'email': formData['email'][0],
+            'content': formData['content'][0]
+        }
+
+        # Set project and set API key
+        client = (
+          Client()
+            .set_project(os.environ["APPWRITE_FUNCTION_PROJECT_ID"])
+            .set_key(context.req.headers["x-appwrite-key"])
+        )
+
+        tablesDB = TablesDB(client)
+        row = tablesDB.create_row(database_id='<DATABASE_ID>', table_id='<MESSAGES_TABLE_ID>', row_id=ID.unique(), data=message)
+
+        return context.res.text("Message sent")
+
+    return context.res.text('Not found', 404)
+```
+
+```php
+<?php
+
+require(__DIR__ . '/../vendor/autoload.php');
+
+use Appwrite\Client;
+use Appwrite\Exception;
+use Appwrite\Services\TablesDB;
+use Appwrite\ID;
+
+$html = '<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Contact Form</title>
+  </head>
+  <body>
+    <form action="/" method="POST">
+      <input type="text" id="name" name="name" placeholder="Name" required>
+      <input type="email" id="email" name="email" placeholder="Email" required>
+      <textarea id="content" name="content" placeholder="Message" required></textarea>
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>';
+
+return function ($context) {
+  global $html;
+
+  if ($context->req->method === 'GET') {
+    return $context->res->text($html, 200, ['content-type' => 'text/html']);
+  }
+
+  if ($context->req->method === 'POST' && $context->req->headers['content-type'] === 'application/x-www-form-urlencoded') {
+    \parse_str($context->req->body, $formData);
+
+    $message = [
+      'name' => $formData['name'],
+      'email' => $formData['email'],
+      'content' => $formData['content']
+    ];
+
+    // Set project and set API key
+    $client = (new Client())
+         ->setProject(getenv('APPWRITE_FUNCTION_PROJECT_ID'))
+         ->setKey($context->req->headers['x-appwrite-key']);
+
+    $tablesDB = new TablesDB($client);
+    $row = $tablesDB->createRow(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<MESSAGES_TABLE_ID>',
+        rowId: ID::unique(),
+        data: $message
+    );
+
+    return $context->res->text("Message sent");
+  }
+
+  return $context->res->text('Not found', 404);
+};
+```
+
+```ruby
+require "appwrite"
+
+html = '''<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Contact Form</title>
+  </head>
+  <body>
+    <form action="/" method="POST">
+      <input type="text" id="name" name="name" placeholder="Name" required>
+      <input type="email" id="email" name="email" placeholder="Email" required>
+      <textarea id="content" name="content" placeholder="Message" required></textarea>
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>
+'''
+
+def main(context)
+    if context.req.method == 'GET'
+        return context.res.text(html, 200, {'content-type': 'text/html'})
+    end
+
+    if context.req.method == 'POST' and context.req.headers['content-type'] == 'application/x-www-form-urlencoded'
+        formData = URI.decode_www_form(context.req.body).to_h
+
+        message = {
+            'name' => formData['name'],
+            'email' => formData['email'],
+            'content' => formData['content']
+        }
+
+        # Set project and set API key
+        client = Appwrite::Client.new
+            .set_project(ENV['APPWRITE_FUNCTION_PROJECT_ID'])
+            .set_key(context.req.headers['x-appwrite-key'])
+
+        tablesDB = Appwrite::TablesDB.new(client)
+        row = tablesDB.create_row(database_id: '<DATABASE_ID>', table_id: '<MESSAGES_TABLE_ID>', row_id: Appwrite::ID.unique(), data: message)
+
+        return context.res.text("Message sent")
+    end
+
+    return context.res.text('Not found', 404)
+end
+```
+
+```dart
+import 'dart:async';
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'dart:io';
+
+Future main(final context) async {
+    final html = '''<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Contact Form</title>
+  </head>
+  <body>
+    <form action="/" method="POST">
+      <input type="text" id="name" name="name" placeholder="Name" required>
+      <input type="email" id="email" name="email" placeholder="Email" required>
+      <textarea id="content" name="content" placeholder="Message" required></textarea>
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>
+''';
+
+    if (context.req.method == 'GET') {
+        return context.res.text(html, 200, {'content-type': 'text/html'});
+    }
+
+    if (context.req.method == 'POST' && context.req.headers['content-type'] == 'application/x-www-form-urlencoded') {
+        final formData = Uri.splitQueryString(context.req.body);
+
+        final message = {
+            'name': formData['name'],
+            'email': formData['email'],
+            'content': formData['content']
+        };
+
+        // Set project and set API key
+        final client = Client()
+          .setProject(Platform.environment['APPWRITE_FUNCTION_PROJECT_ID'])
+          .setKey(context.req.headers['x-appwrite-key']);
+
+        final tablesDB = TablesDB(client);
+        final row = await tablesDB.createRow(
+            databaseId: '<DATABASE_ID>',
+            tableId: '<MESSAGES_TABLE_ID>',
+            rowId: ID.unique(),
+            data: message
+        );
+
+        return context.res.text("Message sent");
+    }
+
+    return context.res.text('Not found', 404);
+}
+```
+
+```rust
+use appwrite::id::ID;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::Client;
+use openruntimes::{Context, Response};
+use serde_json::json;
+use std::collections::HashMap;
+use std::env;
+
+const HTML: &str = r#"<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Contact Form</title>
+  </head>
+  <body>
+    <form action="/" method="POST">
+      <input type="text" id="name" name="name" placeholder="Name" required>
+      <input type="email" id="email" name="email" placeholder="Email" required>
+      <textarea id="content" name="content" placeholder="Message" required></textarea>
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>"#;
+
+fn parse_form(body: &str) -> HashMap<String, String> {
+    body.split('&')
+        .filter_map(|pair| {
+            let mut split = pair.splitn(2, '=');
+            // application/x-www-form-urlencoded encodes spaces as `+`, so
+            // replace `+` before percent-decoding any `%xx` sequences.
+            let key = split.next()?.replace('+', " ");
+            let value = split.next().unwrap_or("").replace('+', " ");
+            Some((
+                urlencoding::decode(&key).ok()?.into_owned(),
+                urlencoding::decode(&value).ok()?.into_owned(),
+            ))
+        })
+        .collect()
+}
+
+pub fn main(context: Context) -> Response {
+    if context.req.method == "GET" {
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "text/html".to_string());
+        return context.res.text(HTML, Some(200), Some(headers));
+    }
+
+    let content_type = context
+        .req
+        .headers
+        .get("content-type")
+        .map(|s| s.as_str())
+        .unwrap_or("");
+
+    if context.req.method == "POST" && content_type == "application/x-www-form-urlencoded" {
+        let body = context.req.body_text();
+        let form = parse_form(&body);
+
+        let client = Client::new()
+            .set_endpoint(env::var("APPWRITE_FUNCTION_API_ENDPOINT").unwrap_or_default())
+            .set_project(env::var("APPWRITE_FUNCTION_PROJECT_ID").unwrap_or_default())
+            .set_key(
+                context
+                    .req
+                    .headers
+                    .get("x-appwrite-key")
+                    .cloned()
+                    .unwrap_or_default(),
+            );
+
+        let tables_db = TablesDB::new(&client);
+
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+
+        let result = runtime.block_on(async move {
+            tables_db
+                .create_row(
+                    "<DATABASE_ID>",
+                    "<MESSAGES_TABLE_ID>",
+                    ID::unique(),
+                    json!({
+                        "name": form.get("name").cloned().unwrap_or_default(),
+                        "email": form.get("email").cloned().unwrap_or_default(),
+                        "content": form.get("content").cloned().unwrap_or_default(),
+                    }),
+                    None,
+                    None,
+                )
+                .await
+        });
+
+        return match result {
+            Ok(_) => context.res.text("Message sent", None, None),
+            Err(e) => {
+                context.error(format!("Failed to save message: {}", e));
+                context.res.text("Failed to save message", Some(500), None)
+            }
+        };
+    }
+
+    context.res.text("Not found", Some(404), None)
+}
+```
+
+{% /multicode %}
+
+Use the function by navigating to the function URL in the browser. Submit the form to store the message in the table.
+{% /section %}

@@ -1,0 +1,38 @@
+---
+layout: changelog
+title: Announcing Appwrite 2.4 for self-hosted deployments
+date: 2026-10-08
+cover: /images/changelog/2026-10-08.avif
+tags: auth, messaging, console, security, infrastructure
+---
+
+Appwrite 2.4 is now available for self-hosting.
+
+This release includes:
+
+- Custom profile photos. Users can upload and remove their own photo, and it is served ahead of the OAuth2, Gravatar and initials fallbacks
+- Webflow as an OAuth2 provider
+- Push messages straight to a user with the Appwrite push provider, without registering a device target
+- Webhook delivery IDs that stay the same across retries, and retries that only resend to the endpoints that failed
+- Outbound requests to user-supplied URLs refuse private addresses, with `_APP_ALLOWED_INTERNAL_ADDRESSES` to allow specific hosts
+- User JWTs that only work in the project that issued them, and OAuth2 callbacks checked against the browser that started the flow
+- Retention for ClickHouse's own logs, so idle installs stop growing by hundreds of MB a day
+- Appwrite Console 1.2.55, with profile photos, the Webflow provider, CLI and MCP onboarding, and the breached password policy
+
+The Appwrite Assistant is retired in this release. Before upgrading, check the [upgrade notes](https://github.com/appwrite/appwrite/releases/tag/2.4.0) if you run behind a public load balancer, use the GitHub integration, or reach private hosts for OAuth2, webhooks or messaging.
+
+Head over to our [migration guide](/docs/advanced/self-hosting/production/updates#upgrading-to-latest) to upgrade your instance.
+
+For the complete list of updates and fixes, check out the [release notes](https://github.com/appwrite/appwrite/releases/tag/2.4.0) on GitHub.
+
+{% arrow_link href="/docs/advanced/self-hosting/installation" %}
+Install Appwrite 2.4
+{% /arrow_link %}
+
+{% arrow_link href="/docs/advanced/self-hosting/production/updates#upgrading-to-latest" %}
+Upgrade your self-hosted instance
+{% /arrow_link %}
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/2.4.0" %}
+View the release notes on GitHub
+{% /arrow_link %}

@@ -31,6 +31,26 @@ permissions:
   packages: write
 
 jobs:
+  changes:
+    name: Changes
+    runs-on: ubuntu-24.04
+    outputs:
+      server: ${{ steps.changes.outputs.server }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Compute changes
+        id: changes
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: bash .github/scripts/changes.sh
+
   dependencies:
     name: Checks / Dependencies
     if: github.event_name == 'pull_request'
@@ -44,7 +64,8 @@ jobs:
 
   security:
     name: Checks / Image
-    if: github.event_name == 'pull_request'
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.server == 'true'
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
@@ -103,6 +124,8 @@ jobs:
 
   checks:
     name: Checks
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
@@ -178,6 +201,8 @@ jobs:
 
   locale:
     name: Checks / Locale
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
@@ -197,6 +222,8 @@ jobs:
 
   static-rules:
     name: Checks / Rules
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -258,6 +285,8 @@ jobs:
 
   matrix:
     name: Tests / Matrix
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-24.04
     outputs:
       databases: ${{ steps.generate.outputs.databases }}
@@ -454,6 +483,8 @@ jobs:
 
   build:
     name: Build
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: gcrunner=${{ github.run_id }}/runner=build
     timeout-minutes: 30
     steps:
@@ -615,6 +646,68 @@ jobs:
           docker compose exec -T
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
           appwrite test /usr/src/code/tests/e2e/General
+
+      - name: Check for native crashes
+        if: ${{ !cancelled() }}
+        run: .github/scripts/check-native-crashes.sh "${IMAGE}"
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Logs ==="
+          docker compose logs --timestamps
+
+  e2e_security:
+    name: Tests / E2E / Security
+    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
+    timeout-minutes: 25
+    needs: build
+    permissions:
+      contents: read
+      packages: read
+    env:
+      COMPOSE_PROFILES: ''
+    steps:
+      - name: checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - parallel:
+          - name: Pull Docker Image
+            run: |
+              docker pull "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
+              docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}"
+
+          - name: Pull Docker Compose images
+            timeout-minutes: 5
+            run: |
+              for attempt in 1 2 3; do
+                if docker compose pull --quiet --ignore-buildable; then
+                  break
+                elif [ "$attempt" -eq 3 ]; then
+                  echo "::error::docker compose pull failed after 3 attempts; aborting"
+                  exit 1
+                fi
+                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+                sleep 15
+              done
+
+      - name: Load and Start Appwrite
+        timeout-minutes: 5
+        run: docker compose up -d --quiet-pull --wait
+
+      - name: Run Security Tests
+        timeout-minutes: 20
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e/Security --group=security
 
       - name: Check for native crashes
         if: ${{ !cancelled() }}

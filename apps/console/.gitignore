@@ -1,0 +1,98 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+.output
+dist
+.nitro
+.tanstack
+
+# Generated static exports (built via generate:sitemap and generate:docs-exports)
+public/llms.txt
+public/llms-full.txt
+public/docs/llms.txt
+public/docs.md
+public/blog.md
+public/setup.md
+public/alternative-to.md
+public/alternative-to/
+public/changelog.md
+public/integrations.md
+public/robots.txt
+public/.well-known/
+public/sitemap.xml
+public/sitemap/
+
+# Vite cache
+.vite
+node_modules/.vite
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
+*.swp
+*.swo
+*~
+
+# Testing
+coverage
+.nyc_output
+test-results/
+playwright-report/
+e2e/.auth/
+e2e/screenshots/
+
+# Temporary files
+*.tmp
+*.temp
+.cache
+
+# Internal social/competitive reports (not for public OSS)
+socials/
+
+# Static asset publishing tools and extracted container files
+image-assets/
+
+# Playwright MCP
+.playwright-mcp
+
+# OAuth2 e2e screenshots (uploaded via gitshot)
+.shots/
+scripts/oauth2-shots.mjs
+
+# Playwright MCP scratch output
+.playwright-mcp/
+*.png
+
+# Bundled site template screenshots (served at /images/sites/templates)
+!public/images/sites/templates/*.png
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo

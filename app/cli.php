@@ -15,7 +15,7 @@ use Utopia\Cache\Cache;
 use Utopia\CLI\Adapters\Generic;
 use Utopia\CLI\CLI;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
