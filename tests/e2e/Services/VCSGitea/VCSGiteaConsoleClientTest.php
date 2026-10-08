@@ -225,6 +225,70 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'web:functions/web'), 30000, 1000);
     }
 
+    public function testCreateTemplateDeployment(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'function-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+        $repositoryPath = '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repository['body']['name'];
+
+        $branch = $this->giteaApiHelper(Client::METHOD_GET, $repositoryPath . '/branches/main');
+        $this->assertEquals(200, $branch['headers']['status-code'], \json_encode($branch['body']));
+        $parent = $branch['body']['commit']['id'];
+
+        $template = $this->client->call(Client::METHOD_GET, '/functions/templates/starter', $headers);
+        $this->assertEquals(200, $template['headers']['status-code'], \json_encode($template['body']));
+        $runtime = \array_values(\array_filter($template['body']['runtimes'], fn ($runtime) => $runtime['name'] === 'node-22'))[0];
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+            'functionId' => ID::unique(),
+            'name' => 'Gitea template',
+            'runtime' => 'node-22',
+            'entrypoint' => $runtime['entrypoint'],
+            'installationId' => $installationId,
+            'providerRepositoryId' => (string) $repository['body']['id'],
+            'providerBranch' => 'main',
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $functionId = $function['body']['$id'];
+
+        // A tag template pins no destination commit, so the worker clones the
+        // branch itself and has to commit on top of it
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/template', $headers, [
+            'repository' => $template['body']['providerRepositoryId'],
+            'owner' => $template['body']['providerOwner'],
+            'rootDirectory' => $runtime['providerRootDirectory'],
+            'type' => 'tag',
+            'reference' => $template['body']['providerVersion'],
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code'], \json_encode($deployment['body']));
+        $deploymentId = $deployment['body']['$id'];
+        $this->waitForDeploymentReadyHelper($functionId, $deploymentId);
+
+        $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, $headers);
+        $commit = $deployment['body']['providerCommitHash'];
+
+        $branch = $this->giteaApiHelper(Client::METHOD_GET, $repositoryPath . '/branches/main');
+        $this->assertEquals($commit, $branch['body']['commit']['id']);
+
+        $pushed = $this->giteaApiHelper(Client::METHOD_GET, $repositoryPath . '/git/commits/' . $commit);
+        $this->assertEquals($parent, $pushed['body']['parents'][0]['sha'] ?? '', \json_encode($pushed['body']));
+
+        $readme = $this->giteaApiHelper(Client::METHOD_GET, $repositoryPath . '/contents/README.md', ['ref' => $commit]);
+        $this->assertEquals(200, $readme['headers']['status-code'], \json_encode($readme['body']));
+    }
+
     public function testUpdateSiteKeepsRepositoryOnNull(): void
     {
         $headers = \array_merge([
