@@ -20,9 +20,9 @@ use Utopia\DI\Container;
 use Utopia\Http\Adapter\FPM\Server;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
-use Utopia\Validator;
 use Utopia\Validator\Multiple;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 
 final class BuilderTest extends TestCase
 {
