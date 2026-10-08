@@ -93,7 +93,7 @@ class Update extends Action
                 'phone' => $phoneValue,
                 'phoneVerification' => $user->getAttribute('phoneVerification'),
             ]));
-            $oldTarget = $user->find('identifier', $oldPhone, 'targets');
+            $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $oldPhone);
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                 if ($number !== '') {

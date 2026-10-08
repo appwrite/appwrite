@@ -12,7 +12,6 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Postgres;
-use Utopia\Database\Adapter\SQL;
 use Utopia\Database\PDO;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
@@ -307,6 +306,14 @@ $register->set('db', function () {
     $dbSchema = System::getEnv('_APP_DB_SCHEMA', '');
     $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'postgresql');
     $dsn = '';
+    $pdoAttributes = [
+        \PDO::ATTR_TIMEOUT => 3,
+        \PDO::ATTR_PERSISTENT => true,
+        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+        \PDO::ATTR_EMULATE_PREPARES => true,
+        \PDO::ATTR_STRINGIFY_FETCHES => true,
+    ];
 
     switch ($dbAdapter) {
         case 'mongodb':
@@ -320,10 +327,10 @@ $register->set('db', function () {
         case 'mysql':
         case 'mariadb':
             $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbSchema};charset=utf8mb4";
-            return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+            return new PDO($dsn, $dbUser, $dbPass, $pdoAttributes);
         case 'postgresql':
             $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema};connect_timeout=3";
-            return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+            return new PDO($dsn, $dbUser, $dbPass, $pdoAttributes);
         default:
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid database adapter');
     }

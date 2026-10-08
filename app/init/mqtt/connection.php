@@ -30,7 +30,7 @@ return function (Container $container): void {
             return new User([]);
         }
 
-        $authorization->setDefaultStatus(true);
+        $authorization->setStatus(true);
 
         $getProjectDB = $container->get('getProjectDB');
         $dbForProject = $getProjectDB($project);

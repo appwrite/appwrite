@@ -456,7 +456,7 @@ return function (Container $context): void {
          *    overwriting the previous value.
          * 7. If account API key is passed, use user of the account API key as long as user ID header matches too
          */
-        $authorization->setDefaultStatus(true);
+        $authorization->setStatus(true);
 
         $store->setKey('a_session_' . $project->getId());
 
@@ -568,11 +568,7 @@ return function (Container $context): void {
 
             $accountKeyUser = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
             if (! $accountKeyUser->isEmpty()) {
-                $key = $accountKeyUser->find(
-                    key: 'secret',
-                    find: $accountKey,
-                    subject: 'keys'
-                );
+                $key = \array_find($accountKeyUser->getAttribute('keys', []), static fn (Document $candidate): bool => $candidate->getAttribute('secret') === $accountKey);
 
                 if (! empty($key)) {
                     $expire = $key->getAttribute('expire');

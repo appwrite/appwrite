@@ -53,7 +53,7 @@ final readonly class ListCache
         return \sprintf(
             '%s-cache:%s:%s:%s:database:%s:collection:%s',
             $dbForProject->getCacheName(),
-            $dbForProject->getAdapter()->hostname(),
+            $dbForProject->getHostname() ?? '',
             $dbForProject->getNamespace(),
             $dbForProject->getTenant(),
             $database->getSequence(),

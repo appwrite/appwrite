@@ -208,7 +208,7 @@ return function (Container $container): void {
     $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization, Store $store, Token $proofForToken) use ($getMode, $getDbForPlatform, $getDbForProject) {
         $mode = $getMode($request, $project);
 
-        $authorization->setDefaultStatus(true);
+        $authorization->setStatus(true);
 
         $dbForPlatform = $getDbForPlatform($authorization);
         $dbForProject = $getDbForProject($project, $authorization);
@@ -298,11 +298,7 @@ return function (Container $container): void {
 
             $accountKeyUser = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
             if (!$accountKeyUser->isEmpty()) {
-                $key = $accountKeyUser->find(
-                    key: 'secret',
-                    find: $accountKey,
-                    subject: 'keys'
-                );
+                $key = \array_find($accountKeyUser->getAttribute('keys', []), static fn (Document $candidate): bool => $candidate->getAttribute('secret') === $accountKey);
 
                 if (!empty($key)) {
                     $expire = $key->getAttribute('expire');

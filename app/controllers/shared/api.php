@@ -36,8 +36,8 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Role;
 use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
@@ -159,7 +159,7 @@ Http::init()
                 // Disable authorization checks for project API keys
                 // Dynamic supported for backwards compatibility
                 if (($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_EPHEMERAL || $apiKey->getType() === 'dynamic') && $apiKey->getProjectId() === $project->getId()) {
-                    $authorization->setDefaultStatus(false);
+                    $authorization->setStatus(false);
                 }
 
                 $user = new User([
@@ -178,26 +178,15 @@ Http::init()
             if (\in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_ORGANIZATION, API_KEY_ACCOUNT])) {
                 $dbKey = null;
                 $keyOwnerInternalId = '';
+                $secret = $request->getHeaderLine('x-appwrite-key', '');
                 if (! empty($apiKey->getProjectId())) {
-                    $dbKey = $project->find(
-                        key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
-                        subject: 'keys'
-                    );
+                    $dbKey = \array_find($project->getAttribute('keys', []), static fn (Document $key): bool => $key->getAttribute('secret') === $secret);
                     $keyOwnerInternalId = (string) ($project->getSequence() ?: $project->getId());
                 } elseif (! empty($apiKey->getUserId())) {
-                    $dbKey = $user->find(
-                        key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
-                        subject: 'keys'
-                    );
+                    $dbKey = \array_find($user->getAttribute('keys', []), static fn (Document $key): bool => $key->getAttribute('secret') === $secret);
                     $keyOwnerInternalId = (string) ($user->getSequence() ?: $user->getId());
                 } elseif (! empty($apiKey->getTeamId())) {
-                    $dbKey = $team->find(
-                        key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
-                        subject: 'keys'
-                    );
+                    $dbKey = \array_find($team->getAttribute('keys', []), static fn (Document $key): bool => $key->getAttribute('secret') === $secret);
                     $keyOwnerInternalId = (string) ($team->getSequence() ?: $team->getId());
                 }
 
@@ -338,10 +327,10 @@ Http::init()
              * Enabling authorization restricts admin user to the projects they have access to.
              */
             if ($project->getId() === 'console' && ($route->getPath() === '/v1/projects' || $route->getPath() === '/v1/projects/:projectId')) {
-                $authorization->setDefaultStatus(true);
+                $authorization->setStatus(true);
             } else {
                 // Otherwise, disable authorization checks.
-                $authorization->setDefaultStatus(false);
+                $authorization->setStatus(false);
             }
         }
 
@@ -383,7 +372,7 @@ Http::init()
             && $apiKey->getRole() === User::ROLE_OWNER;
 
         if ($isAdminProjectRequest && $isOAuthAdminKey) {
-            $authorization->setDefaultStatus(false);
+            $authorization->setStatus(false);
         }
 
         if (!$impersonatorUser->isEmpty() && !$targetUser->isEmpty()) {

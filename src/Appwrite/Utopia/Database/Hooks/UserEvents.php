@@ -10,15 +10,17 @@ use Appwrite\Event\Webhook;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Database\Event as DatabaseEvent;
+use Utopia\Database\Event\Document\Created;
 use Utopia\Database\Event\Domain;
 use Utopia\Database\Hook\Lifecycle;
+use Utopia\Database\Hook\Selective;
 
 /**
  * Triggers function, webhook, and realtime events when users are created.
  *
  * Registered on dbForProject.
  */
-class UserEvents implements Lifecycle
+class UserEvents implements Lifecycle, Selective
 {
     public function __construct(
         private Document $project,
@@ -31,22 +33,27 @@ class UserEvents implements Lifecycle
     ) {
     }
 
+    #[\Override]
+    public function handles(DatabaseEvent $event): bool
+    {
+        return $event === DatabaseEvent::DocumentCreate;
+    }
+
+    #[\Override]
     public function handle(Domain $event): void
     {
-        if ($event !== DatabaseEvent::DocumentCreate) {
+        if (!$event instanceof Created || $event->collection !== 'users') {
             return;
         }
 
-        if (!$data instanceof Document || $data->getCollection() !== 'users') {
-            return;
-        }
+        $user = $event->document;
 
         $this->events
             ->from($this->source)
             ->setProject($this->project)
             ->setEvent('users.[userId].create')
-            ->setParam('userId', $data->getId())
-            ->setPayload($this->response->output($data, Response::MODEL_USER));
+            ->setParam('userId', $user->getId())
+            ->setPayload($this->response->output($user, Response::MODEL_USER));
 
         $this->functions->enqueue(FunctionMessage::fromEvent(
             event: $this->events->getEvent(),
