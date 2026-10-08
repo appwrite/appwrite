@@ -148,10 +148,17 @@ final class AvatarsTest extends Scope
             self::GET_SCREENSHOT,
         ];
         $urls = [
-            'http://127.0.0.1/',
-            'http://169.254.169.254/latest/meta-data/',
-            'http://[::1]/',
             'http://localhost/',
+            'http://appwrite/v1/health/version',
+            'http://metadata.google.internal/computeMetadata/v1/',
+            'http://2130706433/',
+            'http://169.254.169.254/latest/meta-data/',
+            'http://10.0.0.5:8080/',
+            'http://192.168.1.1/',
+            'http://[::ffff:127.0.0.1]/',
+            'http://user:password@10.0.0.5/',
+            'file:///etc/passwd',
+            'gopher://10.0.0.5:6379/_INFO',
         ];
 
         /**
