@@ -9,6 +9,7 @@ use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Hooks\Metadata;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Utopia\Database\Adapter\ConnectedMemory;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
@@ -290,7 +291,7 @@ final class ListCacheTest extends TestCase
 
     private static function project(string $hostname = 'db1', string $namespace = '_1', int $tenant = 7): Database
     {
-        return (new Database((new Memory())->setHostname($hostname), new Cache(new None())))
+        return (new Database((new ConnectedMemory())->setHostname($hostname), new Cache(new None())))
             ->setNamespace($namespace)
             ->setTenant($tenant);
     }

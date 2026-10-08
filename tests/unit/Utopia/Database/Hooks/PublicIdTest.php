@@ -6,6 +6,7 @@ namespace Tests\Unit\Utopia\Database\Hooks;
 
 use Appwrite\Utopia\Database\Hooks\Metadata;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Utopia\Database\Adapter\ConnectedMemory;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter;
@@ -77,7 +78,7 @@ final class PublicIdTest extends TestCase
         };
         $database->addHook($hooks);
 
-        $this->assertTrue($database->findOne('database_2')->isEmpty(), 'the caller cannot read the catalog');
+        $this->assertSame([], $database->find('database_2'), 'the caller cannot read the catalog');
         $this->assertNotSame([], $hooks->events, 'a read the caller makes fires the hooks');
         $hooks->events = [];
 
@@ -195,7 +196,7 @@ final class PublicIdTest extends TestCase
 
     private function database(?Document $catalog = null, bool $inTransaction = false, string $hostname = ''): Database
     {
-        $adapter = new class ($inTransaction) extends Memory {
+        $adapter = new class ($inTransaction) extends ConnectedMemory {
             public function __construct(private readonly bool $transacting)
             {
                 parent::__construct();
