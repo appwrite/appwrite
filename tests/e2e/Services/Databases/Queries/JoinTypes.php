@@ -41,7 +41,7 @@ trait JoinTypes
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::rightJoin($ordersId, '$id', 'customerId')->toString(),
+                Query::rightJoin($ordersId, 'ord', [Query::on('$id', 'customerId')])->toString(),
                 Query::select(['name'])->toString(),
             ],
         ]);
@@ -68,7 +68,7 @@ trait JoinTypes
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::crossJoin($ordersId)->toString(),
+                Query::crossJoin($ordersId, 'ord')->toString(),
             ],
         ]);
 
@@ -95,7 +95,7 @@ trait JoinTypes
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::fullOuterJoin($ordersId, '$id', 'customerId')->toString(),
+                Query::fullOuterJoin($ordersId, 'ord', [Query::on('$id', 'customerId')])->toString(),
                 Query::select(['name'])->toString(),
             ],
         ]);
@@ -122,7 +122,7 @@ trait JoinTypes
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::naturalJoin($ordersId)->toString(),
+                Query::naturalJoin($ordersId, 'ord')->toString(),
             ],
         ]);
 
@@ -146,7 +146,7 @@ trait JoinTypes
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($ordersId, '$id', 'customerId')->toString(),
+                Query::join($ordersId, 'ord', [Query::on('$id', 'customerId')])->toString(),
                 Query::select(['name'])->toString(),
             ],
         ]);
@@ -201,7 +201,7 @@ trait JoinTypes
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($ordersId, '$id', 'customerId')->toString(),
+                Query::join($ordersId, 'ord', [Query::on('$id', 'customerId')])->toString(),
             ],
         ]);
 
@@ -224,7 +224,7 @@ trait JoinTypes
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::rightJoin($ordersId, '$id', 'customerId')->toString(),
+                Query::rightJoin($ordersId, 'ord', [Query::on('$id', 'customerId')])->toString(),
             ],
         ]);
 

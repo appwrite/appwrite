@@ -22,7 +22,7 @@ trait JoinOperators
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($ordersId, '$id', 'customerId', '!=')->toString(),
+                Query::join($ordersId, 'ord', [Query::on('$id', 'customerId', '!=')])->toString(),
             ],
         ]);
 
@@ -48,7 +48,7 @@ trait JoinOperators
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($paymentsId, 'amount', 'amount', '>')->toString(),
+                Query::join($paymentsId, 'pay', [Query::on('amount', 'amount', '>')])->toString(),
             ],
         ]);
 
@@ -74,7 +74,7 @@ trait JoinOperators
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($paymentsId, 'amount', 'amount', '<')->toString(),
+                Query::join($paymentsId, 'pay', [Query::on('amount', 'amount', '<')])->toString(),
             ],
         ]);
 
@@ -100,7 +100,7 @@ trait JoinOperators
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($paymentsId, 'amount', 'amount', '>=')->toString(),
+                Query::join($paymentsId, 'pay', [Query::on('amount', 'amount', '>=')])->toString(),
             ],
         ]);
 
@@ -126,7 +126,7 @@ trait JoinOperators
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($paymentsId, 'amount', 'amount', '<=')->toString(),
+                Query::join($paymentsId, 'pay', [Query::on('amount', 'amount', '<=')])->toString(),
             ],
         ]);
 
@@ -152,7 +152,7 @@ trait JoinOperators
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($ordersId, '$id', 'customerId', 'LIKE')->toString(),
+                Query::join($ordersId, 'ord', [Query::on('$id', 'customerId', 'LIKE')])->toString(),
             ],
         ]);
 

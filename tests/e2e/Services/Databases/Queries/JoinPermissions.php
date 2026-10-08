@@ -636,7 +636,7 @@ trait JoinPermissions
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($data['ordersId'], '$id', 'customerId')->toString(),
+                Query::join($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
             ],
         ]);
 
