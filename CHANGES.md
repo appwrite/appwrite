@@ -1,3 +1,29 @@
+# Version 1.9.7
+
+## What's Changed
+
+### Notable changes
+
+* Security release. Upgrading from 1.9.6 needs no migration changes; 1.9.7 reuses the 1.9.6 migration.
+* Appwrite migration sources must now use a public endpoint. To migrate from a source on a private network, list its hostnames, IP addresses or CIDR ranges in the new `_APP_MIGRATIONS_ALLOWED_HOSTS` variable.
+
+### Security
+
+* Validate Appwrite migration source endpoints, and pin source requests to the validated addresses, so a migration can no longer reach internal services in [#14036](https://github.com/appwrite/appwrite/pull/14036)
+* Authenticate the source API key before a migration reads another project's database on the same instance in [#14005](https://github.com/appwrite/appwrite/pull/14005)
+* Reject a JWT once the session it was created from has expired in [#13169](https://github.com/appwrite/appwrite/pull/13169)
+* Quote the build directory passed to `tar` in the builds worker in [#14006](https://github.com/appwrite/appwrite/pull/14006)
+
+### Fixes
+
+* Remove the unused, undocumented Cloud card avatar endpoints in [#14067](https://github.com/appwrite/appwrite/pull/14067)
+
+### Miscellaneous
+
+* Update the self-hosted Console image to [8.7.37](https://github.com/appwrite/console/releases/tag/8.7.37) for array column inputs in the row editor in [#13130](https://github.com/appwrite/appwrite/pull/13130)
+* Update the Browser service to 0.3.4 and `utopia-php/mongo` to 1.5.4
+* Update release metadata and installation examples for 1.9.7
+
 # Version 1.9.6
 
 ## What's Changed
