@@ -963,6 +963,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Last 30 days': '30 הימים האחרונים',
   'Week to date': 'מתחילת השבוע',
   'Month to date': 'מתחילת החודש',
+  'Longer periods': 'תקופות ארוכות',
+  'Last 90 days': '90 הימים האחרונים',
+  'Last 12 months': '12 החודשים האחרונים',
+  'All time': 'כל הזמן',
   Clear: 'ניקוי',
   Apply: 'החלה',
   Compare: 'השוואה',
@@ -1058,6 +1062,23 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Tracking is live': 'המעקב פעיל',
   'Listening for events': 'מאזינים לאירועים',
   'Latest event': 'האירוע האחרון',
+  "Events go through a small proxy on your own domain, so ad blockers don't drop them.":
+    'האירועים עוברים דרך פרוקסי קטן בדומיין שלכם, כך שחוסמי פרסומות לא חוסמים אותם.',
+  'Choose it when many visitors use ad blockers. It needs a server route and an API key.':
+    'בחרו באפשרות הזו כשהרבה מבקרים משתמשים בחוסמי פרסומות. היא דורשת נתיב בשרת ומפתח API.',
+  'Ad blockers': 'חוסמי פרסומות',
+  'Ad blockers can stop requests to analytics services, so some visits are never counted. Serving tracking from a domain you own recovers most of them.':
+    'חוסמי פרסומות עלולים לחסום בקשות לשירותי אנליטיקס, ולכן חלק מהביקורים לא נספרים. הגשת המעקב מדומיין בבעלותכם מחזירה את רובם.',
+  'Custom domain': 'דומיין מותאם אישית',
+  'Serve the Appwrite API on your own domain and use it as the endpoint in your tracking code. Visitor locations stay accurate with no extra setup.':
+    'הגישו את ה-API של Appwrite על הדומיין שלכם והשתמשו בו כ-endpoint בקוד המעקב. מיקומי המבקרים נשארים מדויקים בלי הגדרות נוספות.',
+  'Forward events through a small proxy on your site. Requests never leave your domain, so it holds up best against blocking.':
+    'העבירו אירועים דרך פרוקסי קטן באתר שלכם. הבקשות לא יוצאות מהדומיין שלכם, ולכן זו ההגנה הטובה ביותר מפני חסימה.',
+  'Set up proxy': 'הגדרת פרוקסי',
+  'Identifiers and timestamps for this property.':
+    'מזהים וחותמות זמן של הנכס הזה.',
+  'Property ID:': 'מזהה נכס:',
+  'Snippet ID:': 'מזהה סניפט:',
   'Events are reaching Appwrite.': 'אירועים מגיעים ל-Appwrite.',
   'Install the code and load a page. Checks every few seconds.':
     'התקינו את הקוד וטענו דף. הבדיקה מתבצעת כל כמה שניות.',

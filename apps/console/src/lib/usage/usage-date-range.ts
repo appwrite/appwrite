@@ -5,6 +5,7 @@ import {
   getUsageDateRangePresetByValue,
   inferRollingPresetByDuration,
   inferUsageDateRangePresetFromStoredRange,
+  type UsageDateRangePresetContext,
 } from '@/lib/usage/usage-date-range-presets'
 
 export function isStartOfLocalDay(date: Date): boolean {
@@ -144,11 +145,12 @@ export function serializeUsageChartDateRange(
 
 export function parseUsageChartDateRange(
   serialized: SerializedUsageChartDateRange,
+  context?: UsageDateRangePresetContext,
 ): DateRange {
   if (serialized.preset) {
     const preset = getUsageDateRangePresetByValue(serialized.preset)
     if (preset) {
-      return preset.getRange()
+      return preset.getRange(context)
     }
   }
 

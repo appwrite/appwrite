@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Braces, Check, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { Models } from '@appwrite.io/console'
 import {
   Dialog,
@@ -13,6 +14,10 @@ import {
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
+import {
+  ConnectCodeExample,
+  type ConnectCodeExampleTab,
+} from '@/components/global/shared/ConnectCodeExample'
 import { getProjectApiEndpoint } from '@/lib/appwrite/sdk'
 import { useAnalyticsFirstEvent } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
@@ -20,9 +25,13 @@ import { cn } from '@/lib/utils'
 import {
   ANALYTICS_PLATFORMS,
   ANALYTICS_PLATFORM_META,
+  ANALYTICS_PROXY_DEFAULT_PATH,
   buildAnalyticsInstallGuide,
+  buildAnalyticsProxyRecipes,
   buildAnalyticsSetupPrompt,
+  supportsAnalyticsProxy,
   type AnalyticsPlatform,
+  type AnalyticsProxyRecipeId,
 } from '@/lib/analytics-wizard/snippets'
 
 function PlatformGlyph({ platform }: { platform: AnalyticsPlatform }) {
@@ -107,11 +116,21 @@ function SetupStatus({
   )
 }
 
+type SendMode = 'direct' | 'proxy'
+
+/** The browser file's tab id; every other tab is a proxy recipe. */
+const APP_FILE_ID = 'app'
+
 /**
  * Install instructions for a property, in the shape of the project Connect
- * modal: platform tabs along the top, steps on the left, the code for the
- * selected step on the right. Used from the property header ("Install") and
- * the settings tab, so the instructions live in one place.
+ * modal: platform tabs along the top, steps on the left, the code on the
+ * right. Used from the property header ("Install") and the settings tab, so
+ * the instructions live in one place.
+ *
+ * On Web, Default / Advanced picks how events travel. Both render the same
+ * two cards (install command, then one code frame); Advanced (a proxy) adds
+ * two lines on why to choose it, and the frame gains file tabs for the
+ * ready-made proxies, Connect-style. The code comments explain the rest.
  */
 export function InstallTrackingDialog({
   open,
@@ -119,34 +138,100 @@ export function InstallTrackingDialog({
   projectId,
   property,
   initialPlatform = 'web',
+  initialProxy = false,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
   property: Models.AnalyticsProperty
   initialPlatform?: AnalyticsPlatform
+  /** Open on "Send through a proxy" (the ad blockers card). */
+  initialProxy?: boolean
 }) {
   const t = useT()
   const [platform, setPlatform] = useState<AnalyticsPlatform>(initialPlatform)
+  const [mode, setMode] = useState<SendMode>(initialProxy ? 'proxy' : 'direct')
+  const [fileId, setFileId] = useState<string>(APP_FILE_ID)
+  // The proxy last looked at; the prompt uses it.
+  const [recipeId, setRecipeId] = useState<AnalyticsProxyRecipeId>('nextjs')
 
-  // Each open starts from the requested platform.
+  // Web only: the browser hands events to the emitter-based tracker, which
+  // posts them to one path. Flutter's tracker needs an Appwrite client, and
+  // server-side REST calls aren't blocked in the first place.
+  const proxyAvailable = supportsAnalyticsProxy(platform)
+  const proxyPath =
+    mode === 'proxy' && proxyAvailable ? ANALYTICS_PROXY_DEFAULT_PATH : undefined
+
+  // Each open starts from the requested platform and mode.
   useEffect(() => {
-    if (open) setPlatform(initialPlatform)
-  }, [open, initialPlatform])
+    if (!open) return
+    setPlatform(initialPlatform)
+    setMode(initialProxy ? 'proxy' : 'direct')
+    setFileId(APP_FILE_ID)
+  }, [open, initialPlatform, initialProxy])
+
+  const endpoint = getProjectApiEndpoint(projectId)
+  // Ingestion takes either ID; the snippet ID is meant for client code.
+  const trackingId = property.snippetId || property.$id
 
   // Two blocks: the install command, then all the code in one snippet.
   const guide = useMemo(
     () =>
       buildAnalyticsInstallGuide(platform, {
-        endpoint: getProjectApiEndpoint(projectId),
+        endpoint,
         projectId,
-        // Ingestion takes either ID; the snippet ID is meant for client code.
-        trackingId: property.snippetId || property.$id,
+        trackingId,
         domain: property.domain,
+        proxyPath,
       }),
-    [platform, projectId, property],
+    [platform, endpoint, projectId, trackingId, property.domain, proxyPath],
+  )
+
+  // The code frame's files: the app's code, plus one file per proxy.
+  const files = useMemo(() => {
+    const app = {
+      id: APP_FILE_ID,
+      label: 'Browser',
+      code: guide.code.code,
+      language: guide.code.language,
+    }
+    if (!proxyPath) return [app]
+    const recipes = buildAnalyticsProxyRecipes({
+      endpoint,
+      projectId,
+      trackingId,
+      proxyPath,
+    })
+    return [
+      app,
+      ...recipes.map((recipe) => ({
+        id: recipe.id,
+        label: recipe.label,
+        code: recipe.code,
+        language: recipe.language,
+      })),
+    ]
+  }, [guide, proxyPath, endpoint, projectId, trackingId])
+  const activeFile = files.find((file) => file.id === fileId) ?? files[0]
+  const fileTabs = useMemo<ConnectCodeExampleTab[]>(
+    () =>
+      files.map((file) => ({
+        id: file.id,
+        // "Browser" is copy; framework names stay as they are.
+        label: file.id === APP_FILE_ID ? t(file.label) : file.label,
+      })),
+    [files, t],
   )
   const meta = ANALYTICS_PLATFORM_META[platform]
+
+  const selectMode = (next: SendMode) => {
+    setMode(next)
+    setFileId(APP_FILE_ID)
+  }
+  const selectFile = (id: string) => {
+    setFileId(id)
+    if (id !== APP_FILE_ID) setRecipeId(id as AnalyticsProxyRecipeId)
+  }
 
   // Live confirmation while the dialog is open: polls until an event lands.
   const { eventReceived, firstEventName } = useAnalyticsFirstEvent(
@@ -155,18 +240,18 @@ export function InstallTrackingDialog({
     open,
   )
 
-  const selectPlatform = (next: AnalyticsPlatform) => setPlatform(next)
-
-  // "Copy prompt": the whole setup for the selected platform, phrased for an
-  // AI coding agent.
+  // "Copy prompt": the setup exactly as configured here (platform, mode and
+  // the proxy last viewed), phrased for an AI coding agent.
   const [copiedPrompt, setCopiedPrompt] = useState(false)
   const handleCopyPrompt = async () => {
     const prompt = buildAnalyticsSetupPrompt(platform, {
-      endpoint: getProjectApiEndpoint(projectId),
+      endpoint,
       projectId,
-      trackingId: property.snippetId || property.$id,
+      trackingId,
       domain: property.domain,
       propertyName: property.name,
+      proxyPath,
+      proxyRecipe: recipeId,
     })
     try {
       await navigator.clipboard.writeText(prompt)
@@ -180,7 +265,9 @@ export function InstallTrackingDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[min(80dvh,720px)] max-h-[80dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl">
+      {/* Same width as the Connect modal, and taller: the code frame is the
+          point of this dialog, so it gets the room. */}
+      <DialogContent className="flex h-[min(88dvh,920px)] max-h-[88dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-6xl">
         <DialogHeader className="shrink-0 px-6 pb-4 pt-6 text-start">
           <DialogTitle>{t('Install tracking')}</DialogTitle>
           <DialogDescription className="text-[13px]">
@@ -194,7 +281,6 @@ export function InstallTrackingDialog({
           aria-label={t('Platform')}
           className="flex shrink-0 gap-0 overflow-x-auto border-b border-border px-6"
         >
-          {/* Copy prompt sits at the end of the tab row, as in Connect. */}
           {ANALYTICS_PLATFORMS.map((id) => {
             const isActive = platform === id
             return (
@@ -203,7 +289,10 @@ export function InstallTrackingDialog({
                 type="button"
                 role="tab"
                 aria-selected={isActive}
-                onClick={() => selectPlatform(id)}
+                onClick={() => {
+                  setPlatform(id)
+                  setFileId(APP_FILE_ID)
+                }}
                 className={cn(
                   'relative flex shrink-0 cursor-pointer items-center gap-1.5 rounded-sm px-3 py-2.5 text-[13px] font-medium transition-colors',
                   'focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
@@ -220,22 +309,6 @@ export function InstallTrackingDialog({
               </button>
             )
           })}
-          <div className="ms-auto flex shrink-0 items-center ps-3">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1.5 text-[12px]"
-              onClick={() => void handleCopyPrompt()}
-            >
-              {copiedPrompt ? (
-                <Check className="h-3.5 w-3.5" />
-              ) : (
-                <Sparkles className="h-3.5 w-3.5" />
-              )}
-              {t('Copy prompt')}
-            </Button>
-          </div>
         </div>
 
         <div className="grid min-h-0 flex-1 gap-6 overflow-y-auto px-6 py-5 md:grid-cols-[0.8fr_1.6fr] md:overflow-hidden">
@@ -257,7 +330,6 @@ export function InstallTrackingDialog({
                 ))}
               </ul>
             </div>
-
 
             <p className="text-[12px] leading-relaxed text-muted-foreground">
               {t(meta.note)}
@@ -283,15 +355,68 @@ export function InstallTrackingDialog({
             </div>
           </div>
 
-          {/* Right: install command, then all the code as one copyable file. */}
-          {/* Copy buttons sit inside the code frames (no separate toolbar
-              row), so the headings sit right on top of the code. */}
-          <div className="flex min-h-[360px] min-w-0 flex-col gap-5 md:min-h-0">
+          {/* Right: a header row (Default / Advanced on Web, otherwise the
+              first heading, plus Copy prompt), then the same two cards in
+              every mode. */}
+          <div className="flex min-h-[360px] min-w-0 flex-col gap-4 md:min-h-0">
+            <div className="flex shrink-0 items-center justify-between gap-3">
+              {proxyAvailable ? (
+                <Tabs
+                  value={mode}
+                  onValueChange={(value) => selectMode(value as SendMode)}
+                >
+                  <TabsList>
+                    <TabsTrigger value="direct">{t('Default')}</TabsTrigger>
+                    <TabsTrigger value="proxy">{t('Advanced')}</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              ) : (
+                <h4 className="text-[13px] font-semibold text-foreground">
+                  {guide.install ? t('Installation') : t('Send events')}
+                </h4>
+              )}
+              {/* Builds from what this modal shows right now. */}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 shrink-0 gap-1.5 text-[12px]"
+                onClick={() => void handleCopyPrompt()}
+              >
+                {copiedPrompt ? (
+                  <Check className="h-3.5 w-3.5" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5" />
+                )}
+                {t('Copy prompt')}
+              </Button>
+            </div>
+
+            {/* Advanced: two lines on why to pick it; the code says how. */}
+            {proxyPath ? (
+              <div className="shrink-0 space-y-0.5 text-[12px] leading-relaxed text-muted-foreground">
+                <p>
+                  {t(
+                    'Events go through a small proxy on your own domain, so ad blockers don\'t drop them.',
+                  )}
+                </p>
+                <p>
+                  {t(
+                    'Choose it when many visitors use ad blockers. It needs a server route and an API key.',
+                  )}
+                </p>
+              </div>
+            ) : null}
+
+            {/* Card 1: the install command. The heading lives in the header
+                row when there are no mode tabs. */}
             {guide.install ? (
               <div className="shrink-0 space-y-1.5">
-                <h4 className="text-[13px] font-semibold text-foreground">
-                  {t('Installation')}
-                </h4>
+                {proxyAvailable ? (
+                  <h4 className="text-[13px] font-semibold text-foreground">
+                    {t('Installation')}
+                  </h4>
+                ) : null}
                 <CodeBlock
                   code={guide.install.code}
                   language={guide.install.language}
@@ -299,16 +424,24 @@ export function InstallTrackingDialog({
                 />
               </div>
             ) : null}
-            <div className="flex min-h-0 flex-1 flex-col gap-1.5">
-              <h4 className="shrink-0 text-[13px] font-semibold text-foreground">
-                {guide.install ? t('Add to your app') : t('Send events')}
-              </h4>
-              <CodeBlock
-                code={guide.code.code}
-                language={guide.code.language}
-                copyInside
+
+            {/* Card 2: the code. One file normally; with a proxy, file tabs
+                (browser code + one per proxy), like Connect's files. */}
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1.5">
+              {guide.install || proxyAvailable ? (
+                <h4 className="shrink-0 text-[13px] font-semibold text-foreground">
+                  {guide.install ? t('Add to your app') : t('Send events')}
+                </h4>
+              ) : null}
+              <ConnectCodeExample
+                code={activeFile.code}
+                language={activeFile.language}
+                tabs={fileTabs}
+                activeTabId={activeFile.id}
+                onTabChange={selectFile}
+                selectorAriaLabel={t('Select file')}
                 fixedHeight="100%"
-                className="flex min-h-0 w-full flex-1 flex-col [&>div:last-child]:min-h-0 [&>div:last-child]:flex-1"
+                className="min-h-0 flex-1"
               />
             </div>
           </div>
