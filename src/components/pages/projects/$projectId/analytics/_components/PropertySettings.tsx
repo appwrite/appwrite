@@ -40,7 +40,6 @@ export function PropertySettings({
 
   const [name, setName] = useState(property.name)
   const [domain, setDomain] = useState(property.domain)
-  const [timezone, setTimezone] = useState(property.timezone)
   const [allowedOrigins, setAllowedOrigins] = useState<string[]>(
     property.allowedOrigins ?? [],
   )
@@ -52,7 +51,6 @@ export function PropertySettings({
   useEffect(() => {
     setName(property.name)
     setDomain(property.domain)
-    setTimezone(property.timezone)
     setAllowedOrigins(property.allowedOrigins ?? [])
   }, [property])
 
@@ -98,7 +96,6 @@ export function PropertySettings({
   const isBusy = updateMutation.isPending || !canWrite
   const nameChanged = name.trim() !== property.name && !!name.trim()
   const domainChanged = domain.trim() !== property.domain
-  const timezoneChanged = timezone.trim() !== property.timezone
   const originsChanged = !sameOrigins(
     allowedOrigins,
     property.allowedOrigins ?? [],
@@ -271,45 +268,6 @@ export function PropertySettings({
               disabled={!domainChanged || isBusy}
               onClick={() =>
                 applyUpdate({ domain: domain.trim() }, t('Domain updated'))
-              }
-            >
-              {t('Update')}
-            </Button>
-          </div>
-        </div>
-
-        {/* Timezone */}
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              {t('Timezone')}
-            </h3>
-          </div>
-          <div className="border-t border-border" />
-          <div className="px-6 py-4">
-            <p className="text-[13px] text-muted-foreground">
-              {t(
-                'IANA timezone used to decide where each day starts and ends for stats.',
-              )}
-            </p>
-            <Input
-              value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
-              placeholder="UTC"
-              disabled={isBusy}
-              className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-            />
-          </div>
-          <div className="px-6 py-4 border-t border-border bg-muted/30">
-            <Button
-              size="sm"
-              className="h-9 text-[13px]"
-              disabled={!timezoneChanged || isBusy}
-              onClick={() =>
-                applyUpdate(
-                  { timezone: timezone.trim() },
-                  t('Timezone updated'),
-                )
               }
             >
               {t('Update')}

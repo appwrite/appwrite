@@ -674,9 +674,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Primary domain being tracked. Optional for native apps.':
     '計測対象の主要ドメインです。ネイティブアプリの場合は任意です。',
   'Domain updated': 'ドメインを更新しました',
-  'IANA timezone used to decide where each day starts and ends for stats.':
-    '統計における 1 日の開始と終了を決定する IANA タイムゾーンです。',
-  'Timezone updated': 'タイムゾーンを更新しました',
   'Origins allowed to send tracking events. Use * to allow all origins.':
     '計測イベントの送信を許可するオリジンです。* を指定するとすべてのオリジンを許可します。',
   'https://example.com': 'https://example.com',

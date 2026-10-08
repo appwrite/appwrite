@@ -49,15 +49,6 @@ function normalizePlatform(
   return isAnalyticsPlatform(value) ? value : 'web'
 }
 
-/** Browser IANA timezone, used as the property's daily boundary by default. */
-function resolveBrowserTimezone(): string | undefined {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined
-  } catch {
-    return undefined
-  }
-}
-
 /**
  * Two stages, no progress bar:
  *
@@ -147,7 +138,6 @@ export function View({ projectId, search }: ViewProps) {
         propertyId,
         name: name.trim(),
         domain: domain.trim() || undefined,
-        timezone: resolveBrowserTimezone(),
       },
       {
         onSuccess: (created) => {
@@ -272,7 +262,7 @@ export function View({ projectId, search }: ViewProps) {
 
           <p className="border-t border-border pt-4 text-[12px] text-muted-foreground">
             {t(
-              'Daily totals use your current timezone. You can change every value later in settings.',
+              'Daily totals are bucketed in UTC. You can change every value later in settings.',
             )}
           </p>
 

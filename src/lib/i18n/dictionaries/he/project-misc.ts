@@ -1036,9 +1036,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Primary domain being tracked. Optional for native apps.':
     'הדומיין הראשי שנמצא במעקב. אופציונלי עבור אפליקציות נייטיב.',
   'Domain updated': 'הדומיין עודכן',
-  'IANA timezone used to decide where each day starts and ends for stats.':
-    'אזור זמן IANA שקובע היכן כל יום מתחיל ומסתיים לצורך הסטטיסטיקות.',
-  'Timezone updated': 'אזור הזמן עודכן',
   'Origins allowed to send tracking events. Use * to allow all origins.':
     'מקורות שמורשים לשלוח אירועי מעקב. השתמשו ב-* כדי לאפשר את כל המקורות.',
   'https://example.com': 'https://example.com',
