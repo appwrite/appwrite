@@ -1,45 +1,29 @@
 /**
  * Integration snippets for an analytics property.
  *
- * The Web and Flutter helpers come from appwrite/sdk-generator#1622
- * (`feat/analytics-auto-tracking`), which is still a draft: neither
- * `sdk-for-web` nor the server SDKs ship an analytics service yet. Those tabs
- * must always be rendered with `unreleased: true` so the UI can warn before
- * anyone copies code that cannot resolve.
+ * The Web and Flutter tabs mirror the `Tracking` helpers shipped in the client
+ * SDKs, which wrap the generated `Analytics` service:
  *
- * Both helpers take a **plain emitter function**, not a client and not a
- * property ID, so they do not hard-couple to the generated `Analytics` class:
+ *   web:     new Tracking(analytics: Analytics, propertyId: string, options?: TrackingOptions)
+ *   flutter: Tracking(Analytics analytics, String propertyId, {String? url})
+ *   flutter: TrackingObserver(tracking, {nameExtractor, eventName = 'screen_view'})
  *
- *   web:     constructor(emit: AnalyticsEventEmitter, options: AnalyticsTrackingOptions = {})
- *   flutter: AnalyticsTracking(AnalyticsEventEmitter emit)
- *   flutter: AnalyticsObserver(this.emit, {nameExtractor, eventName = 'screen_view'})
- *
- * `propertyId` appears nowhere in either template, but the ingestion endpoint
- * requires it, so the console binds it inside the emitter closure.
- *
- * The emitter body calls `analytics.event(...)`, which is what both templates'
- * docblocks document. The console SDK generates `createEvent`, and the client
- * SDKs have not generated this service at all yet, so the method name is not
- * confirmed. That ambiguity is covered by the unreleased warning in the UI.
- *
- * `enableAllAutoTracking()` is NOT "everything" on either platform, and the
- * snippets must keep saying so:
+ * `start()` is NOT "everything" on either platform, and the snippets must keep
+ * saying so:
  *   web:     covers pageviews, outbound links, scroll depth and engagement time.
  *            Downloads are excluded because the extension list is
  *            application-specific; `enableAutoDownloadTracking()` is required
  *            for any `file_download` event.
  *   flutter: covers app lifecycle events only. Route tracking (`screen_view`)
- *            requires attaching an `AnalyticsObserver`.
+ *            requires attaching a `TrackingObserver`.
  *
- * Ingestion is nested under its property, matching the convention used by
- * `POST /v1/storage/buckets/:bucketId/files`:
+ * The helpers take `props` as a map and flatten it; the raw endpoint (and the
+ * service's `createEvent`) takes a flat alternating key/value list instead,
+ * which is what the REST tab shows.
+ *
+ * Ingestion is nested under its property:
  *
  *   POST /v1/analytics/properties/:propertyId/events
- *
- * The SDK tabs are unaffected because `propertyId` is a declared param that
- * Appwrite binds into the path, so only the raw curl example carries the URL.
- *
- * REST is the only integration that works against the API today.
  */
 
 import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
@@ -54,8 +38,6 @@ export type AnalyticsPlatformMeta = {
   description: string
   /** Icon slug understood by `PlatformIcon`. */
   iconSlug: string
-  /** True while the SDK helpers for this platform are unpublished. */
-  unreleased: boolean
   /** Footnote rendered below the snippets. */
   note: string
 }
@@ -69,7 +51,6 @@ export const ANALYTICS_PLATFORM_META: Record<
     label: 'Web',
     description: 'Browser apps and static sites.',
     iconSlug: 'web',
-    unreleased: true,
     note: 'Do Not Track is respected by default. Pass { respectDoNotTrack: false } to the constructor options to opt out. Automatic events are named pageview, outbound_link, file_download, scroll_depth and engagement_time.',
   },
   flutter: {
@@ -77,7 +58,6 @@ export const ANALYTICS_PLATFORM_META: Record<
     label: 'Flutter',
     description: 'iOS, Android, web and desktop from one codebase.',
     iconSlug: 'flutter',
-    unreleased: true,
     note: 'Automatic events are named screen_view, app_backgrounded and app_foregrounded.',
   },
   rest: {
@@ -85,7 +65,6 @@ export const ANALYTICS_PLATFORM_META: Record<
     label: 'REST',
     description: 'Any language, straight against the HTTP API.',
     iconSlug: 'web',
-    unreleased: false,
     note: 'This endpoint is public, so no API key is needed for client-side tracking. Only the server-side override fields (userId, ip, userAgent) require an API key with the analytics.write scope.',
   },
 }
@@ -129,24 +108,19 @@ function webBlocks(input: SnippetInput): SnippetBlock[] {
     {
       label: 'Initialize tracking',
       language: 'typescript',
-      code: `import { Client, Analytics, AnalyticsTracking } from 'appwrite'
+      code: `import { Client, Analytics, Tracking } from 'appwrite'
 
 const client = new Client()
   .setEndpoint('${endpoint}')
   .setProject('${projectId}')
 
-const analytics = new Analytics(client)
-
-// AnalyticsTracking takes a plain emitter function, so bind the property here.
-const tracking = new AnalyticsTracking((name, options) =>
-  analytics.event({ propertyId: '${trackingId}', name, ...(options ?? {}) }),
-)`,
+const tracking = new Tracking(new Analytics(client), '${trackingId}')`,
     },
     {
       label: 'Turn on automatic tracking',
       language: 'typescript',
       code: `// Covers pageviews, outbound links, scroll depth and engagement time.
-tracking.enableAllAutoTracking()
+tracking.start()
 
 // Downloads are NOT included above: the extension list is app-specific,
 // so file_download events only fire once you opt in here.
@@ -181,20 +155,14 @@ final client = Client()
     .setEndpoint('${endpoint}')
     .setProject('${projectId}');
 
-final analytics = Analytics(client);
-
-// The tracking helpers take a plain emitter function, so bind the property here.
-void emit(String name, {Map<String, dynamic>? props}) =>
-    analytics.event(propertyId: '${trackingId}', name: name, props: props);
-
-final tracking = AnalyticsTracking(emit);`,
+final tracking = Tracking(Analytics(client), '${trackingId}');`,
     },
     {
       label: 'Turn on automatic tracking',
       language: 'dart',
       code: `// Currently this only covers app lifecycle events
 // (app_backgrounded / app_foregrounded).
-tracking.enableAllAutoTracking();
+tracking.start();
 
 // Equivalent, if you prefer to be explicit:
 // tracking.enableAutoLifecycleEvents();
@@ -203,10 +171,10 @@ tracking.enableAllAutoTracking();
     {
       label: 'Track route changes',
       language: 'dart',
-      code: `// Route tracking is NOT part of enableAllAutoTracking(): attach the
-// observer to get screen_view events.
+      code: `// Route tracking is NOT part of start(): attach the observer to get
+// screen_view events.
 MaterialApp(
-  navigatorObservers: [AnalyticsObserver(emit)],
+  navigatorObservers: [TrackingObserver(tracking)],
   home: const HomePage(),
 );`,
     },
@@ -375,11 +343,6 @@ export function buildAnalyticsSetupPrompt(
     '- Replace the example custom event with events that matter in this app (sign-ups, purchases, key actions), named in snake_case.',
     `- ${meta.note}`,
   )
-  if (meta.unreleased) {
-    lines.push(
-      '- Note: this SDK helper is not published yet. If the import does not resolve, fall back to POSTing events to the REST endpoint shown in the Appwrite docs.',
-    )
-  }
   lines.push('', 'When done, load a page or open the app once so the first event reaches Appwrite.')
   return lines.join('\n')
 }
