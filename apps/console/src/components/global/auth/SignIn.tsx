@@ -239,6 +239,8 @@ interface SignInProps {
   onOAuthLogin?: (provider: OAuthLoginMethod) => void
   isLoading?: boolean
   oauthLoading?: OAuthLoginMethod | null
+  /** Lets the browser offer passkeys in the email field's autofill; runs on focus to restart the request. */
+  onPasskeyAutofill?: () => void
   redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
   /** Debug preview routes: cross-links stay on /debug/*-preview; demo user is fill-only. */
   preview?: boolean
@@ -250,6 +252,7 @@ export function SignIn({
   onOAuthLogin,
   isLoading,
   oauthLoading,
+  onPasskeyAutofill,
   redirect,
   preview = false,
 }: SignInProps) {
@@ -323,13 +326,19 @@ export function SignIn({
 
   const handleCreateDemoUser = async () => {
     if (preview) {
-      form.setValue('email', DEMO_USER_EMAIL, { shouldDirty: true, shouldValidate: true })
+      form.setValue('email', DEMO_USER_EMAIL, {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
       form.setValue('password', DEMO_USER_PASSWORD, {
         shouldDirty: true,
         shouldValidate: true,
       })
       if (mode === 'sign-up') {
-        form.setValue('name', DEMO_USER_NAME, { shouldDirty: true, shouldValidate: true })
+        form.setValue('name', DEMO_USER_NAME, {
+          shouldDirty: true,
+          shouldValidate: true,
+        })
       }
       setShowPassword(true)
       toast.message(t('Preview only'), {
@@ -340,13 +349,19 @@ export function SignIn({
       return
     }
 
-    form.setValue('email', DEMO_USER_EMAIL, { shouldDirty: true, shouldValidate: true })
+    form.setValue('email', DEMO_USER_EMAIL, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
     form.setValue('password', DEMO_USER_PASSWORD, {
       shouldDirty: true,
       shouldValidate: true,
     })
     if (mode === 'sign-up') {
-      form.setValue('name', DEMO_USER_NAME, { shouldDirty: true, shouldValidate: true })
+      form.setValue('name', DEMO_USER_NAME, {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
     }
     setShowPassword(true)
 
@@ -386,271 +401,269 @@ export function SignIn({
   return (
     <AuthFlowIllustrationCard illustration={<AuthFlowIllustrationColumn />}>
       <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleSubmit)}
-              className="space-y-6"
-            >
-              <div className="space-y-2">
-                <AuthFlowTitle>
-                  {mode === 'sign-in'
-                    ? t('Welcome back')
-                    : t('Create an account')}
-                </AuthFlowTitle>
-                <AuthFlowDescription>
-                  {mode === 'sign-in'
-                    ? t('Login to your account')
-                    : t('Enter your details to create a new account')}
-                </AuthFlowDescription>
-              </div>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <div className="space-y-2">
+            <AuthFlowTitle>
+              {mode === 'sign-in' ? t('Welcome back') : t('Create an account')}
+            </AuthFlowTitle>
+            <AuthFlowDescription>
+              {mode === 'sign-in'
+                ? t('Login to your account')
+                : t('Enter your details to create a new account')}
+            </AuthFlowDescription>
+          </div>
 
-              {onOAuthLogin && (
-                <>
-                  <style>{OAUTH_ACCORDION_STYLES}</style>
-                  <div className="oauth-login-row">
-                    {OAUTH_PROVIDERS.map(({ id, Icon }) => {
-                      const label = oauthProviderLabel(id, mode, t)
-                      const shortLabel = oauthProviderName(id, t)
-                      const isLastUsed =
-                        mode === 'sign-in' && lastLoginMethod === id
-                      const isExpanded = expandedOAuth === id
-                      return (
-                        <div
-                          key={id}
-                          className={
-                            isExpanded
-                              ? 'relative min-w-0 is-expanded'
-                              : 'relative min-w-0'
-                          }
-                          onMouseEnter={() => setExpandedOAuth(id)}
-                        >
-                          {isLastUsed && (
-                            <span
-                              data-last-used={id}
-                              className="oauth-last-used"
-                            >
-                              <span className="oauth-last-used-dot" />
-                              <span className="oauth-last-used-pill">
-                                {t('Last used')}
-                              </span>
-                            </span>
-                          )}
-                          <Button
-                            variant="outline"
-                            type="button"
-                            data-provider={id}
-                            aria-label={
-                              isLastUsed ? `${label}. ${t('Last used')}` : label
-                            }
-                            className="h-9 w-full min-w-0 justify-center gap-0 overflow-hidden px-0 has-[>svg]:px-0"
-                            onClick={() => onOAuthLogin(id)}
-                            onFocus={() => setExpandedOAuth(id)}
-                            disabled={!!oauthLoading || formBusy}
-                          >
-                            <Icon className="size-4 shrink-0" />
-                            <span className="oauth-login-label">
-                              <span>
-                                <span className="oauth-login-label-text">
-                                  <span className="oauth-login-label-short">
-                                    {shortLabel}
-                                  </span>
-                                  <span className="oauth-login-label-full">
-                                    {label}
-                                  </span>
-                                </span>
-                              </span>
-                            </span>
-                          </Button>
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2 text-muted-foreground">
-                        {t('Or continue with')}
-                      </span>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              <div className="space-y-4">
-                {mode === 'sign-up' && (
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('Name')}</FormLabel>
-                        <FormControl>
-                          <Input placeholder={t('Your name')} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('Email')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder={t('Your email')}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('Password')}</FormLabel>
-                      <div className="relative">
-                        <FormControl>
-                          <Input
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder={t('Your password')}
-                            autoComplete={
-                              mode === 'sign-up'
-                                ? 'new-password'
-                                : 'current-password'
-                            }
-                            className="pe-10"
-                            {...field}
-                          />
-                        </FormControl>
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword((current) => !current)}
-                          className="absolute end-2 top-1/2 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          aria-label={
-                            showPassword
-                              ? t('Hide password')
-                              : t('Show password')
-                          }
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </button>
-                      </div>
-                      <FormMessage />
-                      {mode === 'sign-in' && (
-                        <Link
-                          to={preview ? '/debug/recovery-preview' : '/recovery'}
-                          search={
-                            emailValue ? { email: emailValue } : undefined
-                          }
-                          className="link-neutral text-sm"
-                        >
-                          {t('Forgot your password?')}
-                        </Link>
+          {onOAuthLogin && (
+            <>
+              <style>{OAUTH_ACCORDION_STYLES}</style>
+              <div className="oauth-login-row">
+                {OAUTH_PROVIDERS.map(({ id, Icon }) => {
+                  const label = oauthProviderLabel(id, mode, t)
+                  const shortLabel = oauthProviderName(id, t)
+                  const isLastUsed =
+                    mode === 'sign-in' && lastLoginMethod === id
+                  const isExpanded = expandedOAuth === id
+                  return (
+                    <div
+                      key={id}
+                      className={
+                        isExpanded
+                          ? 'relative min-w-0 is-expanded'
+                          : 'relative min-w-0'
+                      }
+                      onMouseEnter={() => setExpandedOAuth(id)}
+                    >
+                      {isLastUsed && (
+                        <span data-last-used={id} className="oauth-last-used">
+                          <span className="oauth-last-used-dot" />
+                          <span className="oauth-last-used-pill">
+                            {t('Last used')}
+                          </span>
+                        </span>
                       )}
-                    </FormItem>
-                  )}
-                />
+                      <Button
+                        variant="outline"
+                        type="button"
+                        data-provider={id}
+                        aria-label={
+                          isLastUsed ? `${label}. ${t('Last used')}` : label
+                        }
+                        className="h-9 w-full min-w-0 justify-center gap-0 overflow-hidden px-0 has-[>svg]:px-0"
+                        onClick={() => onOAuthLogin(id)}
+                        onFocus={() => setExpandedOAuth(id)}
+                        disabled={!!oauthLoading || formBusy}
+                      >
+                        <Icon className="size-4 shrink-0" />
+                        <span className="oauth-login-label">
+                          <span>
+                            <span className="oauth-login-label-text">
+                              <span className="oauth-login-label-short">
+                                {shortLabel}
+                              </span>
+                              <span className="oauth-login-label-full">
+                                {label}
+                              </span>
+                            </span>
+                          </span>
+                        </span>
+                      </Button>
+                    </div>
+                  )
+                })}
               </div>
 
               <div className="relative">
-                {mode === 'sign-in' && lastLoginMethod === 'email' && (
-                  <span className="absolute -top-2 start-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border z-10">
-                    {t('Last used')}
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">
+                    {t('Or continue with')}
                   </span>
-                )}
-                <Button
-                  type="submit"
-                  variant="brandCta"
-                  className="w-full"
-                  disabled={formBusy}
-                >
-                  {mode === 'sign-in' ? t('Login') : t('Sign up')}
-                </Button>
+                </div>
               </div>
+            </>
+          )}
 
-              <AuthFlowDescription className="text-center">
-                {mode === 'sign-in'
-                  ? t("Don't have an account?")
-                  : t('Already have an account?')}{' '}
-                <Link
-                  to={
-                    preview
-                      ? mode === 'sign-in'
-                        ? '/debug/sign-up-preview'
-                        : '/debug/sign-in-preview'
-                      : mode === 'sign-in'
-                        ? '/sign-up'
-                        : '/sign-in'
-                  }
-                  search={!preview && redirect ? { redirect } : undefined}
-                  className="link-neutral"
-                >
-                  {mode === 'sign-in' ? t('Sign up') : t('Sign in')}
-                </Link>
-              </AuthFlowDescription>
-            </form>
-          </Form>
-          {isDebugModeOpen ? (
-            <div
-              dir="ltr"
-              lang="en"
-              data-analytics-track="false"
-              className="mt-6 rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-muted/40 p-3 text-left"
+          <div className="space-y-4">
+            {mode === 'sign-up' && (
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Name')}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={t('Your name')} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Email')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder={t('Your email')}
+                      autoComplete={
+                        mode === 'sign-in' && onPasskeyAutofill
+                          ? 'username webauthn'
+                          : undefined
+                      }
+                      onFocus={
+                        mode === 'sign-in' ? onPasskeyAutofill : undefined
+                      }
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Password')}</FormLabel>
+                  <div className="relative">
+                    <FormControl>
+                      <Input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder={t('Your password')}
+                        autoComplete={
+                          mode === 'sign-up'
+                            ? 'new-password'
+                            : 'current-password'
+                        }
+                        className="pe-10"
+                        {...field}
+                      />
+                    </FormControl>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((current) => !current)}
+                      className="absolute end-2 top-1/2 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      aria-label={
+                        showPassword ? t('Hide password') : t('Show password')
+                      }
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                  <FormMessage />
+                  {mode === 'sign-in' && (
+                    <Link
+                      to={preview ? '/debug/recovery-preview' : '/recovery'}
+                      search={emailValue ? { email: emailValue } : undefined}
+                      className="link-neutral text-sm"
+                    >
+                      {t('Forgot your password?')}
+                    </Link>
+                  )}
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="relative">
+            {mode === 'sign-in' &&
+              (lastLoginMethod === 'email' ||
+                lastLoginMethod === 'passkey') && (
+                <span className="absolute -top-2 start-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border z-10">
+                  {t('Last used')}
+                </span>
+              )}
+            <Button
+              type="submit"
+              variant="brandCta"
+              className="w-full"
+              disabled={formBusy}
             >
-              <p className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-[var(--network-globe-edge)]/75">
-                <Bug className="h-3 w-3 shrink-0 text-[var(--network-globe-edge)]" />
-                Debug
-              </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-[var(--network-globe-edge)]/80">
-                Create a demo user and sign in with these credentials.
-              </p>
-              <dl className="mt-2 space-y-1 font-mono text-[11px]">
-                <div className="flex gap-2">
-                  <dt className="shrink-0 text-[var(--network-globe-edge)]/70">
-                    Email
-                  </dt>
-                  <dd className="min-w-0 break-all text-foreground">
-                    {DEMO_USER_EMAIL}
-                  </dd>
-                </div>
-                <div className="flex gap-2">
-                  <dt className="shrink-0 text-[var(--network-globe-edge)]/70">
-                    Password
-                  </dt>
-                  <dd className="min-w-0 break-all text-foreground">
-                    {DEMO_USER_PASSWORD}
-                  </dd>
-                </div>
-              </dl>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-3 h-7 border-[color-mix(in_srgb,var(--network-globe-edge)_30%,var(--border))] bg-transparent text-[12px] text-foreground hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground"
-                disabled={formBusy}
-                onClick={() => {
-                  void handleCreateDemoUser()
-                }}
-              >
-                Create demo user
-              </Button>
+              {mode === 'sign-in' ? t('Login') : t('Sign up')}
+            </Button>
+          </div>
+
+          <AuthFlowDescription className="text-center">
+            {mode === 'sign-in'
+              ? t("Don't have an account?")
+              : t('Already have an account?')}{' '}
+            <Link
+              to={
+                preview
+                  ? mode === 'sign-in'
+                    ? '/debug/sign-up-preview'
+                    : '/debug/sign-in-preview'
+                  : mode === 'sign-in'
+                    ? '/sign-up'
+                    : '/sign-in'
+              }
+              search={!preview && redirect ? { redirect } : undefined}
+              className="link-neutral"
+            >
+              {mode === 'sign-in' ? t('Sign up') : t('Sign in')}
+            </Link>
+          </AuthFlowDescription>
+        </form>
+      </Form>
+      {isDebugModeOpen ? (
+        <div
+          dir="ltr"
+          lang="en"
+          data-analytics-track="false"
+          className="mt-6 rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-muted/40 p-3 text-left"
+        >
+          <p className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-[var(--network-globe-edge)]/75">
+            <Bug className="h-3 w-3 shrink-0 text-[var(--network-globe-edge)]" />
+            Debug
+          </p>
+          <p className="mt-1 text-[11px] leading-relaxed text-[var(--network-globe-edge)]/80">
+            Create a demo user and sign in with these credentials.
+          </p>
+          <dl className="mt-2 space-y-1 font-mono text-[11px]">
+            <div className="flex gap-2">
+              <dt className="shrink-0 text-[var(--network-globe-edge)]/70">
+                Email
+              </dt>
+              <dd className="min-w-0 break-all text-foreground">
+                {DEMO_USER_EMAIL}
+              </dd>
             </div>
-          ) : null}
+            <div className="flex gap-2">
+              <dt className="shrink-0 text-[var(--network-globe-edge)]/70">
+                Password
+              </dt>
+              <dd className="min-w-0 break-all text-foreground">
+                {DEMO_USER_PASSWORD}
+              </dd>
+            </div>
+          </dl>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-3 h-7 border-[color-mix(in_srgb,var(--network-globe-edge)_30%,var(--border))] bg-transparent text-[12px] text-foreground hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground"
+            disabled={formBusy}
+            onClick={() => {
+              void handleCreateDemoUser()
+            }}
+          >
+            Create demo user
+          </Button>
+        </div>
+      ) : null}
     </AuthFlowIllustrationCard>
   )
 }

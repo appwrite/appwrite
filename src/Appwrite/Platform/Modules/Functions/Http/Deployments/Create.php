@@ -281,7 +281,7 @@ class Create extends Action
         }
 
         try {
-            $locks($lockKey, 600, function () use ($buildTimeout, $activate, $chunk, &$chunks, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $deviceForLocal, $entrypoint, $fileSize, $fileTmpName, &$function, $path, &$metadata, $mergeUploadMetadata, $deployments, $queueForEvents, $response, $type): void {
+            $locks($lockKey, 600, function () use ($buildTimeout, $activate, $chunk, &$chunks, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $deviceForLocal, $entrypoint, $fileTmpName, &$function, $path, &$metadata, $mergeUploadMetadata, $deployments, $queueForEvents, $response, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 

@@ -1354,7 +1354,6 @@ Example:
 
 ```tsx
 import { analyticsAttrs } from '@/lib/analytics-actions'
-
 ;<button {...analyticsAttrs('project-switcher')} type="button">
   {/* trigger content may include the project name; event name stays fixed */}
 </button>
@@ -1413,7 +1412,7 @@ Console uses **team** (organization) and **user** (account) preferences to store
 3. Register the key in `src/lib/prefs-catalog.ts` (`PREFS_CATALOG`) with scope, description, and category so the debug Prefs panel can classify it as known (green) vs unknown (red).
 4. Document the key in this section if it is a shared convention (e.g. `console.pinnedProjectIds`).
 
-**Cloud flags**: Cloud's `task-manage-flags` writes `flags-<name>: true` to team or account prefs. The console reads `flags-passkeys` (see `USER_PREFS_KEY_PASSKEYS_FLAG`) from the signed-in user's prefs to show project passkey settings, only on the Cloud profile. It hides UI only; the server does not gate on it.
+**Cloud flags**: Cloud's `task-manage-flags` writes `flags-<name>: true` to team or account prefs. The console reads `flags-passkeys` (see `USER_PREFS_KEY_PASSKEYS_FLAG`) from the signed-in user's prefs to show passkeys (project settings and the account's own passkeys), only on the Cloud profile. It hides UI only; the server does not gate on it.
 
 **Catalog**: `src/lib/prefs-catalog.ts` is the single enumeration of managed account/team preference keys. Exact keys and dynamic prefixes (e.g. `console.savedFilters.<scope>`) both belong there. The debug menu Prefs structured view reads from this catalog.
 

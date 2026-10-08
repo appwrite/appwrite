@@ -326,7 +326,7 @@ class Screenshot extends Action
             break;
         }
 
-        if (empty($idLight) || empty($idDark)) {
+        if (empty($idLight)) {
             Console::error(\json_encode($deployment));
             throw new \Exception("Failed to get deployment screenshot");
         }

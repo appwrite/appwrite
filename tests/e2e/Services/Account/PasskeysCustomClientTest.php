@@ -1055,6 +1055,7 @@ final class PasskeysCustomClientTest extends Scope
     }
 
     /**
+     * @phpstan-impure
      * @return array<string, mixed>
      */
     private function signIn(array $project, Authenticator $authenticator, string $origin = self::ORIGIN, ?string $rpId = null, bool $crossOrigin = false): array

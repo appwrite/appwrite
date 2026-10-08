@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   createFileRoute,
   redirect,
@@ -15,12 +15,22 @@ import { fetchConsoleAccount } from '@/lib/console-account-get'
 import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
 import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
-import { setLastLoginMethod, type OAuthLoginMethod } from '@/lib/utils/auth-storage'
+import {
+  setLastLoginMethod,
+  type LoginMethod,
+  type OAuthLoginMethod,
+} from '@/lib/utils/auth-storage'
 import {
   CONSOLE_OAUTH_PROVIDERS,
   OAUTH_LOGIN_ERROR,
 } from '@/lib/utils/console-oauth'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  isPasskeyAutofillAvailable,
+  isPasskeyCancellation,
+  passkeySignInErrorMessage,
+  signInWithPasskey,
+} from '@/lib/passkeys'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
@@ -79,6 +89,13 @@ export const Route = createFileRoute('/_auth/sign-in')({
   head: () => ({ meta: [{ title: pageTitle('Sign in') }] }),
 })
 
+interface PasskeyRequest {
+  controller: AbortController
+  /** When the server's challenge expires, in milliseconds. */
+  expire: number
+  selected: boolean
+}
+
 function SignInPage() {
   const t = useT()
   const search = useSearch({ from: '/_auth/sign-in' })
@@ -118,6 +135,67 @@ function SignInPage() {
     }
   }
 
+  const finishSignIn = async (method: LoginMethod) => {
+    setLastLoginMethod(method)
+    try {
+      const account = await refreshConsoleAccountAfterAuth(queryClient)
+
+      // Cloud requires verification before org/project APIs; send unverified
+      // users to /verify-email instead of provisioning a personal org.
+      if (requiresConsoleEmailVerification(account)) {
+        navigate({
+          to: '/verify-email',
+          search: search.redirect ? { redirect: search.redirect } : undefined,
+        })
+        return
+      }
+
+      await prefetchPostAuthDestination(queryClient, account, search.redirect)
+      await router.invalidate()
+      const targetRedirect = resolvePostAuthRedirect(search.redirect)
+      if (targetRedirect) {
+        navigate(toRedirectNavigateOptions(targetRedirect))
+      } else {
+        const orgId = await resolvePostAuthOrganizationId(account)
+        navigate({
+          to: '/organizations/$orgId',
+          params: { orgId },
+          replace: true,
+        })
+      }
+    } catch (error: unknown) {
+      console.error('Post sign-in navigation error:', error)
+      toast.error(
+        getErrorMessage(error, t('Signed in but could not open the console')),
+      )
+    }
+  }
+
+  /** Returns false when the error is not an MFA challenge. */
+  const openMfaIfRequired = async (error: unknown): Promise<boolean> => {
+    const isMfaRequired =
+      typeof error === 'object' &&
+      error !== null &&
+      'isMfaRequired' in error &&
+      (error as { isMfaRequired?: boolean }).isMfaRequired === true
+    if (!isMfaRequired && !isConsoleMfaRequiredError(error)) return false
+
+    setIsOpeningMfa(true)
+    try {
+      await navigateToConsoleMfaAfterSession(
+        queryClient,
+        navigate,
+        search.redirect,
+      )
+    } catch (navigationError: unknown) {
+      setIsOpeningMfa(false)
+      toast.error(
+        getErrorMessage(navigationError, t('Could not open MFA verification')),
+      )
+    }
+    return true
+  }
+
   const signInMutation = useMutation({
     mutationFn: async (data: { email: string; password: string }) => {
       try {
@@ -144,74 +222,10 @@ function SignInPage() {
         throw error
       }
     },
-    onSuccess: async () => {
-      // Only called if account.get() succeeds (no MFA required)
-      setLastLoginMethod('email')
-      try {
-        const account = await refreshConsoleAccountAfterAuth(queryClient)
-
-        // Cloud requires verification before org/project APIs; send unverified
-        // users to /verify-email instead of provisioning a personal org.
-        if (requiresConsoleEmailVerification(account)) {
-          navigate({
-            to: '/verify-email',
-            search: search.redirect
-              ? { redirect: search.redirect }
-              : undefined,
-          })
-          return
-        }
-
-        await prefetchPostAuthDestination(
-          queryClient,
-          account,
-          search.redirect,
-        )
-        await router.invalidate()
-        const targetRedirect = resolvePostAuthRedirect(search.redirect)
-        if (targetRedirect) {
-          navigate(toRedirectNavigateOptions(targetRedirect))
-        } else {
-          const orgId = await resolvePostAuthOrganizationId(account)
-          navigate({
-            to: '/organizations/$orgId',
-            params: { orgId },
-            replace: true,
-          })
-        }
-      } catch (error: unknown) {
-        console.error('Post sign-in navigation error:', error)
-        toast.error(
-          getErrorMessage(error, t('Signed in but could not open the console')),
-        )
-      }
-    },
+    // Only called if account.get() succeeds (no MFA required)
+    onSuccess: () => finishSignIn('email'),
     onError: async (error: unknown) => {
-      // Handle MFA requirement - redirect to MFA page
-      const isMfaRequired =
-        typeof error === 'object' &&
-        error !== null &&
-        'isMfaRequired' in error &&
-        (error as { isMfaRequired?: boolean }).isMfaRequired === true
-      if (isMfaRequired || isConsoleMfaRequiredError(error)) {
-        setIsOpeningMfa(true)
-        try {
-          await navigateToConsoleMfaAfterSession(
-            queryClient,
-            navigate,
-            search.redirect,
-          )
-        } catch (navigationError: unknown) {
-          setIsOpeningMfa(false)
-          toast.error(
-            getErrorMessage(
-              navigationError,
-              t('Could not open MFA verification'),
-            ),
-          )
-        }
-        return
-      }
+      if (await openMfaIfRequired(error)) return
 
       // Show error for other failures
       toast.error(getErrorMessage(error, t('Failed to sign in')))
@@ -219,13 +233,95 @@ function SignInPage() {
     },
   })
 
+  const [passkeySelected, setPasskeySelected] = useState(false)
+  const passkeyRequest = useRef<PasskeyRequest | null>(null)
+  const passkeyRateLimited = useRef(false)
+
+  // Autofill: the browser offers the console's passkeys in the email field's
+  // suggestions. It shows nothing until a passkey for the console exists.
+  const passkeySignInMutation = useMutation({
+    mutationFn: async (request: PasskeyRequest) => {
+      const token = await signInWithPasskey({
+        signal: request.controller.signal,
+        onChallenge: (expire) => {
+          request.expire = Date.parse(expire) || Number.POSITIVE_INFINITY
+        },
+        onSelected: () => {
+          request.selected = true
+          setPasskeySelected(true)
+        },
+      })
+      // A passkey session already satisfies MFA, so finishSignIn's account
+      // refresh is the only account.get needed.
+      await sdk.forConsole.account.createSession({
+        userId: token.userId,
+        secret: token.secret,
+      })
+    },
+    onSuccess: () => finishSignIn('passkey'),
+    onError: async (error: unknown, request: PasskeyRequest) => {
+      setPasskeySelected(false)
+      if (passkeyRequest.current === request) passkeyRequest.current = null
+      if (error instanceof AppwriteException && error.code === 429) {
+        passkeyRateLimited.current = true
+      }
+      if (isPasskeyCancellation(error)) return
+      if (await openMfaIfRequired(error)) return
+      // Autofill starts before any choice, so stay quiet until the user has picked a passkey.
+      if (!request.selected) return
+
+      toast.error(
+        passkeySignInErrorMessage(error, t) ??
+          getErrorMessage(error, t('Failed to sign in with a passkey')),
+      )
+      console.error('Passkey sign in error:', error)
+    },
+  })
+  const { mutate: mutatePasskeySignIn } = passkeySignInMutation
+
+  // Starts the autofill request, or replaces one that ended or whose challenge
+  // expired, so the email field keeps offering passkeys after an error or a wait.
+  const startPasskeyAutofill = useCallback(() => {
+    if (passkeyRateLimited.current) return
+    const current = passkeyRequest.current
+    if (current && (current.selected || Date.now() < current.expire)) return
+    current?.controller.abort()
+    const request: PasskeyRequest = {
+      controller: new AbortController(),
+      expire: Number.POSITIVE_INFINITY,
+      selected: false,
+    }
+    passkeyRequest.current = request
+    mutatePasskeySignIn(request)
+  }, [mutatePasskeySignIn])
+
+  // Runs for everyone: the page cannot know the user yet, and the browser only
+  // offers a passkey it already holds for the console.
+  const [passkeyAutofill, setPasskeyAutofill] = useState(false)
+  useEffect(() => {
+    let active = true
+    void isPasskeyAutofillAvailable().then((available) => {
+      if (!active || !available) return
+      setPasskeyAutofill(true)
+      startPasskeyAutofill()
+    })
+    return () => {
+      active = false
+      passkeyRequest.current?.controller.abort()
+      passkeyRequest.current = null
+    }
+  }, [startPasskeyAutofill])
+
+  const passkeyBusy = passkeySignInMutation.isPending && passkeySelected
+
   return (
     <AuthFlowShell width="illustration">
       <SignIn
         mode="sign-in"
         onSubmit={(data) => signInMutation.mutate(data)}
         onOAuthLogin={handleOAuthLogin}
-        isLoading={signInMutation.isPending || isOpeningMfa}
+        onPasskeyAutofill={passkeyAutofill ? startPasskeyAutofill : undefined}
+        isLoading={signInMutation.isPending || passkeyBusy || isOpeningMfa}
         oauthLoading={oauthLoading}
         redirect={search.redirect}
       />

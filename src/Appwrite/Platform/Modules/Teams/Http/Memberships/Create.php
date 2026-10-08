@@ -129,6 +129,7 @@ class Create extends Action
 
         $email = \strtolower($email);
         $name = empty($name) ? $email : $name;
+        $canonicalEmails = (($project->getId() === 'console') || empty($plan) || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false);
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
@@ -150,6 +151,19 @@ class Create extends Action
             $name = $invitee->getAttribute('name', '') ?: $name;
         } elseif (! empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
+            // Aliased emails are denied at sign-up, so the account holds the unaliased address. Keep the typed
+            // domain as OAuth does.
+            if ($invitee->isEmpty() && $canonicalEmails) {
+                $unaliased = $email;
+                try {
+                    $parsedEmail = new Email($email);
+                    $unaliased = \explode('@', $parsedEmail->getCanonical(), 2)[0] . '@' . $parsedEmail->getDomain();
+                } catch (\Throwable) {
+                }
+                if ($unaliased !== $email) {
+                    $invitee = $dbForProject->findOne('users', [Query::equal('email', [$unaliased])]);
+                }
+            }
             if (! $invitee->isEmpty() && ! empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given email and phone doesn\'t match', 409);
             }
@@ -201,7 +215,7 @@ class Create extends Action
                 throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+            if ($canonicalEmails && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
