@@ -20,6 +20,11 @@ final class Video
      * owned by the StatsResources worker; publishing it per encode would count
      * rendition attempts (and delete-and-retry cycles) as videos.
      *
+     * `videos.storage` is attached to the same message, but StatsUsage skips
+     * it. StatsResources recomputes the gauge from each rendition's stored
+     * size, so a retry or a deletion replaces the total instead of stacking
+     * bytes.
+     *
      * @param int $storageBytes total bytes written to the videos device for this rendition
      * @param int $computeMs    wall-clock encode duration in milliseconds
      */

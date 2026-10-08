@@ -3285,6 +3285,19 @@ return [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                // Bytes of this rendition on the videos device. StatsResources
+                // sums it into the videos.storage gauge.
+                '$id' => ID::custom('size'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 8,
+                'signed' => false,
+                'required' => false,
+                'default' => 0,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [

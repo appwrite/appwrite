@@ -764,6 +764,9 @@ class Videos extends Action
                     'status' => Base::STATUS_READY,
                     'path' => $path,
                     'progress' => '100',
+                    // Retained bytes. The usage event is skipped; StatsResources
+                    // sums this column into the videos.storage gauge.
+                    'size' => $storageBytes,
                 ])
             );
             $this->notify(

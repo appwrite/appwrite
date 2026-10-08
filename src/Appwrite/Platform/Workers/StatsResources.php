@@ -138,6 +138,7 @@ class StatsResources extends Action
         array_push($gauges, ...$this->databaseGauges($project, $dbForProject, $getDatabasesDB));
         array_push($gauges, ...$this->deploymentGauges($project, $dbForProject));
         array_push($gauges, ...$this->photoGauges($project, $dbForProject));
+        array_push($gauges, ...$this->videoGauges($project, $dbForProject));
 
         return $gauges;
     }
@@ -290,6 +291,40 @@ class StatsResources extends Action
         return [
             ['metric' => METRIC_STORAGE, 'value' => $storage, 'service' => 'avatars', 'resourceType' => 'photos', 'resourceId' => $project->getId()],
         ];
+    }
+
+    /**
+     * Current bytes of packaged renditions. Summed from each rendition's stored
+     * size so a retry or a deletion replaces the total. The per-encode event is
+     * skipped in StatsUsage.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function videoGauges(Document $project, Database $dbForProject): array
+    {
+        try {
+            $gauges = [
+                ['metric' => METRIC_VIDEOS_STORAGE, 'value' => (int) $dbForProject->sum('videos_renditions', 'size'), 'service' => 'videos', 'resourceType' => 'project', 'resourceId' => $project->getId()],
+            ];
+        } catch (\Throwable $th) {
+            Console::warning("Failed to measure videos for {$project->getId()}: " . $th->getMessage());
+            return [];
+        }
+
+        $this->foreachDocument($dbForProject, 'videos', [], function (Document $video) use ($dbForProject, &$gauges): void {
+            try {
+                $storage = (int) $dbForProject->sum('videos_renditions', 'size', [
+                    Query::equal('videoInternalId', [$video->getSequence()]),
+                ]);
+            } catch (\Throwable $th) {
+                Console::warning("Failed to measure video {$video->getId()}: " . $th->getMessage());
+                return;
+            }
+
+            $gauges[] = ['metric' => METRIC_VIDEOS_STORAGE, 'value' => $storage, 'service' => 'videos', 'resourceType' => 'video', 'resourceId' => $video->getId(), 'resourceInternalId' => (string) $video->getSequence()];
+        });
+
+        return $gauges;
     }
 
     /**

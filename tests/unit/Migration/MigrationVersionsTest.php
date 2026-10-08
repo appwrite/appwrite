@@ -504,6 +504,13 @@ final class MigrationVersionsTest extends TestCase
         $names = \array_map(fn (Document $profile) => $profile->getAttribute('name'), $profiles);
         \sort($names);
         $this->assertSame(['1080p', '2160p', '360p', '480p', '576p', '720p'], $names);
+
+        $renditionAttributes = [];
+        foreach ($database->getCollection('videos_renditions')->getAttribute('attributes', []) as $attribute) {
+            $id = $attribute instanceof Document ? $attribute->getId() : ($attribute['$id'] ?? '');
+            $renditionAttributes[$id] = $attribute;
+        }
+        $this->assertArrayHasKey('size', $renditionAttributes);
     }
 
     public function testV26SkipsConsoleProject(): void

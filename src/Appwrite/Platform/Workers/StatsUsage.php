@@ -153,6 +153,7 @@ class StatsUsage extends Action
             METRIC_FILES_STORAGE,
             METRIC_DEPLOYMENTS_STORAGE,
             METRIC_BUILDS_STORAGE,
+            METRIC_VIDEOS_STORAGE,
             METRIC_DEPLOYMENTS,
             METRIC_BUILDS,
             METRIC_COLLECTIONS,
