@@ -75,6 +75,24 @@ final class VideosCustomClientTest extends Scope
     }
 
     /**
+     * The token sitting between two fixed markers in a playlist or timeline.
+     */
+    private function playlistToken(string $body, string $before, string $after, string $failure): string
+    {
+        $at = \strpos($body, $before);
+        $this->assertNotFalse($at, $failure);
+
+        $start = $at + \strlen($before);
+        $end = \strpos($body, $after, $start);
+        $this->assertNotFalse($end, $failure);
+
+        $token = \substr($body, $start, $end - $start);
+        $this->assertNotSame('', $token, $failure);
+
+        return $token;
+    }
+
+    /**
      * Guests hold `videos.play` only. Metadata routes still require
      * `videos.read` / `videos.write` and must fail at the scope guard.
      * Play URLs (timeline, manifests) are not in this list — they pass
@@ -593,10 +611,12 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $master['headers']['status-code']);
         $this->assertStringContainsString('#EXTM3U', (string) $master['body']);
 
-        if (\preg_match('#renditions/' . \preg_quote($renditionId, '#') . '/streams/(\d+)/playlist\.m3u8#', (string) $master['body'], $matches) !== 1) {
-            $this->fail('HLS master playlist did not reference a stream playlist');
-        }
-        $streamId = $matches[1];
+        $streamId = $this->playlistToken(
+            (string) $master['body'],
+            'renditions/' . $renditionId . '/streams/',
+            '/playlist.m3u8',
+            'HLS master playlist did not reference a stream playlist'
+        );
 
         $variant = $this->client->call(
             Client::METHOD_GET,
@@ -605,13 +625,16 @@ final class VideosCustomClientTest extends Scope
         );
         $this->assertEquals(200, $variant['headers']['status-code']);
 
-        if (\preg_match('#/segments/([a-zA-Z0-9]+)(?:\?|$)#', (string) $variant['body'], $segmentMatch) !== 1) {
-            $this->fail('HLS variant playlist did not reference a segment');
-        }
+        $segmentId = $this->playlistToken(
+            (string) $variant['body'],
+            '/segments/',
+            '?',
+            'HLS variant playlist did not reference a segment'
+        );
 
         $segment = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/outputs/hls/renditions/' . $renditionId . '/segments/' . $segmentMatch[1],
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $renditionId . '/segments/' . $segmentId,
             $this->anonymousHeaders()
         );
         $this->assertEquals(200, $segment['headers']['status-code']);
@@ -621,17 +644,19 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $guestTimeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $guestTimeline['body']);
 
-        if (\preg_match('~previews/([a-zA-Z0-9]+)#xywh=~', (string) $guestTimeline['body'], $previewMatch) === 1) {
-            $preview = $this->client->call(
-                Client::METHOD_GET,
-                '/videos/' . $videoId . '/previews/' . $previewMatch[1],
-                $this->anonymousHeaders()
-            );
-            $this->assertEquals(200, $preview['headers']['status-code']);
-            $this->assertNotEmpty($preview['body']);
-        } else {
-            $this->fail('Timeline VTT did not reference a preview image');
-        }
+        $previewId = $this->playlistToken(
+            (string) $guestTimeline['body'],
+            'previews/',
+            '#xywh=',
+            'Timeline VTT did not reference a preview image'
+        );
+        $preview = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/previews/' . $previewId,
+            $this->anonymousHeaders()
+        );
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertNotEmpty($preview['body']);
 
         return ['videoId' => $videoId, 'renditionId' => $renditionId];
     }
@@ -801,19 +826,25 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $master['headers']['status-code']);
         $this->assertStringContainsString('#EXTM3U', (string) $master['body']);
 
-        if (\preg_match('#renditions/' . \preg_quote($renditionId, '#') . '/streams/(\d+)/playlist\.m3u8#', (string) $master['body'], $matches) !== 1) {
-            $this->fail('HLS master playlist did not reference a stream playlist');
-        }
+        $streamId = $this->playlistToken(
+            (string) $master['body'],
+            'renditions/' . $renditionId . '/streams/',
+            '/playlist.m3u8',
+            'HLS master playlist did not reference a stream playlist'
+        );
 
-        $variantPath = '/videos/' . $videoId . '/outputs/hls/renditions/' . $renditionId . '/streams/' . $matches[1] . '/playlist.m3u8';
+        $variantPath = '/videos/' . $videoId . '/outputs/hls/renditions/' . $renditionId . '/streams/' . $streamId . '/playlist.m3u8';
         $variant = $this->client->call(Client::METHOD_GET, $variantPath, $this->anonymousHeaders());
         $this->assertEquals(200, $variant['headers']['status-code']);
 
-        if (\preg_match('#/segments/([a-zA-Z0-9]+)(?:\?|$)#', (string) $variant['body'], $segmentMatch) !== 1) {
-            $this->fail('HLS variant playlist did not reference a segment');
-        }
+        $segmentId = $this->playlistToken(
+            (string) $variant['body'],
+            '/segments/',
+            '?',
+            'HLS variant playlist did not reference a segment'
+        );
 
-        $segmentPath = '/videos/' . $videoId . '/outputs/hls/renditions/' . $renditionId . '/segments/' . $segmentMatch[1];
+        $segmentPath = '/videos/' . $videoId . '/outputs/hls/renditions/' . $renditionId . '/segments/' . $segmentId;
         $segment = $this->client->call(Client::METHOD_GET, $segmentPath, $this->anonymousHeaders());
         $this->assertEquals(200, $segment['headers']['status-code']);
         $this->assertNotEmpty($segment['body']);
