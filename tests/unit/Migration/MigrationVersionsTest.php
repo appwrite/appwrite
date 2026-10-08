@@ -362,9 +362,7 @@ final class MigrationVersionsTest extends TestCase
     {
         require_once __DIR__ . '/../../../app/init.php';
 
-        $authorization = new Authorization();
-        $authorization->disable();
-        $authorization->setDefaultStatus(false);
+        $authorization = new Authorization(defaultStatus: false);
         $platform = $this->createConfiguredDatabase($authorization, 'migrationV25ReleasePlatform', 'console');
         $platform->createAttribute('projects', Attribute::string('version', size: 16));
         $project = $platform->createDocument('projects', new Document([
@@ -407,9 +405,7 @@ final class MigrationVersionsTest extends TestCase
     {
         require_once __DIR__ . '/../../../app/init.php';
 
-        $authorization = new Authorization();
-        $authorization->disable();
-        $authorization->setDefaultStatus(false);
+        $authorization = new Authorization(defaultStatus: false);
         $platform = $this->createConfiguredDatabase($authorization, 'migrationV26PreV25Platform', 'console');
         $platform->createAttribute('projects', Attribute::string('version', size: 16));
         $project = $platform->createDocument('projects', new Document([
@@ -454,9 +450,7 @@ final class MigrationVersionsTest extends TestCase
     {
         require_once __DIR__ . '/../../../app/init.php';
 
-        $authorization = new Authorization();
-        $authorization->disable();
-        $authorization->setDefaultStatus(false);
+        $authorization = new Authorization(defaultStatus: false);
         $platform = $this->createConfiguredDatabase($authorization, 'migrationV26RcPlatform', 'console');
         $platform->createAttribute('projects', Attribute::string('version', size: 16));
         $project = $platform->createDocument('projects', new Document([
@@ -528,9 +522,7 @@ final class MigrationVersionsTest extends TestCase
     {
         require_once __DIR__ . '/../../../app/init.php';
 
-        $authorization = new Authorization();
-        $authorization->disable();
-        $authorization->setDefaultStatus(false);
+        $authorization = new Authorization(defaultStatus: false);
         $database = new class (new Memory(), new Cache(new NoCache())) extends Database {
             private bool $interleave = true;
 
