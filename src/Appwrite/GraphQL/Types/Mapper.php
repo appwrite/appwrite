@@ -317,7 +317,8 @@ class Mapper
             case \Utopia\Database\Validator\Queries::class:
             case \Utopia\Database\Validator\Queries\Documents::class:
             case \Utopia\Database\Validator\Roles::class:
-            case \Utopia\WAF\Validator\Conditions::class:
+                // utopia-php/waf is not a dependency here, so the class is named rather than referenced.
+            case 'Utopia\WAF\Validator\Conditions':
                 $type = Type::listOf(Type::string());
                 break;
             case \Utopia\Validator\Multiple::class:
