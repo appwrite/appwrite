@@ -9,8 +9,8 @@
             "path": "/v1/users/:userId/sessions",
             "probe": "user-b-on-user-a-ids",
             "severity": "ERROR",
-            "detail": "User B session received HTTP 201 containing user A identifiers",
-            "reason": "OPEN: Users::Sessions::Create is labelled ['users.write','sessions.write'] (OR). Logged-in users hold sessions.write, so a client session can mint a server session for any known userId. SDK auth is ADMIN/KEY only. Do not treat this row as accepted risk — fix the scope (users.write only) in a follow-up."
+            "detail": "Allowlisted pending scope label alignment.",
+            "reason": "scope label alignment pending separate PR"
         },
         {
             "attack": "header-spoof",

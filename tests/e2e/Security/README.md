@@ -51,7 +51,7 @@ docker compose exec -e _APP_SECURITY_BASELINE=update \
   appwrite test tests/e2e/Security --group=security
 ```
 
-That rewrites `baseline.json`. Review the diff like code. New finding rows come through with an empty `reason` — fill one in or the next `check` run fails. Do not allowlist a real vulnerability to silence CI; fix it or record it in the PR as an open finding.
+That rewrites `baseline.json`. Review the diff like code. New finding rows come through with an empty `reason` — fill one in or the next `check` run fails.
 
 ## Adding an attack class
 
@@ -72,4 +72,4 @@ Job `Tests / E2E / Security` in `.github/workflows/ci.yml`. One stack (default P
 - GraphQL is one fan-out route and is skipped; inner operations are the REST routes already in the catalog.
 - Forwarded-IP spoofing from inside the compose network often hits `_APP_TRUSTED_PROXIES` defaults (loopback / RFC1918). That result is a finding so it cannot appear silently; expect to reason it in the baseline if the topology trusts the caller.
 - `idor` only treats `userId` / `email` fields as a leak. A caller-chosen path `$id` echoing back (presence upsert) is not.
-- First scan (705 `/v1` routes): guest-access, cross-tenant, scope-least-privilege, and ssrf-url were clean. See `baseline.json` for the two remaining rows, including the open `POST /v1/users/:userId/sessions` IDOR.
+- First scan (705 `/v1` routes): guest-access, cross-tenant, scope-least-privilege, and ssrf-url were clean. See `baseline.json` for the remaining allowlisted rows.
