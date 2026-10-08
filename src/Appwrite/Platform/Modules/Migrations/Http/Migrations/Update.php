@@ -75,9 +75,7 @@ class Update extends Action
             throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration not failed yet');
         }
 
-        $migration
-            ->setAttribute('status', 'pending')
-            ->setAttribute('dateUpdated', \time());
+        $migration->setAttribute('status', 'pending');
 
         $publisherForMigrations->enqueue(new MigrationMessage(
             project: $project,
