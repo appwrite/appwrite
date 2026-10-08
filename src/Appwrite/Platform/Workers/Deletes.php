@@ -1639,22 +1639,32 @@ class Deletes extends Action
         $collection = $document->getAttribute('resourceType');
         $resourceId = $document->getAttribute('resourceId');
         $locks($collection . ':deployments:' . $projectId . ':' . $resourceId, 30, function () use ($dbForProject, $collection, $resourceId, $deploymentId) {
-            $resource = $dbForProject->getDocument($collection, $resourceId);
-            if ($resource->getAttribute('latestDeploymentId') !== $deploymentId) {
-                return;
-            }
+            // Builds refresh the latest deployment without this lock. The request timestamp makes the write
+            // conflict when one did so after this read, so a newer deployment is not rolled back.
+            for ($attempt = 0; $attempt < 3; $attempt++) {
+                $resource = $dbForProject->getDocument($collection, $resourceId);
+                if ($resource->getAttribute('latestDeploymentId') !== $deploymentId) {
+                    return;
+                }
 
-            $latestDeployment = $dbForProject->findOne('deployments', [
-                Query::equal('resourceType', [$collection]),
-                Query::equal('resourceInternalId', [$resource->getSequence()]),
-                Query::orderDesc('$createdAt'),
-            ]);
-            $dbForProject->updateDocument($collection, $resourceId, new Document([
-                'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? null : $latestDeployment->getCreatedAt(),
-                'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
-                'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
-                'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
-            ]));
+                $latestDeployment = $dbForProject->findOne('deployments', [
+                    Query::equal('resourceType', [$collection]),
+                    Query::equal('resourceInternalId', [$resource->getSequence()]),
+                    Query::orderDesc('$createdAt'),
+                ]);
+
+                try {
+                    $dbForProject->withRequestTimestamp(new \DateTime($resource->getUpdatedAt()), fn () => $dbForProject->updateDocument($collection, $resourceId, new Document([
+                        'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? null : $latestDeployment->getCreatedAt(),
+                        'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
+                        'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
+                        'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
+                    ])));
+                    return;
+                } catch (Conflict) {
+                    // Re-check which deployment is latest now.
+                }
+            }
         }, 10.0);
 
         /**
