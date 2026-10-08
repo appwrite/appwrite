@@ -5,6 +5,7 @@ namespace Appwrite\Utopia\Database\Validator;
 use Appwrite\Utopia\Database\Attribute;
 use Utopia\Database\Attribute as DatabaseAttribute;
 use Utopia\Database\Database;
+use Utopia\Database\Filter;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Emails\Validator\Email;
@@ -451,9 +452,10 @@ class Attributes extends Validator
         $filters = $format === '' ? (self::ENDPOINT_FILTERS[$type] ?? []) : [];
 
         $columnType = ColumnType::tryFrom($type);
+        $typeFilter = $columnType !== null && \in_array($columnType, DatabaseAttribute::TYPES, true) ? Filter::tryFrom($columnType->value) : null;
 
-        if ($columnType !== null && \in_array($columnType, Database::ATTRIBUTE_FILTER_COLUMN_TYPES, true)) {
-            $filters[] = $columnType->value;
+        if ($typeFilter !== null) {
+            $filters[] = $typeFilter->value;
         }
 
         return \array_values(\array_unique($filters));
