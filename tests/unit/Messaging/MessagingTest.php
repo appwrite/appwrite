@@ -1219,6 +1219,23 @@ final class MessagingTest extends TestCase
         $this->assertContains(Role::any()->toString(), $result['roles']);
     }
 
+    public function testFromPayloadVideoRenditionChannels(): void
+    {
+        $result = Realtime::fromPayload(
+            event: 'videos.video1.renditions.rendition1.update',
+            payload: new Document([
+                '$id' => 'rendition1',
+                '$permissions' => [Permission::read(Role::team('team1'))],
+            ]),
+            project: new Document(['$id' => 'project1', 'teamId' => 'team1']),
+        );
+
+        $this->assertContains('videos.video1.renditions.rendition1', $result['channels']);
+        $this->assertContains('console', $result['channels']);
+        $this->assertContains('projects.project1', $result['channels']);
+        $this->assertContains(Role::team('team1')->toString(), $result['roles']);
+    }
+
     public function testExtractDeletedPresenceIdReturnsIdForDeleteEvent(): void
     {
         $event = [

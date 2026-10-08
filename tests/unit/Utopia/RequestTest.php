@@ -235,6 +235,41 @@ final class RequestTest extends TestCase
         $this->assertSame('https://a.example, https://b.example', $request->getHeaderLine('referer'));
     }
 
+    /**
+     * @param array{0: ?string, 1: ?int, 2: ?int} $expected
+     */
+    #[DataProvider('ranges')]
+    public function testParseRange(string $header, array $expected): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['range' => $header];
+        $request = new Request($swoole);
+
+        $this->assertSame($expected[0], $request->getRangeUnit());
+        $this->assertSame($expected[1], $request->getRangeStart());
+        $this->assertSame($expected[2], $request->getRangeEnd());
+    }
+
+    /**
+     * @return \Iterator<string, array{string, array{(string | null), (int | null), (int | null)}}>
+     */
+    public static function ranges(): \Iterator
+    {
+        // RFC 9110 bounds are inclusive, so start === end asks for one byte.
+        yield 'first byte' => ['bytes=0-0', ['bytes', 0, 0]];
+        yield 'last byte' => ['bytes=511-511', ['bytes', 511, 511]];
+        yield 'closed' => ['bytes=100-199', ['bytes', 100, 199]];
+        yield 'open ended' => ['bytes=100-', ['bytes', 100, null]];
+        yield 'other unit' => ['items=0-1', ['items', 0, 1]];
+        yield 'reversed' => ['bytes=200-100', [null, null, null]];
+        yield 'suffix' => ['bytes=-500', [null, null, null]];
+        yield 'multiple' => ['bytes=0-99,200-299', [null, null, null]];
+        yield 'not a number' => ['bytes=a-b', [null, null, null]];
+        yield 'no bounds' => ['bytes=', [null, null, null]];
+        yield 'no unit' => ['=0-99', [null, null, null]];
+        yield 'empty' => ['', [null, null, null]];
+    }
+
     public function testGetHeadersSynthesizesCookieHeaderFromCookieJar(): void
     {
         // Swoole parses the Cookie header into its cookie jar, so getHeaders()

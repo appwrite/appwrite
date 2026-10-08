@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a729d619303d71cafcf44c4684037bd6",
+    "content-hash": "5624c3f447caf588dab0b4bf1aeb9e5e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -275,6 +275,61 @@
                 }
             ],
             "time": "2026-09-12T10:28:18+00:00"
+        },
+        {
+            "name": "captioning/captioning",
+            "version": "3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/captioning/captioning.git",
+                "reference": "ec3c9bf7d06b68d6556d3c991f4b8693302f7964"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/captioning/captioning/zipball/ec3c9bf7d06b68d6556d3c991f4b8693302f7964",
+                "reference": "ec3c9bf7d06b68d6556d3c991f4b8693302f7964",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^6.0|^9.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Captioning": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Julien Villetorte",
+                    "email": "j.villetorte@gmail.com",
+                    "homepage": "http://www.delphiki.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A collection of tools to manipulate subtitles",
+            "keywords": [
+                "ass",
+                "srt",
+                "ssa",
+                "subrip",
+                "substation",
+                "subtitle",
+                "vtt",
+                "webvtt"
+            ],
+            "support": {
+                "issues": "https://github.com/captioning/captioning/issues",
+                "source": "https://github.com/captioning/captioning/tree/3.0.0"
+            },
+            "time": "2022-09-14T17:15:53+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -4466,6 +4521,70 @@
                 "source": "https://github.com/utopia-php/mongo/tree/1.5.4"
             },
             "time": "2026-09-09T05:42:37+00:00"
+        },
+        {
+            "name": "utopia-php/video",
+            "version": "0.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/video.git",
+                "reference": "b65c0395c95a5541741b11da121fb682b9e24d81"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/video/zipball/b65c0395c95a5541741b11da121fb682b9e24d81",
+                "reference": "b65c0395c95a5541741b11da121fb682b9e24d81",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "ext-json": "*",
+                "php": ">=8.2",
+                "utopia-php/console": "0.1.* || ^0.2"
+            },
+            "require-dev": {
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "9.*",
+                "swoole/ide-helper": "6.2.2"
+            },
+            "suggest": {
+                "ext-swoole": "Needed to run the library inside Swoole coroutines."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Video\\": "src/Video"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Shimon Newman",
+                    "email": "shimon@appwrite.io"
+                }
+            ],
+            "description": "A simple library to probe, encode and package video for adaptive streaming",
+            "keywords": [
+                "cmaf",
+                "dash",
+                "ffmpeg",
+                "framework",
+                "hls",
+                "php",
+                "streaming",
+                "upf",
+                "utopia",
+                "video"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/video/issues",
+                "source": "https://github.com/utopia-php/video/tree/0.0.1"
+            },
+            "time": "2026-08-25T15:00:54+00:00"
         },
         {
             "name": "web-auth/cose-lib",

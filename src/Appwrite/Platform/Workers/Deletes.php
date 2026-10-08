@@ -12,6 +12,7 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Videos\Base as VideosBase;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
@@ -69,6 +70,7 @@ class Deletes extends Action
             ->inject('deviceForSites')
             ->inject('deviceForBuilds')
             ->inject('deviceForCache')
+            ->inject('deviceForVideos')
             ->inject('certificates')
             ->inject('executor')
             ->inject('executionRetention')
@@ -99,6 +101,7 @@ class Deletes extends Action
         Device $deviceForSites,
         Device $deviceForBuilds,
         Device $deviceForCache,
+        Device $deviceForVideos,
         Provider $certificates,
         Executor $executor,
         string $executionRetention,
@@ -132,6 +135,7 @@ class Deletes extends Action
             $deviceForSites,
             $deviceForBuilds,
             $deviceForCache,
+            $deviceForVideos,
             $certificates,
             $executor,
             $executionRetention,
@@ -225,6 +229,7 @@ class Deletes extends Action
         Device $deviceForSites,
         Device $deviceForBuilds,
         Device $deviceForCache,
+        Device $deviceForVideos,
         Provider $certificates,
         Executor $executor,
         string $executionRetention,
@@ -254,7 +259,7 @@ class Deletes extends Action
             case DELETE_TYPE_DOCUMENT:
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_PROJECTS:
-                        $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $document, $bus, $executionStore);
+                        $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $deviceForVideos, $certificates, $document, $bus, $executionStore);
                         break;
                     case DELETE_TYPE_SITES:
                         $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $bus, $executionStore);
@@ -273,6 +278,15 @@ class Deletes extends Action
                         break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($getProjectDB, $deviceForFiles, $document, $project);
+                        break;
+                    case DELETE_TYPE_VIDEOS:
+                        $this->deleteVideo($getProjectDB, $deviceForVideos, $document, $project);
+                        break;
+                    case DELETE_TYPE_VIDEOS_RENDITIONS:
+                        $this->deleteVideoRendition($getProjectDB, $deviceForVideos, $document, $project);
+                        break;
+                    case DELETE_TYPE_VIDEOS_CAPTIONS:
+                        $this->deleteVideoCaption($getProjectDB, $deviceForVideos, $document, $project);
                         break;
                     case DELETE_TYPE_INSTALLATIONS:
                         $this->deleteInstallation($dbForPlatform, $getProjectDB, $document, $project);
@@ -337,6 +351,9 @@ class Deletes extends Action
                 break;
             case DELETE_TYPE_CSV_EXPORTS:
                 $this->deleteOldCSVExports($dbForPlatform, $deviceForFiles);
+                break;
+            case DELETE_TYPE_VIDEOS_TMP:
+                $this->deleteOldVideoTmp();
                 break;
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
@@ -746,8 +763,9 @@ class Deletes extends Action
             $deviceForFunctions = getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
             $deviceForBuilds = getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
             $deviceForCache = getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
+            $deviceForVideos = getDevice(APP_STORAGE_VIDEOS . '/app-' . $project->getId());
 
-            $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $project, $bus, $executionStore);
+            $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $deviceForVideos, $certificates, $project, $bus, $executionStore);
             $dbForPlatform->deleteDocument('projects', $project->getId());
         }
     }
@@ -759,12 +777,16 @@ class Deletes extends Action
      * @param Device $deviceForFunctions
      * @param Device $deviceForBuilds
      * @param Device $deviceForCache
+     * @param Device $deviceForVideos
+     * @param Provider $certificates
      * @param Document $document
+     * @param Bus $bus
+     * @param Store|null $executionStore
      * @return void
      * @throws Exception
      * @throws DatabaseException
      */
-    protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Provider $certificates, Document $document, Bus $bus, ?Store $executionStore = null): void
+    protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Device $deviceForVideos, Provider $certificates, Document $document, Bus $bus, ?Store $executionStore = null): void
     {
         $projectInternalId = $document->getSequence();
         $projectId = $document->getId();
@@ -1022,6 +1044,19 @@ class Deletes extends Action
                 $deviceForCache->delete($deviceForCache->getRoot(), true);
             } catch (Throwable $th) {
                 Console::error('Failed to delete cache storage directory: ' . $th->getMessage());
+            }
+
+            try {
+                $deviceForVideos->delete($deviceForVideos->getRoot(), true);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete videos storage directory: ' . $th->getMessage());
+            }
+
+            try {
+                $deviceForVideosTmp = getDevice(APP_STORAGE_VIDEOS_TMP . '/app-' . $projectId);
+                $deviceForVideosTmp->delete($deviceForVideosTmp->getRoot(), true);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete videos temp storage directory: ' . $th->getMessage());
             }
 
         } finally {
@@ -1319,6 +1354,51 @@ class Deletes extends Action
                 Console::success('Deleted CSV file: ' . $file->getAttribute('name'));
             }
         });
+    }
+
+    /**
+     * Remove orphaned videos-tmp job folders older than VideosBase::TMP_TTL.
+     *
+     * Folder names are `{YmdHi}~{projectId}~{videoId}~{type}-{jobId}`; the
+     * leading stamp is compared as text so this never stats the filesystem.
+     */
+    private function deleteOldVideoTmp(): void
+    {
+        $root = VideosBase::tmpJobsRoot();
+        $tmpRoot = \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/';
+
+        if (!\is_dir($root)) {
+            return;
+        }
+
+        $cutoff = \gmdate('YmdHi', \time() - VideosBase::TMP_TTL);
+        Console::info('Deleting video tmp jobs older than ' . $cutoff);
+
+        foreach (\scandir($root) ?: [] as $name) {
+            if ($name[0] === '.') {
+                continue;
+            }
+
+            if (!VideosBase::jobExpired($name, $cutoff)) {
+                continue;
+            }
+
+            $path = $root . '/' . $name;
+            if (!\str_starts_with($path, $tmpRoot)) {
+                continue;
+            }
+
+            $stdout = '';
+            $stderr = '';
+            $code = Console::execute('rm -rf ' . \escapeshellarg($path), '', $stdout, $stderr, 30);
+
+            if ($code !== 0) {
+                Console::error('Failed removing video tmp [' . $path . ']: ' . $stderr);
+                continue;
+            }
+
+            Console::info('Removing video tmp [' . $path . ']');
+        }
     }
 
     /**
@@ -1785,6 +1865,131 @@ class Deletes extends Action
         $dbForProject->deleteCollection('bucket_' . $document->getSequence());
 
         $deviceForFiles->deletePath($document->getId());
+    }
+
+    /**
+     * Cascades a video deletion across its previews, renditions and captions —
+     * including the per-rendition and per-caption segment rows — then removes the
+     * whole transcoded output tree from the videos device.
+     *
+     * @param callable $getProjectDB
+     * @param Device $deviceForVideos
+     * @param Document $document
+     * @param Document $project
+     * @return void
+     * @throws Exception
+     */
+    private function deleteVideo(callable $getProjectDB, Device $deviceForVideos, Document $document, Document $project): void
+    {
+        $dbForProject = $getProjectDB($project);
+        $videoInternalId = $document->getSequence();
+
+        $this->deleteByGroup('videos_previews', [
+            Query::equal('videoInternalId', [$videoInternalId]),
+        ], $dbForProject);
+
+        // Child documents still exist here (the HTTP action only deleted the
+        // video row), so reuse the per-child cleaners for segments and files
+        // before dropping the parent rows.
+        $this->listByGroup('videos_renditions', [
+            Query::equal('videoInternalId', [$videoInternalId]),
+        ], $dbForProject, function (Document $rendition) use ($getProjectDB, $deviceForVideos, $project) {
+            $this->deleteVideoRendition($getProjectDB, $deviceForVideos, $rendition, $project);
+        });
+
+        $this->deleteByGroup('videos_renditions', [
+            Query::equal('videoInternalId', [$videoInternalId]),
+        ], $dbForProject);
+
+        $this->listByGroup('videos_captions', [
+            Query::equal('videoInternalId', [$videoInternalId]),
+        ], $dbForProject, function (Document $caption) use ($getProjectDB, $deviceForVideos, $project) {
+            $this->deleteVideoCaption($getProjectDB, $deviceForVideos, $caption, $project);
+        });
+
+        $this->deleteByGroup('videos_captions', [
+            Query::equal('videoInternalId', [$videoInternalId]),
+        ], $dbForProject);
+
+        try {
+            $deviceForVideos->deletePath($document->getId());
+        } catch (Throwable $th) {
+            Console::error('Failed to delete video storage directory: ' . $th->getMessage());
+        }
+
+        try {
+            $deviceForVideosTmp = getDevice(APP_STORAGE_VIDEOS_TMP . '/app-' . $project->getId());
+            $deviceForVideosTmp->deletePath($document->getId());
+        } catch (Throwable $th) {
+            Console::error('Failed to delete video temp storage directory: ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * Removes a rendition's segment rows and packaged output directory.
+     *
+     * Safe to run after the rendition row itself is already gone: the
+     * document snapshot in the delete message still carries `$sequence` and
+     * `path`. Safe to run twice — `deleteByGroup` is a no-op on an empty
+     * match and missing storage is ignored.
+     *
+     * @param callable $getProjectDB
+     * @param Device $deviceForVideos
+     * @param Document $document
+     * @param Document $project
+     * @return void
+     */
+    private function deleteVideoRendition(callable $getProjectDB, Device $deviceForVideos, Document $document, Document $project): void
+    {
+        $dbForProject = $getProjectDB($project);
+
+        $this->deleteByGroup('videos_renditions_segments', [
+            Query::equal('renditionInternalId', [$document->getSequence()]),
+        ], $dbForProject);
+
+        $path = $document->getAttribute('path', '');
+
+        if ($path === '') {
+            return;
+        }
+
+        try {
+            // `path` is an absolute getPath() value. deletePath() prefixes the
+            // device root, so an absolute argument would miss the directory.
+            $deviceForVideos->delete($path, true);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete rendition storage directory: ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * Removes a caption's segment rows and packaged VTT file.
+     *
+     * @param callable $getProjectDB
+     * @param Device $deviceForVideos
+     * @param Document $document
+     * @param Document $project
+     * @return void
+     */
+    private function deleteVideoCaption(callable $getProjectDB, Device $deviceForVideos, Document $document, Document $project): void
+    {
+        $dbForProject = $getProjectDB($project);
+
+        $this->deleteByGroup('videos_captions_segments', [
+            Query::equal('captionInternalId', [$document->getSequence()]),
+        ], $dbForProject);
+
+        $path = $document->getAttribute('path', '');
+
+        if ($path === '') {
+            return;
+        }
+
+        try {
+            $deviceForVideos->delete($path);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete caption storage file: ' . $th->getMessage());
+        }
     }
 
     /**

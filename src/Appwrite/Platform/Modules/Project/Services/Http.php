@@ -101,6 +101,11 @@ use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionInvalidation\
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionLimit\Update as UpdateSessionLimitPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\UserLimit\Update as UpdateUserLimitPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\XList as ListPolicies;
+use Appwrite\Platform\Modules\Project\Http\Project\Profiles\Create as CreateProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Profiles\Delete as DeleteProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Profiles\Get as GetProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Profiles\Update as UpdateProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Profiles\XList as ListProfiles;
 use Appwrite\Platform\Modules\Project\Http\Project\Protocols\Update as UpdateProjectProtocol;
 use Appwrite\Platform\Modules\Project\Http\Project\Services\Update as UpdateProjectService;
 use Appwrite\Platform\Modules\Project\Http\Project\SMTP\Tests\Create as CreateSMTPTest;
@@ -198,6 +203,13 @@ class Http extends Service
         $this->addAction(UpdateDenyDisposableEmailPolicy::getName(), new UpdateDenyDisposableEmailPolicy());
         $this->addAction(UpdateDenyFreeEmailPolicy::getName(), new UpdateDenyFreeEmailPolicy());
         $this->addAction(UpdateDenyCorporateEmailPolicy::getName(), new UpdateDenyCorporateEmailPolicy());
+
+        // Profiles
+        $this->addAction(CreateProfile::getName(), new CreateProfile());
+        $this->addAction(ListProfiles::getName(), new ListProfiles());
+        $this->addAction(GetProfile::getName(), new GetProfile());
+        $this->addAction(UpdateProfile::getName(), new UpdateProfile());
+        $this->addAction(DeleteProfile::getName(), new DeleteProfile());
 
         // Auth Methods
         $this->addAction(UpdateAuthMethod::getName(), new UpdateAuthMethod());

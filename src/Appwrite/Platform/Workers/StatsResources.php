@@ -116,6 +116,7 @@ class StatsResources extends Action
             METRIC_SITES => $this->safeCount($dbForProject, 'sites'),
             METRIC_TEAMS => $this->safeCount($dbForProject, 'teams'),
             METRIC_MESSAGES => $this->safeCount($dbForProject, 'messages'),
+            METRIC_VIDEOS => $this->safeCount($dbForProject, 'videos'),
             METRIC_PROVIDERS => $this->safeCount($dbForProject, 'providers'),
             METRIC_TOPICS => $this->safeCount($dbForProject, 'topics'),
             METRIC_TARGETS => $this->safeCount($dbForProject, 'targets'),
@@ -137,6 +138,7 @@ class StatsResources extends Action
         array_push($gauges, ...$this->databaseGauges($project, $dbForProject, $getDatabasesDB));
         array_push($gauges, ...$this->deploymentGauges($project, $dbForProject));
         array_push($gauges, ...$this->photoGauges($project, $dbForProject));
+        array_push($gauges, ...$this->videoGauges($project, $dbForProject));
 
         return $gauges;
     }
@@ -289,6 +291,56 @@ class StatsResources extends Action
         return [
             ['metric' => METRIC_STORAGE, 'value' => $storage, 'service' => 'avatars', 'resourceType' => 'photos', 'resourceId' => $project->getId()],
         ];
+    }
+
+    /**
+     * Current bytes of packaged renditions, captions, preview images, and the
+     * timeline WebVTT.
+     * Summed from each row's stored size so a retry or a deletion replaces
+     * the total. The per-encode event is skipped in StatsUsage.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function videoGauges(Document $project, Database $dbForProject): array
+    {
+        try {
+            $gauges = [
+                ['metric' => METRIC_VIDEOS_STORAGE, 'value' => $this->videoStorage($dbForProject), 'service' => 'videos', 'resourceType' => 'project', 'resourceId' => $project->getId()],
+            ];
+        } catch (\Throwable $th) {
+            Console::warning("Failed to measure videos for {$project->getId()}: " . $th->getMessage());
+            return [];
+        }
+
+        $this->foreachDocument($dbForProject, 'videos', [], function (Document $video) use ($dbForProject, &$gauges): void {
+            try {
+                $storage = $this->videoStorage($dbForProject, [
+                    Query::equal('videoInternalId', [$video->getSequence()]),
+                ]);
+            } catch (\Throwable $th) {
+                Console::warning("Failed to measure video {$video->getId()}: " . $th->getMessage());
+                return;
+            }
+
+            $gauges[] = ['metric' => METRIC_VIDEOS_STORAGE, 'value' => $storage, 'service' => 'videos', 'resourceType' => 'video', 'resourceId' => $video->getId(), 'resourceInternalId' => (string) $video->getSequence()];
+        });
+
+        return $gauges;
+    }
+
+    /**
+     * Bytes retained for one video, or for the project when no query is passed.
+     *
+     * @param array<int, Query> $queries
+     */
+    private function videoStorage(Database $dbForProject, array $queries = []): int
+    {
+        $storage = 0;
+        foreach (['videos_renditions', 'videos_captions', 'videos_previews'] as $collection) {
+            $storage += (int) $dbForProject->sum($collection, 'size', $queries);
+        }
+
+        return $storage;
     }
 
     /**

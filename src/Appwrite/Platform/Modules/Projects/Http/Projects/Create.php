@@ -18,6 +18,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\DSN\DSN;
 use Utopia\Platform\Enum;
@@ -56,10 +57,11 @@ class Create extends Action
             ->inject('cache')
             ->inject('pools')
             ->inject('hooks')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $name, string $teamId, string $region, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks)
+    public function action(string $projectId, string $name, string $teamId, string $region, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks, Authorization $authorization)
     {
         $team = $dbForPlatform->getDocument('teams', $teamId);
 
@@ -229,6 +231,8 @@ class Create extends Action
                         // Collection already exists
                     }
                 }
+
+                $this->seedVideoProfiles($dbForProject, $authorization);
             }
         }
 
@@ -239,5 +243,32 @@ class Create extends Action
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($project, Response::MODEL_PROJECT);
+    }
+
+    /**
+     * Seeds the default encoding ladder into a new project.
+     *
+     * Renditions are always encoded against a profile, so a project with no
+     * profiles cannot transcode anything until one is created by hand. The
+     * presets live in app/config/videos-profiles.php.
+     */
+    private function seedVideoProfiles(Database $dbForProject, Authorization $authorization): void
+    {
+        foreach (Config::getParam('videos-profiles', []) as $profile) {
+            try {
+                $authorization->skip(fn () => $dbForProject->createDocument('videos_profiles', new Document([
+                    '$id' => ID::unique(),
+                    'name' => $profile['name'],
+                    'codec' => $profile['codec'] ?? 'h264',
+                    'videoBitRate' => $profile['videoBitRate'],
+                    'audioBitRate' => $profile['audioBitRate'],
+                    'width' => $profile['width'],
+                    'height' => $profile['height'],
+                    'search' => $profile['name'],
+                ])));
+            } catch (Duplicate) {
+                // Profile already seeded
+            }
+        }
     }
 }

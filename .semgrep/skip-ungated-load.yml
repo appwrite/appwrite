@@ -6,9 +6,11 @@ rules:
       allowlist. Gate the skip on API-key / privileged callers, or load
       with document ACL. Allowlisted: schema/platform metadata, generated
       tables (bucket_*, database_*), existing lookup collections
-      (users, teams, memberships, …), and subquery hydrations
+      (users, teams, memberships, …), subquery hydrations
       (sessions, tokens, challenges, authenticators, insights,
-      resourceTokens, pushLedger).
+      resourceTokens, pushLedger), and video child / profile collections
+      (videos_profiles, videos_renditions, videos_captions,
+      videos_previews, videos_subtitles, and their _segments tables).
     languages: [php]
     severity: ERROR
     metadata:
@@ -25,7 +27,7 @@ rules:
           - pattern: Authorization::skip($CB)
       - metavariable-regex:
           metavariable: $CB
-          regex: (?s).*(?:getDocument|find|findOne)\(\s*['\"](?!(?:databases|collections|attributes|indexes|tables|columns|projects|platforms|keys|webhooks|rules|buckets|functions|deployments|sites|builds|installations|repositories|vcsComments|schedules|variables|migrations|executions|topics|messages|providers|logs|cache|certificates|transactionLogs|notifications|users|teams|memberships|identities|targets|subscribers|sessions|tokens|challenges|authenticators|insights|resourceTokens|pushLedger|bucket_|database_)['\"_])[^'\"]+['\"]
+          regex: (?s).*(?:getDocument|find|findOne)\(\s*['\"](?!(?:databases|collections|attributes|indexes|tables|columns|projects|platforms|keys|webhooks|rules|buckets|functions|deployments|sites|builds|installations|repositories|vcsComments|schedules|variables|migrations|executions|topics|messages|providers|logs|cache|certificates|transactionLogs|notifications|users|teams|memberships|identities|targets|subscribers|sessions|tokens|challenges|authenticators|insights|resourceTokens|pushLedger|videos_profiles|videos_renditions|videos_captions|videos_previews|videos_subtitles|bucket_|database_)['\"_])[^'\"]+['\"]
       - pattern-not-inside: |
           ($IS_KEY || $IS_PRIVILEGED) ? $AUTH->skip(...) : $OTHER
       - pattern-not-inside: |

@@ -1,0 +1,381 @@
+<?php
+
+namespace Appwrite\Platform\Modules\Videos;
+
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\View;
+use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
+use Utopia\Platform\Action as UtopiaAction;
+
+/**
+ * Shared behaviour for the Videos module.
+ *
+ * Lives at the module root rather than under `Http/`, where filenames are
+ * restricted to the CRUD set — see `src/Appwrite/Platform/AGENTS.md`. Follows
+ * the same placement as `Appwrite\Platform\Modules\Compute\Base`.
+ */
+abstract class Base extends UtopiaAction
+{
+    public const OUTPUT_HLS = 'hls';
+    public const OUTPUT_DASH = 'dash';
+    public const OUTPUT_CMAF = 'cmaf';
+
+    /** Outputs a rendition can be packaged into. */
+    public const OUTPUTS = [self::OUTPUT_HLS, self::OUTPUT_DASH, self::OUTPUT_CMAF];
+
+    public const CODEC_H264 = 'h264';
+    public const CODEC_HEVC = 'hevc';
+    public const CODEC_VP9 = 'vp9';
+
+    /**
+     * Codec ids known to videos-codecs.php. Prefer reading the config at runtime;
+     * this list is the compile-time fallback for WhiteList defaults.
+     *
+     * @var list<string>
+     */
+    public const CODECS = [self::CODEC_H264, self::CODEC_HEVC, self::CODEC_VP9];
+
+    /**
+     * All codec ids declared in videos-codecs.php.
+     *
+     * @return list<string>
+     */
+    public static function codecIds(): array
+    {
+        $codecs = Config::getParam('videos-codecs', []);
+        if (!\is_array($codecs) || empty($codecs)) {
+            return self::CODECS;
+        }
+
+        return \array_values(\array_map('strval', \array_keys($codecs)));
+    }
+
+    /**
+     * Codec ids with enabled === true.
+     *
+     * @return list<string>
+     */
+    public static function enabledCodecs(): array
+    {
+        $enabled = [];
+        foreach (Config::getParam('videos-codecs', []) as $id => $codec) {
+            if (\is_array($codec) && ($codec['enabled'] ?? false) === true) {
+                $enabled[] = (string) $id;
+            }
+        }
+
+        return $enabled;
+    }
+
+    /**
+     * Packaging outputs a codec may be asked for on POST /renditions.
+     *
+     * @return list<string>
+     */
+    public static function codecOutputs(string $codec): array
+    {
+        $codecs = Config::getParam('videos-codecs', []);
+        $outputs = $codecs[$codec]['outputs'] ?? [];
+        if (!\is_array($outputs)) {
+            return [];
+        }
+
+        return \array_values(\array_map('strval', $outputs));
+    }
+
+    /**
+     * Whether $output is allowed for $codec per videos-codecs.php.
+     */
+    public static function codecSupportsOutput(string $codec, string $output): bool
+    {
+        return \in_array($output, self::codecOutputs($codec), true);
+    }
+
+    /**
+     * Normalize a stored codec; empty/missing becomes h264 for pre-migration rows.
+     */
+    public static function normalizeCodec(?string $codec): string
+    {
+        $codec = \strtolower(\trim((string) $codec));
+
+        return $codec === '' ? self::CODEC_H264 : $codec;
+    }
+
+    /**
+     * Reject a codec that is not enabled in config.
+     */
+    protected function assertCodecEnabled(string $codec): void
+    {
+        if (!\in_array($codec, self::enabledCodecs(), true)) {
+            throw new Exception(Exception::VIDEO_CODEC_DISABLED);
+        }
+    }
+
+    /**
+     * Reject packaging a codec into an output it cannot carry.
+     */
+    protected function assertCodecSupportsOutput(string $codec, string $output): void
+    {
+        if (!self::codecSupportsOutput($codec, $output)) {
+            throw new Exception(Exception::VIDEO_CODEC_OUTPUT_UNSUPPORTED);
+        }
+    }
+
+    /**
+     * Lifecycle of a rendition or caption, shared with the videos worker.
+     *
+     * Endpoints create rows as `pending`; the worker advances them and settles on
+     * `ready` or `error`.
+     */
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_STARTED = 'started';
+    public const STATUS_ENDED = 'ended';
+    public const STATUS_UPLOADING = 'uploading';
+    public const STATUS_READY = 'ready';
+    public const STATUS_ERROR = 'error';
+    public const STATUS_ABORTED = 'aborted';
+
+    /** Orphaned job folders under videos-tmp/jobs are swept after this many seconds. */
+    public const TMP_TTL = 86400;
+
+    public const JOB_RENDITION = 'rendition';
+    public const JOB_TIMELINE = 'timeline';
+    public const JOB_CAPTION = 'caption';
+
+    /** Flat root for all video worker scratch directories on the shared volume. */
+    public static function tmpJobsRoot(): string
+    {
+        return \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/jobs';
+    }
+
+    /**
+     * Per-job directory: `{tmpJobsRoot()}/{YmdHi}~{projectId}~{videoId}~{type}-{jobId}`.
+     *
+     * The leading 12-character UTC minute stamp sorts as text so a maintenance
+     * sweep can drop leftovers older than TMP_TTL without reading file times.
+     * Encode jobs use the rendition id; timeline and caption jobs use a uniqid.
+     */
+    public static function tmpJobPath(
+        string $projectId,
+        string $videoId,
+        string $type,
+        string $jobId
+    ): string {
+        $stamp = \gmdate('YmdHi');
+
+        return self::tmpJobsRoot()
+            . '/' . $stamp
+            . '~' . $projectId
+            . '~' . $videoId
+            . '~' . $type
+            . '-' . $jobId;
+    }
+
+    /**
+     * True when a job folder name is older than `$cutoff` (`gmdate('YmdHi', …)`).
+     *
+     * Requires a 12-digit stamp followed by `~` so accidental entries under
+     * jobs/ are left alone.
+     */
+    public static function jobExpired(string $name, string $cutoff): bool
+    {
+        if (\strlen($name) < 13) {
+            return false;
+        }
+
+        if ($name[12] !== '~') {
+            return false;
+        }
+
+        $stamp = \substr($name, 0, 12);
+
+        if (!\ctype_digit($stamp)) {
+            return false;
+        }
+
+        return $stamp < $cutoff;
+    }
+
+    /**
+     * Legacy per-video root. Kept for Deletes.php of older trees only.
+     */
+    public static function tmpPath(string $projectId, string $videoId): string
+    {
+        return \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/app-' . $projectId . '/' . $videoId;
+    }
+
+    /**
+     * Bounds for video profile parameters, in kilobits per second and pixels.
+     *
+     * One set shared by create and update: the pre-merge controller validated
+     * create against 32-5000/6-3000 and update against 64-4000/100-2000, so a
+     * profile could be created with values its own update endpoint rejected.
+     * The range spans the seeded presets (360p at 890/64 up to 1080p at
+     * 4800/128) with headroom for 8K.
+     */
+    public const MIN_VIDEO_BITRATE = 32;
+    public const MAX_VIDEO_BITRATE = 20000;
+    public const MIN_AUDIO_BITRATE = 32;
+    public const MAX_AUDIO_BITRATE = 512;
+    public const MIN_DIMENSION = 16;
+    public const MAX_DIMENSION = 4320;
+
+    /** Mime types accepted as a transcodable source. */
+    public const SOURCE_MIME_PREFIXES = ['video/', 'audio/'];
+    public const SOURCE_MIME_TYPES = ['application/ogg'];
+
+    /** Mime types accepted as a caption source. */
+    public const CAPTION_MIME_TYPES = ['text/vtt', 'text/plain', 'application/x-subrip'];
+
+    /**
+     * Renders one of the `app/views/videos/*.phtml` manifest templates.
+     *
+     * The repo root is five levels up from this file
+     * (src/Appwrite/Platform/Modules/Videos).
+     *
+     * Rendering is always unminified. HLS playlists and MPDs are line-oriented,
+     * and View::render()'s default minifier collapses every whitespace run to a
+     * single character — which would fold an entire playlist onto one line.
+     *
+     * @param array<string, mixed> $params
+     */
+    protected function renderView(string $template, array $params): string
+    {
+        $view = new View(__DIR__ . '/../../../../../app/views/videos/' . $template . '.phtml');
+
+        foreach ($params as $key => $value) {
+            // Escaping is left to the templates, which call $this->print($value, self::FILTER_ESCAPE)
+            // on the fields that need it; blanket-escaping would corrupt URLs and XML.
+            $view->setParam($key, $value, false);
+        }
+
+        return $view->render(false);
+    }
+
+    /**
+     * Loads a video enforcing document `$permissions` for sessions.
+     *
+     * Privileged users and API keys skip authorization. Empty → VIDEO_NOT_FOUND.
+     * Static so play routes and the shared response-cache hook in
+     * `app/controllers/shared/api.php` share the same check.
+     */
+    public static function getAuthorizedVideo(
+        Database $dbForProject,
+        Authorization $authorization,
+        User $user,
+        string $videoId
+    ): Document {
+        $isAPIKey = $user->isKey($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+
+        $video = ($isAPIKey || $isPrivilegedUser)
+            ? $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId))
+            : $dbForProject->getDocument('videos', $videoId);
+
+        if ($video->isEmpty()) {
+            throw new Exception(Exception::VIDEO_NOT_FOUND);
+        }
+
+        return $video;
+    }
+
+    /**
+     * Asserts the caller may read the bucket/file backing a video, and returns
+     * the file document.
+     *
+     * Used when attaching a source or caption/subtitle file (create / update),
+     * not for playback. Mirrors
+     * `Modules/Storage/Http/Buckets/Files/View/Get.php` — the legacy version
+     * gated bucket access on `$mode !== APP_MODE_ADMIN` rather than on roles,
+     * which let any admin-mode request through.
+     */
+    public static function assertFileAccess(
+        Database $dbForProject,
+        Authorization $authorization,
+        User $user,
+        string $bucketId,
+        string $fileId
+    ): Document {
+        $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+        $isAPIKey = $user->isKey($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+        $valid = $authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
+
+        if (!$fileSecurity && !$valid) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
+        }
+
+        if ($fileSecurity && !$valid) {
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
+        } else {
+            $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+        }
+
+        if ($file->isEmpty()) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+        }
+
+        return $file;
+    }
+
+    /**
+     * Deletes a rendition row and enqueues lazy cleanup of its segments and files.
+     */
+    protected function deleteRendition(
+        Database $dbForProject,
+        Authorization $authorization,
+        DeletePublisher $publisherForDeletes,
+        Document $project,
+        Document $rendition
+    ): void {
+        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videos_renditions', $rendition->getId()));
+
+        if (!$deleted) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video rendition from DB');
+        }
+
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $project,
+            type: DELETE_TYPE_DOCUMENT,
+            document: $rendition,
+        ));
+    }
+
+    /**
+     * Deletes a caption row and enqueues lazy cleanup of its segments and files.
+     */
+    protected function deleteCaption(
+        Database $dbForProject,
+        Authorization $authorization,
+        DeletePublisher $publisherForDeletes,
+        Document $project,
+        Document $caption
+    ): void {
+        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videos_captions', $caption->getId()));
+
+        if (!$deleted) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video caption from DB');
+        }
+
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $project,
+            type: DELETE_TYPE_DOCUMENT,
+            document: $caption,
+        ));
+    }
+
+}

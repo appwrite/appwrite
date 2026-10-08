@@ -16,6 +16,7 @@ use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Screenshot;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Base;
@@ -56,6 +57,7 @@ class Get extends Base
                 System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME),
                 System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME),
                 System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME),
+                System::getEnv('_APP_VIDEOS_QUEUE_NAME', Event::VIDEOS_QUEUE_NAME),
             ]), 'The name of the queue', enum: new Enum(name: 'HealthQueueName'))
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
             ->inject('response')
@@ -73,6 +75,7 @@ class Get extends Base
             ->inject('publisherForMigrations')
             ->inject('publisherForScreenshots')
             ->inject('publisherForNotifications')
+            ->inject('publisherForVideos')
             ->callback($this->action(...));
     }
 
@@ -94,6 +97,7 @@ class Get extends Base
         MigrationPublisher $publisherForMigrations,
         Screenshot $publisherForScreenshots,
         NotificationPublisher $publisherForNotifications,
+        VideoPublisher $publisherForVideos,
     ): void {
         $threshold = (int) $threshold;
 
@@ -112,6 +116,7 @@ class Get extends Base
             System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME) => $publisherForMessaging,
             System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME) => $publisherForMigrations,
             System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME) => $publisherForNotifications,
+            System::getEnv('_APP_VIDEOS_QUEUE_NAME', Event::VIDEOS_QUEUE_NAME) => $publisherForVideos,
             default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unknown queue name: ' . $name),
         };
         $failed = $queue->getSize(failed: true);

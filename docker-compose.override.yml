@@ -20,6 +20,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
     depends_on:
       - dns
     ports:
@@ -154,6 +155,18 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
   appwrite-worker-screenshots:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+  appwrite-worker-videos:
     build:
       context: .
       target: development

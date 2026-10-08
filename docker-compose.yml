@@ -77,6 +77,8 @@ services:
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
+      - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
@@ -456,6 +458,8 @@ services:
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
+      - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
       - appwrite-config:/storage/config:rw
       - appwrite-imports:/storage/imports:rw
     extra_hosts:
@@ -476,7 +480,7 @@ services:
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases stays at 1.
-      - _APP_WORKER_MAX_COROUTINES=78
+      - _APP_WORKER_MAX_COROUTINES=79
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
@@ -745,6 +749,8 @@ services:
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
+      - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
     environment:
       - _APP_ENV
       - _APP_USAGE_PASS
@@ -1104,6 +1110,71 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
     extra_hosts:
       - host.docker.internal:host-gateway
+  appwrite-worker-videos:
+    profiles:
+      - separate
+    entrypoint: worker-videos
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-worker-videos
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-uploads:/storage/uploads:rw
+      - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
+    depends_on:
+      - redis
+      - ${_APP_DB_HOST:-postgresql}
+    environment:
+      - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      # Transcoding is CPU-bound, so a single coroutine per worker avoids
+      # oversubscribing cores with concurrent ffmpeg processes.
+      - _APP_WORKER_MAX_COROUTINES=1
+      - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
+      - _APP_LOGGING_CONFIG
+      - _APP_OPENSSL_KEY_V1
+      - _APP_DOMAIN
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DATABASE_SHARED_TABLES
+      - _APP_STORAGE_DEVICE
+      - _APP_STORAGE_S3_ACCESS_KEY
+      - _APP_STORAGE_S3_SECRET
+      - _APP_STORAGE_S3_REGION
+      - _APP_STORAGE_S3_BUCKET
+      - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
+      - _APP_STORAGE_DO_SPACES_SECRET
+      - _APP_STORAGE_DO_SPACES_REGION
+      - _APP_STORAGE_DO_SPACES_BUCKET
+      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
+      - _APP_STORAGE_BACKBLAZE_SECRET
+      - _APP_STORAGE_BACKBLAZE_REGION
+      - _APP_STORAGE_BACKBLAZE_BUCKET
+      - _APP_STORAGE_LINODE_ACCESS_KEY
+      - _APP_STORAGE_LINODE_SECRET
+      - _APP_STORAGE_LINODE_REGION
+      - _APP_STORAGE_LINODE_BUCKET
+      - _APP_STORAGE_WASABI_ACCESS_KEY
+      - _APP_STORAGE_WASABI_SECRET
+      - _APP_STORAGE_WASABI_REGION
+      - _APP_STORAGE_WASABI_BUCKET
   appwrite-worker-certificates:
     profiles:
       - separate
@@ -1977,4 +2048,7 @@ volumes:
     name: appwrite-builds
   appwrite-config: null
   appwrite-models: null
+  appwrite-videos: null
+  # Scratch for source download + ffmpeg; swap this volume for block storage later.
+  appwrite-videos-tmp: null
   openruntimes-node-modules-cache: null
