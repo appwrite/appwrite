@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "Choose a project config file per environment in the Appwrite CLI"
+date: 2026-09-28
+cover: /images/changelog/2026-09-28.avif
+tags: cli
+---
+
+Appwrite CLI 28.1.0 adds a `--config-file` flag, so one repository can keep a separate config for each environment, such as staging and production.
+
+```sh
+appwrite push --config-file appwrite.config.prod.json
+```
+
+You can also set `APPWRITE_CONFIG_FILE` once for a shell session or CI job.
+
+{% arrow_link href="/docs/tooling/command-line/installation#multiple-environments" %}
+Learn about multiple environments
+{% /arrow_link %}

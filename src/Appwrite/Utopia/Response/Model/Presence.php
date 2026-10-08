@@ -89,6 +89,11 @@ class Presence extends Model
         $document->removeAttribute('permissionsHash');
         $document->removeAttribute('userInternalId');
 
+        $metadata = $document->getAttribute('metadata');
+        if (\is_array($metadata) && empty($metadata)) {
+            $document->setAttribute('metadata', new \stdClass());
+        }
+
         foreach ($document->getAttributes() as $attribute) {
             if (\is_array($attribute)) {
                 foreach ($attribute as $subAttribute) {

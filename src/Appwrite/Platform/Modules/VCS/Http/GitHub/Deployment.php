@@ -23,6 +23,7 @@ use Utopia\System\System;
 use Utopia\Validator\Contains;
 use Utopia\Validator\Globstar;
 use Utopia\VCS\Adapter\Git;
+use Utopia\VCS\Exception\OwnerNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 trait Deployment
@@ -594,6 +595,11 @@ trait Deployment
 
                 Span::add("{$logBase}.build.triggered", 'true');
                 //TODO: Add event?
+            } catch (OwnerNotFound $e) {
+                // The installation is gone, so nothing can be built or reported back for it.
+                Span::add("{$logBase}.build.skipped.reason", 'owner not found');
+                Span::add("{$logBase}.build.skipped", 'true');
+                Console::warning("Skipping repository '{$repository->getId()}': {$e->getMessage()}");
             } catch (Exception $e) {
                 Span::add("{$logBase}.error", $e->getMessage());
                 Span::add("{$logBase}.error.type", $e->getType());

@@ -1,0 +1,104 @@
+---
+layout: article
+title: Claude Code
+description: Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.
+---
+
+{% section #install-plugin step=1 title="Install the Appwrite plugin" %}
+
+The fastest way to get started with Appwrite in Claude Code is to install the [**Appwrite plugin**](https://claude.com/plugins/appwrite) from the official marketplace. The plugin includes the hosted Appwrite MCP server, agent skills for the CLI and all major SDKs, and commands for deploying sites and functions.
+
+To install the plugin, run the following command in your terminal:
+
+```bash
+claude plugin install appwrite@claude-plugins-official
+```
+
+If Claude Code cannot find the plugin, add the Appwrite marketplace and install it from there:
+
+```bash
+claude plugin marketplace add appwrite/claude-plugin
+claude plugin install appwrite@appwrite
+```
+
+Run `/reload-plugins` in Claude Code to load the plugin in your current session. Then run `/mcp`, select the Appwrite server, and choose **Authenticate**. Your browser opens so you can sign in to your Appwrite account and authorize access. The plugin does not need an API key.
+
+If you installed an earlier version that asked for an endpoint, project ID, and API key, run `/plugins`, open the **Installed** tab, and update the **Appwrite** plugin.
+
+{% info title="Prefer manual setup?" %}
+
+If you'd rather use the MCP server without installing the plugin, skip to [Step 3](#step-3). Manual setup is an alternative to the plugin, not an additional requirement.
+
+{% /info %}
+
+{% /section %}
+
+{% section #quick-start-prompts step=2 title="Quick start prompts" %}
+
+Get started quickly with these pre-built prompts for common Appwrite integrations:
+
+{% cards %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/nextjs" title="Next.js" icon="icon-nextjs" %}
+{% /cards_item %}
+{% /cards %}
+
+{% arrow_link href="/docs/tooling/ai/quickstart-prompts" %}
+Browse all quick start prompts
+{% /arrow_link %}
+
+{% /section %}
+
+{% section #step-3 step=3 title="Manual setup without the plugin (optional)" %}
+
+Skip this step if you installed the plugin, since it already includes the MCP server. Adding the server again registers it twice. To connect the Appwrite MCP server directly, add the remote HTTP server below. There are no additional prerequisites to install.
+
+Run the following command in your terminal to add the MCP server:
+
+```bash
+claude mcp add --transport http appwrite https://mcp.appwrite.io/
+```
+
+The server uses OAuth for authentication. Run `/mcp` in Claude Code, select **appwrite**, and choose **Authenticate**. Your browser opens so you can sign in to your Appwrite account and authorize access.
+
+If you run Claude Code on a remote host, log in from the shell with `--no-browser`:
+
+```bash
+claude mcp login appwrite --no-browser
+```
+
+Open the printed authorization URL in a browser on your local machine, sign in, and authorize access. After you approve, copy the full `http://localhost:.../callback` URL from the address bar and paste it into the Claude Code prompt. Use an interactive SSH session (`ssh -t`) so the prompt can accept the paste. This is the same localhost-callback pattern described in [Authenticate from a remote machine](/docs/tooling/ai/mcp-servers#remote).
+
+{% /section %}
+
+{% section #step-4 step=4 title="Verify MCP tools" %}
+
+Run the following command in your terminal (where Claude Code is running).
+
+```bash
+/mcp
+```
+
+You should see the added MCP server listed there.
+
+![Verify MCP tools](/images/docs/mcp/claude-code/verify-mcp-tools.avif)
+
+{% /section %}
+
+{% section #step-5 step=5 title="Test the integration" %}
+
+Try out the following example prompts:
+
+**Example prompts:**
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+- `How do I set up real-time subscriptions in Appwrite?`
+- `Show me how to authenticate users with OAuth`
+- `How do I implement file uploads with Appwrite Storage?`
+
+![Implement file uploads](/images/docs/mcp/claude-code/implement-file-uploads.avif)
+
+{% /section %}

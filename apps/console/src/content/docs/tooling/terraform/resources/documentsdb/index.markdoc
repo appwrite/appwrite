@@ -1,0 +1,182 @@
+---
+layout: article
+title: DocumentsDB
+description: Manage Appwrite DocumentsDB databases, collections, indexes, and documents with the official Terraform provider.
+---
+
+DocumentsDB stores schemaless JSON documents in collections. The provider exposes it as a database (`appwrite_documentsdb`), then collections, then indexes, and optionally documents for seed data.
+
+For full generated schemas, see the Terraform Registry: [documentsdb](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/documentsdb), [documentsdb_collection](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/documentsdb_collection), [documentsdb_index](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/documentsdb_index), and [documentsdb_document](https://registry.terraform.io/providers/appwrite/appwrite/latest/docs/resources/documentsdb_document).
+
+# Resources {% #resources %}
+
+| Resource | Purpose |
+|----------|---------|
+| `appwrite_documentsdb` | Create a DocumentsDB database in your project |
+| `appwrite_documentsdb_collection` | Create a collection within a database |
+| `appwrite_documentsdb_index` | Index one or more document attributes |
+| `appwrite_documentsdb_document` | Manage seed and reference documents |
+
+# Data sources {% #data-sources %}
+
+| Data source | Purpose |
+|-------------|---------|
+| `appwrite_documentsdb` | Look up a database by ID |
+| `appwrite_documentsdb_specifications` | List the compute specifications your billing plan allows |
+
+{% info title="DocumentsDB has its own API key scopes" %}
+DocumentsDB does not use the TablesDB scopes (`tables.*`, `rows.*`) or the deprecated `collections.*` and `documents.*` ones. Give the key `documentsdb.read` and `documentsdb.write` for databases, `documentsdb.collections.read` and `documentsdb.collections.write` for collections and indexes, and `documentsdb.documents.read` and `documentsdb.documents.write` for documents.
+{% /info %}
+
+# Creating a database {% #creating-a-database %}
+
+A database needs only a `name`:
+
+```hcl
+resource "appwrite_documentsdb" "main" {
+  name = "main"
+}
+```
+
+Setting `specification` instead places the database on dedicated infrastructure reserved for your project, which is billed separately. Each product publishes its own catalog of compute sizes, so size a DocumentsDB database from the DocumentsDB specifications rather than a dedicated engine's.
+
+```hcl
+data "appwrite_documentsdb_specifications" "available" {}
+
+output "available_specifications" {
+  value = [
+    for s in data.appwrite_documentsdb_specifications.available.specifications :
+    { slug = s.slug, cpu = s.cpu, memory = s.memory, price = s.price }
+    if s.enabled
+  ]
+}
+
+resource "appwrite_documentsdb" "production" {
+  name          = "production"
+  specification = "s-2vcpu-4gb"
+  replicas      = 1
+  sync_mode     = "sync"
+}
+```
+
+Set the slug you want rather than deriving one from the catalog output. For a `precondition` that fails the plan when a slug is not enabled on your billing plan, see [asserting a specification at plan time](/docs/tooling/terraform/resources/dedicated-databases#sizing-from-the-specifications-data-source).
+
+{% info title="Some deployments require a specification" %}
+Omitting `specification` runs the database on the deployment's shared pool. Not every deployment has one configured. Where none is, the API rejects creation with `dedicated_database_required`, and `specification` becomes required.
+{% /info %}
+
+`replicas` counts high availability replicas on the dedicated backing, not counting the primary. `sync_mode` (`async`, `sync`, or `quorum`) applies only when `replicas` is greater than 0. Creating a database with a dedicated backing waits for that backing to finish provisioning, so a collection is never created against a database that is still starting.
+
+Set `enabled = false` to make a database unreachable for your users while an API key can still reach it. Read-only attributes report `type`, `engine`, `status`, `created_at`, and `updated_at`. `engine` and `status` are empty when the database has no dedicated backing.
+
+# Collections {% #collections %}
+
+A collection holds the documents. You set permissions at the collection level, and `document_security` enforces per-document permissions on top of them.
+
+```hcl
+resource "appwrite_documentsdb_collection" "articles" {
+  database_id = appwrite_documentsdb.main.id
+  id          = "articles"
+  name        = "Articles"
+
+  permissions       = ["read(\"any\")", "create(\"users\")"]
+  document_security = true
+
+  attributes = jsonencode([
+    {
+      key      = "slug"
+      type     = "string"
+      size     = 255
+      required = true
+    },
+    {
+      key      = "published_at"
+      type     = "datetime"
+      required = false
+    },
+  ])
+}
+```
+
+{% info title="Attributes are create-only" %}
+Appwrite applies `attributes` only when the collection is created. There is no route to add, change, or remove one afterwards, so changing this argument replaces the collection and discards its documents. Terraform does not refresh it from the server either, so drift on it goes undetected. An index can only be built on a declared attribute, so declare anything you intend to index here.
+{% /info %}
+
+# Indexes {% #indexes %}
+
+```hcl
+resource "appwrite_documentsdb_index" "by_slug" {
+  database_id   = appwrite_documentsdb.main.id
+  collection_id = appwrite_documentsdb_collection.articles.id
+  key           = "by_slug"
+  type          = "unique"
+  attributes    = ["slug"]
+}
+
+resource "appwrite_documentsdb_index" "by_published" {
+  database_id   = appwrite_documentsdb.main.id
+  collection_id = appwrite_documentsdb_collection.articles.id
+  key           = "by_published"
+  type          = "key"
+  attributes    = ["published_at"]
+  orders        = ["DESC"]
+}
+```
+
+`type` is `key`, `unique`, or `fulltext`, depending on the attribute being indexed. `orders` (`ASC` or `DESC`) and `lengths` are positional, matching `attributes` entry for entry.
+
+Indexes have no update route, so changing any argument replaces the index. Terraform waits for a new index to become available, so a dependent resource is never handed one that is still building. The read-only `status` reports `available`, `processing`, `deleting`, `stuck`, or `failed`, and `error` explains a failed build.
+
+# Documents {% #documents %}
+
+The document resource manages data rather than infrastructure, which fits seed and reference records:
+
+```hcl
+resource "appwrite_documentsdb_collection" "settings" {
+  database_id = appwrite_documentsdb.main.id
+  name        = "Settings"
+}
+
+resource "appwrite_documentsdb_document" "defaults" {
+  database_id   = appwrite_documentsdb.main.id
+  collection_id = appwrite_documentsdb_collection.settings.id
+  id            = "defaults"
+
+  data = jsonencode({
+    theme       = "dark"
+    locale      = "en-GB"
+    max_uploads = 25
+  })
+}
+```
+
+Terraform tracks only the keys present in `data`, so fields written by other clients do not show up as drift. Do not manage documents your application writes at runtime here. Every apply would fight the application. `permissions` on a document is only enforced when the collection has `document_security` enabled.
+
+# Looking up a database {% #looking-up-a-database %}
+
+```hcl
+data "appwrite_documentsdb" "existing" {
+  id = "main"
+}
+
+resource "appwrite_documentsdb_collection" "example" {
+  database_id = data.appwrite_documentsdb.existing.id
+  name        = "Example"
+}
+```
+
+# Importing {% #importing %}
+
+```bash
+terraform import appwrite_documentsdb.main <database-id>
+terraform import appwrite_documentsdb_collection.articles <database-id>/<collection-id>
+terraform import appwrite_documentsdb_index.by_slug <database-id>/<collection-id>/<key>
+terraform import appwrite_documentsdb_document.defaults <database-id>/<collection-id>/<document-id>
+```
+
+# Related {% #related %}
+
+- [VectorsDB](/docs/tooling/terraform/resources/vectorsdb): the same shape, for embeddings
+- [Dedicated databases](/docs/tooling/terraform/resources/dedicated-databases): PostgreSQL, MySQL, and MongoDB
+- [TablesDB](/docs/tooling/terraform/resources/databases): the relational product on shared infrastructure
+- [Configuration](/docs/tooling/terraform/provider): authentication and endpoints

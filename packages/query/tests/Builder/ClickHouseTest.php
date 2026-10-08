@@ -1045,7 +1045,7 @@ class ClickHouseTest extends TestCase
             ->from('events')
             ->prewhere([Query::equal('type', ['click'])])
             ->filter([Query::greaterThan('count', 5)])
-            ->cursorAfter('abc123')
+            ->cursorAfter(['_cursor' => 'abc123'])
             ->sortAsc('_cursor')
             ->build();
         $this->assertBindingCount($result);
@@ -1069,7 +1069,7 @@ class ClickHouseTest extends TestCase
                     return new Condition('tenant = ?', ['t1']);
                 }
             })
-            ->cursorAfter('cur1')
+            ->cursorAfter(['_cursor' => 'cur1'])
             ->sortAsc('_cursor')
             ->count('*', 'total')
             ->groupBy(['type'])
@@ -1291,7 +1291,7 @@ class ClickHouseTest extends TestCase
         $result = new Builder()
             ->from('events')
             ->final()
-            ->cursorAfter('abc')
+            ->cursorAfter(['_cursor' => 'abc'])
             ->sortAsc('_cursor')
             ->build();
         $this->assertBindingCount($result);
@@ -1597,7 +1597,7 @@ class ClickHouseTest extends TestCase
         $result = new Builder()
             ->from('events')
             ->sample(0.5)
-            ->cursorAfter('xyz')
+            ->cursorAfter(['_cursor' => 'xyz'])
             ->sortAsc('_cursor')
             ->build();
         $this->assertBindingCount($result);
@@ -3726,7 +3726,7 @@ class ClickHouseTest extends TestCase
                     return new Condition('tenant = ?', ['t1']);
                 }
             })
-            ->cursorAfter('cur1')
+            ->cursorAfter(['_cursor' => 'cur1'])
             ->sortAsc('_cursor')
             ->limit(10)
             ->build();
@@ -3817,7 +3817,7 @@ class ClickHouseTest extends TestCase
         $result = new Builder()
             ->from('events')
             ->prewhere([Query::equal('type', ['click'])])
-            ->cursorAfter('abc')
+            ->cursorAfter(['_cursor' => 'abc'])
             ->sortAsc('_cursor')
             ->build();
         $this->assertBindingCount($result);
@@ -3830,7 +3830,7 @@ class ClickHouseTest extends TestCase
         $result = new Builder()
             ->from('events')
             ->prewhere([Query::equal('type', ['click'])])
-            ->cursorBefore('abc')
+            ->cursorBefore(['_cursor' => 'abc'])
             ->sortAsc('_cursor')
             ->build();
         $this->assertBindingCount($result);
@@ -3844,7 +3844,7 @@ class ClickHouseTest extends TestCase
             ->from('events')
             ->prewhere([Query::equal('type', ['click'])])
             ->filter([Query::greaterThan('count', 5)])
-            ->cursorAfter('abc')
+            ->cursorAfter(['_cursor' => 'abc'])
             ->sortAsc('_cursor')
             ->build();
         $this->assertBindingCount($result);
@@ -3857,7 +3857,7 @@ class ClickHouseTest extends TestCase
         $result = new Builder()
             ->from('events')
             ->final()
-            ->cursorAfter('abc')
+            ->cursorAfter(['_cursor' => 'abc'])
             ->sortAsc('_cursor')
             ->build();
         $this->assertBindingCount($result);
@@ -3870,7 +3870,7 @@ class ClickHouseTest extends TestCase
         $result = new Builder()
             ->from('events')
             ->sample(0.5)
-            ->cursorAfter('abc')
+            ->cursorAfter(['_cursor' => 'abc'])
             ->sortAsc('_cursor')
             ->build();
         $this->assertBindingCount($result);
@@ -3883,7 +3883,7 @@ class ClickHouseTest extends TestCase
         $result = new Builder()
             ->from('events')
             ->prewhere([Query::equal('type', ['click'])])
-            ->cursorAfter('cur1')
+            ->cursorAfter(['_cursor' => 'cur1'])
             ->sortAsc('_cursor')
             ->build();
         $this->assertBindingCount($result);
@@ -3903,7 +3903,7 @@ class ClickHouseTest extends TestCase
                     return new Condition('tenant = ?', ['t1']);
                 }
             })
-            ->cursorAfter('cur1')
+            ->cursorAfter(['_cursor' => 'cur1'])
             ->sortAsc('_cursor')
             ->build();
         $this->assertBindingCount($result);
@@ -3921,7 +3921,7 @@ class ClickHouseTest extends TestCase
             ->sample(0.1)
             ->prewhere([Query::equal('type', ['click'])])
             ->filter([Query::greaterThan('count', 0)])
-            ->cursorAfter('cur1')
+            ->cursorAfter(['_cursor' => 'cur1'])
             ->sortAsc('_cursor')
             ->limit(10)
             ->build();
@@ -4488,7 +4488,7 @@ class ClickHouseTest extends TestCase
                     return new Condition('tenant = ?', ['t1']);
                 }
             })
-            ->cursorAfter('cur1')
+            ->cursorAfter(['_cursor' => 'cur1'])
             ->sortAsc('_cursor')
             ->filter([Query::greaterThan('count', 5)])
             ->count('*', 'cnt')
@@ -4757,7 +4757,7 @@ class ClickHouseTest extends TestCase
     public function testCompileCursorAfterStandalone(): void
     {
         $builder = new Builder();
-        $sql = $builder->compileCursor(Query::cursorAfter('abc'));
+        $sql = $builder->compileCursor(Query::cursorAfter(['_cursor' => 'abc']));
         $this->assertSame('`_cursor` > ?', $sql);
         $this->assertSame(['abc'], $builder->getBindings());
     }
@@ -4765,7 +4765,7 @@ class ClickHouseTest extends TestCase
     public function testCompileCursorBeforeStandalone(): void
     {
         $builder = new Builder();
-        $sql = $builder->compileCursor(Query::cursorBefore('xyz'));
+        $sql = $builder->compileCursor(Query::cursorBefore(['_cursor' => 'xyz']));
         $this->assertSame('`_cursor` < ?', $sql);
         $this->assertSame(['xyz'], $builder->getBindings());
     }
@@ -4808,8 +4808,8 @@ class ClickHouseTest extends TestCase
     public function testCompileJoinStandalone(): void
     {
         $builder = new Builder();
-        $sql = $builder->compileJoin(Query::join('orders', 'u.id', 'o.uid'));
-        $this->assertSame('JOIN `orders` ON `u`.`id` = `o`.`uid`', $sql);
+        $sql = $builder->compileJoin(Query::join('orders', 'o', [Query::on('u.id', 'o.uid')]));
+        $this->assertSame('JOIN `orders` AS `o` ON `u`.`id` = `o`.`uid`', $sql);
     }
 
     public function testCompileJoinExceptionStandalone(): void
@@ -4869,7 +4869,7 @@ class ClickHouseTest extends TestCase
                     return new Condition('_tenant = ?', ['t1']);
                 }
             })
-            ->cursorAfter('abc')
+            ->cursorAfter(['_cursor' => 'abc'])
             ->sortAsc('_cursor')
             ->build();
         $this->assertBindingCount($result);
@@ -5234,8 +5234,8 @@ class ClickHouseTest extends TestCase
     public function testQueryCompileJoinViaClickHouse(): void
     {
         $builder = new Builder();
-        $sql = Query::join('orders', 'u.id', 'o.uid')->compile($builder);
-        $this->assertSame('JOIN `orders` ON `u`.`id` = `o`.`uid`', $sql);
+        $sql = Query::join('orders', 'o', [Query::on('u.id', 'o.uid')])->compile($builder);
+        $this->assertSame('JOIN `orders` AS `o` ON `u`.`id` = `o`.`uid`', $sql);
     }
 
     public function testQueryCompileGroupByViaClickHouse(): void
@@ -5370,7 +5370,7 @@ class ClickHouseTest extends TestCase
 
     public function testCursorAfterAndBeforeFirstWins(): void
     {
-        $result = new Builder()->from('t')->cursorAfter('a')->cursorBefore('b')->sortAsc('_cursor')->build();
+        $result = new Builder()->from('t')->cursorAfter(['_cursor' => 'a'])->cursorBefore(['_cursor' => 'b'])->sortAsc('_cursor')->build();
         $this->assertBindingCount($result);
         $this->assertSame('SELECT * FROM `t` WHERE `_cursor` > ? ORDER BY `_cursor` ASC', $result->query);
     }
@@ -6330,7 +6330,7 @@ class ClickHouseTest extends TestCase
     {
         $result = new Builder()
             ->from('t')
-            ->cursorAfter('abc')
+            ->cursorAfter(['_cursor' => 'abc'])
             ->sortAsc('_cursor')
             ->build();
         $this->assertBindingCount($result);
@@ -7707,7 +7707,7 @@ class ClickHouseTest extends TestCase
             ->from('events')
             ->select(['id', 'name'])
             ->filter([Query::greaterThan('age', 18)])
-            ->cursorAfter('abc123')
+            ->cursorAfter(['_cursor' => 'abc123'])
             ->sortDesc('created_at')
             ->limit(25)
             ->build();
@@ -7725,7 +7725,7 @@ class ClickHouseTest extends TestCase
         $result = new Builder()
             ->from('events')
             ->select(['id', 'name'])
-            ->cursorBefore('xyz789')
+            ->cursorBefore(['_cursor' => 'xyz789'])
             ->sortAsc('id')
             ->limit(10)
             ->build();

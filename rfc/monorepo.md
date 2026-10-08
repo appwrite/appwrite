@@ -160,7 +160,7 @@ Direct loading means Appwrite runs the head of every library, so a package where
 
 | Package | Appwrite | Latest | Gap | Action |
 |---|---|---|---|---|
-| `config` | 1.0.0 | 2.0.8 | 1.x is a static key/value registry (`load`, `getParam`, `setParam`); 2.x loads typed config classes from a `Source` plus `Parser`. ~300 call sites, 44 loads in `app/init/configs.php`. | Do not rewrite. Move the 1.x registry (about 100 lines) into `src/Appwrite/Config/`; it only serves Appwrite's product config under `app/config/`. Drop the dependency. 2.x needs a home only if something adopts it. |
+| `config` | 1.0.0 | 2.0.8 | 1.x is a static key/value registry (`load`, `getParam`, `setParam`); 2.x loads typed config classes from a `Source` plus `Parser`. ~300 call sites, 44 loads in `app/init/configs.php`. | Done: 2.x is absorbed into `packages/config` and its `Config` regains the registry's `$params`, `setParam()` and `getParam()`, so the ~300 call sites keep `Utopia\Config\Config`. `load()` belongs to the typed loader in 2.x, so `app/init/configs.php` stores each file with `Config::setParam($key, include $path)`, and repository env detection moves to `Parser\Dotenv`. |
 | `console` | 0.1.1 → 0.2.9 | 0.2.9 | Additive (`Utopia\Command`). | Merged in #13616 (2026-09-14), which supersedes #11937 and requires `database ^7.3.8`, the first release accepting console 0.2 (utopia-php/database#965). Cloud followed in appwrite-labs/cloud#5817 (merged 2026-09-14). |
 | `system` | 0.10.6 | 0.11.0 | Additive (`getMemory()`). `main` already allows `^0.10 \|\| ^0.11`. | `composer update utopia-php/system` in its absorb PR. |
 | `vcs` | 5.2.5 | 5.3.0 | Additive. | Absorb PR. |
@@ -271,8 +271,8 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
 - Add `packages/*/src` to `phpstan-deadcode.neon` and run `composer dead-code`. Candidates visible today: database adapters `SQLite`, `Memory`, `Redis`; cache adapters `Hazelcast`, `Memcached`, `Json`, `Memory`, `RedisCluster`; SMS adapters `Plivo`, `Telnyx`, `Clickatell`, `Infobip`, `Seven`, `Sinch`. Each deletion is mirror-visible: confirm against Executor and Packagist dependents first; anything a mirror consumer needs stays.
 - Collapse `||` compatibility constraints in package manifests to single ranges once every sibling is on the current major.
 - Delete duplicated test helpers (`tests/extensions/Queue/InMemoryConnection.php` versus the queue package's own fakes) and every Appwrite-side workaround that existed only because a library fix was waiting on a release.
-- Burn down every `packages/*/phpstan-baseline.neon` a package arrives with (abuse's Redis cluster log adapters need one under PHPStan 2).
-  - `abuse`: 44 findings (its standalone repository analysed it at level max under PHPStan 1): 35 in `src`, `array|true` `scan()` and `_masters()` replies merged, sorted and combined into log maps in the `RedisCluster` and `RedisPool` adapters of all three strategies, plus an integer passed to `curl_setopt()` in `ReCaptcha`; 9 in its e2e tests, always-true `instanceof` and `is_int()` checks, the cluster `scan()` reply iterated unnarrowed, and a column shape in `TablesDBTest`.
+- Burn down every `packages/*/phpstan-baseline.neon` a package arrives with.
+  - `abuse`: burned down to zero in the 3.0 immutable rewrite; the baseline is deleted.
   - `audit`: 5 findings: `Log::getData()` returning the decoded `mixed` array against its `array<string, mixed>` docblock, Pint's `simplified_null_return` turning the untyped `SQL::getAttribute()`'s `return null;` into `return;`, and the batch fixtures in its e2e tests typed as plain arrays against `logBatch()`'s event shape.
   - `auth`: 33 findings (it had no PHPStan config of its own): `mixed` out-parameters and results from `openssl_pkey_export()`, `openssl_pkey_get_details()` and `openssl_sign()` in the asymmetric issuer and verifier, integer arithmetic in the PHPass encoder, and array shapes in `AuthorizationDetails` and `ResourceIndicators`, plus decoded-claim arithmetic in its tests.
   - `cache`: 25 findings (level 5 in the monorepo): `mixed` from the Memcached and Hazelcast server stats and the `RedisCluster` node addresses, values passed to `Envelope::encode()` untyped, and casts of Redis replies in its multiplexing and leasable e2e tests.
@@ -280,6 +280,7 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
   - `circuit-breaker`: 29 findings (level 5 in the monorepo): casts from `mixed` in the Redis and Swoole Table adapters, and loosely typed telemetry and Redis fixtures in its tests.
   - `cli`: 71 findings (it had no PHPStan config of its own, only Psalm): 39 in `src`, unvalued `array` parameters and properties and offset access on the `mixed` param definitions and parsed arguments in `CLI`, and untyped callbacks in the adapters; 32 in its tests, the nullable `?Task` fixture in `TaskTest` and `mixed` resources in `CLITest`.
   - `compression`: 16 findings covering extension return types and the untyped supported-encoding array.
+  - `config`: 123 findings (the monorepo analysed it below max): 8 in `src`, `mixed` reflection and sentinel values in `Config::load()`'s typed path and the parsers' decoded input; 115 in its tests, nearly all offset access on the `mixed` results in `JSONTest`, `PHPTest` and `YAMLTest`.
   - `console`: 8 findings (it had no PHPStan config of its own): unchecked `fopen()` and `fgets()` results in `confirm()`, the untyped `$cmd` array in `execute()`, and variadic `Command` arrays with string keys passed to `compose()`.
   - `dns`: 8 findings (level 5 in the monorepo): `mixed` offsets on the Swoole request headers and server fields in the DNS-over-HTTPS adapter, and `chr()` arguments not narrowed to `int<0, 255>` in `Record` and `Zone\File`.
   - `domains`: 274 findings (it had no PHPStan config of its own): 219 in `src`, nearly all in the `NameCom`, `OpenSRS` and `Mock` registrar adapters and the base `Adapter`, unvalued `array` parameters and offset access and casts on decoded `mixed` API responses; 55 in its tests, mostly nullable validator fixtures in `ApexDomainTest` and `PublicDomainTest`.
@@ -316,5 +317,5 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
 ## Open questions
 
 1. `reputation`: `appwrite/cloud` or `packages/`?
-2. `config` 2.x: give it a `packages/` home now (unused by Appwrite, still mirrored) or leave it on its standalone repository until something adopts it?
+2. ~~`config` 2.x: give it a `packages/` home now (unused by Appwrite, still mirrored) or leave it on its standalone repository until something adopts it?~~ Resolved: `packages/config`, with the 1.x registry restored on `Config`.
 3. Standard source path: this RFC picks flat `src/` (the directory already repeats the package name). The monorepo's own `docs/creating.md` prescribes `src/<Ns>/`. One has to win before phase 1.

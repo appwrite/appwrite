@@ -1,0 +1,67 @@
+---
+layout: article
+title: Consent
+description: What users see on the Sign in with Appwrite consent screen, what they can change, and what your app receives.
+back: /docs/partners/apps
+---
+
+{% only_dark %}
+![The consent screen turns your request into a granted token response or an access_denied redirect](/images/docs/partners/apps/dark/diagram-consent.avif)
+{% /only_dark %}
+{% only_light %}
+![The consent screen turns your request into a granted token response or an access_denied redirect](/images/docs/partners/apps/diagram-consent.avif)
+{% /only_light %}
+
+Consent is where the user decides. Appwrite hosts the screen, renders what your app asked for, and gives the user the final say over scopes and targets. Your app never sees the screen; it sees the outcome.
+
+# The consent screen {% #consent-screen %}
+
+{% only_dark %}
+![Consent screen showing app identity, requested permissions, and project selection](/images/docs/partners/apps/dark/consent-screen.avif)
+{% /only_dark %}
+{% only_light %}
+![Consent screen showing app identity, requested permissions, and project selection](/images/docs/partners/apps/consent-screen.avif)
+{% /only_light %}
+
+The screen is built from your [registration](/docs/partners/apps/registration) and your request:
+
+- **Your app's identity**: the name, logo, and tagline you registered.
+- **Permissions**: each requested scope as a plain-language line, under a one-line summary of the overall reach.
+- **Project access**: a picker for the projects or organizations the grant covers when the request carries project or organization scopes.
+
+The user signs in first if no session exists, and can switch accounts from the screen itself.
+
+# Users can grant less {% #partial-grants %}
+
+What you request is not always what you get. On the consent screen, the user can:
+
+- Deselect projects or organizations, shrinking where the grant applies.
+- Decline the whole request.
+
+The permission list itself is not editable. Scopes are granted as you requested them or not at all, which is another reason to request the smallest set that serves your app.
+
+The token response tells you what you got: `scope` holds the granted scopes, `authorization_details` the granted projects. Build for this from the start. A dashboard that asked for five projects but got two should show two projects, not an error.
+
+# When the screen is skipped {% #consent-reuse %}
+
+Appwrite remembers approvals. When a returning user's request asks for nothing new, they skip the screen and land straight back in your app. When anything differs from the stored approval, the screen reappears. Send the same authorization parameters on every sign-in and returning users sign in silently.
+
+Two `prompt` values override this:
+
+- `prompt=consent` always shows the screen, even when an approval exists.
+- `prompt=none` never shows it, returning `error=consent_required` or `error=login_required` instead. Use it to check for existing access silently.
+
+# Revocation {% #revocation %}
+
+{% only_dark %}
+![Account applications page listing authorized apps with their token families](/images/docs/partners/apps/dark/account-applications.avif)
+{% /only_dark %}
+{% only_light %}
+![Account applications page listing authorized apps with their token families](/images/docs/partners/apps/account-applications.avif)
+{% /only_light %}
+
+Every approval appears on the user's account applications page. From there, the user revokes a single token or the whole app, which kills every token your app holds for them.
+
+Your app gets no notification. Calls and refreshes start returning `401`, and the fix is to send the user through authorization again.
+
+Revocation goes both ways: when a user disconnects your app on your side, revoke the tokens you hold at the [revocation endpoint](/docs/partners/apps/tokens#revocation).

@@ -16,7 +16,7 @@ use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
-use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
+use Utopia\Abuse\Adapter\TimeLimit\Database as AbuseDatabase;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -1097,6 +1097,17 @@ class Deletes extends Action
             Query::orderAsc()
         ], $dbForProject);
 
+        // Delete authenticators, including passkeys, and their pending challenges
+        $this->deleteByGroup('authenticators', [
+            Query::equal('userInternalId', [$userInternalId]),
+            Query::orderAsc()
+        ], $dbForProject);
+
+        $this->deleteByGroup('challenges', [
+            Query::equal('userInternalId', [$userInternalId]),
+            Query::orderAsc()
+        ], $dbForProject);
+
         // Delete identities
         Identities::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
 
@@ -1719,35 +1730,13 @@ class Deletes extends Action
     protected function listByGroup(string $collection, array $queries, Database $database, ?callable $callback = null): void
     {
         $count = 0;
-        $limit = 1000;
-        $sum = $limit;
-        $cursor = null;
-
         $start = \microtime(true);
 
-        while ($sum === $limit) {
-
-            $queries = \array_merge([Query::limit($limit)], $queries);
-
-            if ($cursor !== null) {
-                $queries[] = Query::cursorAfter($cursor);
+        foreach ($database->iterate($collection, [Query::limit(1000), ...$queries]) as $document) {
+            if ($callback !== null) {
+                $callback($document);
             }
-
-            $results = $database->find($collection, $queries);
-
-            $sum = \count($results);
-
-            if ($sum > 0) {
-                $cursor = $results[$sum - 1];
-            }
-
-            foreach ($results as $document) {
-                if (is_callable($callback)) {
-                    $callback($document);
-                }
-
-                $count++;
-            }
+            $count++;
         }
 
         $end = \microtime(true);

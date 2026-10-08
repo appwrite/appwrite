@@ -1,0 +1,665 @@
+---
+layout: article
+title: Extensions
+description: Install and manage PostgreSQL extensions like PostGIS, pgvector, and pg_trgm on your database, at no extra cost.
+---
+
+PostgreSQL exposes a rich extension ecosystem: PostGIS for geospatial data, pgvector for embeddings, pg_trgm for fuzzy search, and more. Native PostgreSQL databases on Appwrite support extensions at no extra cost.
+
+Extensions change the database itself, so only trusted callers can manage them. You cannot manage extensions from client SDKs: the API needs a [Server SDK](/docs/sdks#server) and an [API key](/docs/partners/project/api-keys). Installing and removing an extension needs the `databases.write` scope, and listing extensions needs `databases.read`.
+
+# Install an extension {% #install %}
+
+{% only_dark %}
+![Extensions catalog in database settings](/images/docs/products/databases/postgresql/dark/settings-extensions.avif)
+{% /only_dark %}
+{% only_light %}
+![Extensions catalog in database settings](/images/docs/products/databases/postgresql/settings-extensions.avif)
+{% /only_light %}
+
+In the Console, open your database's **Settings** > **Extensions**, find the extension in the catalog, click **Install**, and confirm. The database must be in the `ready` state.
+
+You can also install an extension with a Server SDK. Pass the extension name as it appears in the [extension catalog](#list). The install runs asynchronously: the request returns immediately and a worker runs `CREATE EXTENSION` inside the database in the background.
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.createExtension({
+    databaseId: '<DATABASE_ID>',
+    name: 'vector',
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.createExtension({
+    databaseId: '<DATABASE_ID>',
+    name: 'vector',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$postgresql->createExtension(
+    databaseId: '<DATABASE_ID>',
+    name: 'vector',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+postgresql.create_extension(
+    database_id='<DATABASE_ID>',
+    name='vector',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+postgresql.create_extension(
+    database_id: '<DATABASE_ID>',
+    name: 'vector',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+await postgresql.CreateExtension(
+    databaseId: "<DATABASE_ID>",
+    name: "vector"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+await postgresql.createExtension(
+    databaseId: '<DATABASE_ID>',
+    name: 'vector',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+postgresql.createExtension(
+    databaseId = "<DATABASE_ID>",
+    name = "vector",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+_ = try await postgresql.createExtension(
+    databaseId: "<DATABASE_ID>",
+    name: "vector"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    _, err := service.CreateExtension("<DATABASE_ID>", "vector")
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    postgresql.create_extension("<DATABASE_ID>", "vector").await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X POST \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "name": "vector"
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/extensions
+```
+{% /multicode %}
+
+Requesting an extension that is not available fails with an error naming the extension you asked for. Call [list extensions](#list) to see what this database can install.
+
+# List extensions {% #list %}
+
+{% only_dark %}
+![Extensions catalog filtered to installed extensions](/images/docs/products/databases/postgresql/dark/settings-extensions-installed.avif)
+{% /only_dark %}
+{% only_light %}
+![Extensions catalog filtered to installed extensions](/images/docs/products/databases/postgresql/settings-extensions-installed.avif)
+{% /only_light %}
+
+In the Console, the extensions catalog filters by **All**, **Installed**, and **In progress**. The API returns both sets at once, the extensions installed on the database and the extensions available to install:
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const extensions = await postgresql.listExtensions({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const extensions = await postgresql.listExtensions({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$extensions = $postgresql->listExtensions(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+extensions = postgresql.list_extensions(
+    database_id='<DATABASE_ID>',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+extensions = postgresql.list_extensions(
+    database_id: '<DATABASE_ID>',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+var extensions = await postgresql.ListExtensions(
+    databaseId: "<DATABASE_ID>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+final extensions = await postgresql.listExtensions(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+val extensions = postgresql.listExtensions(
+    databaseId = "<DATABASE_ID>",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+let extensions = try await postgresql.listExtensions(
+    databaseId: "<DATABASE_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    result, err := service.ListExtensions("<DATABASE_ID>")
+    if err != nil {
+        panic(err)
+    }
+    _ = result
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    let extensions = postgresql.list_extensions("<DATABASE_ID>").await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X GET \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/extensions
+```
+{% /multicode %}
+
+The response contains two arrays of extension names, plus a `metadata` array describing each one:
+
+```json
+{
+  "installed": ["plpgsql", "vector"],
+  "available": ["postgis", "pg_trgm", "pgcrypto", "hstore", "citext", "..."],
+  "metadata": [
+    {
+      "key": "vector",
+      "name": "pgvector",
+      "description": "Vector data type and similarity search for embeddings",
+      "category": "Search"
+    }
+  ]
+}
+```
+
+The available list starts from what the engine reports for your PostgreSQL version, minus extensions Appwrite does not offer, so it reflects what you can actually install on this database.
+
+# Remove an extension {% #remove %}
+
+{% only_dark %}
+![Uninstall extension confirmation](/images/docs/products/databases/postgresql/dark/settings-extensions-uninstall.avif)
+{% /only_dark %}
+{% only_light %}
+![Uninstall extension confirmation](/images/docs/products/databases/postgresql/settings-extensions-uninstall.avif)
+{% /only_light %}
+
+In the Console, click **Uninstall** on an installed extension and confirm. You can also remove it with a Server SDK:
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.deleteExtension({
+    databaseId: '<DATABASE_ID>',
+    extensionName: 'vector',
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.deleteExtension({
+    databaseId: '<DATABASE_ID>',
+    extensionName: 'vector',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$postgresql->deleteExtension(
+    databaseId: '<DATABASE_ID>',
+    extensionName: 'vector',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+postgresql.delete_extension(
+    database_id='<DATABASE_ID>',
+    extension_name='vector',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+postgresql.delete_extension(
+    database_id: '<DATABASE_ID>',
+    extension_name: 'vector',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+await postgresql.DeleteExtension(
+    databaseId: "<DATABASE_ID>",
+    extensionName: "vector"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+await postgresql.deleteExtension(
+    databaseId: '<DATABASE_ID>',
+    extensionName: 'vector',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+postgresql.deleteExtension(
+    databaseId = "<DATABASE_ID>",
+    extensionName = "vector",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+_ = try await postgresql.deleteExtension(
+    databaseId: "<DATABASE_ID>",
+    extensionName: "vector"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    _, err := service.DeleteExtension("<DATABASE_ID>", "vector")
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    postgresql.delete_extension("<DATABASE_ID>", "vector").await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X DELETE \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/extensions/vector
+```
+{% /multicode %}
+
+Uninstalling always cascades. Any object that depends on the extension is dropped with it, including tables, columns, and indexes that use its types or functions. Check what depends on an extension before you remove it, and take a [backup](/docs/products/databases/postgresql/backups) first if the data matters.
+
+# Common extensions {% #common %}
+
+A few extensions worth knowing about:
+
+| Name        | Use case                                                             |
+|-------------|-----------------------------------------------------------------------|
+| `vector`    | Vector data type and similarity search for embeddings (pgvector)     |
+| `postgis`   | Spatial data types, indexes, and functions for geographic objects    |
+| `pg_trgm`   | Trigram matching for fuzzy string search and similarity              |
+| `pgcrypto`  | Cryptographic functions for hashing and encryption                   |
+| `uuid-ossp` | Generate universally unique identifiers (UUIDs)                      |
+| `hstore`    | Store sets of key/value pairs within a single column                 |
+| `citext`    | Case-insensitive character string data type                          |
+| `ltree`     | Represent and query hierarchical tree-like data                      |
+
+List the extensions on your database for the full catalog available to it.
+
+# Limits {% #limits %}
+
+| Limit                           | Value      |
+|---------------------------------|------------|
+| Maximum extensions per database | 50 (enforced in the Console) |
+| Extension install and uninstall | Free       |
+
+Extensions are installed at their default version for your database's PostgreSQL major version.

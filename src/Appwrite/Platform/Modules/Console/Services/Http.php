@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Console\Services;
 
-use Appwrite\Platform\Modules\Console\Http\Assistant\Create as CreateAssistantQuery;
 use Appwrite\Platform\Modules\Console\Http\Init\API;
 use Appwrite\Platform\Modules\Console\Http\Init\Web;
 use Appwrite\Platform\Modules\Console\Http\OAuth2Providers\XList as ListOAuth2Providers;
@@ -35,7 +34,6 @@ class Http extends Service
         $this->addAction(ListOAuth2Providers::getName(), new ListOAuth2Providers());
         $this->addAction(ListKeyScopes::getName(), new ListKeyScopes());
         $this->addAction(ListOrganizationScopes::getName(), new ListOrganizationScopes());
-        $this->addAction(CreateAssistantQuery::getName(), new CreateAssistantQuery());
         $this->addAction(GetResourceAvailability::getName(), new GetResourceAvailability());
 
         // web redirects to the console

@@ -4,8 +4,7 @@ namespace Appwrite\Mqtt;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Mqtt;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -74,10 +73,9 @@ class Handler implements MqttHandler
         // Rate-limit CONNECT per user (keyed on userId until the infra surfaces client IP).
         if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
             $getRedis = $this->container->get('getRedis');
-            $timeLimit = new TimeLimitRedis('mqtt:connect:{userId}', 128, 60, $getRedis());
-            $timeLimit->setParam('{userId}', $identity['userId'] ?? '');
+            $timeLimit = new TimeLimitRedis('mqtt:connect:{userId}', 128, 60, $getRedis())->withParams(['{userId}' => (string) ($identity['userId'] ?? '')]);
 
-            if ((new Abuse($timeLimit))->check()) {
+            if ($timeLimit->check()->limited) {
                 Span::add('mqtt.result', 'abuse');
                 $this->mqtt->connectRefused->add(1, ['reason' => 'rate_limited']);
                 return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED, $authMethod);

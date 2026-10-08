@@ -75,6 +75,7 @@ class Update extends Action
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Attribute Key.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
@@ -88,6 +89,7 @@ class Update extends Action
         ?string        $newKey,
         UtopiaResponse $response,
         Database       $dbForProject,
+        callable       $getDatabasesDB,
         Event          $queueForEvents,
         Authorization  $authorization
     ): void {
@@ -100,6 +102,7 @@ class Update extends Action
             collectionId: $collectionId,
             key: $key,
             dbForProject: $dbForProject,
+            getDatabasesDB: $getDatabasesDB,
             queueForEvents: $queueForEvents,
             authorization: $authorization,
             type: Database::VAR_RELATIONSHIP,

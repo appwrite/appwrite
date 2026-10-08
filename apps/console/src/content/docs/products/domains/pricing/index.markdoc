@@ -1,0 +1,55 @@
+---
+layout: article
+title: Pricing
+description: Learn how Appwrite prices domain registration, transfers, and renewals, including premium names and registration periods.
+---
+
+Appwrite quotes domain prices before you register or transfer a domain. Prices depend on the TLD, whether the name is premium, and the registration period required by the registry.
+
+# Registration and transfer quotes {% #registration-and-transfer-quotes %}
+
+When you search for a domain in the Console buy flow or start a transfer in, Appwrite fetches a price quote for each name. Quotes include:
+
+- **Price**: total cost for the quoted registration or transfer period (in your organization's billing currency).
+- **Available**: whether the name can be registered or transferred at that time.
+- **Period years**: length of the registration period covered by the price (typically one year; some TLDs require longer minimums).
+- **Premium**: whether the registry classifies the name as premium (higher than standard TLD pricing).
+
+The checkout and transfer summaries also show an estimated **renewal price** for the same period when available, so you can plan ongoing costs before you pay.
+
+{% arrow_link href="/docs/products/domains/renewal" %}
+Learn about renewal
+{% /arrow_link %}
+
+# Registration periods {% #registration-periods %}
+
+Most TLDs register for one year by default. Some TLDs require a longer minimum period. For example, `.ai` domains register for two years. The buy wizard and order summary always show the exact period before you confirm payment.
+
+Transfer-in quotes follow the same period rules as new registration for a given TLD.
+
+# Premium domains {% #premium-domains %}
+
+Premium names are offered at registry premium pricing, which can be significantly higher than standard TLD pricing. The buy wizard marks premium results and the checkout summary labels premium domains before you pay.
+
+Premium status comes from the registry, not from Appwrite. Availability and price can change until registration completes.
+
+# Search and suggestions {% #search-and-suggestions %}
+
+The buy wizard searches across many supported TLDs (for example `.com`, `.io`, `.dev`, `.app`, and others). You can search with or without a TLD:
+
+- `myapp` returns suggestions such as `myapp.com` and `myapp.io`.
+- `myapp.io` focuses results on the `.io` extension.
+
+Prices load as suggestions appear. Unavailable names are marked as taken.
+
+# Transfer pricing {% #transfer-pricing %}
+
+Transfer in includes a registry transfer fee, quoted the same way as registration. The transfer wizard shows the transfer charge and renewal estimate before you submit payment.
+
+If a domain cannot be transferred (locked, policy restriction, or recent registration), the quote reflects **not transferrable** status instead of a price. See [Transfer a domain](/docs/products/domains/transfer).
+
+# Billing {% #billing %}
+
+Registration and transfer charges are invoiced to your organization immediately on successful payment. Renewal charges follow the [renewal](/docs/products/domains/renewal) schedule when auto-renewal runs or when you renew manually.
+
+Prices on the domain resource (`renewalPrice`) reflect the renewal amount Appwrite uses for auto-renewal attempts on Appwrite-registered domains.

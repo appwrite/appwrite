@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Rule extends Model
 {
@@ -105,6 +106,18 @@ class Rule extends Model
                 'array' => false,
             ])
         ;
+    }
+
+    /**
+     * Rules without a deployment store an empty resource type, which is not a valid enum value.
+     */
+    public function filter(Document $document): Document
+    {
+        if ($document->getAttribute('deploymentResourceType') === '') {
+            $document->setAttribute('deploymentResourceType', null);
+        }
+
+        return $document;
     }
 
     /**

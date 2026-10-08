@@ -1,0 +1,30 @@
+{
+  "projectId": "new-console",
+  "sites": [
+    {
+      "$id": "new-console",
+      "name": "New Console",
+      "enabled": true,
+      "logging": true,
+      "framework": "tanstack-start",
+      "timeout": 30,
+      "installCommand": "bun install",
+      "buildCommand": "bun run build:node",
+      "startCommand": "",
+      "outputDirectory": "./dist",
+      "installationId": "697cd33819f0411edb09",
+      "providerRepositoryId": "1131313702",
+      "providerBranch": "main",
+      "providerRootDirectory": "./",
+      "providerSilentMode": false,
+      "providerBranches": [],
+      "providerPaths": [],
+      "buildSpecification": "s-8vcpu-8gb",
+      "runtimeSpecification": "s-8vcpu-8gb",
+      "buildRuntime": "node-22",
+      "adapter": "ssr",
+      "fallbackFile": "_shell/index.html",
+      "deploymentRetention": 30
+    }
+  ]
+}
