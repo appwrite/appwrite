@@ -104,9 +104,6 @@ class Screenshots extends Action
         $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n");
 
         try {
-            // Most deployments carry several rules. Without an order the pick is
-            // whatever the adapter returns first, so an unreachable domain fails
-            // some captures and not others for the same deployment.
             $rule = $dbForPlatform->findOne('rules', [
                 Query::equal("projectInternalId", [$project->getSequence()]),
                 Query::equal("type", ["deployment"]),
