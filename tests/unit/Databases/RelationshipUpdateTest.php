@@ -7,9 +7,9 @@ namespace Tests\Unit\Databases;
 use Appwrite\Databases\RelationshipUpdate;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\RelationSide;
-use Utopia\Database\RelationType;
-use Utopia\Query\Schema\ForeignKeyAction;
+use Utopia\Database\RelationshipDeleteAction;
+use Utopia\Database\RelationshipSide;
+use Utopia\Database\RelationshipType;
 
 final class RelationshipUpdateTest extends TestCase
 {
@@ -18,20 +18,20 @@ final class RelationshipUpdateTest extends TestCase
 
     private const array AUTHOR = [
         'relatedCollection' => 'authors',
-        'relationType' => RelationType::OneToOne->value,
+        'relationType' => RelationshipType::OneToOne->value,
         'twoWay' => true,
         'twoWayKey' => 'book',
-        'onDelete' => ForeignKeyAction::Cascade->value,
-        'side' => RelationSide::Parent->value,
+        'onDelete' => RelationshipDeleteAction::Cascade->value,
+        'side' => RelationshipSide::Parent->value,
     ];
 
     private const array BOOK = [
         'relatedCollection' => 'books',
-        'relationType' => RelationType::OneToOne->value,
+        'relationType' => RelationshipType::OneToOne->value,
         'twoWay' => true,
         'twoWayKey' => self::KEY,
-        'onDelete' => ForeignKeyAction::Cascade->value,
-        'side' => RelationSide::Child->value,
+        'onDelete' => RelationshipDeleteAction::Cascade->value,
+        'side' => RelationshipSide::Child->value,
     ];
 
     public function testRenameWithoutOnDeleteKeepsTheStoredAction(): void
@@ -43,8 +43,8 @@ final class RelationshipUpdateTest extends TestCase
         $book = $update->related(self::BOOK);
 
         $this->assertNull($onDelete);
-        $this->assertSame(ForeignKeyAction::Cascade->value, $author['onDelete']);
-        $this->assertSame(ForeignKeyAction::Cascade->value, $book['onDelete']);
+        $this->assertSame(RelationshipDeleteAction::Cascade->value, $author['onDelete']);
+        $this->assertSame(RelationshipDeleteAction::Cascade->value, $book['onDelete']);
         $this->assertSame(self::NEW_KEY, $book['twoWayKey']);
     }
 
@@ -63,15 +63,15 @@ final class RelationshipUpdateTest extends TestCase
 
     public function testOnDeleteIsAppliedToBothSides(): void
     {
-        $update = new RelationshipUpdate(['onDelete' => ForeignKeyAction::SetNull->value], self::KEY);
+        $update = new RelationshipUpdate(['onDelete' => RelationshipDeleteAction::SetNull->value], self::KEY);
 
         $onDelete = $update->onDelete();
         $author = $update->options(self::AUTHOR);
         $book = $update->related(self::BOOK);
 
-        $this->assertSame(ForeignKeyAction::SetNull, $onDelete);
-        $this->assertSame(ForeignKeyAction::SetNull->value, $author['onDelete']);
-        $this->assertSame(ForeignKeyAction::SetNull->value, $book['onDelete']);
+        $this->assertSame(RelationshipDeleteAction::SetNull, $onDelete);
+        $this->assertSame(RelationshipDeleteAction::SetNull->value, $author['onDelete']);
+        $this->assertSame(RelationshipDeleteAction::SetNull->value, $book['onDelete']);
     }
 
     /**

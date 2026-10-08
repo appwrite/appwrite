@@ -2,7 +2,8 @@
 
 use Utopia\Database\Attribute;
 use Utopia\Database\Index;
-use Utopia\Query\Schema\Order;
+use Utopia\Query\OrderDirection;
+use Utopia\Query\Schema\ColumnType;
 
 return [
     'collections' => [
@@ -21,17 +22,17 @@ return [
             Attribute::string(key: 'search', size: 16384),
         ],
         'defaultAttributes' => [
-            Attribute::vector(key: 'embeddings', required: true, signed: false),
-            Attribute::object(key: 'metadata', default: [], signed: false),
+            Attribute::fromArray(['key' => 'embeddings', 'type' => ColumnType::Vector, 'required' => true, 'signed' => false]),
+            Attribute::object(key: 'metadata', default: []),
         ],
         'indexes' => [
-            Index::fullText(key: '_fulltext_search', attributes: ['search']),
-            Index::key(key: '_key_name', attributes: ['name'], lengths: [256], orders: [Order::Asc]),
-            Index::key(key: '_key_enabled', attributes: ['enabled'], orders: [Order::Asc]),
-            Index::key(key: '_key_documentSecurity', attributes: ['documentSecurity'], orders: [Order::Asc]),
+            Index::fulltext(key: '_fulltext_search', attributes: ['search']),
+            Index::key(key: '_key_name', attributes: ['name'], lengths: [256], orders: [OrderDirection::Asc]),
+            Index::key(key: '_key_enabled', attributes: ['enabled'], orders: [OrderDirection::Asc]),
+            Index::key(key: '_key_documentSecurity', attributes: ['documentSecurity'], orders: [OrderDirection::Asc]),
         ],
         'defaultIndexes' => [
-            Index::object(key: '_key_metadata', attributes: ['metadata']),
+            Index::object(key: '_key_metadata', attribute: 'metadata'),
         ],
     ],
 ];

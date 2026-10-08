@@ -4,6 +4,7 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
 use Utopia\Console\Console;
+use Utopia\Database\CollectionUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
@@ -67,7 +68,7 @@ class V18 extends Migration
                     $documentSecurity = $collection->getAttribute('documentSecurity', false);
                     $permissions = $collection->getPermissions();
 
-                    $this->dbForProject->updateCollection($collectionTable, $permissions, $documentSecurity);
+                    $this->dbForProject->updateCollection($collectionTable, new CollectionUpdate(permissions: $permissions, documentSecurity: $documentSecurity));
                 } catch (\Throwable $th) {
                     Console::warning($th->getMessage());
                 }
@@ -95,7 +96,7 @@ class V18 extends Migration
             }
 
             try {
-                $this->dbForProject->updateCollection($id, [Permission::create(Role::any())], true);
+                $this->dbForProject->updateCollection($id, new CollectionUpdate(permissions: [Permission::create(Role::any())], documentSecurity: true));
             } catch (\Throwable $th) {
                 Console::warning($th->getMessage());
             }
@@ -201,7 +202,7 @@ class V18 extends Migration
                     $internalBucketId = "bucket_{$this->project->getSequence()}";
                     $permissions = $document->getPermissions();
                     $fileSecurity = $document->getAttribute('fileSecurity', false);
-                    $this->dbForProject->updateCollection($internalBucketId, $permissions, $fileSecurity);
+                    $this->dbForProject->updateCollection($internalBucketId, new CollectionUpdate(permissions: $permissions, documentSecurity: $fileSecurity));
                 } catch (\Throwable $th) {
                     Console::warning($th->getMessage());
                 }

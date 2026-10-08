@@ -128,7 +128,7 @@ class Create extends CollectionAction
 
         $collections = (Config::getParam('collections', [])['vectorsdb'] ?? [])['collections'] ?? [];
         $attributes = \array_map(function (Attribute $attribute) use ($dimension) {
-            if ($attribute->getKey() === 'embeddings') {
+            if ($attribute->key === 'embeddings') {
                 $attribute = clone $attribute;
                 $attribute->setAttribute('size', $dimension);
             }
@@ -157,7 +157,7 @@ class Create extends CollectionAction
                     \usleep(100_000);
                 }
             }
-            $dbForDatabases->createCollection(new Collection(
+            $dbForDatabases->createCollection(Collection::create(
                 id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                 attributes: $attributes,
                 indexes: $indexes,
@@ -166,22 +166,22 @@ class Create extends CollectionAction
             ));
             $attributeDocuments = \array_map(function (Attribute $attribute) use ($database, $collection, $databaseId, $collectionId, $dimension) {
                 return new Document([
-                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $attribute->getKey()),
-                    'key' => $attribute->getKey(),
+                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $attribute->key),
+                    'key' => $attribute->key,
                     'databaseInternalId' => $database->getSequence(),
                     'databaseId' => $databaseId,
                     'collectionInternalId' => $collection->getSequence(),
                     'collectionId' => $collectionId,
-                    'type' => $attribute->getType()->value,
+                    'type' => $attribute->type->value,
                     'status' => 'available',
                     'size' => $dimension,
-                    'required' => $attribute->isRequired(),
-                    'signed' => $attribute->isSigned(),
-                    'default' => $attribute->getDefault(),
-                    'array' => $attribute->isArray(),
-                    'format' => $attribute->getFormat() ?? '',
-                    'formatOptions' => $attribute->getFormatOptions(),
-                    'filters' => $attribute->getFilters(),
+                    'required' => $attribute->required,
+                    'signed' => $attribute->signed,
+                    'default' => $attribute->default,
+                    'array' => $attribute->array,
+                    'format' => $attribute->format?->name ?? '',
+                    'formatOptions' => $attribute->format?->options ?? [],
+                    'filters' => $attribute->filters,
                     'options' => $attribute->getOptions() ?? [],
                 ]);
             }, $collections['defaultAttributes']);
@@ -189,17 +189,17 @@ class Create extends CollectionAction
 
             $indexDocuments = \array_map(function (Index $index) use ($database, $collection, $databaseId, $collectionId) {
                 return new Document([
-                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $index->getKey()),
-                    'key' => $index->getKey(),
+                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $index->key),
+                    'key' => $index->key,
                     'status' => 'available',
                     'databaseInternalId' => $database->getSequence(),
                     'databaseId' => $databaseId,
                     'collectionInternalId' => $collection->getSequence(),
                     'collectionId' => $collectionId,
-                    'type' => $index->getType()->value,
-                    'attributes' => $index->getIndexedAttributes(),
-                    'lengths' => $index->getLengths(),
-                    'orders' => $index->getOrders(),
+                    'type' => $index->type->value,
+                    'attributes' => $index->attributes,
+                    'lengths' => $index->lengths,
+                    'orders' => $index->orders,
                 ]);
             }, $collections['defaultIndexes']);
 

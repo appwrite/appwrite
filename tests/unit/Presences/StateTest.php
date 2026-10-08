@@ -43,7 +43,7 @@ final class StateTest extends TestCase
             ->setNamespace('presences_' . \uniqid());
 
         $this->database->create();
-        $this->database->createCollection(new Collection(
+        $this->database->createCollection(Collection::create(
             id: State::COLLECTION_ID,
             attributes: [
                 Attribute::string(key: 'userInternalId', size: 255, required: true),

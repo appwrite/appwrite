@@ -395,15 +395,15 @@ class ClickHouse extends SQL
 
         foreach ($parentAttributes as $index => $attribute) {
             if ($attribute->key === 'userId') {
-                $parentAttributes[$index] = new Attribute(
-                    key: 'actorId',
-                    type: $attribute->type,
-                    size: $attribute->size,
-                    required: $attribute->required,
-                    signed: $attribute->signed,
-                    array: $attribute->array,
-                    filters: $attribute->filters,
-                );
+                $parentAttributes[$index] = Attribute::fromArray([
+                    'key' => 'actorId',
+                    'type' => $attribute->type,
+                    'size' => $attribute->size,
+                    'required' => $attribute->required,
+                    'signed' => $attribute->signed,
+                    'array' => $attribute->array,
+                    'filters' => $attribute->filters,
+                ]);
                 break;
             }
         }
@@ -461,14 +461,14 @@ class ClickHouse extends SQL
 
         foreach ($parentIndexes as $index => $definition) {
             if ($definition->key === 'idx_userId_event') {
-                $parentIndexes[$index] = new Index(
-                    key: 'idx_actorId_event',
-                    type: $definition->type,
-                    attributes: ['actorId', 'event'],
-                    lengths: $definition->lengths,
-                    orders: $definition->orders,
-                    ttl: $definition->ttl,
-                );
+                $parentIndexes[$index] = Index::fromArray([
+                    'key' => 'idx_actorId_event',
+                    'type' => $definition->type,
+                    'attributes' => ['actorId', 'event'],
+                    'lengths' => $definition->lengths,
+                    'orders' => $definition->orders,
+                    'ttl' => $definition->ttl,
+                ]);
                 break;
             }
         }

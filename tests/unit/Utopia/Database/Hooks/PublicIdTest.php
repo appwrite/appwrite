@@ -182,7 +182,7 @@ final class PublicIdTest extends TestCase
         $authorization->skip(function () use ($database, $collections): void {
             $database->create();
             foreach ($collections as $catalogId => $publicIds) {
-                $database->createCollection(new Collection(id: $catalogId));
+                $database->createCollection(Collection::create(id: $catalogId));
                 foreach ($publicIds as $sequence => $publicId) {
                     $database->createDocument($catalogId, new Document(['$id' => $publicId, '$sequence' => (string) $sequence]));
                 }

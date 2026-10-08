@@ -21,7 +21,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
-use Utopia\Query\Schema\ColumnType;
 
 final class ProvisioningHooksTest extends TestCase
 {
@@ -69,9 +68,9 @@ final class ProvisioningHooksTest extends TestCase
      */
     private function collection(string $id, array $permissions): Collection
     {
-        return new Collection(
+        return Collection::create(
             id: $id,
-            attributes: [new Attribute('name', ColumnType::String, size: 255)],
+            attributes: [Attribute::string('name', size: 255)],
             permissions: $permissions,
         );
     }

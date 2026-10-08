@@ -575,7 +575,7 @@ abstract class Base extends Action
 
         try {
             $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
-            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createCollection(new Collection(
+            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createCollection(Collection::create(
                 id: 'bucket_' . $bucket->getSequence(),
                 attributes: $attributes,
                 indexes: $indexes,

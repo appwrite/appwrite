@@ -13,6 +13,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Throwable;
 use Utopia\Database\Attribute;
+use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -23,7 +24,7 @@ use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\RelationSide;
+use Utopia\Database\RelationshipSide;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Structure;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
@@ -370,7 +371,7 @@ abstract class Action extends DatabasesAction
         }
 
         if ($type === ColumnType::Relationship->value) {
-            $options['side'] = RelationSide::Parent->value;
+            $options['side'] = RelationshipSide::Parent->value;
             $relatedCollection = $dbForProject->getDocument('database_' . $db->getSequence(), $options['relatedCollection'] ?? '');
             if ($relatedCollection->isEmpty()) {
                 $parent = $this->isCollectionsAPI() ? 'collection' : 'table';
@@ -411,7 +412,7 @@ abstract class Action extends DatabasesAction
                     throw new StructureException('Failed to add required spatial column: existing rows present. Make the column optional.');
                 }
             }
-            $dbForDatabases->checkAttribute($collection, Attribute::fromArray([
+            $dbForDatabases->checkAttribute($collection->getId(), Attribute::fromArray([
                 'key' => $key,
                 'type' => $type,
                 'size' => $size,
@@ -444,7 +445,7 @@ abstract class Action extends DatabasesAction
             $twoWayKey = $options['twoWayKey'];
             $options['relatedCollection'] = $collection->getId();
             $options['twoWayKey'] = $key;
-            $options['side'] = RelationSide::Child->value;
+            $options['side'] = RelationshipSide::Child->value;
 
             try {
                 $twoWayAttribute = new Document([
@@ -467,7 +468,7 @@ abstract class Action extends DatabasesAction
                     'options' => $options,
                 ]);
 
-                $dbForDatabases->checkAttribute($relatedCollection, Attribute::fromArray([
+                $dbForDatabases->checkAttribute($relatedCollection->getId(), Attribute::fromArray([
                     'key' => $twoWayKey,
                     'type' => $type,
                     'size' => $size,
@@ -650,9 +651,11 @@ abstract class Action extends DatabasesAction
             try {
                 $dbForDatabases->updateRelationship(
                     collection: $collectionId,
-                    id: $key,
-                    newKey: $newKey,
-                    onDelete: $update->onDelete(),
+                    key: $key,
+                    update: new \Utopia\Database\RelationshipUpdate(
+                        key: $newKey,
+                        onDelete: $update->onDelete(),
+                    ),
                 );
             } catch (IndexException) {
                 throw new Exception(Exception::INDEX_INVALID);
@@ -678,7 +681,7 @@ abstract class Action extends DatabasesAction
             try {
                 $definition = $dbForDatabases->updateAttribute(
                     collection: $collectionId,
-                    id: $key,
+                    key: $key,
                     size: $size,
                     required: $required,
                     default: $default,
@@ -688,11 +691,11 @@ abstract class Action extends DatabasesAction
 
                 // updateAttribute() keeps the stored default when given null,
                 // but the API uses null to clear it.
-                if ($default === null && $definition->getAttribute('default') !== null) {
-                    $dbForDatabases->updateAttributeDefault(
+                if ($default === null && $definition->default !== null) {
+                    $dbForDatabases->updateAttribute(
                         collection: $collectionId,
-                        id: $definition->getId(),
-                        default: null
+                        key: $definition->key,
+                        update: new AttributeUpdate(default: null)
                     );
                 }
             } catch (DuplicateException) {

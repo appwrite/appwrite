@@ -6,6 +6,7 @@ use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
 use Utopia\Console\Console;
+use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -82,7 +83,7 @@ class V25 extends Migration
                             $this->dbForProject->deleteAttribute($id, 'devKeys');
                         }
 
-                        if (!$this->dbForProject->getCollection('devKeys')->isEmpty()) {
+                        if ($this->dbForProject->findCollection('devKeys') !== null) {
                             $this->dbForProject->deleteCollection('devKeys');
                         }
                     }
@@ -140,7 +141,7 @@ class V25 extends Migration
                     if ($collectionType === 'console') {
                         foreach (['personalAccessToken', 'personalRefreshToken'] as $attribute) {
                             try {
-                                $this->dbForProject->updateAttribute($id, $attribute, type: ColumnType::Text, size: Database::MAX_TEXT_BYTES);
+                                $this->dbForProject->updateAttribute($id, $attribute, new AttributeUpdate(type: ColumnType::Text, size: Database::MAX_TEXT_BYTES));
                             } catch (Throwable $th) {
                                 Console::warning("Failed to convert attribute \"{$attribute}\" to text in collection {$id}: {$th->getMessage()}");
                             }

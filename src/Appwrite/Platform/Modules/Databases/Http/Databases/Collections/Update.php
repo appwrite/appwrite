@@ -10,6 +10,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\CollectionUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Validator\Authorization;
@@ -112,7 +113,7 @@ class Update extends Action
         );
 
         $dbForDatabases = $getDatabasesDB($database, $collection);
-        $dbForDatabases->updateCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $permissions, $documentSecurity);
+        $dbForDatabases->updateCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), new CollectionUpdate(permissions: $permissions, documentSecurity: $documentSecurity));
 
         $queueForEvents
             ->setContext('database', $database)

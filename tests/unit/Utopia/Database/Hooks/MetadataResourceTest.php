@@ -19,7 +19,6 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Hook\Relationships;
 use Utopia\Database\Relationship;
-use Utopia\Database\RelationType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 
@@ -48,16 +47,14 @@ final class MetadataResourceTest extends TestCase
         $this->authorization->skip(function () use ($tenant): void {
             $tenant->create();
             foreach ([self::MOVIES, self::ACTORS] as $collection) {
-                $tenant->createCollection(new Collection(
+                $tenant->createCollection(Collection::create(
                     id: $collection,
                     attributes: [Attribute::string(key: 'name', size: 100, required: false)],
                     permissions: [Permission::read(Role::any()), Permission::create(Role::any())],
                 ));
             }
-            $tenant->createRelationship(new Relationship(
-                collection: self::MOVIES,
+            $tenant->createRelationship(self::MOVIES, Relationship::manyToOne(
                 relatedCollection: self::ACTORS,
-                type: RelationType::ManyToOne,
                 key: 'lead',
             ));
             $tenant->createDocument(self::ACTORS, new Document(['$id' => 'actor']));
@@ -160,7 +157,7 @@ final class MetadataResourceTest extends TestCase
             ->setAuthorization($this->authorization);
         $this->authorization->skip(function () use ($catalog): void {
             $catalog->create();
-            $catalog->createCollection(new Collection(id: 'database_4'));
+            $catalog->createCollection(Collection::create(id: 'database_4'));
             $catalog->createDocument('database_4', new Document(['$id' => 'movies', '$sequence' => '9']));
             $catalog->createDocument('database_4', new Document(['$id' => 'actors', '$sequence' => '10']));
         });

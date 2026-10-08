@@ -2,6 +2,7 @@
 
 namespace Appwrite\Databases;
 
+use Utopia\Database\RelationshipDeleteAction;
 use Utopia\Query\Schema\ForeignKeyAction;
 
 /**
@@ -25,7 +26,7 @@ final readonly class RelationshipUpdate
         $this->options = \array_filter($options, static fn (mixed $option): bool => $option !== null);
     }
 
-    public function onDelete(): ?ForeignKeyAction
+    public function onDelete(): ?RelationshipDeleteAction
     {
         return isset($this->options['onDelete']) ? ForeignKeyAction::from($this->options['onDelete']) : null;
     }

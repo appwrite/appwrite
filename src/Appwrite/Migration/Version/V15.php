@@ -6,8 +6,10 @@ use Appwrite\Migration\Migration;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
+use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Filter;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -356,15 +358,17 @@ class V15 extends Migration
                 /**
                  * Add datetime filter.
                  */
-                $this->dbForProject->updateAttributeFilters($table, ID::custom($attribute), ['datetime']);
+                $this->dbForProject->updateAttribute($table, ID::custom($attribute), new AttributeUpdate(filters: [Filter::Datetime]));
                 /**
                  * Change data type to DateTime.
                  */
                 $this->dbForProject->updateAttribute(
                     collection: $table,
-                    id: $attribute,
-                    type: ColumnType::Datetime->value,
-                    signed: false
+                    key: $attribute,
+                    update: new AttributeUpdate(
+                        type: ColumnType::Datetime,
+                        signed: false,
+                    )
                 );
             } catch (\Throwable $th) {
                 Console::warning("Add 'datetime' filter to '{$attribute}' from {$table}: {$th->getMessage()}");
@@ -864,7 +868,7 @@ class V15 extends Migration
                         /**
                          * Update 'expire' default value
                          */
-                        $this->dbForProject->updateAttributeDefault('keys', 'expire', null);
+                        $this->dbForProject->updateAttribute('keys', 'expire', new AttributeUpdate(default: null));
                     } catch (\Throwable $th) {
                         Console::warning("'expire' from {$id}: {$th->getMessage()}");
                     }
@@ -1132,7 +1136,7 @@ class V15 extends Migration
                         /**
                          * Add datetime filter to password.
                          */
-                        $this->dbForProject->updateAttributeFilters($id, 'password', ['encrypt']);
+                        $this->dbForProject->updateAttribute($id, 'password', new AttributeUpdate(filters: ['encrypt']));
                     } catch (\Throwable $th) {
                         Console::warning("Add 'encrypt' filter to 'password' from {$id}: {$th->getMessage()}");
                     }

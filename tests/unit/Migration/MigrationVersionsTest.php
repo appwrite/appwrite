@@ -77,8 +77,8 @@ final class MigrationVersionsTest extends TestCase
             \ob_end_clean();
         }
 
-        $collection = $database->getCollection('notifications');
-        $this->assertFalse($collection->isEmpty());
+        $collection = $database->findCollection('notifications');
+        $this->assertNotNull($collection);
 
         $attributes = [];
         foreach ($collection->getAttribute('attributes', []) as $attribute) {
@@ -120,7 +120,7 @@ final class MigrationVersionsTest extends TestCase
             ->setDatabase('migrationV24ExistingAlerts')
             ->setNamespace('migration_existing_alerts_' . \uniqid());
         $database->create();
-        $database->createCollection(new Collection(id: 'notifications'));
+        $database->createCollection(Collection::create(id: 'notifications'));
 
         $migration = $this->v24WithoutWalks();
         $migration->setProject(
@@ -172,7 +172,7 @@ final class MigrationVersionsTest extends TestCase
             ->setNamespace('migration_team_notifications_' . \uniqid());
         $database->create();
 
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'notifications',
             attributes: [
                 Attribute::string(key: 'messageId'),
@@ -251,7 +251,7 @@ final class MigrationVersionsTest extends TestCase
             ->setDatabase('migrationV24Functions')
             ->setNamespace('migration_functions_' . \uniqid());
         $database->create();
-        $database->createCollection(new Collection(id: 'functions'));
+        $database->createCollection(Collection::create(id: 'functions'));
 
         $migration = new V24();
         $migration->setProject(
@@ -302,10 +302,10 @@ final class MigrationVersionsTest extends TestCase
             ->setDatabase('migrationV25ProviderAttributes')
             ->setNamespace('migration_provider_attributes_' . \uniqid());
         $database->create();
-        $database->createCollection(new Collection(id: 'databases'));
-        $database->createCollection(new Collection(id: 'functions'));
-        $database->createCollection(new Collection(id: 'sites'));
-        $database->createCollection(new Collection(id: 'migrations'));
+        $database->createCollection(Collection::create(id: 'databases'));
+        $database->createCollection(Collection::create(id: 'functions'));
+        $database->createCollection(Collection::create(id: 'sites'));
+        $database->createCollection(Collection::create(id: 'migrations'));
 
         $migration = new class () extends V25 {
             #[\Override]
@@ -366,7 +366,7 @@ final class MigrationVersionsTest extends TestCase
         $authorization->disable();
         $authorization->setDefaultStatus(false);
         $platform = $this->createConfiguredDatabase($authorization, 'migrationV25ReleasePlatform', 'console');
-        $platform->createAttribute('projects', new Attribute('version', ColumnType::String, size: 16));
+        $platform->createAttribute('projects', Attribute::string('version', size: 16));
         $project = $platform->createDocument('projects', new Document([
             '$id' => 'pre-v25-project',
             'version' => '1.9.5',
@@ -374,7 +374,7 @@ final class MigrationVersionsTest extends TestCase
 
         $database = $this->createConfiguredDatabase($authorization, 'migrationV25ReleaseProject', 'projects');
         foreach (['status', 'stage'] as $attribute) {
-            $database->createAttribute('migrations', new Attribute($attribute, ColumnType::String));
+            $database->createAttribute('migrations', Attribute::string($attribute, size: 0));
         }
         $database->createDocument('migrations', new Document([
             '$id' => 'migration',
@@ -411,16 +411,16 @@ final class MigrationVersionsTest extends TestCase
         $authorization->disable();
         $authorization->setDefaultStatus(false);
         $platform = $this->createConfiguredDatabase($authorization, 'migrationV26PreV25Platform', 'console');
-        $platform->createAttribute('projects', new Attribute('version', ColumnType::String, size: 16));
+        $platform->createAttribute('projects', Attribute::string('version', size: 16));
         $project = $platform->createDocument('projects', new Document([
             '$id' => 'pre-v25-project',
             'version' => '1.9.5',
         ]));
 
         $database = $this->createConfiguredDatabase($authorization, 'migrationV26PreV25Project', 'projects');
-        $database->createAttribute('databases', new Attribute('legacy', ColumnType::String));
+        $database->createAttribute('databases', Attribute::string('legacy', size: 0));
         foreach (['legacy', 'status', 'stage'] as $attribute) {
-            $database->createAttribute('migrations', new Attribute($attribute, ColumnType::String));
+            $database->createAttribute('migrations', Attribute::string($attribute, size: 0));
         }
         $database->createDocument('databases', new Document([
             '$id' => 'database',
@@ -458,14 +458,14 @@ final class MigrationVersionsTest extends TestCase
         $authorization->disable();
         $authorization->setDefaultStatus(false);
         $platform = $this->createConfiguredDatabase($authorization, 'migrationV26RcPlatform', 'console');
-        $platform->createAttribute('projects', new Attribute('version', ColumnType::String, size: 16));
+        $platform->createAttribute('projects', Attribute::string('version', size: 16));
         $project = $platform->createDocument('projects', new Document([
             '$id' => 'rc-project',
             'version' => '2.0.0-rc.2',
         ]));
         $database = $this->createConfiguredDatabase($authorization, 'migrationV26RcProject', 'projects');
         foreach (['status', 'legacy'] as $attribute) {
-            $database->createAttribute('databases', new Attribute($attribute, ColumnType::String));
+            $database->createAttribute('databases', Attribute::string($attribute, size: 0));
         }
         foreach ([
             'resourceInternalId',
@@ -479,13 +479,13 @@ final class MigrationVersionsTest extends TestCase
             'stage',
             'legacy',
         ] as $attribute) {
-            $database->createAttribute('migrations', new Attribute($attribute, ColumnType::String));
+            $database->createAttribute('migrations', Attribute::string($attribute, size: 0));
         }
         foreach (['providerBranches', 'providerPaths'] as $attribute) {
-            $database->createAttribute('functions', new Attribute($attribute, ColumnType::String, array: true));
-            $database->createAttribute('sites', new Attribute($attribute, ColumnType::String, array: true));
+            $database->createAttribute('functions', Attribute::string($attribute, array: true, size: 0));
+            $database->createAttribute('sites', Attribute::string($attribute, array: true, size: 0));
         }
-        $database->createAttribute('sites', new Attribute('scopes', ColumnType::String, array: true));
+        $database->createAttribute('sites', Attribute::string('scopes', array: true, size: 0));
         $database->createDocument('databases', new Document([
             '$id' => 'database',
             'status' => 'ready',
@@ -556,15 +556,15 @@ final class MigrationVersionsTest extends TestCase
         $database->create();
 
         foreach (Config::getParam('collections', [])['projects'] as $collection) {
-            $database->createCollection(new Collection(id: (string) $collection['$id']));
+            $database->createCollection(Collection::create(id: (string) $collection['$id']));
         }
         foreach ([Database::METADATA, 'audit'] as $id) {
-            if ($database->getCollection($id)->isEmpty()) {
-                $database->createCollection(new Collection(id: $id));
+            if ($database->findCollection($id) === null) {
+                $database->createCollection(Collection::create(id: $id));
             }
         }
         foreach (['status', 'stage'] as $attribute) {
-            $database->createAttribute('migrations', new Attribute($attribute, ColumnType::String));
+            $database->createAttribute('migrations', Attribute::string($attribute, size: 0));
         }
         $database->createDocument('migrations', new Document([
             '$id' => 'migration-race',
@@ -646,20 +646,20 @@ final class MigrationVersionsTest extends TestCase
 
         foreach (Config::getParam('collections', [])[$type] as $collection) {
             $id = (string) $collection['$id'];
-            if (!$database->getCollection($id)->isEmpty()) {
+            if ($database->findCollection($id) !== null) {
                 continue;
             }
 
-            $database->createCollection(new Collection(id: $id));
+            $database->createCollection(Collection::create(id: $id));
         }
 
         if ($type === 'projects') {
             foreach ([Database::METADATA, 'audit'] as $id) {
-                if (!$database->getCollection($id)->isEmpty()) {
+                if ($database->findCollection($id) !== null) {
                     continue;
                 }
 
-                $database->createCollection(new Collection(id: $id));
+                $database->createCollection(Collection::create(id: $id));
             }
         }
 
@@ -729,7 +729,7 @@ final class MigrationVersionsTest extends TestCase
                 continue;
             }
 
-            $database->createCollection(new Collection(
+            $database->createCollection(Collection::create(
                 id: $key,
                 attributes: \array_values($collection['attributes']),
                 indexes: \array_values($collection['indexes']),
@@ -760,7 +760,7 @@ final class MigrationVersionsTest extends TestCase
             'filters' => [],
         ]);
 
-        $database->createCollection(new Collection(id: 'users', attributes: [
+        $database->createCollection(Collection::create(id: 'users', attributes: [
             $string('name', 256),
             $string('email', 320),
             $string('phone', 16),

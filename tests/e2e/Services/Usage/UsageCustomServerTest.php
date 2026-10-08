@@ -12,8 +12,8 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
-use Utopia\Database\RelationType;
-use Utopia\Query\Schema\ForeignKeyAction;
+use Utopia\Database\RelationshipDeleteAction;
+use Utopia\Database\RelationshipType;
 use Utopia\System\System;
 
 final class UsageCustomServerTest extends Scope
@@ -500,11 +500,11 @@ final class UsageCustomServerTest extends Scope
         }
         $response = $this->client->call(Client::METHOD_POST, "$path/albums/$attributes/relationship", $headers, [
             'related' . \ucfirst($containerIdKey) => 'tracks',
-            'type' => RelationType::OneToMany->value,
+            'type' => RelationshipType::OneToMany->value,
             'twoWay' => true,
             'key' => 'tracks',
             'twoWayKey' => 'album',
-            'onDelete' => ForeignKeyAction::Cascade->value,
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
         ]);
         $this->assertSame(202, $response['headers']['status-code']);
         $this->assertEventually(function () use ($path, $attributes, $headers) {

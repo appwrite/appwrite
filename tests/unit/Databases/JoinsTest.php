@@ -17,7 +17,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
-use Utopia\Database\RelationType;
+use Utopia\Database\RelationshipType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 
@@ -119,7 +119,7 @@ final class JoinsTest extends TestCase
 
     public function testJoinOnAOneToManyRelationshipMatchesTheMainIdAgainstTheRelatedKey(): void
     {
-        $customers = self::customers(self::relationship('orders', RelationType::OneToMany, twoWayKey: 'customer'));
+        $customers = self::customers(self::relationship('orders', RelationshipType::OneToMany, twoWayKey: 'customer'));
 
         $resolved = $this->joins()->resolve([Query::join('shared', 'orders', '$id', '=', 'ord')], $customers);
 
@@ -128,7 +128,7 @@ final class JoinsTest extends TestCase
 
     public function testJoinOnAManyToOneRelationshipKeepsItsColumns(): void
     {
-        $customers = self::customers(self::relationship('region', RelationType::ManyToOne, twoWayKey: 'customers'));
+        $customers = self::customers(self::relationship('region', RelationshipType::ManyToOne, twoWayKey: 'customers'));
 
         $resolved = $this->joins()->resolve([Query::join('shared', 'region', '$id', '=', 'reg')], $customers);
 
@@ -218,7 +218,7 @@ final class JoinsTest extends TestCase
         return self::collection('customers', '1', [Permission::read(Role::any())], documentSecurity: true, attributes: $attributes);
     }
 
-    private static function relationship(string $key, RelationType $type, string $twoWayKey): Document
+    private static function relationship(string $key, RelationshipType $type, string $twoWayKey): Document
     {
         return new Document([
             'key' => $key,

@@ -260,7 +260,7 @@ abstract class Migration
             default => 'projects',
         };
 
-        if (!$this->dbForProject->getCollection($id)->isEmpty()) {
+        if ($this->dbForProject->findCollection($id) !== null) {
             return;
         }
 
@@ -270,7 +270,7 @@ abstract class Migration
         $indexes = $collection['indexes'];
 
         try {
-            $this->dbForProject->createCollection(new Collection(
+            $this->dbForProject->createCollection(Collection::create(
                 id: $name,
                 attributes: $attributes,
                 indexes: $indexes,
@@ -320,13 +320,13 @@ abstract class Migration
 
         $attributesToCreate = [];
         $attributes = $collection['attributes'];
-        $attributeKeys = \array_map(fn (Attribute $attribute): string => $attribute->getKey(), $collection['attributes']);
+        $attributeKeys = \array_map(fn (Attribute $attribute): string => $attribute->key, $collection['attributes']);
 
         $database->purgeCachedCollection($collectionId);
 
         $existingIds = \array_map(
-            fn (Attribute $attribute): string => $attribute->getId(),
-            $database->getCollection($collectionId)->getDeclaredAttributes()
+            fn (Attribute $attribute): string => $attribute->key,
+            $database->getCollection($collectionId)->attributes()
         );
 
         foreach ($attributeIds as $attributeId) {
@@ -413,7 +413,7 @@ abstract class Migration
 
         $attributes = $collection['attributes'];
 
-        $attributeKey = \array_search($attributeId, \array_map(fn (Attribute $attribute): string => $attribute->getKey(), $attributes));
+        $attributeKey = \array_search($attributeId, \array_map(fn (Attribute $attribute): string => $attribute->key, $attributes));
 
         if ($attributeKey === false) {
             throw new Exception('Attribute ' . $attributeId . ' not found');
@@ -464,7 +464,7 @@ abstract class Migration
 
         $indexes = $collection['indexes'];
 
-        $indexKey = \array_search($indexId, \array_map(fn (Index $index): string => $index->getKey(), $indexes));
+        $indexKey = \array_search($indexId, \array_map(fn (Index $index): string => $index->key, $indexes));
 
         if ($indexKey === false) {
             throw new Exception('Index ' . $indexId . ' not found');

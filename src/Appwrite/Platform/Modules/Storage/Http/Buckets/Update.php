@@ -10,6 +10,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Storage\Bytes;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Compression;
+use Utopia\Database\CollectionUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Validator\Permissions;
@@ -119,7 +120,7 @@ class Update extends Action
             ->setAttribute('antivirus', $antivirus)
             ->setAttribute('transformations', $transformations));
 
-        $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), $permissions, $fileSecurity);
+        $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), new CollectionUpdate(permissions: $permissions, documentSecurity: $fileSecurity));
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId());

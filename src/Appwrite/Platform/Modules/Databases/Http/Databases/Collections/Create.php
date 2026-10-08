@@ -223,7 +223,7 @@ class Create extends Action
         }
 
         try {
-            $dbForDatabases->createCollection(new Collection(
+            $dbForDatabases->createCollection(Collection::create(
                 id: $collectionKey,
                 attributes: $collectionAttributes,
                 indexes: $collectionIndexes,

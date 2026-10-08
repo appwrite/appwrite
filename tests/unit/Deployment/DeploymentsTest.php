@@ -290,7 +290,7 @@ final class DeploymentsTest extends TestCase
 
         $authorization->skip(function () use ($database): void {
             $database->create();
-            $database->createCollection(new Collection(
+            $database->createCollection(Collection::create(
                 id: self::COLLECTION,
                 attributes: [
                     Attribute::string(key: 'resourceId'),
@@ -300,7 +300,7 @@ final class DeploymentsTest extends TestCase
                     Attribute::string(key: 'status'),
                     Attribute::string(key: 'buildPath', size: 1024),
                     Attribute::string(key: 'buildLogs', size: 1024),
-                    Attribute::datetime(key: 'buildEndedAt', filters: ['datetime']),
+                    Attribute::datetime(key: 'buildEndedAt'),
                     Attribute::boolean(key: 'activate', default: false),
                 ],
                 permissions: [

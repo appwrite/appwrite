@@ -93,7 +93,7 @@ class V24 extends Migration
         $notificationsCollectionExists = false;
 
         if ($collectionType === 'console') {
-            $notificationsCollectionExists = !$this->dbForProject->getCollection('notifications')->isEmpty();
+            $notificationsCollectionExists = $this->dbForProject->findCollection('notifications') !== null;
             $this->createCollection('notifications');
         }
 

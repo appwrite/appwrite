@@ -15,6 +15,7 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Filter;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
@@ -43,9 +44,9 @@ final class StagesTest extends TestCase
 
         $this->authorization->skip(function (): void {
             $this->database->create();
-            $this->database->createCollection(new Collection(
+            $this->database->createCollection(Collection::create(
                 id: 'projects',
-                attributes: [Attribute::string(key: 'onboarding', size: 65536, default: [], filters: ['json'])],
+                attributes: [Attribute::string(key: 'onboarding', size: 65536, default: [], filters: [Filter::Json])],
             ));
             $this->database->createDocument('projects', new Document([
                 '$id' => self::PROJECT,

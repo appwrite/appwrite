@@ -17,7 +17,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
-use Utopia\Query\Schema\ColumnType;
 
 final class FactoryTest extends TestCase
 {
@@ -32,15 +31,15 @@ final class FactoryTest extends TestCase
 
         // The maintenance sweep reads a collection that provisioning has not
         // created yet, which caches its absence.
-        $this->assertTrue($read->getCollection('targets')->isEmpty());
+        $this->assertNull($read->findCollection('targets'));
 
-        $provisioning->createCollection(new Collection(
+        $provisioning->createCollection(Collection::create(
             id: 'targets',
-            attributes: [new Attribute('userInternalId', ColumnType::String, size: 255)],
+            attributes: [Attribute::string('userInternalId', size: 255)],
         ));
 
-        $this->assertFalse(
-            $read->getCollection('targets')->isEmpty(),
+        $this->assertNotNull(
+            $read->findCollection('targets'),
             'Provisioning creates the collections a project database later reads, so its cache invalidation has to reach that reader'
         );
     }

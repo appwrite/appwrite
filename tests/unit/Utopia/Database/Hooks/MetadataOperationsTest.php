@@ -20,7 +20,6 @@ use Utopia\Database\Hook\Permissions;
 use Utopia\Database\Hook\Relationships;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
-use Utopia\Database\RelationType;
 use Utopia\Database\Validator\Authorization;
 
 final class MetadataOperationsTest extends TestCase
@@ -41,7 +40,7 @@ final class MetadataOperationsTest extends TestCase
             $this->database->create();
             $permissions = [Permission::read(Role::any()), Permission::create(Role::any()), Permission::update(Role::any())];
             foreach (['albums', 'tracks', 'genres'] as $collection) {
-                $this->database->createCollection(new Collection(
+                $this->database->createCollection(Collection::create(
                     id: $collection,
                     attributes: [Attribute::string(key: 'name', size: 100, required: false)],
                     permissions: $permissions,
@@ -49,18 +48,14 @@ final class MetadataOperationsTest extends TestCase
             }
             $this->database->addHook(new Permissions());
             $this->database->addHook(new Relationships($this->database));
-            $this->database->createRelationship(new Relationship(
-                collection: 'albums',
+            $this->database->createRelationship('albums', Relationship::oneToMany(
                 relatedCollection: 'tracks',
-                type: RelationType::OneToMany,
                 twoWay: true,
                 key: 'tracks',
                 twoWayKey: 'album',
             ));
-            $this->database->createRelationship(new Relationship(
-                collection: 'tracks',
+            $this->database->createRelationship('tracks', Relationship::manyToMany(
                 relatedCollection: 'genres',
-                type: RelationType::ManyToMany,
                 key: 'genres',
             ));
             $this->database->createDocument('genres', new Document(['$id' => 'rock']));

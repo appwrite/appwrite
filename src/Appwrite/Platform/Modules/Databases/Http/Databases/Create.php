@@ -141,7 +141,7 @@ class Create extends Action
         $indexes = $collections['indexes'];
 
         try {
-            $dbForProject->createCollection(new Collection(
+            $dbForProject->createCollection(Collection::create(
                 id: 'database_' . $database->getSequence(),
                 attributes: $attributes,
                 indexes: $indexes,

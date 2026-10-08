@@ -1948,7 +1948,7 @@ class Deletes extends Action
         Console::info('Delete expired push ledger messages');
 
         $dbForProject = $getProjectDB($project);
-        if ($dbForProject->getCollection('pushLedger')->isEmpty()) {
+        if ($dbForProject->findCollection('pushLedger') === null) {
             return;
         }
 

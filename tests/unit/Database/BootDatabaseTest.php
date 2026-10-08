@@ -22,7 +22,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
-use Utopia\Query\Schema\ColumnType;
 
 final class BootDatabaseTest extends TestCase
 {
@@ -83,12 +82,12 @@ final class BootDatabaseTest extends TestCase
 
         $project = $this->factory->project($this->project());
 
-        $this->assertTrue($project->getCollection('users')->isEmpty());
+        $this->assertNull($project->findCollection('users'));
 
         $setup->createCollection($this->collection('users'));
 
-        $this->assertFalse(
-            $project->getCollection('users')->isEmpty(),
+        $this->assertNotNull(
+            $project->findCollection('users'),
             'A project database that read a project collection before the boot created it must see it once the boot has'
         );
     }
@@ -128,9 +127,9 @@ final class BootDatabaseTest extends TestCase
      */
     private function collection(string $id, ?array $permissions = null): Collection
     {
-        return new Collection(
+        return Collection::create(
             id: $id,
-            attributes: [new Attribute('name', ColumnType::String, size: 255)],
+            attributes: [Attribute::string('name', size: 255)],
             permissions: $permissions,
         );
     }

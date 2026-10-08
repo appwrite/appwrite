@@ -135,7 +135,7 @@ class Create extends Action
             // so the document is committed first. A bucket without its collection
             // can never hold a file: remove it rather than leave an orphan.
             try {
-                $dbForProject->createCollection(new Collection(
+                $dbForProject->createCollection(Collection::create(
                     id: 'bucket_' . $bucket->getSequence(),
                     attributes: $attributes,
                     indexes: $indexes,

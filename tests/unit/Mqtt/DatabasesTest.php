@@ -231,7 +231,7 @@ final class DatabasesTest extends TestCase
 
         $platform = $this->factory->platform();
         $platform->create();
-        $platform->createCollection(new Collection(
+        $platform->createCollection(Collection::create(
             id: 'projects',
             attributes: [Attribute::string(key: 'database', size: 256)],
         ));
@@ -244,20 +244,20 @@ final class DatabasesTest extends TestCase
 
         $database = $sharedTables ? $this->factory->setup(self::POOL) : $this->factory->project($this->project);
         $database->create();
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'users',
             attributes: [
                 Attribute::boolean(key: 'status'),
                 Attribute::string(key: 'sessions', size: 16384, filters: ['subQuerySessions']),
             ],
         ));
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'sessions',
             attributes: [
                 Attribute::string(key: 'userInternalId', required: true),
                 Attribute::string(key: 'provider', size: 128),
                 Attribute::string(key: 'secret', size: 512),
-                Attribute::datetime(key: 'expire', filters: ['datetime']),
+                Attribute::datetime(key: 'expire'),
             ],
         ));
     }

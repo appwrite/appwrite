@@ -299,15 +299,15 @@ class DatabaseTest extends TestCase
 
             $this->assertSame(
                 \array_map(self::describeDeclaredAttribute(...), self::declaredAttributes()),
-                \array_map(self::describeAttribute(...), $collection->attributes),
+                \array_map(self::describeAttribute(...), $collection->attributes()),
                 'every column 0.16.5 declared must come back with the same type, size and flags, in the same order',
             );
             $this->assertSame(
                 \array_map(self::describeDeclaredIndex(...), self::declaredIndexes()),
-                \array_map(self::describeIndex(...), $collection->indexes),
+                \array_map(self::describeIndex(...), $collection->indexes()),
                 'every index 0.16.5 declared must come back with the same type, columns and prefix lengths, in the same order',
             );
-            $this->assertTrue($collection->documentSecurity);
+            $this->assertTrue($collection->documentSecurity());
             $this->assertSame([Permission::create(Role::any())], $collection->getPermissions());
         } finally {
             self::dropCollection($database);
@@ -316,7 +316,7 @@ class DatabaseTest extends TestCase
 
     private static function dropCollection(Database $database): void
     {
-        if (!$database->getCollection(SQL::COLLECTION)->isEmpty()) {
+        if ($database->findCollection(SQL::COLLECTION) !== null) {
             $database->deleteCollection(SQL::COLLECTION);
         }
     }

@@ -22,7 +22,6 @@ use Utopia\Database\Hook\Permissions;
 use Utopia\Database\Hook\Relationships;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
-use Utopia\Database\RelationType;
 use Utopia\Database\Validator\Authorization;
 
 /**
@@ -328,30 +327,24 @@ final class ListCacheTest extends TestCase
         $this->authorization->skip(function () use ($tenant): void {
             $tenant->create();
             foreach (\array_keys(self::PUBLIC_IDS) as $collection) {
-                $tenant->createCollection(new Collection(
+                $tenant->createCollection(Collection::create(
                     id: $collection,
                     attributes: [Attribute::string(key: 'name', size: 100, required: false)],
                     permissions: [Permission::read(Role::any()), Permission::create(Role::any())],
                 ));
             }
-            $tenant->createRelationship(new Relationship(
-                collection: self::ALBUMS,
+            $tenant->createRelationship(self::ALBUMS, Relationship::oneToMany(
                 relatedCollection: self::TRACKS,
-                type: RelationType::OneToMany,
                 twoWay: true,
                 key: 'tracks',
                 twoWayKey: 'album',
             ));
-            $tenant->createRelationship(new Relationship(
-                collection: self::TRACKS,
+            $tenant->createRelationship(self::TRACKS, Relationship::manyToOne(
                 relatedCollection: self::ARTISTS,
-                type: RelationType::ManyToOne,
                 key: 'artist',
             ));
-            $tenant->createRelationship(new Relationship(
-                collection: self::LABELS,
+            $tenant->createRelationship(self::LABELS, Relationship::oneToMany(
                 relatedCollection: self::ALBUMS,
-                type: RelationType::OneToMany,
                 twoWay: true,
                 key: 'albums',
                 twoWayKey: 'label',

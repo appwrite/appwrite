@@ -16,6 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\System\System;
 use Utopia\Validator\IP;
 
@@ -125,7 +126,7 @@ class Get extends Action
             'supportForAttributeResizing' => $adapter->supports(Capability::AttributeResizing),
             'supportForSchemas' => $adapter->supports(Capability::Schemas),
             'maxIndexLength' => $adapter->getMaxIndexLength(),
-            'supportForIntegerIds' => $adapter->getIdAttributeType() === 'integer',
+            'supportForIntegerIds' => $adapter->getIdAttributeType() === ColumnType::Integer,
         ]);
 
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);

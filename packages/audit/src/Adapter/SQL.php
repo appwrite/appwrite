@@ -4,6 +4,7 @@ namespace Utopia\Audit\Adapter;
 
 use Utopia\Audit\Adapter;
 use Utopia\Database\Attribute;
+use Utopia\Database\Filter;
 use Utopia\Database\Index;
 
 /**
@@ -37,8 +38,8 @@ abstract class SQL extends Adapter
             Attribute::string(key: 'resource'),
             Attribute::string(key: 'userAgent', size: 65534, required: true),
             Attribute::string(key: 'ip', size: 45, required: true),
-            Attribute::datetime(key: 'time', filters: ['datetime']),
-            Attribute::string(key: 'data', size: 16777216, filters: ['json']),
+            Attribute::datetime(key: 'time'),
+            Attribute::string(key: 'data', size: 16777216, filters: [Filter::Json]),
         ];
     }
 

@@ -28,6 +28,7 @@ use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Filter;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
@@ -40,7 +41,6 @@ use Utopia\Migration\Resources\Auth\User;
 use Utopia\Migration\Resources\Database\Database as ResourceDatabase;
 use Utopia\Migration\Source;
 use Utopia\Migration\Transfer;
-use Utopia\Query\Schema\ColumnType;
 use Utopia\Queue\Message;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
@@ -385,20 +385,20 @@ final class MigrationsTest extends TestCase
             ->setDatabase('migrationWorkerReuse')
             ->setNamespace('migration_worker_reuse_' . \uniqid());
         $database->create();
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'databases',
             attributes: [
-                new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
-                new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY),
+                Attribute::string('migrationId', size: Database::LENGTH_KEY),
+                Attribute::string('migrationAttemptId', size: Database::LENGTH_KEY),
             ],
         ));
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'migrations',
             attributes: [
-                new Attribute('status', ColumnType::String, size: 255, required: true),
-                new Attribute('stage', ColumnType::String, size: 255, required: true),
-                new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY),
-                new Attribute('resourceData', ColumnType::String, size: 131_070, required: true, filters: ['json']),
+                Attribute::string('status', size: 255, required: true),
+                Attribute::string('stage', size: 255, required: true),
+                Attribute::string('attemptId', size: Database::LENGTH_KEY),
+                Attribute::string('resourceData', size: 131_070, required: true, filters: [Filter::Json]),
             ],
             permissions: [
                 Permission::create(Role::any()),
@@ -487,21 +487,21 @@ final class MigrationsTest extends TestCase
             ->setDatabase('migrationWorkerApiKeyFailure')
             ->setNamespace('migration_worker_api_key_failure_' . \uniqid());
         $database->create();
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'databases',
             attributes: [
-                new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
-                new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY),
+                Attribute::string('migrationId', size: Database::LENGTH_KEY),
+                Attribute::string('migrationAttemptId', size: Database::LENGTH_KEY),
             ],
         ));
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'migrations',
             attributes: [
-                new Attribute('status', ColumnType::String, size: 255, required: true),
-                new Attribute('stage', ColumnType::String, size: 255, required: true),
-                new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY),
-                new Attribute('resourceData', ColumnType::String, size: 131_070, required: true, filters: ['json']),
-                new Attribute('errors', ColumnType::String, size: 1_000_000, array: true),
+                Attribute::string('status', size: 255, required: true),
+                Attribute::string('stage', size: 255, required: true),
+                Attribute::string('attemptId', size: Database::LENGTH_KEY),
+                Attribute::string('resourceData', size: 131_070, required: true, filters: [Filter::Json]),
+                Attribute::string('errors', size: 1_000_000, array: true),
             ],
             permissions: [
                 Permission::create(Role::any()),
@@ -617,20 +617,20 @@ final class MigrationsTest extends TestCase
             ->setDatabase('migrationWorkerGenerationFence')
             ->setNamespace('migration_worker_generation_fence_' . \uniqid());
         $database->create();
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'databases',
             attributes: [
-                new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
-                new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY),
+                Attribute::string('migrationId', size: Database::LENGTH_KEY),
+                Attribute::string('migrationAttemptId', size: Database::LENGTH_KEY),
             ],
         ));
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'migrations',
             attributes: [
-                new Attribute('status', ColumnType::String, size: 255, required: true),
-                new Attribute('stage', ColumnType::String, size: 255, required: true),
-                new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY),
-                new Attribute('resourceData', ColumnType::String, size: 131_070, required: true, filters: ['json']),
+                Attribute::string('status', size: 255, required: true),
+                Attribute::string('stage', size: 255, required: true),
+                Attribute::string('attemptId', size: Database::LENGTH_KEY),
+                Attribute::string('resourceData', size: 131_070, required: true, filters: [Filter::Json]),
             ],
             permissions: [
                 Permission::create(Role::any()),
@@ -944,9 +944,9 @@ final class MigrationsTest extends TestCase
         $this->assertSame('init', $stored->getAttribute('stage'));
         $this->assertSame($migration->getUpdatedAt(), $stored->getUpdatedAt());
 
-        $database->createAttribute('databases', new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY));
-        $database->createAttribute('databases', new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY));
-        $database->createAttribute('migrations', new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY));
+        $database->createAttribute('databases', Attribute::string('migrationId', size: Database::LENGTH_KEY));
+        $database->createAttribute('databases', Attribute::string('migrationAttemptId', size: Database::LENGTH_KEY));
+        $database->createAttribute('migrations', Attribute::string('attemptId', size: Database::LENGTH_KEY));
 
         $this->deliverClaim($worker, $database, $project, $delivery);
 
@@ -964,23 +964,23 @@ final class MigrationsTest extends TestCase
             ->setDatabase('migrationWorkerClaims')
             ->setNamespace('migration_worker_claims_' . \uniqid());
         $database->create();
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'databases',
             attributes: $ownership
                 ? [
-                    new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
-                    new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY),
+                    Attribute::string('migrationId', size: Database::LENGTH_KEY),
+                    Attribute::string('migrationAttemptId', size: Database::LENGTH_KEY),
                 ]
-                : [new Attribute('name', ColumnType::String, size: 256)],
+                : [Attribute::string('name', size: 256)],
         ));
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'migrations',
             attributes: \array_values(\array_filter([
-                new Attribute('status', ColumnType::String, size: 255, required: true),
-                new Attribute('stage', ColumnType::String, size: 255, required: true),
-                $ownership ? new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY) : null,
-                new Attribute('resourceData', ColumnType::String, size: 131_070, required: true, filters: ['json']),
-                new Attribute('errors', ColumnType::String, size: 1_000_000, array: true),
+                Attribute::string('status', size: 255, required: true),
+                Attribute::string('stage', size: 255, required: true),
+                $ownership ? Attribute::string('attemptId', size: Database::LENGTH_KEY) : null,
+                Attribute::string('resourceData', size: 131_070, required: true, filters: [Filter::Json]),
+                Attribute::string('errors', size: 1_000_000, array: true),
             ])),
             permissions: [
                 Permission::create(Role::any()),

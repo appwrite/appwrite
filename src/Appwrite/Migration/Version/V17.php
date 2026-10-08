@@ -5,6 +5,7 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Migration\Migration;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Console\Console;
+use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Query\Schema\ColumnType;
@@ -48,7 +49,7 @@ class V17 extends Migration
             $id = "bucket_{$bucket->getSequence()}";
 
             try {
-                $this->dbForProject->updateAttribute($id, 'mimeType', ColumnType::String->value, 255, true, false);
+                $this->dbForProject->updateAttribute($id, 'mimeType', new AttributeUpdate(type: ColumnType::String, size: 255, required: true, default: false));
                 $this->dbForProject->purgeCachedCollection($id);
             } catch (\Throwable $th) {
                 Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
@@ -88,7 +89,7 @@ class V17 extends Migration
                         /**
                          * Update 'mimeType' attribute size (127->255)
                          */
-                        $this->dbForProject->updateAttribute($id, 'mimeType', ColumnType::String->value, 255, true, false);
+                        $this->dbForProject->updateAttribute($id, 'mimeType', new AttributeUpdate(type: ColumnType::String, size: 255, required: true, default: false));
                         $this->dbForProject->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'mimeType' from {$id}: {$th->getMessage()}");

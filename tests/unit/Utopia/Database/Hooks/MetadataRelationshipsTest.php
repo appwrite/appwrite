@@ -16,13 +16,14 @@ use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Event;
+use Utopia\Database\Filter;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Hook\Permissions;
 use Utopia\Database\Hook\Relationships;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
-use Utopia\Database\RelationType;
+use Utopia\Database\RelationshipType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool as Connections;
@@ -56,34 +57,33 @@ final class MetadataRelationshipsTest extends TestCase
         if ($separate) {
             $catalog->create();
         }
-        $catalog->createCollection(new Collection(id: 'database_2'));
+        $catalog->createCollection(Collection::create(id: 'database_2'));
         $collections = [];
         foreach (['veterinarians', 'animals', 'zoos', 'presidents'] as $name) {
             $record = $catalog->createDocument('database_2', new Document(['$id' => $name]));
             $collections[$name] = 'database_2_collection_' . $record->getSequence();
-            $tenant->createCollection(new Collection(
+            $tenant->createCollection(Collection::create(
                 id: $collections[$name],
-                attributes: [Attribute::string(key: 'name', size: 100), Attribute::string(key: 'payload', size: 1000, filters: ['json'])],
+                attributes: [Attribute::string(key: 'name', size: 100), Attribute::string(key: 'payload', size: 1000, filters: [Filter::Json])],
                 permissions: [Permission::create(Role::any())],
             ));
         }
         if ($separate) {
-            $this->assertTrue($tenant->getCollection('database_2')->isEmpty());
+            $this->assertNull($tenant->findCollection('database_2'));
         }
         $tenant->addHook(new Permissions());
         $tenant->addHook(new Relationships($tenant));
         foreach ([
-            ['veterinarians', 'animals', 'animals', RelationType::ManyToMany],
-            ['animals', 'zoos', 'zoo', RelationType::ManyToOne],
-            ['animals', 'presidents', 'president', RelationType::ManyToOne],
-            ['zoos', 'presidents', 'president', RelationType::ManyToOne],
+            ['veterinarians', 'animals', 'animals', RelationshipType::ManyToMany],
+            ['animals', 'zoos', 'zoo', RelationshipType::ManyToOne],
+            ['animals', 'presidents', 'president', RelationshipType::ManyToOne],
+            ['zoos', 'presidents', 'president', RelationshipType::ManyToOne],
         ] as [$from, $to, $key, $type]) {
-            $tenant->createRelationship(new Relationship(
-                collection: $collections[$from],
-                relatedCollection: $collections[$to],
-                type: $type,
-                key: $key,
-            ));
+            $tenant->createRelationship($collections[$from], Relationship::fromArray([
+                'relatedCollection' => $collections[$to],
+                'relationType' => $type,
+                'key' => $key,
+            ]));
         }
         $permissions = [Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())];
         $tenant->createDocument($collections['presidents'], new Document(['$id' => 'leader', '$permissions' => $permissions, 'name' => 'Leader']));
@@ -173,14 +173,12 @@ final class MetadataRelationshipsTest extends TestCase
         $tenant = $this->database($connections, $authorization);
         $tenant->create();
         foreach (['roots', 'children', 'leaves'] as $id) {
-            $tenant->createCollection(new Collection(id: $id));
+            $tenant->createCollection(Collection::create(id: $id));
         }
         $tenant->addHook(new Relationships($tenant));
         foreach ([['roots', 'children', 'child'], ['children', 'leaves', 'leaf']] as [$from, $to, $key]) {
-            $tenant->createRelationship(new Relationship(
-                collection: $from,
+            $tenant->createRelationship($from, Relationship::manyToOne(
                 relatedCollection: $to,
-                type: RelationType::ManyToOne,
                 key: $key,
             ));
         }
@@ -210,7 +208,7 @@ final class MetadataRelationshipsTest extends TestCase
         $tenant = $this->database($connections, $authorization);
         $tenant->create();
         foreach (['roots', 'children', 'leaves', 'beyond'] as $id) {
-            $tenant->createCollection(new Collection(id: $id, attributes: [Attribute::string(key: 'payload', size: 1000, filters: ['json'])]));
+            $tenant->createCollection(Collection::create(id: $id, attributes: [Attribute::string(key: 'payload', size: 1000, filters: [Filter::Json])]));
         }
         foreach ([
             ['roots', 'children', 'first'],
@@ -223,13 +221,12 @@ final class MetadataRelationshipsTest extends TestCase
             ['children', 'leaves', 'leaf'],
             ['leaves', 'beyond', 'next'],
         ] as [$from, $to, $key]) {
-            $tenant->createRelationship(new Relationship(
-                collection: $from,
-                relatedCollection: $to,
-                type: $key === 'many' ? RelationType::ManyToMany : RelationType::ManyToOne,
-                key: $key,
-                twoWayKey: $from . '_' . $key,
-            ));
+            $tenant->createRelationship($from, Relationship::fromArray([
+                'relatedCollection' => $to,
+                'relationType' => $key === 'many' ? RelationshipType::ManyToMany : RelationshipType::ManyToOne,
+                'key' => $key,
+                'twoWayKey' => $from . '_' . $key,
+            ]));
         }
         $beyond = new Document(['$id' => 'beyond', '$collection' => 'beyond']);
         $leaf = new Document(['$id' => 'leaf', '$collection' => 'leaves', 'next' => $beyond]);

@@ -15,7 +15,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\RelationType;
+use Utopia\Database\RelationshipType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 
@@ -404,12 +404,12 @@ final class RelationshipValuesTest extends TestCase
         return [
             'albums' => self::collection('albums', [
                 self::attribute('title'),
-                self::relationship('artist', 'artists', RelationType::ManyToOne),
-                self::relationship('tracks', 'tracks', RelationType::OneToMany),
+                self::relationship('artist', 'artists', RelationshipType::ManyToOne),
+                self::relationship('tracks', 'tracks', RelationshipType::OneToMany),
             ]),
             'artists' => self::collection('artists', [
                 self::attribute('name'),
-                self::relationship('label', 'labels', RelationType::ManyToOne),
+                self::relationship('label', 'labels', RelationshipType::ManyToOne),
             ]),
             'labels' => self::collection('labels', [self::attribute('name')]),
             'tracks' => self::collection('tracks', [self::attribute('name')]),
@@ -437,7 +437,7 @@ final class RelationshipValuesTest extends TestCase
         ]);
     }
 
-    private static function relationship(string $key, string $relatedCollection, RelationType $type): Document
+    private static function relationship(string $key, string $relatedCollection, RelationshipType $type): Document
     {
         return new Document([
             '$id' => $key,

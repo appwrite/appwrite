@@ -6,6 +6,7 @@ use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
 use Utopia\Console\Console;
+use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -98,7 +99,7 @@ class V21 extends Migration
                 case 'platforms':
                     // Increase 'type' length to 255
                     try {
-                        $this->dbForProject->updateAttribute($id, 'type', size: 255);
+                        $this->dbForProject->updateAttribute($id, 'type', new AttributeUpdate(size: 255));
                     } catch (Throwable $th) {
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
                     }
@@ -256,7 +257,7 @@ class V21 extends Migration
             Console::log("Migrating Bucket {$bucketId} {$bucket->getId()} ({$bucket->getAttribute('name')})");
 
             try {
-                $this->dbForProject->updateAttribute($bucketId, 'metadata', size: 65534);
+                $this->dbForProject->updateAttribute($bucketId, 'metadata', new AttributeUpdate(size: 65534));
             } catch (\Throwable $th) {
                 Console::warning("'metadata' from {$bucketId}: {$th->getMessage()}");
             }

@@ -148,20 +148,20 @@ final class V25Test extends TestCase
             $attributes = $id === 'topics'
                 ? \array_filter($collection['attributes'], fn (Document $attribute) => !\in_array($attribute->getId(), $added, true))
                 : $collection['attributes'];
-            $database->createCollection(new Collection(
+            $database->createCollection(Collection::create(
                 id: $id,
                 attributes: \array_values($attributes),
                 indexes: \array_values($collection['indexes']),
             ));
         }
-        $database->createCollection(new Collection(id: 'audit'));
+        $database->createCollection(Collection::create(id: 'audit'));
 
         $migration = new V25();
         $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
         $migration->execute();
         $migration->execute();
 
-        $this->assertFalse($database->getCollection('pushLedger')->isEmpty());
+        $this->assertNotNull($database->findCollection('pushLedger'));
         $topics = \array_map(
             fn (Document $attribute) => $attribute->getId(),
             $database->getCollection('topics')->getAttribute('attributes', [])

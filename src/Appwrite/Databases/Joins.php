@@ -8,7 +8,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
-use Utopia\Database\RelationType;
+use Utopia\Database\RelationshipType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 
@@ -110,7 +110,7 @@ final readonly class Joins
         $relationType = $options['relationType'] ?? $relationship->getAttribute('relationType');
         $twoWayKey = $options['twoWayKey'] ?? $relationship->getAttribute('twoWayKey');
 
-        if ($relationType !== RelationType::OneToMany->value) {
+        if ($relationType !== RelationshipType::OneToMany->value) {
             return;
         }
 

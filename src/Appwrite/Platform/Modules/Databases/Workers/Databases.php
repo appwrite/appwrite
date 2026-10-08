@@ -17,13 +17,13 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Index as IndexObject;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
-use Utopia\Database\RelationType;
+use Utopia\Database\RelationshipType;
 use Utopia\Database\SetType;
 use Utopia\Platform\Action;
+use Utopia\Query\OrderDirection;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Schema\ForeignKeyAction;
 use Utopia\Query\Schema\IndexType;
-use Utopia\Query\Schema\Order;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 
@@ -190,19 +190,14 @@ class Databases extends Action
                         throw new DatabaseException('Collection/Table not found');
                     }
 
-                    if (
-                        !$dbForDatabases->createRelationship(new Relationship(
-                            collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                            relatedCollection: 'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
-                            type: RelationType::from($options['relationType']),
-                            twoWay: $options['twoWay'],
-                            key: $key,
-                            twoWayKey: $options['twoWayKey'],
-                            onDelete: ForeignKeyAction::from($options['onDelete']),
-                        ))
-                    ) {
-                        throw new DatabaseException('Failed to create attribute/column');
-                    }
+                    $dbForDatabases->createRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), Relationship::fromArray([
+                        'relatedCollection' => 'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
+                        'relationType' => RelationshipType::from($options['relationType']),
+                        'twoWay' => $options['twoWay'],
+                        'key' => $key,
+                        'twoWayKey' => $options['twoWayKey'],
+                        'onDelete' => ForeignKeyAction::from($options['onDelete']),
+                    ]));
 
                     if ($options['twoWay']) {
                         $relatedAttribute = $dbForProject->getDocument('attributes', $database->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $options['twoWayKey']);
@@ -210,20 +205,18 @@ class Databases extends Action
                     }
                     break;
                 default:
-                    if (!$dbForDatabases->createAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), new Attribute(
-                        key: $key,
-                        type: Attribute::normalizeType($type),
-                        size: $size,
-                        required: $required,
-                        default: $default,
-                        signed: $signed,
-                        array: $array,
-                        format: $format,
-                        formatOptions: $formatOptions,
-                        filters: $filters,
-                    ))) {
-                        throw new Exception('Failed to create attribute/column');
-                    }
+                    $dbForDatabases->createAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), Attribute::fromArray([
+                        'key' => $key,
+                        'type' => Attribute::normalizeType($type),
+                        'size' => $size,
+                        'required' => $required,
+                        'default' => $default,
+                        'signed' => $signed,
+                        'array' => $array,
+                        'format' => $format,
+                        'formatOptions' => $formatOptions,
+                        'filters' => $filters,
+                    ]));
             }
 
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
@@ -314,10 +307,7 @@ class Databases extends Action
                         $relatedAttribute = $dbForProject->getDocument('attributes', $database->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $options['twoWayKey']);
                     }
 
-                    if (!$dbForDatabases->deleteRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
-                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
-                        throw new DatabaseException('Failed to delete Relationship');
-                    }
+                    $dbForDatabases->deleteRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key);
                 } elseif (!$dbForDatabases->deleteAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
                     throw new DatabaseException('Failed to delete attribute/column');
                 }
@@ -466,21 +456,19 @@ class Databases extends Action
         // and an InvalidArgumentException is not a DatabaseException, so the
         // failure would be recorded with no message at all.
         $orders = \array_map(
-            static fn (mixed $order): ?Order => Order::tryFrom(\is_string($order) ? \strtoupper($order) : ''),
+            static fn (mixed $order): ?OrderDirection => OrderDirection::tryFrom(\is_string($order) ? \strtoupper($order) : ''),
             $index->getAttribute('orders', []),
         );
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
-            if (!$dbForDatabases->createIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), new IndexObject(
-                key: $key,
-                type: IndexType::from($type),
-                attributes: $attributes,
-                lengths: $lengths,
-                orders: $orders,
-            ))) {
-                throw new DatabaseException('Failed to create Index');
-            }
+            $dbForDatabases->createIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), IndexObject::fromArray([
+                'key' => $key,
+                'type' => IndexType::from($type),
+                'attributes' => $attributes,
+                'lengths' => $lengths,
+                'orders' => $orders,
+            ]));
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
         } catch (\Throwable $e) {
             if ($e instanceof DatabaseException) {

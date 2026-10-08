@@ -37,7 +37,7 @@ final class ConsoleTest extends TestCase
             ->setNamespace('alerts_' . \uniqid());
 
         $this->database->create();
-        $this->database->createCollection(new Collection(id: 'notifications', permissions: [Permission::create(Role::any()), Permission::read(Role::any())], documentSecurity: false));
+        $this->database->createCollection(Collection::create(id: 'notifications', permissions: [Permission::create(Role::any()), Permission::read(Role::any())], documentSecurity: false));
         $this->database->createAttribute('notifications', Attribute::string(key: 'messageId'));
         $this->database->createAttribute('notifications', Attribute::string(key: 'recipientHash', size: 64, required: true));
         $this->database->createAttribute('notifications', Attribute::string(key: 'type', size: 64, default: 'info'));
@@ -53,8 +53,8 @@ final class ConsoleTest extends TestCase
         $this->database->createAttribute('notifications', Attribute::string(key: 'title', size: 256, required: true));
         $this->database->createAttribute('notifications', Attribute::string(key: 'body', size: 16384, required: true));
         $this->database->createAttribute('notifications', Attribute::boolean(key: 'read', default: false));
-        $this->database->createAttribute('notifications', Attribute::datetime(key: 'firstSeen', filters: ['datetime']));
-        $this->database->createAttribute('notifications', Attribute::datetime(key: 'lastSeen', filters: ['datetime']));
+        $this->database->createAttribute('notifications', Attribute::datetime(key: 'firstSeen'));
+        $this->database->createAttribute('notifications', Attribute::datetime(key: 'lastSeen'));
     }
 
     protected function tearDown(): void

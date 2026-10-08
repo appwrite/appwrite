@@ -7,6 +7,7 @@ use Exception;
 use PDOException;
 use Throwable;
 use Utopia\Console\Console;
+use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -105,7 +106,7 @@ class V20 extends Migration
                     }
                 }
 
-                $this->dbForProject->updateAttribute($collectionId, $attribute['key'], $attribute['type']);
+                $this->dbForProject->updateAttribute($collectionId, $attribute['key'], new AttributeUpdate(type: $attribute['type']));
             }
         }
 
@@ -127,7 +128,7 @@ class V20 extends Migration
                     }
 
                     try {
-                        $this->dbForProject->updateAttribute($id, $attribute['$id'], $attribute['type']);
+                        $this->dbForProject->updateAttribute($id, $attribute['$id'], new AttributeUpdate(type: $attribute['type']));
                     } catch (Throwable $th) {
                         Console::warning("'{$attribute['$id']}' from {$id}: {$th->getMessage()}");
                     }
@@ -177,7 +178,7 @@ class V20 extends Migration
                         /**
                          * Alter `signed`  internal type on `value` attr
                          */
-                        $this->dbForProject->updateAttribute(collection: $id, id: 'value', signed: true);
+                        $this->dbForProject->updateAttribute(collection: $id, key: 'value', update: new AttributeUpdate(signed: true));
                     } catch (Throwable $th) {
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
                     }
@@ -186,7 +187,7 @@ class V20 extends Migration
                         /**
                          * Ensure 'time' attribute is not required
                          */
-                        $this->dbForProject->updateAttribute($id, 'time', required: false);
+                        $this->dbForProject->updateAttribute($id, 'time', new AttributeUpdate(required: false));
                     } catch (Throwable $th) {
                         Console::warning("'time' from {$id}: {$th->getMessage()}");
                     }
@@ -338,19 +339,19 @@ class V20 extends Migration
                     break;
                 case 'topics':
                     try {
-                        $this->dbForProject->updateAttributeDefault($id, 'emailTotal', 0);
+                        $this->dbForProject->updateAttribute($id, 'emailTotal', new AttributeUpdate(default: 0));
                     } catch (Throwable $th) {
                         Console::warning("'topics' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->dbForProject->updateAttributeDefault($id, 'pushTotal', 0);
+                        $this->dbForProject->updateAttribute($id, 'pushTotal', new AttributeUpdate(default: 0));
                     } catch (Throwable $th) {
                         Console::warning("'topics' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->dbForProject->updateAttributeDefault($id, 'smsTotal', 0);
+                        $this->dbForProject->updateAttribute($id, 'smsTotal', new AttributeUpdate(default: 0));
                     } catch (Throwable $th) {
                         Console::warning("'topics' from {$id}: {$th->getMessage()}");
                     }

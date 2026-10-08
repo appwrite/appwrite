@@ -57,7 +57,7 @@ final class ClaimTest extends TestCase
         $database->create();
 
         try {
-            $database->createCollection(new Collection(
+            $database->createCollection(Collection::create(
                 id: 'migrations',
                 attributes: [
                     Attribute::string('attemptId', size: Database::LENGTH_KEY),

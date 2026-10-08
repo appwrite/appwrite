@@ -40,13 +40,13 @@ final class CounterTest extends TestCase
             ->setDatabase('counter')
             ->setNamespace('counter_' . \uniqid());
         $this->database->create();
-        $this->database->createCollection(new Collection(
+        $this->database->createCollection(Collection::create(
             id: self::COLLECTION,
             attributes: [
-                new Attribute('count', ColumnType::Integer),
-                new Attribute('big', ColumnType::BigInteger),
-                new Attribute('ratio', ColumnType::Double),
-                new Attribute('scores', ColumnType::Integer, array: true),
+                Attribute::integer('count'),
+                Attribute::bigInteger('big'),
+                Attribute::double('ratio'),
+                Attribute::integer('scores', array: true),
             ],
             permissions: [
                 Permission::create(Role::any()),

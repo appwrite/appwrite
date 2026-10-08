@@ -7,6 +7,7 @@ use Exception;
 use Throwable;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
+use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
@@ -127,7 +128,7 @@ class V23 extends Migration
                     break;
                 case 'schedules':
                     try {
-                        $this->dbForProject->updateAttribute($id, 'resourceInternalId', required: false);
+                        $this->dbForProject->updateAttribute($id, 'resourceInternalId', new AttributeUpdate(required: false));
                     } catch (Throwable $th) {
                         Console::warning("'resourceInternalId' from {$id}: {$th->getMessage()}");
                     }

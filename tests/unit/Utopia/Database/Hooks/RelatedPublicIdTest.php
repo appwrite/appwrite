@@ -24,7 +24,7 @@ use Utopia\Database\Hook\Relationships;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
-use Utopia\Database\RelationType;
+use Utopia\Database\RelationshipType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\CursorDirection;
 use Utopia\Query\Schema\ColumnType;
@@ -220,7 +220,7 @@ final class RelatedPublicIdTest extends TestCase
                     continue;
                 }
 
-                $catalog->createCollection(new Collection(
+                $catalog->createCollection(Collection::create(
                     id: $id,
                     attributes: $collection['attributes'],
                     indexes: $collection['indexes'],
@@ -234,7 +234,7 @@ final class RelatedPublicIdTest extends TestCase
                 'type' => DATABASE_TYPE_LEGACY,
             ]));
             $this->assertSame('1', $database->getSequence());
-            $catalog->createCollection(new Collection(
+            $catalog->createCollection(Collection::create(
                 id: 'database_1',
                 attributes: $collections['databases']['collections']['attributes'],
                 indexes: $collections['databases']['collections']['indexes'],
@@ -253,11 +253,11 @@ final class RelatedPublicIdTest extends TestCase
             }
 
             foreach ([
-                ['albums', 'tracks', 'tracks', RelationType::OneToMany, 'album', 'parent'],
-                ['tracks', 'album', 'albums', RelationType::OneToMany, 'tracks', 'child'],
-                ['labels', 'albums', 'albums', RelationType::OneToMany, 'label', 'parent'],
-                ['albums', 'label', 'labels', RelationType::OneToMany, 'albums', 'child'],
-                ['tracks', 'artist', 'artists', RelationType::ManyToOne, '', 'parent'],
+                ['albums', 'tracks', 'tracks', RelationshipType::OneToMany, 'album', 'parent'],
+                ['tracks', 'album', 'albums', RelationshipType::OneToMany, 'tracks', 'child'],
+                ['labels', 'albums', 'albums', RelationshipType::OneToMany, 'label', 'parent'],
+                ['albums', 'label', 'labels', RelationshipType::OneToMany, 'albums', 'child'],
+                ['tracks', 'artist', 'artists', RelationshipType::ManyToOne, '', 'parent'],
             ] as [$collectionId, $key, $relatedCollection, $type, $twoWayKey, $side]) {
                 $catalog->createDocument('attributes', new Document([
                     '$id' => '1_' . \substr($this->internalIds[$collectionId], \strlen('database_1_collection_')) . '_' . $key,
@@ -291,32 +291,26 @@ final class RelatedPublicIdTest extends TestCase
         $this->authorization->skip(function () use ($tenant): void {
             $tenant->create();
             foreach ($this->internalIds as $internalId) {
-                $tenant->createCollection(new Collection(
+                $tenant->createCollection(Collection::create(
                     id: $internalId,
                     attributes: [Attribute::string(key: 'name', size: 100, required: false)],
                     permissions: [Permission::read(Role::any()), Permission::create(Role::any())],
                 ));
             }
-            $tenant->createRelationship(new Relationship(
-                collection: $this->internalIds['albums'],
+            $tenant->createRelationship($this->internalIds['albums'], Relationship::oneToMany(
                 relatedCollection: $this->internalIds['tracks'],
-                type: RelationType::OneToMany,
                 twoWay: true,
                 key: 'tracks',
                 twoWayKey: 'album',
             ));
-            $tenant->createRelationship(new Relationship(
-                collection: $this->internalIds['labels'],
+            $tenant->createRelationship($this->internalIds['labels'], Relationship::oneToMany(
                 relatedCollection: $this->internalIds['albums'],
-                type: RelationType::OneToMany,
                 twoWay: true,
                 key: 'albums',
                 twoWayKey: 'label',
             ));
-            $tenant->createRelationship(new Relationship(
-                collection: $this->internalIds['tracks'],
+            $tenant->createRelationship($this->internalIds['tracks'], Relationship::manyToOne(
                 relatedCollection: $this->internalIds['artists'],
-                type: RelationType::ManyToOne,
                 key: 'artist',
             ));
 

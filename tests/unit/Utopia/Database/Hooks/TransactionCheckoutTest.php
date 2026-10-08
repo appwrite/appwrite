@@ -73,7 +73,7 @@ final class TransactionCheckoutTest extends TestCase
             ->setDatabase('appwrite')
             ->setNamespace('txn_' . \uniqid());
         $setup->create();
-        $setup->createCollection(new Collection(id: 'database_2', permissions: [
+        $setup->createCollection(Collection::create(id: 'database_2', permissions: [
             Permission::create(Role::any()),
             Permission::read(Role::any()),
         ]));
@@ -137,7 +137,7 @@ final class TransactionCheckoutTest extends TestCase
             ->setDatabase('appwrite')
             ->setNamespace($namespace);
         $catalogSetup->create();
-        $catalogSetup->createCollection(new Collection(id: 'database_2', permissions: [
+        $catalogSetup->createCollection(Collection::create(id: 'database_2', permissions: [
             Permission::create(Role::any()),
             Permission::read(Role::any()),
         ]));
@@ -154,7 +154,7 @@ final class TransactionCheckoutTest extends TestCase
             ->setDatabase('appwrite')
             ->setNamespace($namespace);
         $tenantSetup->create();
-        $tenantSetup->createCollection(new Collection(id: 'database_2', permissions: [
+        $tenantSetup->createCollection(Collection::create(id: 'database_2', permissions: [
             Permission::create(Role::any()),
             Permission::read(Role::any()),
         ]));

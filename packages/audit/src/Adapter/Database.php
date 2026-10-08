@@ -64,7 +64,7 @@ class Database extends SQL
         $indexes = $this->getIndexDocuments();
 
         try {
-            $this->db->createCollection(new Collection(id: $this->getCollectionName(), attributes: $attributes, indexes: $indexes));
+            $this->db->createCollection(Collection::create(id: $this->getCollectionName(), attributes: $attributes, indexes: $indexes));
         } catch (DuplicateException) {
             // Collection already exists
         }

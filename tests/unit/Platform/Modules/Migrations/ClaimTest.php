@@ -22,12 +22,12 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Filter;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Lock\Exception\Contention;
 use Utopia\Migration\Destinations\Appwrite\ProvisioningOwner;
-use Utopia\Query\Schema\ColumnType;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
@@ -115,20 +115,20 @@ final class ClaimTest extends TestCase
             ->setDatabase('migrationClaims')
             ->setNamespace('migration_claims_' . \uniqid());
         $database->create();
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'databases',
             attributes: [
-                new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
-                new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY),
+                Attribute::string('migrationId', size: Database::LENGTH_KEY),
+                Attribute::string('migrationAttemptId', size: Database::LENGTH_KEY),
             ],
         ));
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'migrations',
             attributes: [
-                new Attribute('status', ColumnType::String, size: 255, required: true),
-                new Attribute('stage', ColumnType::String, size: 255, required: true),
-                new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY),
-                new Attribute('resourceData', ColumnType::String, size: 131_070, required: true, filters: ['json']),
+                Attribute::string('status', size: 255, required: true),
+                Attribute::string('stage', size: 255, required: true),
+                Attribute::string('attemptId', size: Database::LENGTH_KEY),
+                Attribute::string('resourceData', size: 131_070, required: true, filters: [Filter::Json]),
             ],
             permissions: [
                 Permission::create(Role::any()),
@@ -161,17 +161,17 @@ final class ClaimTest extends TestCase
             ->setDatabase('migrationClaimReadiness')
             ->setNamespace('migration_claim_readiness_' . $missing . '_' . \uniqid());
         $database->create();
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'databases',
             attributes: \array_values(\array_filter([
-                $missing === 'migrationId' ? null : new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
-                $missing === 'migrationAttemptId' ? null : new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY),
+                $missing === 'migrationId' ? null : Attribute::string('migrationId', size: Database::LENGTH_KEY),
+                $missing === 'migrationAttemptId' ? null : Attribute::string('migrationAttemptId', size: Database::LENGTH_KEY),
             ])),
         ));
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'migrations',
             attributes: $missing === 'attemptId' ? [] : [
-                new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY),
+                Attribute::string('attemptId', size: Database::LENGTH_KEY),
             ],
         ));
 
@@ -586,10 +586,10 @@ final class ClaimTest extends TestCase
     {
         foreach (self::starts() as $path => [$start]) {
             yield "{$path}: no databases collection" => [$start, null];
-            yield "{$path}: no database migration attempt ID" => [$start, new Collection(
+            yield "{$path}: no database migration attempt ID" => [$start, Collection::create(
                 id: 'databases',
                 attributes: [
-                    new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
+                    Attribute::string('migrationId', size: Database::LENGTH_KEY),
                 ],
             )];
         }
@@ -607,13 +607,13 @@ final class ClaimTest extends TestCase
         if ($databases !== null) {
             $database->createCollection($databases);
         }
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'migrations',
             attributes: [
-                new Attribute('status', ColumnType::String, size: 255, required: true),
-                new Attribute('stage', ColumnType::String, size: 255, required: true),
-                new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY),
-                new Attribute('resourceData', ColumnType::String, size: 131_070, required: true, filters: ['json']),
+                Attribute::string('status', size: 255, required: true),
+                Attribute::string('stage', size: 255, required: true),
+                Attribute::string('attemptId', size: Database::LENGTH_KEY),
+                Attribute::string('resourceData', size: 131_070, required: true, filters: [Filter::Json]),
             ],
             permissions: [
                 Permission::create(Role::any()),
@@ -1771,16 +1771,16 @@ final class ClaimTest extends TestCase
             ->setDatabase('migrationClaimLegacy')
             ->setNamespace('migration_claim_legacy_' . \uniqid());
         $database->create();
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'databases',
-            attributes: [new Attribute('name', ColumnType::String, size: 256)],
+            attributes: [Attribute::string('name', size: 256)],
         ));
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'migrations',
             attributes: [
-                new Attribute('status', ColumnType::String, size: 255, required: true),
-                new Attribute('stage', ColumnType::String, size: 255, required: true),
-                new Attribute('resourceData', ColumnType::String, size: 131_070, required: true, filters: ['json']),
+                Attribute::string('status', size: 255, required: true),
+                Attribute::string('stage', size: 255, required: true),
+                Attribute::string('resourceData', size: 131_070, required: true, filters: [Filter::Json]),
             ],
             permissions: [
                 Permission::create(Role::any()),
@@ -1810,9 +1810,9 @@ final class ClaimTest extends TestCase
         $this->assertSame('init', $stored->getAttribute('stage'));
         $this->assertSame($queued->getUpdatedAt(), $stored->getUpdatedAt());
 
-        $database->createAttribute('databases', new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY));
-        $database->createAttribute('databases', new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY));
-        $database->createAttribute('migrations', new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY));
+        $database->createAttribute('databases', Attribute::string('migrationId', size: Database::LENGTH_KEY));
+        $database->createAttribute('databases', Attribute::string('migrationAttemptId', size: Database::LENGTH_KEY));
+        $database->createAttribute('migrations', Attribute::string('attemptId', size: Database::LENGTH_KEY));
 
         $delivery = $claims->consume('project-1', $message);
 

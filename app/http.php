@@ -163,14 +163,14 @@ function createDatabase(Container $resources, string $resourceKey, string $dbNam
             continue;
         }
 
-        if (!$database->getCollection($key)->isEmpty()) {
+        if ($database->findCollection($key) !== null) {
             continue;
         }
 
         $attributes = $collection['attributes'];
         $indexes = $collection['indexes'];
 
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: $key,
             attributes: $attributes,
             indexes: $indexes,
@@ -231,7 +231,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 $attributes = $files['attributes'];
                 $indexes = $files['indexes'];
 
-                $dbForPlatform->createCollection(new Collection(
+                $dbForPlatform->createCollection(Collection::create(
                     id: 'bucket_' . $bucket->getSequence(),
                     attributes: $attributes,
                     indexes: $indexes,
@@ -264,7 +264,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 $attributes = $files['attributes'];
                 $indexes = $files['indexes'];
 
-                $authorization->skip(fn () => $dbForPlatform->createCollection(new Collection(
+                $authorization->skip(fn () => $dbForPlatform->createCollection(Collection::create(
                     id: 'bucket_' . $bucket->getSequence(),
                     attributes: $attributes,
                     indexes: $indexes,
@@ -321,14 +321,14 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 if (($collection['$collection'] ?? '') !== Database::METADATA) {
                     continue;
                 }
-                if (!$dbForProject->getCollection($key)->isEmpty()) {
+                if ($dbForProject->findCollection($key) !== null) {
                     continue;
                 }
 
                 $attributes = $collection['attributes'];
                 $indexes = $collection['indexes'];
 
-                $dbForProject->createCollection(new Collection(
+                $dbForProject->createCollection(Collection::create(
                     id: $key,
                     attributes: $attributes,
                     indexes: $indexes,

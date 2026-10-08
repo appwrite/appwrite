@@ -21,10 +21,10 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Operator;
 use Utopia\Database\Query;
-use Utopia\Database\RelationType;
+use Utopia\Database\RelationshipDeleteAction;
+use Utopia\Database\RelationshipType;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Query\Schema\ColumnType;
-use Utopia\Query\Schema\ForeignKeyAction;
 use Utopia\Query\Schema\IndexType;
 
 trait DatabasesBase
@@ -569,7 +569,7 @@ trait DatabasesBase
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
                 $this->getRelatedIdParam() => $library['body']['$id'],
-                'type' => RelationType::OneToOne->value,
+                'type' => RelationshipType::OneToOne->value,
                 'twoWay' => false,
                 'key' => 'library',
             ]);
@@ -641,7 +641,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $libraryCollection,
-            'type' => RelationType::OneToMany->value,
+            'type' => RelationshipType::OneToMany->value,
             'twoWay' => true,
             'key' => 'libraries',
             'twoWayKey' => 'person_one_to_many',
@@ -728,7 +728,7 @@ trait DatabasesBase
 
         // Update onDelete to cascade
         $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $personCollection, 'relationship', 'libraries'), $serverHeaders, [
-            'onDelete' => ForeignKeyAction::Cascade->value,
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
         ]);
 
         self::$oneToManyCache[$cacheKey] = ['databaseId' => $databaseId, 'personCollection' => $personCollection, 'libraryCollection' => $libraryCollection];
@@ -2622,11 +2622,11 @@ trait DatabasesBase
 
         $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $booksId, 'relationship'), $headers, [
             $this->getRelatedIdParam() => $authorsId,
-            'type' => RelationType::OneToOne->value,
+            'type' => RelationshipType::OneToOne->value,
             'key' => 'author',
             'twoWay' => true,
             'twoWayKey' => 'book',
-            'onDelete' => ForeignKeyAction::Cascade->value,
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
         ]);
 
         $this->assertEquals(202, $relationship['headers']['status-code']);
@@ -2640,26 +2640,26 @@ trait DatabasesBase
 
         $this->assertEquals(200, $renamed['headers']['status-code']);
         $this->assertSame('writer', $renamed['body']['key']);
-        $this->assertSame(ForeignKeyAction::Cascade->value, $renamed['body']['onDelete']);
+        $this->assertSame(RelationshipDeleteAction::Cascade->value, $renamed['body']['onDelete']);
 
         $writer = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $booksId, '', 'writer'), $headers);
 
         $this->assertEquals(200, $writer['headers']['status-code']);
         $this->assertSame('book', $writer['body']['twoWayKey']);
-        $this->assertSame(ForeignKeyAction::Cascade->value, $writer['body']['onDelete']);
+        $this->assertSame(RelationshipDeleteAction::Cascade->value, $writer['body']['onDelete']);
 
         $book = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $authorsId, '', 'book'), $headers);
 
         $this->assertEquals(200, $book['headers']['status-code']);
         $this->assertSame('writer', $book['body']['twoWayKey']);
-        $this->assertSame(ForeignKeyAction::Cascade->value, $book['body']['onDelete']);
+        $this->assertSame(RelationshipDeleteAction::Cascade->value, $book['body']['onDelete']);
 
         $legacyAliasUrl = $this->getSchemaUrl($databaseId, $booksId) . '/writer/relationship';
         $emptyUpdate = $this->client->call(Client::METHOD_PATCH, $legacyAliasUrl, $headers);
 
         $this->assertEquals(200, $emptyUpdate['headers']['status-code']);
         $this->assertSame('writer', $emptyUpdate['body']['key']);
-        $this->assertSame(ForeignKeyAction::Cascade->value, $emptyUpdate['body']['onDelete']);
+        $this->assertSame(RelationshipDeleteAction::Cascade->value, $emptyUpdate['body']['onDelete']);
     }
 
     public function testUpdateRelationshipAttributeOnDeleteReachesBothSides(): void
@@ -2694,11 +2694,11 @@ trait DatabasesBase
 
         $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $booksId, 'relationship'), $headers, [
             $this->getRelatedIdParam() => $authorsId,
-            'type' => RelationType::OneToOne->value,
+            'type' => RelationshipType::OneToOne->value,
             'key' => 'author',
             'twoWay' => true,
             'twoWayKey' => 'book',
-            'onDelete' => ForeignKeyAction::Cascade->value,
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
         ]);
 
         $this->assertSame(202, $relationship['headers']['status-code']);
@@ -2710,21 +2710,21 @@ trait DatabasesBase
          * Test for SUCCESS
          */
         $updated = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $booksId, 'relationship', 'author'), $headers, [
-            'onDelete' => ForeignKeyAction::SetNull->value,
+            'onDelete' => RelationshipDeleteAction::SetNull->value,
         ]);
 
         $this->assertSame(200, $updated['headers']['status-code']);
-        $this->assertSame(ForeignKeyAction::SetNull->value, $updated['body']['onDelete']);
+        $this->assertSame(RelationshipDeleteAction::SetNull->value, $updated['body']['onDelete']);
 
         $author = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $booksId, '', 'author'), $headers);
 
         $this->assertSame(200, $author['headers']['status-code']);
-        $this->assertSame(ForeignKeyAction::SetNull->value, $author['body']['onDelete']);
+        $this->assertSame(RelationshipDeleteAction::SetNull->value, $author['body']['onDelete']);
 
         $book = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $authorsId, '', 'book'), $headers);
 
         $this->assertSame(200, $book['headers']['status-code']);
-        $this->assertSame(ForeignKeyAction::SetNull->value, $book['body']['onDelete']);
+        $this->assertSame(RelationshipDeleteAction::SetNull->value, $book['body']['onDelete']);
     }
 
     public function testAttributeResponseModels(): void
@@ -4484,10 +4484,10 @@ trait DatabasesBase
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
                 $this->getRelatedIdParam() => 'library-upsert',
-                'type' => RelationType::OneToOne->value,
+                'type' => RelationshipType::OneToOne->value,
                 'key' => 'library',
                 'twoWay' => true,
-                'onDelete' => ForeignKeyAction::Cascade->value,
+                'onDelete' => RelationshipDeleteAction::Cascade->value,
             ]);
 
             $this->waitForAttribute($databaseId, $person['body']['$id'], 'library');
@@ -8216,11 +8216,11 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $library['body']['$id'],
-            'type' => RelationType::OneToOne->value,
+            'type' => RelationshipType::OneToOne->value,
             'key' => 'library',
             'twoWay' => true,
             'twoWayKey' => 'person',
-            'onDelete' => ForeignKeyAction::Cascade->value,
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
         ]);
 
         $this->waitForAttribute($databaseId, $person['body']['$id'], 'library');
@@ -8256,7 +8256,7 @@ trait DatabasesBase
         $this->assertEquals('oneToOne', $attributes[1]['relationType']);
         $this->assertEquals(true, $attributes[1]['twoWay']);
         $this->assertEquals('person', $attributes[1]['twoWayKey']);
-        $this->assertEquals(ForeignKeyAction::Cascade->value, $attributes[1]['onDelete']);
+        $this->assertEquals(RelationshipDeleteAction::Cascade->value, $attributes[1]['onDelete']);
 
         $attribute = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $person['body']['$id'], '', 'library'), array_merge([
             'content-type' => 'application/json',
@@ -8273,7 +8273,7 @@ trait DatabasesBase
         $this->assertEquals('oneToOne', $attribute['body']['relationType']);
         $this->assertEquals(true, $attribute['body']['twoWay']);
         $this->assertEquals('person', $attribute['body']['twoWayKey']);
-        $this->assertEquals(ForeignKeyAction::Cascade->value, $attribute['body']['onDelete']);
+        $this->assertEquals(RelationshipDeleteAction::Cascade->value, $attribute['body']['onDelete']);
 
         $person1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $person['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -8455,7 +8455,7 @@ trait DatabasesBase
 
         $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $parentId, 'relationship'), $keyHeaders, [
             $this->getRelatedIdParam() => $childId,
-            'type' => RelationType::OneToOne->value,
+            'type' => RelationshipType::OneToOne->value,
             'key' => 'child',
         ]);
         $this->assertEquals(202, $relationship['headers']['status-code']);
@@ -8835,7 +8835,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'onDelete' => ForeignKeyAction::Cascade->value,
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8854,7 +8854,7 @@ trait DatabasesBase
         $this->assertEquals(false, $attribute['body']['array']);
         $this->assertEquals('oneToMany', $attribute['body']['relationType']);
         $this->assertEquals(true, $attribute['body']['twoWay']);
-        $this->assertEquals(ForeignKeyAction::Cascade->value, $attribute['body']['onDelete']);
+        $this->assertEquals(RelationshipDeleteAction::Cascade->value, $attribute['body']['onDelete']);
     }
 
     public function testManyToOneRelationship(): void
@@ -8926,7 +8926,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $artists['body']['$id'],
-            'type' => RelationType::ManyToOne->value,
+            'type' => RelationshipType::ManyToOne->value,
             'twoWay' => true,
             'key' => 'artist',
             'twoWayKey' => 'albums',
@@ -9075,11 +9075,11 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $players['body']['$id'],
-            'type' => RelationType::ManyToMany->value,
+            'type' => RelationshipType::ManyToMany->value,
             'twoWay' => true,
             'key' => 'players',
             'twoWayKey' => 'sports',
-            'onDelete' => ForeignKeyAction::SetNull->value,
+            'onDelete' => RelationshipDeleteAction::SetNull->value,
         ]);
 
         $this->assertEquals(202, $response['headers']['status-code']);
@@ -9468,7 +9468,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $collection2,
-            'type' => RelationType::OneToMany->value,
+            'type' => RelationshipType::OneToMany->value,
             'twoWay' => true,
             'key' => 'collection2'
         ]);
@@ -9950,10 +9950,10 @@ trait DatabasesBase
         foreach ([['authors', 'books'], ['books', 'chapters']] as [$parent, $child]) {
             $relationship = $this->createAttribute($databaseId, $ids[$parent], 'relationship', [
                 $this->getRelatedIdParam() => $ids[$child],
-                'type' => RelationType::OneToMany->value,
+                'type' => RelationshipType::OneToMany->value,
                 'key' => $child,
                 'twoWay' => false,
-                'onDelete' => ForeignKeyAction::SetNull->value,
+                'onDelete' => RelationshipDeleteAction::SetNull->value,
             ]);
             $this->assertSame(202, $relationship['headers']['status-code']);
             $this->waitForAttribute($databaseId, $ids[$parent], $child);
@@ -10047,10 +10047,10 @@ trait DatabasesBase
 
         $relationship = $this->createAttribute($databaseId, $ids['albums'], 'relationship', [
             $this->getRelatedIdParam() => $ids['artists'],
-            'type' => RelationType::ManyToOne->value,
+            'type' => RelationshipType::ManyToOne->value,
             'key' => 'artist',
             'twoWay' => false,
-            'onDelete' => ForeignKeyAction::SetNull->value,
+            'onDelete' => RelationshipDeleteAction::SetNull->value,
         ]);
         $this->assertSame(202, $relationship['headers']['status-code']);
         $this->waitForAttribute($databaseId, $ids['albums'], 'artist');
@@ -11799,11 +11799,11 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $locationId,
-            'type' => RelationType::OneToOne->value,
+            'type' => RelationshipType::OneToOne->value,
             'key' => 'location',
             'twoWay' => true,
             'twoWayKey' => 'place',
-            'onDelete' => ForeignKeyAction::Cascade->value,
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
         ]);
         $this->assertEquals(202, $relation['headers']['status-code']);
 
@@ -11940,7 +11940,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $visitId,
-            'type' => RelationType::OneToMany->value,
+            'type' => RelationshipType::OneToMany->value,
             'key' => 'visits',
             'twoWay' => true,
             'twoWayKey' => 'person',
@@ -12076,7 +12076,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $citiesId,
-            'type' => RelationType::ManyToOne->value,
+            'type' => RelationshipType::ManyToOne->value,
             'key' => 'city',
             'twoWay' => true,
             'twoWayKey' => 'stores',
@@ -12205,7 +12205,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $zonesId,
-            'type' => RelationType::ManyToMany->value,
+            'type' => RelationshipType::ManyToMany->value,
             'key' => 'zones',
             'twoWay' => true,
             'twoWayKey' => 'drivers',

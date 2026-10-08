@@ -19,7 +19,6 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Hook\Permissions;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Query\Schema\ColumnType;
 
 final class CursorLookupTest extends TestCase
 {
@@ -308,17 +307,17 @@ final class CursorLookupTest extends TestCase
         $store->create();
 
         $store->createCollection(self::perDocumentCollection(self::CUSTOMERS, [
-            new Attribute('name', ColumnType::String, size: 64),
+            Attribute::string('name', size: 64),
         ]));
         $store->createCollection(self::perDocumentCollection(self::ORDERS, [
-            new Attribute('customerId', ColumnType::String, size: 64),
-            new Attribute('productId', ColumnType::String, size: 64),
-            new Attribute('status', ColumnType::String, size: 16),
-            new Attribute('amount', ColumnType::Integer),
-            new Attribute('placedAt', ColumnType::Datetime, filters: ['datetime']),
+            Attribute::string('customerId', size: 64),
+            Attribute::string('productId', size: 64),
+            Attribute::string('status', size: 16),
+            Attribute::integer('amount'),
+            Attribute::datetime('placedAt'),
         ]));
         $store->createCollection(self::perDocumentCollection(self::PRODUCTS, [
-            new Attribute('name', ColumnType::String, size: 64),
+            Attribute::string('name', size: 64),
         ]));
 
         return $store;
@@ -359,7 +358,7 @@ final class CursorLookupTest extends TestCase
      */
     private static function perDocumentCollection(string $id, array $attributes): Collection
     {
-        return new Collection(
+        return Collection::create(
             id: $id,
             attributes: $attributes,
             permissions: [Permission::create(Role::any())],

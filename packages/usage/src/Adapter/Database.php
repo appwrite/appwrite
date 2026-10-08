@@ -48,7 +48,7 @@ class Database extends SQL
             }
 
             $collectionName = $this->collection ?? 'usage';
-            if ($this->db->getCollection($collectionName)->isEmpty()) {
+            if ($this->db->findCollection($collectionName) === null) {
                 return [
                     'healthy' => false,
                     'database' => $databaseName,
@@ -90,7 +90,7 @@ class Database extends SQL
         $indexes[] = Index::key(key: 'index-type', attributes: ['type']);
 
         try {
-            $this->db->createCollection(new Collection(
+            $this->db->createCollection(Collection::create(
                 id: $this->collection,
                 attributes: $attributes,
                 indexes: $indexes,

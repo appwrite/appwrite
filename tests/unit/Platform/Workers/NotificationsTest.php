@@ -25,7 +25,7 @@ use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool;
-use Utopia\Query\Schema\Order;
+use Utopia\Query\OrderDirection;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
@@ -184,7 +184,7 @@ final class NotificationsTest extends TestCase
             ->setNamespace('notif_' . \uniqid());
 
         $this->database->create();
-        $this->database->createCollection(new Collection(id: 'notifications', permissions: [Permission::create(Role::any()), Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())], documentSecurity: false));
+        $this->database->createCollection(Collection::create(id: 'notifications', permissions: [Permission::create(Role::any()), Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())], documentSecurity: false));
         $this->database->createAttribute('notifications', Attribute::string(key: 'messageId'));
         $this->database->createAttribute('notifications', Attribute::string(key: 'recipientHash', size: 64, required: true));
         $this->database->createAttribute('notifications', Attribute::string(key: 'type', size: 64, default: 'info'));
@@ -200,13 +200,13 @@ final class NotificationsTest extends TestCase
         $this->database->createAttribute('notifications', Attribute::string(key: 'title', size: 256, required: true));
         $this->database->createAttribute('notifications', Attribute::string(key: 'body', size: 16384, required: true));
         $this->database->createAttribute('notifications', Attribute::boolean(key: 'read', default: false));
-        $this->database->createAttribute('notifications', Attribute::datetime(key: 'firstSeen', filters: ['datetime']));
-        $this->database->createAttribute('notifications', Attribute::datetime(key: 'lastSeen', filters: ['datetime']));
+        $this->database->createAttribute('notifications', Attribute::datetime(key: 'firstSeen'));
+        $this->database->createAttribute('notifications', Attribute::datetime(key: 'lastSeen'));
 
         // Mirror the production `_key_recipient` UNIQUE composite index so the
         // duplicate-handling branch in persistAlert (catch DuplicateException ->
         // return existing alertId) is actually exercised by tests.
-        $this->database->createIndex('notifications', Index::unique(key: '_key_recipient', attributes: ['messageId', 'channel', 'recipientHash'], lengths: [Database::LENGTH_KEY, 64, 64], orders: [Order::Asc, Order::Asc, Order::Asc]));
+        $this->database->createIndex('notifications', Index::unique(key: '_key_recipient', attributes: ['messageId', 'channel', 'recipientHash'], lengths: [Database::LENGTH_KEY, 64, 64], orders: [OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc]));
 
         $this->registry = new Registry();
         $this->project = new Document(['$id' => 'project-x', '$sequence' => 'project-internal-x']);

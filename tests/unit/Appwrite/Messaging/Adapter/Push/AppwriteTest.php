@@ -108,7 +108,7 @@ final class AppwriteTest extends TestCase
 
         // The topic counter (`sequence`, incremented per publish) plus the `name` the adapter
         // resolves from the id and fans out under (subscribers match on the name, not the id).
-        $this->database->createCollection(new Collection(
+        $this->database->createCollection(Collection::create(
             id: 'topics',
             attributes: [
                 Attribute::integer(key: 'sequence', default: 0),
@@ -121,7 +121,7 @@ final class AppwriteTest extends TestCase
         // The append-only ledger. `data` is a plain string here (the adapter passes an
         // already-encoded JSON envelope); the production collection's json filter is a
         // storage detail, not adapter behaviour.
-        $this->database->createCollection(new Collection(
+        $this->database->createCollection(Collection::create(
             id: 'pushLedger',
             attributes: [
                 Attribute::string(key: 'topic', size: 255, required: true),

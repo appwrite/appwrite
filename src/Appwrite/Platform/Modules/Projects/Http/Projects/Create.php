@@ -220,7 +220,7 @@ class Create extends Action
                     $indexes = $collection['indexes'];
 
                     try {
-                        $dbForProject->createCollection(new Collection(
+                        $dbForProject->createCollection(Collection::create(
                             id: $key,
                             attributes: $attributes,
                             indexes: $indexes,

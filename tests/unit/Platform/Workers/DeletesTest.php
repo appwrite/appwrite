@@ -30,7 +30,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Query\Schema\ColumnType;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
@@ -186,42 +185,42 @@ final class DeletesTest extends TestCase
             Permission::update(Role::any()),
             Permission::delete(Role::any()),
         ];
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'databases',
             attributes: $ownership
                 ? [
-                    new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
-                    new Attribute('migrationAttemptId', ColumnType::String, size: Database::LENGTH_KEY),
+                    Attribute::string('migrationId', size: Database::LENGTH_KEY),
+                    Attribute::string('migrationAttemptId', size: Database::LENGTH_KEY),
                 ]
-                : [new Attribute('name', ColumnType::String, size: 256)],
+                : [Attribute::string('name', size: 256)],
             permissions: $permissions,
             documentSecurity: false,
         ));
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'migrations',
             attributes: \array_values(\array_filter([
-                new Attribute('status', ColumnType::String, size: 255, required: true),
-                new Attribute('stage', ColumnType::String, size: 255, required: true),
-                $ownership ? new Attribute('attemptId', ColumnType::String, size: Database::LENGTH_KEY) : null,
+                Attribute::string('status', size: 255, required: true),
+                Attribute::string('stage', size: 255, required: true),
+                $ownership ? Attribute::string('attemptId', size: Database::LENGTH_KEY) : null,
             ])),
             permissions: $permissions,
             documentSecurity: false,
         ));
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'targets',
-            attributes: [new Attribute('expired', ColumnType::Boolean)],
+            attributes: [Attribute::boolean('expired')],
             permissions: $permissions,
             documentSecurity: false,
         ));
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'transactions',
-            attributes: [new Attribute('expiresAt', ColumnType::Datetime)],
+            attributes: [Attribute::datetime('expiresAt')],
             permissions: $permissions,
             documentSecurity: false,
         ));
-        $database->createCollection(new Collection(
+        $database->createCollection(Collection::create(
             id: 'presenceLogs',
-            attributes: [new Attribute('expiresAt', ColumnType::Datetime)],
+            attributes: [Attribute::datetime('expiresAt')],
             permissions: $permissions,
             documentSecurity: false,
         ));

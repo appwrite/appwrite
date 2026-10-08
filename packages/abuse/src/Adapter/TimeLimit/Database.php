@@ -12,6 +12,7 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Index;
+use Utopia\Database\IntegerWidth;
 use Utopia\Database\Query;
 
 final readonly class Database extends TimeLimit
@@ -30,8 +31,8 @@ final readonly class Database extends TimeLimit
     {
         return [
             Attribute::string(key: 'key', size: UtopiaDB::LENGTH_KEY, required: true),
-            Attribute::datetime(key: 'time', required: true, signed: false, filters: ['datetime']),
-            Attribute::integer(key: 'count', size: 11, required: true, signed: false),
+            Attribute::datetime(key: 'time', required: true),
+            Attribute::integer(key: 'count', width: IntegerWidth::Bits64, required: true, signed: false),
         ];
     }
 
@@ -57,7 +58,7 @@ final readonly class Database extends TimeLimit
         }
 
         try {
-            $this->db->createCollection(new Collection(id: self::COLLECTION, attributes: self::attributes(), indexes: self::indexes()));
+            $this->db->createCollection(Collection::create(id: self::COLLECTION, attributes: self::attributes(), indexes: self::indexes()));
         } catch (Duplicate) {
             // Collection already exists
         }
