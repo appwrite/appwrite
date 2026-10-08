@@ -261,13 +261,7 @@ class V23 extends Migration
             return;
         }
 
-        $desiredSize = 1_000_000;
-        foreach (Config::getParam('collections', [])['projects']['migrations']['attributes'] ?? [] as $attribute) {
-            if ($attribute->key === 'errors' && $attribute->size !== null) {
-                $desiredSize = $attribute->size;
-            }
-        }
-
+        $desiredSize = self::configuredErrorsSize();
         $currentSize = (int) ($attributes[$errorsPosition]['size'] ?? 0);
 
         if ($currentSize === $desiredSize) {
@@ -278,5 +272,16 @@ class V23 extends Migration
         $migration->setAttribute('attributes', $attributes);
         $this->dbForProject->updateDocument($migration->getCollection(), $migration->getId(), $migration);
         $this->dbForProject->purgeCachedCollection('migrations');
+    }
+
+    protected static function configuredErrorsSize(): int
+    {
+        foreach (Config::getParam('collections', [])['projects']['migrations']['attributes'] ?? [] as $attribute) {
+            if ($attribute->key === 'errors' && $attribute->size !== null) {
+                return $attribute->size;
+            }
+        }
+
+        return 1_000_000;
     }
 }
