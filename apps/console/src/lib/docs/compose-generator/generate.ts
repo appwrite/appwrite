@@ -1,6 +1,8 @@
 import {
   APPWRITE_VERSION,
   AUTOGRAVITY_SERVICE,
+  CLICKHOUSE_CONFIG_XML,
+  CLICKHOUSE_INIT_SH,
   COMPOSE_NETWORKS,
   COMPOSE_PREFIX,
   COMPOSE_SERVICES,
@@ -100,7 +102,7 @@ export function generateEnv({
 export type GeneratedFile = {
   filename: string
   content: string
-  language: 'yaml' | 'bash' | 'javascript'
+  language: 'yaml' | 'bash' | 'javascript' | 'markup'
 }
 
 /** Every file the user needs to place next to docker-compose.yml. */
@@ -112,6 +114,16 @@ export function generateFiles(options: ComposeOptions): GeneratedFile[] {
       language: 'yaml',
     },
     { filename: '.env', content: generateEnv(options), language: 'bash' },
+    {
+      filename: 'clickhouse-config.xml',
+      content: CLICKHOUSE_CONFIG_XML,
+      language: 'markup',
+    },
+    {
+      filename: 'clickhouse-init.sh',
+      content: CLICKHOUSE_INIT_SH,
+      language: 'bash',
+    },
   ]
   if (options.database === 'mongodb') {
     files.push(
