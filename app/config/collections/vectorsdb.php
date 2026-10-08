@@ -3,7 +3,6 @@
 use Utopia\Database\Attribute;
 use Utopia\Database\Index;
 use Utopia\Query\OrderDirection;
-use Utopia\Query\Schema\ColumnType;
 
 return [
     'collections' => [
@@ -22,7 +21,6 @@ return [
             Attribute::string(key: 'search', size: 16384),
         ],
         'defaultAttributes' => [
-            Attribute::fromArray(['key' => 'embeddings', 'type' => ColumnType::Vector, 'required' => true, 'signed' => false]),
             Attribute::object(key: 'metadata', default: []),
         ],
         'indexes' => [
