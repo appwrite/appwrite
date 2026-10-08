@@ -46,6 +46,7 @@ import {
   isValidRelativeRedirect,
   resolvePostAuthRedirect,
 } from '@/lib/post-auth-navigation'
+import { registerPasskey } from '@/lib/passkeys'
 import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 import {
   buildDatabasesSidebarWidthPrefs,
@@ -1406,6 +1407,59 @@ export function useAccountIdentities() {
  */
 export function useAccountSessions() {
   return useQuery(accountSessionsQueryOptions())
+}
+
+const ACCOUNT_PASSKEYS_QUERY_KEY = ['passkeys', 'account'] as const
+
+export function accountPasskeysQueryOptions() {
+  return queryOptions({
+    queryKey: ACCOUNT_PASSKEYS_QUERY_KEY,
+    queryFn: () => sdk.forConsole.account.listPasskeys(),
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  })
+}
+
+/**
+ * Hook to fetch the console account's passkeys
+ */
+export function useAccountPasskeys(options: { enabled?: boolean } = {}) {
+  return useQuery({ ...accountPasskeysQueryOptions(), ...options })
+}
+
+/**
+ * Registers a passkey on this device: the server issues a challenge, the browser
+ * creates the credential, and the server verifies it.
+ */
+export function useCreateAccountPasskey() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (name: string) => registerPasskey(name),
+    onSuccess: () =>
+      queryClient.refetchQueries({ queryKey: ACCOUNT_PASSKEYS_QUERY_KEY }),
+  })
+}
+
+export function useUpdateAccountPasskey() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ passkeyId, name }: { passkeyId: string; name: string }) =>
+      sdk.forConsole.account.updatePasskey({ passkeyId, name }),
+    onSuccess: () =>
+      queryClient.refetchQueries({ queryKey: ACCOUNT_PASSKEYS_QUERY_KEY }),
+  })
+}
+
+export function useDeleteAccountPasskey() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (passkeyId: string) =>
+      sdk.forConsole.account.deletePasskey({ passkeyId }),
+    onSuccess: () =>
+      queryClient.refetchQueries({ queryKey: ACCOUNT_PASSKEYS_QUERY_KEY }),
+  })
 }
 
 // ============================================================================

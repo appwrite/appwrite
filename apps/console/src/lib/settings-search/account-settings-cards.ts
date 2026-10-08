@@ -56,6 +56,11 @@ export const ACCOUNT_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     keywords: ['mfa', '2fa', 'totp', 'authenticator', 'recovery codes'],
   },
   {
+    sectionId: 'security',
+    title: 'Passkeys',
+    keywords: ['passkey', 'webauthn', 'fingerprint', 'face id', 'biometric'],
+  },
+  {
     sectionId: 'sessions',
     title: 'Active sessions',
     keywords: ['sessions', 'devices', 'logout', 'revoke'],

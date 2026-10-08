@@ -1042,6 +1042,9 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Hide member name, email, or MFA status from other team members':
     'הסתרת שם, אימייל או סטטוס MFA של חבר צוות משאר חברי הצוות',
   'Auth · Policies · Passwords': 'אימות · מדיניות · סיסמאות',
+  'Security · Passkeys': 'אבטחה · מפתחות גישה',
+  'Sign in with a fingerprint, face or device PIN':
+    'התחברות עם טביעת אצבע, זיהוי פנים או קוד PIN של המכשיר',
   'Auth · Policies · Passkeys': 'אימות · מדיניות · מפתחות גישה',
   'Relying party ID and allowed origins for passkey sign-in':
     'מזהה צד מסתמך ומקורות מורשים להתחברות עם מפתח גישה',
