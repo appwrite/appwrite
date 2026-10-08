@@ -212,7 +212,7 @@ class CLI
         $output = [];
 
         foreach ($args as &$arg) {
-            if (substr($arg, 0, 2) === '--') {
+            if (str_starts_with($arg, '--')) {
                 $arg = substr($arg, 2);
             }
         }

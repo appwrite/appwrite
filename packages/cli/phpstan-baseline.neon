@@ -145,6 +145,12 @@ parameters:
 			path: src/CLI.php
 
 		-
+			message: '#^Parameter \#1 \$haystack of function str_starts_with expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/CLI.php
+
+		-
 			message: '#^Parameter \#1 \$name of method Utopia\\CLI\\CLI\:\:getResource\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
@@ -153,7 +159,7 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$string of function substr expects string, mixed given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 1
 			path: src/CLI.php
 
 		-
