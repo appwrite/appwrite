@@ -21,11 +21,17 @@ const BANNED = ['pint.json', 'psalm.xml', 'phpcs.xml', '.travis.yml', '.gitpod.y
 
 /**
  * Packages that still declare the bare `Utopia\` prefix because a class lives
- * at its root (`Utopia\Validator`), mapped to the namespace segment the rest
+ * at its root (`Utopia\Console`), mapped to the namespace segment the rest
  * of their classes and their tests use. Step B (rfc/monorepo.md, phase 6)
  * renames those classes and removes the package from this list.
  */
-const BARE = ['validators' => 'Validator', 'console' => 'Console'];
+const BARE = ['console' => 'Console'];
+
+/**
+ * Packages whose namespace segment does not spell the package name: namespaces
+ * are singular (`Utopia\Validator\Text`) where a package name may be plural.
+ */
+const SEGMENTS = ['validators' => 'Validator'];
 
 /**
  * Dockerfiles a package's docker-compose.yml builds from. Those belong to the
@@ -454,6 +460,48 @@ function linked_versions(string $package): array
  * requires the package back (span and client require each other), the
  * checkout has to claim a release line or the solver rejects the cycle.
  */
+/**
+ * Resolve a package's dependencies in its own directory and return the
+ * environment prefix later commands in that directory need. With $linked,
+ * siblings come from the local checkout instead of Packagist, via a generated
+ * manifest (COMPOSER env) with a path repository claiming constraint-
+ * satisfying versions, so a package can depend on a sibling's unreleased
+ * change. --ignore-platform-reqs: CI installs each package's declared
+ * extensions, and exotic transitive ones (e.g. ext-opentelemetry) must not
+ * block resolution.
+ *
+ * @return array{int, string} the composer exit code and the environment prefix
+ */
+function install(string $package, bool $linked): array
+{
+    $directory = "packages/{$package}";
+    $environment = root_environment($package);
+    if ($linked) {
+        $versions = linked_versions($package);
+        $rootVersion = $versions[ORG . "/{$package}"] ?? null;
+        unset($versions[ORG . "/{$package}"]);
+        if ($versions === []) {
+            out('no local siblings to link; running registry-resolved');
+        } else {
+            $manifest = manifest($package);
+            $manifest['repositories'] = array_merge([[
+                'type' => 'path',
+                'url' => '../*',
+                'only' => array_keys($versions),
+                'options' => ['symlink' => false, 'versions' => $versions],
+            ]], $manifest['repositories'] ?? []);
+            file_put_contents("{$directory}/composer.linked.json", json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n");
+            $environment = ($rootVersion === null ? '' : "COMPOSER_ROOT_VERSION={$rootVersion} ")
+                . 'COMPOSER=composer.linked.json ';
+            out('linked: ' . implode(', ', array_keys($versions)));
+        }
+    }
+
+    passthru("cd {$directory} && {$environment}composer update --no-interaction --prefer-dist --no-progress --ignore-platform-reqs", $code);
+
+    return [$code, $environment];
+}
+
 function root_environment(string $package): string
 {
     $version = linked_versions($package)[ORG . "/{$package}"] ?? null;
@@ -764,12 +812,13 @@ switch ($command) {
                 }
 
                 // One prefix per package, Utopia\<Ns>\ => src/, with <Ns>
-                // spelling the package name (CircuitBreaker <-> circuit-breaker).
+                // spelling the package name (CircuitBreaker <-> circuit-breaker)
+                // or the segment SEGMENTS names.
                 // A package in BARE declares Utopia\ => src/ until step B,
                 // and its tests use the segment BARE names.
                 $namespace = namespace_of($manifest);
                 $bare = $namespace !== null && array_key_first($manifest['autoload']['psr-4']) === 'Utopia\\';
-                if ($namespace === null || (!$bare && strtolower($namespace) !== str_replace('-', '', $package))) {
+                if ($namespace === null || (!$bare && strtolower($namespace) !== strtolower(SEGMENTS[$package] ?? str_replace('-', '', $package)))) {
                     $problems[] = 'autoload must declare exactly one PSR-4 prefix, Utopia\<Ns>\ with <Ns> spelling the package name';
                 } else {
                     $prefix = "Utopia\\{$namespace}\\";
@@ -883,7 +932,7 @@ switch ($command) {
             // above all) are what its phpstan.neon scans, so resolve them the
             // way `test` does before analysing a fresh checkout.
             if (!is_dir("{$directory}/vendor")) {
-                passthru("cd {$directory} && " . root_environment($package) . 'composer update --no-interaction --prefer-dist --no-progress --ignore-platform-reqs', $code);
+                [$code] = install($package, isset($options['linked']));
                 if ($code !== 0) {
                     $failed[] = "{$package} (composer)";
                     continue;
@@ -955,35 +1004,7 @@ switch ($command) {
             out("==> {$package}");
             $directory = "packages/{$package}";
 
-            // --linked: resolve siblings from the local checkout instead of
-            // Packagist, via a generated manifest (COMPOSER env) with a path
-            // repository claiming constraint-satisfying versions.
-            $environment = root_environment($package);
-            if (isset($options['linked'])) {
-                $versions = linked_versions($package);
-                $rootVersion = $versions[ORG . "/{$package}"] ?? null;
-                unset($versions[ORG . "/{$package}"]);
-                if ($versions === []) {
-                    out('no local siblings to link; running registry-resolved');
-                } else {
-                    $manifest = manifest($package);
-                    $manifest['repositories'] = array_merge([[
-                        'type' => 'path',
-                        'url' => '../*',
-                        'only' => array_keys($versions),
-                        'options' => ['symlink' => false, 'versions' => $versions],
-                    ]], $manifest['repositories'] ?? []);
-                    file_put_contents("{$directory}/composer.linked.json", json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n");
-                    $environment = ($rootVersion === null ? '' : "COMPOSER_ROOT_VERSION={$rootVersion} ")
-                        . 'COMPOSER=composer.linked.json ';
-                    out('linked: ' . implode(', ', array_keys($versions)));
-                }
-            }
-
-            // --ignore-platform-reqs: CI installs each package's declared
-            // extensions, and exotic transitive ones (e.g. ext-opentelemetry)
-            // must not block resolution.
-            passthru("cd {$directory} && {$environment}composer update --no-interaction --prefer-dist --no-progress --ignore-platform-reqs", $code);
+            [$code, $environment] = install($package, isset($options['linked']));
 
             // The test contract: `composer test` is the unit tier and runs on
             // a bare host; `composer test:e2e` runs on the host against the
@@ -1029,7 +1050,8 @@ switch ($command) {
                                               preview notes, tag <name>/<version> and push it (CI does the rest)
           validate                            check the package shape and the root autoload wiring
           autoload                            regenerate the root composer.json autoload entries for packages/
-          check [name...] [--fix]             run pint, phpstan and rector against packages
+          check [name...] [--fix] [--linked]  run pint, phpstan and rector against packages
+                                              (--linked resolves siblings from the local checkout)
           test [name...] [--linked]           install dependencies and run package test suites
                                               (--linked resolves siblings from the local checkout)
           dependents <name...>                list packages that depend on the given ones (transitively)

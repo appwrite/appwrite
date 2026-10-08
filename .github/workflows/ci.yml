@@ -447,7 +447,7 @@ jobs:
         run: composer install --prefer-dist --no-progress --ignore-platform-reqs
 
       - name: Check package
-        run: bin/monorepo check ${{ matrix.package }}
+        run: bin/monorepo check ${{ matrix.package }} ${{ matrix.linked && '--linked' || '' }}
 
       - name: Test package${{ matrix.linked && ' (linked)' || '' }}
         run: bin/monorepo test ${{ matrix.package }} ${{ matrix.linked && '--linked' || '' }}
