@@ -1120,6 +1120,8 @@ final class VideosCustomServerTest extends Scope
     /**
      * Timeline extract registers soft text tracks from the source as ready
      * `videos_captions` rows (empty fileId) and advertises them on the HLS master.
+     * A CMAF rendition must expose that track from both masters: WebVTT from the
+     * DASH MPD, and a VOD subtitle playlist from the HLS master.
      */
     public function testExtractEmbeddedCaptions(): array
     {
@@ -1187,6 +1189,16 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $master['headers']['status-code']);
         $this->assertStringContainsString('#EXT-X-MEDIA:TYPE=SUBTITLES', (string) $master['body']);
         $this->assertStringContainsString('/captions/' . $embedded['$id'] . '/manifest', (string) $master['body']);
+
+        $cmaf = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'cmaf',
+        ]);
+        $this->assertEquals(202, $cmaf['headers']['status-code']);
+        $cmafBody = $this->waitForRenditionTerminalState($videoId, $cmaf['body']['$id']);
+        $this->assertEquals('ready', $cmafBody['status'], 'Short fixture CMAF encode should succeed');
+
+        $this->assertCmafCaptionPlayback($videoId, $embedded['$id'], 'EMBEDDED CUE');
 
         return [
             'videoId' => $videoId,
@@ -1492,6 +1504,10 @@ final class VideosCustomServerTest extends Scope
         $this->assertMatchesRegularExpression('/#EXTINF:[0-9.]+,\R/', $playlist['body']);
         $this->assertStringContainsString('#EXT-X-ENDLIST', (string) $playlist['body']);
 
+        // The CMAF rendition from the extracted track must publish this upload
+        // from both masters as well.
+        $this->assertCmafCaptionPlayback($videoId, $uploadId, 'OVERRIDE CUE');
+
         // The master advertises both tracks until the user curates.
         $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
         $this->assertEquals(200, $master['headers']['status-code']);
@@ -1658,6 +1674,109 @@ final class VideosCustomServerTest extends Scope
         }
 
         $this->assertSame(0, $renditions, 'Deletes worker did not cascade the video renditions');
+    }
+
+    /**
+     * Follow the subtitle URLs published by both CMAF masters.
+     *
+     * CMAF-DASH addresses WebVTT at `/outputs/cmaf/captions/{id}/manifest`.
+     * CMAF-HLS points its subtitle playlist at the HLS output, because that
+     * same CMAF path is what the MPD fetches as `text/vtt`. Building either
+     * URL here would let a master that advertises the wrong one keep passing.
+     */
+    private function assertCmafCaptionPlayback(string $videoId, string $captionId, string $cue): void
+    {
+        $hls = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/cmaf/master.m3u8', $this->headers());
+        $this->assertEquals(200, $hls['headers']['status-code']);
+
+        $playlistUri = $this->subtitleUri((string) $hls['body'], $captionId);
+        $playlist = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($playlistUri), $this->headers());
+        $this->assertEquals(200, $playlist['headers']['status-code']);
+        $this->assertStringContainsString('application/x-mpegurl', (string) ($playlist['headers']['content-type'] ?? ''));
+        $this->assertSame(1, \substr_count((string) $playlist['body'], '#EXT-X-MEDIA-SEQUENCE'));
+        $this->assertStringContainsString('#EXT-X-MEDIA-SEQUENCE:0', (string) $playlist['body']);
+        $this->assertMatchesRegularExpression('/#EXTINF:[0-9.]+,\R/', (string) $playlist['body']);
+        $this->assertStringContainsString('#EXT-X-ENDLIST', (string) $playlist['body']);
+
+        $dash = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/cmaf/master.mpd', $this->headers());
+        $this->assertEquals(200, $dash['headers']['status-code']);
+
+        $vttUri = $this->subtitleBaseUrl((string) $dash['body'], $captionId);
+        $vtt = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($vttUri), $this->headers());
+        $this->assertEquals(200, $vtt['headers']['status-code']);
+        $this->assertStringContainsString('text/vtt', (string) ($vtt['headers']['content-type'] ?? ''));
+        $this->assertStringContainsString('WEBVTT', (string) $vtt['body']);
+        $this->assertStringContainsString($cue, (string) $vtt['body']);
+    }
+
+    /**
+     * `URI` of the EXT-X-MEDIA subtitle entry for this caption.
+     */
+    private function subtitleUri(string $master, string $captionId): string
+    {
+        $needle = '/captions/' . $captionId . '/manifest';
+
+        foreach (\explode("\n", $master) as $line) {
+            if (!\str_contains($line, 'TYPE=SUBTITLES') || !\str_contains($line, $needle)) {
+                continue;
+            }
+
+            $marker = 'URI="';
+            $start = \strpos($line, $marker);
+            if ($start === false) {
+                continue;
+            }
+
+            $start += \strlen($marker);
+            $end = \strpos($line, '"', $start);
+            if ($end === false) {
+                continue;
+            }
+
+            return \substr($line, $start, $end - $start);
+        }
+
+        $this->fail('CMAF HLS master did not reference a subtitle playlist for ' . $captionId);
+    }
+
+    /**
+     * BaseURL of the WebVTT adaptation set for this caption.
+     */
+    private function subtitleBaseUrl(string $mpd, string $captionId): string
+    {
+        $needle = '/captions/' . $captionId . '/manifest';
+        $open = '<BaseURL>';
+        $offset = 0;
+
+        while (($start = \strpos($mpd, $open, $offset)) !== false) {
+            $start += \strlen($open);
+            $end = \strpos($mpd, '</BaseURL>', $start);
+            if ($end === false) {
+                break;
+            }
+
+            $uri = \html_entity_decode(\substr($mpd, $start, $end - $start), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            if (\str_contains($uri, $needle)) {
+                return $uri;
+            }
+
+            $offset = $end;
+        }
+
+        $this->fail('CMAF DASH master did not reference a WebVTT subtitle for ' . $captionId);
+    }
+
+    /**
+     * Manifest URLs are absolute paths (`/v1/videos/...`). The test client
+     * already prefixes `/v1`.
+     */
+    private function manifestRequestPath(string $uri): string
+    {
+        if (\str_starts_with($uri, '/v1/')) {
+            return \substr($uri, 3);
+        }
+
+        return $uri;
     }
 
     /**
