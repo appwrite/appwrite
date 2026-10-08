@@ -239,8 +239,8 @@ interface SignInProps {
   onOAuthLogin?: (provider: OAuthLoginMethod) => void
   isLoading?: boolean
   oauthLoading?: OAuthLoginMethod | null
-  /** Lets the browser offer passkeys in the email field's autofill. */
-  passkeyAutofill?: boolean
+  /** Lets the browser offer passkeys in the email field's autofill; runs on focus to restart the request. */
+  onPasskeyAutofill?: () => void
   redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
   /** Debug preview routes: cross-links stay on /debug/*-preview; demo user is fill-only. */
   preview?: boolean
@@ -252,7 +252,7 @@ export function SignIn({
   onOAuthLogin,
   isLoading,
   oauthLoading,
-  passkeyAutofill = false,
+  onPasskeyAutofill,
   redirect,
   preview = false,
 }: SignInProps) {
@@ -513,9 +513,12 @@ export function SignIn({
                       type="email"
                       placeholder={t('Your email')}
                       autoComplete={
-                        mode === 'sign-in' && passkeyAutofill
+                        mode === 'sign-in' && onPasskeyAutofill
                           ? 'username webauthn'
                           : undefined
+                      }
+                      onFocus={
+                        mode === 'sign-in' ? onPasskeyAutofill : undefined
                       }
                       {...field}
                     />
@@ -576,11 +579,13 @@ export function SignIn({
           </div>
 
           <div className="relative">
-            {mode === 'sign-in' && lastLoginMethod === 'email' && (
-              <span className="absolute -top-2 start-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border z-10">
-                {t('Last used')}
-              </span>
-            )}
+            {mode === 'sign-in' &&
+              (lastLoginMethod === 'email' ||
+                lastLoginMethod === 'passkey') && (
+                <span className="absolute -top-2 start-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border z-10">
+                  {t('Last used')}
+                </span>
+              )}
             <Button
               type="submit"
               variant="brandCta"

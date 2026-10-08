@@ -156,15 +156,18 @@ function asPublicKeyCredential(
 /**
  * Signs in with a passkey offered in the email field's autofill and returns a
  * token to exchange for a session. The request waits until a passkey is picked
- * or `signal` aborts it; `onSelected` runs once the user has picked one.
+ * or `signal` aborts it; `onChallenge` gets the challenge's expiry and
+ * `onSelected` runs once the user has picked one.
  */
 export async function signInWithPasskey(options: {
   signal: AbortSignal
+  onChallenge: (expire: string) => void
   onSelected: () => void
 }): Promise<Models.Token> {
   const account = sdk.forConsole.account
   const challenge = await account.createPasskeyToken()
   options.signal.throwIfAborted()
+  options.onChallenge(challenge.expire)
   const credential = asPublicKeyCredential(
     await navigator.credentials.get({
       publicKey: parseRequestOptions(

@@ -17,10 +17,6 @@ export const Route = createFileRoute('/_public/account/security')({
 
     const { queryClient } = context
     const features = getActiveProfileFeatures()
-    const account = features.passkeysFlag
-      ? await ensureConsoleAccountQueryData(queryClient)
-      : undefined
-
     const [identities, mfaFactors, passkeys] = await Promise.all([
       features.accountIdentities
         ? queryClient.ensureQueryData(accountIdentitiesQueryOptions())
@@ -28,11 +24,16 @@ export const Route = createFileRoute('/_public/account/security')({
       features.accountMfa
         ? queryClient.ensureQueryData(mfaFactorsQueryOptions())
         : Promise.resolve(undefined),
-      canUsePasskeys(features, account?.prefs)
-        ? queryClient
-            .ensureQueryData(accountPasskeysQueryOptions())
-            .catch(() => undefined)
-        : Promise.resolve(undefined),
+      (features.passkeysFlag
+        ? ensureConsoleAccountQueryData(queryClient)
+        : Promise.resolve(undefined)
+      ).then((account) =>
+        canUsePasskeys(features, account?.prefs)
+          ? queryClient
+              .ensureQueryData(accountPasskeysQueryOptions())
+              .catch(() => undefined)
+          : undefined,
+      ),
     ])
 
     return { identities, mfaFactors, passkeys }

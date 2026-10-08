@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   createFileRoute,
   redirect,
@@ -88,6 +88,13 @@ export const Route = createFileRoute('/_auth/sign-in')({
   },
   head: () => ({ meta: [{ title: pageTitle('Sign in') }] }),
 })
+
+interface PasskeyRequest {
+  controller: AbortController
+  /** When the server's challenge expires, in milliseconds. */
+  expire: number
+  selected: boolean
+}
 
 function SignInPage() {
   const t = useT()
@@ -227,39 +234,41 @@ function SignInPage() {
   })
 
   const [passkeySelected, setPasskeySelected] = useState(false)
-  const selected = useRef(false)
+  const passkeyRequest = useRef<PasskeyRequest | null>(null)
+  const passkeyRateLimited = useRef(false)
 
   // Autofill: the browser offers the console's passkeys in the email field's
   // suggestions. It shows nothing until a passkey for the console exists.
   const passkeySignInMutation = useMutation({
-    mutationFn: async (signal: AbortSignal) => {
+    mutationFn: async (request: PasskeyRequest) => {
       const token = await signInWithPasskey({
-        signal,
+        signal: request.controller.signal,
+        onChallenge: (expire) => {
+          request.expire = Date.parse(expire) || Number.POSITIVE_INFINITY
+        },
         onSelected: () => {
-          selected.current = true
+          request.selected = true
           setPasskeySelected(true)
         },
       })
+      // A passkey session already satisfies MFA, so finishSignIn's account
+      // refresh is the only account.get needed.
       await sdk.forConsole.account.createSession({
         userId: token.userId,
         secret: token.secret,
       })
-      // A passkey session already satisfies MFA; this also replaces the guest
-      // account.get the _auth loader cached.
-      await fetchConsoleAccount({ force: true })
     },
     onSuccess: () => finishSignIn('passkey'),
-    onMutate: () => {
-      selected.current = false
+    onError: async (error: unknown, request: PasskeyRequest) => {
       setPasskeySelected(false)
-    },
-    onError: async (error: unknown) => {
-      const wasSelected = selected.current
-      setPasskeySelected(false)
+      if (passkeyRequest.current === request) passkeyRequest.current = null
+      if (error instanceof AppwriteException && error.code === 429) {
+        passkeyRateLimited.current = true
+      }
       if (isPasskeyCancellation(error)) return
       if (await openMfaIfRequired(error)) return
-      // Autofill starts on page load, so stay quiet until the user has picked a passkey.
-      if (!wasSelected) return
+      // Autofill starts before any choice, so stay quiet until the user has picked a passkey.
+      if (!request.selected) return
 
       toast.error(
         passkeySignInErrorMessage(error, t) ??
@@ -270,17 +279,38 @@ function SignInPage() {
   })
   const { mutate: mutatePasskeySignIn } = passkeySignInMutation
 
+  // Starts the autofill request, or replaces one that ended or whose challenge
+  // expired, so the email field keeps offering passkeys after an error or a wait.
+  const startPasskeyAutofill = useCallback(() => {
+    if (passkeyRateLimited.current) return
+    const current = passkeyRequest.current
+    if (current && (current.selected || Date.now() < current.expire)) return
+    current?.controller.abort()
+    const request: PasskeyRequest = {
+      controller: new AbortController(),
+      expire: Number.POSITIVE_INFINITY,
+      selected: false,
+    }
+    passkeyRequest.current = request
+    mutatePasskeySignIn(request)
+  }, [mutatePasskeySignIn])
+
   // Runs for everyone: the page cannot know the user yet, and the browser only
   // offers a passkey it already holds for the console.
+  const [passkeyAutofill, setPasskeyAutofill] = useState(false)
   useEffect(() => {
-    const controller = new AbortController()
+    let active = true
     void isPasskeyAutofillAvailable().then((available) => {
-      if (available && !controller.signal.aborted) {
-        mutatePasskeySignIn(controller.signal)
-      }
+      if (!active || !available) return
+      setPasskeyAutofill(true)
+      startPasskeyAutofill()
     })
-    return () => controller.abort()
-  }, [mutatePasskeySignIn])
+    return () => {
+      active = false
+      passkeyRequest.current?.controller.abort()
+      passkeyRequest.current = null
+    }
+  }, [startPasskeyAutofill])
 
   const passkeyBusy = passkeySignInMutation.isPending && passkeySelected
 
@@ -290,7 +320,7 @@ function SignInPage() {
         mode="sign-in"
         onSubmit={(data) => signInMutation.mutate(data)}
         onOAuthLogin={handleOAuthLogin}
-        passkeyAutofill
+        onPasskeyAutofill={passkeyAutofill ? startPasskeyAutofill : undefined}
         isLoading={signInMutation.isPending || passkeyBusy || isOpeningMfa}
         oauthLoading={oauthLoading}
         redirect={search.redirect}

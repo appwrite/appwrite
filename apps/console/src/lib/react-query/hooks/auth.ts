@@ -1425,8 +1425,8 @@ export function accountPasskeysQueryOptions() {
 /**
  * Hook to fetch the console account's passkeys
  */
-export function useAccountPasskeys(options: { enabled?: boolean } = {}) {
-  return useQuery({ ...accountPasskeysQueryOptions(), ...options })
+export function useAccountPasskeys() {
+  return useQuery(accountPasskeysQueryOptions())
 }
 
 /**
