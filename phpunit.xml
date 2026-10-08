@@ -12,15 +12,6 @@
     <extensions>
         <bootstrap class="Appwrite\Tests\TestHook" />
     </extensions>
-    <!-- Report deprecations only when first-party code triggers them; PHP 8.4+
-         implicit-nullable notices raised vendor-to-vendor are not actionable here. -->
-    <source ignoreIndirectDeprecations="true">
-        <include>
-            <directory>./app</directory>
-            <directory>./src</directory>
-            <directory>./tests</directory>
-        </include>
-    </source>
     <php>
         <!-- The dev containers allow their own network; tests run against the default SSRF policy -->
         <env name="_APP_ALLOWED_INTERNAL_ADDRESSES" value="" force="true" />
