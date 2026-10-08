@@ -2,5 +2,24 @@
     "version": 1,
     "notes": "Empty routes means the inventory is not locked yet. After the first green run, populate it with _APP_SECURITY_BASELINE=update so new routes fail CI until they are reviewed.",
     "routes": [],
-    "findings": []
+    "findings": [
+        {
+            "attack": "idor",
+            "method": "POST",
+            "path": "/v1/users/:userId/sessions",
+            "probe": "user-b-on-user-a-ids",
+            "severity": "ERROR",
+            "detail": "User B session received HTTP 201 containing user A identifiers",
+            "reason": "OPEN: Users::Sessions::Create is labelled ['users.write','sessions.write'] (OR). Logged-in users hold sessions.write, so a client session can mint a server session for any known userId. SDK auth is ADMIN/KEY only. Do not treat this row as accepted risk — fix the scope (users.write only) in a follow-up."
+        },
+        {
+            "attack": "header-spoof",
+            "method": "GET",
+            "path": "/v1/locale",
+            "probe": "forwarded-ip",
+            "severity": "WARNING",
+            "detail": "Locale reflected X-Forwarded-For / X-Real-IP / Forwarded as the client IP",
+            "reason": "Compose/CI callers sit on loopback or RFC1918, which default _APP_TRUSTED_PROXIES treats as a proxy. Locale then reflects X-Forwarded-For. Not an untrusted-Internet spoof; revisit if trusted-proxy defaults are narrowed."
+        }
+    ]
 }

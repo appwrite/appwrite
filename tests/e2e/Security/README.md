@@ -71,3 +71,5 @@ Job `Tests / E2E / Security` in `.github/workflows/ci.yml`. One stack (default P
 - SSRF does not flag a 2xx that merely *stores* a URL. Fetching endpoints and connect timeouts still fail.
 - GraphQL is one fan-out route and is skipped; inner operations are the REST routes already in the catalog.
 - Forwarded-IP spoofing from inside the compose network often hits `_APP_TRUSTED_PROXIES` defaults (loopback / RFC1918). That result is a finding so it cannot appear silently; expect to reason it in the baseline if the topology trusts the caller.
+- `idor` only treats `userId` / `email` fields as a leak. A caller-chosen path `$id` echoing back (presence upsert) is not.
+- First scan (705 `/v1` routes): guest-access, cross-tenant, scope-least-privilege, and ssrf-url were clean. See `baseline.json` for the two remaining rows, including the open `POST /v1/users/:userId/sessions` IDOR.

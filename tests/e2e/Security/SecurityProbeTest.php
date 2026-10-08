@@ -57,15 +57,15 @@ final class SecurityProbeTest extends TestCase
         $baseline = Baseline::load();
         $partition = $baseline->partitionRoutes(Catalog::ids(self::$routes));
 
-        if ($partition['fresh'] !== []) {
-            $this->fail(
-                \count($partition['fresh']) . " new route(s) are not in tests/e2e/Security/baseline.json.\n"
-                . "They were probed automatically. Accept them with:\n"
-                . "  _APP_SECURITY_BASELINE=update docker compose exec appwrite test tests/e2e/Security --group=security\n"
-                . "then review the routes list.\n"
-                . \implode("\n", \array_slice($partition['fresh'], 0, 30))
-            );
-        }
+        $this->assertSame(
+            [],
+            $partition['fresh'],
+            \count($partition['fresh']) . " new route(s) are not in tests/e2e/Security/baseline.json.\n"
+            . "They were probed automatically. Accept them with:\n"
+            . "  _APP_SECURITY_BASELINE=update docker compose exec appwrite test tests/e2e/Security --group=security\n"
+            . "then review the routes list.\n"
+            . \implode("\n", \array_slice($partition['fresh'], 0, 30))
+        );
 
         if ($partition['stale'] !== []) {
             \fwrite(STDOUT, \count($partition['stale']) . " baseline route(s) are gone; regenerate the inventory.\n");

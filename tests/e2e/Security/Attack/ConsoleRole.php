@@ -31,8 +31,9 @@ final class ConsoleRole implements Attack
             return false;
         }
         // Session-scoped account routes succeed for any logged-in console
-        // user; that is not an organization-role escalation.
-        return ! $route->allowsScopes(['account', 'home', 'console']);
+        // user. Developer can also read org projects (console UX) even
+        // though `projects.read` sits on the owner/member scope list.
+        return ! $route->allowsScopes(['account', 'home', 'console', 'projects.read']);
     }
 
     public function probe(RouteTarget $route, World $world, Probe $http): array

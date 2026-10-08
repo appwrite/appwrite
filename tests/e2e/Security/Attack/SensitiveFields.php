@@ -18,7 +18,7 @@ final class SensitiveFields implements Attack
     /**
      * @var list<string>
      */
-    private const array KEYS = ['secret', 'password', 'passwordupdate', 'stdout', 'stderr'];
+    private const array KEYS = ['secret', 'password', 'stdout', 'stderr'];
 
     public static function getName(): string
     {

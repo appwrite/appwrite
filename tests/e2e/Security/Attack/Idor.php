@@ -54,15 +54,39 @@ final class Idor implements Attack
         )];
     }
 
+    /**
+     * A path ID we supplied echoing back as `$id` is not a leak (callers
+     * choose presence IDs). A `userId` / `email` field owned by A is.
+     *
+     * @param array<string, mixed> $response
+     */
     private function leaksVictim(array $response, World $world): bool
     {
-        $encoded = \json_encode($response['body'] ?? []);
-        if ($encoded === false) {
+        $body = $response['body'] ?? [];
+        if (! \is_array($body)) {
             return false;
         }
 
-        foreach ([$world->userA['id'], $world->userA['email'], $world->teamA['id']] as $token) {
-            if ($token !== '' && \str_contains($encoded, $token)) {
+        return $this->containsOwner($body, $world);
+    }
+
+    /**
+     * @param array<mixed> $value
+     */
+    private function containsOwner(array $value, World $world): bool
+    {
+        $id = $world->userA['id'];
+        $email = $world->userA['email'];
+
+        foreach ($value as $key => $item) {
+            $name = \is_string($key) ? $key : '';
+            if ($name === 'email' && $item === $email) {
+                return true;
+            }
+            if (($name === 'userId' || $name === 'userInternalId') && $item === $id) {
+                return true;
+            }
+            if (\is_array($item) && $this->containsOwner($item, $world)) {
                 return true;
             }
         }
