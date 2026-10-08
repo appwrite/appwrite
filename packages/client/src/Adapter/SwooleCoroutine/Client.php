@@ -493,7 +493,7 @@ class Client implements Adapter
             $responseBody,
         );
 
-        if (\is_resource($suppressedBody) && $sink !== null && !Redirect::isRedirect($response)) {
+        if (\is_resource($suppressedBody) && !Redirect::isRedirect($response)) {
             rewind($suppressedBody);
 
             while (($chunk = fread($suppressedBody, 8192)) !== false && $chunk !== '') {

@@ -813,10 +813,25 @@ class OpenAPI3 extends Format
                         }
                         break;
                     case Queries::class:
+                        // utopia-php/waf is not a dependency here, so the class is named rather than referenced.
+                    case 'Utopia\WAF\Validator\Conditions':
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
+                        break;
+                    case \Utopia\Validator\Multiple::class:
+                        // Its rules check the whole value, so an array-typed Multiple declares no
+                        // item type; its items are taken to be strings.
+                        $node['schema']['type'] = $validator->getType();
+                        if ($validator->getType() === Validator::TYPE_ARRAY) {
+                            $node['schema']['items'] = [
+                                'type' => 'string',
+                            ];
+                        }
+                        if (($param['example'] ?? '') !== '') {
+                            $node['schema']['example'] = $param['example'];
+                        }
                         break;
                     case \Utopia\Database\Validator\Permissions::class:
                         $node['schema']['type'] = $validator->getType();
@@ -996,6 +1011,16 @@ class OpenAPI3 extends Format
                             $node['schema']['type'] = 'object';
                             $node['schema']['default'] = empty($param['default']) ? new \stdClass() : $param['default'];
                             $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '{}';
+                            break;
+                        }
+
+                        // A validator of its own that takes a whole array declares no item type.
+                        if ($validator->getType() === Validator::TYPE_ARRAY) {
+                            $node['schema']['type'] = 'array';
+                            $node['schema']['items'] = new \stdClass();
+                            if (($param['example'] ?? '') !== '') {
+                                $node['schema']['example'] = $param['example'];
+                            }
                             break;
                         }
 
