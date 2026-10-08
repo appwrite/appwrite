@@ -754,6 +754,96 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $timeline['headers']['status-code']);
     }
 
+    /**
+     * An API key publishes a video with read("any"), encodes it, and a guest
+     * can play the result. Restricting that same video to one user then hides
+     * the encode from the guest; the API key can still read it.
+     */
+    public function testGuestLosesEncodedPlaybackWhenPermissionsRestricted(): void
+    {
+        $userId = $this->getUser()['$id'];
+
+        $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+            'name' => 'guest-then-private-' . ID::unique(),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $this->assertContains((string) Permission::read(Role::any()), $created['body']['$permissions']);
+        $videoId = $created['body']['$id'];
+
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
+        $this->assertEquals(200, $profiles['headers']['status-code']);
+        $profile = null;
+        foreach ($profiles['body']['profiles'] as $candidate) {
+            if (($candidate['name'] ?? '') === '360p') {
+                $profile = $candidate;
+                break;
+            }
+        }
+        $this->assertNotNull($profile, 'Seeded 360p profile missing');
+
+        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->serverHeaders(), [
+            'profileId' => $profile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $rendition['headers']['status-code']);
+        $renditionId = $rendition['body']['$id'];
+
+        $body = $this->waitForRenditionTerminalState($videoId, $renditionId);
+        $this->assertEquals('ready', $body['status'], 'Public rendition did not finish');
+
+        $masterPath = '/videos/' . $videoId . '/outputs/hls/master.m3u8';
+        $master = $this->client->call(Client::METHOD_GET, $masterPath, $this->anonymousHeaders());
+        $this->assertEquals(200, $master['headers']['status-code']);
+        $this->assertStringContainsString('#EXTM3U', (string) $master['body']);
+
+        if (\preg_match('#renditions/' . \preg_quote($renditionId, '#') . '/streams/(\d+)/playlist\.m3u8#', (string) $master['body'], $matches) !== 1) {
+            $this->fail('HLS master playlist did not reference a stream playlist');
+        }
+
+        $variantPath = '/videos/' . $videoId . '/outputs/hls/renditions/' . $renditionId . '/streams/' . $matches[1] . '/playlist.m3u8';
+        $variant = $this->client->call(Client::METHOD_GET, $variantPath, $this->anonymousHeaders());
+        $this->assertEquals(200, $variant['headers']['status-code']);
+
+        if (\preg_match('#/segments/([a-zA-Z0-9]+)(?:\?|$)#', (string) $variant['body'], $segmentMatch) !== 1) {
+            $this->fail('HLS variant playlist did not reference a segment');
+        }
+
+        $segmentPath = '/videos/' . $videoId . '/outputs/hls/renditions/' . $renditionId . '/segments/' . $segmentMatch[1];
+        $segment = $this->client->call(Client::METHOD_GET, $segmentPath, $this->anonymousHeaders());
+        $this->assertEquals(200, $segment['headers']['status-code']);
+        $this->assertNotEmpty($segment['body']);
+
+        $timelinePath = '/videos/' . $videoId . '/timeline';
+        $timeline = $this->client->call(Client::METHOD_GET, $timelinePath, $this->anonymousHeaders());
+        $this->assertEquals(200, $timeline['headers']['status-code']);
+        $this->assertStringContainsString('WEBVTT', (string) $timeline['body']);
+
+        $restricted = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->serverHeaders(), [
+            'name' => $created['body']['name'],
+            'permissions' => [
+                Permission::read(Role::user($userId)),
+            ],
+        ]);
+        $this->assertEquals(200, $restricted['headers']['status-code']);
+        $this->assertNotContains((string) Permission::read(Role::any()), $restricted['body']['$permissions']);
+        $this->assertContains((string) Permission::read(Role::user($userId)), $restricted['body']['$permissions']);
+
+        foreach ([$masterPath, $variantPath, $segmentPath, $timelinePath] as $path) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $this->anonymousHeaders());
+            $this->assertEquals(404, $response['headers']['status-code'], $path . ' stayed available to guests');
+            $this->assertEquals('video_not_found', $response['body']['type'], $path);
+        }
+
+        $stillThere = $this->client->call(Client::METHOD_GET, $masterPath, $this->serverHeaders());
+        $this->assertEquals(200, $stillThere['headers']['status-code']);
+        $this->assertStringContainsString($renditionId, (string) $stillThere['body']);
+    }
+
     public function testSessionCreateUpdateDeleteWithPermissions(): void
     {
         $userId = $this->getUser()['$id'];
