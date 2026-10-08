@@ -84,6 +84,7 @@ import {
   USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH,
   USER_PREFS_KEY_VIDEOS_PLAYER,
   USER_PREFS_KEY_USAGE_CHART_INTERVAL,
+  USER_PREFS_KEY_PASSKEYS_FLAG,
 } from '@/lib/user-prefs-keys'
 
 export type PrefsCatalogScope = 'account' | 'team' | 'both'
@@ -663,6 +664,15 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     key: TEAM_PREFS_KEY_PINNED_PROJECT_IDS,
     description: 'Pinned project IDs for the organization (JSON string[]).',
     category: 'Organization',
+  },
+  // Cloud flags (written by Cloud's task-manage-flags, read-only here)
+  {
+    id: 'passkeysFlag',
+    scope: 'account',
+    key: USER_PREFS_KEY_PASSKEYS_FLAG,
+    description:
+      "Cloud passkeys rollout flag, set by Cloud's task-manage-flags: shows project passkey settings to this user.",
+    category: 'Cloud flags',
   },
 ] as const
 

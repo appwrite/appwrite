@@ -1292,6 +1292,52 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Password not checked against known data breaches':
     'パスワードは既知のデータ漏洩と照合されていません',
   'breached password': '漏洩したパスワード',
+
+  // Passkey relying party policy and auth method
+  Passkey: 'パスキー',
+  Passkeys: 'パスキー',
+  'Relying party': 'Relying Party',
+  'Passkeys are bound to the domain of your app. Users can only sign in with a passkey once a relying party ID and at least one origin are set, and the Passkey auth method is enabled.':
+    'パスキーはアプリのドメインに紐付けられます。Relying Party ID と 1 つ以上のオリジンが設定され、パスキー認証方法が有効になっている場合にのみ、ユーザーはパスキーでサインインできます。',
+  'Relying party ID': 'Relying Party ID',
+  'The domain of the app where users sign in, not your Appwrite endpoint. Use localhost for local development.':
+    'ユーザーがサインインするアプリのドメインです（Appwrite エンドポイントではありません）。ローカル開発では localhost を使用してください。',
+  'Allowed origins': '許可されたオリジン',
+  'The exact origins your app is served from, on the relying party ID or one of its subdomains.':
+    'アプリが配信される正確なオリジンです。Relying Party ID またはそのサブドメイン上である必要があります。',
+  'Origin URL': 'オリジン URL',
+  'This origin is already in the list.': 'このオリジンはすでにリストにあります。',
+  'The relying party ID must be a domain, not an IP address.':
+    'Relying Party ID は IP アドレスではなくドメインである必要があります。',
+  'Add origin': 'オリジンを追加',
+  'Remove origin': 'オリジンを削除',
+  'Enter a domain without a scheme or path, like example.com.':
+    'example.com のように、スキームやパスを含まないドメインを入力してください。',
+  'The relying party ID must be lowercase.':
+    'Relying Party ID は小文字である必要があります。',
+  'The relying party ID cannot include a port.':
+    'Relying Party ID にポートを含めることはできません。',
+  'Enter a domain like example.com, or localhost.':
+    'example.com のようなドメイン、または localhost を入力してください。',
+  'Enter a full origin, like https://example.com.':
+    'https://example.com のような完全なオリジンを入力してください。',
+  'Origins must use https://, or http:// on localhost.':
+    'オリジンは https:// を使用する必要があります（localhost では http:// も可）。',
+  'Origins cannot include credentials.':
+    'オリジンに認証情報を含めることはできません。',
+  'Origins cannot include a path, query or fragment.':
+    'オリジンにパス、クエリ、フラグメントを含めることはできません。',
+  'Origins must be on the relying party ID or one of its subdomains.':
+    'オリジンは Relying Party ID またはそのサブドメイン上にある必要があります。',
+  'Updated passkey settings': 'パスキー設定を更新しました',
+  'Passkey auth method': 'パスキー認証方法',
+  'The Passkey auth method is enabled. Without a relying party ID and at least one origin, users cannot sign in with a passkey.':
+    'パスキー認証方法が有効になっています。Relying Party ID と 1 つ以上のオリジンがないと、ユーザーはパスキーでサインインできません。',
+  'Failed to update passkey settings': 'パスキー設定の更新に失敗しました',
+  'Set a relying party ID and origins in passkey policies to enable.':
+    '有効にするには、パスキーポリシーで Relying Party ID とオリジンを設定してください。',
+  'Passkey policies': 'パスキーポリシー',
+  'Membership policies': 'メンバーシップポリシー',
   '1 to 30 minutes. Default: 10 minutes when empty.': '1 分から 30 分まで。デフォルト: 空欄の場合 10 分。',
   '6 to 12 characters, excluding the separator. Default: 8 when empty.': '6 文字から 12 文字まで (区切り文字を除く)。デフォルト: 空欄の場合 8 文字。',
   'Add a type and press Enter': 'タイプを追加して Enter を押してください',

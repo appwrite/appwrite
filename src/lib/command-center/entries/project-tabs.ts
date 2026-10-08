@@ -13,6 +13,7 @@
 import {
   Bell,
   Code,
+  Fingerprint,
   Globe,
   KeyRound,
   Layers,
@@ -92,7 +93,14 @@ const PROJECT_TABS: CommandEntry[] = [
     label: 'Auth · Policies · Sessions',
     description: 'Session length, limits, alerts, and invalidation',
     icon: Shield,
-    keywords: ['sessions', 'length', 'limit', 'invalidation', 'alerts', 'email'],
+    keywords: [
+      'sessions',
+      'length',
+      'limit',
+      'invalidation',
+      'alerts',
+      'email',
+    ],
     available: (ctx) => canShowAuthSecuritySettings(ctx.access, ctx.features),
     to: (ctx) => `/projects/${ctx.projectId}/auth/policies/sessions`,
   },
@@ -137,7 +145,8 @@ const PROJECT_TABS: CommandEntry[] = [
     kind: 'tab',
     group: 'Auth',
     label: 'Auth · Policies · Memberships',
-    description: 'Hide member name, email, or MFA status from other team members',
+    description:
+      'Hide member name, email, or MFA status from other team members',
     icon: Users,
     keywords: ['membership', 'memberships', 'privacy', 'team'],
     available: (ctx) => canShowAuthSecuritySettings(ctx.access, ctx.features),
@@ -154,6 +163,19 @@ const PROJECT_TABS: CommandEntry[] = [
     keywords: ['password', 'history', 'dictionary', 'personal data'],
     available: (ctx) => canShowAuthSecuritySettings(ctx.access, ctx.features),
     to: (ctx) => `/projects/${ctx.projectId}/auth/policies/passwords`,
+  },
+  {
+    id: 'project.tab.auth.policies.passkeys',
+    scopes: ['project'],
+    kind: 'tab',
+    group: 'Auth',
+    label: 'Auth · Policies · Passkeys',
+    description: 'Relying party ID and allowed origins for passkey sign-in',
+    icon: Fingerprint,
+    keywords: ['passkey', 'passkeys', 'webauthn', 'relying party', 'origins'],
+    available: (ctx) =>
+      ctx.passkeys && canShowAuthSecuritySettings(ctx.access, ctx.features),
+    to: (ctx) => `/projects/${ctx.projectId}/auth/policies/passkeys`,
   },
   {
     id: 'project.tab.auth.social-providers',
@@ -185,8 +207,7 @@ const PROJECT_TABS: CommandEntry[] = [
       'tokens',
       'settings',
     ],
-    available: (ctx) =>
-      canShowProjectOAuth2Server(ctx.access, ctx.features),
+    available: (ctx) => canShowProjectOAuth2Server(ctx.access, ctx.features),
     to: (ctx) => `/projects/${ctx.projectId}/auth/oauth2-server`,
   },
   {
@@ -198,8 +219,7 @@ const PROJECT_TABS: CommandEntry[] = [
     description: 'Manage OAuth2 client apps for this project',
     icon: KeyRound,
     keywords: ['oauth', 'oauth2', 'clients', 'apps', 'redirect'],
-    available: (ctx) =>
-      canShowProjectOAuth2Server(ctx.access, ctx.features),
+    available: (ctx) => canShowProjectOAuth2Server(ctx.access, ctx.features),
     to: (ctx) => `/projects/${ctx.projectId}/auth/oauth2-server/apps`,
   },
   {
@@ -258,7 +278,16 @@ const PROJECT_TABS: CommandEntry[] = [
     label: 'Messaging · Providers',
     description: 'Email, SMS and push providers',
     icon: Bell,
-    keywords: ['providers', 'twilio', 'sendgrid', 'fcm', 'apns', 'mailgun', 'ses', 'amazon'],
+    keywords: [
+      'providers',
+      'twilio',
+      'sendgrid',
+      'fcm',
+      'apns',
+      'mailgun',
+      'ses',
+      'amazon',
+    ],
     to: (ctx) => `/projects/${ctx.projectId}/messaging/providers`,
   },
 

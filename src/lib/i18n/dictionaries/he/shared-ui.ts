@@ -1010,7 +1010,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Push notifications, email and SMS messages':
     'התראות פוש, הודעות אימייל ו-SMS', // pragma: allowlist secret
   'Deployed websites and hosting': 'אתרים פרוסים ואירוח אתרים',
-  'Adaptive video streaming, renditions and subtitles': 'סטרימינג וידאו אדפטיבי, גרסאות קידוד וכתוביות',
+  'Adaptive video streaming, renditions and subtitles':
+    'סטרימינג וידאו אדפטיבי, גרסאות קידוד וכתוביות',
   'Audit log of project events': 'יומן ביקורת של אירועי הפרויקט',
   'Realtime channels and live messages': 'ערוצי זמן אמת והודעות חיות', // pragma: allowlist secret
   'Usage statistics and quotas': 'נתוני שימוש ומכסות',
@@ -1041,6 +1042,9 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Hide member name, email, or MFA status from other team members':
     'הסתרת שם, אימייל או סטטוס MFA של חבר צוות משאר חברי הצוות',
   'Auth · Policies · Passwords': 'אימות · מדיניות · סיסמאות',
+  'Auth · Policies · Passkeys': 'אימות · מדיניות · מפתחות גישה',
+  'Relying party ID and allowed origins for passkey sign-in':
+    'מזהה צד מסתמך ומקורות מורשים להתחברות עם מפתח גישה',
   'Password history, dictionary, and personal data checks':
     'בדיקות היסטוריית סיסמאות, מילון ונתונים אישיים',
   'Auth · Social providers': 'אימות · ספקי OAuth',
@@ -1064,7 +1068,8 @@ export const heSharedUiDictionary: Record<string, string> = {
     'נושאי מנויים לשליחת הודעות בתפוצה רחבה',
   'Messaging · Providers': 'הודעות · ספקים',
   'Videos · Encoding profiles': 'סרטונים · פרופילי קידוד',
-  'Resolution and bitrate targets for renditions': 'יעדי רזולוציה ו-Bitrate לגרסאות קידוד',
+  'Resolution and bitrate targets for renditions':
+    'יעדי רזולוציה ו-Bitrate לגרסאות קידוד',
   'Email, SMS and push providers': 'ספקי אימייל, SMS ופוש',
   'Settings · Overview': 'הגדרות · סקירה',
   'Project ID, name, region, API endpoint':

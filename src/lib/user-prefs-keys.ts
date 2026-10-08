@@ -124,8 +124,8 @@ export function clearDismissedBannerPrefs(
   const next = parseDismissedBannerIds(prefs).filter((id) => id !== bannerId)
   const base = { ...(prefs ?? {}) } as UserPrefs
   if (next.length === 0) {
-    const { [USER_PREFS_KEY_DISMISSED_BANNERS]: _removed, ...rest } = base
-    return rest as UserPrefs
+    delete base[USER_PREFS_KEY_DISMISSED_BANNERS]
+    return base
   }
   return { ...base, [USER_PREFS_KEY_DISMISSED_BANNERS]: next.join(',') }
 }
@@ -4434,4 +4434,16 @@ export function mergeRecentImpersonationIntoAccountPrefs(
     ...(prefs ?? {}),
     [USER_PREFS_KEY_CONSOLE_IMPERSONATION_RECENT]: JSON.stringify(ids),
   }
+}
+
+/**
+ * Cloud's passkeys rollout flag on the console user's prefs, set with Cloud's
+ * `task-manage-flags`. The console only reads it. Value: `true` when shown.
+ */
+export const USER_PREFS_KEY_PASSKEYS_FLAG = 'flags-passkeys'
+
+export function parsePasskeysFlag(
+  prefs: Record<string, unknown> | null | undefined,
+): boolean {
+  return Boolean(prefs?.[USER_PREFS_KEY_PASSKEYS_FLAG])
 }

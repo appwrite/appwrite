@@ -104,4 +104,9 @@ export const POLICIES_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
       'compromised',
     ],
   },
+  {
+    sectionId: 'passkeys',
+    title: 'Relying party',
+    keywords: ['passkey', 'webauthn', 'rp id', 'domain', 'origins'],
+  },
 ]
