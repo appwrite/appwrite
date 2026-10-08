@@ -83,7 +83,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:2.3.0
+    appwrite/appwrite:2.4.0
 ```
 
 ### Windows
@@ -96,7 +96,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:2.3.0
+    appwrite/appwrite:2.4.0
 ```
 
 #### PowerShell
@@ -107,7 +107,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:2.3.0
+    appwrite/appwrite:2.4.0
 ```
 
 安装程序运行后，打开终端打印出的 URL（其中包含一次性密钥）完成安装向导。安装完成后，访问 http://localhost 即可从浏览器进入 Appwrite 控制台。请注意，在非 Linux 本机主机上，安装完成后服务器可能需要几分钟才能启动。
@@ -123,7 +123,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:2.2.0
+    appwrite/appwrite:2.4.0
 ```
 
 升级时，请为 `--entrypoint="upgrade"` 使用相同的 `--env DOCKER_API_VERSION=...` 参数。

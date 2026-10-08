@@ -83,7 +83,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:2.3.0
+    appwrite/appwrite:2.4.0
 ```
 
 ### Windows
@@ -96,7 +96,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:2.3.0
+    appwrite/appwrite:2.4.0
 ```
 
 #### PowerShell
@@ -107,7 +107,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:2.3.0
+    appwrite/appwrite:2.4.0
 ```
 
 Once the installer is running, open the URL printed in the terminal (it includes a one-time secret) to complete the setup wizard. After installation, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
@@ -123,7 +123,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:2.3.0
+    appwrite/appwrite:2.4.0
 ```
 
 Use the same `--env DOCKER_API_VERSION=...` flag with `--entrypoint="upgrade"` when upgrading.
