@@ -159,6 +159,9 @@ final class SitesConsoleClientTest extends Scope
             $this->assertNotEmpty($preview['body']['screenshotLight']);
         });
 
+        // The worker saves the preview's screenshots before it would write the site, and nothing observable follows, so give that write time to land.
+        \sleep(1);
+
         $site = $this->getSite($siteId);
         $this->assertEquals($deployment['body']['screenshotLight'], $site['body']['deploymentScreenshotLight']);
 
