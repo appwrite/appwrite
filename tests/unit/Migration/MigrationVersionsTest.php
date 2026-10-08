@@ -7,6 +7,7 @@ namespace Tests\Unit\Migration;
 use Appwrite\Migration\Migration;
 use Appwrite\Migration\Version\V24;
 use Appwrite\Migration\Version\V25;
+use Appwrite\Migration\Version\V26;
 use PHPUnit\Framework\TestCase;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
@@ -444,5 +445,171 @@ final class MigrationVersionsTest extends TestCase
         $user = $authorization->skip(fn () => $database->getDocument('users', 'legacy-user'));
 
         $this->assertSame('legacyuser@example.com', $user->getAttribute('emailCanonical'));
+    }
+
+    /**
+     * An install upgraded past Videos has none of the seven collections. V26
+     * creates them and seeds the default encode ladder. A second run must not
+     * insert another ladder.
+     */
+    public function testV26CreatesVideoCollectionsAndSeedsProfilesIdempotently(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV26Videos')
+            ->setNamespace('migration_videos_' . \uniqid());
+        $database->create();
+
+        $migration = new V26();
+        $migration->setProject(
+            new Document(['$id' => 'project', '$sequence' => '1']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migration->execute();
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $collections = [
+            'videos',
+            'videos_previews',
+            'videos_renditions',
+            'videos_renditions_segments',
+            'videos_profiles',
+            'videos_captions',
+            'videos_captions_segments',
+        ];
+        foreach ($collections as $collectionId) {
+            $this->assertFalse(
+                $database->getCollection($collectionId)->isEmpty(),
+                "Expected collection \"{$collectionId}\" to exist"
+            );
+        }
+
+        $profiles = $authorization->skip(fn () => $database->find('videos_profiles', [
+            Query::limit(100),
+        ]));
+        $this->assertCount(6, $profiles);
+
+        $names = \array_map(fn (Document $profile) => $profile->getAttribute('name'), $profiles);
+        \sort($names);
+        $this->assertSame(['1080p', '2160p', '360p', '480p', '576p', '720p'], $names);
+    }
+
+    public function testV26SkipsConsoleProject(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV26Console')
+            ->setNamespace('migration_videos_console_' . \uniqid());
+        $database->create();
+
+        $migration = new V26();
+        $migration->setProject(
+            new Document(['$id' => 'console', '$sequence' => 'console']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $this->assertTrue($database->getCollection('videos')->isEmpty());
+        $this->assertTrue($database->getCollection('videos_profiles')->isEmpty());
+    }
+
+    /**
+     * On a shared-tables host the physical table and its _metadata row belong
+     * to no tenant. Each project still gets its own encode ladder because
+     * unique indexes lead with _tenant.
+     */
+    public function testV26SharedTablesCreateGlobalCollectionsAndPerTenantProfiles(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV26Shared')
+            ->setNamespace('migration_videos_shared_' . \uniqid())
+            ->setSharedTables(true)
+            ->setTenant(null);
+        $database->create();
+
+        $migrationA = new V26();
+        $database->setTenant('tenant-a');
+        $migrationA->setProject(
+            new Document(['$id' => 'project-a', '$sequence' => 'tenant-a']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migrationA->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $metadata = $database->withTenant(null, fn () => $database->getDocument(Database::METADATA, 'videos'));
+        $this->assertFalse($metadata->isEmpty());
+        $this->assertNull($metadata->getTenant());
+
+        $profilesA = $authorization->skip(fn () => $database->find('videos_profiles', [
+            Query::limit(100),
+        ]));
+        $this->assertCount(6, $profilesA);
+
+        $migrationB = new V26();
+        $database->setTenant('tenant-b');
+        $migrationB->setProject(
+            new Document(['$id' => 'project-b', '$sequence' => 'tenant-b']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migrationB->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $profilesB = $authorization->skip(fn () => $database->find('videos_profiles', [
+            Query::limit(100),
+        ]));
+        $this->assertCount(6, $profilesB);
+
+        $database->setTenant('tenant-a');
+        $profilesAAgain = $authorization->skip(fn () => $database->find('videos_profiles', [
+            Query::limit(100),
+        ]));
+        $this->assertCount(6, $profilesAAgain);
+
+        $idsA = \array_map(fn (Document $profile) => $profile->getId(), $profilesAAgain);
+        $idsB = \array_map(fn (Document $profile) => $profile->getId(), $profilesB);
+        $this->assertSame([], \array_intersect($idsA, $idsB));
     }
 }
