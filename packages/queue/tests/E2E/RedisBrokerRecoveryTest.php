@@ -304,7 +304,8 @@ final class RedisBrokerRecoveryTest extends RedisTestCase
         $broker = new Redis($this->connection, $this->connection, reapAfter: 0, reapMaxAge: 3600);
         $broker->publish($this->queue, ['n' => 1]);
         $broker->publish($this->queue, ['n' => 2]);
-        [$stale] = $broker->receive($this->queue, 0, 2);
+        $stale = $broker->receive($this->queue, 0, 2)[0] ?? null;
+        $this->assertInstanceOf(\Utopia\Queue\Message::class, $stale);
         $this->backdate($stale->getPid(), 7200);
         $this->expire('.claims.*');
 
