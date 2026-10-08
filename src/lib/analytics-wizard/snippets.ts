@@ -100,10 +100,11 @@ function sampleUrl(domain: string): string {
 function webBlocks(input: SnippetInput): SnippetBlock[] {
   const { endpoint, projectId, trackingId } = input
   return [
+    // Tracking is only on npm `next`; drop the exact pin once 28.2.0 is `latest`.
     {
       label: 'Install the SDK',
       language: 'bash',
-      code: `npm install appwrite`,
+      code: `npm install appwrite@28.2.0-rc.7`,
     },
     {
       label: 'Initialize tracking',
@@ -144,7 +145,7 @@ function flutterBlocks(input: SnippetInput): SnippetBlock[] {
     {
       label: 'Add the package',
       language: 'bash',
-      code: `flutter pub add appwrite`,
+      code: `flutter pub add appwrite:^27.1.0-rc.8`,
     },
     {
       label: 'Initialize tracking',
