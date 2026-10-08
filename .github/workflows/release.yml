@@ -37,7 +37,7 @@ jobs:
       with:
         images: appwrite/appwrite
         flavor: |
-          latest=false
+          latest=${{ startsWith(github.event.release.tag_name, '1.') && 'false' || 'auto' }}
         tags: |
           type=semver,pattern={{major}}.{{minor}}.{{patch}}
           type=semver,pattern={{major}}.{{minor}}
