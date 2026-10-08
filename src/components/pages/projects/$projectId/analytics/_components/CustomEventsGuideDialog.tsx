@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { AlertTriangle, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import {
   Dialog,
@@ -74,7 +74,6 @@ export function CustomEventsGuideDialog({
         : [],
     [platform, projectId, property],
   )
-  const meta = ANALYTICS_PLATFORM_META[platform]
   const reserved = Array.from(ANALYTICS_AUTOMATIC_EVENTS)
 
   return (
@@ -127,17 +126,6 @@ export function CustomEventsGuideDialog({
               </Tabs>
             </div>
 
-            {meta.unreleased ? (
-              <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2">
-                <AlertTriangle
-                  className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400"
-                  aria-hidden
-                />
-                <p className="text-[12px] text-amber-900 dark:text-amber-200">
-                  {t('Not released yet and may change. Use REST to send events today.')}
-                </p>
-              </div>
-            ) : null}
 
             {blocks.map((block) => (
               <CodeBlock

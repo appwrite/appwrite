@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, Braces, Check, Sparkles } from 'lucide-react'
+import { Braces, Check, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import type { Models } from '@appwrite.io/console'
@@ -258,19 +258,6 @@ export function InstallTrackingDialog({
               </ul>
             </div>
 
-            {meta.unreleased ? (
-              <div className="flex gap-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
-                <AlertTriangle
-                  className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400"
-                  aria-hidden
-                />
-                <p className="text-[12px] leading-relaxed text-amber-900 dark:text-amber-200">
-                  {t(
-                    'This SDK is not published yet, so the code will not resolve today. Use the REST tab to start sending events now.',
-                  )}
-                </p>
-              </div>
-            ) : null}
 
             <p className="text-[12px] leading-relaxed text-muted-foreground">
               {t(meta.note)}

@@ -1,6 +1,5 @@
 import { Braces, Check } from 'lucide-react'
 import { PlatformIcon } from '@/components/global/shared/Icon'
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import {
@@ -77,11 +76,6 @@ export function PlatformCards({ value, onChange, disabled }: Props) {
             <span className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
               {t(meta.description)}
             </span>
-            {meta.unreleased ? (
-              <Badge variant="warning" className="mt-3 w-fit text-[10px]">
-                {t('SDK coming soon')}
-              </Badge>
-            ) : null}
           </button>
         )
       })}

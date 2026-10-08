@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { AlertTriangle } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
@@ -77,20 +76,6 @@ export function IntegrationSnippets({
           ))}
         </TabsList>
       </Tabs>
-
-      {meta.unreleased && (
-        <div className="flex gap-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
-          <AlertTriangle
-            className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400"
-            aria-hidden
-          />
-          <p className="text-[12px] leading-relaxed text-amber-900 dark:text-amber-200">
-            {t(
-              'These helpers are not published yet. They arrive in an upcoming SDK release, and the API surface may still change, including the analytics.event() call inside the emitter, which the client SDKs have not generated yet. This code will not resolve if you copy it today. Use the REST tab to start sending events now.',
-            )}
-          </p>
-        </div>
-      )}
 
       <div className="space-y-4">
         {blocks.map((block) => (
