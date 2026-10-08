@@ -207,7 +207,7 @@ use Utopia\Mqtt\Adapter;
 
 $adapter = new Adapter\Swoole([
     new Adapter\Swoole\Tcp('0.0.0.0', 1883),
-    new Adapter\Swoole\Tls('0.0.0.0', 8883, cert: '/etc/ssl/mqtt.crt', key: '/etc/ssl/mqtt.key'),
+    new Adapter\Swoole\Tls(new Adapter\Swoole\Tcp('0.0.0.0', 8883), cert: '/etc/ssl/mqtt.crt', key: '/etc/ssl/mqtt.key'),
     new Adapter\Swoole\WebSocket('0.0.0.0', 8083),
 ], workers: 4);
 ```

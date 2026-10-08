@@ -215,10 +215,45 @@ $registerConnectionResources($container);
 $telemetry = $container->get('telemetry');
 
 $maxPacketSize = (int) System::getEnv('_APP_MQTT_MAX_PACKET_SIZE', '64000');
-$adapter = new Adapter\Swoole([
+$wsPort = (int) System::getEnv('_APP_MQTT_WS_PORT', '8083');
+
+$tlsCert = System::getEnv('_APP_MQTT_TLS_CERT', '');
+$tlsKey = System::getEnv('_APP_MQTT_TLS_KEY', '');
+
+$transports = [
     new Adapter\Swoole\Tcp('0.0.0.0', 1883, $maxPacketSize),
-    new Adapter\Swoole\WebSocket('0.0.0.0', (int) System::getEnv('_APP_MQTT_WS_PORT', '8083'), $maxPacketSize),
-], workers: 1);
+];
+
+if ($tlsCert !== '' || $tlsKey !== '') {
+    // Fail fast on a half-configured or unreadable cert, before Swoole aborts opaquely and
+    // takes the plaintext listener down with it.
+    if ($tlsCert === '' || $tlsKey === '') {
+        Console::error('MQTT TLS needs both _APP_MQTT_TLS_CERT and _APP_MQTT_TLS_KEY set, or neither.');
+        exit(1);
+    }
+    foreach (['_APP_MQTT_TLS_CERT' => $tlsCert, '_APP_MQTT_TLS_KEY' => $tlsKey] as $name => $path) {
+        if (!is_readable($path)) {
+            Console::error("MQTT TLS file for {$name} is missing or unreadable: {$path}");
+            exit(1);
+        }
+    }
+    // Only one WebSocket listener can be the
+    // Swoole master, so wss replaces the plaintext WebSocket rather than running beside it.
+    $transports[] = new Adapter\Swoole\Tls(
+        new Adapter\Swoole\Tcp('0.0.0.0', (int) System::getEnv('_APP_MQTT_TLS_PORT', '8883'), $maxPacketSize),
+        $tlsCert,
+        $tlsKey,
+    );
+    $transports[] = new Adapter\Swoole\Tls(
+        new Adapter\Swoole\WebSocket('0.0.0.0', $wsPort, $maxPacketSize),
+        $tlsCert,
+        $tlsKey,
+    );
+} else {
+    $transports[] = new Adapter\Swoole\WebSocket('0.0.0.0', $wsPort, $maxPacketSize);
+}
+
+$adapter = new Adapter\Swoole($transports, workers: 1);
 
 $mqtt = new Mqtt($telemetry, new PubSubPool($register->get('pools')->get('pubsub')));
 

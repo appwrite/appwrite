@@ -14,4 +14,9 @@ abstract class Transport
 
     /** @return array<string, mixed> */
     abstract public function getSettings(): array;
+
+    public function isWebSocket(): bool
+    {
+        return false;
+    }
 }

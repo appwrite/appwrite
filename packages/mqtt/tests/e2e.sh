@@ -3,12 +3,21 @@
 set -eu
 cd "$(dirname "$0")/.."
 
+# Self-signed cert for the TLS-wrapped listener (18832). Ephemeral, never committed.
+CERT_DIR="$(mktemp -d)"
+MQTT_TLS_CERT="$CERT_DIR/mqtt.crt"
+MQTT_TLS_KEY="$CERT_DIR/mqtt.key"
+export MQTT_TLS_CERT MQTT_TLS_KEY
+openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj "/CN=localhost" \
+    -keyout "$MQTT_TLS_KEY" -out "$MQTT_TLS_CERT" >/dev/null 2>&1
+
 php tests/Fixtures/Swoole/server.php &
 BROKER_PID=$!
 
 cleanup() {
     kill -TERM "$BROKER_PID" 2>/dev/null || true
     wait 2>/dev/null || true
+    rm -rf "$CERT_DIR"
 }
 trap cleanup EXIT INT TERM
 
@@ -30,5 +39,6 @@ wait_for_port() {
 
 wait_for_port 18830
 wait_for_port 18831
+wait_for_port 18832
 
 phpunit --testsuite e2e
