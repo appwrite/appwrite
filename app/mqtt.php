@@ -223,7 +223,19 @@ $transports = [
 
 $tlsCert = System::getEnv('_APP_MQTT_TLS_CERT', '');
 $tlsKey = System::getEnv('_APP_MQTT_TLS_KEY', '');
-if ($tlsCert !== '' && $tlsKey !== '') {
+if ($tlsCert !== '' || $tlsKey !== '') {
+    // Fail fast on a half-configured or unreadable cert, before Swoole aborts opaquely and
+    // takes the plaintext listeners down with it.
+    if ($tlsCert === '' || $tlsKey === '') {
+        Console::error('MQTT TLS needs both _APP_MQTT_TLS_CERT and _APP_MQTT_TLS_KEY set, or neither.');
+        exit(1);
+    }
+    foreach (['_APP_MQTT_TLS_CERT' => $tlsCert, '_APP_MQTT_TLS_KEY' => $tlsKey] as $name => $path) {
+        if (!is_readable($path)) {
+            Console::error("MQTT TLS file for {$name} is missing or unreadable: {$path}");
+            exit(1);
+        }
+    }
     $transports[] = new Adapter\Swoole\Tls(
         new Adapter\Swoole\Tcp('0.0.0.0', (int) System::getEnv('_APP_MQTT_TLS_PORT', '8883'), $maxPacketSize),
         $tlsCert,
