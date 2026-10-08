@@ -254,12 +254,12 @@ class Nats implements Synchronous, Consumer, Bounded
      * @param Provisioning $provisioning Whether this broker may create and rewrite the
      *        queue's streams and worker consumers, or must use what is already there
      *        and refuse otherwise. See {@see Provisioning}.
-     * @param float $releaseDelay How long a message handed back by release() waits
-     *        before JetStream redelivers it, in seconds. Every redelivery counts toward
-     *        $maxDeliver and JetStream has no NAK that doesn't, so an immediate NAK lets
-     *        several workers stopping at once pass a message between them until it runs
-     *        out of deliveries without running: a fleet scaled down 8 -> 1 lost messages
-     *        that way. The delay has to outlast the stopping workers' last fetch. 0
+     * @param float $releaseDelay How long a message waits before JetStream redelivers
+     *        it, in seconds, when release() cannot requeue it and falls back to a NAK.
+     *        That NAK counts toward $maxDeliver, so an immediate one lets several workers
+     *        stopping at once pass a message between them until it runs out of
+     *        deliveries without running: a fleet scaled down 8 -> 1 lost messages that
+     *        way. The delay has to outlast the stopping workers' last fetch. 0
      *        redelivers at once.
      */
     public function __construct(
@@ -823,6 +823,101 @@ class Nats implements Synchronous, Consumer, Bounded
     }
 
     /**
+     * Return prefetched work without treating shutdown as a handler failure.
+     *
+     * Requeued as a new message rather than NAK'd. JetStream counts every NAK as a
+     * delivery, so a NAK spends an attempt on work no handler ever saw: on a queue
+     * with maxDeliver=1 the redelivery is the spare one and is dead-lettered on
+     * arrival, which turned every rolling restart into dead letters for jobs that
+     * never ran. A new message starts its count at zero.
+     *
+     * The bytes go back as they arrived, under an id of their own: the original's id
+     * is its pid, which the work stream remembers for the duplicate window and would
+     * collapse the requeue into. The id is derived from the stream sequence, so a
+     * requeue retried after an ambiguous publish still stores one copy.
+     *
+     * Acknowledged only once the requeue is stored, so a failure between the two
+     * leaves a duplicate, never a loss. Otherwise the message falls back to a NAK
+     * after releaseDelay, which costs the attempt but keeps the work: when the
+     * requeue is refused, and on a bounded stream that discards old messages, where
+     * a requeue is accepted by evicting the oldest stored job -- another worker's,
+     * silently.
+     *
+     * The requeue joins the back of the queue and is deliverable at once, so a worker
+     * that is also stopping may fetch it and hand it back again. Each round costs a
+     * publish, not an attempt. The stream's maxAge counts from the requeue.
+     *
+     * Never throws: a stopping worker has nowhere to handle it, and one message that
+     * cannot be handed back must not keep the rest of the batch from it. Whatever is
+     * neither requeued nor NAK'd is redelivered by the server after ackWait.
+     */
+    public function release(Queue $queue, Message ...$messages): void
+    {
+        try {
+            $this->command(function () use ($queue, $messages): void {
+                $requeue = null;
+                foreach ($messages as $message) {
+                    $pid = $message->getPid();
+                    $jsMessage = $this->inFlight[$pid] ?? null;
+                    if (!$jsMessage instanceof JetStreamMessage) {
+                        continue;
+                    }
+                    unset($this->inFlight[$pid]);
+
+                    $stored = false;
+                    try {
+                        // Read from the server, not from this broker's arguments: a broker
+                        // that adopted the stream did not choose its limits.
+                        $requeue ??= (function () use ($queue): bool {
+                            $config = $this->commandsJs()->getStreamInfo($this->workStream($queue))->config;
+
+                            return $config->discard === DiscardPolicy::New
+                                || ($config->maxMsgs === -1 && $config->maxBytes === -1 && $config->maxMsgsPerSubject === -1);
+                        })();
+
+                        if ($requeue) {
+                            // The message's own Content-Type, as in park(): the bytes go back unread.
+                            $headers = new Headers();
+                            $contentType = $jsMessage->getHeaders()?->get(self::CONTENT_TYPE);
+                            if ($contentType !== null) {
+                                $headers->set(self::CONTENT_TYPE, $contentType);
+                            }
+                            $this->commandsJs()->publish(
+                                $this->workSubject($queue),
+                                $jsMessage->getData(),
+                                headers: $headers,
+                                msgId: $pid . '.released.' . $jsMessage->metadata()->streamSequence,
+                            );
+                            $stored = true;
+                            $this->onCommands($jsMessage)->ack();
+
+                            continue;
+                        }
+                    } catch (\Throwable $error) {
+                        $this->report($error);
+                        if ($stored) {
+                            // The copy is safe; a NAK now would queue the job twice.
+                            continue;
+                        }
+                    }
+
+                    try {
+                        $this->onCommands($jsMessage)->nak($this->releaseDelay > 0 ? $this->releaseDelay : null);
+                    } catch (\Throwable $error) {
+                        $this->report($error);
+                    }
+                }
+            });
+        } catch (\Throwable $error) {
+            $this->report($error);
+        } finally {
+            // A stopping worker may never receive() again, so what went wrong is handed
+            // over here rather than left for the next receive to flush.
+            $this->flushReports();
+        }
+    }
+
+    /**
      * Tell the server the handler is still working on this message.
      *
      * ackWait is a deadline, not a hint: when it passes with no ack the server
@@ -835,20 +930,6 @@ class Nats implements Synchronous, Consumer, Bounded
      * Silent for a message that is no longer in flight: a handler racing its own
      * completion must not turn into an error on a job that already finished.
      */
-    /** Return prefetched work without treating shutdown as a handler failure. */
-    public function release(Queue $queue, Message ...$messages): void
-    {
-        $this->command(function () use ($messages): void {
-            foreach ($messages as $message) {
-                $pid = $message->getPid();
-                if (isset($this->inFlight[$pid])) {
-                    $this->onCommands($this->inFlight[$pid])->nak($this->releaseDelay > 0 ? $this->releaseDelay : null);
-                    unset($this->inFlight[$pid]);
-                }
-            }
-        });
-    }
-
     public function extend(Queue $queue, Message ...$messages): void
     {
         $this->command(function () use ($messages): void {
