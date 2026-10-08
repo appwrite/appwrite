@@ -197,4 +197,46 @@ final class V25Test extends TestCase
         $this->assertFalse($migration->isCandidate(new Document(), $document));
         $this->assertFalse($migration->isCandidate($document, new Document()));
     }
+
+    public function testDropsDevKeysFromConsoleProjects(): void
+    {
+        $authorization = new Authorization();
+        $authorization->disable();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+        $database->createCollection(Collection::create(
+            id: 'projects',
+            attributes: [
+                Attribute::string(key: 'name', size: 128),
+                Attribute::string(key: 'devKeys', size: 16384),
+            ],
+        ));
+
+        $migration = new class ($database) extends V25 {
+            public function __construct(Database $database)
+            {
+                $this->dbForProject = $database;
+                $this->project = new Document(['$id' => 'console', '$sequence' => 'console']);
+                $this->collections = ['console' => [
+                    'projects' => ['$collection' => Database::METADATA, '$id' => 'projects', 'attributes' => [], 'indexes' => []],
+                ]];
+            }
+        };
+
+        \ob_start();
+        try {
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $this->assertSame(['name'], \array_map(
+            fn (Attribute $attribute): string => $attribute->key,
+            $database->getCollection('projects')->attributes()
+        ));
+    }
 }

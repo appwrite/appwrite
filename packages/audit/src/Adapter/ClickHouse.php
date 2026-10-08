@@ -10,6 +10,7 @@ use Utopia\Audit\Query;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Database\Attribute;
+use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Index;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Method as HttpMethod;
@@ -386,7 +387,7 @@ class ClickHouse extends SQL
      * Override getAttributes to provide extended attributes for ClickHouse.
      * Includes existing attributes from parent and adds new missing ones.
      *
-     * @return array<int, Attribute>
+     * @return list<Attribute>
      */
     #[\Override]
     public function getAttributes(): array
@@ -395,15 +396,7 @@ class ClickHouse extends SQL
 
         foreach ($parentAttributes as $index => $attribute) {
             if ($attribute->key === 'userId') {
-                $parentAttributes[$index] = Attribute::fromArray([
-                    'key' => 'actorId',
-                    'type' => $attribute->type,
-                    'size' => $attribute->size,
-                    'required' => $attribute->required,
-                    'signed' => $attribute->signed,
-                    'array' => $attribute->array,
-                    'filters' => $attribute->filters,
-                ]);
+                $parentAttributes[$index] = $attribute->apply(new AttributeUpdate(key: 'actorId'));
                 break;
             }
         }
@@ -452,7 +445,7 @@ class ClickHouse extends SQL
      * Override getIndexes to provide extended indexes for ClickHouse.
      * Includes existing indexes from parent and adds new missing ones.
      *
-     * @return array<int, Index>
+     * @return list<Index>
      */
     #[\Override]
     public function getIndexes(): array

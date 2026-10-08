@@ -30,7 +30,7 @@ abstract class SQL extends Adapter
     /**
      * Get attribute definitions for event metrics.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function getEventAttributes(): array
     {
@@ -40,7 +40,7 @@ abstract class SQL extends Adapter
     /**
      * Get attribute definitions for gauge metrics.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function getGaugeAttributes(): array
     {
@@ -51,7 +51,7 @@ abstract class SQL extends Adapter
      * Get attribute definitions for a specific type.
      *
      * @param string $type 'event' or 'gauge'
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function getAttributes(string $type = 'event'): array
     {
@@ -62,7 +62,7 @@ abstract class SQL extends Adapter
      * Get attribute models for a specific type.
      *
      * @param string $type 'event' or 'gauge'
-     * @return array<Attribute>
+     * @return list<Attribute>
      */
     public function getAttributeDocuments(string $type = 'event'): array
     {
@@ -72,7 +72,7 @@ abstract class SQL extends Adapter
     /**
      * Get index definitions for event metrics.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function getEventIndexes(): array
     {
@@ -82,7 +82,7 @@ abstract class SQL extends Adapter
     /**
      * Get index definitions for gauge metrics.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function getGaugeIndexes(): array
     {
@@ -93,7 +93,7 @@ abstract class SQL extends Adapter
      * Get index definitions for a specific type.
      *
      * @param string $type 'event' or 'gauge'
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function getIndexes(string $type = 'event'): array
     {
@@ -104,7 +104,7 @@ abstract class SQL extends Adapter
      * Get index models for a specific type.
      *
      * @param string $type 'event' or 'gauge'
-     * @return array<Index>
+     * @return list<Index>
      */
     public function getIndexDocuments(string $type = 'event'): array
     {

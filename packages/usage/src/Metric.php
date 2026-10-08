@@ -603,7 +603,7 @@ class Metric extends ArrayObject
      * raw request events with metadata columns for path, method, status,
      * resourceType, and resourceId.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public static function getEventSchema(): array
     {
@@ -706,7 +706,7 @@ class Metric extends ArrayObject
      * Returns the attribute schema for the gauges table which stores
      * simple resource snapshots (metric, value, time, tags).
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public static function getGaugeSchema(): array
     {
@@ -775,7 +775,7 @@ class Metric extends ArrayObject
     /**
      * Get event table indexes.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public static function getEventIndexes(): array
     {
@@ -832,7 +832,7 @@ class Metric extends ArrayObject
     /**
      * Get gauge table indexes.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public static function getGaugeIndexes(): array
     {

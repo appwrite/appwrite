@@ -30,9 +30,14 @@ final class DatabaseTest extends TestCase
         $username = 'root';
         $password = 'password';
 
-        $attributes = MariaDB::getPdoAttributes();
-        $attributes[PDO::ATTR_PERSISTENT] = false;
-        $connection = new PDO("mysql:host={$host};port={$port};charset=utf8mb4", $username, $password, $attributes);
+        $connection = new PDO("mysql:host={$host};port={$port};charset=utf8mb4", $username, $password, [
+            PDO::ATTR_TIMEOUT => 3,
+            PDO::ATTR_PERSISTENT => false,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_EMULATE_PREPARES => true,
+            PDO::ATTR_STRINGIFY_FETCHES => true,
+        ]);
         $cache = new Cache(new NoCache());
         $database = new Database(new MariaDB($connection), $cache);
         $database->setDatabase('utopiaTests');

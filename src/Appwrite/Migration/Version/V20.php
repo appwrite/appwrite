@@ -7,6 +7,7 @@ use Exception;
 use PDOException;
 use Throwable;
 use Utopia\Console\Console;
+use Utopia\Database\Attribute;
 use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -106,7 +107,7 @@ class V20 extends Migration
                     }
                 }
 
-                $this->dbForProject->updateAttribute($collectionId, $attribute['key'], new AttributeUpdate(type: $attribute['type']));
+                $this->dbForProject->updateAttribute($collectionId, $attribute['key'], new AttributeUpdate(type: Attribute::typeFromStored($attribute->getAttribute('type'))));
             }
         }
 
@@ -120,17 +121,17 @@ class V20 extends Migration
 
             // Support database array type migration
             foreach ($collection['attributes'] ?? [] as $attribute) {
-                if ($attribute['array'] === true) {
+                if ($attribute->array) {
                     foreach ($collection['indexes'] ?? [] as $index) {
-                        if (\in_array($attribute['$id'], $index['attributes'])) {
-                            $this->dbForProject->deleteIndex($id, $index['$id']);
+                        if (\in_array($attribute->key, $index->attributes, true)) {
+                            $this->dbForProject->deleteIndex($id, $index->key);
                         }
                     }
 
                     try {
-                        $this->dbForProject->updateAttribute($id, $attribute['$id'], new AttributeUpdate(type: $attribute['type']));
+                        $this->dbForProject->updateAttribute($id, $attribute->key, new AttributeUpdate(type: $attribute->type));
                     } catch (Throwable $th) {
-                        Console::warning("'{$attribute['$id']}' from {$id}: {$th->getMessage()}");
+                        Console::warning("'{$attribute->key}' from {$id}: {$th->getMessage()}");
                     }
                 }
             }

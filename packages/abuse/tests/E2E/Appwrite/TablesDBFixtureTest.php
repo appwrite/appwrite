@@ -235,7 +235,10 @@ final class TablesDBFixtureTest extends TestCase
         $this->assertCount(1, $this->read()['deletes']);
     }
 
-    /** @return State */
+    /**
+     * @return State
+     * @phpstan-impure
+     */
     private function read(): array
     {
         $state = json_decode((string) file_get_contents($this->state), true, flags: JSON_THROW_ON_ERROR);
