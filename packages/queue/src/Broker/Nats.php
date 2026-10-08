@@ -1017,6 +1017,12 @@ class Nats implements Synchronous, Consumer, Bounded
     /**
      * Re-drive dead-lettered messages back onto the work queue, up to $limit.
      *
+     * A null $limit means every message on the dead stream when the sweep starts, as
+     * Broker\Redis::retry() reads it. The bound is taken from the retry consumer's
+     * pending count up front rather than looping until the stream is empty: a message
+     * re-driven by this sweep can fail again and land back on the dead stream before
+     * the sweep ends, and must not be picked up a second time by the same run.
+     *
      * $maxAttempts and $newerThan exist only for signature compatibility with
      * Broker\Redis::retry() (cloud calls it with them); they are not applied here.
      * In the JetStream model attempts are capped server-side by maxDeliver before a
@@ -1048,7 +1054,7 @@ class Nats implements Synchronous, Consumer, Bounded
                 filterSubject: $this->deadSubject($queue),
             ));
 
-            $remaining = $limit ?? 500;
+            $remaining = $limit ?? $consumer->info(true)->numPending;
             while ($remaining > 0) {
                 $jsMessage = $this->fetch($consumer, 1, 1.0, false)[0] ?? null;
                 if (!$jsMessage instanceof JetStreamMessage) {

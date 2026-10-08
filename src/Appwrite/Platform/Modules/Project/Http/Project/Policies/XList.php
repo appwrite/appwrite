@@ -176,6 +176,11 @@ class XList extends Action
                 '$id' => 'deny-corporate-email',
                 'enabled' => $auths['corporateEmails'] ?? false,
             ]),
+            new Document([
+                '$id' => 'passkey',
+                'rpId' => $auths['passkeyRpId'] ?? '',
+                'origins' => $auths['passkeyOrigins'] ?? [],
+            ]),
         ];
     }
 }

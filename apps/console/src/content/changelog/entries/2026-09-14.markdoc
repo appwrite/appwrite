@@ -1,0 +1,33 @@
+---
+layout: changelog
+title: Announcing Appwrite 2.1 for self-hosted deployments
+date: 2026-09-14
+cover: /images/blog/appwrite-2-1-self-hosted/cover.avif
+tags: storage, auth, console, infrastructure
+---
+
+Appwrite 2.1 is now available for self-hosting.
+
+This release includes:
+
+- The [S3 API](/blog/post/announcing-s3-api) for Storage at `/v1/s3`, so the AWS CLI, AWS SDKs, rclone, and other S3 clients can read and write files in your buckets
+- [AutoGravity](/blog/post/introducing-autogravity) as a new `appwrite-autogravity` container. Set `_APP_AUTOGRAVITY_HOST` to turn on AutoGravity
+- TikTok and Kakao as OAuth2 providers
+- A batch of fixes to Appwrite Console
+- Runtimes for Dart 3.13 and Flutter 3.47
+
+Head over to our [migration guide](/docs/advanced/self-hosting/production/updates) to upgrade your instance. Upgrade to 2.0.0 first if you are still on 1.9.x.
+
+For the complete list of updates and fixes, check out the [release notes](https://github.com/appwrite/appwrite/releases/tag/2.1.0) on GitHub.
+
+{% arrow_link href="/blog/post/appwrite-2-1-self-hosted" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/advanced/self-hosting/installation" %}
+Install Appwrite 2.1
+{% /arrow_link %}
+
+{% arrow_link href="/docs/advanced/self-hosting/production/updates#upgrading-to-latest" %}
+Upgrade your self-hosted instance
+{% /arrow_link %}

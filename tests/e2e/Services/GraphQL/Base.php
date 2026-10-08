@@ -3,8 +3,8 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use CURLFile;
-use Utopia\Command;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Image\Image;
 
 trait Base

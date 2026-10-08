@@ -1274,6 +1274,7 @@ final class ProjectsConsoleClientTest extends Scope
         foreach ($authsKeys as $authsKey) {
             $this->assertTrue($response['body'][$authsKey], 'Auth method should be enabled: ' . $authsKey);
         }
+        $this->assertArrayNotHasKey('authPasskey', $response['body'], 'Older response formats never see passkeys');
 
         $serviceKeys = [
             'serviceStatusForAccount',
@@ -2500,6 +2501,7 @@ final class ProjectsConsoleClientTest extends Scope
         $id = $response['body']['$id'];
 
         $auth = require(__DIR__ . '/../../../../app/config/auth.php');
+        unset($auth['passkey']); // Not exposed in these older response formats
         $originalEmail = uniqid() . 'user@localhost.test';
         $originalPassword = 'password';
         $originalName = 'User Name';

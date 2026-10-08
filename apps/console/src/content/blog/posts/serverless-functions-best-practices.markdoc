@@ -1,0 +1,220 @@
+---
+layout: post
+title: "Serverless functions 101: Best practices"
+description: Some do's, don'ts and best practices for creating and maintaining serverless functions.
+date: 2024-08-19
+cover: /images/blog/serverless-functions/cover.avif
+timeToRead: 5
+author: ebenezer-don
+category: products
+featured: false
+lastUpdated: 2026-06-29
+faqs:
+  - question: "What are serverless functions?"
+    answer: "Serverless functions let you run small pieces of code in the cloud without managing servers. You just define a function, deploy it, and the platform (like Appwrite, AWS Lambda, or Vercel) automatically scales it up or down based on usage. You only pay for the time your code runs, no idle costs, no manual infrastructure setup."
+  - question: "How do I decide what logic should go into a serverless function?"
+    answer: "Keep functions small, focused, and event-driven. A good rule of thumb: one function should do one thing well, like sending an email, processing an image, or verifying a payment. Avoid cramming multiple workflows into a single function; it makes testing, scaling, and debugging much easier."
+  - question: "How can I reduce the cost of running serverless functions?"
+    answer: "Design your architecture to be event-driven and avoid functions running longer than needed. Split heavy or continuous tasks (like file processing or large data syncs) into smaller chunks or move them to specialized services. Also, clean up unused triggers and logs, they can silently add to costs over time."
+  - question: "How do I secure my serverless functions?"
+    answer: "Enforce authentication and authorization at the function level. Use minimal API scopes and regularly rotate keys. Never rely solely on client-side validation. Always validate tokens or permissions in the function itself. In Appwrite, you can configure execute permissions to restrict who can run each function."
+  - question: "How do I manage versions of serverless functions?"
+    answer: "Versioning helps you roll back safely if something breaks. Assign version numbers when making breaking changes and maintain backward-compatible routes for existing clients. Appwrite lets you manage multiple function versions directly from the console."
+---
+
+Serverless functions have become a popular choice for modern application development due to their scalability, cost-effectiveness, and ease of use. Appwrite offers an integrated serverless platform that allows you to build and deploy functions seamlessly. However, to make the most of serverless functions, it's essential to follow best practices that ensure efficiency, security, and maintainability.
+
+In this guide, we'll explore some dos and don'ts of serverless functions and provide tips for optimizing your functions.
+
+# Define clear objectives
+
+Before writing any code, clearly define what you want each function to accomplish. This clarity helps in creating focused, efficient functions. Clear objectives prevent scope creep, making functions easier to test, maintain, and optimize.
+
+For example, if you're building a function to process user registrations, define the inputs, outputs, and expected behavior of the function. It might look like this:
+
+- **Inputs**: User data (name, email, password)
+- **Outputs**: Success or error message
+- **Behavior**: Validate user data, create a new user account, and send a welcome email
+- **Error handling**: Return appropriate error messages for invalid data or failed operations
+
+# Document your functions
+
+Proper documentation is essential for maintaining and scaling serverless functions. Documenting your functions helps other developers understand how they work and how to interact with them. It's best practice to document your functions in your project's README. A well-documented function includes the following details:
+
+## Endpoints
+
+For each endpoint, provide:
+
+- **Description**: What the endpoint does
+- **Method**: HTTP method used (GET, POST, etc.)
+- **Path**: The URL path
+- **Params**: Parameters required or optional
+- **Headers**: Any required or optional headers
+- **Success response example**: A sample of a successful response
+- **Failed response example**: A sample of a failed response
+- **Response structure**: Any variations in the structure of the response body
+
+## Environment variables
+
+List all environment variables that need to be set to ensure the function runs correctly. This includes any API keys, database URLs, or other configurations.
+
+For each variable, include the following details:
+
+- **Variable name**: The name of the environment variable.
+- **Description**: A brief explanation of the variable's purpose and how it affects the function.
+- **Example value**: An example of a typical value that the variable might take.
+- **Required**: Indicate whether the variable is mandatory or optional.
+- **Link to documentation**: Provide a link to any relevant documentation.
+
+## Entrypoint and build command
+
+Specify the entry point (main file) for the function and the command needed to build it. This will help you understand how to run and deploy the function.
+
+## Deployment configuration
+
+Detail the configuration needed for deployment on your chosen platform. For example, if using Appwrite, include:
+
+- **Timeout**: The function's timeout setting.
+- **Scopes**: Permissions required by the function.
+- **Execute permissions**: Who or what can execute the function.
+- **Cron**: If the function is scheduled, provide the cron expression.
+- **Events**: Events that trigger the function.
+
+## Development setup
+
+Explain how to run the function in a development environment. For Appwrite, this would include using the command `appwrite run function`.
+
+Proper documentation ensures that other developers can understand and work with your code efficiently.
+
+# Keep functions small and focused
+
+Adhering to the single responsibility principle means each function should perform one task. This approach simplifies testing, debugging, and scaling. Smaller functions are easier to manage, and they can be independently updated or replaced without affecting the entire application. So, instead of having a single function that handles user registration, payment processing, and email notifications, it's better to break them down into separate functions.
+
+However, there are exceptions. If your function acts as an API server, you might want to consolidate multiple services into a single API function. This approach can minimize cold-start times, as the function remains warm longer due to frequent invocations. In such cases, balancing the need for focused functions with the benefits of reduced latency is key.
+
+# Choose appropriate specifications for your functions
+
+Configuring the right specifications ensures that your functions have the necessary resources for optimal performance. Proper allocation balances performance and cost, helping to avoid unnecessary expenses while maintaining efficiency.
+
+For example, if your function handles image processing, it may require more resources than a function that processes text data. In such cases, allocating more CPU and RAM can enhance performance.
+
+In Appwrite, you can configure your function specification by navigating to your function settings and scrolling to “**Runtime**”:
+
+![Functions-specifications](/images/blog/serverless-functions/1.avif)
+
+This will allow you to choose the CPU and memory allocation for your function. It's important to choose the right settings based on your function's requirements to ensure optimal performance.
+
+# Minimize cold starts
+
+Cold starts occur when a function is invoked after being idle, causing a delay as the runtime environment initializes. This can impact the user experience by increasing latency. Minimizing cold starts ensures a smoother, more responsive application. 
+
+Some languages are faster at cold starts than others. Choosing the right language for your serverless functions is important, especially for user-facing functions. Compiled languages like Go or Dart typically have faster start times compared to interpreted languages. However, for interpreted languages like Node.js, Python, or PHP, you could use a build tool like ESBuild to bundle all your code into a single file. This reduces the number of files that need to be loaded and extracted during the cold start, speeding up the process.
+
+You could also consider using warm-up strategies to keep functions warm and ready to respond quickly, like scheduling periodic pings to your functions. Although this may incur additional costs and could be a form of abuse on free-tier plans. So, it's essential to weigh the trade-offs and choose the best approach for your use case.
+
+Additionally, you can optimize warm starts by reusing resources between executions. For example, you can maintain a pool of database connections at a global level to avoid repeated handshakes on each request. Also, implementing caching for database queries that don't require the latest data on every invocation can help reduce latency. However, be cautious with caching as it can lead to stale data if not managed properly.
+
+# Use environment variables
+
+Avoid hardcoding configuration values like API keys or database URLs. Instead, use environment variables to manage these configurations securely. Hardcoding sensitive information poses a security risk and reduces flexibility. Environment variables keep sensitive data out of your codebase and make it easy to change configurations without modifying code.
+
+In Appwrite, you can set environment variables for your functions in the Cloud Console. Navigate to your function settings and scroll down to the "Environment Variables" section. Here, you can add key-value pairs for your configurations. It should look like this:
+
+![Environment-variables](/images/blog/serverless-functions/2.avif)
+After setting environment variables, you can access them in your function code like this (for Node.js):
+
+```jsx
+const apiKey = process.env.NAME_OF_YOUR_ENV_VARIABLE
+
+```
+
+Depending on your runtime and programming language, the above code might look different.
+
+# Ensure API keys are secure
+
+Always set minimal scopes to the API keys used in your functions to maintain security. This limits access to only the necessary resources. Additionally, set an expiration date for your API keys and regularly rotate them to enhance security further. Depending on your application, you might want to rotate the keys more or less frequently, but a general recommendation is every 1-3 months.
+
+# Manage dependencies effectively
+
+Keep your function dependencies lean by including only necessary libraries. This will reduce deployment size, improve performance, and simplify maintenance.
+
+Large deployment packages slow down the function initialization process and increase resource consumption. If a library is not essential or you only need a small part of it, consider searching for a more lightweight alternative or writing custom code.
+
+# Implement authentication and authorization
+
+Ensure only authorized users can execute your functions. Appwrite provides built-in authentication and authorization features that you can leverage to secure your functions. This is important for protecting sensitive data and preventing your functions from being misused or easily exploited.
+
+You must ensure that authorization is enforced on your serverless functions and not solely on the client side. Client-side authorization can be bypassed, leading to security vulnerabilities. Appwrite Databases and Storage services can be configured to enforce access control rules. For example, you can restrict read and write access to rows by navigating to your database table settings in the Appwrite Console and setting the appropriate permissions. It looks like this:
+
+![Functions-authorization](/images/blog/serverless-functions/3.avif)
+
+You can also configure **execute access** for your Appwrite functions, allowing you to specify who can execute the function using the client API.
+
+![Functions-access](/images/blog/serverless-functions/4.avif)
+
+# Encrypt sensitive data
+
+Always encrypt sensitive data, both in transit and at rest, to protect it from unauthorized access. Encryption ensures that even if data is intercepted or accessed by unauthorized users, it cannot be read or tampered with.
+
+For example, if your function interacts with a database, ensure that the database connection is encrypted using SSL/TLS. Additionally, encrypt sensitive data before storing it in the database. Appwrite already does a great job of applying encryption in authentication, enforcing HTTPS connections, and generating TLS certificates for domains. But in addition to that, Appwrite also use encryption for storage. However, you should ensure that there are no loose ends or security loopholes in your function code that could expose sensitive data.
+
+In addition to encryption, consider allowing access only from specific IP ranges to enhance security. Note that encryption can impact query performance. So, you should carefully plan your encryption strategy to balance security and performance, possibly using selective encryption for highly sensitive data while ensuring efficient access to less sensitive information.
+
+# Write unit and integration tests
+
+Unit tests validate individual parts of your function, while integration tests ensure that different parts of your system work together correctly. Testing catches bugs early in the development process, ensuring that your functions work as intended and reducing the likelihood of issues in production.
+
+Here's what a unit test for a function that calculates the sum of two numbers might look like:
+
+```jsx
+const sum = require('./sum')
+
+test('adds 1 + 2 to equal 3', () => {
+  expect(sum(1, 2)).toBe(3)
+})
+
+```
+
+For integration tests, you can use tools like Jest, Mocha, or Cypress to test the interaction between different components of your application.
+
+You can also include your test command as part of your build command, so your deployments run tests automatically. If you need a more complex test pipeline, you can use GitHub Actions or similar tools to manage and run your tests.
+
+# Use logging and monitoring tools
+
+Logging helps you track the execution of your functions, identify issues, and monitor performance. By logging key events and data, you can gain insights into how your functions are behaving and quickly troubleshoot problems.
+
+Appwrite provides built-in logging and monitoring tools that you can use to track function execution, view logs, and monitor resource usage. This helps you gain visibility into your functions' performance and ensure they are running smoothly.
+
+When using Appwrite Functions, you can keep your log statements within the source code and disable logging from the function settings. This allows you to re-enable logging with a single click in the future if you need to debug or monitor specific requests.
+
+![Functions-logging](/images/blog/serverless-functions/5.avif)
+
+# Automate deployment process
+
+Automate your deployment process with CI/CD pipelines. This ensures consistent deployments and helps catch issues early in the development cycle.
+
+CI/CD pipelines streamline the deployment process, reduce the risk of human error, and ensure that code changes are thoroughly tested before reaching production. Appwrite has built-in support for linking your functions to a Git repository and deploying them automatically when changes are pushed. However, you can also use external CI/CD tools like GitHub Actions or Jenkins to manage your deployment pipeline, which can be integrated with Appwrite using the [Appwrite CLI](https://appwrite.io/docs/tooling/command-line/installation).
+
+# Version your functions
+
+Versioning your functions helps you manage updates and rollbacks effectively, especially when making breaking changes. By assigning version numbers to your functions, you can track changes, maintain backward compatibility, and ensure a smooth deployment process.
+
+# Use cost-effective architectures
+
+Design your serverless architecture to minimize costs. Use event-driven models and offload heavy processing to external services to optimize resource usage and reduce expenses. For example, instead of processing tasks like image recognition within your functions, you can use specialized services like AWS Rekognition or Google Cloud Vision to handle these tasks more efficiently.
+
+Another tip is to use event triggers to invoke functions only when necessary. This ensures that resources are used efficiently and costs are minimized. Appwrite provides built-in support for event triggers, allowing you to trigger functions based on events like database changes, file uploads, or HTTP requests. Here's a more detailed guide on [Appwrite Events](https://appwrite.io/docs/advanced/platform/events).
+
+# Avoid long-running functions
+
+Serverless platforms have execution time limits. Avoid long-running tasks to prevent timeouts and increased costs. When a function runs for an extended period, it consumes resources and can impact the performance of other executions. So, design your functions to be short-lived and efficient. And when you notice that a function is taking too long to execute, consider breaking it down into smaller tasks.
+
+# Conclusion
+
+By following these best practices, you can build efficient, secure, and scalable serverless functions. This enables you to fully leverage the advantages of Appwrite Functions, resulting in robust and scalable solutions tailored to modern development needs.
+
+Resources:
+
+- [Appwrite functions documentation](https://appwrite.io/docs/functions)
+- [Appwrite events documentation](https://appwrite.io/docs/advanced/platform/events)
+- [Appwrite environment variables documentation](https://appwrite.io/docs/environment-variables)

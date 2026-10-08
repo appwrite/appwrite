@@ -7,8 +7,8 @@ use Utopia\Agents\Agent;
 use Utopia\Agents\Conversation;
 use Utopia\Agents\Message;
 use Utopia\Agents\Roles\User;
-use Utopia\Command;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 
 class DiffCheck
 {

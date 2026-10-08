@@ -6,7 +6,6 @@ namespace Tests\Unit\General;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Config\Config;
 
 /**
  * Scopes are a public contract: they are stored on API keys, functions and
@@ -16,22 +15,25 @@ use Utopia\Config\Config;
  */
 final class ScopesTest extends TestCase
 {
-    private const string LOCK = __DIR__ . '/../../../app/config/scopes/lock.json';
+    private const string SCOPES = __DIR__ . '/../../../app/config/scopes';
 
     /**
-     * @return \Iterator<string, array{string, string}>
+     * Reads each catalog from its file rather than the registry: Cloud runs this
+     * suite with its own, larger catalogs registered, and locks those itself.
+     *
+     * @return \Iterator<string, array{string}>
      */
     public static function catalogs(): \Iterator
     {
-        yield 'project' => ['project', 'projectScopes'];
-        yield 'organization' => ['organization', 'organizationScopes'];
-        yield 'account' => ['account', 'accountScopes'];
+        yield 'project' => ['project'];
+        yield 'organization' => ['organization'];
+        yield 'account' => ['account'];
     }
 
     #[DataProvider('catalogs')]
-    public function testLockedScopesAreNotRemoved(string $catalog, string $param): void
+    public function testLockedScopesAreNotRemoved(string $catalog): void
     {
-        $scopes = Config::getParam($param, []);
+        $scopes = $this->scopes($catalog);
 
         foreach ($this->locked($catalog) as $scope) {
             $this->assertArrayHasKey(
@@ -43,11 +45,11 @@ final class ScopesTest extends TestCase
     }
 
     #[DataProvider('catalogs')]
-    public function testScopesAreLocked(string $catalog, string $param): void
+    public function testScopesAreLocked(string $catalog): void
     {
         $locked = $this->locked($catalog);
 
-        foreach (\array_keys(Config::getParam($param, [])) as $scope) {
+        foreach (\array_keys($this->scopes($catalog)) as $scope) {
             $this->assertContains(
                 $scope,
                 $locked,
@@ -57,11 +59,19 @@ final class ScopesTest extends TestCase
     }
 
     /**
+     * @return array<string, array<string, mixed>>
+     */
+    private function scopes(string $catalog): array
+    {
+        return include self::SCOPES . '/' . $catalog . '.php';
+    }
+
+    /**
      * @return array<string>
      */
     private function locked(string $catalog): array
     {
-        $lock = \json_decode((string) \file_get_contents(self::LOCK), true, flags: JSON_THROW_ON_ERROR);
+        $lock = \json_decode((string) \file_get_contents(self::SCOPES . '/lock.json'), true, flags: JSON_THROW_ON_ERROR);
 
         return $lock[$catalog] ?? [];
     }
