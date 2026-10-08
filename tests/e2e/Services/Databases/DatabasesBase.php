@@ -5860,7 +5860,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($authorsId, 'authorId', '$id')->toString(),
+                Query::join($authorsId, 'author', [Query::on('authorId', '$id')])->toString(),
                 Query::select(['authorId'])->toString(),
                 Query::orderAsc('title')->toString(),
                 Query::cursorAfter(new Document(['$id' => $postIds['Post 2']]))->toString(),
@@ -14576,7 +14576,7 @@ trait DatabasesBase
         ]), [
             'queries' => [
                 Query::select(['fullName'])->toString(),
-                Query::join($libraryId, 'library', '$id')->toString(),
+                Query::join($libraryId, 'lib', [Query::on('library', '$id')])->toString(),
             ],
         ]);
 
@@ -14603,7 +14603,7 @@ trait DatabasesBase
         ]), [
             'queries' => [
                 Query::select(['fullName'])->toString(),
-                Query::leftJoin($libraryId, 'library', '$id')->toString(),
+                Query::leftJoin($libraryId, 'lib', [Query::on('library', '$id')])->toString(),
             ],
         ]);
 
@@ -14630,7 +14630,7 @@ trait DatabasesBase
         ]), [
             'queries' => [
                 Query::count('*', 'total')->toString(),
-                Query::join($libraryId, 'libraries', '$id')->toString(),
+                Query::join($libraryId, 'lib', [Query::on('libraries', '$id')])->toString(),
                 Query::groupBy(['fullName'])->toString(),
             ],
         ]);
@@ -14778,7 +14778,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($targetId, 'targetRef', '$id')->toString(),
+                Query::join($targetId, 'target', [Query::on('targetRef', '$id')])->toString(),
             ],
         ]);
 
@@ -14894,7 +14894,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($paymentsId, '$id', 'orderId')->toString(),
+                Query::join($paymentsId, 'pay', [Query::on('$id', 'orderId')])->toString(),
                 Query::sum('amount', 'totalPaid')->toString(),
                 Query::groupBy(['item'])->toString(),
             ],
@@ -14931,7 +14931,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
-                Query::join($libraryId, 'library', '$id')->toString(),
+                Query::join($libraryId, 'lib', [Query::on('library', '$id')])->toString(),
                 Query::count('*', 'total')->toString(),
             ],
         ]);
@@ -14957,7 +14957,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join('nonexistent_collection', 'title', '$id')->toString(),
+                Query::join('nonexistent_collection', 'missing', [Query::on('title', '$id')])->toString(),
             ],
         ]);
 
