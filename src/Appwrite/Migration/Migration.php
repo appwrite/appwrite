@@ -6,6 +6,7 @@ use Exception;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Attribute;
+use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -13,6 +14,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Limit;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Filter;
 use Utopia\Database\Id;
 use Utopia\Database\Index;
 use Utopia\Database\PDO;
@@ -116,7 +118,6 @@ abstract class Migration
 
     public function __construct()
     {
-
         $this->collections = Config::getParam('collections', []);
 
         $this->collections['projects']['_metadata'] = [
@@ -326,7 +327,7 @@ abstract class Migration
 
         $existingIds = \array_map(
             fn (Attribute $attribute): string => $attribute->key,
-            $database->getCollection($collectionId)->attributes()
+            $database->findCollection($collectionId)?->attributes() ?? []
         );
 
         foreach ($attributeIds as $attributeId) {
@@ -341,13 +342,7 @@ abstract class Migration
                 throw new Exception('Attribute ' . $attributeId . ' not found');
             }
 
-            $attribute = clone $attributes[$attributeKey];
-
-            if (\in_array('json', $attribute->getFilters()) && $attribute->getDefault() !== null) {
-                $attribute->setAttribute('default', \json_encode($attribute->getDefault()));
-            }
-
-            $attributesToCreate[] = $attribute;
+            $attributesToCreate[] = self::withEncodedDefault($attributes[$attributeKey]);
         }
 
         if (empty($attributesToCreate)) {
@@ -367,7 +362,7 @@ abstract class Migration
                         attribute: $attribute,
                     );
                 } catch (Duplicate) {
-                    Console::warning('Skipping attribute "' . $attribute->getKey() . '" in collection ' . $collectionId . ': Attribute already exists');
+                    Console::warning('Skipping attribute "' . $attribute->key . '" in collection ' . $collectionId . ': Attribute already exists');
                 }
             }
         }
@@ -419,15 +414,9 @@ abstract class Migration
             throw new Exception('Attribute ' . $attributeId . ' not found');
         }
 
-        $attribute = clone $attributes[$attributeKey];
-
-        if (\in_array('json', $attribute->getFilters()) && $attribute->getDefault() !== null) {
-            $attribute->setAttribute('default', \json_encode($attribute->getDefault()));
-        }
-
         $database->createAttribute(
             collection: $collectionId,
-            attribute: $attribute,
+            attribute: self::withEncodedDefault($attributes[$attributeKey]),
         );
     }
 
@@ -474,6 +463,18 @@ abstract class Migration
             collection: $collectionId,
             index: $indexes[$indexKey],
         );
+    }
+
+    /**
+     * A JSON attribute stores its default encoded, as the json filter would on write.
+     */
+    private static function withEncodedDefault(Attribute $attribute): Attribute
+    {
+        if ($attribute->default === null || !\in_array(Filter::Json->value, $attribute->filters, true)) {
+            return $attribute;
+        }
+
+        return $attribute->apply(new AttributeUpdate(default: \json_encode($attribute->default)));
     }
 
     /**
