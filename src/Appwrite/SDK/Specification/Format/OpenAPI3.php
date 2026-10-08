@@ -813,7 +813,8 @@ class OpenAPI3 extends Format
                         }
                         break;
                     case Queries::class:
-                    case \Utopia\WAF\Validator\Conditions::class:
+                        // utopia-php/waf is not a dependency here, so the class is named rather than referenced.
+                    case 'Utopia\WAF\Validator\Conditions':
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'type' => 'string',
@@ -821,7 +822,7 @@ class OpenAPI3 extends Format
                         break;
                     case \Utopia\Validator\Multiple::class:
                         // Its rules check the whole value, so an array-typed Multiple declares no
-                        // item type. The only one in use is the OAuth2 resource indicator list.
+                        // item type; its items are taken to be strings.
                         $node['schema']['type'] = $validator->getType();
                         if ($validator->getType() === Validator::TYPE_ARRAY) {
                             $node['schema']['items'] = [
