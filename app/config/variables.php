@@ -797,7 +797,7 @@ return [
             [
                 'name' => '_APP_REDIS_QUEUE_HOST',
                 'description' => 'Hostname of a separate Redis server for queues. This is an optional variable. When empty, queues use the main Redis server set by _APP_REDIS_HOST and the other _APP_REDIS_QUEUE_* variables are ignored. Use a dedicated instance with maxmemory-policy noeviction in production so a queue backlog never evicts the cache and queued jobs are never evicted. Default value is an empty string.',
-                'introduction' => '2.3.1',
+                'introduction' => '2.4.1',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -806,7 +806,7 @@ return [
             [
                 'name' => '_APP_REDIS_QUEUE_PORT',
                 'description' => 'TCP port of the separate Redis server for queues. Only used when _APP_REDIS_QUEUE_HOST is set. Default value is: \'6379\'.',
-                'introduction' => '2.3.1',
+                'introduction' => '2.4.1',
                 'default' => '6379',
                 'required' => false,
                 'question' => '',
@@ -815,7 +815,7 @@ return [
             [
                 'name' => '_APP_REDIS_QUEUE_USER',
                 'description' => 'User of the separate Redis server for queues. Only used when _APP_REDIS_QUEUE_HOST is set. This is an optional variable. Default value is an empty string.',
-                'introduction' => '2.3.1',
+                'introduction' => '2.4.1',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -824,7 +824,7 @@ return [
             [
                 'name' => '_APP_REDIS_QUEUE_PASS',
                 'description' => 'Password of the separate Redis server for queues. Only used when _APP_REDIS_QUEUE_HOST is set. This is an optional variable. Default value is an empty string.',
-                'introduction' => '2.3.1',
+                'introduction' => '2.4.1',
                 'default' => '',
                 'required' => false,
                 'question' => '',
