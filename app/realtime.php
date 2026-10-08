@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -28,8 +29,7 @@ use Swoole\Http\Response as SwooleResponse;
 use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -58,6 +58,16 @@ use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\WebSocket\Server;
 
 require_once __DIR__ . '/init.php';
+
+try {
+    EncryptionKey::assertProduction(
+        System::getEnv('_APP_ENV', 'production'),
+        System::getEnv('_APP_OPENSSL_KEY_V1')
+    );
+} catch (\RuntimeException $exception) {
+    Console::error($exception->getMessage());
+    exit(1);
+}
 
 if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
     require_once __DIR__ . '/init/span.php';
@@ -1008,13 +1018,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          * Abuse limits are connecting 128 times per minute and ip address.
          */
         $isRateLimited = $timelimit('url:{url},ip:{ip}', 128, 60, function (TimeLimit $timeLimit) use ($request): bool {
-            $timeLimit
-                ->setParam('{ip}', $request->getIP())
-                ->setParam('{url}', $request->getURI());
-
-            $abuse = new Abuse($timeLimit);
-
-            return System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check();
+            return System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $timeLimit->withParams(['{ip}' => $request->getIP(), '{url}' => $request->getURI()])->check()->limited;
         });
 
         if ($isRateLimited) {
@@ -1322,13 +1326,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
          * Abuse limits are sending 32 times per minute and connection.
          */
         $isRateLimited = $container->get('timelimit')('url:{url},connection:{connection}', 32, 60, function (TimeLimit $timeLimit) use ($connection, $containerId): bool {
-            $timeLimit
-                ->setParam('{connection}', $connection)
-                ->setParam('{container}', $containerId);
-
-            $abuse = new Abuse($timeLimit);
-
-            return $abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled';
+            return $timeLimit->withParams(['{connection}' => (string) $connection, '{container}' => (string) $containerId])->check()->limited && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled';
         });
 
         if ($isRateLimited) {

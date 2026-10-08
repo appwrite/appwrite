@@ -4,9 +4,11 @@ namespace Appwrite\Utopia\Database\Documents;
 
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Roles;
 
 class User extends Document
@@ -187,5 +189,27 @@ class User extends Document
         }
 
         return (new \DateTime($session->getAttribute('expire')))->getTimestamp();
+    }
+
+    public static function invalidateAuthentication(Database $dbForProject, Document $user, ?string $keepSessionId = null): void
+    {
+        foreach ($user->getAttribute('sessions', []) as $session) {
+            if (!$session instanceof Document) {
+                continue;
+            }
+            if ($keepSessionId !== null && $session->getId() === $keepSessionId) {
+                continue;
+            }
+            $dbForProject->deleteDocument('sessions', $session->getId());
+        }
+
+        $sequence = $user->getSequence();
+        if ($sequence === '' || $sequence === null) {
+            return;
+        }
+
+        $dbForProject->deleteDocuments('challenges', [
+            Query::equal('userInternalId', [$sequence]),
+        ]);
     }
 }

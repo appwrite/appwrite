@@ -63,9 +63,15 @@ final class SwooleRestartTest extends TestCase
         $this->start($workers);
         $initial = $this->waitFor('ready', $workers);
         $pids = array_column($initial, 'pid', 'worker');
+        $exits = [
+            'kill' => 'Worker 0 exited abnormally: signal=9 code=0',
+            'fatal' => 'Worker 0 exited abnormally: signal=0 code=255',
+            'retire' => null,
+        ];
 
-        foreach (['kill', 'fatal', 'retire'] as $mode) {
+        foreach ($exits as $mode => $exit) {
             $this->events = [];
+            $logged = substr_count($this->logContents(), 'exited abnormally');
             if ($mode === 'kill') {
                 $this->assertTrue(Process::kill($pids[0], SIGKILL));
             } else {
@@ -75,6 +81,14 @@ final class SwooleRestartTest extends TestCase
             $this->assertSame('0', $replacement['worker']);
             $this->assertNotSame($pids[0], $replacement['pid']);
             $pids[0] = $replacement['pid'];
+
+            $log = $this->logContents();
+            if ($exit === null) {
+                $this->assertSame($logged, substr_count($log, 'exited abnormally'), 'A worker that retires cleanly must not be reported as an abnormal exit');
+            } else {
+                $this->assertStringContainsString($exit, $log, 'The supervisor must log how the worker exited');
+                $this->assertSame($logged + 1, substr_count($log, 'exited abnormally'));
+            }
 
             for ($id = 0; $id < $workers; $id++) {
                 $this->publish($id, 'probe');
@@ -86,7 +100,7 @@ final class SwooleRestartTest extends TestCase
             $this->assertSame($pids, $actual, 'Replacement and surviving workers must all consume their queues');
             $this->assertTrue(proc_get_status($this->process)['running']);
         }
-        $this->assertStringContainsString('Allowed memory size', (string) file_get_contents($this->log));
+        $this->assertStringContainsString('Allowed memory size', $this->logContents());
     }
 
     public function testSimultaneousWorkerExitsRestoreTheWholePool(): void
@@ -142,6 +156,7 @@ final class SwooleRestartTest extends TestCase
         foreach ($ready as $worker) {
             $this->assertFalse(Process::kill($worker['pid'], 0), 'Supervisor must reap every child before returning');
         }
+        $this->assertStringNotContainsString('exited abnormally', $this->logContents(), 'Workers stopped by the supervisor must not be reported as abnormal exits');
     }
 
     private function start(int $workers, int $queues = 1): void
@@ -171,6 +186,11 @@ final class SwooleRestartTest extends TestCase
         return $broker->getQueueSize(new Queue('worker-' . $worker, $this->namespace));
     }
 
+    private function logContents(): string
+    {
+        return (string) file_get_contents($this->log);
+    }
+
     private function waitFor(string $event, int $count): array
     {
         $deadline = microtime(true) + 10;
@@ -197,6 +217,6 @@ final class SwooleRestartTest extends TestCase
             usleep(10_000);
         } while (microtime(true) < $deadline);
 
-        $this->fail('Timed out waiting for ' . $event . ': ' . json_encode($this->events) . "\n" . file_get_contents($this->log));
+        $this->fail('Timed out waiting for ' . $event . ': ' . json_encode($this->events) . "\n" . $this->logContents());
     }
 }

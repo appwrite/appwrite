@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -29,8 +30,19 @@ use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 require_once __DIR__ . '/init.php';
+
+try {
+    EncryptionKey::assertProduction(
+        System::getEnv('_APP_ENV', 'production'),
+        System::getEnv('_APP_OPENSSL_KEY_V1')
+    );
+} catch (\RuntimeException $exception) {
+    Console::error($exception->getMessage());
+    exit(1);
+}
 
 require_once __DIR__ . '/init/span.php';
 
@@ -221,7 +233,21 @@ $server->error(fn (\Throwable $error, string $action) => Console::error("MQTT {$
 
 // Server-initiated delivery: bridge the Redis 'mqtt' firehose to this worker's local subscribers.
 // Appwrite clients never PUBLISH; messages are produced by the Messaging worker onto the channel.
-$server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $register, $container): void {
+$server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $register, $container, $telemetry): void {
+    if (!$telemetry instanceof NoTelemetry) {
+        // Liveness signal that is off the client path. Every other broker metric is a synchronous
+        // counter or histogram, recorded only when a client acts, so a freshly rolled worker in a
+        // quiet region exports nothing until the first CONNECT. This uptime gauge is observed on
+        // every collect, so the broker reports within one cycle of a worker starting, whatever the
+        // traffic, and resets to zero on restart. The alert that pages when the broker stops
+        // reporting reads this series, so a rollout no longer looks like an outage.
+        $workerStartedAt = microtime(true);
+        $uptime = $telemetry->createObservableGauge('mqtt.server.uptime', 's', 'Seconds since the broker worker started.');
+        $uptime->observe(fn (callable $observe) => $observe(microtime(true) - $workerStartedAt, []));
+
+        Timer::tick(60000, fn () => $telemetry->collect());
+    }
+
     // Flush accumulated per-project usage (connections, deliveries) to the stats-usage queue.
     Timer::tick(60000, function () use ($mqtt, $container): void {
         $usage = $mqtt->flushUsage();

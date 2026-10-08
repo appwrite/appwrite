@@ -9,7 +9,7 @@ class Response
     private int $deliveredTo = 0;
 
     /**
-     * @var array<array<string, string>>
+     * @var array<array{recipient: string, status: string, error: string, permanent: bool}>
      */
     private array $results = [];
 
@@ -43,19 +43,27 @@ class Response
     }
 
     /**
-     * @return array<array<string, string>>
+     * @return array<array{recipient: string, status: string, error: string, permanent: bool}>
      */
     public function getDetails(): array
     {
         return $this->results;
     }
 
-    public function addResult(string $recipient, string $error = ''): void
+    /**
+     * @param  bool  $permanent  The provider said sending the same message again gets the same answer,
+     *                           such as an SMTP 5xx reply. Only an adapter that can tell says so, which
+     *                           is why a failure defaults to one worth retrying.
+     */
+    public function addResult(string $recipient, string $error = '', bool $permanent = false): void
     {
+        $failed = !($error === '' || $error === '0');
+
         $this->results[] = [
             'recipient' => $recipient,
-            'status' => $error === '' || $error === '0' ? 'success' : 'failure',
+            'status' => $failed ? 'failure' : 'success',
             'error' => $error,
+            'permanent' => $failed && $permanent,
         ];
     }
 
