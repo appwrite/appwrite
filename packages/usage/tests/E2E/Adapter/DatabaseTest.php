@@ -326,7 +326,14 @@ class DatabaseTest extends TestCase
         $host = getenv('MARIADB_HOST') ?: 'mariadb';
         $port = getenv('MARIADB_PORT') ?: '3306';
 
-        $pdo = new PDO("mysql:host={$host};port={$port};charset=utf8mb4", 'root', 'password', MariaDB::getPDOAttributes());
+        $pdo = new PDO("mysql:host={$host};port={$port};charset=utf8mb4", 'root', 'password', [
+            PDO::ATTR_TIMEOUT => 3,
+            PDO::ATTR_PERSISTENT => true,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_EMULATE_PREPARES => true,
+            PDO::ATTR_STRINGIFY_FETCHES => true,
+        ]);
 
         $connection = new Database(new MariaDB($pdo), new Cache(new NoCache()));
         $connection->setDatabase($database);
