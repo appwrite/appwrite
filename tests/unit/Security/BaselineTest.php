@@ -71,7 +71,7 @@ final class BaselineTest extends TestCase
         $this->assertNotSame([], $listed, 'Route inventory must be locked so new endpoints fail CI.');
 
         $canary = 'POST /v1/security-inventory-canary';
-        $this->assertFalse(\in_array($canary, $listed, true), 'Canary must not be pre-listed.');
+        $this->assertNotContains($canary, $listed, 'Canary must not be pre-listed.');
 
         $partition = $baseline->partitionRoutes([...$listed, $canary]);
 
