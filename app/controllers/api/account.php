@@ -392,6 +392,10 @@ Http::post('/v1/account')
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
+        // A signed-in caller's attributes must not become part of the new account.
+        if (!$user->isEmpty()) {
+            $user = new User();
+        }
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
@@ -470,7 +474,6 @@ Http::post('/v1/account')
                 'passwordPwned' => $passwordPwned,
             ]);
 
-            $user->removeAttribute('$sequence');
             $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([

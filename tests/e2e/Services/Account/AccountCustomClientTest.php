@@ -42,6 +42,92 @@ final class AccountCustomClientTest extends Scope
     private static array $magicUrlData = [];
     private static array $magicUrlSessionData = [];
 
+    public function testCreateAccountWhileAuthenticated(): void
+    {
+        $actor = $this->createFreshAccountWithSession();
+        $project = $this->getProject();
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+        ];
+        $serverHeaders = array_merge($headers, ['x-appwrite-key' => $project['apiKey']]);
+        $sessionHeaders = array_merge($headers, [
+            'cookie' => 'a_session_' . $project['$id'] . '=' . $actor['session'],
+        ]);
+        $userId = ID::unique();
+        $email = $userId . '@localhost.test';
+        $phone = '+1' . random_int(2000000000, 9999999999);
+
+        try {
+            $response = $this->client->call(Client::METHOD_PUT, '/users/' . $actor['id'] . '/labels', $serverHeaders, [
+                'labels' => ['registered'],
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $actor['id'] . '/phone', $serverHeaders, [
+                'number' => $phone,
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $actor['id'] . '/verification/phone', $serverHeaders, [
+                'phoneVerification' => true,
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+
+            /**
+             * Test for SUCCESS
+             */
+            $response = $this->client->call(Client::METHOD_POST, '/account', $sessionHeaders, [
+                'userId' => $userId,
+                'email' => $email,
+                'password' => 'password',
+                'name' => 'Separate account',
+            ]);
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $this->assertEquals($userId, $response['body']['$id']);
+            $this->assertSame([], $response['body']['labels']);
+            $this->assertSame('', $response['body']['phone']);
+            $this->assertFalse($response['body']['phoneVerification']);
+            $this->assertFalse($response['body']['emailVerification']);
+            $this->assertCount(1, $response['body']['targets']);
+            $this->assertEquals($email, $response['body']['targets'][0]['identifier']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $serverHeaders);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertSame([], $response['body']['labels']);
+            $this->assertSame('', $response['body']['phone']);
+            $this->assertFalse($response['body']['phoneVerification']);
+            $this->assertCount(1, $response['body']['targets']);
+            $this->assertEquals($email, $response['body']['targets'][0]['identifier']);
+
+            /**
+             * Test for FAILURE
+             */
+            $response = $this->client->call(Client::METHOD_POST, '/account', $sessionHeaders, [
+                'userId' => ID::unique(),
+                'email' => $email,
+                'password' => 'password',
+            ]);
+            $this->assertEquals(409, $response['headers']['status-code']);
+            $this->assertEquals('user_already_exists', $response['body']['type']);
+
+            // Both registration attempts leave the caller's session and account intact.
+            $response = $this->client->call(Client::METHOD_GET, '/account', $sessionHeaders);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($actor['id'], $response['body']['$id']);
+            $this->assertEquals($actor['email'], $response['body']['email']);
+            $this->assertSame(['registered'], $response['body']['labels']);
+            $this->assertEquals($phone, $response['body']['phone']);
+            $this->assertTrue($response['body']['phoneVerification']);
+            $this->assertEqualsCanonicalizing([$actor['email'], $phone], array_column($response['body']['targets'], 'identifier'));
+        } finally {
+            foreach ([$userId, $actor['id']] as $id) {
+                $this->client->call(Client::METHOD_DELETE, '/users/' . $id, $serverHeaders);
+            }
+        }
+    }
+
     /**
      * Helper to set up an account with session
      */
