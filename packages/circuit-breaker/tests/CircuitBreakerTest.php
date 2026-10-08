@@ -524,6 +524,7 @@ final class CircuitBreakerTest extends TestCase
     }
 
     /**
+     * @phpstan-impure
      * @return array<string, float|int> gauge name => last observed value
      */
     private function observe(TestTelemetry $telemetry): array

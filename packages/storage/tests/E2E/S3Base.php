@@ -332,7 +332,7 @@ abstract class S3Base extends TestCase
         $handle = $this->openStream($source);
         while ($start < $totalSize) {
             $contents = $this->readBytes($handle, $chunkSize);
-            $this->object->upload(new Stream($contents), $dest, $metadata['content_type'] ?? '', $chunk, $chunks, $metadata);
+            $this->object->upload(new Stream($contents), $dest, $metadata['content_type'], $chunk, $chunks, $metadata);
             $start += \strlen($contents);
             ++$chunk;
             break;

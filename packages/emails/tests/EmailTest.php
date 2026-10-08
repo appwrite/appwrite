@@ -15,8 +15,6 @@ class EmailTest extends TestCase
         $this->assertSame('test@company.org', $email->get());
         $this->assertSame('test', $email->getLocal());
         $this->assertSame('company.org', $email->getDomain());
-        $this->assertSame('company.org', $email->getDomain());
-        $this->assertSame('test', $email->getLocal());
         $this->assertSame(true, $email->isValid());
         $this->assertSame(true, $email->hasValidLocal());
         $this->assertSame(true, $email->hasValidDomain());
@@ -26,7 +24,6 @@ class EmailTest extends TestCase
         $this->assertSame('company.org', $email->getProvider());
         $this->assertSame('', $email->getSubdomain());
         $this->assertSame(false, $email->hasSubdomain());
-        $this->assertSame('test@company.org', $email->get());
     }
 
     public function test_email_with_subdomain(): void

@@ -210,7 +210,6 @@ class PostgreSQLIntegrationTest extends IntegrationTestCase
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         $this->assertNotFalse($row);
-        \assert(\is_array($row));
         $this->assertSame('UNIQUE', $row['constraint_type']);
     }
 
@@ -391,7 +390,6 @@ class PostgreSQLIntegrationTest extends IntegrationTestCase
             $typeStmt->execute(['name' => $typeName]);
             $typeRow = $typeStmt->fetch(\PDO::FETCH_ASSOC);
             $this->assertNotFalse($typeRow);
-            \assert(\is_array($typeRow));
             $this->assertSame($typeName, $typeRow['typname']);
         } finally {
             $this->postgresStatement("DROP TABLE IF EXISTS \"{$table}\" CASCADE");
