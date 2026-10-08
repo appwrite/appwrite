@@ -710,15 +710,6 @@
     ],
     "findings": [
         {
-            "attack": "idor",
-            "method": "POST",
-            "path": "/v1/users/:userId/sessions",
-            "probe": "user-b-on-user-a-ids",
-            "severity": "ERROR",
-            "detail": "Allowlisted pending scope label alignment.",
-            "reason": "scope label alignment pending separate PR"
-        },
-        {
             "attack": "header-spoof",
             "method": "GET",
             "path": "/v1/locale",
