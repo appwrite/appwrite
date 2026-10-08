@@ -141,7 +141,6 @@ jobs:
                   done
 
     publish-assets:
-        environment: console-staging
         needs: build
         runs-on: gcrunner=${{ github.run_id }}-console-publish-assets/runner=deploy
         timeout-minutes: 25
@@ -176,8 +175,8 @@ jobs:
                   RCLONE_CONFIG_R2_ENDPOINT: https://285d5ba7177bab8490e237b619b4b9f6.r2.cloudflarestorage.com
                   RCLONE_CONFIG_R2_REGION: auto
                   RCLONE_CONFIG_R2_NO_CHECK_BUCKET: 'true'
-                  RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-                  RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+                  RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.CONSOLE_STAGING_R2_ACCESS_KEY_ID }}
+                  RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.CONSOLE_STAGING_R2_SECRET_ACCESS_KEY }}
                   R2_BUCKET: appwrite-console
 
     deploy:
