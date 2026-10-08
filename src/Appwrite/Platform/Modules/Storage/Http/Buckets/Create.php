@@ -16,8 +16,8 @@ use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -97,7 +97,7 @@ class Create extends Action
         Database $dbForProject,
         Event $queueForEvents
     ) {
-        $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
+        $bucketId = $bucketId === 'unique()' ? Id::unique() : $bucketId;
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions) ?? [];

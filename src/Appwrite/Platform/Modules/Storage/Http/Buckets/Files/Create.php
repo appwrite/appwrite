@@ -25,10 +25,10 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
@@ -143,7 +143,7 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        if (!$authorization->isValid(new Input(PermissionType::Create, $bucket->getCreate()))) {
+        if (!$authorization->isValid(new Input(PermissionType::Create, $bucket->getPermissionsByType(PermissionType::Create)))) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
@@ -209,7 +209,7 @@ class Create extends Action
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         $contentRange = $request->getHeaderLine('content-range');
-        $fileId = $fileId === 'unique()' ? ID::unique() : $fileId;
+        $fileId = $fileId === 'unique()' ? Id::unique() : $fileId;
         $folder = Folder::normalize($folder);
         $chunk = 1;
         $chunks = 1;
@@ -313,7 +313,7 @@ class Create extends Action
 
                 if (!empty($contentRange)) {
                     $doc = new Document([
-                        '$id' => ID::custom($fileId),
+                        '$id' => Id::custom($fileId),
                         '$permissions' => $permissions,
                         'bucketId' => $bucket->getId(),
                         'bucketInternalId' => $bucket->getSequence(),
@@ -628,12 +628,12 @@ class Create extends Action
      */
     private function assertResumeAllowed(Document $bucket, Document $file, Authorization $authorization, User $user): void
     {
-        if ($authorization->isValid(new Input(PermissionType::Update, $bucket->getUpdate()))) {
+        if ($authorization->isValid(new Input(PermissionType::Update, $bucket->getPermissionsByType(PermissionType::Update)))) {
             return;
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        if ($fileSecurity && $authorization->isValid(new Input(PermissionType::Update, $file->getUpdate()))) {
+        if ($fileSecurity && $authorization->isValid(new Input(PermissionType::Update, $file->getPermissionsByType(PermissionType::Update)))) {
             return;
         }
 

@@ -43,7 +43,7 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID.', false, ['dbForProject'])
+            ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Topic ID.', false, ['dbForProject'])
             ->inject('dbForProject')
             ->inject('response')
             ->callback($this->action(...));

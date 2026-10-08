@@ -206,7 +206,7 @@ class Attributes extends Validator
             }
 
             // Validate signed only for integer/bigint/float types
-            if (isset($attribute['signed']) && !in_array($type, [ColumnType::Integer->value, ColumnType::BigInteger->value, DatabaseAttribute::persistedType(ColumnType::BigInteger), ColumnType::Float->value, ColumnType::Double->value])) {
+            if (isset($attribute['signed']) && !in_array($type, [ColumnType::Integer->value, ColumnType::BigInteger->value, DatabaseAttribute::storedType(ColumnType::BigInteger), ColumnType::Float->value, ColumnType::Double->value])) {
                 $this->message = "Attribute '" . $attribute['key'] . "': 'signed' can only be used with integer, bigint or float types";
                 return false;
             }
@@ -225,7 +225,7 @@ class Attributes extends Validator
 
             // Validate min/max range for integer/bigint/float
             if (isset($attribute['min']) || isset($attribute['max'])) {
-                if (!in_array($type, [ColumnType::Integer->value, ColumnType::BigInteger->value, DatabaseAttribute::persistedType(ColumnType::BigInteger), ColumnType::Float->value, ColumnType::Double->value])) {
+                if (!in_array($type, [ColumnType::Integer->value, ColumnType::BigInteger->value, DatabaseAttribute::storedType(ColumnType::BigInteger), ColumnType::Float->value, ColumnType::Double->value])) {
                     $this->message = "Attribute '" . $attribute['key'] . "': min/max can only be used with integer, bigint or float types";
                     return false;
                 }
@@ -314,7 +314,7 @@ class Attributes extends Validator
                         break;
 
                     case ColumnType::BigInteger->value:
-                    case DatabaseAttribute::persistedType(ColumnType::BigInteger):
+                    case DatabaseAttribute::storedType(ColumnType::BigInteger):
                         if (!is_int($attribute['default'])) {
                             $this->message = "Default value for bigint attribute '" . $attribute['key'] . "' must be an integer";
                             return false;

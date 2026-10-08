@@ -94,7 +94,7 @@ class Delete extends Action
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $valid = $authorization->isValid(new Input(PermissionType::Delete, $bucket->getDelete()));
+        $valid = $authorization->isValid(new Input(PermissionType::Delete, $bucket->getPermissionsByType(PermissionType::Delete)));
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
@@ -107,7 +107,7 @@ class Delete extends Action
         }
 
         // Make sure we don't delete the file before the document permission check occurs
-        if ($fileSecurity && !$valid && !$authorization->isValid(new Input(PermissionType::Delete, $file->getDelete()))) {
+        if ($fileSecurity && !$valid && !$authorization->isValid(new Input(PermissionType::Delete, $file->getPermissionsByType(PermissionType::Delete)))) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 

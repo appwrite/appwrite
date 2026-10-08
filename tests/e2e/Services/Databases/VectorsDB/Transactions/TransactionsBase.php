@@ -5,10 +5,10 @@ namespace Tests\E2E\Services\Databases\VectorsDB\Transactions;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Query\Schema\IndexType;
 
 trait TransactionsBase
@@ -33,7 +33,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'TransactionTestDatabase'
         ]);
 
@@ -131,7 +131,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'TransactionOperationsTestDB'
         ]);
 
@@ -153,7 +153,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TransactionOperationsTest',
             'dimension' => 3,
             'documentSecurity' => false,
@@ -234,7 +234,7 @@ trait TransactionsBase
                     'databaseId' => 'invalid_database',
                     'collectionId' => $collectionId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => [
                         'embeddings' => $this->generateEmbeddings(3),
                         'metadata' => ['name' => 'Test']
@@ -256,7 +256,7 @@ trait TransactionsBase
                     'databaseId' => $databaseId,
                     'collectionId' => 'invalid_collection',
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => [
                         'embeddings' => $this->generateEmbeddings(3),
                         'metadata' => ['name' => 'Test']
@@ -279,7 +279,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'TransactionCommitTestDB'
         ]);
 
@@ -292,7 +292,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TransactionCommitTest',
             'dimension' => 3,
             'documentSecurity' => false,
@@ -412,7 +412,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'TransactionRollbackTestDB'
         ]);
 
@@ -434,7 +434,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TransactionRollbackTest',
             'dimension' => 3,
             'documentSecurity' => false,
@@ -503,7 +503,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'ExpirationTestDB'
         ]);
 
@@ -514,7 +514,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TestCollection',
             'dimension' => 3,
             'permissions' => [
@@ -549,7 +549,7 @@ trait TransactionsBase
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => [
                         'embeddings' => $this->generateEmbeddings(3),
                         'metadata' => ['data' => 'Should expire']
@@ -589,7 +589,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'SizeLimitTestDB'
         ]);
 
@@ -600,7 +600,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TestCollection',
             'dimension' => 3,
             'permissions' => [Permission::create(Role::any())],
@@ -704,7 +704,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'ConflictTestDB'
         ]);
 
@@ -715,7 +715,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TestCollection',
             'dimension' => 3,
             'permissions' => [
@@ -835,7 +835,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'DeleteConflictDB'
         ]);
 
@@ -846,7 +846,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TestCollection',
             'dimension' => 3,
             'permissions' => [
@@ -933,7 +933,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'BulkOpsDB'
         ]);
 
@@ -944,7 +944,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TestCollection',
             'dimension' => 3,
             'permissions' => [
@@ -1093,7 +1093,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'PartialFailureDB'
         ]);
 
@@ -1104,7 +1104,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TestCollection',
             'dimension' => 3,
             'permissions' => [
@@ -1129,7 +1129,7 @@ trait TransactionsBase
         sleep(2);
 
         // Create an existing document
-        $duplicateId = ID::unique();
+        $duplicateId = Id::unique();
         $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1161,7 +1161,7 @@ trait TransactionsBase
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => [
                         'embeddings' => $this->generateEmbeddings(3, 0.2),
                         'metadata' => ['email' => 'valid1@example.com']
@@ -1171,7 +1171,7 @@ trait TransactionsBase
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => [
                         'embeddings' => $this->generateEmbeddings(3, 0.3),
                         'metadata' => ['email' => 'valid2@example.com']
@@ -1191,7 +1191,7 @@ trait TransactionsBase
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => [
                         'embeddings' => $this->generateEmbeddings(3, 0.5),
                         'metadata' => ['email' => 'valid3@example.com']
@@ -1234,7 +1234,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'DoubleCommitDB'
         ]);
 
@@ -1245,7 +1245,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TestCollection',
             'dimension' => 3,
             'permissions' => [Permission::create(Role::any())],
@@ -1272,7 +1272,7 @@ trait TransactionsBase
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => [
                         'embeddings' => $this->generateEmbeddings(3),
                         'metadata' => ['data' => 'Test']
@@ -1345,7 +1345,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'NonExistentDocDB'
         ]);
 
@@ -1356,7 +1356,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TestCollection',
             'dimension' => 3,
             'permissions' => [
@@ -1435,7 +1435,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'WriteRoutesTestDB'
         ]);
 
@@ -1446,7 +1446,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TestCollection',
             'dimension' => 3,
             'documentSecurity' => false,
@@ -1532,7 +1532,7 @@ trait TransactionsBase
                     'name' => 'Unknown transaction',
                 ]
             ],
-            'transactionId' => ID::unique()
+            'transactionId' => Id::unique()
         ]);
 
         $this->assertEquals(404, $unknown['headers']['status-code']);
@@ -1550,7 +1550,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'UpdateRouteTestDB'
         ]);
 
@@ -1561,7 +1561,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TestCollection',
             'dimension' => 3,
             'permissions' => [
@@ -1659,7 +1659,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'UpsertRouteTestDB'
         ]);
 
@@ -1670,7 +1670,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TestCollection',
             'dimension' => 3,
             'permissions' => [
@@ -1768,7 +1768,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'DeleteRouteTestDB'
         ]);
 
@@ -1779,7 +1779,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TestCollection',
             'dimension' => 3,
             'permissions' => [
@@ -1864,7 +1864,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'BulkCreateTestDB'
         ]);
 
@@ -1875,7 +1875,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TestCollection',
             'dimension' => 3,
             'permissions' => [
@@ -1999,7 +1999,7 @@ trait TransactionsBase
                     ]
                 ]
             ],
-            'transactionId' => ID::unique()
+            'transactionId' => Id::unique()
         ]);
 
         $this->assertEquals(404, $unknown['headers']['status-code']);
@@ -2017,7 +2017,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'BulkUpdateTestDB'
         ]);
 
@@ -2028,7 +2028,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TestCollection',
             'dimension' => 3,
             'permissions' => [
@@ -2122,7 +2122,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'BulkUpsertTestDB'
         ]);
 
@@ -2133,7 +2133,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TestCollection',
             'dimension' => 3,
             'permissions' => [
@@ -2165,7 +2165,7 @@ trait TransactionsBase
                     'action' => 'invalidAction',
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => ['name' => 'Test']
                 ]
             ]
@@ -2183,7 +2183,7 @@ trait TransactionsBase
                 [
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => ['name' => 'Test']
                 ]
             ]
@@ -2201,7 +2201,7 @@ trait TransactionsBase
                 [
                     'action' => 'create',
                     'collectionId' => $collectionId,
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => ['name' => 'Test']
                 ]
             ]
@@ -2238,7 +2238,7 @@ trait TransactionsBase
                     'action' => 'create',
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
-                    'documentId' => ID::unique()
+                    'documentId' => Id::unique()
                 ]
             ]
         ]);
@@ -2386,7 +2386,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'ResourceTestDatabase'
         ]);
 
@@ -2412,7 +2412,7 @@ trait TransactionsBase
                     'action' => 'create',
                     'databaseId' => 'nonExistentDatabase',
                     'collectionId' => 'someCollection',
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => ['name' => 'Test']
                 ]
             ]
@@ -2431,7 +2431,7 @@ trait TransactionsBase
                     'action' => 'create',
                     'databaseId' => $databaseId,
                     'collectionId' => 'nonExistentCollection',
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => ['name' => 'Test']
                 ]
             ]

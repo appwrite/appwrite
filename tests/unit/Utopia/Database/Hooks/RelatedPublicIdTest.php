@@ -18,13 +18,13 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Hook\Relationships;
+use Utopia\Database\Permission;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
 use Utopia\Database\RelationshipType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\CursorDirection;
 use Utopia\Query\Schema\ColumnType;
@@ -77,6 +77,7 @@ final class RelatedPublicIdTest extends TestCase
                 parent::__construct();
             }
 
+            #[\Override]
             public function getDocument(Document $collection, string $id, array $queries = [], bool $forUpdate = false): Document
             {
                 ($this->read)('getDocument:' . $collection->getId());
@@ -84,6 +85,7 @@ final class RelatedPublicIdTest extends TestCase
                 return parent::getDocument($collection, $id, $queries, $forUpdate);
             }
 
+            #[\Override]
             public function find(Document $collection, array $queries = [], ?int $limit = 25, ?int $offset = null, array $orderAttributes = [], array $orderTypes = [], array $cursor = [], CursorDirection $cursorDirection = CursorDirection::After, PermissionType $forPermission = PermissionType::Read): array
             {
                 ($this->read)('find:' . $collection->getId());
@@ -205,7 +207,7 @@ final class RelatedPublicIdTest extends TestCase
             ->setNamespace('tenant')
             ->setAuthorization($this->authorization);
 
-        return $tenant->addHook(new Relationships($tenant));
+        return $tenant->addHook(new Relationships());
     }
 
     private function seedCatalog(): void

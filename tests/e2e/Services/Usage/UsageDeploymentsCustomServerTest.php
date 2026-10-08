@@ -9,7 +9,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\Functions\FunctionsBase;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\System\System;
 
 final class UsageDeploymentsCustomServerTest extends Scope
@@ -39,7 +39,7 @@ final class UsageDeploymentsCustomServerTest extends Scope
         }, 60_000, 500);
 
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Deployment usage attribution',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',

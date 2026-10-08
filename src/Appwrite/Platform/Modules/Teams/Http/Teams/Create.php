@@ -15,9 +15,9 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Lock\Distributed;
@@ -78,7 +78,7 @@ class Create extends Action
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
         $isAppUser = $user->isKey($authorization->getRoles());
 
-        $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
+        $teamId = $teamId == 'unique()' ? Id::unique() : $teamId;
         $limited = $this->isOrganizationLimited($project);
 
         $refuseSecondOrganization = function () use ($dbForProject, $authorization): void {
@@ -115,7 +115,7 @@ class Create extends Action
                         $roles[] = 'owner';
                     }
 
-                    $membershipId = ID::unique();
+                    $membershipId = Id::unique();
                     $dbForProject->createDocument('memberships', new Document([
                         '$id' => $membershipId,
                         '$permissions' => [

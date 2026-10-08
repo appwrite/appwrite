@@ -5,6 +5,7 @@ namespace Appwrite\Utopia\Database\Hooks;
 use Appwrite\Usage\Context as UsageContext;
 use Utopia\Database\Document;
 use Utopia\Database\Event;
+use Utopia\Database\Event\Domain;
 use Utopia\Database\Hook\Lifecycle;
 
 /**
@@ -18,7 +19,7 @@ class Usage implements Lifecycle
     ) {
     }
 
-    public function handle(Event $event, mixed $data): void
+    public function handle(Domain $event): void
     {
         if (!$data instanceof Document) {
             return;

@@ -94,7 +94,7 @@ class Upsert extends PlatformAction
                     ],
                 ),
             ])
-            ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Presence unique ID.', false, ['dbForProject'])
+            ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Presence unique ID.', false, ['dbForProject'])
             ->param('userId', null, new UID(), 'User ID.', true)
             ->param('status', '', new Text(Database::LENGTH_KEY), 'Presence status.', false)
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)

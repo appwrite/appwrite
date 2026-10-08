@@ -16,12 +16,12 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Hook\Permissions;
 use Utopia\Database\Hook\Relationships;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 
 /**
@@ -307,7 +307,7 @@ final class ListCacheTest extends TestCase
             ->setNamespace('cached')
             ->setAuthorization($this->authorization);
         $tenant->addHook(new Permissions());
-        $tenant->addHook(new Relationships($tenant));
+        $tenant->addHook(new Relationships());
 
         if ($operations !== null) {
             $tenant->addHook(new Metadata(

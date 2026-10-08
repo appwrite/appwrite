@@ -53,7 +53,7 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])
+            ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Platform ID.', false, ['dbForPlatform'])
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('authorization')

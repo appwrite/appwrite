@@ -62,11 +62,11 @@ class Create extends IndexCreate
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/references/cloud/server-dart/tablesDB#createTable).', false, ['dbForProject'])
-            ->param('key', null, fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Index Key.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/references/cloud/server-dart/tablesDB#createTable).', false, ['dbForProject'])
+            ->param('key', null, fn (Database $dbForProject) => new Key(false, $dbForProject->getMaxUidLength()), 'Index Key.', false, ['dbForProject'])
             ->param('type', null, new WhiteList([IndexType::Key->value, IndexType::Fulltext->value, IndexType::Unique->value, IndexType::Spatial->value]), 'Index type.', enum: new Enum(name: 'TablesDBIndexType'))
-            ->param('columns', null, fn (Database $dbForProject) => new ArrayList(new Key(true, $dbForProject->getAdapter()->getMaxUIDLength()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of columns to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' columns are allowed, each 32 characters long.', false, ['dbForProject'], example: '["username"]')
+            ->param('columns', null, fn (Database $dbForProject) => new ArrayList(new Key(true, $dbForProject->getMaxUidLength()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of columns to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' columns are allowed, each 32 characters long.', false, ['dbForProject'], example: '["username"]')
             ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, ColumnType::String->value), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true, enum: new Enum(name: 'OrderBy'))
             ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
             ->inject('response')

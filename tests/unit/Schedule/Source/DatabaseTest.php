@@ -136,11 +136,13 @@ final class ScheduleDatabase extends Database
         ];
     }
 
+    #[\Override]
     public function skipFilters(callable $callback, ?array $filters = null): mixed
     {
         return $callback();
     }
 
+    #[\Override]
     public function getDocument(string $collection, string $id, array $queries = [], bool $forUpdate = false): Document
     {
         if ($collection === 'projects' && $this->readError !== null) {
@@ -150,6 +152,7 @@ final class ScheduleDatabase extends Database
         return $this->documents[$collection][$id] ?? new Document();
     }
 
+    #[\Override]
     public function deleteDocument(string $collection, string $id, ?int $expectedVersion = null): bool
     {
         if ($this->deleteError !== null) {
@@ -160,6 +163,7 @@ final class ScheduleDatabase extends Database
         return true;
     }
 
+    #[\Override]
     public function find(string $collection, array $queries = [], PermissionType $forPermission = PermissionType::Read): array
     {
         return array_values($this->documents[$collection] ?? []);

@@ -17,11 +17,11 @@ enum Join: string
     public function query(string $ordersId, string $alias): Query
     {
         return match ($this) {
-            self::Inner => Query::join($ordersId, '$id', 'customerId', '=', $alias),
-            self::Left => Query::leftJoin($ordersId, '$id', 'customerId', '=', $alias),
-            self::Right => Query::rightJoin($ordersId, '$id', 'customerId', '=', $alias),
+            self::Inner => Query::join($ordersId, $alias, [Query::on('$id', 'customerId')]),
+            self::Left => Query::leftJoin($ordersId, $alias, [Query::on('$id', 'customerId')]),
+            self::Right => Query::rightJoin($ordersId, $alias, [Query::on('$id', 'customerId')]),
             self::Cross => Query::crossJoin($ordersId, $alias),
-            self::FullOuter => Query::fullOuterJoin($ordersId, '$id', 'customerId', '=', $alias),
+            self::FullOuter => Query::fullOuterJoin($ordersId, $alias, [Query::on('$id', 'customerId')]),
         };
     }
 

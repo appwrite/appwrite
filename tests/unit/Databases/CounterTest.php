@@ -18,8 +18,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Type as TypeException;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 
@@ -267,6 +267,7 @@ final class CounterTest extends TestCase
                 parent::__construct($adapter, $cache);
             }
 
+            #[\Override]
             public function getCollection(string $id): Collection
             {
                 return $this->definition;

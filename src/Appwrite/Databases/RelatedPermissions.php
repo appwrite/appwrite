@@ -4,8 +4,8 @@ namespace Appwrite\Databases;
 
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 

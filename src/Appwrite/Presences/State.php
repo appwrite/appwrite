@@ -17,11 +17,11 @@ use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Structure as StructureException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Span\Span;
 
@@ -123,7 +123,7 @@ class State
         ?callable $onPresenceCreated = null
     ): Document {
         if ($presenceId === 'unique()') {
-            $presenceId = ID::unique();
+            $presenceId = Id::unique();
         }
         $presenceDocument->setAttribute('$id', $presenceId);
 

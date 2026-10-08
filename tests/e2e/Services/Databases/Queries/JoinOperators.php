@@ -175,7 +175,7 @@ trait JoinOperators
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($ordersId, '$id', 'customerId', '=', 'ord')->toString(),
+                Query::join($ordersId, 'ord', [Query::on('$id', 'customerId')])->toString(),
                 Query::select(['name', 'ord.amount'])->toString(),
             ],
         ]);
@@ -207,8 +207,8 @@ trait JoinOperators
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($ordersId, '$id', 'customerId', '=', 'ord')->toString(),
-                Query::join($paymentsId, 'ord.$id', 'orderId', '=', 'pay')->toString(),
+                Query::join($ordersId, 'ord', [Query::on('$id', 'customerId')])->toString(),
+                Query::join($paymentsId, 'pay', [Query::on('ord.$id', 'orderId')])->toString(),
                 Query::select(['name', 'ord.amount', 'pay.amount'])->toString(),
             ],
         ]);

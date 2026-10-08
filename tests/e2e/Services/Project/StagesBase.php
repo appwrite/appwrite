@@ -5,7 +5,7 @@ namespace Tests\E2E\Services\Project;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Utopia\Config\Config;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait StagesBase
@@ -164,7 +164,7 @@ trait StagesBase
             'x-appwrite-key' => $project['apiKey'],
             'x-sdk-name' => 'mcp',
         ], [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Onboarding',
         ]);
         $this->assertSame(201, $second['headers']['status-code']);
@@ -190,7 +190,7 @@ trait StagesBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Onboarding',
         ]);
         $this->assertSame(201, $response['headers']['status-code']);

@@ -13,11 +13,11 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\RelationshipType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 
@@ -121,7 +121,7 @@ final class JoinsTest extends TestCase
     {
         $customers = self::customers(self::relationship('orders', RelationshipType::OneToMany, twoWayKey: 'customer'));
 
-        $resolved = $this->joins()->resolve([Query::join('shared', 'orders', '$id', '=', 'ord')], $customers);
+        $resolved = $this->joins()->resolve([Query::join('shared', 'ord', [Query::on('orders', '$id')])], $customers);
 
         $this->assertSame(['$id', '=', 'customer', 'ord'], $resolved[0]->getValues(), 'a one-to-many relationship is stored on the related side, in its two-way key');
     }
@@ -130,7 +130,7 @@ final class JoinsTest extends TestCase
     {
         $customers = self::customers(self::relationship('region', RelationshipType::ManyToOne, twoWayKey: 'customers'));
 
-        $resolved = $this->joins()->resolve([Query::join('shared', 'region', '$id', '=', 'reg')], $customers);
+        $resolved = $this->joins()->resolve([Query::join('shared', 'reg', [Query::on('region', '$id')])], $customers);
 
         $this->assertSame(['region', '=', '$id', 'reg'], $resolved[0]->getValues());
     }
@@ -148,7 +148,7 @@ final class JoinsTest extends TestCase
 
     private function resolve(string $joined, ?Joins $joins = null): Query
     {
-        $resolved = ($joins ?? $this->joins())->resolve([Query::join($joined, '$id', 'customerId', '=', 'ord')], self::customers());
+        $resolved = ($joins ?? $this->joins())->resolve([Query::join($joined, 'ord', [Query::on('$id', 'customerId')])], self::customers());
 
         $this->assertCount(1, $resolved);
 
@@ -158,7 +158,7 @@ final class JoinsTest extends TestCase
     private function refusal(string $joined, ?Joins $joins = null): Exception
     {
         try {
-            ($joins ?? $this->joins())->resolve([Query::join($joined, '$id', 'customerId', '=', 'ord')], self::customers());
+            ($joins ?? $this->joins())->resolve([Query::join($joined, 'ord', [Query::on('$id', 'customerId')])], self::customers());
         } catch (Exception $refusal) {
             return $refusal;
         }

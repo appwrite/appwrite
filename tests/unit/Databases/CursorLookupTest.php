@@ -14,10 +14,10 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Hook\Permissions;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 
 final class CursorLookupTest extends TestCase
@@ -146,7 +146,7 @@ final class CursorLookupTest extends TestCase
         ])));
 
         $cursor = $this->page($store, [
-            Query::join(self::PRODUCTS, 'ord.productId', '$id', '=', 'prod')->toString(),
+            Query::join(self::PRODUCTS, 'prod', [Query::on('ord.productId', '$id')])->toString(),
             Query::orderAsc('prod.name'),
         ], Query::cursorAfter('alice'));
 
@@ -189,7 +189,7 @@ final class CursorLookupTest extends TestCase
         $this->order($store, 'b-only', 'bob', 15, readable: true);
 
         $rows = $this->pageRows($store, [
-            Query::leftJoin(self::ORDERS, '$id', 'customerId', '=', 'ord')->toString(),
+            Query::leftJoin(self::ORDERS, 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::orderAsc('ord.amount'),
         ], Query::cursorAfter('alice'), join: false);
 
@@ -218,7 +218,7 @@ final class CursorLookupTest extends TestCase
         $this->order($store, 'a-second', 'alice', 25, readable: true);
 
         $parsed = Query::parseQueries([
-            Query::join(self::CUSTOMERS, 'customerId', '$id', '=', 'cus')->toString(),
+            Query::join(self::CUSTOMERS, 'cus', [Query::on('customerId', '$id')])->toString(),
             Query::cursorAfter('a-first')->toString(),
         ]);
         $cursor = Query::getCursorQueries($parsed, false)[0];
@@ -285,7 +285,7 @@ final class CursorLookupTest extends TestCase
     private function customerQueries(array $queries, Query $cursor, bool $join): array
     {
         return Query::parseQueries([
-            ...($join ? [Query::join(self::ORDERS, '$id', 'customerId', '=', 'ord')->toString()] : []),
+            ...($join ? [Query::join(self::ORDERS, 'ord', [Query::on('$id', 'customerId')])->toString()] : []),
             ...\array_map(static fn (Query|string $query): string => $query instanceof Query ? $query->toString() : $query, $queries),
             $cursor->toString(),
         ]);

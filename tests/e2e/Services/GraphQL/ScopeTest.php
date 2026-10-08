@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class ScopeTest extends Scope
 {
@@ -24,7 +24,7 @@ final class ScopeTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Actors',
             ]
         ];
@@ -52,7 +52,7 @@ final class ScopeTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Actors',
             ]
         ];

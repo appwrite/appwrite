@@ -3,7 +3,7 @@
 namespace Tests\E2E\Services\Project;
 
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 /**
  * Smoke coverage for the project-scoped keys endpoints kept for a zero-downtime transition.
@@ -33,7 +33,7 @@ trait KeysBase
          * Test for SUCCESS
          */
         $key = $this->client->call(Client::METHOD_POST, '/project/keys', $consoleHeaders, [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Legacy Key',
             'scopes' => ['users.read'],
         ]);

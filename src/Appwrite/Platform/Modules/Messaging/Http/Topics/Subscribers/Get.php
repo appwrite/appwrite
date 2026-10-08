@@ -44,8 +44,8 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID. The topic ID subscribed to.', false, ['dbForProject'])
-            ->param('subscriberId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Subscriber ID.', false, ['dbForProject'])
+            ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Topic ID. The topic ID subscribed to.', false, ['dbForProject'])
+            ->param('subscriberId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Subscriber ID.', false, ['dbForProject'])
             ->inject('dbForProject')
             ->inject('authorization')
             ->inject('response')

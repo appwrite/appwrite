@@ -16,7 +16,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
@@ -73,7 +73,7 @@ class Create extends Action
                 type: MethodType::UPLOAD,
                 packaging: true,
             ))
-            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Site ID.', false, ['dbForProject'])
             ->param('installCommand', null, new Nullable(new Text(8192, 0)), 'Install Commands.', true)
             ->param('buildCommand', null, new Nullable(new Text(8192, 0)), 'Build Commands.', true)
             ->param('outputDirectory', null, new Nullable(new Text(8192, 0)), 'Output Directory.', true)
@@ -171,7 +171,7 @@ class Create extends Action
         }
 
         $contentRange = $request->getHeaderLine('content-range');
-        $deploymentId = ID::unique();
+        $deploymentId = Id::unique();
         $chunk = 1;
         $chunks = 1;
 
@@ -286,11 +286,11 @@ class Create extends Action
                     ]));
 
                     $sitesDomain = $platform['sitesDomain'];
-                    $domain = ID::unique() . "." . $sitesDomain;
+                    $domain = Id::unique() . "." . $sitesDomain;
 
                     // TODO: (@Meldiron) Remove after 1.7.x migration
                     $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-                    $ruleId = $isMd5 ? md5($domain) : ID::unique();
+                    $ruleId = $isMd5 ? md5($domain) : Id::unique();
 
                     $rule = $authorization->skip(
                         fn () => $dbForPlatform->createDocument('rules', new Document([
@@ -369,11 +369,11 @@ class Create extends Action
 
                 if ($isNewDeployment) {
                     $sitesDomain = $platform['sitesDomain'];
-                    $domain = ID::unique() . "." . $sitesDomain;
+                    $domain = Id::unique() . "." . $sitesDomain;
 
                     // TODO: (@Meldiron) Remove after 1.7.x migration
                     $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-                    $ruleId = $isMd5 ? md5($domain) : ID::unique();
+                    $ruleId = $isMd5 ? md5($domain) : Id::unique();
 
                     $rule = $authorization->skip(
                         fn () => $dbForPlatform->createDocument('rules', new Document([

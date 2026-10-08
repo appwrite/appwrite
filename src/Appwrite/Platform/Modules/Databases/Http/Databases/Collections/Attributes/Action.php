@@ -23,7 +23,7 @@ use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\RelationshipSide;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Structure;
@@ -356,7 +356,7 @@ abstract class Action extends DatabasesAction
         }
 
         if (!empty($format)) {
-            if (!Structure::hasFormat($format, Attribute::normalizeType($type))) {
+            if (!Structure::hasFormat($format, Attribute::typeFromStored($type))) {
                 throw new Exception($this->getFormatUnsupportedException(), "Format $format not available for $type columns.");
             }
         }
@@ -381,7 +381,7 @@ abstract class Action extends DatabasesAction
 
         try {
             $attribute = new Document([
-                '$id' => ID::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $key),
+                '$id' => Id::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $key),
                 'key' => $key,
                 'databaseInternalId' => $db->getSequence(),
                 'databaseId' => $db->getId(),
@@ -401,7 +401,7 @@ abstract class Action extends DatabasesAction
             ]);
 
             if (
-                !$dbForDatabases->getAdapter()->supports(Capability::SpatialIndexNull) &&
+                !$dbForDatabases->getAdapter()->supports(Capability::IndexSpatialNull) &&
                 \in_array($attribute->getAttribute('type'), [ColumnType::Point->value, ColumnType::Linestring->value, ColumnType::Polygon->value]) &&
                 $attribute->getAttribute('required')
             ) {
@@ -449,7 +449,7 @@ abstract class Action extends DatabasesAction
 
             try {
                 $twoWayAttribute = new Document([
-                    '$id' => ID::custom($db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $twoWayKey),
+                    '$id' => Id::custom($db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $twoWayKey),
                     'key' => $twoWayKey,
                     'databaseInternalId' => $db->getSequence(),
                     'databaseId' => $db->getId(),
@@ -713,7 +713,7 @@ abstract class Action extends DatabasesAction
             $originalUid = $attribute->getId();
 
             $attribute
-                ->setAttribute('$id', ID::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $newKey))
+                ->setAttribute('$id', Id::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $newKey))
                 ->setAttribute('key', $newKey);
 
             try {

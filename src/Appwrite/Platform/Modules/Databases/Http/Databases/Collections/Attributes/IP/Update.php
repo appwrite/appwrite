@@ -63,12 +63,12 @@ class Update extends Action
                     replaceWith: 'tablesDB.updateIpColumn',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
-            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getMaxUidLength()), 'Attribute Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Nullable(new IP()), 'Default value. Cannot be set when attribute is required.', example: '192.0.2.0')
-            ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Attribute Key.', true, ['dbForProject'])
+            ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getMaxUidLength())), 'New Attribute Key.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')

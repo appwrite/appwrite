@@ -4,7 +4,7 @@ use Utopia\Auth\Hashes\Argon2;
 use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Filter;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Index;
 use Utopia\Database\IntegerWidth;
 use Utopia\Query\OrderDirection;
@@ -29,8 +29,8 @@ return [
     ],
 
     'users' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('users'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('users'),
         'name' => 'Users',
         'attributes' => [
             Attribute::string(key: 'name', size: 256),
@@ -89,13 +89,13 @@ return [
             Index::key(key: '_key_passwordPwned', attributes: ['passwordPwned'], orders: [OrderDirection::Asc]),
             Index::fulltext(key: '_key_search', attributes: ['search']),
             Index::key(key: '_key_accessedAt', attributes: ['accessedAt']),
-            Index::key(key: 'impersonator', attributes: [ID::custom('impersonator')]),
+            Index::key(key: 'impersonator', attributes: [Id::custom('impersonator')]),
         ],
     ],
 
     'tokens' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('tokens'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('tokens'),
         'name' => 'Tokens',
         'attributes' => [
             Attribute::string(key: 'userInternalId', required: true),
@@ -115,8 +115,8 @@ return [
     ],
 
     'authenticators' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('authenticators'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('authenticators'),
         'name' => 'Authenticators',
         'attributes' => [
             Attribute::string(key: 'userInternalId'),
@@ -136,8 +136,8 @@ return [
     ],
 
     'challenges' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('challenges'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('challenges'),
         'name' => 'Challenges',
         'attributes' => [
             Attribute::string(key: 'userInternalId'),
@@ -157,8 +157,8 @@ return [
     ],
 
     'sessions' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('sessions'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('sessions'),
         'name' => 'Sessions',
         'attributes' => [
             Attribute::string(key: 'userInternalId', required: true),
@@ -209,8 +209,8 @@ return [
     ],
 
     'identities' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('identities'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('identities'),
         'name' => 'Identities',
         'attributes' => [
             Attribute::string(key: 'userInternalId'),
@@ -247,8 +247,8 @@ return [
     ],
 
     'teams' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('teams'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('teams'),
         'name' => 'Teams',
         'attributes' => [
             Attribute::string(key: 'name', size: 128),
@@ -265,8 +265,8 @@ return [
     ],
 
     'memberships' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('memberships'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('memberships'),
         'name' => 'Memberships',
         'attributes' => [
             Attribute::string(key: 'userInternalId', required: true),
@@ -295,8 +295,8 @@ return [
     ],
 
     'buckets' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('buckets'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('buckets'),
         'name' => 'Buckets',
         'attributes' => [
             Attribute::boolean(key: 'enabled', required: true),
@@ -322,8 +322,8 @@ return [
     ],
 
     'providers' => [
-        '$collection' => ID::custom(DATABASE::METADATA),
-        '$id' => ID::custom('providers'),
+        '$collection' => Id::custom(DATABASE::METADATA),
+        '$id' => Id::custom('providers'),
         'name' => 'Providers',
         'attributes' => [
             Attribute::string(key: 'name', size: 128, required: true),
@@ -343,8 +343,8 @@ return [
     ],
 
     'messages' => [
-        '$collection' => ID::custom(DATABASE::METADATA),
-        '$id' => ID::custom('messages'),
+        '$collection' => Id::custom(DATABASE::METADATA),
+        '$id' => Id::custom('messages'),
         'name' => 'Messages',
         'attributes' => [
             Attribute::string(key: 'providerType', required: true),
@@ -367,8 +367,8 @@ return [
     ],
 
     'pushLedger' => [
-        '$collection' => ID::custom(DATABASE::METADATA),
-        '$id' => ID::custom('pushLedger'),
+        '$collection' => Id::custom(DATABASE::METADATA),
+        '$id' => Id::custom('pushLedger'),
         'name' => 'MQTT Messages',
         'attributes' => [
             Attribute::string(key: 'topic', required: true),
@@ -387,8 +387,8 @@ return [
     ],
 
     'topics' => [
-        '$collection' => ID::custom(DATABASE::METADATA),
-        '$id' => ID::custom('topics'),
+        '$collection' => Id::custom(DATABASE::METADATA),
+        '$id' => Id::custom('topics'),
         'name' => 'Topics',
         'attributes' => [
             Attribute::string(key: 'name', size: 128, required: true),
@@ -416,8 +416,8 @@ return [
     ],
 
     'subscribers' => [
-        '$collection' => ID::custom(DATABASE::METADATA),
-        '$id' => ID::custom('subscribers'),
+        '$collection' => Id::custom(DATABASE::METADATA),
+        '$id' => Id::custom('subscribers'),
         'name' => 'Subscribers',
         'attributes' => [
             Attribute::string(key: 'targetId', required: true),
@@ -442,8 +442,8 @@ return [
     ],
 
     'targets' => [
-        '$collection' => ID::custom(DATABASE::METADATA),
-        '$id' => ID::custom('targets'),
+        '$collection' => Id::custom(DATABASE::METADATA),
+        '$id' => Id::custom('targets'),
         'name' => 'Targets',
         'attributes' => [
             Attribute::string(key: 'userId', required: true),
@@ -470,8 +470,8 @@ return [
 
     // note that this is not required for console & projects.
     'files' => [
-        '$collection' => ID::custom('buckets'),
-        '$id' => ID::custom('files'),
+        '$collection' => Id::custom('buckets'),
+        '$id' => Id::custom('files'),
         '$name' => 'Files',
         'attributes' => [
             Attribute::string(key: 'bucketId'),
@@ -513,8 +513,8 @@ return [
 
     // Naming it presenceLogs as later it might be only be used as a presence events table only and not for the actual presence
     'presenceLogs' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('presenceLogs'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('presenceLogs'),
         'name' => 'Presence Logs',
         'attributes' => [
             Attribute::id(key: 'userInternalId', required: true),

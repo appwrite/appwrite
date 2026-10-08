@@ -11,10 +11,10 @@ use Tests\E2E\Services\Databases\Queries\Oracle\Order;
 use Tests\E2E\Services\Databases\Queries\Oracle\Seed;
 use Tests\E2E\Services\Databases\Queries\Oracle\Summary;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 
 trait JoinTypes
 {
@@ -172,7 +172,7 @@ trait JoinTypes
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::leftJoin($ordersId, '$id', 'customerId', '=', 'ord')->toString(),
+                Query::leftJoin($ordersId, 'ord', [Query::on('$id', 'customerId')])->toString(),
                 Query::select(['name', 'ord.amount'])->toString(),
             ],
         ]);
@@ -247,7 +247,7 @@ trait JoinTypes
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($ordersId, '$id', 'customerId', '=', 'ord')->toString(),
+                Query::join($ordersId, 'ord', [Query::on('$id', 'customerId')])->toString(),
             ],
         ]);
 
@@ -274,7 +274,7 @@ trait JoinTypes
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::fullOuterJoin($ordersId, '$id', 'customerId', '=', 'ord')->toString(),
+                Query::fullOuterJoin($ordersId, 'ord', [Query::on('$id', 'customerId')])->toString(),
             ],
         ]);
 
@@ -364,7 +364,7 @@ trait JoinTypes
     {
         $databaseId = $this->setupDatabase()['databaseId'];
         $notesId = $this->createBulkNotes($databaseId);
-        $peersId = $this->createSeedContainer($databaseId, 'bulkPeers' . ID::unique(), false, [
+        $peersId = $this->createSeedContainer($databaseId, 'bulkPeers' . Id::unique(), false, [
             Permission::read(Role::any()),
             Permission::create(Role::any()),
         ]);
@@ -372,7 +372,7 @@ trait JoinTypes
         foreach ([$peersId, Database::METADATA] as $joined) {
             $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $notesId), $this->apiKeyHeaders(), [
                 'data' => ['note' => 'rewritten'],
-                'queries' => [Query::leftJoin($joined, '$id', '$id', '=', 'peer')->toString()],
+                'queries' => [Query::leftJoin($joined, 'peer', [Query::on('$id', '$id')])->toString()],
             ]);
 
             $this->assertSame(400, $updated['headers']['status-code'], "A bulk update joining '{$joined}' must be rejected");
@@ -386,14 +386,14 @@ trait JoinTypes
     {
         $databaseId = $this->setupDatabase()['databaseId'];
         $notesId = $this->createBulkNotes($databaseId);
-        $peersId = $this->createSeedContainer($databaseId, 'bulkPeers' . ID::unique(), false, [
+        $peersId = $this->createSeedContainer($databaseId, 'bulkPeers' . Id::unique(), false, [
             Permission::read(Role::any()),
             Permission::create(Role::any()),
         ]);
 
         foreach ([$peersId, Database::METADATA] as $joined) {
             $deleted = $this->client->call(Client::METHOD_DELETE, $this->getRecordUrl($databaseId, $notesId), $this->apiKeyHeaders(), [
-                'queries' => [Query::leftJoin($joined, '$id', '$id', '=', 'peer')->toString()],
+                'queries' => [Query::leftJoin($joined, 'peer', [Query::on('$id', '$id')])->toString()],
             ]);
 
             $this->assertSame(400, $deleted['headers']['status-code'], "A bulk delete joining '{$joined}' must be rejected");
@@ -411,11 +411,11 @@ trait JoinTypes
 
         $databaseId = $this->setupDatabase()['databaseId'];
         $probesId = $this->createProbeContainer($databaseId);
-        $peersId = $this->createSeedContainer($databaseId, 'probePeers' . ID::unique(), false, [
+        $peersId = $this->createSeedContainer($databaseId, 'probePeers' . Id::unique(), false, [
             Permission::read(Role::any()),
             Permission::create(Role::any()),
         ]);
-        $join = Query::leftJoin($peersId, '$id', '$id', '=', 'peer')->toString();
+        $join = Query::leftJoin($peersId, 'peer', [Query::on('$id', '$id')])->toString();
 
         $plain = $this->queryRecords($databaseId, $probesId, []);
         $this->assertSame(200, $plain['headers']['status-code']);
@@ -438,7 +438,7 @@ trait JoinTypes
         }
 
         $databaseId = $this->setupDatabase()['databaseId'];
-        $suffix = ID::unique();
+        $suffix = Id::unique();
         $documentLevel = [Permission::create(Role::any())];
 
         $fixture = new Fixture(
@@ -610,14 +610,14 @@ trait JoinTypes
     private function selfJoins(string $collectionId, int $count): array
     {
         return \array_map(
-            static fn (int $index): string => Query::join($collectionId, '$id', '$id', '=', 'peer' . $index)->toString(),
+            static fn (int $index): string => Query::join($collectionId, 'peer' . $index, [Query::on('$id', '$id')])->toString(),
             \range(1, $count),
         );
     }
 
     private function createBulkNotes(string $databaseId): string
     {
-        $notesId = $this->createSeedContainer($databaseId, 'bulkNotes' . ID::unique(), false, [
+        $notesId = $this->createSeedContainer($databaseId, 'bulkNotes' . Id::unique(), false, [
             Permission::read(Role::any()),
             Permission::create(Role::any()),
             Permission::update(Role::any()),
@@ -651,7 +651,7 @@ trait JoinTypes
 
     protected function createProbeContainer(string $databaseId): string
     {
-        $probesId = $this->createSeedContainer($databaseId, 'probes' . ID::unique(), false, [
+        $probesId = $this->createSeedContainer($databaseId, 'probes' . Id::unique(), false, [
             Permission::read(Role::any()),
             Permission::create(Role::any()),
         ]);
@@ -668,7 +668,7 @@ trait JoinTypes
     private function createSeedContainer(string $databaseId, string $name, bool $documentSecurity, array $permissions): string
     {
         $created = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $this->apiKeyHeaders(), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => $name,
             $this->getSecurityParam() => $documentSecurity,
             'permissions' => $permissions,

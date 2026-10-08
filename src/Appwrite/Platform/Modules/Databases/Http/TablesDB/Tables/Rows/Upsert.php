@@ -72,12 +72,12 @@ class Upsert extends DocumentUpsert
                     contentType: ContentType::JSON
                 ),
             ])
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
-            ->param('rowId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Row ID.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Table ID.', false, ['dbForProject'])
+            ->param('rowId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Row ID.', false, ['dbForProject'])
             ->param('data', [], new JSONObject(), 'Row data as JSON object. Include all required columns of the row to be created or updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":33,"isAdmin":false}')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('user')

@@ -12,9 +12,9 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\Queries;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
+use Utopia\Database\Validator\Queries\Base;
 use Utopia\Database\Validator\Spatial;
 use Utopia\OpenAPI\Model\Composition;
 use Utopia\OpenAPI\Model\ParameterLocation;
@@ -644,8 +644,8 @@ class OpenAPI3 extends Format
 
                 // Every Queries validator serialises to an array of query strings, so
                 // normalise the whole hierarchy instead of enumerating each subclass.
-                if (\is_subclass_of($class, Queries::class)) {
-                    $class = Queries::class;
+                if (\is_subclass_of($class, Base::class)) {
+                    $class = Base::class;
                 }
 
                 $openEnum = false;
@@ -812,7 +812,7 @@ class OpenAPI3 extends Format
                             $node['schema']['example'] = $param['example'];
                         }
                         break;
-                    case Queries::class:
+                    case Base::class:
                         // utopia-php/waf is not a dependency here, so the class is named rather than referenced.
                     case 'Utopia\WAF\Validator\Conditions':
                         $node['schema']['type'] = 'array';

@@ -65,9 +65,9 @@ class Create extends Action
                     replaceWith: 'tablesDB.createFloatColumn',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
-            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getMaxUidLength()), 'Attribute Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('min', null, new Nullable(new FloatValidator()), 'Minimum value.', true, example: '0.0')
             ->param('max', null, new Nullable(new FloatValidator()), 'Maximum value.', true, example: '100.0')

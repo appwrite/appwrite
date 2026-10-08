@@ -75,7 +75,7 @@ class Get extends Action
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $valid = $authorization->isValid(new Input(PermissionType::Read, $bucket->getRead()));
+        $valid = $authorization->isValid(new Input(PermissionType::Read, $bucket->getPermissionsByType(PermissionType::Read)));
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }

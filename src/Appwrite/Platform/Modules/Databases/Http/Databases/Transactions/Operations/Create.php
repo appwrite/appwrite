@@ -16,10 +16,10 @@ use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
@@ -73,7 +73,7 @@ class Create extends Action
                     replaceWith: 'tablesDB.createOperations',
                 )
             ))
-            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Transaction ID.', false, ['dbForProject'])
             ->param('operations', [], new ArrayList(new Operation(type: 'legacy')), 'Array of staged operations.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -191,11 +191,11 @@ class Create extends Action
                     if ($document !== null && !$document->isEmpty() && $documentSecurity) {
                         if ($permissionType === PermissionType::Update) {
                             $documentValid = $authorization->isValid(
-                                new Input(PermissionType::Update, $document->getUpdate())
+                                new Input(PermissionType::Update, $document->getPermissionsByType(PermissionType::Update))
                             );
                         } elseif ($permissionType === PermissionType::Delete) {
                             $documentValid = $authorization->isValid(
-                                new Input(PermissionType::Delete, $document->getDelete())
+                                new Input(PermissionType::Delete, $document->getPermissionsByType(PermissionType::Delete))
                             );
                         }
                     }
@@ -247,7 +247,7 @@ class Create extends Action
             }
 
             $staged[] = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),

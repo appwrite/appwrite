@@ -48,7 +48,7 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('ruleId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Rule ID.', false, ['dbForProject'])
+            ->param('ruleId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Rule ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')

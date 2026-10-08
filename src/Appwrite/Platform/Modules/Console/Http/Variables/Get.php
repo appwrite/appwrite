@@ -120,13 +120,13 @@ class Get extends Action
             'supportForSpatials' => Support::spatial($adapter),
             'supportForAggregations' => $adapter->supports(Capability::Aggregations),
             'supportForJoins' => $adapter->supports(Capability::Joins),
-            'supportForSpatialIndexNull' => $adapter->supports(Capability::SpatialIndexNull),
-            'supportForFulltextWildcard' => $adapter->supports(Capability::FulltextWildcard),
-            'supportForMultipleFulltextIndexes' => $adapter->supports(Capability::MultipleFulltextIndexes),
+            'supportForSpatialIndexNull' => $adapter->supports(Capability::IndexSpatialNull),
+            'supportForFulltextWildcard' => $adapter->supports(Capability::IndexFulltextWildcard),
+            'supportForMultipleFulltextIndexes' => $adapter->supports(Capability::IndexFulltextMultiple),
             'supportForAttributeResizing' => $adapter->supports(Capability::AttributeResizing),
             'supportForSchemas' => $adapter->supports(Capability::Schemas),
-            'maxIndexLength' => $adapter->getMaxIndexLength(),
-            'supportForIntegerIds' => $adapter->getIdAttributeType() === ColumnType::Integer,
+            'maxIndexLength' => $adapter->limits()->indexLength,
+            'supportForIntegerIds' => $adapter->limits()->idType === ColumnType::Integer,
         ]);
 
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);

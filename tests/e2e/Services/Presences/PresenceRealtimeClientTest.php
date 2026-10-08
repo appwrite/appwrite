@@ -9,10 +9,10 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\TimeoutException;
 
@@ -300,8 +300,8 @@ final class PresenceRealtimeClientTest extends Scope
     public function testPresenceUpsertSenderGetsResponseAndEvent(): void
     {
         [$project, $user, $headers] = $this->bootstrapIsolatedProject();
-        $presenceId = ID::unique();
-        $metadata = ['testRunId' => ID::unique(), 'case' => 'upsert-basic'];
+        $presenceId = Id::unique();
+        $metadata = ['testRunId' => Id::unique(), 'case' => 'upsert-basic'];
 
         $publisher = $this->connectRealtimeAndSubscribe(
             $project,
@@ -340,9 +340,9 @@ final class PresenceRealtimeClientTest extends Scope
     public function testPresenceUpsertSameUserUpdatesSingleRecord(): void
     {
         [$project, $user, $headers] = $this->bootstrapIsolatedProject();
-        $firstPresenceId = ID::unique();
-        $secondPresenceId = ID::unique();
-        $marker = ID::unique();
+        $firstPresenceId = Id::unique();
+        $secondPresenceId = Id::unique();
+        $marker = Id::unique();
 
         $publisher = $this->connectRealtimeAndSubscribe(
             $project,
@@ -399,7 +399,7 @@ final class PresenceRealtimeClientTest extends Scope
     public function testPresenceValidationErrorsReturnErrorOnly(): void
     {
         [$project, , $headers] = $this->bootstrapIsolatedProject();
-        $presenceId = ID::unique();
+        $presenceId = Id::unique();
         $client = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 2);
 
         try {
@@ -408,7 +408,7 @@ final class PresenceRealtimeClientTest extends Scope
                 'data' => [
                     'presenceId' => $presenceId,
                     'metadata' => [
-                        'testRunId' => ID::unique(),
+                        'testRunId' => Id::unique(),
                     ],
                 ],
             ]));
@@ -445,7 +445,7 @@ final class PresenceRealtimeClientTest extends Scope
         $project = $this->getProject(true);
         self::$project = $project;
 
-        $presenceId = ID::unique();
+        $presenceId = Id::unique();
         $client = $this->connectRealtimeAndSubscribe(
             $project,
             ['origin' => 'http://localhost'],
@@ -459,7 +459,7 @@ final class PresenceRealtimeClientTest extends Scope
                 'data' => [
                     'presenceId' => $presenceId,
                     'status' => 'online',
-                    'metadata' => ['testRunId' => ID::unique()],
+                    'metadata' => ['testRunId' => Id::unique()],
                 ],
             ]));
 
@@ -480,7 +480,7 @@ final class PresenceRealtimeClientTest extends Scope
     public function testChannelParsingChannelsAndEvents(): void
     {
         [$project, $user, $headers] = $this->bootstrapIsolatedProject();
-        $presenceId = ID::unique();
+        $presenceId = Id::unique();
         $listener = $this->connectRealtimeAndSubscribe(
             $project,
             $headers,
@@ -489,7 +489,7 @@ final class PresenceRealtimeClientTest extends Scope
         );
 
         try {
-            $createMetadata = ['testRunId' => ID::unique(), 'source' => 'channel-create'];
+            $createMetadata = ['testRunId' => Id::unique(), 'source' => 'channel-create'];
             $updateMetadata = ['testRunId' => $createMetadata['testRunId'], 'source' => 'channel-update'];
 
             $create = $this->client->call(
@@ -540,8 +540,8 @@ final class PresenceRealtimeClientTest extends Scope
             'cookie' => 'a_session_' . $project['$id'] . '=' . $user2['session'],
         ];
 
-        $presenceIdAny = ID::unique();
-        $presenceIdOwner = ID::unique();
+        $presenceIdAny = Id::unique();
+        $presenceIdOwner = Id::unique();
 
         $channels = [
             'presences',
@@ -554,7 +554,7 @@ final class PresenceRealtimeClientTest extends Scope
         $listener2 = $this->connectRealtimeAndSubscribe($project, $user2Headers, $channels, timeout: 1);
 
         try {
-            $metadataAny = ['testRunId' => ID::unique(), 'visibility' => 'any'];
+            $metadataAny = ['testRunId' => Id::unique(), 'visibility' => 'any'];
             $this->sendPresenceMessage(
                 $publisher,
                 $presenceIdAny,
@@ -566,7 +566,7 @@ final class PresenceRealtimeClientTest extends Scope
             $this->receivePresenceEvent($listener1, $presenceIdAny, 'upsert', 'online', $metadataAny, $user1['$id']);
             $this->receivePresenceEvent($listener2, $presenceIdAny, 'upsert', 'online', $metadataAny, $user1['$id']);
 
-            $metadataOwner = ['testRunId' => ID::unique(), 'visibility' => 'owner'];
+            $metadataOwner = ['testRunId' => Id::unique(), 'visibility' => 'owner'];
             $this->sendPresenceMessage(
                 $publisher,
                 $presenceIdOwner,
@@ -594,8 +594,8 @@ final class PresenceRealtimeClientTest extends Scope
     public function testPresenceCloseEmitsDeleteEvent(): void
     {
         [$project, $user, $headers] = $this->bootstrapIsolatedProject();
-        $presenceId = ID::unique();
-        $metadata = ['testRunId' => ID::unique(), 'source' => 'close-delete'];
+        $presenceId = Id::unique();
+        $metadata = ['testRunId' => Id::unique(), 'source' => 'close-delete'];
 
         $publisher = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
         $listener = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
@@ -627,7 +627,7 @@ final class PresenceRealtimeClientTest extends Scope
         // an array key in the realtime worker's in-memory connection map it is coerced to an int
         // by PHP. onClose must still delete it — regression for the coerced-key $id cleanup query.
         $presenceId = (string) \random_int(10_000_000, 99_999_999);
-        $metadata = ['testRunId' => ID::unique(), 'source' => 'close-delete-numeric'];
+        $metadata = ['testRunId' => Id::unique(), 'source' => 'close-delete-numeric'];
 
         $publisher = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
         $listener = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
@@ -669,8 +669,8 @@ final class PresenceRealtimeClientTest extends Scope
     public function testHttpDeleteThenCloseDoesNotDuplicateDeleteEvent(): void
     {
         [$project, $user, $headers] = $this->bootstrapIsolatedProject();
-        $presenceId = ID::unique();
-        $metadata = ['testRunId' => ID::unique(), 'source' => 'http-delete-then-close'];
+        $presenceId = Id::unique();
+        $metadata = ['testRunId' => Id::unique(), 'source' => 'http-delete-then-close'];
 
         $publisher = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
         $listener = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
@@ -759,7 +759,7 @@ final class PresenceRealtimeClientTest extends Scope
     public function testPresenceSetOverRealtimeIsListedToItsOwner(): void
     {
         [$project, $user, $headers] = $this->bootstrapIsolatedProject();
-        $presenceId = ID::unique();
+        $presenceId = Id::unique();
 
         $publisher = $this->connectRealtimeAndSubscribe($project, $headers, timeout: 2);
 
@@ -768,7 +768,7 @@ final class PresenceRealtimeClientTest extends Scope
                 $publisher,
                 $presenceId,
                 'online',
-                ['testRunId' => ID::unique(), 'case' => 'owner-list'],
+                ['testRunId' => Id::unique(), 'case' => 'owner-list'],
                 $this->getPresencePermissions(Role::user($user['$id']))
             );
             $this->receivePresenceResponse($publisher, $presenceId, 'online');
@@ -787,7 +787,7 @@ final class PresenceRealtimeClientTest extends Scope
     {
         [$project, $owner, $headers] = $this->bootstrapIsolatedProject();
         $other = $this->getUser(true);
-        $presenceId = ID::unique();
+        $presenceId = Id::unique();
 
         $create = $this->client->call(
             Client::METHOD_PUT,
@@ -809,7 +809,7 @@ final class PresenceRealtimeClientTest extends Scope
                 $publisher,
                 $presenceId,
                 'busy',
-                ['testRunId' => ID::unique(), 'case' => 'made-private'],
+                ['testRunId' => Id::unique(), 'case' => 'made-private'],
                 $this->getPresencePermissions(Role::user($owner['$id']))
             );
             $this->receivePresenceResponse($publisher, $presenceId, 'busy');

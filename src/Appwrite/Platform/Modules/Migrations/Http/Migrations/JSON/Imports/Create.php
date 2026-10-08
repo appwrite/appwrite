@@ -16,7 +16,7 @@ use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Migration\Destinations\OnDuplicate;
@@ -133,7 +133,7 @@ class Create extends Action
         $compression = $file->getAttribute('algorithm', Compression::NONE);
         $hasCompression = $compression !== Compression::NONE;
 
-        $migrationId = ID::unique();
+        $migrationId = Id::unique();
         $newPath = $deviceForMigrations->getPath($migrationId . '_' . $fileId . '.json');
 
         if ($hasEncryption || $hasCompression) {

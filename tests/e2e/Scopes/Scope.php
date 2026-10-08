@@ -15,9 +15,9 @@ use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
 
@@ -99,7 +99,7 @@ abstract class Scope extends TestCase
             $this->assertSame(200, $account['headers']['status-code']);
         }, 3_000, 100);
 
-        $teamId = ($params['teamId'] ?? 'unique()') === 'unique()' ? ID::unique() : $params['teamId'];
+        $teamId = ($params['teamId'] ?? 'unique()') === 'unique()' ? Id::unique() : $params['teamId'];
         $seed = function () use ($account, $params, $teamId) {
             global $register;
             $pools = $register->get('pools');
@@ -126,7 +126,7 @@ abstract class Scope extends TestCase
                         'search' => $teamId . ' ' . $params['name'],
                     ]));
                     $roles = array_values(array_unique([...($params['roles'] ?? []), 'owner']));
-                    $membershipId = ID::unique();
+                    $membershipId = Id::unique();
                     $database->createDocument('memberships', new Document([
                         '$id' => $membershipId,
                         '$permissions' => [
@@ -531,7 +531,7 @@ abstract class Scope extends TestCase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => 'console',
             ], [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $email,
                 'password' => $password,
                 'name' => $name,
@@ -566,7 +566,7 @@ abstract class Scope extends TestCase
 
             if ($verify['headers']['status-code'] === 200) {
                 self::$root = [
-                    '$id' => ID::custom($root['body']['$id']),
+                    '$id' => Id::custom($root['body']['$id']),
                     'name' => $root['body']['name'],
                     'email' => $root['body']['email'],
                     'session' => $session['cookies']['a_session_console'],
@@ -607,7 +607,7 @@ abstract class Scope extends TestCase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -625,7 +625,7 @@ abstract class Scope extends TestCase
         ]);
 
         self::$user[$projectId] = [
-            '$id' => ID::custom($user['body']['$id']),
+            '$id' => Id::custom($user['body']['$id']),
             'name' => $user['body']['name'],
             'email' => $user['body']['email'],
             'session' => $session['cookies']['a_session_' . $projectId],

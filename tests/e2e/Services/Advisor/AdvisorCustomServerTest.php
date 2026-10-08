@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class AdvisorCustomServerTest extends Scope
 {
@@ -47,7 +47,7 @@ final class AdvisorCustomServerTest extends Scope
                 'x-appwrite-key' => $userKey,
             ],
             [
-                'reportId' => ID::unique(),
+                'reportId' => Id::unique(),
                 'type' => 'audit',
                 'title' => 'Read-only check',
                 'targetType' => 'sites',

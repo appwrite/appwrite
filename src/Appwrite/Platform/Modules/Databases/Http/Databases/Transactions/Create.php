@@ -11,8 +11,8 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
@@ -76,7 +76,7 @@ class Create extends Action
         }
 
         $transaction = $authorization->skip(fn () => $dbForProject->createDocument('transactions', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             '$permissions' => $permissions,
             'status' => 'pending',
             'operations' => 0,

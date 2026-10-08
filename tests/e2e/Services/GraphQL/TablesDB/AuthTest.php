@@ -9,9 +9,9 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\GraphQL\Base;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class AuthTest extends Scope
 {
@@ -41,7 +41,7 @@ final class AuthTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'name' => 'User Name',
                 'email' => $email1,
                 'password' => 'password',
@@ -53,7 +53,7 @@ final class AuthTest extends Scope
         ], $graphQLPayload);
 
         // Create account 2
-        $graphQLPayload['variables']['userId'] = ID::unique();
+        $graphQLPayload['variables']['userId'] = Id::unique();
         $graphQLPayload['variables']['email'] = $email2;
 
         $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -92,7 +92,7 @@ final class AuthTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Actors',
             ]
         ];
@@ -109,7 +109,7 @@ final class AuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'tableId' => ID::unique(),
+                'tableId' => Id::unique(),
                 'name' => 'Actors',
                 'rowSecurity' => true,
                 'permissions' => [
@@ -166,7 +166,7 @@ final class AuthTest extends Scope
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
                 'tableId' => $this->table['body']['data']['tablesDBCreateTable']['_id'],
-                'rowId' => ID::unique(),
+                'rowId' => Id::unique(),
                 'data' => [
                     'name' => 'John Doe',
                 ],
@@ -226,7 +226,7 @@ final class AuthTest extends Scope
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
                 'tableId' => $this->table['body']['data']['tablesDBCreateTable']['_id'],
-                'rowId' => ID::unique(),
+                'rowId' => Id::unique(),
                 'data' => [
                     'name' => 'John Doe',
                 ],

@@ -251,7 +251,7 @@ class V21 extends Migration
      */
     private function migrateBuckets(): void
     {
-        $this->dbForProject->forEach('buckets', function (Document $bucket) {
+        foreach ($this->dbForProject->cursor('buckets', batchSize: 25) as $bucket) {
             $bucketId = 'bucket_' . $bucket['$sequence'];
 
             Console::log("Migrating Bucket {$bucketId} {$bucket->getId()} ({$bucket->getAttribute('name')})");
@@ -279,6 +279,6 @@ class V21 extends Migration
             } catch (\Throwable $th) {
                 Console::warning("purging {$bucketId}: {$th->getMessage()}");
             }
-        });
+        }
     }
 }

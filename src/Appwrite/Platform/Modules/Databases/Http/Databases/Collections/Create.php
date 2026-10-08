@@ -23,11 +23,11 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Id;
 use Utopia\Database\Index;
+use Utopia\Database\Permission;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Index as IndexValidator;
+use Utopia\Database\Validator\IndexDefinition as IndexValidator;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
@@ -81,8 +81,8 @@ class Create extends Action
                     replaceWith: 'tablesDB.createTable',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
@@ -105,7 +105,7 @@ class Create extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
-        $collectionId = $collectionId === 'unique()' ? ID::unique() : $collectionId;
+        $collectionId = $collectionId === 'unique()' ? Id::unique() : $collectionId;
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions) ?? [];
@@ -196,23 +196,7 @@ class Create extends Action
         $indexValidator = new IndexValidator(
             $collectionAttributes,
             [],
-            $dbForDatabases->getAdapter()->getMaxIndexLength(),
-            $dbForDatabases->getAdapter()->getInternalIndexesKeys(),
-            $dbForDatabases->getAdapter()->supports(Capability::IndexArray),
-            $dbForDatabases->getAdapter()->supports(Capability::SpatialIndexNull),
-            $dbForDatabases->getAdapter()->supports(Capability::SpatialIndexOrder),
-            $dbForDatabases->getAdapter()->supports(Capability::Vectors),
-            $this->supportsDefinedAttributes($dbForDatabases->getAdapter()),
-            $dbForDatabases->getAdapter()->supports(Capability::MultipleFulltextIndexes),
-            $dbForDatabases->getAdapter()->supports(Capability::IdenticalIndexes),
-            $dbForDatabases->getAdapter()->supports(Capability::ObjectIndexes),
-            $dbForDatabases->getAdapter()->supports(Capability::TrigramIndex),
-            $this->supportsSpatial($dbForDatabases->getAdapter()),
-            $dbForDatabases->getAdapter()->supports(Capability::Index),
-            $dbForDatabases->getAdapter()->supports(Capability::UniqueIndex),
-            $dbForDatabases->getAdapter()->supports(Capability::Fulltext),
-            $dbForDatabases->getAdapter()->supports(Capability::TTLIndexes),
-            $dbForDatabases->getAdapter()->supports(Capability::Objects),
+            $dbForDatabases->profile(),
         );
 
         foreach ($collectionIndexes as $indexDoc) {
@@ -305,7 +289,7 @@ class Create extends Action
         // the same document rather than one with no range at all.
         if (\in_array($type, [
             ColumnType::Integer->value,
-            Attribute::persistedType(ColumnType::BigInteger),
+            Attribute::storedType(ColumnType::BigInteger),
             ColumnType::Float->value,
             ColumnType::Double->value,
         ], true)) {
@@ -313,7 +297,7 @@ class Create extends Action
 
             $format = match ($type) {
                 ColumnType::Integer->value => APP_DATABASE_ATTRIBUTE_INT_RANGE,
-                Attribute::persistedType(ColumnType::BigInteger) => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
+                Attribute::storedType(ColumnType::BigInteger) => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
                 default => APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
             };
 
@@ -341,7 +325,7 @@ class Create extends Action
         ]);
 
         $document = new Document([
-            '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
+            '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
             'key' => $key,
             'databaseInternalId' => $database->getSequence(),
             'databaseId' => $database->getId(),
@@ -415,7 +399,7 @@ class Create extends Action
         ]);
 
         $document = new Document([
-            '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
+            '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
             'key' => $key,
             'status' => 'available',
             'databaseInternalId' => $database->getSequence(),

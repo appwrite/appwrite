@@ -67,7 +67,7 @@ final readonly class Joins
     private function isListable(Document $collection): bool
     {
         return (bool) $collection->getAttribute('documentSecurity', false)
-            || $this->authorization->isValid(new Input(PermissionType::Read, $collection->getRead()));
+            || $this->authorization->isValid(new Input(PermissionType::Read, $collection->getPermissionsByType(PermissionType::Read)));
     }
 
     private function collection(string $externalId, string $prefix): Document

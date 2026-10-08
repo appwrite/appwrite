@@ -10,9 +10,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideNone;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\System\System;
 
 final class AbuseTest extends Scope
@@ -45,7 +45,7 @@ final class AbuseTest extends Scope
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Increased Limit Team',
         ]);
 
@@ -75,7 +75,7 @@ final class AbuseTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-forwarded-for' => '198.51.100.' . random_int(1, 254),
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'increased.limit.' . bin2hex(random_bytes(8)) . '@example.com',
             'password' => 'password',
         ]);
@@ -92,7 +92,7 @@ final class AbuseTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-forwarded-for' => '198.51.100.' . random_int(1, 254),
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'default.limit.' . bin2hex(random_bytes(8)) . '@example.com',
             'password' => 'password',
         ]);
@@ -113,7 +113,7 @@ final class AbuseTest extends Scope
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => [
                     'title' => 'The Hulk ' . $i,
                 ],
@@ -139,7 +139,7 @@ final class AbuseTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'title' => 'The Hulk',
             ],
@@ -178,7 +178,7 @@ final class AbuseTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => [
                     'title' => 'The Hulk',
                 ],
@@ -211,7 +211,7 @@ final class AbuseTest extends Scope
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'rowId' => ID::unique(),
+                'rowId' => Id::unique(),
                 'data' => [
                     'title' => 'The Hulk ' . $i,
                 ],
@@ -237,7 +237,7 @@ final class AbuseTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'title' => 'The Hulk',
             ],
@@ -276,7 +276,7 @@ final class AbuseTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
-                'rowId' => ID::unique(),
+                'rowId' => Id::unique(),
                 'data' => [
                     'title' => 'The Hulk',
                 ],
@@ -308,7 +308,7 @@ final class AbuseTest extends Scope
                 'content-type' => 'multipart/form-data',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'fileId' => ID::unique(),
+                'fileId' => Id::unique(),
                 'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'permissions.png'),
             ]);
 
@@ -331,7 +331,7 @@ final class AbuseTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -365,7 +365,7 @@ final class AbuseTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
-                'fileId' => ID::unique(),
+                'fileId' => Id::unique(),
                 'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'permissions.png'),
             ]);
 
@@ -391,7 +391,7 @@ final class AbuseTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'AbuseDatabase',
         ]);
 
@@ -409,7 +409,7 @@ final class AbuseTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            $idParam => ID::unique(),
+            $idParam => Id::unique(),
             'name' => 'Movies',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -458,7 +458,7 @@ final class AbuseTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'permissions' => [

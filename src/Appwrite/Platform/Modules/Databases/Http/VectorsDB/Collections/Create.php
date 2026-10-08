@@ -20,9 +20,9 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Id;
 use Utopia\Database\Index;
+use Utopia\Database\Permission;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -70,8 +70,8 @@ class Create extends CollectionAction
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
             ->param('dimension', null, new Range(MIN_VECTOR_DIMENSION, MAX_VECTOR_DIMENSION), 'Embedding dimension.', example: '4')
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
@@ -93,7 +93,7 @@ class Create extends CollectionAction
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collectionId = $collectionId === 'unique()' ? ID::unique() : $collectionId;
+        $collectionId = $collectionId === 'unique()' ? Id::unique() : $collectionId;
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions) ?? [];
@@ -146,7 +146,7 @@ class Create extends CollectionAction
                 } catch (DuplicateException) {
                     break;
                 } catch (\Throwable $e) {
-                    if ($dbForDatabases->exists(null, Database::METADATA)) {
+                    if ($dbForDatabases->collectionExists(Database::METADATA, null)) {
                         break;
                     }
 
@@ -166,7 +166,7 @@ class Create extends CollectionAction
             ));
             $attributeDocuments = \array_map(function (Attribute $attribute) use ($database, $collection, $databaseId, $collectionId, $dimension) {
                 return new Document([
-                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $attribute->key),
+                    '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $attribute->key),
                     'key' => $attribute->key,
                     'databaseInternalId' => $database->getSequence(),
                     'databaseId' => $databaseId,
@@ -189,7 +189,7 @@ class Create extends CollectionAction
 
             $indexDocuments = \array_map(function (Index $index) use ($database, $collection, $databaseId, $collectionId) {
                 return new Document([
-                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $index->key),
+                    '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $index->key),
                     'key' => $index->key,
                     'status' => 'available',
                     'databaseInternalId' => $database->getSequence(),

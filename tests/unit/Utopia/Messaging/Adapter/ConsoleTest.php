@@ -15,9 +15,9 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 
 final class ConsoleTest extends TestCase
@@ -100,7 +100,7 @@ final class ConsoleTest extends TestCase
             title: 'Hello',
             body: 'World',
             type: 'info',
-            messageId: ID::custom('msg-aaa'),
+            messageId: Id::custom('msg-aaa'),
             projectId: 'project-1',
             projectInternalId: 'project-internal-1',
         );
@@ -136,7 +136,7 @@ final class ConsoleTest extends TestCase
             recipients: [$this->recipient('user-2', 'user-2')],
             title: 'Title',
             body: 'Body',
-            messageId: ID::custom('msg-perms-user'),
+            messageId: Id::custom('msg-perms-user'),
             projectId: 'project-1',
             projectInternalId: 'project-internal-1',
         );
@@ -157,7 +157,7 @@ final class ConsoleTest extends TestCase
             recipients: [$this->recipient('team-9', 'team-9', RESOURCE_TYPE_TEAMS)],
             title: 'Heads up',
             body: '...',
-            messageId: ID::custom('msg-team'),
+            messageId: Id::custom('msg-team'),
             projectId: 'project-1',
             projectInternalId: 'project-internal-1',
         );
@@ -184,7 +184,7 @@ final class ConsoleTest extends TestCase
             ],
             title: 'Heads up',
             body: 'multi',
-            messageId: ID::custom('same-msg'),
+            messageId: Id::custom('same-msg'),
             projectId: 'project-1',
             projectInternalId: 'project-internal-1',
         );
@@ -261,7 +261,7 @@ final class ConsoleTest extends TestCase
             recipients: [$this->recipient($userId, $userId)],
             title: 'Same alert resent',
             body: 'b',
-            messageId: ID::custom($messageId),
+            messageId: Id::custom($messageId),
             projectId: 'project-x',
             projectInternalId: 'project-internal-x',
         );

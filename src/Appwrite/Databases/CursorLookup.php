@@ -76,8 +76,8 @@ final readonly class CursorLookup
     {
         $joins = [];
         foreach ($queries as $query) {
-            if ($query->getMethod()->isJoin() && $query->getJoinAlias() !== '') {
-                $joins[$query->getJoinAlias()] = $query;
+            if ($query->getMethod()->isJoin() && $query->getAlias() !== '') {
+                $joins[$query->getAlias()] = $query;
             }
         }
 

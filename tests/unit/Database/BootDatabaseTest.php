@@ -15,9 +15,9 @@ use Utopia\Database\Capability;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Group;
@@ -51,12 +51,14 @@ final class BootDatabaseTest extends TestCase
         $connection = new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 
         $adapter = new class ($connection) extends SQLite {
+            #[\Override]
             public function supports(Capability $feature): bool
             {
                 return $feature === Capability::Hostname || parent::supports($feature);
             }
 
-            public function getHostname(): string
+            #[\Override]
+            public function hostname(): string
             {
                 return 'mariadb';
             }

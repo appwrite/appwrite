@@ -10,8 +10,8 @@ use Appwrite\Realtime\Message\Validators\SubscribePayload as SubscribePayloadVal
 use Appwrite\Utopia\Database\RuntimeQuery;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Role;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
@@ -56,7 +56,7 @@ class Subscribe extends Action
         foreach ($items as $payload) {
             $subscriptionId = \array_key_exists('subscriptionId', $payload)
                 ? $payload['subscriptionId']
-                : ID::unique();
+                : Id::unique();
 
             $queries = $payload['queries'] ?? [];
 

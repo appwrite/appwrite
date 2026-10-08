@@ -61,7 +61,7 @@ class Attribute
             ColumnType::LongText->value,
             ColumnType::Integer->value,
             ColumnType::BigInteger->value,
-            DatabaseAttribute::persistedType(ColumnType::BigInteger),
+            DatabaseAttribute::storedType(ColumnType::BigInteger),
             ColumnType::Double->value,
             ColumnType::Boolean->value,
             ColumnType::Datetime->value,
@@ -126,7 +126,7 @@ class Attribute
     public static function storedType(ColumnType|string $type): string
     {
         if (DatabaseAttribute::tryNormalizeType($type) === ColumnType::BigInteger) {
-            return DatabaseAttribute::persistedType(ColumnType::BigInteger);
+            return DatabaseAttribute::storedType(ColumnType::BigInteger);
         }
 
         return $type instanceof ColumnType ? $type->value : $type;

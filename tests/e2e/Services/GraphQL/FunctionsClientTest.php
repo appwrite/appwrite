@@ -9,8 +9,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Role;
 
 final class FunctionsClientTest extends Scope
 {
@@ -35,7 +35,7 @@ final class FunctionsClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => ID::unique(),
+                'functionId' => Id::unique(),
                 'name' => 'Test Function',
                 'runtime' => 'node-22',
                 'entrypoint' => 'index.js',

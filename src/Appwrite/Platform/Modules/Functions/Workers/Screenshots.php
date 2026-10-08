@@ -13,7 +13,7 @@ use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Psr7\Stream;
@@ -169,7 +169,7 @@ class Screenshots extends Action
             $updates = new Document([]);
 
             foreach ($captures as $key => $screenshot) {
-                $fileId = ID::unique();
+                $fileId = Id::unique();
                 $fileName = $fileId . '.png';
                 $path = $deviceForFiles->getPath($fileName);
                 $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
@@ -183,7 +183,7 @@ class Screenshots extends Action
                 $file = new Document([
                     '$id' => $fileId,
                     '$permissions' => [
-                        Permission::read(Role::team(ID::custom($teamId))),
+                        Permission::read(Role::team(Id::custom($teamId))),
                     ],
                     'bucketId' => $bucket->getId(),
                     'bucketInternalId' => $bucket->getSequence(),

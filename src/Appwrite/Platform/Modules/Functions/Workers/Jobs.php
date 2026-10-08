@@ -883,20 +883,20 @@ class Jobs extends Action
         $isBranchBuild = $branch !== '' && ! empty($deployment->getAttribute('installationId'));
         $branches = $isBranchBuild ? ['', $branch] : [''];
 
-        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-            ]));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
-        }, [
+        foreach ($dbForPlatform->cursor('rules', [
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
             Query::equal('deploymentResourceType', [$resource->getCollection() === 'sites' ? 'site' : 'function']),
             Query::equal('trigger', ['manual']),
             Query::equal('deploymentVcsProviderBranch', $branches),
-        ]);
+        ], batchSize: 25) as $rule) {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+        }
 
         $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
             'live' => true,
@@ -918,20 +918,20 @@ class Jobs extends Action
             return;
         }
 
-        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-            ]));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
-        }, [
+        foreach ($dbForPlatform->cursor('rules', [
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
             Query::equal('deploymentResourceType', ['function']),
             Query::equal('trigger', ['manual']),
             Query::equal('deploymentVcsProviderBranch', [$branch]),
-        ]);
+        ], batchSize: 25) as $rule) {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+        }
     }
 
     /**
@@ -1005,7 +1005,7 @@ class Jobs extends Action
             ->setEvent(self::event($deployment))
             ->setParam(self::resourceParam($deployment), $deployment->getAttribute('resourceId'))
             ->setParam('deploymentId', $deployment->getId())
-            ->setPayload($deployment->getArrayCopy(\array_keys($model->getRules())));
+            ->setPayload($deployment->only(\array_keys($model->getRules())));
 
         $queueForWebhooks->from($update)->trigger();
 

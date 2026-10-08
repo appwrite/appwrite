@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
@@ -35,7 +35,7 @@ final class SchedulesConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-key' => $apiKey,
         ], [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Schedule Function',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -79,7 +79,7 @@ final class SchedulesConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-key' => $apiKey,
         ], [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Schedule Function',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -138,7 +138,7 @@ final class SchedulesConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'resourceType' => 'function',
-            'resourceId' => ID::unique(),
+            'resourceId' => Id::unique(),
             'schedule' => '0 0 * * *',
         ]);
 
@@ -150,7 +150,7 @@ final class SchedulesConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'resourceType' => 'invalid',
-            'resourceId' => ID::unique(),
+            'resourceId' => Id::unique(),
             'schedule' => '0 0 * * *',
         ]);
 
@@ -162,7 +162,7 @@ final class SchedulesConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'resourceType' => 'function',
-            'resourceId' => ID::unique(),
+            'resourceId' => Id::unique(),
             'schedule' => 'not-a-cron',
         ]);
 
@@ -173,7 +173,7 @@ final class SchedulesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'resourceId' => ID::unique(),
+            'resourceId' => Id::unique(),
             'schedule' => '0 0 * * *',
         ]);
 
@@ -196,7 +196,7 @@ final class SchedulesConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'resourceType' => 'function',
-            'resourceId' => ID::unique(),
+            'resourceId' => Id::unique(),
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -227,7 +227,7 @@ final class SchedulesConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/schedules/'.ID::unique(), array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/schedules/'.Id::unique(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -330,7 +330,7 @@ final class SchedulesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Isolation Test Team',
         ]);
 
@@ -340,7 +340,7 @@ final class SchedulesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Isolation Test Project',
             'teamId' => $team['body']['$id'],
             'region' => System::getEnv('_APP_REGION', 'default'),

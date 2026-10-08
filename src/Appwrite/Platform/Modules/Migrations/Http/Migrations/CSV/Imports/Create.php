@@ -16,7 +16,7 @@ use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Migration\Destinations\OnDuplicate;
@@ -66,8 +66,8 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('bucketId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).', false, ['dbForProject'])
-            ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'File ID.', false, ['dbForProject'])
+            ->param('bucketId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).', false, ['dbForProject'])
+            ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'File ID.', false, ['dbForProject'])
             ->param('databaseId', '', new UID(), 'Database ID containing the target collection.')
             ->param('collectionId', '', new UID(), 'Collection ID to import documents into.')
             ->param('internalFile', false, new Boolean(), 'Is the file stored in an internal bucket?', true)
@@ -134,7 +134,7 @@ class Create extends Action
         $compression = $file->getAttribute('algorithm', Compression::NONE);
         $hasCompression = $compression !== Compression::NONE;
 
-        $migrationId = ID::unique();
+        $migrationId = Id::unique();
         $newPath = $deviceForMigrations->getPath($migrationId . '_' . $fileId . '.csv');
 
         if ($hasEncryption || $hasCompression) {

@@ -10,7 +10,7 @@ use Appwrite\Extend\Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Migration\Destinations\Appwrite\ProvisioningOwner;
 
 final readonly class Claim
@@ -128,7 +128,7 @@ final readonly class Claim
 
         return $this->database->createDocument('migrations', new Document([
             ...$migration->getArrayCopy(),
-            'attemptId' => ID::unique(),
+            'attemptId' => Id::unique(),
             'status' => self::STATUS_PENDING,
             'stage' => self::STAGE_INIT,
         ]));
@@ -169,7 +169,7 @@ final readonly class Claim
                     }
 
                     return $this->write($live, new Document([
-                        'attemptId' => ID::unique(),
+                        'attemptId' => Id::unique(),
                     ]));
                 });
             },
@@ -238,7 +238,7 @@ final readonly class Claim
 
                     return new Retry(
                         migration: $this->write($migration, new Document([
-                            'attemptId' => ID::unique(),
+                            'attemptId' => Id::unique(),
                             'status' => self::STATUS_PENDING,
                             'stage' => self::STAGE_FINISHED,
                         ])),
@@ -322,7 +322,7 @@ final readonly class Claim
 
                             return new Delivery(
                                 migration: $this->write($live, new Document([
-                                    'attemptId' => ID::unique(),
+                                    'attemptId' => Id::unique(),
                                     'status' => self::STATUS_PROCESSING,
                                     'stage' => self::STAGE_PROCESSING,
                                 ])),
@@ -378,7 +378,7 @@ final readonly class Claim
                         }
 
                         if ($liveAttemptId === null || $legacyRetry) {
-                            $liveAttemptId = ID::unique();
+                            $liveAttemptId = Id::unique();
                         }
 
                         $migration = $this->write($live, new Document([

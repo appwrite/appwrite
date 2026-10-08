@@ -9,7 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\System\System;
 
 final class UsersCustomServerTest extends Scope
@@ -23,7 +23,7 @@ final class UsersCustomServerTest extends Scope
         $victimProject = $this->getProject();
         $attackerProject = $this->getProject(true);
 
-        $victimId = ID::unique();
+        $victimId = Id::unique();
         $victim = $this->client->call(Client::METHOD_POST, '/users', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $victimProject['$id'],
@@ -44,7 +44,7 @@ final class UsersCustomServerTest extends Scope
                 'x-appwrite-key' => $attackerProject['apiKey'],
             ], [
                 'userId' => $userId,
-                'email' => 'attacker-' . ID::unique() . '@appwrite.io',
+                'email' => 'attacker-' . Id::unique() . '@appwrite.io',
                 'password' => 'password',
             ]);
             $this->assertSame(201, $user['headers']['status-code']);
@@ -88,7 +88,7 @@ final class UsersCustomServerTest extends Scope
     {
         $project = $this->getProject();
         $otherProject = $this->getProject(true);
-        $userId = ID::unique();
+        $userId = Id::unique();
 
         foreach ([$project, $otherProject] as $p) {
             $user = $this->client->call(Client::METHOD_POST, '/users', [
@@ -97,7 +97,7 @@ final class UsersCustomServerTest extends Scope
                 'x-appwrite-key' => $p['apiKey'],
             ], [
                 'userId' => $userId,
-                'email' => 'legacy-' . ID::unique() . '@appwrite.io',
+                'email' => 'legacy-' . Id::unique() . '@appwrite.io',
                 'password' => 'password',
             ]);
             $this->assertSame(201, $user['headers']['status-code']);
@@ -190,8 +190,8 @@ final class UsersCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
-            'email' => 'sessions-key-' . ID::unique() . '@appwrite.io',
+            'userId' => Id::unique(),
+            'email' => 'sessions-key-' . Id::unique() . '@appwrite.io',
             'password' => 'password',
         ]);
         $this->assertSame(201, $user['headers']['status-code']);
@@ -226,7 +226,7 @@ final class UsersCustomServerTest extends Scope
             [Client::METHOD_POST, '/users/' . $userId . '/tokens', []],
             [Client::METHOD_POST, '/users/' . $userId . '/jwts', []],
             [Client::METHOD_PATCH, '/users/' . $userId . '/password', ['password' => 'new-password']],
-            [Client::METHOD_PATCH, '/users/' . $userId . '/email', ['email' => 'changed-' . ID::unique() . '@appwrite.io']],
+            [Client::METHOD_PATCH, '/users/' . $userId . '/email', ['email' => 'changed-' . Id::unique() . '@appwrite.io']],
             [Client::METHOD_GET, '/users/' . $userId . '/mfa/recovery-codes', []],
             [Client::METHOD_GET, '/account', []],
             [Client::METHOD_POST, '/account/jwts', []],
@@ -258,8 +258,8 @@ final class UsersCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
-            'email' => 'list-sessions-' . ID::unique() . '@appwrite.io',
+            'userId' => Id::unique(),
+            'email' => 'list-sessions-' . Id::unique() . '@appwrite.io',
             'password' => 'password',
         ]);
         $this->assertSame(201, $user['headers']['status-code']);

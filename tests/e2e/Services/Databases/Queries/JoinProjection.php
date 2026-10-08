@@ -22,7 +22,7 @@ trait JoinProjection
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+                Query::leftJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
                 Query::select(['name', 'ord.amount'])->toString(),
             ],
         ]);
@@ -61,7 +61,7 @@ trait JoinProjection
         }
 
         $result = $this->queryRecords($data['databaseId'], $data['customersId'], [
-            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::leftJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'ord.*'])->toString(),
         ]);
 
@@ -106,7 +106,7 @@ trait JoinProjection
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::rightJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+                Query::rightJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
                 Query::select(['name', 'ord.amount'])->toString(),
             ],
         ]);
@@ -140,7 +140,7 @@ trait JoinProjection
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+                Query::join($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
                 Query::select(['name', 'ord.amount'])->toString(),
             ],
         ]);
@@ -192,7 +192,7 @@ trait JoinProjection
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::join($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+                Query::join($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
                 Query::select(['name', 'ord.amount'])->toString(),
             ],
         ]);
@@ -212,7 +212,7 @@ trait JoinProjection
 
         $fixture = $this->setupRestrictedOrdersFixture();
         $seed = $this->seedVisibleToCaller();
-        $join = Query::join($fixture->ordersId, '$id', 'customerId', '=', 'ord')->toString();
+        $join = Query::join($fixture->ordersId, 'ord', [Query::on('$id', 'customerId')])->toString();
         $joinedKeys = ['ord.$id', 'ord.customerId', 'ord.amount', 'ord.label', 'ord.flags', 'ord.scores'];
         $readableOrderIds = \array_map(static fn (Order $order): string => $order->id, $seed->orders);
 
@@ -252,8 +252,8 @@ trait JoinProjection
 
         $fixture = $this->setupRestrictedOrdersFixture();
         $seed = $this->seedVisibleToCaller();
-        $orders = Query::join($fixture->ordersId, '$id', 'customerId', '=', 'ord')->toString();
-        $payments = Query::join($fixture->paymentsId, 'ord.$id', 'orderId', '=', 'pay')->toString();
+        $orders = Query::join($fixture->ordersId, 'ord', [Query::on('$id', 'customerId')])->toString();
+        $payments = Query::join($fixture->paymentsId, 'pay', [Query::on('ord.$id', 'orderId')])->toString();
 
         $qualified = $this->queryRecords($fixture->databaseId, $fixture->customersId, [
             $orders,
@@ -290,7 +290,7 @@ trait JoinProjection
         $fixture = $this->setupRestrictedOrdersFixture();
         $seed = $this->seedVisibleToCaller();
         $expected = Summary::of(Join::Inner->pairs($seed->customers, $seed->orders))->sum;
-        $orders = Query::join($fixture->ordersId, '$id', 'customerId', '=', 'ord')->toString();
+        $orders = Query::join($fixture->ordersId, 'ord', [Query::on('$id', 'customerId')])->toString();
 
         foreach (['amount', 'ord.amount'] as $attribute) {
             $summed = $this->queryRecords($fixture->databaseId, $fixture->customersId, [

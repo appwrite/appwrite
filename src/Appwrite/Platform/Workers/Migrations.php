@@ -28,10 +28,10 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Locale\Locale;
 use Utopia\Migration\Destination;
@@ -929,7 +929,7 @@ class Migrations extends Action
         $mime = $this->deviceForFiles->getFileMimeType($path);
         $hash = $this->deviceForFiles->getFileHash($path);
         $algorithm = Compression::NONE;
-        $fileId = ID::unique();
+        $fileId = Id::unique();
 
         $sizeMB = \round($size / (1000 * 1000), 2);
 

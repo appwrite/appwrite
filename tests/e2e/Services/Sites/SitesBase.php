@@ -8,7 +8,7 @@ use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
@@ -339,7 +339,7 @@ trait SitesBase
     protected function setupSiteDomain(string $siteId, string $subdomain = ''): string
     {
         $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
-        $subdomain = $subdomain ? $subdomain : ID::unique();
+        $subdomain = $subdomain ? $subdomain : Id::unique();
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

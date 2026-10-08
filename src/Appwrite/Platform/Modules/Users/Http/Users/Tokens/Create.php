@@ -15,7 +15,7 @@ use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Range;
@@ -53,7 +53,7 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('length', 6, new Range(4, 128), 'Token length in characters. The default length is 6 characters', true)
             ->param('expire', TOKEN_EXPIRATION_GENERIC, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 15 minutes.', true)
             ->inject('request')
@@ -77,7 +77,7 @@ class Create extends Action
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $token = new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getSequence(),
             'type' => TOKEN_TYPE_GENERIC,

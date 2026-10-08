@@ -8,9 +8,10 @@ use Appwrite\Utopia\Database\RuntimeQuery;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Query\Method;
 
 class Realtime extends MessagingAdapter
@@ -1042,7 +1043,7 @@ class Realtime extends MessagingAdapter
             case 'users':
                 $channels[] = 'account';
                 $channels[] = 'account.' . $parts[1];
-                $roles = [Role::user(ID::custom($parts[1]))->toString()];
+                $roles = [Role::user(Id::custom($parts[1]))->toString()];
                 // Roles come from the user document (verification, labels, status,
                 // sessions), so the user's open connections re-resolve when it changes,
                 // as they already do for memberships.
@@ -1085,7 +1086,7 @@ class Realtime extends MessagingAdapter
                     $channels[] = 'teams';
                     $channels[] = 'teams.' . $parts[1];
                 }
-                $roles = [Role::team(ID::custom($parts[1]))->toString()];
+                $roles = [Role::team(Id::custom($parts[1]))->toString()];
                 break;
             case 'databases':
             case 'tablesdb':
@@ -1126,8 +1127,8 @@ class Realtime extends MessagingAdapter
                     }
 
                     $roles = $collection->getAttribute('documentSecurity', false)
-                        ? \array_merge($collection->getRead(), $payload->getRead())
-                        : $collection->getRead();
+                        ? \array_merge($collection->getPermissionsByType(PermissionType::Read), $payload->getPermissionsByType(PermissionType::Read))
+                        : $collection->getPermissionsByType(PermissionType::Read);
                 }
                 break;
             case 'buckets':
@@ -1140,20 +1141,20 @@ class Realtime extends MessagingAdapter
                     $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files.' . $payload->getId();
 
                     $roles = $bucket->getAttribute('fileSecurity', false)
-                        ? \array_merge($bucket->getRead(), $payload->getRead())
-                        : $bucket->getRead();
+                        ? \array_merge($bucket->getPermissionsByType(PermissionType::Read), $payload->getPermissionsByType(PermissionType::Read))
+                        : $bucket->getPermissionsByType(PermissionType::Read);
                 }
 
                 break;
             case 'functions':
                 if ($parts[2] === 'executions') {
-                    if (!empty($payload->getRead())) {
+                    if (!empty($payload->getPermissionsByType(PermissionType::Read))) {
                         $channels[] = 'console';
                         $channels[] = 'projects.' . $project->getId();
                         $channels[] = 'executions';
                         $channels[] = 'executions.' . $payload->getId();
                         $channels[] = 'functions.' . $payload->getAttribute('resourceId');
-                        $roles = $payload->getRead();
+                        $roles = $payload->getPermissionsByType(PermissionType::Read);
                     }
                 } elseif ($parts[2] === 'deployments') {
                     $channels[] = 'console';
@@ -1189,7 +1190,7 @@ class Realtime extends MessagingAdapter
             case 'presences':
                 $channels[] = 'presences';
                 $channels[] = 'presences.' . $parts[1];
-                $roles = $payload->getRead();
+                $roles = $payload->getPermissionsByType(PermissionType::Read);
                 break;
         }
 

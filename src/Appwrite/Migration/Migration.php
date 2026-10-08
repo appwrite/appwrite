@@ -13,7 +13,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Limit;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Index;
 use Utopia\Database\PDO;
 use Utopia\Database\Query;
@@ -120,12 +120,12 @@ abstract class Migration
         $this->collections = Config::getParam('collections', []);
 
         $this->collections['projects']['_metadata'] = [
-            '$id' => ID::custom('_metadata'),
+            '$id' => Id::custom('_metadata'),
             '$collection' => Database::METADATA,
         ];
 
         $this->collections['projects']['audit'] = [
-            '$id' => ID::custom('audit'),
+            '$id' => Id::custom('audit'),
             '$collection' => Database::METADATA,
         ];
     }
@@ -193,16 +193,16 @@ abstract class Migration
 
             Console::log('Migrating documents for collection "' . $collection['$id'] . '"');
 
-            $this->dbForProject->foreach($collection['$id'], function (Document $document) use ($collection, $callback) {
+            foreach ($this->dbForProject->cursor($collection['$id'], batchSize: 25) as $document) {
                 if (empty($document->getId()) || empty($document->getCollection())) {
-                    return;
+                    continue;
                 }
 
                 $old = $document->getArrayCopy();
                 $new = $callback($document);
 
                 if ($new === null || $new->getArrayCopy() == $old) {
-                    return;
+                    continue;
                 }
 
                 try {
@@ -213,9 +213,9 @@ abstract class Migration
                     );
                 } catch (\Throwable $th) {
                     Console::error("Failed to update document \"{$document->getId()}\" in collection \"{$collection['$id']}\":" . $th->getMessage());
-                    return;
+                    continue;
                 }
-            });
+            }
         }
     }
 

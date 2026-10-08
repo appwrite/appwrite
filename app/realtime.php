@@ -42,8 +42,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Timeout as TimeoutException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
@@ -359,8 +359,8 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
             try {
                 $attempts++;
                 $document = new Document([
-                    '$id' => ID::unique(),
-                    '$collection' => ID::custom('realtime'),
+                    '$id' => Id::unique(),
+                    '$collection' => Id::custom('realtime'),
                     '$permissions' => [],
                     'container' => $containerId,
                     'timestamp' => DateTime::now(),
@@ -1044,7 +1044,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $mapping = [];
         $prepared = [];
         foreach ($subscriptions as $index => $subscription) {
-            $subscriptionId = ID::unique();
+            $subscriptionId = Id::unique();
             $mapping[$index] = $subscriptionId;
             $prepared[] = [$subscriptionId, $subscription];
         }

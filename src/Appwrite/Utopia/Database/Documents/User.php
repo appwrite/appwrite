@@ -7,8 +7,8 @@ use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Roles;
 
 class User extends Document

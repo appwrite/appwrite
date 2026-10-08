@@ -3,15 +3,15 @@
 use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Filter;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Index;
 use Utopia\Database\IntegerWidth;
 use Utopia\Query\OrderDirection;
 
 return [
     'databases' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('databases'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('databases'),
         'name' => 'Databases',
         'attributes' => [
             Attribute::string(key: 'name', size: 256, required: true),
@@ -31,8 +31,8 @@ return [
     ],
 
     'attributes' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('attributes'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('attributes'),
         'name' => 'Attributes',
         'attributes' => [
             Attribute::string(key: 'databaseInternalId', required: true),
@@ -59,8 +59,8 @@ return [
     ],
 
     'indexes' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('indexes'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('indexes'),
         'name' => 'Indexes',
         'attributes' => [
             Attribute::string(key: 'databaseInternalId', required: true),
@@ -81,8 +81,8 @@ return [
     ],
 
     'functions' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('functions'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('functions'),
         'name' => 'Functions',
         'attributes' => [
             Attribute::string(key: 'execute', size: 128, array: true),
@@ -142,8 +142,8 @@ return [
     ],
 
     'sites' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('sites'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('sites'),
         'name' => 'Sites',
         'attributes' => [
             Attribute::string(key: 'name', size: 2048),
@@ -205,8 +205,8 @@ return [
     ],
 
     'deployments' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('deployments'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('deployments'),
         'name' => 'Deployments',
         'attributes' => [
             Attribute::string(key: 'resourceInternalId'),
@@ -298,8 +298,8 @@ return [
     ],
 
     'migrations' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('migrations'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('migrations'),
         'name' => 'Migrations',
         'attributes' => [
             Attribute::string(key: 'status', required: true),
@@ -344,8 +344,8 @@ return [
     ],
 
     'resourceTokens' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('resourceTokens'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('resourceTokens'),
         'name' => 'Resource Tokens',
         'attributes' => [
             Attribute::string(key: 'resourceId', required: true),
@@ -363,8 +363,8 @@ return [
     ],
 
     'transactions' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('transactions'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('transactions'),
         'name' => 'Transactions',
         'attributes' => [
             // pending | committing | committed | failed
@@ -378,8 +378,8 @@ return [
     ],
 
     'transactionLogs' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('transactionLogs'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('transactionLogs'),
         'name' => 'Transaction Logs',
         'attributes' => [
             Attribute::string(key: 'transactionInternalId', required: true),

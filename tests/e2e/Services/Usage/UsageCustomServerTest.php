@@ -10,7 +10,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\RelationshipDeleteAction;
 use Utopia\Database\RelationshipType;
@@ -168,8 +168,8 @@ final class UsageCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        $databaseIds = [ID::unique(), ID::unique()];
-        $containerId = ID::unique();
+        $databaseIds = [Id::unique(), Id::unique()];
+        $containerId = Id::unique();
         $paths = [];
 
         // Test for SUCCESS: each API shares the database operation emitters.
@@ -273,7 +273,7 @@ final class UsageCustomServerTest extends Scope
             $databaseIds[0] => [3, 15],
             $databaseIds[1] => [1, 3],
             $this->getProject()['$id'] => [0, 0],
-            ID::unique() => [0, 0],
+            Id::unique() => [0, 0],
         ];
         $usageHeaders = array_merge($headers, ['x-appwrite-key' => $this->getNewKey(['usage.read'])]);
         foreach ($expected as $resourceId => $values) {
@@ -304,7 +304,7 @@ final class UsageCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        $databaseId = ID::unique();
+        $databaseId = Id::unique();
         $path = $this->createAlbumsWithTracks($api, $databaseId, $containers, $attributes, $containerIdKey, $headers);
 
         // Test for SUCCESS: a write is metered as its document plus every related document in its payload.
@@ -366,7 +366,7 @@ final class UsageCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        $databaseId = ID::unique();
+        $databaseId = Id::unique();
         $path = $this->createAlbumsWithTracks($api, $databaseId, $containers, $attributes, $containerIdKey, $headers);
         $albums = "$path/albums/$records";
         $response = $this->client->call(Client::METHOD_POST, $albums, $headers, [
@@ -420,7 +420,7 @@ final class UsageCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        $databaseId = ID::unique();
+        $databaseId = Id::unique();
         $path = $this->createAlbumsWithTracks($api, $databaseId, $containers, $attributes, $containerIdKey, $headers);
 
         // Test for SUCCESS: an upsert is metered as its document plus every related document in its payload.
@@ -531,7 +531,7 @@ final class UsageCustomServerTest extends Scope
         $providers = [];
         foreach (['sent' => (int) System::getEnv('_APP_SMTP_PORT', '1025'), 'failed' => 1] as $outcome => $port) {
             $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Usage ' . $outcome,
                 'host' => System::getEnv('_APP_SMTP_HOST', 'maildev'),
                 'port' => $port,
@@ -546,7 +546,7 @@ final class UsageCustomServerTest extends Scope
         }
 
         $response = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => \uniqid() . '@appwrite.io',
             'password' => 'password',
         ]);
@@ -558,7 +558,7 @@ final class UsageCustomServerTest extends Scope
             $targets = [];
             for ($i = 0; $i < $recipients; $i++) {
                 $response = $this->client->call(Client::METHOD_POST, "/users/$userId/targets", $headers, [
-                    'targetId' => ID::unique(),
+                    'targetId' => Id::unique(),
                     'providerType' => 'email',
                     'providerId' => $providers[$outcome],
                     'identifier' => \uniqid() . '@appwrite.io',
@@ -568,7 +568,7 @@ final class UsageCustomServerTest extends Scope
             }
 
             $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
-                'messageId' => ID::unique(),
+                'messageId' => Id::unique(),
                 'targets' => $targets,
                 'subject' => 'Usage ' . $outcome,
                 'content' => 'Usage attribution',
@@ -589,7 +589,7 @@ final class UsageCustomServerTest extends Scope
             $messages['sent'] => [2, 0],
             $messages['failed'] => [0, 1],
             $this->getProject()['$id'] => [0, 0],
-            ID::unique() => [0, 0],
+            Id::unique() => [0, 0],
         ];
         $usageHeaders = array_merge($headers, ['x-appwrite-key' => $this->getNewKey(['usage.read'])]);
         foreach ($expected as $resourceId => $values) {

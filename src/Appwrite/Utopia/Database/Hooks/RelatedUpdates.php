@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Database\Hooks;
 
 use Utopia\Database\Document;
 use Utopia\Database\Event;
+use Utopia\Database\Event\Domain;
 use Utopia\Database\Hook\Lifecycle;
 use Utopia\Database\Hook\Named;
 
@@ -25,7 +26,7 @@ final class RelatedUpdates implements Lifecycle, Named
         return 'relationship-delete';
     }
 
-    public function handle(Event $event, mixed $data): void
+    public function handle(Domain $event): void
     {
         if ($this->recording && $event === Event::DocumentUpdate && $data instanceof Document) {
             $this->documents[] = $data;

@@ -12,7 +12,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\Specs\V5;
 use Utopia\Mqtt\Properties;
@@ -53,7 +53,7 @@ final class MqttServerTest extends Scope
      */
     private function createUser(): array
     {
-        $userId = ID::unique();
+        $userId = Id::unique();
 
         $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
             'content-type' => 'application/json',
@@ -292,7 +292,7 @@ final class MqttServerTest extends Scope
         // removed, so the broker does not enforce these roles.
         $topicName = 'mqtt-open-' . $ownerId;
         $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $server, [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => $topicName,
             'subscribe' => ['user:' . $ownerId],
         ]);
@@ -522,14 +522,14 @@ final class MqttServerTest extends Scope
     private function setupPushTopic(array $server, string $userId, string $name, int $qos = 1): array
     {
         $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', $server, [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => $name,
             'enabled' => true,
         ]);
         $this->assertEquals(201, $provider['headers']['status-code']);
 
         $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $server, [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => $name,
             'qos' => $qos,
         ]);
@@ -537,7 +537,7 @@ final class MqttServerTest extends Scope
         $topicId = $topic['body']['$id'];
 
         $target = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/targets', $server, [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'push',
             'providerId' => $provider['body']['$id'],
             'identifier' => $topicId,
@@ -545,7 +545,7 @@ final class MqttServerTest extends Scope
         $this->assertEquals(201, $target['headers']['status-code']);
 
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topicId . '/subscribers', $server, [
-            'subscriberId' => ID::unique(),
+            'subscriberId' => Id::unique(),
             'targetId' => $target['body']['$id'],
         ]);
         $this->assertEquals(201, $subscriber['headers']['status-code']);
@@ -563,7 +563,7 @@ final class MqttServerTest extends Scope
     private function publishCampaign(array $server, string $topicId, string $title, string $body, array $data = [], array $extra = []): string
     {
         $push = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $server, \array_merge([
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'topics' => [$topicId],
             'title' => $title,
             'body' => $body,
@@ -590,7 +590,7 @@ final class MqttServerTest extends Scope
     private function setupAppwriteProvider(array $server): void
     {
         $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', $server, [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'appwrite-user-push',
             'enabled' => true,
         ]);
@@ -607,7 +607,7 @@ final class MqttServerTest extends Scope
     private function publishToUser(array $server, string $userId, string $title, string $body, array $data = []): void
     {
         $push = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $server, [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'users' => [$userId],
             'title' => $title,
             'body' => $body,
@@ -706,7 +706,7 @@ final class MqttServerTest extends Scope
         ['id' => $topicId, 'name' => $topicName] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-channel-clear');
 
         $draft = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $server, [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'topics' => [$topicId],
             'title' => 'Reminder',
             'body' => 'Stand-up in 5',
@@ -1126,7 +1126,7 @@ final class MqttServerTest extends Scope
             'x-appwrite-key' => $project['apiKey'],
         ];
 
-        $userId = ID::unique();
+        $userId = Id::unique();
         $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
             'userId' => $userId,
             'email' => 'mqtt-usage-' . $userId . '@appwrite.io',
@@ -1188,7 +1188,7 @@ final class MqttServerTest extends Scope
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'MQTT usage key',
             'scopes' => $scopes,
         ]);

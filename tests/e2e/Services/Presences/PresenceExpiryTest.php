@@ -11,7 +11,7 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
 use Utopia\Database\DateTime;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class PresenceExpiryTest extends Scope
 {
@@ -43,7 +43,7 @@ final class PresenceExpiryTest extends Scope
 
         $createServer = $this->client->call(
             Client::METHOD_PUT,
-            '/presences/' . ID::unique(),
+            '/presences/' . Id::unique(),
             [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,

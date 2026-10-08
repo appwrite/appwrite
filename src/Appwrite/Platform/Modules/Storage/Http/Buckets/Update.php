@@ -12,7 +12,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Compression\Compression;
 use Utopia\Database\CollectionUpdate;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Permission;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;

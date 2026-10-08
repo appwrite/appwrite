@@ -12,14 +12,13 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Index as IndexValidator;
+use Utopia\Database\Validator\IndexDefinition as IndexValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
@@ -74,11 +73,11 @@ class Create extends Action
                     replaceWith: 'tablesDB.createIndex',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
-            ->param('key', null, fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Index Key.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
+            ->param('key', null, fn (Database $dbForProject) => new Key(false, $dbForProject->getMaxUidLength()), 'Index Key.', false, ['dbForProject'])
             ->param('type', null, new WhiteList([IndexType::Key->value, IndexType::Fulltext->value, IndexType::Unique->value, IndexType::Spatial->value]), 'Index type.', enum: new Enum(name: 'DatabasesIndexType'))
-            ->param('attributes', null, fn (Database $dbForProject) => new ArrayList(new Key(true, $dbForProject->getAdapter()->getMaxUIDLength()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.', false, ['dbForProject'], example: '["username"]')
+            ->param('attributes', null, fn (Database $dbForProject) => new ArrayList(new Key(true, $dbForProject->getMaxUidLength()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.', false, ['dbForProject'], example: '["username"]')
             ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, ColumnType::String->value), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true, enum: new Enum(name: 'OrderBy'))
             ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
             ->inject('response')
@@ -187,7 +186,7 @@ class Create extends Action
         }
 
         $index = new Document([
-            '$id' => ID::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $key),
+            '$id' => Id::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $key),
             'key' => $key,
             'status' => 'processing', // processing, available, failed, deleting, stuck
             'databaseInternalId' => $db->getSequence(),
@@ -203,23 +202,7 @@ class Create extends Action
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
             $collection->getAttribute('indexes'),
-            $dbForDatabases->getAdapter()->getMaxIndexLength(),
-            $dbForDatabases->getAdapter()->getInternalIndexesKeys(),
-            $dbForDatabases->getAdapter()->supports(Capability::IndexArray),
-            $dbForDatabases->getAdapter()->supports(Capability::SpatialIndexNull),
-            $dbForDatabases->getAdapter()->supports(Capability::SpatialIndexOrder),
-            $dbForDatabases->getAdapter()->supports(Capability::Vectors),
-            $this->supportsDefinedAttributes($dbForDatabases->getAdapter()),
-            $dbForDatabases->getAdapter()->supports(Capability::MultipleFulltextIndexes),
-            $dbForDatabases->getAdapter()->supports(Capability::IdenticalIndexes),
-            $dbForDatabases->getAdapter()->supports(Capability::ObjectIndexes),
-            $dbForDatabases->getAdapter()->supports(Capability::TrigramIndex),
-            $this->supportsSpatial($dbForDatabases->getAdapter()),
-            $dbForDatabases->getAdapter()->supports(Capability::Index),
-            $dbForDatabases->getAdapter()->supports(Capability::UniqueIndex),
-            $dbForDatabases->getAdapter()->supports(Capability::Fulltext),
-            $dbForDatabases->getAdapter()->supports(Capability::TTLIndexes),
-            $dbForDatabases->getAdapter()->supports(Capability::Objects)
+            $dbForDatabases->profile()
         );
 
         if (!$validator->isValid($index)) {

@@ -178,19 +178,19 @@ class V23 extends Migration
      */
     private function migrateDatabases(): void
     {
-        $this->dbForProject->foreach('databases', function (Document $database) {
+        foreach ($this->dbForProject->cursor('databases', batchSize: 25) as $database) {
             Console::log("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
 
             $databaseTable = "database_{$database->getSequence()}";
             $this->dbForProject->purgeCachedCollection($databaseTable);
 
-            $this->dbForProject->foreach($databaseTable, function (Document $collection) use ($databaseTable) {
+            foreach ($this->dbForProject->cursor($databaseTable, batchSize: 25) as $collection) {
                 Console::log("Migrating Collection of {$collection->getId()} ({$collection->getAttribute('name')})");
 
                 $collectionTable = "{$databaseTable}_collection_{$collection->getSequence()}";
                 $this->dbForProject->purgeCachedCollection($collectionTable);
-            });
-        });
+            }
+        }
     }
 
     /**
@@ -202,12 +202,12 @@ class V23 extends Migration
      */
     protected function migrateBuckets(): void
     {
-        $this->dbForProject->foreach('buckets', function (Document $bucket) {
+        foreach ($this->dbForProject->cursor('buckets', batchSize: 25) as $bucket) {
             Console::log("Migrating Bucket {$bucket->getId()} ({$bucket->getAttribute('name')})");
 
             $bucketTable = "bucket_{$bucket->getSequence()}";
             $this->dbForProject->purgeCachedCollection($bucketTable);
-        });
+        }
     }
 
     /**

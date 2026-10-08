@@ -3,7 +3,7 @@
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Queries\Base;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Filter;
 use Utopia\Database\Validator\Query\Limit;
@@ -11,7 +11,7 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Query\Order;
 use Utopia\Query\Schema\ColumnType;
 
-class Executions extends Queries
+class Executions extends Base
 {
     protected const ATTRIBUTE_TYPES = [
         'trigger' => ColumnType::String->value,

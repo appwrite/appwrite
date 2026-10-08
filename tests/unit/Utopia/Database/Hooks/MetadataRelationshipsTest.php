@@ -17,13 +17,13 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Event;
 use Utopia\Database\Filter;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Hook\Permissions;
 use Utopia\Database\Hook\Relationships;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
 use Utopia\Database\RelationshipType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool as Connections;
@@ -72,7 +72,7 @@ final class MetadataRelationshipsTest extends TestCase
             $this->assertNull($tenant->findCollection('database_2'));
         }
         $tenant->addHook(new Permissions());
-        $tenant->addHook(new Relationships($tenant));
+        $tenant->addHook(new Relationships());
         foreach ([
             ['veterinarians', 'animals', 'animals', RelationshipType::ManyToMany],
             ['animals', 'zoos', 'zoo', RelationshipType::ManyToOne],
@@ -175,7 +175,7 @@ final class MetadataRelationshipsTest extends TestCase
         foreach (['roots', 'children', 'leaves'] as $id) {
             $tenant->createCollection(Collection::create(id: $id));
         }
-        $tenant->addHook(new Relationships($tenant));
+        $tenant->addHook(new Relationships());
         foreach ([['roots', 'children', 'child'], ['children', 'leaves', 'leaf']] as [$from, $to, $key]) {
             $tenant->createRelationship($from, Relationship::manyToOne(
                 relatedCollection: $to,

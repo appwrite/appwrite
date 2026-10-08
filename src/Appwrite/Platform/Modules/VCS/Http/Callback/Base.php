@@ -12,7 +12,7 @@ use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -152,7 +152,7 @@ abstract class Base extends Action
             $teamId = $project->getAttribute('teamId', '');
 
             $installation = $dbForPlatform->createDocument('installations', new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 '$permissions' => $this->getPermissions($teamId, $projectId),
                 'providerInstallationId' => $providerInstallationId,
                 'projectId' => $projectId,

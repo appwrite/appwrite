@@ -64,14 +64,14 @@ class Update extends Action
                     replaceWith: 'tablesDB.updateBigIntColumn',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
-            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getMaxUidLength()), 'Attribute Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('min', null, new Nullable(new Integer(false, 64)), 'Minimum value', true, example: '0')
             ->param('max', null, new Nullable(new Integer(false, 64)), 'Maximum value', true, example: '1000000')
             ->param('default', null, new Nullable(new Integer(false, 64)), 'Default value. Cannot be set when attribute is required.', example: '0')
-            ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Attribute Key.', true, ['dbForProject'])
+            ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getMaxUidLength())), 'New Attribute Key.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')

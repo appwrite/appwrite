@@ -65,7 +65,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
@@ -384,7 +384,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             }
         }
 
-        $executionId = ID::unique();
+        $executionId = Id::unique();
 
         $headers = \array_merge([], $requestHeaders);
         $headers['x-appwrite-execution-id'] = $executionId;
@@ -1183,7 +1183,7 @@ Http::init()
                    }
                }
 
-               $ruleId = $isMd5 ? md5($domain->get()) : ID::unique();
+               $ruleId = $isMd5 ? md5($domain->get()) : Id::unique();
                $document = new Document([
                    '$id' => $ruleId,
                    'domain' => $domain->get(),

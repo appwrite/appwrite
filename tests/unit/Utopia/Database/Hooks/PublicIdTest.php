@@ -14,8 +14,9 @@ use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Event;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Event\Domain;
 use Utopia\Database\Hook\Lifecycle;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 
 final class PublicIdTest extends TestCase
@@ -69,7 +70,7 @@ final class PublicIdTest extends TestCase
             /** @var list<Event> */
             public array $events = [];
 
-            public function handle(Event $event, mixed $data): void
+            public function handle(Domain $event): void
             {
                 $this->events[] = $event;
             }

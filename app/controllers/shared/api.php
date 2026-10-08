@@ -36,7 +36,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Role;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
@@ -754,7 +754,7 @@ Http::init()
                     }
 
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-                    $valid = $authorization->isValid(new Input(PermissionType::Read, $bucket->getRead()));
+                    $valid = $authorization->isValid(new Input(PermissionType::Read, $bucket->getPermissionsByType(PermissionType::Read)));
                     if (! $fileSecurity && ! $valid && ! $isToken) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }

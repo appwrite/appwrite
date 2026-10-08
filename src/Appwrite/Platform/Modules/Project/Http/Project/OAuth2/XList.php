@@ -11,7 +11,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Queries\Base as Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Platform\Action;

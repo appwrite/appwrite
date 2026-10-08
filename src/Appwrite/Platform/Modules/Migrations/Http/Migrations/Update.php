@@ -49,7 +49,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration unique ID.', false, ['dbForProject'])
+            ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Migration unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')

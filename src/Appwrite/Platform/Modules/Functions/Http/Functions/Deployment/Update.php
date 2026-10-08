@@ -58,8 +58,8 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
-            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
@@ -142,7 +142,7 @@ class Update extends Base
         /** @var list<array<string, mixed>> $updatedRules */
         $updatedRules = $authorization->skip(function () use ($dbForPlatform, $deployment, $queries): array {
             $collected = [];
-            foreach ($dbForPlatform->iterate('rules', $queries) as $rule) {
+            foreach ($dbForPlatform->cursor('rules', $queries, batchSize: 25) as $rule) {
                 $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                     'deploymentId' => $deployment->getId(),
                     'deploymentInternalId' => $deployment->getSequence(),

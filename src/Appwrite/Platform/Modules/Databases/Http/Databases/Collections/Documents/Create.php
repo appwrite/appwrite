@@ -25,10 +25,10 @@ use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Unique as UniqueException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -128,13 +128,13 @@ class Create extends Action
                     ),
                 )
             ])
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('documentId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('documentId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.', false, ['dbForProject'])
             ->param('data', [], new JSONObject(), 'Document data as JSON object.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write])), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSONObject(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'], example: '[{"$id":"example1","username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}]')
-            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -292,7 +292,7 @@ class Create extends Action
 
             // Determine the source ID depending on whether it's a bulk operation.
             $sourceId = $isBulk
-                ? ($document['$id'] ?? ID::unique())
+                ? ($document['$id'] ?? Id::unique())
                 : $documentId;
 
             // If bulk, we need to validate ID explicitly
@@ -304,7 +304,7 @@ class Create extends Action
             }
 
             // Assign a unique ID if needed, otherwise use the provided ID.
-            $document['$id'] = $sourceId === CustomId::UNIQUE ? ID::unique() : $sourceId;
+            $document['$id'] = $sourceId === CustomId::UNIQUE ? Id::unique() : $sourceId;
             $document = $relationshipValues->prepare($document, $collection);
             $document = $this->removeReadonlyAttributes($document, $isAPIKey || $isPrivilegedUser);
             $this->validateTimestamps($document);
@@ -343,7 +343,7 @@ class Create extends Action
             }
 
             $staged = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
@@ -391,7 +391,7 @@ class Create extends Action
         $created = [];
         try {
             $dbForDatabases->withPreserveDates(
-                function () use (&$created, $dbForDatabases, $collection, $collectionTableId, $documents) {
+                true, function () use (&$created, $dbForDatabases, $collection, $collectionTableId, $documents) {
                     $this->withRelationshipTransaction(
                         $dbForDatabases,
                         $collection,

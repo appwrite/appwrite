@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class WebhooksCustomServerTest extends Scope
 {
@@ -19,7 +19,7 @@ final class WebhooksCustomServerTest extends Scope
     public function testReadOnlyKeyCannotRecoverAuthPassword(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Read Scope Password Test',
             ['users.*.create'],
             null,

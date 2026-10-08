@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Lock\Distributed;
 use Utopia\System\System;
 
@@ -47,7 +47,7 @@ final class TeamsConsoleClientTest extends Scope
                         'X-Appwrite-Project: console',
                         'Cookie: a_session_console=' . $accounts[$index]['session'],
                     ],
-                    CURLOPT_POSTFIELDS => json_encode(['teamId' => ID::unique(), 'name' => 'Instance organization']),
+                    CURLOPT_POSTFIELDS => json_encode(['teamId' => Id::unique(), 'name' => 'Instance organization']),
                 ]);
                 curl_multi_add_handle($multi, $handle);
                 $handles[] = [$handle, $index];
@@ -97,7 +97,7 @@ final class TeamsConsoleClientTest extends Scope
 
         foreach ([$ownerHeaders, $outsiderHeaders] as $requestHeaders) {
             $response = $this->client->call(Client::METHOD_POST, '/teams', $requestHeaders, [
-                'teamId' => ID::unique(),
+                'teamId' => Id::unique(),
                 'name' => 'Another organization',
             ]);
             $this->assertSame(403, $response['headers']['status-code']);
@@ -116,7 +116,7 @@ final class TeamsConsoleClientTest extends Scope
         ], $this->getHeaders());
 
         $this->createTeamFixture($headers, [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Existing organization',
         ]);
 
@@ -133,7 +133,7 @@ final class TeamsConsoleClientTest extends Scope
 
         try {
             $response = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
-                'teamId' => ID::unique(),
+                'teamId' => Id::unique(),
                 'name' => 'Another organization',
             ]);
         } finally {
@@ -639,7 +639,7 @@ final class TeamsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => 'Other Member',
@@ -665,7 +665,7 @@ final class TeamsConsoleClientTest extends Scope
         ];
 
         $organization = $this->createTeamFixture($memberHeaders, [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Other organization',
         ]);
 

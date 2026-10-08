@@ -4,7 +4,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Filter;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Index;
 use Utopia\Query\OrderDirection;
 
@@ -12,8 +12,8 @@ $providers = Config::getParam('oAuthProviders', []);
 
 $platformCollections = [
     'projects' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('projects'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('projects'),
         'name' => 'Projects',
         'attributes' => [
             Attribute::string(key: 'teamInternalId', required: true),
@@ -63,8 +63,8 @@ $platformCollections = [
     ],
 
     'schedules' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('schedules'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('schedules'),
         'name' => 'schedules',
         'attributes' => [
             Attribute::string(key: 'resourceType', size: 100),
@@ -89,8 +89,8 @@ $platformCollections = [
     ],
 
     'platforms' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('platforms'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('platforms'),
         'name' => 'platforms',
         'attributes' => [
             Attribute::string(key: 'projectInternalId', required: true),
@@ -111,8 +111,8 @@ $platformCollections = [
     ],
 
     'keys' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('keys'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('keys'),
         'name' => 'keys',
         'attributes' => [
             Attribute::string(key: 'resourceType'),
@@ -133,8 +133,8 @@ $platformCollections = [
     ],
 
     'webhooks' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('webhooks'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('webhooks'),
         'name' => 'webhooks',
         'attributes' => [
             Attribute::string(key: 'projectInternalId', required: true),
@@ -158,8 +158,8 @@ $platformCollections = [
     ],
 
     'notifications' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('notifications'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('notifications'),
         'name' => 'Notifications',
         'attributes' => [
             Attribute::string(key: 'messageId'),
@@ -193,8 +193,8 @@ $platformCollections = [
     ],
 
     'certificates' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('certificates'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('certificates'),
         'name' => 'Certificates',
         'attributes' => [
             // The maximum total length of a domain name or number is 255 characters.
@@ -213,8 +213,8 @@ $platformCollections = [
     ],
 
     'realtime' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('realtime'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('realtime'),
         'name' => 'Realtime Connections',
         'attributes' => [
             Attribute::string(key: 'container', required: true),
@@ -227,8 +227,8 @@ $platformCollections = [
     ],
 
     'rules' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('rules'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('rules'),
         'name' => 'Rules',
         'attributes' => [
             Attribute::string(key: 'projectId', required: true),
@@ -274,8 +274,8 @@ $platformCollections = [
     ],
 
     'installations' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('installations'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('installations'),
         'name' => 'installations',
         'attributes' => [
             Attribute::string(key: 'projectId', required: true),
@@ -296,8 +296,8 @@ $platformCollections = [
     ],
 
     'repositories' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('repositories'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('repositories'),
         'name' => 'repositories',
         'attributes' => [
             Attribute::string(key: 'installationId', required: true),
@@ -324,8 +324,8 @@ $platformCollections = [
     ],
 
     'vcsComments' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('vcsComments'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('vcsComments'),
         'name' => 'vcsComments',
         'attributes' => [
             Attribute::string(key: 'installationId', required: true),
@@ -350,16 +350,16 @@ $platformCollections = [
     ],
 
     'vcsCommentLocks' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('vcsCommentLocks'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('vcsCommentLocks'),
         'name' => 'vcsCommentLocks',
         'attributes' => [],
         'indexes' => []
     ],
 
     'reports' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('reports'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reports'),
         'name' => 'Reports',
         'attributes' => [
             Attribute::id(key: 'projectInternalId', required: true),
@@ -391,8 +391,8 @@ $platformCollections = [
     ],
 
     'insights' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('insights'),
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('insights'),
         'name' => 'Insights',
         'attributes' => [
             Attribute::id(key: 'projectInternalId', required: true),

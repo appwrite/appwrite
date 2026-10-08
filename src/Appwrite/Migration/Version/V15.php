@@ -10,9 +10,9 @@ use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Filter;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\System\System;
 
@@ -358,7 +358,7 @@ class V15 extends Migration
                 /**
                  * Add datetime filter.
                  */
-                $this->dbForProject->updateAttribute($table, ID::custom($attribute), new AttributeUpdate(filters: [Filter::Datetime]));
+                $this->dbForProject->updateAttribute($table, Id::custom($attribute), new AttributeUpdate(filters: [Filter::Datetime]));
                 /**
                  * Change data type to DateTime.
                  */
@@ -742,7 +742,7 @@ class V15 extends Migration
                                 continue;
                             }
 
-                            $variableId = ID::unique();
+                            $variableId = Id::unique();
                             $variable = new Document([
                                 '$id' => $variableId,
                                 '$permissions' => [

@@ -10,6 +10,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Database\Event as DatabaseEvent;
+use Utopia\Database\Event\Domain;
 use Utopia\Database\Hook\Lifecycle;
 
 /**
@@ -30,7 +31,7 @@ class UserEvents implements Lifecycle
     ) {
     }
 
-    public function handle(DatabaseEvent $event, mixed $data): void
+    public function handle(Domain $event): void
     {
         if ($event !== DatabaseEvent::DocumentCreate) {
             return;

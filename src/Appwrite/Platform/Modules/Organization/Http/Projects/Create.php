@@ -20,7 +20,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\DSN\DSN;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -122,7 +122,7 @@ class Create extends Action
             $auths[$method['key'] ?? ''] = $method['enabled'] ?? true;
         }
 
-        $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
+        $projectId = ($projectId == 'unique()') ? Id::unique() : $projectId;
 
         if ($projectId === 'console') {
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");

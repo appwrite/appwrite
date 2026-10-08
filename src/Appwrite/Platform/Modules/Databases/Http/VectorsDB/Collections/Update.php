@@ -12,7 +12,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\CollectionUpdate;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Permission;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;

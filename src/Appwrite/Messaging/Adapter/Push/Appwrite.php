@@ -7,7 +7,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\NotFound;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Operator;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -120,7 +120,7 @@ class Appwrite extends PushAdapter
      */
     private function createUserTopic(string $name): array
     {
-        $id = ID::custom(\md5($name));
+        $id = Id::custom(\md5($name));
         $authorization = $this->dbForProject->getAuthorization();
 
         $topic = $authorization->skip(fn () => $this->dbForProject->getDocument('topics', $id));
@@ -194,7 +194,7 @@ class Appwrite extends PushAdapter
                     ->getAttribute('sequence');
 
                 $this->dbForProject->createDocument('pushLedger', new Document([
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'topic' => $topic,
                     'data' => $payload,
                     'messageId' => $this->messageId,

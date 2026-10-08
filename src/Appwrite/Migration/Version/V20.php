@@ -14,7 +14,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 
 class V20 extends Migration
@@ -603,7 +603,7 @@ class V20 extends Migration
             case 'users':
                 if ($document->getAttribute('email', '') !== '') {
                     $target = new Document([
-                        '$id' => ID::unique(),
+                        '$id' => Id::unique(),
                         'userId' => $document->getId(),
                         'userInternalId' => $document->getSequence(),
                         'providerType' => MESSAGE_TYPE_EMAIL,
@@ -618,7 +618,7 @@ class V20 extends Migration
 
                 if ($document->getAttribute('phone', '') !== '') {
                     $target = new Document([
-                        '$id' => ID::unique(),
+                        '$id' => Id::unique(),
                         'userId' => $document->getId(),
                         'userInternalId' => $document->getSequence(),
                         'providerType' => MESSAGE_TYPE_SMS,

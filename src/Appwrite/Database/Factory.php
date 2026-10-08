@@ -125,7 +125,7 @@ class Factory implements Provisioner
             ->setDatabase($this->database)
             ->setAuthorization($this->authorization);
 
-        $database->getAdapter()->setSupportForAttributes($databaseType !== DOCUMENTSDB);
+        $database->setSchemaless(!$databaseType !== DOCUMENTSDB);
 
         if ($preserveDates) {
             $database->setPreserveDates(true);
@@ -227,11 +227,11 @@ class Factory implements Provisioner
         $database->addHook(new Permissions());
 
         if ($relationships) {
-            $database->addHook(new Relationships($database));
+            $database->addHook(new Relationships());
         }
 
-        if ($database->getSharedTables() && $database->getTenant() !== null) {
-            $database->addHook(new Tenancy($database->getTenant()));
+        if ($database->hasSharedTables() && $database->getTenant() !== null) {
+            $database->addHook(new Tenancy());
         }
 
         return $database;

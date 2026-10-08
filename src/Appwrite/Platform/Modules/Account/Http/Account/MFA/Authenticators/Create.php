@@ -15,9 +15,9 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\WhiteList;
@@ -113,7 +113,7 @@ class Create extends Action
         }
 
         $authenticator = new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getSequence(),
             'type' => Type::TOTP,

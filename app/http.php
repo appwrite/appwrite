@@ -20,9 +20,9 @@ use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\DI\Container;
 use Utopia\Http\Adapter\Swoole\Mode;
 use Utopia\Http\Adapter\Swoole\Server;
@@ -202,8 +202,8 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
 
             if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
                 $dbForPlatform->createDocument('buckets', new Document([
-                    '$id' => ID::custom('default'),
-                    '$collection' => ID::custom('buckets'),
+                    '$id' => Id::custom('default'),
+                    '$collection' => Id::custom('buckets'),
                     'name' => 'Default',
                     'maximumFileSize' => (int) System::getEnv('_APP_STORAGE_LIMIT', 0),
                     'allowedFileExtensions' => [],
@@ -240,8 +240,8 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
 
             if ($authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
                 $authorization->skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
-                    '$id' => ID::custom('screenshots'),
-                    '$collection' => ID::custom('buckets'),
+                    '$id' => Id::custom('screenshots'),
+                    '$collection' => Id::custom('buckets'),
                     'name' => 'Screenshots',
                     'maximumFileSize' => 20000000, // ~20MB
                     'allowedFileExtensions' => [ 'png' ],

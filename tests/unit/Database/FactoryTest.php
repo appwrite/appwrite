@@ -70,12 +70,14 @@ final class FactoryTest extends TestCase
  */
 final class ConnectedAdapter extends Memory
 {
+    #[\Override]
     public function supports(Capability $feature): bool
     {
         return $feature === Capability::Hostname || parent::supports($feature);
     }
 
-    public function getHostname(): string
+    #[\Override]
+    public function hostname(): string
     {
         return 'mariadb';
     }

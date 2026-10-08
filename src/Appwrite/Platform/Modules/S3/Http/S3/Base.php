@@ -24,9 +24,9 @@ use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Id;
 use Utopia\Database\Index;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
@@ -194,7 +194,7 @@ abstract class Base extends Action
             'name' => $existing->getAttribute('name', ''),
         ];
         // Stage each upload independently; destination identity is chosen only at locked completion.
-        $fileId = ID::unique();
+        $fileId = Id::unique();
         $name = $object['name'];
         $this->validateFileConstraints($bucket, $name, 0);
         $path = $this->path($deviceForFiles, $bucket, $fileId, $name);
@@ -597,14 +597,14 @@ abstract class Base extends Action
             'folder' => $existing->getAttribute('folder', ''),
             'name' => $existing->getAttribute('name', ''),
         ];
-        $fileId = $existing?->getId() ?: ID::unique();
+        $fileId = $existing?->getId() ?: Id::unique();
         $folder = $object['folder'];
         $name = $object['name'];
         $this->validateFileConstraints($bucket, $name, \strlen($body));
         $previousPath = $existing?->getAttribute('path', '') ?? '';
         $path = $existing === null
             ? $this->path($deviceForFiles, $bucket, $fileId, $name)
-            : $this->path($deviceForFiles, $bucket, ID::unique(), $name);
+            : $this->path($deviceForFiles, $bucket, Id::unique(), $name);
         $contentType = $this->contentType($name, $contentType, $body);
         $etag = \md5($body);
 
@@ -633,7 +633,7 @@ abstract class Base extends Action
                 ));
             } else {
                 $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createDocument('bucket_' . $bucket->getSequence(), new Document([
-                    '$id' => ID::custom($fileId),
+                    '$id' => Id::custom($fileId),
                     '$permissions' => [],
                     'bucketId' => $bucket->getId(),
                     'bucketInternalId' => $bucket->getSequence(),
@@ -693,7 +693,7 @@ abstract class Base extends Action
     {
         $contentType = $this->contentType($name, $contentType);
         $document = new Document([
-            '$id' => ID::custom($fileId),
+            '$id' => Id::custom($fileId),
             '$permissions' => [],
             'bucketId' => $bucket->getId(),
             'bucketInternalId' => $bucket->getSequence(),

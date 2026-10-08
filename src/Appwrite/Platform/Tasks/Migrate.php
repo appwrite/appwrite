@@ -93,7 +93,7 @@ class Migrate extends Action
             );
         }
 
-        $dbForPlatform->disableValidation();
+        $dbForPlatform->setValidation(false);
         $dbForPlatform->purgeCachedCollection('projects');
 
         $count = 0;
@@ -103,10 +103,10 @@ class Migrate extends Action
             $total = 0;
         }
 
-        $dbForPlatform->foreach('projects', function (Document $project) use ($dbForPlatform, $getProjectDB, $register, $migration, &$count, $total, $authorization) {
+        $callback = function (Document $project) use ($dbForPlatform, $getProjectDB, $register, $migration, &$count, $total, $authorization) {
             /** @var Database $dbForProject */
             $dbForProject = $getProjectDB($project);
-            $dbForProject->disableValidation();
+            $dbForProject->setValidation(false);
 
             try {
                 $migration
@@ -124,7 +124,10 @@ class Migrate extends Action
             }
 
             Console::log('Migrated ' . ++$count . '/' . $total . ' projects...');
-        });
+        };
+        foreach ($dbForPlatform->cursor('projects', batchSize: 25) as $document) {
+            $callback($document);
+        }
 
         try {
             $migration

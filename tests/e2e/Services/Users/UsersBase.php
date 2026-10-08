@@ -7,7 +7,7 @@ use Appwrite\Utopia\Response;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 
 trait UsersBase
@@ -36,7 +36,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'cristiano.ronaldo@manchester-united.co.uk',
             'password' => 'password',
             'name' => 'Cristiano Ronaldo',
@@ -75,7 +75,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'userId' => ID::custom('user1'),
+            'userId' => Id::custom('user1'),
             'email' => 'lionel.messi@psg.fr',
             'password' => 'password',
             'name' => 'Lionel Messi',
@@ -211,7 +211,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Sengrid1',
             'apiKey' => 'my-apikey',
             'from' => 'from@domain.com',
@@ -237,7 +237,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerId' => $provider['body']['$id'],
             'providerType' => 'email',
             'identifier' => 'random-email@mail.org',
@@ -328,7 +328,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'cristiano.ronaldo@manchester-united.co.uk',
             'password' => 'password',
             'name' => 'Cristiano Ronaldo',
@@ -361,7 +361,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::custom('user1'),
+            'userId' => Id::custom('user1'),
             'email' => 'lionel.messi@psg.fr',
             'password' => 'password',
             'name' => 'Lionel Messi',
@@ -506,7 +506,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => 'Configured Argon2 User',
@@ -560,7 +560,7 @@ trait UsersBase
         /**
          * Test for SUCCESS
          */
-        $userId = ID::unique();
+        $userId = Id::unique();
         $response = $this->client->call(Client::METHOD_POST, '/users/scrypt-modified', $headers, array_merge($options, [
             'userId' => $userId,
             'email' => $userId . '@example.com',
@@ -588,7 +588,7 @@ trait UsersBase
             ['passwordSalt', '0'],
             ['passwordSignerKey', '0'],
         ] as [$parameter, $value]) {
-            $userId = ID::unique();
+            $userId = Id::unique();
             $response = $this->client->call(Client::METHOD_POST, '/users/scrypt-modified', $headers, array_merge($options, [
                 'userId' => $userId,
                 'email' => $userId . '@example.com',
@@ -771,7 +771,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => \uniqid() . '@appwrite.io',
             'password' => 'password',
             'name' => 'MFA Challenge User',
@@ -831,7 +831,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => \uniqid() . '@appwrite.io',
             'password' => 'password',
             'name' => 'Other User',
@@ -1992,7 +1992,7 @@ trait UsersBase
 
         // Create two users with distinct valid phone numbers
         $user1 = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'user1-phone-empty-test@appwrite.io',
             'password' => 'password',
             'name' => 'User One',
@@ -2002,7 +2002,7 @@ trait UsersBase
         $this->assertEquals('+16175551201', $user1['body']['phone']);
 
         $user2 = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'user2-phone-empty-test@appwrite.io',
             'password' => 'password',
             'name' => 'User Two',
@@ -2149,7 +2149,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Sengrid1',
             'apiKey' => 'my-apikey',
             'from' => 'from@domain.com',
@@ -2159,7 +2159,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerId' => $provider['body']['$id'],
             'providerType' => 'email',
             'identifier' => 'random-email@mail.org',
@@ -2243,7 +2243,7 @@ trait UsersBase
     public function testDeleteUser(): void
     {
         // Create a new user specifically for deletion test
-        $userId = ID::unique();
+        $userId = Id::unique();
         $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2280,7 +2280,7 @@ trait UsersBase
     public function testUserJWT()
     {
         // Create user
-        $userId = ID::unique();
+        $userId = Id::unique();
         $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2516,7 +2516,7 @@ trait UsersBase
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders());
 
-        $userAId = ID::unique();
+        $userAId = Id::unique();
         $userA = $this->client->call(Client::METHOD_POST, '/users', $headers, [
             'userId' => $userAId,
             'email' => 'session-owner-' . $userAId . '@example.com',
@@ -2525,7 +2525,7 @@ trait UsersBase
         ]);
         $this->assertEquals(201, $userA['headers']['status-code']);
 
-        $userBId = ID::unique();
+        $userBId = Id::unique();
         $userB = $this->client->call(Client::METHOD_POST, '/users', $headers, [
             'userId' => $userBId,
             'email' => 'session-other-' . $userBId . '@example.com',
@@ -2583,7 +2583,7 @@ trait UsersBase
         ], $this->getHeaders());
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'impersonator-update-test@appwrite.io',
             'password' => 'password',
             'name' => 'Impersonator Update Test',
@@ -2627,7 +2627,7 @@ trait UsersBase
         ], $this->getHeaders());
 
         $userA = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'impersonator-a@appwrite.io',
             'password' => 'password',
             'name' => 'User A Impersonator',
@@ -2636,7 +2636,7 @@ trait UsersBase
         $idA = $userA['body']['$id'];
 
         $userB = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'impersonator-target-b@appwrite.io',
             'password' => 'password',
             'name' => 'User B Target',
@@ -2688,7 +2688,7 @@ trait UsersBase
         ], $this->getHeaders());
 
         $userA = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'impersonate-by-email-actor@appwrite.io',
             'password' => 'password',
             'name' => 'Actor',
@@ -2698,7 +2698,7 @@ trait UsersBase
 
         $targetEmail = 'impersonate-by-email-target@appwrite.io';
         $userB = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $targetEmail,
             'password' => 'password',
             'name' => 'Target By Email',
@@ -2733,7 +2733,7 @@ trait UsersBase
         ], $this->getHeaders());
 
         $userA = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'impersonate-by-phone-actor@appwrite.io',
             'password' => 'password',
             'name' => 'Actor Phone',
@@ -2743,7 +2743,7 @@ trait UsersBase
 
         $targetPhone = '+1555010200';
         $userB = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'phone' => $targetPhone,
             'name' => 'Target By Phone',
         ]);
@@ -2777,7 +2777,7 @@ trait UsersBase
         ], $this->getHeaders());
 
         $userA = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'non-impersonator@appwrite.io',
             'password' => 'password',
             'name' => 'Non Impersonator',
@@ -2786,7 +2786,7 @@ trait UsersBase
         $idA = $userA['body']['$id'];
 
         $userB = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'other-user@appwrite.io',
             'password' => 'password',
             'name' => 'Other User',
@@ -2822,7 +2822,7 @@ trait UsersBase
         ], $this->getHeaders());
 
         $userA = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'non-impersonator-scope@appwrite.io',
             'password' => 'password',
             'name' => 'Non Impersonator Scope',
@@ -2831,7 +2831,7 @@ trait UsersBase
         $idA = $userA['body']['$id'];
 
         $userB = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'non-impersonator-scope-target@appwrite.io',
             'password' => 'password',
             'name' => 'Non Impersonator Scope Target',
@@ -2863,7 +2863,7 @@ trait UsersBase
         ], $this->getHeaders());
 
         $userA = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'non-impersonator-headers@appwrite.io',
             'password' => 'password',
             'name' => 'Non Impersonator Headers',
@@ -2873,7 +2873,7 @@ trait UsersBase
 
         $targetEmail = 'non-impersonator-target-email@appwrite.io';
         $targetByEmail = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $targetEmail,
             'password' => 'password',
             'name' => 'Target Email',
@@ -2882,7 +2882,7 @@ trait UsersBase
 
         $targetPhone = '+1555010300';
         $targetByPhone = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'phone' => $targetPhone,
             'name' => 'Target Phone',
         ]);
@@ -2928,7 +2928,7 @@ trait UsersBase
         ], $this->getHeaders());
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'impersonator-browse-users@appwrite.io',
             'password' => 'password',
             'name' => 'Impersonator Browse Users',
@@ -2968,7 +2968,7 @@ trait UsersBase
         ], $this->getHeaders());
 
         $userA = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'impersonator-list-test@appwrite.io',
             'password' => 'password',
             'name' => 'Impersonator List Test',
@@ -2977,7 +2977,7 @@ trait UsersBase
         $idA = $userA['body']['$id'];
 
         $userB = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'impersonator-list-target@appwrite.io',
             'password' => 'password',
             'name' => 'List Target',
@@ -3014,7 +3014,7 @@ trait UsersBase
         ], $this->getHeaders());
 
         $userWithImpersonator = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'filter-impersonator-true@appwrite.io',
             'password' => 'password',
             'name' => 'Has Impersonator',
@@ -3059,7 +3059,7 @@ trait UsersBase
         $phone = '+1' . \rand(1000000000, 9999999999);
 
         $userA = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $emailA,
             'password' => 'password',
             'name' => 'Query Param Impersonator',
@@ -3068,7 +3068,7 @@ trait UsersBase
         $idA = $userA['body']['$id'];
 
         $userB = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $emailB,
             'password' => 'password',
             'name' => 'Query Param Target',
@@ -3119,7 +3119,7 @@ trait UsersBase
 
         // Header takes priority over query param when both are present
         $userC = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $emailC,
             'password' => 'password',
             'name' => 'Query Param Target C',
@@ -3151,10 +3151,10 @@ trait UsersBase
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders());
 
-        $suffix = ID::unique();
+        $suffix = Id::unique();
 
         $impersonator = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'reads-impersonator-' . $suffix . '@appwrite.io',
             'password' => 'password',
             'name' => 'Reads Impersonator',
@@ -3163,7 +3163,7 @@ trait UsersBase
         $impersonatorId = $impersonator['body']['$id'];
 
         $target = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'reads-target-' . $suffix . '@appwrite.io',
             'password' => 'password',
             'name' => 'Reads Target',
@@ -3211,10 +3211,10 @@ trait UsersBase
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders());
 
-        $suffix = ID::unique();
+        $suffix = Id::unique();
 
         $impersonator = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'writes-impersonator-' . $suffix . '@appwrite.io',
             'password' => 'password',
             'name' => 'Writes Impersonator',
@@ -3223,7 +3223,7 @@ trait UsersBase
         $impersonatorId = $impersonator['body']['$id'];
 
         $target = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'writes-target-' . $suffix . '@appwrite.io',
             'password' => 'password',
             'name' => 'Writes Target',
@@ -3267,10 +3267,10 @@ trait UsersBase
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders());
 
-        $suffix = ID::unique();
+        $suffix = Id::unique();
 
         $impersonator = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'delete-impersonator-' . $suffix . '@appwrite.io',
             'password' => 'password',
             'name' => 'Delete Impersonator',
@@ -3279,7 +3279,7 @@ trait UsersBase
         $impersonatorId = $impersonator['body']['$id'];
 
         $target = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'delete-target-' . $suffix . '@appwrite.io',
             'password' => 'password',
             'name' => 'Delete Target',
@@ -3316,10 +3316,10 @@ trait UsersBase
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders());
 
-        $suffix = ID::unique();
+        $suffix = Id::unique();
 
         $impersonator = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'factors-impersonator-' . $suffix . '@appwrite.io',
             'password' => 'password',
             'name' => 'Factors Impersonator',
@@ -3328,7 +3328,7 @@ trait UsersBase
         $impersonatorId = $impersonator['body']['$id'];
 
         $target = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'factors-target-' . $suffix . '@appwrite.io',
             'password' => 'password',
             'name' => 'Factors Target',
@@ -3368,7 +3368,7 @@ trait UsersBase
         // A JWT bound to the incomplete session, and one bound to no session, are refused too.
         $jwts = [
             $this->client->call(Client::METHOD_POST, '/users/' . $impersonatorId . '/jwts', $headers, ['sessionId' => $session['body']['$id']]),
-            $this->client->call(Client::METHOD_POST, '/users/' . $impersonatorId . '/jwts', $headers, ['sessionId' => ID::unique()]),
+            $this->client->call(Client::METHOD_POST, '/users/' . $impersonatorId . '/jwts', $headers, ['sessionId' => Id::unique()]),
         ];
         foreach ($jwts as $jwt) {
             $this->assertEquals(201, $jwt['headers']['status-code']);
@@ -3395,10 +3395,10 @@ trait UsersBase
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders());
 
-        $suffix = ID::unique();
+        $suffix = Id::unique();
 
         $impersonator = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'target-factors-impersonator-' . $suffix . '@appwrite.io',
             'password' => 'password',
             'name' => 'Target Factors Impersonator',
@@ -3407,7 +3407,7 @@ trait UsersBase
         $impersonatorId = $impersonator['body']['$id'];
 
         $target = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'target-factors-target-' . $suffix . '@appwrite.io',
             'password' => 'password',
             'name' => 'Target Factors Target',
@@ -3450,10 +3450,10 @@ trait UsersBase
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders());
 
-        $suffix = ID::unique();
+        $suffix = Id::unique();
 
         $impersonator = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'discovery-impersonator-' . $suffix . '@appwrite.io',
             'password' => 'password',
             'name' => 'Discovery Impersonator',
@@ -3462,7 +3462,7 @@ trait UsersBase
         $impersonatorId = $impersonator['body']['$id'];
 
         $other = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'discovery-other-' . $suffix . '@appwrite.io',
             'password' => 'password',
             'name' => 'Discovery Other',
@@ -3513,7 +3513,7 @@ trait UsersBase
         ], $this->getHeaders());
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => \uniqid() . '@appwrite.io',
             'password' => 'password',
             'name' => 'MFA Recovery Code User',

@@ -11,9 +11,9 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\NotFound as NotFoundException;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
 use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
@@ -91,7 +91,7 @@ class Update extends Action
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $valid = $authorization->isValid(new Input(PermissionType::Update, $bucket->getUpdate()));
+        $valid = $authorization->isValid(new Input(PermissionType::Update, $bucket->getPermissionsByType(PermissionType::Update)));
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }

@@ -20,7 +20,7 @@ use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -85,11 +85,11 @@ class Update extends Action
                     replaceWith: 'tablesDB.updateRows',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('data', [], new JSONObject(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":33,"isAdmin":false}')
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
-            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -171,7 +171,7 @@ class Update extends Action
 
             // Stage the operation in transaction logs
             $staged = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
@@ -205,7 +205,7 @@ class Update extends Action
         $documents = [];
 
         try {
-            $modified = $dbForDatabases->withPreserveDates(function () use ($plan, &$documents, $dbForDatabases, $database, $collection, $data, $queries) {
+            $modified = $dbForDatabases->withPreserveDates(true, function () use ($plan, &$documents, $dbForDatabases, $database, $collection, $data, $queries) {
                 return $dbForDatabases->updateDocuments(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     new Document($data),

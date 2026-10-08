@@ -13,9 +13,9 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
 use Utopia\Database\RelationshipType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 

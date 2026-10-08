@@ -11,9 +11,9 @@ use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class DatabasesStringTypesTest extends Scope
 {
@@ -45,7 +45,7 @@ final class DatabasesStringTypesTest extends Scope
 
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'String Types Test Database'
         ]);
 
@@ -54,7 +54,7 @@ final class DatabasesStringTypesTest extends Scope
 
         // Create table
         $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'String Types Table',
             'rowSecurity' => true,
             'permissions' => [
@@ -151,7 +151,7 @@ final class DatabasesStringTypesTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'String Types Test Database'
         ]);
 
@@ -565,7 +565,7 @@ final class DatabasesStringTypesTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'varchar_field' => 'Test varchar value',
                 'varchar_required' => 'Required value',
@@ -608,7 +608,7 @@ final class DatabasesStringTypesTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'varchar_field' => 'Value',
                 'varchar_required' => 'Required',
@@ -639,7 +639,7 @@ final class DatabasesStringTypesTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'varchar_field' => 'Value',
                 // Missing varchar_required, text_required, etc.

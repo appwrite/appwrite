@@ -9,9 +9,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class TablesDBColumnsTest extends Scope
 {
@@ -31,7 +31,7 @@ final class TablesDBColumnsTest extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Inline Columns',
         ]);
 
@@ -39,7 +39,7 @@ final class TablesDBColumnsTest extends Scope
         $databaseId = $database['body']['$id'];
 
         $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Modules',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -112,7 +112,7 @@ final class TablesDBColumnsTest extends Scope
         $modulePath = \str_repeat('src/Appwrite/Platform/Modules/Databases/', 200);
 
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', $headers, [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'title' => 'Appwrite',
                 'modulePath' => $modulePath,
@@ -137,7 +137,7 @@ final class TablesDBColumnsTest extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Inline Columns Invalid',
         ]);
 
@@ -145,7 +145,7 @@ final class TablesDBColumnsTest extends Scope
         $databaseId = $database['body']['$id'];
 
         $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Invalid',
             'columns' => [
                 ['key' => 'unknown', 'type' => 'blob'],
@@ -169,13 +169,13 @@ final class TablesDBColumnsTest extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Inline Column Filters',
         ]);
 
         $this->assertSame(201, $database['headers']['status-code']);
         $databaseId = $database['body']['$id'];
-        $tableId = ID::unique();
+        $tableId = Id::unique();
 
         $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
             'tableId' => $tableId,
@@ -193,7 +193,7 @@ final class TablesDBColumnsTest extends Scope
         $this->assertSame(404, $missing['headers']['status-code']);
 
         $encrypted = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Encrypted',
             'columns' => [
                 ['key' => 'secret', 'type' => 'string', 'size' => APP_DATABASE_ENCRYPT_SIZE_MIN, 'filters' => ['encrypt']],

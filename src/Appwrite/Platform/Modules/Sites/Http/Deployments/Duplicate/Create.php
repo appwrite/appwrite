@@ -14,7 +14,7 @@ use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
@@ -60,8 +60,8 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
-            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('request')
             ->inject('response')
             ->inject('project')
@@ -127,7 +127,7 @@ class Create extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $deploymentId = ID::unique();
+        $deploymentId = Id::unique();
 
         $destination = '';
         if ($hasSource) {
@@ -211,11 +211,11 @@ class Create extends Action
 
         // Preview deployments for sites
         $sitesDomain = $platform['sitesDomain'];
-        $domain = ID::unique() . "." . $sitesDomain;
+        $domain = Id::unique() . "." . $sitesDomain;
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-        $ruleId = $isMd5 ? md5($domain) : ID::unique();
+        $ruleId = $isMd5 ? md5($domain) : Id::unique();
 
         $rule = $authorization->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([

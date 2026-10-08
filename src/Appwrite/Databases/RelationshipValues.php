@@ -7,7 +7,7 @@ use Appwrite\Utopia\Database\Attribute;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 
 /**
@@ -47,7 +47,7 @@ final readonly class RelationshipValues
                 $isDocument = \is_array($relation) && !\array_is_list($relation);
 
                 if ($isDocument && ($relation['$id'] ?? CustomId::UNIQUE) === CustomId::UNIQUE) {
-                    $relation['$id'] = ID::unique();
+                    $relation['$id'] = Id::unique();
                 }
 
                 $this->validate($relation);

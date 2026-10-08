@@ -23,10 +23,10 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Unique as UniqueException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -95,12 +95,12 @@ class Upsert extends Action
                     ),
                 ),
             ])
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
-            ->param('documentId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('documentId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Document ID.', false, ['dbForProject'])
             ->param('data', [], new JSONObject(), 'Document data as JSON object. Include all required attributes of the document to be created or updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('user')
@@ -229,7 +229,7 @@ class Upsert extends Action
 
             // Stage the operation in transaction logs
             $staged = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
@@ -266,7 +266,7 @@ class Upsert extends Action
 
         $upserted = [];
         try {
-            $dbForDatabases->withPreserveDates(function () use (&$upserted, $dbForDatabases, $collection, $collectionTableId, $newDocument) {
+            $dbForDatabases->withPreserveDates(true, function () use (&$upserted, $dbForDatabases, $collection, $collectionTableId, $newDocument) {
                 return $this->withRelationshipTransaction(
                     $dbForDatabases,
                     $collection,

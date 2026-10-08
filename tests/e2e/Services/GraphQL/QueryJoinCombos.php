@@ -13,10 +13,10 @@ use Tests\E2E\Services\Databases\Queries\Oracle\Statistic;
 use Tests\E2E\Services\Databases\Queries\Oracle\Summary;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 
 trait QueryJoinCombos
 {
@@ -34,18 +34,18 @@ trait QueryJoinCombos
         }
 
         $userId = $this->getUser()['$id'];
-        $suffix = ID::unique();
+        $suffix = Id::unique();
         $serverHeaders = $this->joinServerHeaders();
 
         $database = $this->client->call(Client::METHOD_POST, $this->joinApiBase(), $serverHeaders, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'jcGraphQL' . $suffix,
         ]);
         $this->assertSame(201, $database['headers']['status-code']);
         $databaseId = $database['body']['$id'];
 
         $customers = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
-            $this->joinContainerIdParam() => ID::unique(),
+            $this->joinContainerIdParam() => Id::unique(),
             'name' => 'jcCustomers' . $suffix,
             $this->joinSecurityParam() => false,
             'permissions' => [
@@ -57,7 +57,7 @@ trait QueryJoinCombos
         $customersId = $customers['body']['$id'];
 
         $public = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
-            $this->joinContainerIdParam() => ID::unique(),
+            $this->joinContainerIdParam() => Id::unique(),
             'name' => 'jcPublic' . $suffix,
             $this->joinSecurityParam() => true,
             'permissions' => [
@@ -69,7 +69,7 @@ trait QueryJoinCombos
         $publicId = $public['body']['$id'];
 
         $secret = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
-            $this->joinContainerIdParam() => ID::unique(),
+            $this->joinContainerIdParam() => Id::unique(),
             'name' => 'jcSecret' . $suffix,
             $this->joinSecurityParam() => true,
             'permissions' => [
@@ -116,7 +116,7 @@ trait QueryJoinCombos
         $this->waitForJoinAttribute($databaseId, $secretId, 'secret');
 
         $alice = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $customersId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => ['name' => 'Alice'],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -126,7 +126,7 @@ trait QueryJoinCombos
         $aliceId = $alice['body']['$id'];
 
         $carol = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $customersId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => ['name' => 'Carol'],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -136,7 +136,7 @@ trait QueryJoinCombos
         $carolId = $carol['body']['$id'];
 
         $publicRow = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $publicId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => [
                 'customerId' => $aliceId,
                 'amount' => 313,
@@ -148,7 +148,7 @@ trait QueryJoinCombos
         $this->assertSame(201, $publicRow['headers']['status-code']);
 
         $secretRow = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $secretId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => [
                 'customerId' => $aliceId,
                 'amount' => 777,
@@ -178,8 +178,8 @@ trait QueryJoinCombos
     protected function joinComboLeftAndInnerQueries(array $data, array $extra = []): array
     {
         return [
-            Query::leftJoin($data['secretId'], '$id', 'customerId', '=', 'sec')->toString(),
-            Query::join($data['publicId'], '$id', 'customerId', '=', 'pub')->toString(),
+            Query::leftJoin($data['secretId'], 'sec', [Query::on('$id', 'customerId')])->toString(),
+            Query::join($data['publicId'], 'pub', [Query::on('$id', 'customerId')])->toString(),
             ...$extra,
         ];
     }
@@ -412,7 +412,7 @@ trait QueryJoinCombos
             return self::$joinHardcoreCache[$cacheKey];
         }
 
-        $suffix = ID::unique();
+        $suffix = Id::unique();
         $serverHeaders = $this->joinServerHeaders();
         $any = [
             Permission::read(Role::any()),
@@ -424,7 +424,7 @@ trait QueryJoinCombos
         $midHidden = [Permission::read(Role::user('jh-mid-hidden'))];
 
         $database = $this->client->call(Client::METHOD_POST, $this->joinApiBase(), $serverHeaders, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'jhGraphQL' . $suffix,
         ]);
         $this->assertSame(201, $database['headers']['status-code']);
@@ -674,7 +674,7 @@ trait QueryJoinCombos
     protected function createJoinHardcoreContainer(string $databaseId, string $name, bool $documentSecurity, array $permissions): string
     {
         $result = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $this->joinServerHeaders(), [
-            $this->joinContainerIdParam() => ID::unique(),
+            $this->joinContainerIdParam() => Id::unique(),
             'name' => $name,
             $this->joinSecurityParam() => $documentSecurity,
             'permissions' => $permissions,
@@ -692,7 +692,7 @@ trait QueryJoinCombos
     protected function createJoinHardcoreRecord(string $databaseId, string $containerId, array $data, array $permissions): array
     {
         $result = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $containerId), $this->joinServerHeaders(), [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => $data,
             'permissions' => $permissions,
         ]);
@@ -861,8 +861,8 @@ trait QueryJoinCombos
         $data = $this->setupJoinHardcoreFixture();
 
         $listed = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::join($data['ordersId'], '$id', 'customerId', '=', 'alpha')->toString(),
-            Query::join($data['ordersId'], 'code', 'partnerCode', '=', 'beta')->toString(),
+            Query::join($data['ordersId'], 'alpha', [Query::on('$id', 'customerId')])->toString(),
+            Query::join($data['ordersId'], 'beta', [Query::on('code', 'partnerCode')])->toString(),
             Query::select(['name', 'code', 'alpha.amount', 'beta.amount', 'alpha.label', 'beta.label'])->toString(),
         ]);
 
@@ -892,8 +892,8 @@ trait QueryJoinCombos
         }
 
         $independent = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::join($data['ordersId'], '$id', 'customerId', '=', 'alpha')->toString(),
-            Query::join($data['ordersId'], 'code', 'partnerCode', '=', 'beta')->toString(),
+            Query::join($data['ordersId'], 'alpha', [Query::on('$id', 'customerId')])->toString(),
+            Query::join($data['ordersId'], 'beta', [Query::on('code', 'partnerCode')])->toString(),
             Query::equal('alpha.amount', [313])->toString(),
             Query::equal('beta.amount', [424])->toString(),
             Query::select(['name', 'alpha.amount', 'beta.amount'])->toString(),
@@ -919,8 +919,8 @@ trait QueryJoinCombos
         }
 
         $hiddenOnly = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::join($data['ordersId'], '$id', 'customerId', '=', 'alpha')->toString(),
-            Query::join($data['ordersId'], 'code', 'partnerCode', '=', 'beta')->toString(),
+            Query::join($data['ordersId'], 'alpha', [Query::on('$id', 'customerId')])->toString(),
+            Query::join($data['ordersId'], 'beta', [Query::on('code', 'partnerCode')])->toString(),
             Query::equal('alpha.amount', [8686])->toString(),
             Query::select(['name', 'alpha.amount', 'beta.amount'])->toString(),
         ]);
@@ -944,8 +944,8 @@ trait QueryJoinCombos
 
         $data = $this->setupJoinHardcoreFixture();
         $queries = [
-            Query::join($data['customersId'], '$id', '$id', '=', 'peer')->toString(),
-            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::join($data['customersId'], 'peer', [Query::on('$id', '$id')])->toString(),
+            Query::leftJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'peer.name', 'peer.$id', 'ord.amount', 'ord.$id'])->toString(),
         ];
 
@@ -979,8 +979,8 @@ trait QueryJoinCombos
         }
 
         $got = $this->joinHardcoreGet($data['databaseId'], $data['customersId'], $data['aliceId'], [
-            Query::join($data['customersId'], '$id', '$id', '=', 'peer')->toString(),
-            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::join($data['customersId'], 'peer', [Query::on('$id', '$id')])->toString(),
+            Query::leftJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'peer.name', 'peer.$id', 'ord.amount'])->toString(),
         ]);
 
@@ -1009,9 +1009,9 @@ trait QueryJoinCombos
         $data = $this->setupJoinHardcoreFixture();
 
         $result = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
-            Query::join($data['midId'], '$id', 'customerId', '=', 'mid')->toString(),
-            Query::rightJoin($data['rightId'], '$id', 'customerId', '=', 'rt')->toString(),
+            Query::leftJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
+            Query::join($data['midId'], 'mid', [Query::on('$id', 'customerId')])->toString(),
+            Query::rightJoin($data['rightId'], 'rt', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'ord.amount', 'mid.note', 'rt.tag'])->toString(),
         ]);
 
@@ -1061,8 +1061,8 @@ trait QueryJoinCombos
         $data = $this->setupJoinHardcoreFixture();
 
         $result = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::join($data['midId'], '$id', 'customerId', '=', 'mid')->toString(),
-            Query::leftJoin($data['secretsId'], 'mid.$id', 'midId', '=', 'sec')->toString(),
+            Query::join($data['midId'], 'mid', [Query::on('$id', 'customerId')])->toString(),
+            Query::leftJoin($data['secretsId'], 'sec', [Query::on('mid.$id', 'midId')])->toString(),
             Query::select(['name', 'mid.note', 'mid.amount', 'sec.secret', 'sec.amount', 'sec.payload'])->toString(),
         ]);
 
@@ -1116,7 +1116,7 @@ trait QueryJoinCombos
 
         $data = $this->setupJoinHardcoreFixture();
         $orderQueries = [
-            Query::fullOuterJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::fullOuterJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::orderAsc('ord.amount')->toString(),
             Query::select(['name', 'ord.amount', 'ord.label'])->toString(),
         ];
@@ -1207,8 +1207,8 @@ trait QueryJoinCombos
         $data = $this->setupJoinHardcoreFixture();
 
         $mixed = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
-            Query::leftJoin($data['secretsId'], '$id', 'customerId', '=', 'sec')->toString(),
+            Query::leftJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
+            Query::leftJoin($data['secretsId'], 'sec', [Query::on('$id', 'customerId')])->toString(),
             Query::and([
                 Query::equal('name', ['Alice']),
                 Query::or([
@@ -1238,8 +1238,8 @@ trait QueryJoinCombos
         }
 
         $hiddenOnly = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
-            Query::leftJoin($data['secretsId'], '$id', 'customerId', '=', 'sec')->toString(),
+            Query::leftJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
+            Query::leftJoin($data['secretsId'], 'sec', [Query::on('$id', 'customerId')])->toString(),
             Query::and([
                 Query::or([
                     Query::equal('name', ['Alice']),
@@ -1269,7 +1269,7 @@ trait QueryJoinCombos
 
         $data = $this->setupJoinHardcoreFixture();
         $orderQueries = [
-            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::leftJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::orderAsc('name')->toString(),
             Query::orderDesc('ord.amount')->toString(),
             Query::select(['name', 'ord.amount'])->toString(),
@@ -1343,7 +1343,7 @@ trait QueryJoinCombos
         }
 
         $data = $this->setupJoinHardcoreFixture();
-        $join = Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString();
+        $join = Query::leftJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString();
         $select = Query::select(['name', 'ord.amount', 'ord.label', 'ord.$id', 'ord.$createdAt'])->toString();
 
         $contains = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
@@ -1450,7 +1450,7 @@ trait QueryJoinCombos
         $data = $this->setupJoinHardcoreFixture();
 
         $result = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::rightJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::rightJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'ord.amount', 'ord.label'])->toString(),
         ]);
 
@@ -1508,7 +1508,7 @@ trait QueryJoinCombos
         $data = $this->setupJoinHardcoreFixture();
 
         $result = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::leftJoin($data['secretsId'], '$id', 'customerId', '=', 'sec')->toString(),
+            Query::leftJoin($data['secretsId'], 'sec', [Query::on('$id', 'customerId')])->toString(),
             Query::equal('sec.amount', ['8686'])->toString(),
             Query::select(['name', 'sec.amount', 'sec.secret', 'sec.payload'])->toString(),
         ]);
@@ -1538,7 +1538,7 @@ trait QueryJoinCombos
 
         $data = $this->setupJoinHardcoreFixture();
         $joinQueries = [
-            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::leftJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'ord.amount', 'ord.label'])->toString(),
         ];
 
@@ -1607,8 +1607,8 @@ trait QueryJoinCombos
 
         $data = $this->setupJoinHardcoreFixture();
         $joins = [
-            Query::join($data['ordersId'], '$id', 'customerId', '=', 'alpha')->toString(),
-            Query::join($data['ordersId'], 'code', 'partnerCode', '=', 'beta')->toString(),
+            Query::join($data['ordersId'], 'alpha', [Query::on('$id', 'customerId')])->toString(),
+            Query::join($data['ordersId'], 'beta', [Query::on('code', 'partnerCode')])->toString(),
         ];
 
         $listed = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
@@ -1682,7 +1682,7 @@ trait QueryJoinCombos
         $data = $this->setupJoinHardcoreFixture();
 
         $left = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::leftJoin($data['secretsId'], '$id', 'customerId', '=', 'sec')->toString(),
+            Query::leftJoin($data['secretsId'], 'sec', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'sec.secret', 'sec.amount'])->toString(),
         ]);
         $this->assertSame(200, $left['headers']['status-code']);
@@ -1712,7 +1712,7 @@ trait QueryJoinCombos
         }
 
         $inner = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::join($data['secretsId'], '$id', 'customerId', '=', 'sec')->toString(),
+            Query::join($data['secretsId'], 'sec', [Query::on('$id', 'customerId')])->toString(),
             Query::equal('sec.amount', [8686])->toString(),
             Query::select(['name', 'sec.amount', 'sec.secret'])->toString(),
         ]);
@@ -1727,7 +1727,7 @@ trait QueryJoinCombos
         }
 
         $foj = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::fullOuterJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::fullOuterJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'ord.amount', 'ord.label'])->toString(),
         ]);
         $this->assertSame(200, $foj['headers']['status-code']);
@@ -1757,8 +1757,8 @@ trait QueryJoinCombos
 
         $data = $this->setupJoinHardcoreFixture();
         $orderQueries = [
-            Query::fullOuterJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
-            Query::join($data['rightId'], '$id', 'customerId', '=', 'rt')->toString(),
+            Query::fullOuterJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
+            Query::join($data['rightId'], 'rt', [Query::on('$id', 'customerId')])->toString(),
             Query::orderAsc('ord.amount')->toString(),
             Query::select(['name', 'ord.$id', 'ord.amount', 'rt.$id', 'rt.tag'])->toString(),
         ];
@@ -1855,7 +1855,7 @@ trait QueryJoinCombos
         $data = $this->setupJoinHardcoreFixture();
 
         $got = $this->joinHardcoreGet($data['databaseId'], $data['customersId'], $data['aliceId'], [
-            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::leftJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'ord.amount', 'ord.$id', 'ord.$permissions'])->toString(),
         ]);
 
@@ -1880,7 +1880,7 @@ trait QueryJoinCombos
         }
 
         $listed = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::join($data['midId'], '$id', 'customerId', '=', 'mid')->toString(),
+            Query::join($data['midId'], 'mid', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'mid.$id', 'mid.note', 'mid.$permissions'])->toString(),
         ]);
 
@@ -1904,7 +1904,7 @@ trait QueryJoinCombos
         $data = $this->setupJoinHardcoreFixture();
 
         $joined = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::leftJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'ord.$id', 'ord.$sequence'])->toString(),
         ]);
         $direct = $this->client->call(Client::METHOD_GET, $this->joinRecordUrl($data['databaseId'], $data['ordersId']), \array_merge([
@@ -1954,7 +1954,7 @@ trait QueryJoinCombos
         $data = $this->setupJoinHardcoreFixture();
 
         $listed = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::fullOuterJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::fullOuterJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'ord.amount', 'ord.label'])->toString(),
         ]);
 
@@ -1979,7 +1979,7 @@ trait QueryJoinCombos
         }
 
         $hidden = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::fullOuterJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::fullOuterJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::equal('ord.amount', [8686])->toString(),
             Query::select(['name', 'ord.amount'])->toString(),
         ]);
@@ -2020,7 +2020,7 @@ trait QueryJoinCombos
         $expected = Summary::of($pairs);
 
         $aggregated = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::fullOuterJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::fullOuterJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::count('*', 'rowCount')->toString(),
             Query::count('ord.$id', 'orderCount')->toString(),
             Query::sum('ord.amount', 'amountSum')->toString(),
@@ -2043,7 +2043,7 @@ trait QueryJoinCombos
         $data = $this->setupJoinHardcoreFixture();
 
         $notNull = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::leftJoin($data['secretsId'], '$id', 'customerId', '=', 'sec')->toString(),
+            Query::leftJoin($data['secretsId'], 'sec', [Query::on('$id', 'customerId')])->toString(),
             Query::isNotNull('sec.secret')->toString(),
             Query::select(['name', 'sec.secret', 'sec.amount', 'sec.payload'])->toString(),
         ]);
@@ -2058,7 +2058,7 @@ trait QueryJoinCombos
         }
 
         $notEqual = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::leftJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::notEqual('ord.amount', 8686)->toString(),
             Query::select(['name', 'ord.amount', 'ord.label'])->toString(),
         ]);
@@ -2091,7 +2091,7 @@ trait QueryJoinCombos
 
         if ($notContainsQuery !== null) {
             $notContains = $this->joinHardcoreList($data['databaseId'], $data['customersId'], [
-                Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+                Query::leftJoin($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
                 $notContainsQuery,
                 Query::select(['name', 'ord.amount', 'ord.label'])->toString(),
             ]);
@@ -2179,8 +2179,8 @@ trait QueryJoinCombos
 
         $fixture = $this->setupRestrictedOrdersFixture();
         $seed = $this->seedVisibleToCaller();
-        $orders = Query::join($fixture->ordersId, '$id', 'customerId', '=', 'ord')->toString();
-        $payments = Query::join($fixture->paymentsId, 'ord.$id', 'orderId', '=', 'pay')->toString();
+        $orders = Query::join($fixture->ordersId, 'ord', [Query::on('$id', 'customerId')])->toString();
+        $payments = Query::join($fixture->paymentsId, 'pay', [Query::on('ord.$id', 'orderId')])->toString();
 
         $qualified = $this->graphqlRecords($fixture->databaseId, $fixture->customersId, [
             $orders,
@@ -2219,7 +2219,7 @@ trait QueryJoinCombos
         $fixture = $this->setupRestrictedOrdersFixture();
         $seed = $this->seedVisibleToCaller();
         $expected = Summary::of(Join::Inner->pairs($seed->customers, $seed->orders))->sum;
-        $orders = Query::join($fixture->ordersId, '$id', 'customerId', '=', 'ord')->toString();
+        $orders = Query::join($fixture->ordersId, 'ord', [Query::on('$id', 'customerId')])->toString();
 
         foreach (['amount', 'ord.amount'] as $attribute) {
             $summed = $this->graphqlRecords($fixture->databaseId, $fixture->customersId, [
@@ -2248,7 +2248,7 @@ trait QueryJoinCombos
 
         $fixture = $this->setupRestrictedOrdersFixture();
         $seed = $this->seedVisibleToCaller();
-        $join = Query::join($fixture->ordersId, '$id', 'customerId', '=', 'ord')->toString();
+        $join = Query::join($fixture->ordersId, 'ord', [Query::on('$id', 'customerId')])->toString();
         $joinedKeys = ['ord.$id', 'ord.customerId', 'ord.amount', 'ord.label', 'ord.flags', 'ord.scores'];
         $readableOrderIds = \array_map(static fn (Order $order): string => $order->id, $seed->orders);
 
@@ -2286,13 +2286,13 @@ trait QueryJoinCombos
     {
         $databaseId = $this->setupAggregateDatabase();
         $notesId = $this->createBulkNotes($databaseId);
-        $peersId = $this->createSeedContainer($databaseId, 'bulkPeers' . ID::unique(), false, [
+        $peersId = $this->createSeedContainer($databaseId, 'bulkPeers' . Id::unique(), false, [
             Permission::read(Role::any()),
             Permission::create(Role::any()),
         ]);
 
         foreach ([$peersId, Database::METADATA] as $joined) {
-            $queries = [Query::leftJoin($joined, '$id', '$id', '=', 'peer')->toString()];
+            $queries = [Query::leftJoin($joined, 'peer', [Query::on('$id', '$id')])->toString()];
 
             $rest = $this->client->call(Client::METHOD_PATCH, $this->joinRecordUrl($databaseId, $notesId), $this->joinServerHeaders(), [
                 'data' => ['note' => 'rewritten'],
@@ -2315,13 +2315,13 @@ trait QueryJoinCombos
     {
         $databaseId = $this->setupAggregateDatabase();
         $notesId = $this->createBulkNotes($databaseId);
-        $peersId = $this->createSeedContainer($databaseId, 'bulkPeers' . ID::unique(), false, [
+        $peersId = $this->createSeedContainer($databaseId, 'bulkPeers' . Id::unique(), false, [
             Permission::read(Role::any()),
             Permission::create(Role::any()),
         ]);
 
         foreach ([$peersId, Database::METADATA] as $joined) {
-            $queries = [Query::leftJoin($joined, '$id', '$id', '=', 'peer')->toString()];
+            $queries = [Query::leftJoin($joined, 'peer', [Query::on('$id', '$id')])->toString()];
 
             $rest = $this->client->call(Client::METHOD_DELETE, $this->joinRecordUrl($databaseId, $notesId), $this->joinServerHeaders(), [
                 'queries' => $queries,
@@ -2428,11 +2428,11 @@ trait QueryJoinCombos
 
         $databaseId = $this->setupAggregateDatabase();
         $probesId = $this->createProbeContainer($databaseId);
-        $peersId = $this->createSeedContainer($databaseId, 'probePeers' . ID::unique(), false, [
+        $peersId = $this->createSeedContainer($databaseId, 'probePeers' . Id::unique(), false, [
             Permission::read(Role::any()),
             Permission::create(Role::any()),
         ]);
-        $queries = [Query::leftJoin($peersId, '$id', '$id', '=', 'peer')->toString()];
+        $queries = [Query::leftJoin($peersId, 'peer', [Query::on('$id', '$id')])->toString()];
 
         $plain = $this->graphqlRecords($databaseId, $probesId, []);
         $this->assertArrayNotHasKey('errors', $plain['body']);
@@ -2486,7 +2486,7 @@ trait QueryJoinCombos
         }
 
         $database = $this->client->call(Client::METHOD_POST, $this->joinApiBase(), $this->joinServerHeaders(), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'aggregateGraphQL',
         ]);
         $this->assertSame(201, $database['headers']['status-code']);
@@ -2502,7 +2502,7 @@ trait QueryJoinCombos
         }
 
         $databaseId = $this->setupAggregateDatabase();
-        $suffix = ID::unique();
+        $suffix = Id::unique();
         $documentLevel = [Permission::create(Role::any())];
 
         $fixture = new Fixture(
@@ -2705,14 +2705,14 @@ trait QueryJoinCombos
     private function selfJoins(string $collectionId, int $count): array
     {
         return \array_map(
-            static fn (int $index): string => Query::join($collectionId, '$id', '$id', '=', 'peer' . $index)->toString(),
+            static fn (int $index): string => Query::join($collectionId, 'peer' . $index, [Query::on('$id', '$id')])->toString(),
             \range(1, $count),
         );
     }
 
     private function createBulkNotes(string $databaseId): string
     {
-        $notesId = $this->createSeedContainer($databaseId, 'bulkNotes' . ID::unique(), false, [
+        $notesId = $this->createSeedContainer($databaseId, 'bulkNotes' . Id::unique(), false, [
             Permission::read(Role::any()),
             Permission::create(Role::any()),
             Permission::update(Role::any()),
@@ -2746,7 +2746,7 @@ trait QueryJoinCombos
 
     private function createProbeContainer(string $databaseId): string
     {
-        $probesId = $this->createSeedContainer($databaseId, 'probes' . ID::unique(), false, [
+        $probesId = $this->createSeedContainer($databaseId, 'probes' . Id::unique(), false, [
             Permission::read(Role::any()),
             Permission::create(Role::any()),
         ]);
@@ -2764,7 +2764,7 @@ trait QueryJoinCombos
     private function createSeedContainer(string $databaseId, string $name, bool $documentSecurity, array $permissions): string
     {
         $created = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $this->joinServerHeaders(), [
-            $this->joinContainerIdParam() => ID::unique(),
+            $this->joinContainerIdParam() => Id::unique(),
             'name' => $name,
             $this->joinSecurityParam() => $documentSecurity,
             'permissions' => $permissions,

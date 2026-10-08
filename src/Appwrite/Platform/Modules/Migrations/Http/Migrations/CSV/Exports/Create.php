@@ -13,7 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries\Documents;
@@ -140,7 +140,7 @@ class Create extends Action
         $validator = new Documents(
             attributes: $collection->getAttribute('attributes', []),
             indexes: $collection->getAttribute('indexes', []),
-            idAttributeType: $dbForProject->getAdapter()->getIdAttributeType(),
+            idAttributeType: $dbForProject->getAdapter()->limits()->idType,
             supportForAttributes: !$isSchemaless,
         );
 
@@ -154,7 +154,7 @@ class Create extends Action
         $migration = $claim->start(
             project: $project,
             migration: new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'source' => AppwriteSource::getName(),
                 'destination' => CSV::getName(),
                 'resources' => $resources,

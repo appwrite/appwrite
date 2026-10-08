@@ -3,10 +3,10 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 
 trait QueryJoinPermissions
 {
@@ -197,18 +197,18 @@ trait QueryJoinPermissions
         }
 
         $userId = $this->getUser()['$id'];
-        $suffix = ID::unique();
+        $suffix = Id::unique();
         $serverHeaders = $this->joinServerHeaders();
 
         $database = $this->client->call(Client::METHOD_POST, $this->joinApiBase(), $serverHeaders, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'jpGraphQL' . $suffix,
         ]);
         $this->assertSame(201, $database['headers']['status-code']);
         $databaseId = $database['body']['$id'];
 
         $customers = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
-            $this->joinContainerIdParam() => ID::unique(),
+            $this->joinContainerIdParam() => Id::unique(),
             'name' => 'jpCustomers' . $suffix,
             $this->joinSecurityParam() => true,
             'permissions' => [
@@ -220,7 +220,7 @@ trait QueryJoinPermissions
         $customersId = $customers['body']['$id'];
 
         $orders = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
-            $this->joinContainerIdParam() => ID::unique(),
+            $this->joinContainerIdParam() => Id::unique(),
             'name' => 'jpOrders' . $suffix,
             $this->joinSecurityParam() => true,
             'permissions' => [
@@ -232,7 +232,7 @@ trait QueryJoinPermissions
         $ordersId = $orders['body']['$id'];
 
         $userOrders = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
-            $this->joinContainerIdParam() => ID::unique(),
+            $this->joinContainerIdParam() => Id::unique(),
             'name' => 'jpUserOrders' . $suffix,
             $this->joinSecurityParam() => true,
             'permissions' => [
@@ -243,7 +243,7 @@ trait QueryJoinPermissions
         $userOrdersId = $userOrders['body']['$id'];
 
         $profiles = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
-            $this->joinContainerIdParam() => ID::unique(),
+            $this->joinContainerIdParam() => Id::unique(),
             'name' => 'jpProfiles' . $suffix,
             $this->joinSecurityParam() => true,
             'permissions' => [
@@ -255,7 +255,7 @@ trait QueryJoinPermissions
         $profilesId = $profiles['body']['$id'];
 
         $private = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
-            $this->joinContainerIdParam() => ID::unique(),
+            $this->joinContainerIdParam() => Id::unique(),
             'name' => 'jpPrivate' . $suffix,
             $this->joinSecurityParam() => true,
             'permissions' => [],
@@ -311,7 +311,7 @@ trait QueryJoinPermissions
         $this->waitForJoinAttribute($databaseId, $privateId, 'secret');
 
         $alice = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $customersId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => ['name' => 'Alice'],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -321,7 +321,7 @@ trait QueryJoinPermissions
         $aliceId = $alice['body']['$id'];
 
         $carol = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $customersId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => ['name' => 'Carol'],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -330,7 +330,7 @@ trait QueryJoinPermissions
         $this->assertSame(201, $carol['headers']['status-code']);
 
         $dora = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $customersId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => ['name' => 'Dora'],
             'permissions' => [],
         ]);
@@ -344,7 +344,7 @@ trait QueryJoinPermissions
                 [['amount' => 8888], Permission::read(Role::user('other-join-perm-user'))],
             ] as [$order, $permission]) {
                 $created = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $orderContainerId), $serverHeaders, [
-                    $this->joinRecordIdParam() => ID::unique(),
+                    $this->joinRecordIdParam() => Id::unique(),
                     'data' => $order,
                     'permissions' => [$permission],
                 ]);
@@ -353,7 +353,7 @@ trait QueryJoinPermissions
         }
 
         $profile = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $profilesId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => [
                 'customerId' => $aliceId,
                 'tier' => 'gold',
@@ -363,7 +363,7 @@ trait QueryJoinPermissions
         $this->assertSame(201, $profile['headers']['status-code']);
 
         $privateRow = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $privateId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => [
                 'customerId' => $aliceId,
                 'secret' => 'classified-join-data',
@@ -372,7 +372,7 @@ trait QueryJoinPermissions
         $this->assertSame(201, $privateRow['headers']['status-code']);
 
         $ownedRow = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $privateId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => [
                 'customerId' => $aliceId,
                 'secret' => 'owned-join-data',
@@ -384,7 +384,7 @@ trait QueryJoinPermissions
         $this->assertSame(201, $ownedRow['headers']['status-code']);
 
         $selfJoin = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
-            $this->joinContainerIdParam() => ID::unique(),
+            $this->joinContainerIdParam() => Id::unique(),
             'name' => 'jpSelfJoin' . $suffix,
             $this->joinSecurityParam() => true,
             'permissions' => [
@@ -395,7 +395,7 @@ trait QueryJoinPermissions
         $selfJoinId = $selfJoin['body']['$id'];
 
         $dsOffSource = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
-            $this->joinContainerIdParam() => ID::unique(),
+            $this->joinContainerIdParam() => Id::unique(),
             'name' => 'jpDsOffSource' . $suffix,
             $this->joinSecurityParam() => false,
             'permissions' => [
@@ -407,7 +407,7 @@ trait QueryJoinPermissions
         $dsOffSourceId = $dsOffSource['body']['$id'];
 
         $dsOffJoined = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
-            $this->joinContainerIdParam() => ID::unique(),
+            $this->joinContainerIdParam() => Id::unique(),
             'name' => 'jpDsOffJoined' . $suffix,
             $this->joinSecurityParam() => false,
             'permissions' => [
@@ -419,7 +419,7 @@ trait QueryJoinPermissions
         $dsOffJoinedId = $dsOffJoined['body']['$id'];
 
         $dsOffDenied = $this->client->call(Client::METHOD_POST, $this->joinContainerUrl($databaseId), $serverHeaders, [
-            $this->joinContainerIdParam() => ID::unique(),
+            $this->joinContainerIdParam() => Id::unique(),
             'name' => 'jpDsOffDenied' . $suffix,
             $this->joinSecurityParam() => false,
             'permissions' => [],
@@ -478,7 +478,7 @@ trait QueryJoinPermissions
         $this->waitForJoinAttribute($databaseId, $dsOffDeniedId, 'secret');
 
         $openSelf = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $selfJoinId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => [
                 'payload' => 'open-payload',
                 'code' => 'open-code',
@@ -491,7 +491,7 @@ trait QueryJoinPermissions
         $this->assertSame(201, $openSelf['headers']['status-code']);
 
         $secretSelf = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $selfJoinId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => [
                 'payload' => 'classified-join-data',
                 'code' => 'classified-join-data',
@@ -504,7 +504,7 @@ trait QueryJoinPermissions
         $this->assertSame(201, $secretSelf['headers']['status-code']);
 
         $dsOffRow = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $dsOffSourceId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => ['name' => 'Alice'],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -514,7 +514,7 @@ trait QueryJoinPermissions
         $dsOffRowId = $dsOffRow['body']['$id'];
 
         $dsOffVisible = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $dsOffJoinedId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => [
                 'customerId' => $dsOffRowId,
                 'secret' => 'classified-join-data',
@@ -526,7 +526,7 @@ trait QueryJoinPermissions
         $this->assertSame(201, $dsOffVisible['headers']['status-code']);
 
         $dsOffHidden = $this->client->call(Client::METHOD_POST, $this->joinRecordUrl($databaseId, $dsOffDeniedId), $serverHeaders, [
-            $this->joinRecordIdParam() => ID::unique(),
+            $this->joinRecordIdParam() => Id::unique(),
             'data' => [
                 'customerId' => $dsOffRowId,
                 'secret' => 'classified-join-data',
@@ -602,7 +602,7 @@ trait QueryJoinPermissions
             Query::select(['name'])->toString(),
         ]));
         $joined = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
-            Query::leftJoin($data['profilesId'], '$id', 'customerId', '=', 'prof')->toString(),
+            Query::leftJoin($data['profilesId'], 'prof', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'prof.tier'])->toString(),
         ]));
 
@@ -628,7 +628,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
-            Query::join($data['privateId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::join($data['privateId'], 'rev', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'rev.secret'])->toString(),
         ]));
         $direct = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['privateId'], [
@@ -659,7 +659,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinGetQuery(), $this->joinGetVariables($data['databaseId'], $data['customersId'], $data['aliceId'], [
-            Query::join($data['privateId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::join($data['privateId'], 'rev', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'rev.secret'])->toString(),
         ]));
 
@@ -686,7 +686,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
-            Query::fullOuterJoin($data['userOrdersId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::fullOuterJoin($data['userOrdersId'], 'rev', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'rev.amount'])->toString(),
         ]));
 
@@ -724,7 +724,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
-            Query::leftJoin($data['userOrdersId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::leftJoin($data['userOrdersId'], 'rev', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'rev.amount'])->toString(),
         ]));
 
@@ -762,7 +762,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinGetQuery(), $this->joinGetVariables($data['databaseId'], $data['customersId'], $data['aliceId'], [
-            Query::leftJoin($data['userOrdersId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::leftJoin($data['userOrdersId'], 'rev', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'rev.amount'])->toString(),
         ]));
 
@@ -792,7 +792,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoinWithKey($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
-            Query::join($data['privateId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::join($data['privateId'], 'rev', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'rev.secret'])->toString(),
         ]), $this->getProject()['apiKey']);
 
@@ -819,7 +819,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
-            Query::rightJoin($data['userOrdersId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::rightJoin($data['userOrdersId'], 'rev', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'rev.amount'])->toString(),
         ]));
 
@@ -857,7 +857,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinGetQuery(), $this->joinGetVariables($data['databaseId'], $data['customersId'], $data['aliceId'], [
-            Query::rightJoin($data['userOrdersId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::rightJoin($data['userOrdersId'], 'rev', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'rev.amount'])->toString(),
         ]));
 
@@ -928,7 +928,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['dsOffSourceId'], [
-            Query::leftJoin($data['dsOffJoinedId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::leftJoin($data['dsOffJoinedId'], 'rev', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'rev.secret'])->toString(),
         ]));
 
@@ -956,7 +956,7 @@ trait QueryJoinPermissions
 
         $data = $this->setupJoinPermissionsFixture();
         $queries = fn (string $joinedId): array => [
-            Query::join($joinedId, '$id', 'customerId', '=', 'rev')->toString(),
+            Query::join($joinedId, 'rev', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'rev.secret'])->toString(),
         ];
 
@@ -989,7 +989,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['selfJoinId'], [
-            Query::join($data['selfJoinId'], 'tag', 'tag', '=', 'peer')->toString(),
+            Query::join($data['selfJoinId'], 'peer', [Query::on('tag', 'tag')])->toString(),
             Query::select(['payload', 'code', 'peer.payload', 'peer.code'])->toString(),
         ]));
 
@@ -1021,7 +1021,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $result = $this->graphqlJoin($this->joinGetQuery(), $this->joinGetVariables($data['databaseId'], $data['customersId'], $data['aliceId'], [
-            Query::fullOuterJoin($data['userOrdersId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::fullOuterJoin($data['userOrdersId'], 'rev', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'rev.amount'])->toString(),
         ]));
 
@@ -1056,7 +1056,7 @@ trait QueryJoinPermissions
         $data = $this->setupJoinPermissionsFixture();
 
         $joined = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], [
-            Query::join($data['ordersId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::join($data['ordersId'], 'rev', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'rev.amount'])->toString(),
         ]));
         $direct = $this->graphqlJoin($this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['ordersId'], [
@@ -1082,7 +1082,7 @@ trait QueryJoinPermissions
 
         $data = $this->setupJoinPermissionsFixture();
         $variables = $this->joinListVariables($data['databaseId'], $data['customersId'], [
-            Query::join($data['privateId'], '$id', 'customerId', '=', 'rev')->toString(),
+            Query::join($data['privateId'], 'rev', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'rev.secret'])->toString(),
         ]);
 

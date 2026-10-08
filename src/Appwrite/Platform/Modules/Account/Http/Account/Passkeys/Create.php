@@ -16,10 +16,10 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
@@ -89,7 +89,7 @@ class Create extends Action
         // Shown by the authenticator when picking a passkey; passkey-only accounts have no email or phone
         $userName = $user->getAttribute('email') ?: $user->getAttribute('phone') ?: $user->getAttribute('name') ?: $user->getId();
 
-        $passkeyId = $passkeyId === 'unique()' ? ID::unique() : $passkeyId;
+        $passkeyId = $passkeyId === 'unique()' ? Id::unique() : $passkeyId;
 
         // A registration restarted with the same ID replaces the pending one instead of conflicting with it.
         // The row lock keeps a verification that lands first from being deleted.
@@ -120,7 +120,7 @@ class Create extends Action
         $challenge = $ceremony->register($userName, $user->getAttribute('name') ?: $userName, $records);
 
         // Verification consumes the challenge the pending passkey points to, so a replaced registration's challenge is never used
-        $challengeId = ID::unique();
+        $challengeId = Id::unique();
 
         try {
             $passkey = $dbForProject->createDocument('authenticators', new Document([

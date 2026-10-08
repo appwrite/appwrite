@@ -7,9 +7,10 @@ use Utopia\Pools\Pool as UtopiaPool;
 
 class Pool extends DatabasePool
 {
-    public function getHostname(): string
+    #[\Override]
+    public function hostname(): string
     {
-        return $this->hostname !== '' ? $this->hostname : parent::getHostname();
+        return $this->hostname !== '' ? $this->hostname : parent::hostname();
     }
 
     /**

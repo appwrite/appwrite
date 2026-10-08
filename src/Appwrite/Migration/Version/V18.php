@@ -7,8 +7,8 @@ use Utopia\Console\Console;
 use Utopia\Database\CollectionUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Query\Schema\ColumnType;
 
 class V18 extends Migration

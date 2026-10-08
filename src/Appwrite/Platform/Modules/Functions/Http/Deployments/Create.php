@@ -14,7 +14,7 @@ use Appwrite\Utopia\Request\Validator\File;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
@@ -75,7 +75,7 @@ class Create extends Action
                 type: MethodType::UPLOAD,
                 packaging: true,
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Function ID.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Function ID.', false, ['dbForProject'])
             ->param('entrypoint', null, new Nullable(new Text(1028)), 'Entrypoint File.', true)
             ->param('commands', null, new Nullable(new Text(8192, 0)), 'Build Commands.', true)
             ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
@@ -165,7 +165,7 @@ class Create extends Action
         }
 
         $contentRange = $request->getHeaderLine('content-range');
-        $deploymentId = ID::unique();
+        $deploymentId = Id::unique();
         $chunk = 1;
         $chunks = 1;
 

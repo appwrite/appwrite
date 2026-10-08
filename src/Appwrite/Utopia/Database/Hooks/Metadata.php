@@ -191,7 +191,7 @@ class Metadata implements Decorator
             return $left->getPool() === $right->getPool();
         }
 
-        return $left->getHostname() === $right->getHostname();
+        return $left->hostname() === $right->hostname();
     }
 
     /** @param array<int, true> $path */

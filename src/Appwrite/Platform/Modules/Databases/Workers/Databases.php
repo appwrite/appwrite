@@ -207,7 +207,7 @@ class Databases extends Action
                 default:
                     $dbForDatabases->createAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), Attribute::fromArray([
                         'key' => $key,
-                        'type' => Attribute::normalizeType($type),
+                        'type' => Attribute::typeFromStored($type),
                         'size' => $size,
                         'required' => $required,
                         'default' => $default,
@@ -631,7 +631,7 @@ class Databases extends Action
             $count = $database->deleteDocuments(
                 $collectionId,
                 $queries,
-                Database::DELETE_BATCH_SIZE,
+                Database::BATCH_SIZE,
                 $callback
             );
         } catch (\Throwable $th) {

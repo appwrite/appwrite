@@ -90,7 +90,7 @@ $container->set('dbForPlatform', function (DatabaseFactory $databaseFactory) {
             $collections = Config::getParam('collections', [])['console'];
             $last = \array_key_last($collections);
 
-            if (! ($dbForPlatform->exists($dbForPlatform->getDatabase(), $last))) { /** TODO cache ready variable using registry */
+            if (! ($dbForPlatform->collectionExists($last, $dbForPlatform->getDatabase()))) { /** TODO cache ready variable using registry */
                 throw new Exception('Tables not ready yet.');
             }
 

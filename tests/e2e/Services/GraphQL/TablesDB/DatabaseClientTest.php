@@ -11,10 +11,10 @@ use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\GraphQL\Base;
 use Tests\E2E\Services\GraphQL\QueryJoinCombos;
 use Tests\E2E\Services\GraphQL\QueryJoinPermissions;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 
 final class DatabaseClientTest extends Scope
 {
@@ -68,7 +68,7 @@ final class DatabaseClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Actors',
             ]
         ];
@@ -104,7 +104,7 @@ final class DatabaseClientTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $database['_id'],
-                'tableId' => ID::unique(),
+                'tableId' => Id::unique(),
                 'name' => 'Actors',
                 'rowSecurity' => false,
                 'permissions' => [
@@ -233,7 +233,7 @@ final class DatabaseClientTest extends Scope
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'tableId' => $data['table']['_id'],
-                'rowId' => ID::unique(),
+                'rowId' => Id::unique(),
                 'data' => [
                     'name' => 'John Doe',
                     'age' => 35,
@@ -287,7 +287,7 @@ final class DatabaseClientTest extends Scope
         $payload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Bulk',
             ],
         ];
@@ -301,7 +301,7 @@ final class DatabaseClientTest extends Scope
         $payload['query'] = $query;
         $payload['variables'] = [
             'databaseId' => $databaseId,
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Operations',
             'rowSecurity' => false,
             'permissions' => [
@@ -342,7 +342,7 @@ final class DatabaseClientTest extends Scope
         $query = $this->getQuery(self::CREATE_ROWS);
         $rows = [];
         for ($i = 1; $i <= 10; $i++) {
-            $rows[] = ['$id' => ID::unique(), 'name' => 'Row #' . $i];
+            $rows[] = ['$id' => Id::unique(), 'name' => 'Row #' . $i];
         }
 
         $payload['query'] = $query;
@@ -411,7 +411,7 @@ final class DatabaseClientTest extends Scope
                 'tableId' => $data['tableId'],
                 'rows' => [
                     [
-                        '$id' => ID::unique(),
+                        '$id' => Id::unique(),
                         'name' => 'Row #1000',
                     ],
                     [
@@ -428,7 +428,7 @@ final class DatabaseClientTest extends Scope
         $this->assertCount(2, $rows);
 
         // Step 3: Upsert row with new permissions using `tablesUpsertRow`
-        $upsertRowId = ID::unique();
+        $upsertRowId = Id::unique();
         $query = $this->getQuery(self::UPSERT_ROW);
         $payload = [
             'query' => $query,
@@ -641,7 +641,7 @@ final class DatabaseClientTest extends Scope
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'tableId' => $data['table']['_id'],
-                'rowId' => ID::unique(),
+                'rowId' => Id::unique(),
                 'data' => [
                     'name' => 'Row To Delete',
                     'age' => 25,
@@ -779,7 +779,7 @@ final class DatabaseClientTest extends Scope
                 'tableId' => $data['tableId'],
                 'rows' => [
                     [
-                        '$id' => ID::unique(),
+                        '$id' => Id::unique(),
                         'name' => 'Row #1000',
                     ],
                     [
@@ -821,7 +821,7 @@ final class DatabaseClientTest extends Scope
         $this->assertGreaterThanOrEqual(11, $fetched['total']);
 
         // Step 3: Upsert row with new permissions using `tablesUpsertRow`
-        $upsertRowId = ID::unique();
+        $upsertRowId = Id::unique();
         $query = $this->getQuery(self::UPSERT_ROW);
         $payload = [
             'query' => $query,

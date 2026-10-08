@@ -22,9 +22,9 @@ use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Pools\Adapter\Stack;
@@ -76,12 +76,14 @@ final class DatabasesTest extends TestCase
         // Reports the host it dialled, as a pooled MariaDB, MySQL, PostgreSQL or
         // MongoDB connection does; plain SQLite keys its cache by no host at all.
         $adapter = new class (new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION])) extends SQLite {
+            #[\Override]
             public function supports(Capability $feature): bool
             {
                 return $feature === Capability::Hostname || parent::supports($feature);
             }
 
-            public function getHostname(): string
+            #[\Override]
+            public function hostname(): string
             {
                 return 'mariadb';
             }
@@ -237,7 +239,7 @@ final class DatabasesTest extends TestCase
         ));
 
         $this->project = $platform->createDocument('projects', new Document([
-            '$id' => ID::custom('project-1'),
+            '$id' => Id::custom('project-1'),
             '$permissions' => [],
             'database' => 'mysql://' . self::POOL . ($sharedTables ? '?namespace=' . self::NAMESPACE : ''),
         ]));
@@ -285,7 +287,7 @@ final class DatabasesTest extends TestCase
 
     private function createUser(): Document
     {
-        $userId = ID::unique();
+        $userId = Id::unique();
 
         return $this->factory->project($this->project)->createDocument('users', new Document([
             '$id' => $userId,
@@ -325,7 +327,7 @@ final class DatabasesTest extends TestCase
 
         $database = $this->factory->project($this->project);
         $session = $database->createDocument('sessions', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             '$permissions' => [
                 Permission::read(Role::user($user->getId())),
                 Permission::update(Role::user($user->getId())),

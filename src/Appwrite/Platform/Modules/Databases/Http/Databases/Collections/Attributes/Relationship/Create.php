@@ -67,9 +67,9 @@ class Create extends Action
                     replaceWith: 'tablesDB.createRelationshipColumn',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
-            ->param('relatedCollectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Related Collection ID.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('relatedCollectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Related Collection ID.', false, ['dbForProject'])
             ->param('type', '', new WhiteList([
                 RelationshipType::OneToOne->value,
                 RelationshipType::ManyToOne->value,
@@ -77,8 +77,8 @@ class Create extends Action
                 RelationshipType::OneToMany->value
             ], true), 'Relationship type. Possible values are: oneToOne, oneToMany, manyToOne, manyToMany.', enum: new Enum(name: 'RelationshipType'))
             ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
-            ->param('key', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Attribute Key.', true, ['dbForProject'])
-            ->param('twoWayKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Two Way Attribute Key.', true, ['dbForProject'])
+            ->param('key', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getMaxUidLength())), 'Attribute Key.', true, ['dbForProject'])
+            ->param('twoWayKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getMaxUidLength())), 'Two Way Attribute Key.', true, ['dbForProject'])
             ->param('onDelete', RelationshipDeleteAction::Restrict->value, new WhiteList([
                 RelationshipDeleteAction::Cascade->value,
                 RelationshipDeleteAction::Restrict->value,

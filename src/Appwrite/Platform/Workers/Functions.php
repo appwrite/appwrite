@@ -22,10 +22,10 @@ use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -457,7 +457,7 @@ class Functions extends Action
         ?string $jwt = null,
         ?string $event = null,
     ): void {
-        $executionId = ID::unique();
+        $executionId = Id::unique();
         $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
@@ -614,7 +614,7 @@ class Functions extends Action
 
         /** Create or update execution to processing status */
         if (empty($executionId)) {
-            $executionId = ID::unique();
+            $executionId = Id::unique();
         }
         $headers['x-appwrite-execution-id'] = $executionId;
 

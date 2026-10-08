@@ -52,7 +52,7 @@ use Appwrite\Utopia\Response\Model\Webhook;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Validator\Key;
-use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Queries\Base;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Spatial;
@@ -1356,7 +1356,7 @@ final class FormatTest extends TestCase
                 auth: [AuthType::ADMIN],
                 responses: [],
             ))
-            ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Queries.', true)
+            ->param('queries', [], new Base([new Limit(), new Offset()]), 'Queries.', true)
             ->param('repositoryQueries', [], new VcsRepositories(), 'Repository queries.', true)
             ->param('deepQueries', [], $deepSubclass, 'Deeply nested queries.', true);
 

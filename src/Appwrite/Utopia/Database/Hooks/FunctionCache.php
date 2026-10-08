@@ -5,6 +5,7 @@ namespace Appwrite\Utopia\Database\Hooks;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Event;
+use Utopia\Database\Event\Domain;
 use Utopia\Database\Hook\Lifecycle;
 
 /**
@@ -20,7 +21,7 @@ class FunctionCache implements Lifecycle
     ) {
     }
 
-    public function handle(Event $event, mixed $data): void
+    public function handle(Domain $event): void
     {
         if (!in_array($event, [Event::DocumentCreate, Event::DocumentUpdate, Event::DocumentDelete])) {
             return;
@@ -34,7 +35,7 @@ class FunctionCache implements Lifecycle
             return;
         }
 
-        $hostname = $this->database->getAdapter()->getHostname();
+        $hostname = $this->database->getAdapter()->hostname();
         $cacheKey = \sprintf(
             '%s-cache-%s:%s:%s:project:%s:functions:events',
             $this->database->getCacheName(),
