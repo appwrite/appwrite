@@ -6,6 +6,7 @@ use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
 use Utopia\Console\Console;
+use Utopia\Database\Attribute;
 use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -76,8 +77,8 @@ class V25 extends Migration
                         }
 
                         $attributes = \array_map(
-                            fn (Document $attribute) => $attribute->getId(),
-                            $this->dbForProject->getCollection($id)->getAttribute('attributes', [])
+                            fn (Attribute $attribute): string => $attribute->key,
+                            $this->dbForProject->findCollection($id)?->attributes() ?? []
                         );
                         if (\in_array('devKeys', $attributes, true)) {
                             $this->dbForProject->deleteAttribute($id, 'devKeys');
