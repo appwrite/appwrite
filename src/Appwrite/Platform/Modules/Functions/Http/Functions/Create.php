@@ -453,7 +453,7 @@ class Create extends Base
                         ->setProject($project)
                         ->setEvent('rules.[ruleId].create')
                         ->setParam('ruleId', $rule->getId())
-                        ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())));
+                        ->setPayload($rule->only(\array_keys($ruleModel->getRules())));
 
                 /** Trigger Webhook */
                 $queueForWebhooks

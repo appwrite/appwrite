@@ -813,7 +813,7 @@ class Functions extends Action
         try {
             $executionModel = new Execution();
             $realtimeExecution = $executionModel->filter(new Document($execution->getArrayCopy()));
-            $realtimeExecution = $realtimeExecution->getArrayCopy(\array_keys($executionModel->getRules()));
+            $realtimeExecution = $realtimeExecution->only(\array_keys($executionModel->getRules()));
 
             $queueForEvents
                 ->setProject($project)
