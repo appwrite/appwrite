@@ -252,6 +252,29 @@ class OpenAPI3 extends Format
             'components' => [
                 'schemas' => [],
                 'securitySchemes' => $schemes,
+                'parameters' => [
+                    'ContentRange' => [
+                        'name' => 'Content-Range',
+                        'in' => 'header',
+                        'required' => false,
+                        'description' => 'Byte range of this chunk, as `bytes {start}-{end}/{total}`. Sent on every request when a file is uploaded in chunks.',
+                        'schema' => [
+                            'type' => 'string',
+                            'pattern' => '^bytes \d+-\d+/\d+$',
+                            'example' => 'bytes 0-5242879/12582912',
+                        ],
+                    ],
+                    'UploadId' => [
+                        'name' => 'X-Appwrite-ID',
+                        'in' => 'header',
+                        'required' => false,
+                        'description' => 'ID returned by the first chunk. Sent on every later chunk of the same upload.',
+                        'schema' => [
+                            'type' => 'string',
+                            'example' => '<UPLOAD_ID>',
+                        ],
+                    ],
+                ],
             ],
             'externalDocs' => [
                 'description' => $this->getParam('docs.description'),
@@ -1127,6 +1150,11 @@ class OpenAPI3 extends Format
                             $body['content'][$consumes[0]]['schema']['properties'][$name]['nullable'] = true;
                         }
                     }
+                }
+
+                if ($sdk->isChunked()) {
+                    $methodTemp['parameters'][] = ['$ref' => '#/components/parameters/ContentRange'];
+                    $methodTemp['parameters'][] = ['$ref' => '#/components/parameters/UploadId'];
                 }
 
                 if (!empty($bodyRequired)) {
