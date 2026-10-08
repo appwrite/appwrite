@@ -3,8 +3,8 @@
 namespace Utopia\VCS\Adapter\Git;
 
 use Exception;
-use Utopia\Command;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Gogs extends Gitea

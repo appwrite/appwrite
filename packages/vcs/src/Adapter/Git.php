@@ -7,7 +7,7 @@ namespace Utopia\VCS\Adapter;
 use Exception;
 use InvalidArgumentException;
 use Utopia\Cache\Cache;
-use Utopia\Command;
+use Utopia\Console\Command;
 use Utopia\VCS\Adapter;
 
 abstract class Git extends Adapter

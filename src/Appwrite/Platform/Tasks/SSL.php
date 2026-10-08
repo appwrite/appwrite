@@ -6,7 +6,7 @@ use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Event\Publisher\Certificate;
 use Utopia\Bus\Bus;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;

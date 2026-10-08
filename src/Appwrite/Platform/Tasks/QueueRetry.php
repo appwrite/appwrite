@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Platform\Action;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
