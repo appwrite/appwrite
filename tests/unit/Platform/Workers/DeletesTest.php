@@ -28,6 +28,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Permission;
+use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Queue\Message;
@@ -164,6 +165,34 @@ final class DeletesTest extends TestCase
         $terminal = $database->getDocument('migrations', $migration->getId());
         $this->assertSame('failed', $terminal->getAttribute('status'));
         $this->assertSame('finished', $terminal->getAttribute('stage'));
+    }
+
+    public function testListByGroupVisitsEveryMatchPastOnePage(): void
+    {
+        $database = $this->createDatabase();
+        $targets = \array_map(
+            static fn (int $index): Document => new Document(['$id' => 'target-' . $index, 'expired' => false]),
+            \range(1, 1002),
+        );
+        $database->createDocuments('targets', $targets);
+
+        $visited = [];
+        $lister = new class () extends Deletes {
+            /**
+             * @param array<Query> $queries
+             */
+            public function list(string $collection, array $queries, Database $database, callable $callback): void
+            {
+                $this->listByGroup($collection, $queries, $database, $callback);
+            }
+        };
+
+        $lister->list('targets', [Query::orderAsc()], $database, function (Document $target) use (&$visited): void {
+            $visited[] = $target->getId();
+        });
+
+        $this->assertCount(1002, $visited);
+        $this->assertSame($visited, \array_values(\array_unique($visited)));
     }
 
     private function createDatabase(bool $ownership = true): Database
