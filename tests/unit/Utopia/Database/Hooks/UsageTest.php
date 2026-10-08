@@ -10,6 +10,13 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 use Utopia\Database\Event;
+use Utopia\Database\Event\Document\BatchCreated;
+use Utopia\Database\Event\Document\BatchDeleted;
+use Utopia\Database\Event\Document\BatchUpserted;
+use Utopia\Database\Event\Document\Created;
+use Utopia\Database\Event\Document\Deleted;
+use Utopia\Database\Event\Document\Updated;
+use Utopia\Database\Event\Domain;
 
 final class UsageTest extends TestCase
 {
@@ -24,7 +31,7 @@ final class UsageTest extends TestCase
     {
         $context = new Context();
 
-        (new Usage($context))->handle(Event::DocumentCreate, $this->deployment($resourceType, '42'));
+        (new Usage($context))->handle(new Created('deployments', $this->deployment($resourceType, '42')));
 
         $this->assertSame([
             [$resourceType . '.deployments', $owner, '42'],
@@ -38,7 +45,7 @@ final class UsageTest extends TestCase
     {
         $context = new Context();
 
-        (new Usage($context))->handle(Event::DocumentDelete, $this->deployment($resourceType, '42'));
+        (new Usage($context))->handle(new Deleted('deployments', $this->deployment($resourceType, '42')));
 
         $this->assertSame([
             [$resourceType . '.deployments', $owner, '42'],
@@ -51,7 +58,7 @@ final class UsageTest extends TestCase
     {
         $context = new Context();
 
-        (new Usage($context))->handle(Event::DocumentCreate, $this->deployment('sites', '9'));
+        (new Usage($context))->handle(new Created('deployments', $this->deployment('sites', '9')));
         $context->fillMissingResource('project', 'project1', '1');
 
         $this->assertSame([
@@ -64,7 +71,7 @@ final class UsageTest extends TestCase
     {
         $context = new Context();
 
-        (new Usage($context))->handle(Event::DocumentCreate, $this->deployment('functions', '42'));
+        (new Usage($context))->handle(new Created('deployments', $this->deployment('functions', '42')));
         $context->addMetric(METRIC_NETWORK_REQUESTS, 1);
         $context->fillMissingResource('project', 'project1', '1');
 
@@ -77,26 +84,22 @@ final class UsageTest extends TestCase
 
     public static function documentWrites(): \Iterator
     {
-        yield 'create' => [Event::DocumentCreate, []];
-        yield 'delete' => [Event::DocumentDelete, []];
-        yield 'bulk create' => [Event::DocumentsCreate, ['modified' => 3]];
-        yield 'bulk delete' => [Event::DocumentsDelete, ['modified' => 3]];
-        yield 'bulk upsert' => [Event::DocumentsUpsert, ['created' => 2, 'updated' => 1]];
+        $collection = 'database_3_collection_8';
+        $document = new Document(['$id' => 'document1', '$collection' => $collection]);
+
+        yield 'create' => [new Created($collection, $document)];
+        yield 'delete' => [new Deleted($collection, $document)];
+        yield 'bulk create' => [new BatchCreated($collection, 3)];
+        yield 'bulk delete' => [new BatchDeleted($collection, 3)];
+        yield 'bulk upsert' => [new BatchUpserted($collection, 2, 1)];
     }
 
-    /**
-     * @param array<string, int> $attributes
-     */
     #[DataProvider('documentWrites')]
-    public function testDocumentWritesEmitNoDocumentMetrics(Event $event, array $attributes): void
+    public function testDocumentWritesEmitNoDocumentMetrics(Domain $event): void
     {
         $context = new Context();
 
-        (new Usage($context))->handle($event, new Document([
-            '$id' => 'document1',
-            '$collection' => 'database_3_collection_8',
-            ...$attributes,
-        ]));
+        (new Usage($context))->handle($event);
 
         $this->assertSame([], $context->getMetrics());
     }
@@ -124,8 +127,8 @@ final class UsageTest extends TestCase
             'sizeOriginal' => 512,
         ]);
 
-        $hook->handle(Event::DocumentCreate, $document);
-        $hook->handle(Event::DocumentDelete, $document);
+        $hook->handle(new Created($collection, $document));
+        $hook->handle(new Deleted($collection, $document));
 
         $this->assertSame([], $context->getMetrics());
     }
@@ -134,12 +137,12 @@ final class UsageTest extends TestCase
     {
         $context = new Context();
 
-        (new Usage($context))->handle(Event::DocumentCreate, new Document([
+        (new Usage($context))->handle(new Created('deployments', new Document([
             '$id' => 'deployment1',
             '$collection' => 'deployments',
             'resourceInternalId' => '42',
             'resourceType' => 'functions',
-        ]));
+        ])));
 
         $this->assertSame(
             ['functions.deployments', 'functions.deployments.storage'],
@@ -162,11 +165,11 @@ final class UsageTest extends TestCase
     {
         $context = new Context();
 
-        (new Usage($context))->handle(Event::DocumentDelete, new Document([
+        (new Usage($context))->handle(new Deleted($collection, new Document([
             '$id' => 'resource1',
             '$collection' => $collection,
             'prefs' => ['theme' => 'dark'],
-        ]));
+        ])));
 
         $this->assertSame([], $context->getReduce());
     }
@@ -177,15 +180,46 @@ final class UsageTest extends TestCase
         $hook = new Usage($context);
         $session = new Document(['$id' => 'session1', '$collection' => 'sessions']);
 
-        $hook->handle(Event::DocumentCreate, $session);
-        $hook->handle(Event::DocumentUpdate, $session);
-        $hook->handle(Event::DocumentDelete, $session);
-        $hook->handle(Event::DocumentsDelete, new Document(['$collection' => 'sessions', 'modified' => 3]));
+        $hook->handle(new Created('sessions', $session));
+        $hook->handle(new Updated('sessions', $session));
+        $hook->handle(new Deleted('sessions', $session));
+        $hook->handle(new BatchDeleted('sessions', 3));
+        $hook->handle(new BatchCreated('sessions', 4));
+        $hook->handle(new BatchUpserted('sessions', 2, 5));
 
         $this->assertSame(
-            [['sessions', 1], ['sessions', -1], ['sessions', -3]],
+            [['sessions', 1], ['sessions', -1], ['sessions', -3], ['sessions', 4], ['sessions', 2]],
             \array_map(static fn (array $metric): array => [$metric['key'], $metric['value']], $context->getMetrics()),
         );
+    }
+
+    public function testABulkDeploymentWriteEmitsNoMetrics(): void
+    {
+        $context = new Context();
+        $hook = new Usage($context);
+
+        $hook->handle(new BatchCreated('deployments', 2));
+        $hook->handle(new BatchDeleted('deployments', 2));
+
+        $this->assertSame([], $context->getMetrics());
+    }
+
+    public static function handledEvents(): \Iterator
+    {
+        yield 'create' => [Event::DocumentCreate, true];
+        yield 'delete' => [Event::DocumentDelete, true];
+        yield 'bulk create' => [Event::DocumentsCreate, true];
+        yield 'bulk delete' => [Event::DocumentsDelete, true];
+        yield 'bulk upsert' => [Event::DocumentsUpsert, true];
+        yield 'update' => [Event::DocumentUpdate, false];
+        yield 'read' => [Event::DocumentRead, false];
+        yield 'find' => [Event::DocumentFind, false];
+    }
+
+    #[DataProvider('handledEvents')]
+    public function testItSelectsOnlyTheWritesItCounts(Event $event, bool $handled): void
+    {
+        $this->assertSame($handled, (new Usage(new Context()))->handles($event));
     }
 
     private function deployment(string $resourceType, string $resourceInternalId): Document
