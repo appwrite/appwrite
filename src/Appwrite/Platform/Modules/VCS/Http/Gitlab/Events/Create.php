@@ -94,37 +94,19 @@ class Create extends Action
         $response->json(['events' => $parsedPayloads]);
     }
 
-    private function resolveGitlabInstallation(Document $repository, Database $dbForPlatform, Authorization $authorization): ?Document
-    {
-        $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
-
-        if ($installation->isEmpty() || $installation->getAttribute('provider', 'github') !== 'gitlab') {
-            return null;
-        }
-
-        return $installation;
-    }
-
     /**
      * A refresh/adapter failure is pushed onto $errors instead of swallowed, so the
      * caller can surface a non-2xx response and GitLab logs it as a failed delivery.
      */
-    private function resolveAdapterForRepository(Document $repository, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform, Authorization $authorization, array &$errors): ?Git
+    private function resolveAdapterForRepository(Document $repository, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform, array &$errors): ?Git
     {
-        $installation = $this->resolveGitlabInstallation($repository, $dbForPlatform, $authorization);
-
-        if ($installation === null) {
-            return null;
-        }
-
         try {
-            $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory);
-
-            return $vcsFactory->fromInstallation($installation);
+            return $installationTokens->adapterForRepository($repository, 'gitlab', $dbForPlatform, $vcsFactory);
         } catch (\Throwable $error) {
-            $message = "Failed to resolve GitLab adapter for installation '{$installation->getId()}': " . $error->getMessage();
+            $installationId = $repository->getAttribute('installationId', '');
+            $message = "Failed to resolve GitLab adapter for installation '{$installationId}': " . $error->getMessage();
             Console::warning($message);
-            Span::add("vcs.gitlab.event.installation.{$installation->getId()}.error", $message);
+            Span::add("vcs.gitlab.event.installation.{$installationId}.error", $message);
             $errors[] = $message;
             return null;
         }
@@ -172,7 +154,7 @@ class Create extends Action
 
         $errors = [];
         foreach ($repositories as $repository) {
-            $adapter = $this->resolveAdapterForRepository($repository, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $errors);
+            $adapter = $this->resolveAdapterForRepository($repository, $vcsFactory, $installationTokens, $dbForPlatform, $errors);
 
             if ($adapter === null) {
                 continue;
@@ -231,7 +213,7 @@ class Create extends Action
 
             $errors = [];
             foreach ($repositories as $repository) {
-                $adapter = $this->resolveAdapterForRepository($repository, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $errors);
+                $adapter = $this->resolveAdapterForRepository($repository, $vcsFactory, $installationTokens, $dbForPlatform, $errors);
 
                 if ($adapter === null) {
                     continue;
