@@ -35,13 +35,19 @@ final class TransactionCheckoutTest extends TestCase
     public function testResolverDoesNotCheckoutCatalogDuringPinnedTransaction(): void
     {
         $shared = $this->sharedPool();
+        $checkoutsDuringTransaction = 0;
 
         $publicId = $shared['tenant']->withTransaction(
-            fn (): string => (Metadata::resolver($shared['tenant'], $shared['catalog']))($shared['internalId']),
+            function () use ($shared, &$checkoutsDuringTransaction): string {
+                $publicId = (Metadata::resolver($shared['tenant'], $shared['catalog']))($shared['internalId']);
+                $checkoutsDuringTransaction = $shared['checkouts'];
+
+                return $publicId;
+            },
         );
 
         $this->assertSame('movies', $publicId);
-        $this->assertSame(1, $shared['checkouts']);
+        $this->assertSame(1, $checkoutsDuringTransaction, 'resolving a public ID inside the transaction reuses its pinned connection');
     }
 
     public function testResolverReadsCatalogOnDedicatedHostDuringPinnedTransaction(): void

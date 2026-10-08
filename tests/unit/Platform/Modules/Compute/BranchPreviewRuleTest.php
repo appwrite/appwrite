@@ -19,7 +19,7 @@ final class BranchPreviewRuleTest extends TestCase
             ->method('createDocument')
             ->with('rules', $this->callback(fn (Document $rule) => \str_starts_with($rule->getAttribute('domain'), 'branch-feature-login-')))
             ->willReturnArgument(1);
-        $dbForPlatform->expects($this->once())->method('foreach');
+        $dbForPlatform->expects($this->once())->method('cursor');
 
         $this->activate($dbForPlatform, 'appwrite.network');
     }
@@ -31,7 +31,7 @@ final class BranchPreviewRuleTest extends TestCase
         $dbForPlatform->expects($this->never())->method('updateDocument');
 
         // Manual rules pinned to the branch still follow the new deployment.
-        $dbForPlatform->expects($this->once())->method('foreach')->with('rules');
+        $dbForPlatform->expects($this->once())->method('cursor')->with('rules');
 
         // Deliberately not wrapped: the deployment must go ahead, so a throw
         // here is the defect this test covers.

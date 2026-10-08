@@ -19,6 +19,7 @@ use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Query\Method;
 
 final class CursorLookupTest extends TestCase
 {
@@ -42,7 +43,7 @@ final class CursorLookupTest extends TestCase
         $this->customer($store, 'bob', readable: false);
         $this->customer($store, 'carol', readable: true);
 
-        $ids = $this->listedIds($store, [Query::orderAsc('name')], Query::cursorAfter('bob'), join: false);
+        $ids = $this->listedIds($store, [Query::orderAsc('name')], self::cursorAfterId('bob'), join: false);
 
         $this->assertSame(['carol'], $ids, 'a caller who cannot read the cursor document still pages past it');
     }
@@ -60,7 +61,7 @@ final class CursorLookupTest extends TestCase
         $ids = $this->listedIds($store, [
             Query::select(['$id'])->toString(),
             Query::orderAsc('name'),
-        ], Query::cursorAfter('bob'));
+        ], self::cursorAfterId('bob'));
 
         $this->assertSame(['carol'], $ids, 'the select shapes the listed rows, never the cursor document the page starts after');
     }
@@ -72,7 +73,7 @@ final class CursorLookupTest extends TestCase
         $this->order($store, 'a-hidden', 'alice', 35, readable: false);
         $this->order($store, 'b-visible', 'alice', 10, readable: true);
 
-        $cursor = $this->page($store, [Query::orderAsc('ord.amount')], Query::cursorAfter('alice'));
+        $cursor = $this->page($store, [Query::orderAsc('ord.amount')], self::cursorAfterId('alice'));
 
         $this->assertSame('alice', $cursor->getId());
         $this->assertSame(10, $this->orderValue($cursor, 'ord.amount'), 'the page boundary must come from the order the caller can read, not the one the list hides');
@@ -85,7 +86,7 @@ final class CursorLookupTest extends TestCase
         $this->order($store, 'c-hidden', 'bob', 30, readable: false);
         $this->order($store, 'd-visible', 'bob', 20, readable: true);
 
-        $cursor = $this->page($store, [Query::orderAsc('ord.amount')], Query::cursorAfter('bob'));
+        $cursor = $this->page($store, [Query::orderAsc('ord.amount')], self::cursorAfterId('bob'));
 
         $this->assertSame('bob', $cursor->getId(), 'a caller who cannot read the cursor document still pages past it');
         $this->assertSame(20, $this->orderValue($cursor, 'ord.amount'));
@@ -101,7 +102,7 @@ final class CursorLookupTest extends TestCase
         $cursor = $this->page($store, [
             Query::equal('ord.status', ['paid']),
             Query::orderAsc('ord.amount'),
-        ], Query::cursorAfter('alice'));
+        ], self::cursorAfterId('alice'));
 
         $this->assertSame(10, $this->orderValue($cursor, 'ord.amount'), 'the list only pairs the customer with its paid order');
     }
@@ -113,13 +114,13 @@ final class CursorLookupTest extends TestCase
         $this->order($store, 'a-first', 'alice', 10, readable: true);
         $this->order($store, 'b-second', 'alice', 25, readable: true);
 
-        $after = $this->page($store, [Query::orderAsc('ord.amount')], Query::cursorAfter('alice'));
+        $after = $this->page($store, [Query::orderAsc('ord.amount')], self::cursorAfterId('alice'));
         $this->assertSame(25, $this->orderValue($after, 'ord.amount'));
 
-        $descending = $this->page($store, [Query::orderDesc('ord.amount')], Query::cursorAfter('alice'));
+        $descending = $this->page($store, [Query::orderDesc('ord.amount')], self::cursorAfterId('alice'));
         $this->assertSame(10, $this->orderValue($descending, 'ord.amount'));
 
-        $before = $this->page($store, [Query::orderAsc('ord.amount')], Query::cursorBefore('alice'));
+        $before = $this->page($store, [Query::orderAsc('ord.amount')], self::cursorBeforeId('alice'));
         $this->assertSame(10, $this->orderValue($before, 'ord.amount'), 'the page before a document ends ahead of its first row');
     }
 
@@ -129,7 +130,7 @@ final class CursorLookupTest extends TestCase
         $this->customer($store, 'alice', readable: true);
         $this->order($store, 'b-visible', 'alice', 10, readable: true, placedAt: '2024-05-01T10:00:00.000+00:00');
 
-        $cursor = $this->page($store, [Query::orderAsc('ord.placedAt')], Query::cursorAfter('alice'));
+        $cursor = $this->page($store, [Query::orderAsc('ord.placedAt')], self::cursorAfterId('alice'));
 
         $this->assertSame('2024-05-01T10:00:00.000+00:00', $cursor->getAttribute('ord.placedAt'), 'the library encodes joined cursor values, as it does the cursor document\'s own attributes');
     }
@@ -148,7 +149,7 @@ final class CursorLookupTest extends TestCase
         $cursor = $this->page($store, [
             Query::join(self::PRODUCTS, 'prod', [Query::on('ord.productId', '$id')])->toString(),
             Query::orderAsc('prod.name'),
-        ], Query::cursorAfter('alice'));
+        ], self::cursorAfterId('alice'));
 
         $this->assertSame('Lamp', $this->orderValue($cursor, 'prod.name'));
     }
@@ -159,7 +160,7 @@ final class CursorLookupTest extends TestCase
         $this->customer($store, 'alice', readable: true);
         $this->order($store, 'a-hidden', 'alice', 35, readable: false);
 
-        $cursor = $this->page($store, [Query::orderAsc('ord.amount')], Query::cursorAfter('alice'));
+        $cursor = $this->page($store, [Query::orderAsc('ord.amount')], self::cursorAfterId('alice'));
 
         $this->assertNull($this->orderValue($cursor, 'ord.amount'), 'without a row the caller can read the order value is null, as it is in the list');
     }
@@ -173,10 +174,10 @@ final class CursorLookupTest extends TestCase
         $this->order($store, 'a-second', 'alice', 25, readable: true);
         $this->order($store, 'b-only', 'bob', 15, readable: true);
 
-        $after = $this->pageRows($store, [], Query::cursorAfter('alice'));
+        $after = $this->pageRows($store, [], self::cursorAfterId('alice'));
         $this->assertSame([['bob', 'b-only']], $after, 'the page after a document starts behind every row the list pairs with it');
 
-        $before = $this->pageRows($store, [], Query::cursorBefore('bob'));
+        $before = $this->pageRows($store, [], self::cursorBeforeId('bob'));
         $this->assertSame([['alice', 'a-first'], ['alice', 'a-second']], $before, 'the page before a document ends ahead of its first row');
     }
 
@@ -191,7 +192,7 @@ final class CursorLookupTest extends TestCase
         $rows = $this->pageRows($store, [
             Query::leftJoin(self::ORDERS, 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::orderAsc('ord.amount'),
-        ], Query::cursorAfter('alice'), join: false);
+        ], self::cursorAfterId('alice'), join: false);
 
         $this->assertSame([['bob', 'b-only']], $rows, 'a row the join did not match is a page boundary with null joined values');
     }
@@ -205,7 +206,7 @@ final class CursorLookupTest extends TestCase
         $this->order($store, 'a-second', 'alice', 25, readable: true);
         $this->order($store, 'b-only', 'bob', 15, readable: true);
 
-        $rows = $this->pageRows($store, [Query::orderAsc('amount')], Query::cursorAfter('bob'));
+        $rows = $this->pageRows($store, [Query::orderAsc('amount')], self::cursorAfterId('bob'));
 
         $this->assertSame([['alice', 'a-second']], $rows, 'a bare order name only the joined collection declares reads the joined row');
     }
@@ -219,7 +220,7 @@ final class CursorLookupTest extends TestCase
 
         $parsed = Query::parseQueries([
             Query::join(self::CUSTOMERS, 'cus', [Query::on('customerId', '$id')])->toString(),
-            Query::cursorAfter('a-first')->toString(),
+            self::cursorAfterId('a-first')->toString(),
         ]);
         $cursor = Query::getCursorQueries($parsed, false)[0];
         $document = (new CursorLookup($store, $this->authorization))->resolve(self::ORDERS, $cursor, $parsed);
@@ -229,6 +230,16 @@ final class CursorLookupTest extends TestCase
             static fn (Document $row): string => $row->getId(),
             $store->find(self::ORDERS, $parsed),
         ));
+    }
+
+    private static function cursorAfterId(string $id): Query
+    {
+        return new Query(Method::CursorAfter, values: [$id]);
+    }
+
+    private static function cursorBeforeId(string $id): Query
+    {
+        return new Query(Method::CursorBefore, values: [$id]);
     }
 
     /**

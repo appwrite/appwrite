@@ -68,9 +68,10 @@ final class PublicIdTest extends TestCase
         $database = $this->catalog(['database_2' => ['17' => 'libraries']]);
 
         $hooks = new class () implements Lifecycle {
-            /** @var list<Event> */
+            /** @var list<Domain> */
             public array $events = [];
 
+            #[\Override]
             public function handle(Domain $event): void
             {
                 $this->events[] = $event;
