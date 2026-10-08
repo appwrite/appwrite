@@ -813,10 +813,24 @@ class OpenAPI3 extends Format
                         }
                         break;
                     case Queries::class:
+                    case \Utopia\WAF\Validator\Conditions::class:
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
+                        break;
+                    case \Utopia\Validator\Multiple::class:
+                        // Its rules check the whole value, so an array-typed Multiple declares no
+                        // item type. The only one in use is the OAuth2 resource indicator list.
+                        $node['schema']['type'] = $validator->getType();
+                        if ($validator->getType() === Validator::TYPE_ARRAY) {
+                            $node['schema']['items'] = [
+                                'type' => 'string',
+                            ];
+                        }
+                        if (($param['example'] ?? '') !== '') {
+                            $node['schema']['example'] = $param['example'];
+                        }
                         break;
                     case \Utopia\Database\Validator\Permissions::class:
                         $node['schema']['type'] = $validator->getType();
