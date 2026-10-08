@@ -75,8 +75,8 @@ use Utopia\Locale\Locale;
 use Utopia\Platform\Service;
 use Utopia\Span\Span;
 use Utopia\System\System;
-use Utopia\Validator;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 

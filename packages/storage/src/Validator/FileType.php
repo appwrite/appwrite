@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Utopia\Storage\Validator;
 
 use Exception;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 /**
  * @see \Utopia\Storage\Tests\Validator\FileTypeTest

@@ -157,7 +157,7 @@ parameters:
 			path: src/CLI.php
 
 		-
-			message: '#^Parameter \#1 \$validator of method Utopia\\CLI\\CLI\:\:coerce\(\) expects \(callable\(\)\: mixed\)\|Utopia\\Validator, mixed given\.$#'
+			message: '#^Parameter \#1 \$validator of method Utopia\\CLI\\CLI\:\:coerce\(\) expects \(callable\(\)\: mixed\)\|Utopia\\Validator\\Validator, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/CLI.php

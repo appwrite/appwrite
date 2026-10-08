@@ -101,7 +101,7 @@ class TestFormat extends Format
     }
 }
 
-class MixedValidator extends \Utopia\Validator
+class MixedValidator extends \Utopia\Validator\Validator
 {
     public function getDescription(): string
     {

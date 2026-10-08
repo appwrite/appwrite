@@ -6,9 +6,9 @@ use Exception;
 use Utopia\CLI\Adapters\Generic;
 use Utopia\DI\Container;
 use Utopia\Servers\Hook;
-use Utopia\Validator;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Validator;
 
 class CLI
 {
