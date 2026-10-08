@@ -1,8 +1,8 @@
 <?php
 
 namespace Appwrite\Utopia\Database\Validator\Query;
-use Appwrite\Utopia\Database\Validator\Queries\Restricted;
 
+use Appwrite\Utopia\Database\Validator\Queries\Restricted;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Base;
 use Utopia\Validator\Text;
@@ -18,6 +18,18 @@ class VcsNamespace extends Base implements Restricted
     {
         return [Query::TYPE_EQUAL];
     }
+
+    public function getMethodType(): string
+    {
+        return self::METHOD_TYPE_FILTER;
+    }
+
+    public function isValid($value): bool
+    {
+        if (!$value instanceof Query) {
+            $this->message = 'Query must be an instance of Query';
+            return false;
+        }
 
         if ($value->getMethod() !== Query::TYPE_EQUAL) {
             $this->message = 'Only equal queries are supported for namespace';
