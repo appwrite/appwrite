@@ -350,9 +350,10 @@ class Create extends Action
     }
 
     /**
+     * @param list<Attribute> $attributes
      * @return array{collection: Index, document: Document}
      */
-    protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributeDocuments, Database $dbForDatabases): array
+    protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributes, Database $dbForDatabases): array
     {
         $key = $indexDef['key'];
         $type = $indexDef['type'];
@@ -360,32 +361,26 @@ class Create extends Action
         $orders = $indexDef['orders'] ?? [];
         $lengths = $indexDef['lengths'] ?? [];
 
-        $attrKeys = array_map(fn ($a) => $a->getAttribute('key'), $attributeDocuments);
+        $attributesByKey = [];
+        foreach ($attributes as $attribute) {
+            $attributesByKey[$attribute->key] = $attribute;
+        }
 
-        // Build lengths and orders based on attribute properties
         foreach ($indexAttributes as $i => $attr) {
-            $attrIndex = array_search($attr, $attrKeys);
-            if ($attrIndex !== false) {
-                $attrDoc = $attributeDocuments[$attrIndex];
-                $attrArray = $attrDoc->getAttribute('array', false);
+            if (empty($lengths[$i])) {
+                $lengths[$i] = null;
+            }
 
-                if (empty($lengths[$i])) {
-                    $lengths[$i] = null;
-                }
+            if (!(($attributesByKey[$attr] ?? null)?->array)) {
+                continue;
+            }
 
-                if ($attrArray === true) {
-                    $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
-                    $orders[$i] = null;
+            $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
+            $orders[$i] = null;
 
-                    if ($dbForDatabases->getAdapter()->supports(Capability::DefinedAttributes)) {
-                        // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
-                        throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
-                    }
-                }
-            } else {
-                if (empty($lengths[$i])) {
-                    $lengths[$i] = null;
-                }
+            if ($dbForDatabases->getAdapter()->supports(Capability::DefinedAttributes)) {
+                // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
+                throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
             }
         }
 
