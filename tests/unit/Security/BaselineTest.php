@@ -62,4 +62,20 @@ final class BaselineTest extends TestCase
         $this->assertSame([], $partition['fresh']);
         $this->assertSame([], $partition['stale']);
     }
+
+    public function testLockedInventoryRejectsUnreviewedRoute(): void
+    {
+        $baseline = Baseline::load();
+        $listed = $baseline->routes();
+
+        $this->assertNotSame([], $listed, 'Route inventory must be locked so new endpoints fail CI.');
+
+        $canary = 'POST /v1/security-inventory-canary';
+        $this->assertFalse(\in_array($canary, $listed, true), 'Canary must not be pre-listed.');
+
+        $partition = $baseline->partitionRoutes([...$listed, $canary]);
+
+        $this->assertSame([$canary], $partition['fresh']);
+        $this->assertSame([], $partition['stale']);
+    }
 }

@@ -40,18 +40,31 @@ docker compose exec appwrite test tests/unit/Security
 
 1. A finding whose `attack + method + path + probe` key is not listed.
 2. A listed finding whose `reason` is empty.
-3. A new route, once the `routes` array has been populated. An empty `routes` list is bootstrap-only and does not lock.
+3. A new route whose `METHOD /v1/...` id is not in `routes`. The inventory is locked; an empty `routes` list is bootstrap-only and does not lock.
 
 Stale entries (gone routes or fixed findings) are printed and do not fail the job.
 
-Accept a clean new surface, or refresh the route inventory after reviewing findings:
+## Adding a route to the inventory
+
+When you add an HTTP endpoint, `Catalog` picks it up from `Http::getRoutes()` on the next run. CI fails until that `METHOD /path` id is in [`baseline.json`](baseline.json) `routes`.
+
+1. Land the action (and any `httpAlias`; aliases collapse onto the primary `getPath()`).
+2. Run the suite so the new surface is probed:
+
+```bash
+docker compose exec appwrite test tests/e2e/Security --group=security
+```
+
+3. Review any fresh findings. Then rewrite the allowlist and the route list together:
 
 ```bash
 docker compose exec -e _APP_SECURITY_BASELINE=update \
   appwrite test tests/e2e/Security --group=security
 ```
 
-That rewrites `baseline.json`. Review the diff like code. New finding rows come through with an empty `reason` — fill one in or the next `check` run fails.
+4. Open the `baseline.json` diff. Keep the new `routes` row. New finding rows come through with an empty `reason` — fill one in or the next `check` run fails. Commit the inventory change with the endpoint.
+
+Do not hand-edit a route id unless you are matching `Catalog::ids()` (`METHOD` + primary path). `httpAlias` paths are not listed separately.
 
 ## Adding an attack class
 
@@ -72,4 +85,4 @@ Job `Tests / E2E / Security` in `.github/workflows/ci.yml`. One stack (default P
 - GraphQL is one fan-out route and is skipped; inner operations are the REST routes already in the catalog.
 - Forwarded-IP spoofing from inside the compose network often hits `_APP_TRUSTED_PROXIES` defaults (loopback / RFC1918). That result is a finding so it cannot appear silently; expect to reason it in the baseline if the topology trusts the caller.
 - `idor` only treats `userId` / `email` fields as a leak. A caller-chosen path `$id` echoing back (presence upsert) is not.
-- First scan (705 `/v1` routes): guest-access, cross-tenant, scope-least-privilege, and ssrf-url were clean. See `baseline.json` for the remaining allowlisted rows.
+- First scan: guest-access, cross-tenant, scope-least-privilege, and ssrf-url were clean. See `baseline.json` for the remaining allowlisted rows. The locked `routes` list is the live catalog size at lock time.
