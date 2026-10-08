@@ -28,7 +28,7 @@ abstract class SQL extends Adapter
     /**
      * Get attribute definitions for audit logs.
      *
-     * @return array<int, Attribute>
+     * @return list<Attribute>
      */
     public function getAttributes(): array
     {
@@ -46,7 +46,7 @@ abstract class SQL extends Adapter
     /**
      * Get attribute value objects for createCollection.
      *
-     * @return array<Attribute>
+     * @return list<Attribute>
      */
     public function getAttributeDocuments(): array
     {
@@ -56,7 +56,7 @@ abstract class SQL extends Adapter
     /**
      * Get index definitions for audit logs.
      *
-     * @return array<int, Index>
+     * @return list<Index>
      */
     public function getIndexes(): array
     {
@@ -71,7 +71,7 @@ abstract class SQL extends Adapter
     /**
      * Get index value objects for createCollection.
      *
-     * @return array<Index>
+     * @return list<Index>
      */
     public function getIndexDocuments(): array
     {
