@@ -381,8 +381,6 @@ abstract class Action extends DatabasesAction
 
         $collectionId = $collection->getId();
         $document->removeAttribute('$collection');
-        $document->removeAttribute('$tenant');
-        $document->removeAttribute($this->isCollectionsAPI() ? '$tableId' : '$collectionId');
         $document->setAttribute('$databaseId', $database->getId());
         $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
 
