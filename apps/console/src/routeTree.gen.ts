@@ -283,6 +283,8 @@ import { Route as PublicOrganizationsOrgIdAppsAppIdSupportRouteImport } from './
 import { Route as PublicOrganizationsOrgIdDomainsDomainIdIndexRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId.index'
 import { Route as PublicOrganizationsOrgIdDomainsDomainIdSettingsRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId.settings'
 import { Route as PublicOrganizationsOrgIdMarketplaceAppIdIndexRouteImport } from './routes/_public/organizations.$orgId.marketplace.$appId.index'
+import { Route as PublicProjectsProjectIdAnalyticsPropertyIdIndexRouteImport } from './routes/_public/projects.$projectId.analytics.$propertyId.index'
+import { Route as PublicProjectsProjectIdAnalyticsPropertyIdSettingsRouteImport } from './routes/_public/projects.$projectId.analytics.$propertyId.settings'
 import { Route as PublicProjectsProjectIdAuthOauth2ServerAppsRouteImport } from './routes/_public/projects.$projectId.auth.oauth2-server.apps'
 import { Route as PublicProjectsProjectIdAuthOauth2ServerSettingsRouteImport } from './routes/_public/projects.$projectId.auth.oauth2-server.settings'
 import { Route as PublicProjectsProjectIdAuthPoliciesEmailsRouteImport } from './routes/_public/projects.$projectId.auth.policies.emails'
@@ -1994,6 +1996,18 @@ const PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute =
     path: '/$appId/',
     getParentRoute: () => PublicOrganizationsOrgIdMarketplaceRoute,
   } as any)
+const PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute =
+  PublicProjectsProjectIdAnalyticsPropertyIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdAnalyticsPropertyIdRoute,
+  } as any)
+const PublicProjectsProjectIdAnalyticsPropertyIdSettingsRoute =
+  PublicProjectsProjectIdAnalyticsPropertyIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicProjectsProjectIdAnalyticsPropertyIdRoute,
+  } as any)
 const PublicProjectsProjectIdAuthOauth2ServerAppsRoute =
   PublicProjectsProjectIdAuthOauth2ServerAppsRouteImport.update({
     id: '/apps',
@@ -3535,7 +3549,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
-  '/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdRoute
+  '/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdRouteWithChildren
   '/projects/$projectId/analytics/add': typeof PublicProjectsProjectIdAnalyticsAddRoute
   '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
@@ -3600,6 +3614,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/apps/$appId/settings': typeof PublicOrganizationsOrgIdAppsAppIdSettingsRoute
   '/organizations/$orgId/apps/$appId/support': typeof PublicOrganizationsOrgIdAppsAppIdSupportRoute
   '/organizations/$orgId/domains/$domainId/settings': typeof PublicOrganizationsOrgIdDomainsDomainIdSettingsRoute
+  '/projects/$projectId/analytics/$propertyId/settings': typeof PublicProjectsProjectIdAnalyticsPropertyIdSettingsRoute
   '/projects/$projectId/auth/oauth2-server/apps': typeof PublicProjectsProjectIdAuthOauth2ServerAppsRoute
   '/projects/$projectId/auth/oauth2-server/settings': typeof PublicProjectsProjectIdAuthOauth2ServerSettingsRoute
   '/projects/$projectId/auth/policies/emails': typeof PublicProjectsProjectIdAuthPoliciesEmailsRoute
@@ -3650,6 +3665,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/apps/$appId/': typeof PublicOrganizationsOrgIdAppsAppIdIndexRoute
   '/organizations/$orgId/domains/$domainId/': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
   '/organizations/$orgId/marketplace/$appId/': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
+  '/projects/$projectId/analytics/$propertyId/': typeof PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute
   '/projects/$projectId/functions/$functionId/': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/projects/$projectId/functions/create/': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/projects/$projectId/messaging/$messageId/': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
@@ -3965,7 +3981,6 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
-  '/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdRoute
   '/projects/$projectId/analytics/add': typeof PublicProjectsProjectIdAnalyticsAddRoute
   '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
@@ -4021,6 +4036,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/apps/$appId/settings': typeof PublicOrganizationsOrgIdAppsAppIdSettingsRoute
   '/organizations/$orgId/apps/$appId/support': typeof PublicOrganizationsOrgIdAppsAppIdSupportRoute
   '/organizations/$orgId/domains/$domainId/settings': typeof PublicOrganizationsOrgIdDomainsDomainIdSettingsRoute
+  '/projects/$projectId/analytics/$propertyId/settings': typeof PublicProjectsProjectIdAnalyticsPropertyIdSettingsRoute
   '/projects/$projectId/auth/oauth2-server/apps': typeof PublicProjectsProjectIdAuthOauth2ServerAppsRoute
   '/projects/$projectId/auth/oauth2-server/settings': typeof PublicProjectsProjectIdAuthOauth2ServerSettingsRoute
   '/projects/$projectId/auth/policies/emails': typeof PublicProjectsProjectIdAuthPoliciesEmailsRoute
@@ -4061,6 +4077,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdIndexRoute
   '/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
   '/organizations/$orgId/marketplace/$appId': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
+  '/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute
   '/projects/$projectId/functions/$functionId': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/projects/$projectId/functions/create': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/projects/$projectId/messaging/$messageId': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
@@ -4402,7 +4419,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/_public/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/_public/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
-  '/_public/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdRoute
+  '/_public/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdRouteWithChildren
   '/_public/projects/$projectId/analytics/add': typeof PublicProjectsProjectIdAnalyticsAddRoute
   '/_public/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/_public/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
@@ -4467,6 +4484,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/apps/$appId/settings': typeof PublicOrganizationsOrgIdAppsAppIdSettingsRoute
   '/_public/organizations/$orgId/apps/$appId/support': typeof PublicOrganizationsOrgIdAppsAppIdSupportRoute
   '/_public/organizations/$orgId/domains/$domainId/settings': typeof PublicOrganizationsOrgIdDomainsDomainIdSettingsRoute
+  '/_public/projects/$projectId/analytics/$propertyId/settings': typeof PublicProjectsProjectIdAnalyticsPropertyIdSettingsRoute
   '/_public/projects/$projectId/auth/oauth2-server/apps': typeof PublicProjectsProjectIdAuthOauth2ServerAppsRoute
   '/_public/projects/$projectId/auth/oauth2-server/settings': typeof PublicProjectsProjectIdAuthOauth2ServerSettingsRoute
   '/_public/projects/$projectId/auth/policies/emails': typeof PublicProjectsProjectIdAuthPoliciesEmailsRoute
@@ -4517,6 +4535,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/apps/$appId/': typeof PublicOrganizationsOrgIdAppsAppIdIndexRoute
   '/_public/organizations/$orgId/domains/$domainId/': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
   '/_public/organizations/$orgId/marketplace/$appId/': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
+  '/_public/projects/$projectId/analytics/$propertyId/': typeof PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute
   '/_public/projects/$projectId/functions/$functionId/': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/_public/projects/$projectId/functions/create/': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/_public/projects/$projectId/messaging/$messageId/': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
@@ -4926,6 +4945,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/apps/$appId/settings'
     | '/organizations/$orgId/apps/$appId/support'
     | '/organizations/$orgId/domains/$domainId/settings'
+    | '/projects/$projectId/analytics/$propertyId/settings'
     | '/projects/$projectId/auth/oauth2-server/apps'
     | '/projects/$projectId/auth/oauth2-server/settings'
     | '/projects/$projectId/auth/policies/emails'
@@ -4976,6 +4996,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/apps/$appId/'
     | '/organizations/$orgId/domains/$domainId/'
     | '/organizations/$orgId/marketplace/$appId/'
+    | '/projects/$projectId/analytics/$propertyId/'
     | '/projects/$projectId/functions/$functionId/'
     | '/projects/$projectId/functions/create/'
     | '/projects/$projectId/messaging/$messageId/'
@@ -5291,7 +5312,6 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/organizations/$orgId/settings/partners'
-    | '/projects/$projectId/analytics/$propertyId'
     | '/projects/$projectId/analytics/add'
     | '/projects/$projectId/apps/add'
     | '/projects/$projectId/auth/oauth2-server'
@@ -5347,6 +5367,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/apps/$appId/settings'
     | '/organizations/$orgId/apps/$appId/support'
     | '/organizations/$orgId/domains/$domainId/settings'
+    | '/projects/$projectId/analytics/$propertyId/settings'
     | '/projects/$projectId/auth/oauth2-server/apps'
     | '/projects/$projectId/auth/oauth2-server/settings'
     | '/projects/$projectId/auth/policies/emails'
@@ -5387,6 +5408,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/apps/$appId'
     | '/organizations/$orgId/domains/$domainId'
     | '/organizations/$orgId/marketplace/$appId'
+    | '/projects/$projectId/analytics/$propertyId'
     | '/projects/$projectId/functions/$functionId'
     | '/projects/$projectId/functions/create'
     | '/projects/$projectId/messaging/$messageId'
@@ -5792,6 +5814,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/apps/$appId/settings'
     | '/_public/organizations/$orgId/apps/$appId/support'
     | '/_public/organizations/$orgId/domains/$domainId/settings'
+    | '/_public/projects/$projectId/analytics/$propertyId/settings'
     | '/_public/projects/$projectId/auth/oauth2-server/apps'
     | '/_public/projects/$projectId/auth/oauth2-server/settings'
     | '/_public/projects/$projectId/auth/policies/emails'
@@ -5842,6 +5865,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/apps/$appId/'
     | '/_public/organizations/$orgId/domains/$domainId/'
     | '/_public/organizations/$orgId/marketplace/$appId/'
+    | '/_public/projects/$projectId/analytics/$propertyId/'
     | '/_public/projects/$projectId/functions/$functionId/'
     | '/_public/projects/$projectId/functions/create/'
     | '/_public/projects/$projectId/messaging/$messageId/'
@@ -7949,6 +7973,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdMarketplaceRoute
     }
+    '/_public/projects/$projectId/analytics/$propertyId/': {
+      id: '/_public/projects/$projectId/analytics/$propertyId/'
+      path: '/'
+      fullPath: '/projects/$projectId/analytics/$propertyId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdAnalyticsPropertyIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAnalyticsPropertyIdRoute
+    }
+    '/_public/projects/$projectId/analytics/$propertyId/settings': {
+      id: '/_public/projects/$projectId/analytics/$propertyId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/analytics/$propertyId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdAnalyticsPropertyIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAnalyticsPropertyIdRoute
+    }
     '/_public/projects/$projectId/auth/oauth2-server/apps': {
       id: '/_public/projects/$projectId/auth/oauth2-server/apps'
       path: '/apps'
@@ -9711,15 +9749,33 @@ const PublicOrganizationsOrgIdRouteWithChildren =
     PublicOrganizationsOrgIdRouteChildren,
   )
 
+interface PublicProjectsProjectIdAnalyticsPropertyIdRouteChildren {
+  PublicProjectsProjectIdAnalyticsPropertyIdSettingsRoute: typeof PublicProjectsProjectIdAnalyticsPropertyIdSettingsRoute
+  PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute: typeof PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute
+}
+
+const PublicProjectsProjectIdAnalyticsPropertyIdRouteChildren: PublicProjectsProjectIdAnalyticsPropertyIdRouteChildren =
+  {
+    PublicProjectsProjectIdAnalyticsPropertyIdSettingsRoute:
+      PublicProjectsProjectIdAnalyticsPropertyIdSettingsRoute,
+    PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute:
+      PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute,
+  }
+
+const PublicProjectsProjectIdAnalyticsPropertyIdRouteWithChildren =
+  PublicProjectsProjectIdAnalyticsPropertyIdRoute._addFileChildren(
+    PublicProjectsProjectIdAnalyticsPropertyIdRouteChildren,
+  )
+
 interface PublicProjectsProjectIdAnalyticsRouteChildren {
-  PublicProjectsProjectIdAnalyticsPropertyIdRoute: typeof PublicProjectsProjectIdAnalyticsPropertyIdRoute
+  PublicProjectsProjectIdAnalyticsPropertyIdRoute: typeof PublicProjectsProjectIdAnalyticsPropertyIdRouteWithChildren
   PublicProjectsProjectIdAnalyticsAddRoute: typeof PublicProjectsProjectIdAnalyticsAddRoute
 }
 
 const PublicProjectsProjectIdAnalyticsRouteChildren: PublicProjectsProjectIdAnalyticsRouteChildren =
   {
     PublicProjectsProjectIdAnalyticsPropertyIdRoute:
-      PublicProjectsProjectIdAnalyticsPropertyIdRoute,
+      PublicProjectsProjectIdAnalyticsPropertyIdRouteWithChildren,
     PublicProjectsProjectIdAnalyticsAddRoute:
       PublicProjectsProjectIdAnalyticsAddRoute,
   }

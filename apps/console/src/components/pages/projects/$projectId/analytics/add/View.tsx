@@ -1,14 +1,35 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowRight } from 'lucide-react'
+import {
+  ArrowRight,
+  BrainCircuit,
+  Check,
+  ChevronDown,
+  Copy,
+  ExternalLink,
+} from 'lucide-react'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
+import { getProjectApiEndpoint } from '@/lib/appwrite/sdk'
+import {
+  getAIChatIDEs,
+  generateAIChatDeeplink,
+  openAIChatDeeplink,
+  type IDEConfig,
+} from '@/lib/config/ide'
 import {
   useAnalyticsFirstEvent,
   useAnalyticsProperty,
@@ -20,6 +41,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canCreateAnalyticsProperty } from '@/lib/console-access-checks'
 import {
   ANALYTICS_PLATFORM_META,
+  buildAnalyticsSetupPrompt,
   isAnalyticsPlatform,
   type AnalyticsPlatform,
 } from '@/lib/analytics-wizard/snippets'
@@ -150,6 +172,53 @@ export function View({ projectId, search }: ViewProps) {
 
   const platformMeta = ANALYTICS_PLATFORM_META[platform]
 
+  // "Set up with AI": the whole install for the selected platform, phrased
+  // for a coding agent. Same prompt as the property's Install dialog.
+  const promptText = useMemo(
+    () =>
+      property
+        ? buildAnalyticsSetupPrompt(platform, {
+            endpoint: getProjectApiEndpoint(projectId),
+            projectId,
+            // Ingestion takes either ID; the snippet ID is meant for client code.
+            trackingId: property.snippetId || property.$id,
+            domain: property.domain,
+            propertyName: property.name,
+          })
+        : null,
+    [platform, projectId, property],
+  )
+
+  // IDEs with an AI-chat deeplink, as in the Connect app wizard.
+  const aiChatIDEs = useMemo(() => getAIChatIDEs(), [])
+  const [copied, setCopied] = useState(false)
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(
+    () => () => {
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current)
+    },
+    [],
+  )
+
+  const handleCopyPrompt = async () => {
+    if (!promptText) return
+    try {
+      await navigator.clipboard.writeText(promptText)
+      setCopied(true)
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current)
+      copiedTimeoutRef.current = setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Silent: the button keeps its "Copy prompt" icon, as in the app wizard.
+    }
+  }
+
+  const handleOpenInIDE = (ide: IDEConfig) => {
+    if (!promptText) return
+    const deeplink = generateAIChatDeeplink(ide, promptText)
+    if (deeplink) openAIChatDeeplink(deeplink)
+  }
+
   return (
     <WizardLayout
       title={step === 'setup' ? t('Install tracking') : t('Create property')}
@@ -278,6 +347,76 @@ export function View({ projectId, search }: ViewProps) {
             eventReceived={eventReceived}
             firstEventName={firstEventName}
           />
+
+          {/* Fastest path: hand the whole setup to a coding agent. */}
+          <div className="overflow-hidden rounded-xl border border-border bg-card/50">
+            <div className="px-5 py-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-[14px] font-semibold text-foreground">
+                  {t('Set up with AI')}
+                </h3>
+                <Badge variant="success" className="text-[10px]">
+                  {t('Recommended')}
+                </Badge>
+              </div>
+              <p className="mt-0.5 text-[12px] text-muted-foreground">
+                {t(
+                  'Hand off a ready-made prompt with your endpoint and project ID to your favourite AI tool, or copy it anywhere.',
+                )}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 border-t border-border px-5 py-4">
+              <Button
+                type="button"
+                size="sm"
+                className="h-9 gap-1.5 text-[13px]"
+                disabled={!promptText}
+                onClick={() => void handleCopyPrompt()}
+              >
+                {copied ? <Check /> : <Copy />}
+                {t('Copy prompt')}
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 gap-1.5 text-[13px]"
+                    disabled={!promptText}
+                  >
+                    <BrainCircuit />
+                    {t('Open in tool')}
+                    <ChevronDown />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  className="z-[10050] min-w-[200px]"
+                >
+                  {aiChatIDEs.map((ide) => (
+                    <DropdownMenuItem
+                      key={ide.id}
+                      onClick={() => handleOpenInIDE(ide)}
+                    >
+                      <img
+                        src={ide.iconPath}
+                        alt={ide.name}
+                        className="h-4 w-4"
+                      />
+                      <span className="ms-2">
+                        {t('Prompt')} {ide.name}
+                      </span>
+                      <ExternalLink
+                        className="ms-auto h-2.5 w-2.5 shrink-0 text-muted-foreground/30"
+                        strokeWidth={1.25}
+                      />
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
 
           <div className="overflow-hidden rounded-xl border border-border bg-card/50">
             <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
