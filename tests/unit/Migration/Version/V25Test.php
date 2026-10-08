@@ -10,6 +10,7 @@ use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -146,7 +147,7 @@ final class V25Test extends TestCase
                 continue;
             }
             $attributes = $id === 'topics'
-                ? \array_filter($collection['attributes'], fn (Document $attribute) => !\in_array($attribute->getId(), $added, true))
+                ? \array_filter($collection['attributes'], static fn (Attribute $attribute): bool => !\in_array($attribute->key, $added, true))
                 : $collection['attributes'];
             $database->createCollection(Collection::create(
                 id: $id,

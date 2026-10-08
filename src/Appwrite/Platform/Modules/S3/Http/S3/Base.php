@@ -19,13 +19,11 @@ use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Id;
-use Utopia\Database\Index;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Http\Adapter\Swoole\Request;
@@ -523,33 +521,8 @@ abstract class Base extends Action
             throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Files collection is not configured.');
         }
 
-        $attributes = [];
-        foreach ($files['attributes'] as $attribute) {
-            $attributes[] = Attribute::fromArray([
-                '$id' => $attribute['$id'],
-                'key' => $attribute['$id'],
-                'type' => $attribute['type'],
-                'size' => $attribute['size'],
-                'required' => $attribute['required'],
-                'signed' => $attribute['signed'],
-                'array' => $attribute['array'],
-                'filters' => $attribute['filters'],
-                'default' => $attribute['default'] ?? null,
-                'format' => $attribute['format'] ?? '',
-            ]);
-        }
-
-        $indexes = [];
-        foreach ($files['indexes'] as $index) {
-            $indexes[] = Index::fromArray([
-                '$id' => $index['$id'],
-                'key' => $index['$id'],
-                'type' => $index['type'],
-                'attributes' => $index['attributes'],
-                'lengths' => $index['lengths'] ?? [],
-                'orders' => $index['orders'] ?? [],
-            ]);
-        }
+        $attributes = $files['attributes'];
+        $indexes = $files['indexes'];
 
         $permissions = Permission::aggregate(null) ?? [];
 

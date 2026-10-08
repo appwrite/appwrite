@@ -143,7 +143,7 @@ final readonly class CursorLookup
     private function declares(string $collection, string $attribute, bool $relationships): bool
     {
         /** @var array<Document> $attributes */
-        $attributes = $this->database->getCollection($collection)->getAttribute('attributes', []);
+        $attributes = $this->database->findCollection($collection)?->getAttribute('attributes', []) ?? [];
         foreach ($attributes as $declared) {
             if ($declared->getId() === $attribute && ($relationships || !Attribute::isRelationship($declared))) {
                 return true;

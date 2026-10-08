@@ -93,6 +93,26 @@ final class AttributeTest extends TestCase
         $this->assertSame($expected, Attribute::sameType($stored, $type));
     }
 
+    /**
+     * @return \Iterator<string, array{ColumnType|string, ?ColumnType}>
+     */
+    public static function columnTypes(): \Iterator
+    {
+        yield 'stored bigint' => ['bigint', ColumnType::BigInteger];
+        yield 'biginteger' => ['biginteger', ColumnType::BigInteger];
+        yield 'string' => [ColumnType::String->value, ColumnType::String];
+        yield 'relationship' => [ColumnType::Relationship->value, ColumnType::Relationship];
+        yield 'a column type' => [ColumnType::Double, ColumnType::Double];
+        yield 'unrecognised' => ['unknown', null];
+        yield 'empty' => ['', null];
+    }
+
+    #[DataProvider('columnTypes')]
+    public function testColumnTypeResolvesEitherSpellingAndRejectsAnUnrecognisedType(ColumnType|string $type, ?ColumnType $expected): void
+    {
+        $this->assertSame($expected, Attribute::columnType($type));
+    }
+
     public function testRelationshipsAreTheRelationshipAttributesOfTheCollectionByKey(): void
     {
         $collection = new Document(['attributes' => [

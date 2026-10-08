@@ -17,12 +17,10 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Index as IndexObject;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
-use Utopia\Database\RelationshipType;
 use Utopia\Database\SetType;
 use Utopia\Platform\Action;
 use Utopia\Query\OrderDirection;
 use Utopia\Query\Schema\ColumnType;
-use Utopia\Query\Schema\ForeignKeyAction;
 use Utopia\Query\Schema\IndexType;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -192,11 +190,11 @@ class Databases extends Action
 
                     $dbForDatabases->createRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), Relationship::fromArray([
                         'relatedCollection' => 'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
-                        'relationType' => RelationshipType::from($options['relationType']),
+                        'relationType' => $options['relationType'],
                         'twoWay' => $options['twoWay'],
                         'key' => $key,
                         'twoWayKey' => $options['twoWayKey'],
-                        'onDelete' => ForeignKeyAction::from($options['onDelete']),
+                        'onDelete' => $options['onDelete'],
                     ]));
 
                     if ($options['twoWay']) {
@@ -207,7 +205,7 @@ class Databases extends Action
                 default:
                     $dbForDatabases->createAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), Attribute::fromArray([
                         'key' => $key,
-                        'type' => Attribute::typeFromStored($type),
+                        'type' => $type,
                         'size' => $size,
                         'required' => $required,
                         'default' => $default,
@@ -308,8 +306,8 @@ class Databases extends Action
                     }
 
                     $dbForDatabases->deleteRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key);
-                } elseif (!$dbForDatabases->deleteAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
-                    throw new DatabaseException('Failed to delete attribute/column');
+                } else {
+                    $dbForDatabases->deleteAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key);
                 }
 
                 $dbForProject->deleteDocument('attributes', $attribute->getId());
@@ -520,8 +518,8 @@ class Databases extends Action
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
-            if ($status !== 'failed' && !$dbForDatabases->deleteIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
-                throw new DatabaseException('Failed to delete index');
+            if ($status !== 'failed') {
+                $dbForDatabases->deleteIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key);
             }
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');

@@ -123,10 +123,28 @@ class Attribute
         ];
     }
 
+    /**
+     * The column type of a type in either spelling, or null for an unrecognised one.
+     */
+    public static function columnType(ColumnType|string $type): ?ColumnType
+    {
+        if ($type instanceof ColumnType) {
+            return $type;
+        }
+
+        if ($type === DatabaseAttribute::storedType(ColumnType::BigInteger)) {
+            return ColumnType::BigInteger;
+        }
+
+        return ColumnType::tryFrom($type);
+    }
+
     public static function storedType(ColumnType|string $type): string
     {
-        if (DatabaseAttribute::tryNormalizeType($type) === ColumnType::BigInteger) {
-            return DatabaseAttribute::storedType(ColumnType::BigInteger);
+        $columnType = self::columnType($type);
+
+        if ($columnType === ColumnType::BigInteger) {
+            return DatabaseAttribute::storedType($columnType);
         }
 
         return $type instanceof ColumnType ? $type->value : $type;
@@ -137,9 +155,9 @@ class Attribute
      */
     public static function sameType(ColumnType|string $stored, ColumnType|string $type): bool
     {
-        $normalized = DatabaseAttribute::tryNormalizeType($stored);
+        $columnType = self::columnType($stored);
 
-        return $normalized !== null && $normalized === DatabaseAttribute::tryNormalizeType($type);
+        return $columnType !== null && $columnType === self::columnType($type);
     }
 
     /**

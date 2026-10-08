@@ -260,6 +260,29 @@ final class MetadataRelationshipsTest extends TestCase
         $this->assertSame(1, $connections->count());
     }
 
+    public function testARelationshipToAMissingCollectionDecoratesWithoutItsSchema(): void
+    {
+        $authorization = new Authorization();
+        $authorization->disable();
+        $connections = new Connections(new Stack(), 'missing-schema', 1, static fn (): Memory => new Memory(), 0.0);
+        $tenant = $this->database($connections, $authorization);
+        $tenant->create();
+
+        $collection = new Document(['$id' => 'roots', 'attributes' => [
+            new Document(['key' => 'ghost', 'type' => 'relationship', 'options' => ['relatedCollection' => 'ghosts']]),
+        ]]);
+        $ghost = new Document(['$id' => 'ghost', '$collection' => 'ghosts']);
+        $root = new Document(['$id' => 'root', '$collection' => 'roots', 'ghost' => $ghost]);
+
+        $hook = new Metadata(new Document(['$id' => 'database']), tenant: $tenant);
+        $hook->decorate(Event::DocumentRead, $collection, $root);
+
+        $this->assertSame('roots', $root->getAttribute('$collectionId'));
+        $this->assertSame('ghosts', $ghost->getAttribute('$collectionId'));
+        $this->assertSame('database', $ghost->getAttribute('$databaseId'));
+        $this->assertSame(2, $hook->getOperations());
+    }
+
     /** @param Connections<Memory> $connections */
     private function database(Connections $connections, Authorization $authorization): Database
     {
