@@ -282,7 +282,10 @@ class Videos extends Action
             if (!empty($urls)) {
                 $vtt = $sheet->render(fn (string $file): string => $urls[$file] ?? $file);
                 $vttPath = $deviceForVideos->getPath($video->getId() . '/timeline') . '/timeline.vtt';
+                // Retained bytes. StatsResources sums this column into the videos.storage gauge.
+                $bytes = \strlen($vtt);
                 $deviceForVideos->write($vttPath, new Stream($vtt), 'text/vtt');
+                $this->persistTimelineVtt($dbForProject, $video, $vttPath, $bytes);
                 Console::info('Uploaded timeline vtt for video ' . $video->getId());
             }
 
@@ -869,6 +872,40 @@ class Videos extends Action
         $webvtt = (new SubripFile($srtPath))->convertTo('webvtt');
         $webvtt->build();
         $webvtt->save($vttPath);
+    }
+
+    /**
+     * Record the timeline cue file so its bytes join the videos.storage gauge.
+     *
+     * Sprite rows are replaced on each timeline job. This row stays and its size
+     * is replaced, so a rebuild does not stack the previous cue file.
+     */
+    private function persistTimelineVtt(Database $dbForProject, Document $video, string $path, int $bytes): void
+    {
+        $existing = $dbForProject->find('videos_previews', [
+            Query::equal('videoInternalId', [$video->getSequence()]),
+            Query::equal('type', ['timeline']),
+            Query::equal('name', ['timeline.vtt']),
+            Query::limit(1),
+        ]);
+
+        if (empty($existing)) {
+            $dbForProject->createDocument('videos_previews', new Document([
+                'videoId' => $video->getId(),
+                'videoInternalId' => $video->getSequence(),
+                'type' => 'timeline',
+                'name' => 'timeline.vtt',
+                'path' => $path,
+                'size' => $bytes,
+            ]));
+
+            return;
+        }
+
+        $dbForProject->updateDocument('videos_previews', $existing[0]->getId(), new Document([
+            'path' => $path,
+            'size' => $bytes,
+        ]));
     }
 
     /**

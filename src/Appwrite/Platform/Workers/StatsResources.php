@@ -294,7 +294,8 @@ class StatsResources extends Action
     }
 
     /**
-     * Current bytes of packaged renditions, captions, and preview images.
+     * Current bytes of packaged renditions, captions, preview images, and the
+     * timeline WebVTT.
      * Summed from each row's stored size so a retry or a deletion replaces
      * the total. The per-encode event is skipped in StatsUsage.
      *

@@ -97,7 +97,13 @@ class Get extends Base
 
         $preview = $authorization->skip(fn () => $dbForProject->getDocument('videos_previews', $previewId));
 
-        if ($preview->isEmpty() || $preview->getAttribute('videoInternalId') !== $video->getSequence()) {
+        // The timeline cue file is stored beside the sprites so its bytes are
+        // counted. It is not an image.
+        if (
+            $preview->isEmpty()
+            || $preview->getAttribute('videoInternalId') !== $video->getSequence()
+            || $preview->getAttribute('type') !== 'sprite'
+        ) {
             throw new Exception(Exception::VIDEO_PREVIEW_NOT_FOUND);
         }
 
