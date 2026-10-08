@@ -999,6 +999,16 @@ class OpenAPI3 extends Format
                             break;
                         }
 
+                        // A validator of its own that takes a whole array declares no item type.
+                        if ($validator->getType() === Validator::TYPE_ARRAY) {
+                            $node['schema']['type'] = 'array';
+                            $node['schema']['items'] = new \stdClass();
+                            if (($param['example'] ?? '') !== '') {
+                                $node['schema']['example'] = $param['example'];
+                            }
+                            break;
+                        }
+
                         $node['schema']['type'] = 'string';
                         if (($param['example'] ?? '') !== '') {
                             $node['schema']['example'] = $param['example'];
