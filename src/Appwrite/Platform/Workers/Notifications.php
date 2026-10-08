@@ -10,6 +10,7 @@ use Appwrite\Utopia\Messaging\Messages\Console as ConsoleMessage;
 use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
 use Exception;
 use Throwable;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -23,6 +24,7 @@ use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -54,10 +56,11 @@ class Notifications extends Action
             ->inject('register')
             ->inject('dbForPlatform')
             ->inject('platform')
+            ->inject('clientForWebhooks')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform): void
+    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks): void
     {
         $payload = $message->getPayload();
 
@@ -92,14 +95,21 @@ class Notifications extends Action
             }
 
             try {
-                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform);
+                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform, $clientForWebhooks);
                 if ($messageId !== '' && $channel === NOTIFICATION_TYPE_WEBHOOK && $alertId === null) {
                     $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload, $project);
                 }
             } catch (Throwable $error) {
                 Span::add('channel', $channel);
                 Span::add('channel.error', $error->getMessage());
-                $failure ??= $error;
+
+                // A retryable failure outranks a permanent one: ending the whole
+                // message would abandon a recipient the next attempt can still
+                // reach, while the dedup above keeps the retry from repeating the
+                // recipients already delivered.
+                if ($failure === null || ($failure instanceof PermanentFailure && !$error instanceof PermanentFailure)) {
+                    $failure = $error;
+                }
             }
         }
 
@@ -176,13 +186,14 @@ class Notifications extends Action
         Registry $register,
         Database $dbForPlatform,
         array $platform,
+        Client $clientForWebhooks,
     ): ?string {
         $channel = $recipient['channel'];
 
         return match ($channel) {
             NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform),
             NOTIFICATION_TYPE_CONSOLE => $this->dispatchConsole($recipient, $messageId, $payload, $project, $dbForPlatform),
-            NOTIFICATION_TYPE_WEBHOOK => $this->dispatchWebhook($recipient, $payload),
+            NOTIFICATION_TYPE_WEBHOOK => $this->dispatchWebhook($recipient, $payload, $clientForWebhooks),
             default => throw new Exception('Unsupported notification channel: ' . $channel),
         };
     }
@@ -342,11 +353,7 @@ class Notifications extends Action
 
             $send = static fn (EmailAdapter $adapter): array => $adapter->send($emailMessage);
 
-            if ($adapter instanceof EmailAdapter) {
-                $send($adapter);
-            } else {
-                $register->get('smtp')->use($send);
-            }
+            $result = $adapter instanceof EmailAdapter ? $send($adapter) : $register->get('smtp')->use($send);
         } catch (InvalidArgumentException $error) {
             // The address or name can never be delivered, so a retry cannot help.
             Span::add('email.skipped', $error->getType());
@@ -355,6 +362,23 @@ class Notifications extends Action
             return null;
         } catch (Throwable $error) {
             throw new Exception('Error sending notification: ' . $error->getMessage(), $type === 'smtp' ? 401 : 500);
+        }
+
+        // The adapter records a refusal in its result rather than throwing, so a
+        // send nobody accepted has to be failed here, or it is persisted as sent
+        // and never retried. As in the Mails worker: a project's own server that
+        // refused for good answers every attempt the same way, so retrying only
+        // repeats it from the shared egress IP; anything else is worth repeating.
+        if (($result['deliveredTo'] ?? 0) === 0) {
+            $failure = $result['results'][0] ?? [];
+            $error = 'Error sending notification: ' . ($failure['error'] ?? ($result['error'] ?? 'Unknown error'));
+            Span::add('email.error', $error);
+
+            if ($type === 'smtp' && ($failure['permanent'] ?? false) === true) {
+                throw new PermanentFailure($error, 401);
+            }
+
+            throw new Exception($error, $type === 'smtp' ? 401 : 500);
         }
 
         if ($messageId !== '') {
@@ -419,7 +443,7 @@ class Notifications extends Action
     /**
      * @param array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $recipient
      */
-    protected function dispatchWebhook(array $recipient, array $payload): ?string
+    protected function dispatchWebhook(array $recipient, array $payload, Client $clientForWebhooks): ?string
     {
         $address = $recipient['address'];
         $signatureKey = $recipient['signatureKey'] ?? null;
@@ -444,7 +468,7 @@ class Notifications extends Action
             signingSecret: $signatureKey,
         );
 
-        $adapter = new WebhookAdapter();
+        $adapter = new WebhookAdapter($clientForWebhooks);
         $result = $adapter->send($message);
 
         if (($result['deliveredTo'] ?? 0) === 0) {

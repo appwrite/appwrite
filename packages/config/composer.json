@@ -1,0 +1,35 @@
+{
+    "name": "utopia-php/config",
+    "description": "A simple Config library to managing application config variables",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "config"
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Config\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Config\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "require": {
+        "php": ">=8.5",
+        "utopia-php/validators": "^1.0"
+    },
+    "suggest": {
+        "ext-yaml": "Required only for the YAML parser"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

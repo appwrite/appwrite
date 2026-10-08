@@ -248,7 +248,6 @@ $platforms = [
                 'changelog' => \realpath(__DIR__ . '/../../docs/sdks/cli/CHANGELOG.md'),
                 'exclude' => [
                     'services' => [
-                        ['name' => 'assistant'],
                         ['name' => 'avatars'],
                     ],
                 ],

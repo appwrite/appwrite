@@ -279,18 +279,33 @@ Add a qualifier only when the verb or single name is ambiguous (`createStringCol
 - **Modules:** PascalCase, prefer one word (`Teams`, `Storage`); standard abbreviations OK (`VCS`, `JWT`, `SMTP`). Workers/tasks: PascalCase domain noun. `bin/` entry points: kebab-case with a role prefix (`worker-functions`).
 - **Identifiers:** HTTP `getName()` is `{restVerb}` or `{restVerb}{Resource}`. Workers: lowercase plural (`functions`). Tasks: lowercase, matching the bin script.
 - **Paths:** lowercase, kebab-case where needed, plural resources. Route params camelCase; `Id` suffix when multiple IDs appear (`:teamId`, `:deploymentId`). JSON camelCase; system fields keep `$` prefixes (`$id`, `$createdAt`).
-- **Scopes:** `{resource}.{read|write}`; special scopes `account`, `public`. **Events:** `teams.[teamId].create`. **Audits:** `audits.event` `{resource}.{action}`; `audits.resource` `{type}/{id}`.
+- **Scopes:** `{resource}.{read|write}`; special scopes `account`, `public`. Scopes are never removed: keys, functions, sites and OAuth2/MCP clients store them. Retire one with `'deprecated' => true`; `app/config/scopes/lock.json` records every shipped scope and `tests/unit/General/ScopesTest.php` fails on a removal or an unlocked addition. **Events:** `teams.[teamId].create`. **Audits:** `audits.event` `{resource}.{action}`; `audits.resource` `{type}/{id}`.
 - **Collections:** lowercase plural. Attributes camelCase; do not prefix with the collection name. `resourceType` is usually plural (`functions`, `sites`, `deployments`).
 - **DI:** inject object dependencies only (`$dbForProject`, `$queueForEvents`, `$user`). `{role}For{Target}` only when multiple of that role coexist (`dbForProject` / `dbForPlatform`). Register new resources in `app/init/resources.php` and `app/init/resources/request.php`. Never inject callbacks or global-shaped functions to reuse logic — see [Reuse](#reuse).
 - **Models:** class PascalCase; `getName()` matches. `Response::MODEL_*` constants `SCREAMING_SNAKE_CASE`; values camelCase singular (`team`) or `{name}List`.
 - **Env:** `_APP_` + `SCREAMING_SNAKE_CASE`.
 - **Spans:** in handlers only `Span::add($key, $value)` — never `Span::init`, `setError`, or `Span::finish`. Keys `snake_case`; dots only for child relationships (`project.id`, `storage.bucket.id`). Cross-cutting ids (`project.id`, `function.id`, `user.id`) stay at top level, not under a subsystem.
 
+## Collections
+
+Project collections are defined in [`app/config/collections/projects.php`](app/config/collections/projects.php) (merged with `common.php` into `Config::getParam('collections')['projects']`). That config is the source of truth for which collections a project owns.
+
+When a project is deleted, [`Deletes::cleanDatabaseCollections()`](src/Appwrite/Platform/Workers/Deletes.php) walks every collection in `_metadata`. On a shared-tables host, a collection **in** the config gets only the deleted tenant's rows removed; a collection **not** in the config gets `deleteCollection()`, which drops the shared table and its global (`_tenant` null) metadata for **every project on the host**.
+
+Order matters when a patch script creates a new project collection:
+
+1. **First** add the collection to `app/config/collections/projects.php`, then merge and deploy it.
+2. **Only then** run the patch script that creates the collection.
+
+On a shared-tables host, the patch script must create the collection as a **global shared collection**: call `$dbForProject->setTenant(null)` before `createCollection()` so the table and its `_metadata` row belong to no tenant and are shared by every project on the host. If it is created while a project's tenant is set, its `_metadata` row gets that project's tenant and the collection is missing for every other project on the host.
+
+Never hardcode a collection schema only inside a patch script. If the collection exists before it is in the config, the next project deletion on that host wipes it for every tenant. This happened to `analyticsProperties` on every Cloud shared-tables host within minutes of the patch running.
+
 ## Tests
 
 **E2E** (`tests/e2e/Services/{Service}/`) is the contract for the HTTP/API surface. Cover every route for **success and failure** through the real API: status codes, headers, cookies, response shape, SDK-visible contracts, validation, auth, scopes, permissions, project mode, and client vs server vs console sides. Also cover persistence, queue-visible behavior, worker and CLI-task integration, and cross-subsystem workflows users can observe. Shared logic in `{Service}Base` traits; suites `{Feature}{ConsoleClientTest|CustomClientTest|CustomServerTest}`. Use `Tests\E2E\Client` and existing scope traits (`Scope`, `ProjectCustom`, `SideClient`, `SideServer`, `ProjectConsole`). Methods `test{Verb}` or `test{Verb}{Qualifier}`. Group assertions under `Test for SUCCESS` / `Test for FAILURE` blocks. Generate unique IDs, emails, and names so parallel runs do not collide.
 
-**Unit** (`tests/unit/`) covers **local src libraries only** (`src/Appwrite/Auth`, `Network`, `URL`, validators, mappers, parsers, filters). Path mirrors source; class `{ClassUnderTest}Test`. Use `PHPUnit\Framework\TestCase`, data providers for matrices, and named fakes over anonymous mocks. Do **not** unit-test HTTP route actions (`Platform/Modules/**/Http`), CLI tasks, or workers — e2e covers those surfaces; unit-test the libraries they call. If an e2e test finds a library bug and no unit test fails, add a unit regression on that library. Never use reflection to reach private members. Do not run Swoole coroutine work in the shared unit process. Never call production third-party services from automated tests.
+**Unit** (`tests/unit/`) covers **local src libraries** (`src/Appwrite/Auth`, `Network`, `URL`, validators, mappers, parsers, filters), plus **contract locks** for configuration clients persist (`tests/unit/General/ScopesTest.php` against `app/config/scopes/lock.json`). A contract lock pins what must never disappear from a published catalog; do not use it to mirror config shape or values. Path mirrors source; class `{ClassUnderTest}Test`. Use `PHPUnit\Framework\TestCase`, data providers for matrices, and named fakes over anonymous mocks. Do **not** unit-test HTTP route actions (`Platform/Modules/**/Http`), CLI tasks, or workers — e2e covers those surfaces; unit-test the libraries they call. If an e2e test finds a library bug and no unit test fails, add a unit regression on that library. Never use reflection to reach private members. Do not run Swoole coroutine work in the shared unit process. Never call production third-party services from automated tests.
 
 Structure tests as Arrange, Act, Assert. Assert observable behavior (status, body fields, error type, permission outcome, persisted value), not private call order. Avoid full-document assertions when a sparse check is enough. Avoid sleeps; prefer existing polling helpers. Run the narrowest command that validates the change (`composer lint <file>`, a single `--filter`, one service suite) before broadening.
 

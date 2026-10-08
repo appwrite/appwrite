@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Installer\Http\Installer;
 
 use Appwrite\Platform\Installer\Runtime\State;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
 use Utopia\Validator\Text;
@@ -21,13 +22,20 @@ class Status extends Action
             ->setHttpPath('/install/status')
             ->desc('Poll installation progress')
             ->param('installId', '', new Text(64, 0), 'Installation ID', true)
+            ->inject('request')
             ->inject('response')
             ->inject('installerState')
             ->callback($this->action(...));
     }
 
-    public function action(string $installId, Response $response, State $state): void
+    public function action(string $installId, Request $request, Response $response, State $state): void
     {
+        if (!Validate::validateSecret($request)) {
+            $response->setStatusCode(Response::STATUS_CODE_UNAUTHORIZED);
+            $response->json(['success' => false, 'message' => 'Invalid installer secret']);
+            return;
+        }
+
         $state->clearStaleLockIfNeeded();
 
         $installId = $state->sanitizeInstallId($installId);
@@ -48,9 +56,7 @@ class Status extends Action
         if (isset($data['payload']) && is_array($data['payload'])) {
             unset(
                 $data['payload']['opensslKey'],
-                $data['payload']['assistantOpenAIKey'],
                 $data['payload']['opensslKeyHash'],
-                $data['payload']['assistantOpenAIKeyHash'],
             );
         }
         // Strip sensitive data from step details

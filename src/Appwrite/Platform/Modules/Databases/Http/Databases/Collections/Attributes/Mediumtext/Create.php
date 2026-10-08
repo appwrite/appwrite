@@ -73,6 +73,7 @@ class Create extends Action
             ->param('encrypt', false, new Boolean(), 'Toggle encryption for the attribute. Encryption enhances security by not storing any plain text values in the database. However, encrypted attributes cannot be queried.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('plan')
@@ -90,6 +91,7 @@ class Create extends Action
         bool           $encrypt,
         UtopiaResponse $response,
         Database       $dbForProject,
+        callable       $getDatabasesDB,
         DatabasePublisher  $publisherForDatabase,
         Event          $queueForEvents,
         array $plan,
@@ -118,6 +120,7 @@ class Create extends Action
             ]),
             $response,
             $dbForProject,
+            $getDatabasesDB,
             $publisherForDatabase,
             $queueForEvents,
             $authorization

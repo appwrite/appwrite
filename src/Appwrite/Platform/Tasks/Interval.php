@@ -84,7 +84,14 @@ class Interval extends Action
                     $this->verifyDomain($dbForPlatform, $publisherForCertificates);
                 },
                 'interval' => $intervalDomainVerification * 1000,
-            ]
+            ],
+            [
+                'name' => 'certificateGeneration',
+                'callback' => function (Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates) {
+                    $this->generateCertificate($dbForPlatform, $publisherForCertificates);
+                },
+                'interval' => $intervalDomainVerification * 1000,
+            ],
         ];
     }
 
@@ -134,5 +141,53 @@ class Interval extends Action
 
         Span::add("interval.domain_verification.processed", $processed);
         Span::add("interval.domain_verification.failed", $failed);
+    }
+
+    private function generateCertificate(Database $dbForPlatform, Certificate $publisherForCertificates): void
+    {
+        $before = DatabaseDateTime::format(new DateTime('-5 minutes')); // Outlast a running job, which only updates the rule when it ends
+
+        $rules = $dbForPlatform->find('rules', [
+            Query::equal('status', [RULE_STATUS_CERTIFICATE_GENERATING]), // Delayed providers finish issuing after the first job
+            Query::lessThan('$updatedAt', $before),
+            Query::orderAsc('$updatedAt'),
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+            Query::limit(100),
+        ]);
+
+        $scanned = \count($rules);
+        Span::add('interval.certificate_generation.scanned', $scanned);
+
+        if ($scanned === 0) {
+            Span::add('interval.certificate_generation.processed', 0);
+            Span::add('interval.certificate_generation.failed', 0);
+            return;
+        }
+
+        $processed = 0;
+        $failed = 0;
+
+        foreach ($rules as $rule) {
+            try {
+                $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                    project: new Document([
+                        '$id' => $rule->getAttribute('projectId', ''),
+                        '$sequence' => $rule->getAttribute('projectInternalId', 0),
+                    ]),
+                    domain: new Document([
+                        'domain' => $rule->getAttribute('domain'),
+                        'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                    ]),
+                    action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                    skipDomainValidation: true, // DNS passed before the rule reached generating
+                ));
+                $processed++;
+            } catch (\Throwable) {
+                $failed++;
+            }
+        }
+
+        Span::add('interval.certificate_generation.processed', $processed);
+        Span::add('interval.certificate_generation.failed', $failed);
     }
 }

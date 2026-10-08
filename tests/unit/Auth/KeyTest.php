@@ -42,6 +42,7 @@ final class KeyTest extends TestCase
         $this->assertSame(User::ROLE_KEYS, $decoded->getRole());
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
         $this->assertSame('Ephemeral Key', $decoded->getName());
+        $this->assertFalse($decoded->isRuntimeEphemeral());
 
         // Decode ephemeral key with extras
         $extra = [
@@ -51,6 +52,7 @@ final class KeyTest extends TestCase
             'projectCheckDisabled' => true,
             'previewAuthDisabled' => true,
             'deploymentStatusIgnored' => true,
+            'runtimeEphemeral' => true,
         ];
         $key = self::generateKey($projectId, $usage, $scopes, extra: $extra);
         $decoded = Key::decode(
@@ -72,6 +74,7 @@ final class KeyTest extends TestCase
         $this->assertEquals(true, $decoded->isProjectCheckDisabled());
         $this->assertEquals(true, $decoded->isPreviewAuthDisabled());
         $this->assertEquals(true, $decoded->isDeploymentStatusIgnored());
+        $this->assertTrue($decoded->isRuntimeEphemeral());
 
         // Decode invalid ephemeral key
         $invalidKey = API_KEY_EPHEMERAL . '_invalid_jwt_token';

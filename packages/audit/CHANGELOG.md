@@ -4,6 +4,16 @@ All notable changes to `utopia-php/audit` are documented in this file.
 
 ## Unreleased
 
+### utopia-php/client 0.6
+
+- Require `utopia-php/client` ^0.6.
+
+### utopia-php/query 0.7
+
+- `utopia-php/query` widened from `0.6.*` to `^0.6 || ^0.7`.
+  `Query::__construct()` takes the query's alias as a fourth argument and
+  passes it on. Array and object cursors work on both lines.
+
 ### ClickHouse adapter — migrated to the utopia-php/query 0.6 builder
 
 #### Changed
