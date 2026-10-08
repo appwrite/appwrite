@@ -136,13 +136,25 @@ async function buildRouter() {
 }
 
 export async function getRouter() {
-  if (!routerPromise) {
-    routerPromise = buildRouter().catch((error) => {
-      routerPromise = null
-      throw error
-    })
+  // The browser keeps one router for the page lifetime. The server must build a
+  // new router and QueryClient on every call. TanStack Start memoizes this
+  // function per request, then attaches `serverSsr` and clears it in cleanup.
+  // A process-wide router lets concurrent requests overwrite `serverSsr`, so
+  // dehydration throws (undefined is not an object, evaluating
+  // `routerInstance.serverSsr.dehydrate`) and one request's loader data can
+  // land in another response. The route-tree import above stays deduped so
+  // Vite SSR reloads still cannot observe `routeTree === undefined`.
+  if (typeof document !== 'undefined') {
+    if (!routerPromise) {
+      routerPromise = buildRouter().catch((error) => {
+        routerPromise = null
+        throw error
+      })
+    }
+    return routerPromise
   }
-  return routerPromise
+
+  return buildRouter()
 }
 
 if (import.meta.hot) {
