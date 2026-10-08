@@ -12,6 +12,7 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Platform\Modules\Migrations\Endpoint;
 use Appwrite\Services\TablesDB;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
@@ -63,6 +64,7 @@ class Migrations extends Action
     protected ?Device $deviceForFiles;
     protected ?Document $project;
     protected ?PublicHostname $publicHostname = null;
+    protected ?Endpoint $migrationEndpoint = null;
 
     protected ?Document $sourceProject = null;
 
@@ -109,6 +111,7 @@ class Migrations extends Action
             ->inject('plan')
             ->inject('authorization')
             ->inject('publicHostname')
+            ->inject('migrationEndpoint')
             ->callback($this->action(...));
     }
 
@@ -131,6 +134,7 @@ class Migrations extends Action
         array $plan,
         Authorization $authorization,
         PublicHostname $publicHostname,
+        Endpoint $migrationEndpoint,
     ): void {
         $migrationMessage = Migration::fromArray($message->getPayload());
         $this->getDatabasesDB = $getDatabasesDB;
@@ -158,6 +162,7 @@ class Migrations extends Action
         $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
         $this->publicHostname = $publicHostname;
+        $this->migrationEndpoint = $migrationEndpoint;
 
         $platform = $migrationMessage->platform ?: Config::getParam('platform', []);
 
@@ -176,6 +181,7 @@ class Migrations extends Action
             $this->dbForPlatform = null;
             $this->project = null;
             $this->publicHostname = null;
+            $this->migrationEndpoint = null;
             $this->deviceForMigrations = null;
             $this->deviceForFiles = null;
             $this->plan = [];
@@ -317,10 +323,28 @@ class Migrations extends Action
             default => throw new Exception(Exception::MIGRATION_SOURCE_TYPE_INVALID),
         };
 
+        if ($migrationSource instanceof SourceAppwrite && $credentials['endpoint'] !== $this->getInternalEndpoint()) {
+            $migrationSource->setResolver($this->migrationEndpoint->resolve(...));
+        }
+
         $resources = $migration->getAttribute('resources', []);
         $this->sourceReport = $migrationSource->report($resources);
 
         return $migrationSource;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    private function getInternalEndpoint(): string
+    {
+        $host = System::getEnv('_APP_MIGRATION_HOST');
+
+        if (empty($host)) {
+            throw new \Exception('_APP_MIGRATION_HOST is not set');
+        }
+
+        return 'http://' . $host . '/v1';
     }
 
     /**
@@ -341,7 +365,7 @@ class Migrations extends Action
 
         $tablesDB = new TablesDB(
             (new Client())
-                ->setEndpoint('http://' . System::getEnv('_APP_MIGRATION_HOST') . '/v1')
+                ->setEndpoint($this->getInternalEndpoint())
                 ->setProject($projectId)
                 ->setKey($key)
         );
@@ -563,16 +587,15 @@ class Migrations extends Action
         $caughtError = null;
 
         try {
-            $host = System::getEnv('_APP_MIGRATION_HOST');
-            if (empty($host)) {
-                throw new \Exception('_APP_MIGRATION_HOST is not set');
-            }
-
-            $endpoint = 'http://' . $host . '/v1';
+            $endpoint = $this->getInternalEndpoint();
 
             $credentials = $migration->getAttribute('credentials', []);
 
             if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
+                if (isset($credentials['endpoint']) && $credentials['endpoint'] !== $endpoint) {
+                    $this->migrationEndpoint->validate($credentials['endpoint']);
+                }
+
                 $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
                 $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
                 $credentials['endpoint'] = $credentials['endpoint'] ?? $endpoint;
