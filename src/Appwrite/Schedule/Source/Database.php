@@ -65,7 +65,7 @@ abstract class Database implements Source, Changes
             'resourceId' => $document->getAttribute('resourceId'),
             'resourceType' => $document->getAttribute('resourceType'),
             'schedule' => $document->getAttribute('schedule'),
-            'interval' => $document->getAttribute('interval', ''),
+            'interval' => $document->getAttribute('interval', 0),
             'active' => $document->getAttribute('active'),
             'resourceUpdatedAt' => $document->getAttribute('resourceUpdatedAt'),
             'data' => $document->getAttribute('data', []),

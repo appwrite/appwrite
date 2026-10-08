@@ -129,10 +129,10 @@ class Func extends Model
                 'example' => '5 4 * * *',
             ])
             ->addRule('interval', [
-                'type' => self::TYPE_STRING,
-                'description' => 'How often the function runs on a schedule. Empty when the function has no interval.',
-                'default' => '',
-                'example' => '1h',
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Minutes between scheduled executions. 0 when the function has no interval.',
+                'default' => 0,
+                'example' => 60,
             ])
             ->addRule('timeout', [
                 'type' => self::TYPE_INTEGER,

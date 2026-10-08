@@ -125,10 +125,10 @@ final class FunctionsScheduleTest extends Scope
      */
     public static function invalidIntervals(): \Iterator
     {
-        yield 'one second' => ['1s'];
-        yield 'seconds as text' => ['3600'];
-        yield 'seconds as integer' => [3600];
+        yield 'negative' => [-60];
+        yield 'fraction' => [1.5];
         yield 'word' => ['hourly'];
+        yield 'above integer column' => [2147483648];
     }
 
     #[DataProvider('invalidIntervals')]
@@ -157,18 +157,18 @@ final class FunctionsScheduleTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Hourly',
             'runtime' => 'node-22',
-            'interval' => '1h',
+            'interval' => 60,
         ]);
 
         $this->assertSame(201, $function['headers']['status-code']);
-        $this->assertSame('1h', $function['body']['interval']);
+        $this->assertSame(60, $function['body']['interval']);
         $this->assertSame('', $function['body']['schedule']);
         $functionId = $function['body']['$id'];
 
         try {
             $function = $this->getFunction($functionId);
             $this->assertSame(200, $function['headers']['status-code']);
-            $this->assertSame('1h', $function['body']['interval']);
+            $this->assertSame(60, $function['body']['interval']);
 
             $function = $this->createFunction([
                 'functionId' => ID::unique(),
@@ -177,7 +177,7 @@ final class FunctionsScheduleTest extends Scope
                 'interval' => null,
             ]);
             $this->assertSame(201, $function['headers']['status-code']);
-            $this->assertSame('', $function['body']['interval']);
+            $this->assertSame(0, $function['body']['interval']);
             $this->cleanupFunction($function['body']['$id']);
 
             /**
@@ -188,7 +188,7 @@ final class FunctionsScheduleTest extends Scope
                 'name' => 'Both',
                 'runtime' => 'node-22',
                 'schedule' => '0 * * * *',
-                'interval' => '1h',
+                'interval' => 60,
             ]);
             $this->assertSame(400, $function['headers']['status-code']);
             $this->assertSame('general_argument_invalid', $function['body']['type']);
@@ -213,10 +213,10 @@ final class FunctionsScheduleTest extends Scope
             $function = $this->updateFunction($functionId, [
                 'name' => 'Interval',
                 'runtime' => 'node-22',
-                'interval' => '6h',
+                'interval' => 45,
             ]);
             $this->assertSame(200, $function['headers']['status-code']);
-            $this->assertSame('6h', $function['body']['interval']);
+            $this->assertSame(45, $function['body']['interval']);
             $this->assertSame('', $function['body']['schedule']);
 
             $function = $this->updateFunction($functionId, [
@@ -225,7 +225,7 @@ final class FunctionsScheduleTest extends Scope
                 'schedule' => '0 0 * * *',
             ]);
             $this->assertSame(200, $function['headers']['status-code']);
-            $this->assertSame('', $function['body']['interval']);
+            $this->assertSame(0, $function['body']['interval']);
             $this->assertSame('0 0 * * *', $function['body']['schedule']);
 
             /**
@@ -235,7 +235,7 @@ final class FunctionsScheduleTest extends Scope
                 'name' => 'Both',
                 'runtime' => 'node-22',
                 'schedule' => '0 0 * * *',
-                'interval' => '1h',
+                'interval' => 60,
             ]);
             $this->assertSame(400, $function['headers']['status-code']);
             $this->assertSame('general_argument_invalid', $function['body']['type']);
@@ -243,13 +243,13 @@ final class FunctionsScheduleTest extends Scope
             $function = $this->updateFunction($functionId, [
                 'name' => 'Invalid',
                 'runtime' => 'node-22',
-                'interval' => '30s',
+                'interval' => -1,
             ]);
             $this->assertSame(400, $function['headers']['status-code']);
             $this->assertSame('general_argument_invalid', $function['body']['type']);
 
             $function = $this->getFunction($functionId);
-            $this->assertSame('', $function['body']['interval']);
+            $this->assertSame(0, $function['body']['interval']);
             $this->assertSame('0 0 * * *', $function['body']['schedule']);
         } finally {
             $this->cleanupFunction($functionId);
@@ -267,7 +267,7 @@ final class FunctionsScheduleTest extends Scope
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
-            'interval' => '1m',
+            'interval' => 1,
             'timeout' => 10,
         ]);
 

@@ -2,11 +2,10 @@
 
 namespace Appwrite\Schedule\Source;
 
-use Appwrite\Schedule\Interval;
 use Utopia\Database\Document;
 use Utopia\Schedule\Trigger;
 use Utopia\Schedule\Trigger\Cron;
-use Utopia\Schedule\Trigger\Interval as IntervalTrigger;
+use Utopia\Schedule\Trigger\Interval;
 use Utopia\Schedule\Trigger\Shifted;
 
 final class Functions extends Database
@@ -51,22 +50,20 @@ final class Functions extends Database
     #[\Override]
     protected function runnable(Document $schedule): bool
     {
-        $interval = (string) $schedule->getAttribute('interval', '');
+        $interval = $schedule->getAttribute('interval', 0);
 
-        return $interval === '' || Interval::tryFrom($interval) !== null;
+        return \is_int($interval) && $interval >= 0;
     }
 
     #[\Override]
     protected function trigger(array $schedule): Trigger
     {
         $resourceId = (string) $schedule['resourceId'];
-        $interval = Interval::tryFrom((string) ($schedule['interval'] ?? ''));
+        $seconds = (int) ($schedule['interval'] ?? 0) * 60;
 
-        if ($interval !== null) {
-            $seconds = $interval->seconds();
-
+        if ($seconds > 0) {
             // Phase each function inside its interval so equal intervals do not fire together.
-            return new Shifted(new IntervalTrigger($seconds), \abs(\crc32($resourceId)) % $seconds);
+            return new Shifted(new Interval($seconds), \abs(\crc32($resourceId)) % $seconds);
         }
 
         $window = ($this->spread)($schedule);

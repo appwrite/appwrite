@@ -13,7 +13,7 @@ final class FunctionsTest extends TestCase
 {
     public function testIntervalRunsOncePerPeriodAtStablePhase(): void
     {
-        $entry = $this->entry(['schedule' => '', 'interval' => '1h']);
+        $entry = $this->entry(['schedule' => '', 'interval' => 60]);
         $start = new \DateTimeImmutable('2026-10-07 00:00:00 UTC');
 
         $occurrences = $entry->trigger->occurrencesBetween($start, $start->modify('+3 hours'));
@@ -28,7 +28,7 @@ final class FunctionsTest extends TestCase
 
     public function testSkipsUnsupportedInterval(): void
     {
-        $database = $this->database(['schedule' => '', 'interval' => '1s']);
+        $database = $this->database(['schedule' => '', 'interval' => -5]);
         $source = new Functions($database, fn () => $database, fn () => false, fn () => 0);
 
         $row = \iterator_to_array($source->snapshot())[0];

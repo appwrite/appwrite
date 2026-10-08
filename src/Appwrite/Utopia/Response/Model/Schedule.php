@@ -60,10 +60,10 @@ class Schedule extends Model
                 'example' => '5 4 * * *',
             ])
             ->addRule('interval', [
-                'type' => self::TYPE_STRING,
-                'description' => 'How often the schedule runs. Empty when the schedule has no interval.',
-                'default' => '',
-                'example' => '1h',
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Minutes between runs. 0 when the schedule has no interval.',
+                'default' => 0,
+                'example' => 60,
             ])
             ->addRule('data', [
                 'type' => self::TYPE_JSON,

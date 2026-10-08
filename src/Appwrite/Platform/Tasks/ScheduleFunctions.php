@@ -99,7 +99,7 @@ class ScheduleFunctions extends Action
                 Span::add('function.id', $schedule['resource']->getId());
                 Span::add('schedule.id', $schedule['$id'] ?? '');
                 Span::add('schedule.cron', (string) ($schedule['schedule'] ?? ''));
-                Span::add('schedule.interval', (string) ($schedule['interval'] ?? ''));
+                Span::add('schedule.interval', (int) ($schedule['interval'] ?? 0));
                 Span::add('occurrence.due', $occurrence->due->format('c'));
                 Span::add('occurrence.late', \round(\microtime(true) - (float) $occurrence->due->format('U.u'), 3));
                 Span::add('occurrence.batch', $batch);
