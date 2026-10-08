@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+: "${VITE_APPWRITE_ENDPOINT:?CONSOLE_VITE_APPWRITE_ENDPOINT is not set}"
+: "${E2E_TEST_EMAIL:?CONSOLE_E2E_TEST_EMAIL is not set}"
+: "${E2E_TEST_PASSWORD:?CONSOLE_E2E_TEST_PASSWORD is not set}"
+
 headers=$(mktemp)
 body=$(mktemp)
 trap 'rm -f "$headers" "$body"' EXIT

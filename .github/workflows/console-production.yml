@@ -26,7 +26,10 @@ permissions:
     contents: read
 
 jobs:
+    # Every other job waits on this one, so approval rules on console-production
+    # gate the whole release: images, manifests, assets and the deploy.
     version:
+        environment: console-production
         runs-on: ubuntu-24.04
         outputs:
             tag: ${{ steps.version.outputs.tag }}
@@ -47,6 +50,7 @@ jobs:
                   echo "Deploying $IMAGE_NAME:$tag"
 
     build:
+        needs: version
         permissions:
             contents: read
             packages: write
@@ -160,6 +164,7 @@ jobs:
                   done
 
     build-self-hosted:
+        needs: version
         permissions:
             contents: read
             packages: write
@@ -266,7 +271,6 @@ jobs:
                   done
 
     publish-assets:
-        environment: console-production
         needs: build
         runs-on: gcrunner=${{ github.run_id }}-console-publish-assets/runner=deploy
         timeout-minutes: 25

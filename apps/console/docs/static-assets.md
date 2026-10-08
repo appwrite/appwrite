@@ -43,9 +43,9 @@ asset loading with CDN access blocked before adopting the first release.
 2. Add bucket-scoped Object Read & Write repository secrets
    `CONSOLE_STAGING_R2_ACCESS_KEY_ID` / `CONSOLE_STAGING_R2_SECRET_ACCESS_KEY` and
    `CONSOLE_PRODUCTION_R2_ACCESS_KEY_ID` / `CONSOLE_PRODUCTION_R2_SECRET_ACCESS_KEY`;
-   use a separate bucket-scoped credential for each. The upload jobs run in the
-   `console-staging` and `console-production` environments, where approval rules
-   for production belong.
+   use a separate bucket-scoped credential for each. Staging uploads run in the
+   `console-staging` environment; every production job waits on the
+   `console-production` environment, where approval rules for releases belong.
 3. Deploy staging, verify scripts/styles/fonts and client navigation, then release
    production. No application-configuration change is required.
 
