@@ -79,6 +79,12 @@ parameters:
 			path: src/Adapter/Redis.php
 
 		-
+			message: '#^Property Utopia\\Cache\\Adapter\\Redis\:\:\$auth \(array\<string\>\) does not accept array\<mixed\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Adapter/Redis.php
+
+		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
 			count: 1
@@ -91,19 +97,49 @@ parameters:
 			path: src/Adapter/Redis/Multiplexing.php
 
 		-
+			message: '#^Anonymous function should return array but returns array\|RedisCluster\|false\.$#'
+			identifier: return.type
+			count: 3
+			path: src/Adapter/RedisCluster.php
+
+		-
+			message: '#^Anonymous function should return bool but returns bool\|RedisCluster\.$#'
+			identifier: return.type
+			count: 3
+			path: src/Adapter/RedisCluster.php
+
+		-
+			message: '#^Anonymous function should return int but returns int\|RedisCluster\|false\.$#'
+			identifier: return.type
+			count: 3
+			path: src/Adapter/RedisCluster.php
+
+		-
+			message: '#^Anonymous function should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 2
+			path: src/Adapter/RedisCluster.php
+
+		-
+			message: '#^Binary operation "\+\=" between mixed and int\|RedisCluster results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
+			path: src/Adapter/RedisCluster.php
+
+		-
 			message: '#^Parameter \#1 \$data of method Utopia\\Cache\\Envelope\:\:encode\(\) expects array\<int\|string, mixed\>\|string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Adapter/RedisCluster.php
 
 		-
-			message: '#^Parameter \#1 \$key_or_address of method RedisCluster\:\:dbSize\(\) expects string, mixed given\.$#'
+			message: '#^Parameter \#1 \$key_or_address of method RedisCluster\:\:dbSize\(\) expects array\|string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Adapter/RedisCluster.php
 
 		-
-			message: '#^Parameter \#1 \$key_or_address of method RedisCluster\:\:ping\(\) expects string, mixed given\.$#'
+			message: '#^Parameter \#1 \$key_or_address of method RedisCluster\:\:ping\(\) expects array\|string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Adapter/RedisCluster.php

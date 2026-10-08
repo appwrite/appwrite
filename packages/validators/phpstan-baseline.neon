@@ -225,5 +225,5 @@ parameters:
 		-
 			message: '#^Cannot call method isValid\(\) on Utopia\\Validator\\URL\|null\.$#'
 			identifier: method.nonObject
-			count: 15
+			count: 12
 			path: tests/URLTest.php

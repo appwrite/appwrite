@@ -421,12 +421,6 @@ parameters:
 			path: src/Connection/Locking.php
 
 		-
-			message: '#^Cannot access offset 1 on non\-empty\-array\|Redis\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: src/Connection/Redis.php
-
-		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
 			count: 1
@@ -529,6 +523,12 @@ parameters:
 			path: src/Connection/Redis.php
 
 		-
+			message: '#^Cannot access offset 1 on non\-empty\-array\|RedisCluster\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Connection/RedisCluster.php
+
+		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
 			count: 1
@@ -541,13 +541,31 @@ parameters:
 			path: src/Connection/RedisCluster.php
 
 		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:decrement\(\) should return int but returns int\|RedisCluster\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
 			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:get\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: src/Connection/RedisCluster.php
 
 		-
-			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:get\(\) should return array\|string\|null but returns string\|true\|null\.$#'
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:get\(\) should return array\|string\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:increment\(\) should return int but returns int\|RedisCluster\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:incrementBy\(\) should return int but returns int\|RedisCluster\|false\.$#'
 			identifier: return.type
 			count: 1
 			path: src/Connection/RedisCluster.php
@@ -579,6 +597,18 @@ parameters:
 		-
 			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:listRange\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:listRange\(\) should return array but returns array\|RedisCluster\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:listSize\(\) should return int but returns bool\|int\|RedisCluster\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Connection/RedisCluster.php
 
@@ -619,13 +649,31 @@ parameters:
 			path: src/Connection/RedisCluster.php
 
 		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:set\(\) should return bool but returns bool\|RedisCluster\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:set\(\) should return bool but returns bool\|RedisCluster\|string\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
 			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:setArray\(\) has parameter \$value with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: src/Connection/RedisCluster.php
 
 		-
-			message: '#^Parameter \#1 \$key_or_address of method RedisCluster\:\:ping\(\) expects string, mixed given\.$#'
+			message: '#^Method Utopia\\Queue\\Connection\\RedisCluster\:\:setNotExists\(\) should return bool but returns bool\|RedisCluster\|string\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Connection/RedisCluster.php
+
+		-
+			message: '#^Parameter \#1 \$key_or_address of method RedisCluster\:\:ping\(\) expects array\|string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Connection/RedisCluster.php
@@ -637,19 +685,7 @@ parameters:
 			path: src/Connection/RedisCluster.php
 
 		-
-			message: '#^Parameter \#2 \$elements of method RedisCluster\:\:rPush\(\) expects string, string\|false given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Connection/RedisCluster.php
-
-		-
 			message: '#^Parameter \#2 \$seeds of class RedisCluster constructor expects array\<string\>\|null, array given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Connection/RedisCluster.php
-
-		-
-			message: '#^Parameter \#2 \$value of method RedisCluster\:\:lPush\(\) expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Connection/RedisCluster.php
