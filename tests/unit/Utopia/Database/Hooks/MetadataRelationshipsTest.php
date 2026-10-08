@@ -22,7 +22,6 @@ use Utopia\Database\Hook\Relationships;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
-use Utopia\Database\RelationshipType;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Adapter\Stack;
@@ -74,16 +73,12 @@ final class MetadataRelationshipsTest extends TestCase
         $tenant->addHook(new Permissions());
         $tenant->addHook(new Relationships());
         foreach ([
-            ['veterinarians', 'animals', 'animals', RelationshipType::ManyToMany],
-            ['animals', 'zoos', 'zoo', RelationshipType::ManyToOne],
-            ['animals', 'presidents', 'president', RelationshipType::ManyToOne],
-            ['zoos', 'presidents', 'president', RelationshipType::ManyToOne],
-        ] as [$from, $to, $key, $type]) {
-            $tenant->createRelationship($collections[$from], Relationship::fromArray([
-                'relatedCollection' => $collections[$to],
-                'relationType' => $type,
-                'key' => $key,
-            ]));
+            ['veterinarians', 'animals', 'animals', Relationship::manyToMany(...)],
+            ['animals', 'zoos', 'zoo', Relationship::manyToOne(...)],
+            ['animals', 'presidents', 'president', Relationship::manyToOne(...)],
+            ['zoos', 'presidents', 'president', Relationship::manyToOne(...)],
+        ] as [$from, $to, $key, $relationship]) {
+            $tenant->createRelationship($collections[$from], $relationship($collections[$to], key: $key));
         }
         $permissions = [Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())];
         $tenant->createDocument($collections['presidents'], new Document(['$id' => 'leader', '$permissions' => $permissions, 'name' => 'Leader']));
@@ -221,12 +216,8 @@ final class MetadataRelationshipsTest extends TestCase
             ['children', 'leaves', 'leaf'],
             ['leaves', 'beyond', 'next'],
         ] as [$from, $to, $key]) {
-            $tenant->createRelationship($from, Relationship::fromArray([
-                'relatedCollection' => $to,
-                'relationType' => $key === 'many' ? RelationshipType::ManyToMany : RelationshipType::ManyToOne,
-                'key' => $key,
-                'twoWayKey' => $from . '_' . $key,
-            ]));
+            $relationship = $key === 'many' ? Relationship::manyToMany(...) : Relationship::manyToOne(...);
+            $tenant->createRelationship($from, $relationship($to, key: $key, twoWayKey: $from . '_' . $key));
         }
         $beyond = new Document(['$id' => 'beyond', '$collection' => 'beyond']);
         $leaf = new Document(['$id' => 'leaf', '$collection' => 'leaves', 'next' => $beyond]);
