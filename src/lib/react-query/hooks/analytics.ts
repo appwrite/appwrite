@@ -1109,7 +1109,6 @@ export type CreateAnalyticsPropertyInput = {
   propertyId?: string
   name: string
   domain?: string
-  timezone?: string
 }
 
 export function useCreateAnalyticsProperty(
@@ -1125,7 +1124,6 @@ export function useCreateAnalyticsProperty(
         propertyId: input.propertyId?.trim() || ID.unique(),
         name: input.name.trim(),
         domain: input.domain?.trim() || undefined,
-        timezone: input.timezone?.trim() || undefined,
       })
     },
     onSuccess: async () => {
@@ -1146,7 +1144,6 @@ export type UpdateAnalyticsPropertyInput = {
   propertyId: string
   name?: string
   domain?: string
-  timezone?: string
   enabled?: boolean
   /** Maps to the API's `xpublic` (public stats visibility). */
   xpublic?: boolean
@@ -1166,7 +1163,6 @@ export function useUpdateAnalyticsProperty(
         propertyId: input.propertyId,
         ...(input.name !== undefined && { name: input.name }),
         ...(input.domain !== undefined && { domain: input.domain }),
-        ...(input.timezone !== undefined && { timezone: input.timezone }),
         ...(input.enabled !== undefined && { enabled: input.enabled }),
         ...(input.xpublic !== undefined && { xpublic: input.xpublic }),
         ...(input.allowedOrigins !== undefined && {

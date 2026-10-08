@@ -674,9 +674,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Primary domain being tracked. Optional for native apps.':
     '計測対象の主要ドメインです。ネイティブアプリの場合は任意です。',
   'Domain updated': 'ドメインを更新しました',
-  'IANA timezone used to decide where each day starts and ends for stats.':
-    '統計における 1 日の開始と終了を決定する IANA タイムゾーンです。',
-  'Timezone updated': 'タイムゾーンを更新しました',
   'Origins allowed to send tracking events. Use * to allow all origins.':
     '計測イベントの送信を許可するオリジンです。* を指定するとすべてのオリジンを許可します。',
   'https://example.com': 'https://example.com',
@@ -711,8 +708,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Could not copy to clipboard': 'クリップボードにコピーできませんでした',
   'Add the snippet, then wait for the first event.':
     'スニペットを追加し、最初のイベントを待ちます。',
-  'Daily boundaries use your current timezone. You can change every value later in settings.':
-    '日次の区切りには現在のタイムゾーンを使用します。すべての値は後から設定で変更できます。',
+  'Daily totals are bucketed in UTC. You can change every value later in settings.':
+    '日次の集計は UTC で区切られます。すべての値は後から設定で変更できます。',
   'Add tracking to your app': 'アプリに計測を追加',
   'Add tracking to your site or app to start collecting events.':
     'サイトやアプリに計測を追加して、イベントの収集を開始します。',

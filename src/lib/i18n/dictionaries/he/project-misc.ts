@@ -1036,9 +1036,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Primary domain being tracked. Optional for native apps.':
     'הדומיין הראשי שנמצא במעקב. אופציונלי עבור אפליקציות נייטיב.',
   'Domain updated': 'הדומיין עודכן',
-  'IANA timezone used to decide where each day starts and ends for stats.':
-    'אזור זמן IANA שקובע היכן כל יום מתחיל ומסתיים לצורך הסטטיסטיקות.',
-  'Timezone updated': 'אזור הזמן עודכן',
   'Origins allowed to send tracking events. Use * to allow all origins.':
     'מקורות שמורשים לשלוח אירועי מעקב. השתמשו ב-* כדי לאפשר את כל המקורות.',
   'https://example.com': 'https://example.com',
@@ -1073,8 +1070,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Could not copy to clipboard': 'לא ניתן היה להעתיק ללוח',
   'Add the snippet, then wait for the first event.':
     'הוסיפו את הסניפט, ואז המתינו לאירוע הראשון.',
-  'Daily boundaries use your current timezone. You can change every value later in settings.':
-    'גבולות היום נקבעים לפי אזור הזמן הנוכחי שלכם. אפשר לשנות כל ערך מאוחר יותר בהגדרות.',
+  'Daily totals are bucketed in UTC. You can change every value later in settings.':
+    'הסיכומים היומיים מחושבים לפי UTC. אפשר לשנות כל ערך מאוחר יותר בהגדרות.',
   'Add tracking to your app': 'הוספת מעקב לאפליקציה שלכם',
   'Add tracking to your site or app to start collecting events.':
     'הוסיפו מעקב לאתר או לאפליקציה שלכם כדי להתחיל לאסוף אירועים.',
