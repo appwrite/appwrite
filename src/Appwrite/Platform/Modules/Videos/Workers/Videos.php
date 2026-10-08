@@ -529,10 +529,14 @@ class Videos extends Action
             );
 
             // Apply loudnorm only when the probe found an audio stream.
+            // On inputs under 3s loudnorm falls back to a linear gain from the
+            // integrated loudness, which is -inf for digital silence, so it
+            // emits NaN samples that the AAC encoder rejects. The aeval stage
+            // maps those back to silence.
             $params = ['-dn', '-sn'];
             if (\trim((string) $video->getAttribute('audioCodec', '')) !== '') {
                 $params[] = '-af';
-                $params[] = 'loudnorm=I=-14:TP=-1.5:LRA=11';
+                $params[] = 'loudnorm=I=-14:TP=-1.5:LRA=11,aeval=if(isnan(val(ch))+isinf(val(ch))\,0\,val(ch)):c=same';
             }
 
             $format = match ($codec) {

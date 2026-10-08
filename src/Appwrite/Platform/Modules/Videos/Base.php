@@ -211,8 +211,10 @@ abstract class Base extends UtopiaAction
      * Loads a video enforcing document `$permissions` for sessions.
      *
      * Privileged users and API keys skip authorization. Empty → VIDEO_NOT_FOUND.
+     * Static so play routes and the shared response-cache hook in
+     * `app/controllers/shared/api.php` share the same check.
      */
-    protected function getAuthorizedVideo(
+    public static function getAuthorizedVideo(
         Database $dbForProject,
         Authorization $authorization,
         User $user,
@@ -236,12 +238,8 @@ abstract class Base extends UtopiaAction
      * Asserts the caller may read the bucket/file backing a video, and returns
      * the file document.
      *
-     * Static so the shared response-cache revalidation hook in
-     * `app/controllers/shared/api.php` can reuse the same check for cached
-     * sprite bytes without duplicating the permission logic.
-     *
-     * This replaces the procedural `validateFilePermissions()` helper the legacy
-     * controller declared at file scope. It mirrors
+     * Used when attaching a source or caption/subtitle file (create / update),
+     * not for playback. Mirrors
      * `Modules/Storage/Http/Buckets/Files/View/Get.php` — the legacy version
      * gated bucket access on `$mode !== APP_MODE_ADMIN` rather than on roles,
      * which let any admin-mode request through.
@@ -280,35 +278,6 @@ abstract class Base extends UtopiaAction
         }
 
         return $file;
-    }
-
-    /**
-     * Loads a video for playback: skips document ACL, requires source-file read.
-     *
-     * Guests and members reach play via the videos.play scope; per-video access
-     * is the source file (assertFileAccess), not the video document's $permissions.
-     */
-    protected function getPlayableVideo(
-        Database $dbForProject,
-        Authorization $authorization,
-        User $user,
-        string $videoId
-    ): Document {
-        $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
-
-        if ($video->isEmpty()) {
-            throw new Exception(Exception::VIDEO_NOT_FOUND);
-        }
-
-        self::assertFileAccess(
-            $dbForProject,
-            $authorization,
-            $user,
-            $video->getAttribute('bucketId', ''),
-            $video->getAttribute('fileId', '')
-        );
-
-        return $video;
     }
 
     /**

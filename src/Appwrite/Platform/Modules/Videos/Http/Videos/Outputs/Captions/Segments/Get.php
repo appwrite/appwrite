@@ -78,7 +78,7 @@ class Get extends Base
         Authorization $authorization,
         Device $deviceForVideos
     ): void {
-        $video = $this->getPlayableVideo($dbForProject, $authorization, $user, $videoId);
+        $video = self::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
         $caption = $authorization->skip(fn () => $dbForProject->getDocument('videos_captions', $captionId));
 

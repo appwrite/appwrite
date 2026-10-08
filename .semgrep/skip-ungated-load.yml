@@ -11,9 +11,6 @@ rules:
       resourceTokens, pushLedger), and video child / profile collections
       (videos_profiles, videos_renditions, videos_captions,
       videos_previews, videos_subtitles, and their _segments tables).
-      A videos load (getDocument/find/findOne) in a function that also
-      calls assertFileAccess (play / cache) is allowed. Another collection
-      in that function is still an error.
     languages: [php]
     severity: ERROR
     metadata:
@@ -41,32 +38,3 @@ rules:
           } else {
             ...
           }
-      # Play / cache exemption: a videos load inside a function that calls
-      # assertFileAccess. Semgrep's PHP parser rejects `fn () =>` in
-      # patterns, so this is the negation of (videos load AND play function)
-      # instead of pattern-not-inside on the arrow. Either the callback is
-      # not a videos load, or the skip is outside both function forms.
-      - pattern-either:
-          - patterns:
-              - pattern-either:
-                  - pattern: $AUTH->skip($CB)
-                  - pattern: Authorization::skip($CB)
-              - metavariable-regex:
-                  metavariable: $CB
-                  regex: (?s)^(?!.*(?:getDocument|findOne|find)\(\s*['\"]videos['\"]).*$
-          - patterns:
-              - pattern-either:
-                  - pattern: $AUTH->skip($CB)
-                  - pattern: Authorization::skip($CB)
-              - pattern-not-inside: |
-                  function $F(...) {
-                    ...
-                    $CLASS::assertFileAccess(...);
-                    ...
-                  }
-              - pattern-not-inside: |
-                  function (...) {
-                    ...
-                    $CLASS::assertFileAccess(...);
-                    ...
-                  }

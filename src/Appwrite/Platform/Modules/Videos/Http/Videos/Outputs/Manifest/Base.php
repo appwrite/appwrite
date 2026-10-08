@@ -155,7 +155,7 @@ abstract class Base extends VideosAction
     }
 
     /**
-     * Loads the video and asserts the caller may read its source file.
+     * Loads the video enforcing document `$permissions` for sessions.
      */
     protected function authorizeVideo(
         Database $dbForProject,
@@ -163,7 +163,7 @@ abstract class Base extends VideosAction
         User $user,
         string $videoId
     ): Document {
-        return $this->getPlayableVideo($dbForProject, $authorization, $user, $videoId);
+        return self::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
     }
 
     /**

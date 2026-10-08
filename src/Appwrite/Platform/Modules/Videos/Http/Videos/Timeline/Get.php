@@ -71,7 +71,7 @@ class Get extends Base
         Authorization $authorization,
         Device $deviceForVideos
     ): void {
-        $video = $this->getPlayableVideo($dbForProject, $authorization, $user, $videoId);
+        $video = self::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
         // Scoped to this video's sprites. The pre-merge check queried every sprite
         // in the project, so any video with a timeline made all of them look ready.

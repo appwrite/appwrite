@@ -66,45 +66,6 @@ $profile = $authorization->skip(fn () => $dbForProject->getDocument('videos_prof
 // ok: php.appwrite.skip-ungated-load
 $rendition = $authorization->skip(fn () => $dbForProject->getDocument('videos_renditions', $renditionId));
 
-// Bare videos without assertFileAccess stays an error.
+// Bare videos without a privileged/API-key gate stays an error.
 // ruleid: php.appwrite.skip-ungated-load
 $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
-
-// Play / cache: skip videos ACL then gate on the source file (same function).
-function playWithSelfAssert($authorization, $dbForProject, $videoId, $user, $bucketId, $fileId)
-{
-    // ok: php.appwrite.skip-ungated-load
-    $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
-    self::assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
-}
-
-function playWithClassAssert($authorization, $dbForProject, $videoId, $user, $bucketId, $fileId)
-{
-    // ok: php.appwrite.skip-ungated-load
-    $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
-    VideosBase::assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
-}
-
-// assertFileAccess does not exempt a different collection in the same function.
-function playWithUnrelatedLoad($authorization, $dbForProject, $videoId, $transactionId, $user, $bucketId, $fileId)
-{
-    // ruleid: php.appwrite.skip-ungated-load
-    $transaction = $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId));
-
-    // ruleid: php.appwrite.skip-ungated-load
-    $file = $authorization->skip(fn () => $dbForProject->findOne('files', []));
-
-    // ok: php.appwrite.skip-ungated-load
-    $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
-    self::assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
-}
-
-// Same exemption inside the closure form used by the cache hook.
-$play = function ($authorization, $dbForProject, $videoId, $transactionId, $user, $bucketId, $fileId) {
-    // ruleid: php.appwrite.skip-ungated-load
-    $transaction = $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId));
-
-    // ok: php.appwrite.skip-ungated-load
-    $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
-    VideosBase::assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
-};

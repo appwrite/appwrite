@@ -796,22 +796,10 @@ Http::init()
                         ));
                     }
                 } elseif ($type === 'video') {
-                    // Sprite previews inherit access from the video's source
-                    // bucket/file — re-check that before serving cached bytes.
+                    // Sprite previews inherit access from the video document's
+                    // `$permissions` — re-check that before serving cached bytes.
                     $videoId = $parts[1] ?? null;
-                    $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
-
-                    if ($video->isEmpty()) {
-                        throw new Exception(Exception::VIDEO_NOT_FOUND);
-                    }
-
-                    VideosBase::assertFileAccess(
-                        $dbForProject,
-                        $authorization,
-                        $user,
-                        $video->getAttribute('bucketId', ''),
-                        $video->getAttribute('fileId', '')
-                    );
+                    VideosBase::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
                     Span::add('video.id', $videoId);
                 }

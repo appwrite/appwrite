@@ -199,8 +199,8 @@ final class VideosCustomClientTest extends Scope
     }
 
     /**
-     * Empty video permissions hide manage routes from the session; play still
-     * fails when the source bucket grants the caller nothing.
+     * Empty video permissions hide manage and play routes from the session.
+     * The source bucket ACL no longer gates playback.
      */
     public function testSessionCannotReadVideoInRestrictedBucket(): string
     {
@@ -230,19 +230,12 @@ final class VideosCustomClientTest extends Scope
             '/videos/' . $videoId,
             '/videos/' . $videoId . '/captions',
             '/videos/' . $videoId . '/renditions',
-        ] as $path) {
-            $response = $this->client->call(Client::METHOD_GET, $path, $this->sessionHeaders());
-            $this->assertEquals(404, $response['headers']['status-code'], $path . ' leaked manage access');
-            $this->assertEquals('video_not_found', $response['body']['type'], $path);
-        }
-
-        foreach ([
             '/videos/' . $videoId . '/timeline',
             '/videos/' . $videoId . '/outputs/hls/master.m3u8',
         ] as $path) {
             $response = $this->client->call(Client::METHOD_GET, $path, $this->sessionHeaders());
-            $this->assertEquals(401, $response['headers']['status-code'], $path . ' leaked a video from a private bucket');
-            $this->assertEquals('user_unauthorized', $response['body']['type'], $path);
+            $this->assertEquals(404, $response['headers']['status-code'], $path . ' leaked access');
+            $this->assertEquals('video_not_found', $response['body']['type'], $path);
         }
 
         return $videoId;
@@ -256,9 +249,46 @@ final class VideosCustomClientTest extends Scope
             '/videos/' . $videoId . '/outputs/hls/master.m3u8',
         ] as $path) {
             $response = $this->client->call(Client::METHOD_GET, $path, $this->anonymousHeaders());
-            $this->assertEquals(401, $response['headers']['status-code'], $path);
-            $this->assertEquals('user_unauthorized', $response['body']['type'], $path);
+            $this->assertEquals(404, $response['headers']['status-code'], $path);
+            $this->assertEquals('video_not_found', $response['body']['type'], $path);
         }
+    }
+
+    /**
+     * Session read on the video unlocks play even when the source bucket
+     * grants the caller nothing. Timeline is used because the HLS master
+     * requires a ready rendition.
+     */
+    public function testSessionCanPlayVideoFromPrivateBucket(): void
+    {
+        $userId = $this->getUser()['$id'];
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $this->serverHeaders(), [
+            'bucketId' => 'unique()',
+            'name' => 'Private source for playable video',
+            'fileSecurity' => false,
+            'permissions' => [],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $file = $this->uploadVideoTo($bucket['body']['$id'], [], [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'bucketId' => $bucket['body']['$id'],
+            'fileId' => $file['$id'],
+            'permissions' => [
+                Permission::read(Role::user($userId)),
+            ],
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $videoId = $created['body']['$id'];
+        $this->assertContains((string) Permission::read(Role::user($userId)), $created['body']['$permissions']);
+
+        $timeline = $this->waitForTimeline($videoId);
+        $this->assertEquals(200, $timeline['headers']['status-code']);
+        $this->assertStringContainsString('WEBVTT', (string) $timeline['body']);
     }
 
     /**
@@ -515,18 +545,20 @@ final class VideosCustomClientTest extends Scope
     }
 
     /**
-     * Guests with videos.play can stream a video whose source file is public.
-     * The video document itself has no guest/any grants so manage stays closed.
+     * Guests with videos.play can stream a video that grants read("any").
+     * Guests still lack videos.read, so manage metadata stays closed.
      */
     public function testGuestCanPlayPublicVideo(): array
     {
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
-            'permissions' => [],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
         ]);
         $this->assertEquals(201, $created['headers']['status-code']);
-        $this->assertSame([], $created['body']['$permissions'] ?? []);
+        $this->assertContains((string) Permission::read(Role::any()), $created['body']['$permissions']);
         $videoId = $created['body']['$id'];
 
         $timeline = $this->waitForTimeline($videoId);
@@ -692,8 +724,9 @@ final class VideosCustomClientTest extends Scope
     }
 
     /**
-     * Session with videos.read/write but no video-document ACL can play a public
-     * source and cannot get, list, update, delete, or add renditions/captions.
+     * A guest-playable video grants read("any"). Sessions with videos.read can
+     * therefore get, list, play, and create child resources, but cannot update
+     * or delete without those permissions on the document.
      */
     #[Depends('testGuestCanPlayPublicVideo')]
     public function testSessionCannotManagePlayableVideoWithoutDocumentAcl(array $play): void
@@ -701,49 +734,21 @@ final class VideosCustomClientTest extends Scope
         $videoId = $play['videoId'];
 
         $get = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->sessionHeaders());
-        $this->assertEquals(404, $get['headers']['status-code']);
-        $this->assertEquals('video_not_found', $get['body']['type']);
+        $this->assertEquals(200, $get['headers']['status-code']);
 
         $list = $this->client->call(Client::METHOD_GET, '/videos', $this->sessionHeaders());
         $this->assertEquals(200, $list['headers']['status-code']);
-        $this->assertNotContains($videoId, \array_column($list['body']['videos'], '$id'));
+        $this->assertContains($videoId, \array_column($list['body']['videos'], '$id'));
 
         $update = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->sessionHeaders(), [
             'name' => 'nope',
         ]);
-        $this->assertEquals(404, $update['headers']['status-code']);
+        $this->assertEquals(401, $update['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $update['body']['type']);
 
         $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->sessionHeaders());
-        $this->assertEquals(404, $delete['headers']['status-code']);
-
-        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
-        $profileId = $profiles['body']['profiles'][0]['$id'] ?? '';
-        $this->assertNotEmpty($profileId);
-
-        $rendition = $this->client->call(
-            Client::METHOD_POST,
-            '/videos/' . $videoId . '/renditions',
-            $this->sessionHeaders(),
-            [
-                'profileId' => $profileId,
-                'output' => 'hls',
-            ]
-        );
-        $this->assertEquals(404, $rendition['headers']['status-code']);
-        $this->assertEquals('video_not_found', $rendition['body']['type']);
-
-        $caption = $this->client->call(
-            Client::METHOD_POST,
-            '/videos/' . $videoId . '/captions',
-            $this->sessionHeaders(),
-            [
-                'bucketId' => $this->getVideoBucket()['$id'],
-                'fileId' => $this->getCaptionFile()['$id'],
-                'name' => 'Session',
-                'code' => 'eng',
-            ]
-        );
-        $this->assertEquals(404, $caption['headers']['status-code']);
+        $this->assertEquals(401, $delete['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $delete['body']['type']);
 
         $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $this->sessionHeaders());
         $this->assertEquals(200, $timeline['headers']['status-code']);
