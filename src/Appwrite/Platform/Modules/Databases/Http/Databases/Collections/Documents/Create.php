@@ -391,7 +391,8 @@ class Create extends Action
         $created = [];
         try {
             $dbForDatabases->withPreserveDates(
-                true, function () use (&$created, $dbForDatabases, $collection, $collectionTableId, $documents) {
+                true,
+                function () use (&$created, $dbForDatabases, $collection, $collectionTableId, $documents) {
                     $this->withRelationshipTransaction(
                         $dbForDatabases,
                         $collection,
