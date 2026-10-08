@@ -27,6 +27,7 @@ trait VideoCustom
     protected static array $videoFileWithSameNameCaptions = [];
     protected static array $overrideCaptionFile = [];
     protected static array $audioOnlyFile = [];
+    protected static array $shortSilenceFile = [];
     protected static array $invalidVideoFile = [];
 
     /**
@@ -204,6 +205,44 @@ trait VideoCustom
         ];
 
         return self::$audioOnlyFile;
+    }
+
+    /**
+     * Two seconds of black H.264 plus PCM digital silence (`anullsrc`).
+     *
+     * Loudnorm's short-input path (under 3s) turns that -inf loudness into
+     * non-finite samples. Ordinary rendition fixtures have real audio, so
+     * they still pass if the cleanup that maps those samples back to silence
+     * is removed and the AAC encoder fails again.
+     */
+    public function getShortSilenceFile(): array
+    {
+        if (!empty(self::$shortSilenceFile)) {
+            return self::$shortSilenceFile;
+        }
+
+        $source = \realpath(__DIR__ . '/../../resources/disk-a/short-silence.mov');
+        $this->assertNotFalse($source);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files', \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => 'unique()',
+            'file' => new \CURLFile($source, 'video/quicktime', 'short-silence.mov'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        self::$shortSilenceFile = [
+            '$id' => $file['body']['$id'],
+            'sizeOriginal' => $file['body']['sizeOriginal'],
+        ];
+
+        return self::$shortSilenceFile;
     }
 
     /**

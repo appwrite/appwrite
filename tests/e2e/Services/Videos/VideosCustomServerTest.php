@@ -640,6 +640,30 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
+     * Digital silence under 3s is the input that makes loudnorm emit non-finite
+     * samples. The rendition has to reach ready; a normal-audio encode would
+     * still succeed if that cleanup were gone.
+     */
+    public function testShortSilenceRenditionReachesReady(): void
+    {
+        $video = $this->createReadyVideo($this->getShortSilenceFile());
+        $this->assertLessThan(3000, (int) $video['duration']);
+        $this->assertSame('pcm_s16le', $video['audioCodec']);
+
+        $profile = $this->seededProfile('360p');
+        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $video['$id'] . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $rendition['headers']['status-code']);
+        $this->assertEquals('pending', $rendition['body']['status']);
+
+        $body = $this->waitForRenditionTerminalState($video['$id'], $rendition['body']['$id']);
+        $this->assertEquals('ready', $body['status'], 'Short silence rendition did not finish');
+        $this->assertEquals('100', $body['progress']);
+    }
+
+    /**
      * A second rendition on the same video downloads its own copy — no
      * create-source call and no shared working copy.
      */
