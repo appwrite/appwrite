@@ -22,9 +22,9 @@ Before upgrading, be sure to:
 1. review the [changelog](https://github.com/appwrite/appwrite/releases) for any breaking changes
 1. test the migration process on a non-production instance to make sure your application is working well
 
-# Upgrading to 2.3.0 {% #upgrading-to-latest %}
+# Upgrading to 2.4.0 {% #upgrading-to-latest %}
 
-Appwrite 2.3.0 upgrades from `1.9.6` or any later version. Run the upgrade command with the `2.3.0` tag, then run the migration.
+Appwrite 2.4.0 upgrades from `1.9.6` or any later version. Run the upgrade command with the `2.4.0` tag, then run the migration.
 
 ```sh
 docker run -it --rm \
@@ -32,7 +32,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="upgrade" \
-    appwrite/appwrite:2.3.0
+    appwrite/appwrite:2.4.0
 ```
 
 Then run the migration from the `appwrite` directory.
@@ -42,9 +42,20 @@ cd appwrite/
 docker compose exec appwrite migrate
 ```
 
-The migration drops the `devKeys` collection and project attribute from the console database, removes the dev key scopes from API keys, functions and sites, and in every project adds `providerIdToken` to `identities` and a `passwordPwned` attribute and index to `users`, restoring any missing email metadata attributes on the way. Its run time grows with the number of projects. The upgraded compose file adds an `appwrite-mqtt` container and has Traefik publish ports 8883 and 8084; set `_APP_MQTT_PORT` and `_APP_MQTT_WSS_PORT` in `.env` if those are taken. Remove `_APP_CONSOLE_URL_SCHEME` from your `.env`, and set `_APP_CONSOLE_URL` if your console is served from a different host than the API. To roll back to 2.2.0, stop the workers and let queued jobs drain first, since the older queue client can't recover jobs the new one has reserved. **Back up your data first.**
+The migration stays on V25. It adds columns for passkeys, authenticator names and profile photos to every project, and removes `assistant.read` from keys, functions and sites. It takes longer the more projects you have. The new compose file drops `appwrite-assistant`, moves `appwrite-browser` to its own network and adds two ClickHouse config mounts. Remove `_APP_ASSISTANT_OPENAI_API_KEY` from your `.env`.
 
-If you skip releases, also follow the upgrade notes of each release you skip: [`2.0.0`](https://github.com/appwrite/appwrite/releases/tag/2.0.0), [`2.1.0`](https://github.com/appwrite/appwrite/releases/tag/2.1.0), [`2.2.0`](https://github.com/appwrite/appwrite/releases/tag/2.2.0).
+Before upgrading, check these:
+
+- **Public load balancer:** forwarded client IPs are only trusted from `_APP_TRUSTED_PROXIES` (private ranges by default). If a public hop like Cloudflare adds itself to `X-Forwarded-For`, add its ranges there or set `_APP_TRUSTED_HEADERS` (for example `cf-connecting-ip`). Otherwise all clients look like that hop and share its rate limits.
+- **GitHub integration:** set a webhook secret in your GitHub App and the same value in `_APP_VCS_GITHUB_WEBHOOK_SECRET`, or GitHub stops working.
+- **Private hosts:** OAuth2 providers, webhooks and migration sources on private addresses need to be listed in `_APP_ALLOWED_INTERNAL_ADDRESSES`. Messaging providers no longer use `HTTP_PROXY` / `HTTPS_PROXY`. If your screenshots router is not `appwrite`, add it to `ALLOWED_HOSTS` on `appwrite-browser`.
+- **Function templates:** Node templates need `node-18.0` or later in `_APP_FUNCTIONS_RUNTIMES`. The old default only has `node-16.0`, and upgrades keep it.
+- **Monitoring:** the failed-queue health check now includes dead-lettered messages, so alerts may fire without new failures.
+- **Sign-ins in flight:** OAuth2 flows started before the upgrade fail once, and session-less JWTs from before it stop working (they expire within an hour).
+
+If you upgrade with `--use-existing-config`, copy the two ClickHouse mounts from the new `docker-compose.yml` yourself to get log retention. **Back up your data first.**
+
+If you skip releases, also follow the upgrade notes of each release you skip: [`2.0.0`](https://github.com/appwrite/appwrite/releases/tag/2.0.0), [`2.1.0`](https://github.com/appwrite/appwrite/releases/tag/2.1.0), [`2.2.0`](https://github.com/appwrite/appwrite/releases/tag/2.2.0), [`2.3.0`](https://github.com/appwrite/appwrite/releases/tag/2.3.0).
 
 # Installing the next version {% #install-next-version %}
 
@@ -63,7 +74,7 @@ Your Appwrite installation's parent directory name is expected to be `appwrite`.
 {% /info %}
 
 {% info title="Choose an image tag" %}
-Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `2.3.0`). Avoid using `latest` in production.
+Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `2.4.0`). Avoid using `latest` in production.
 {% /info %}
 
 ## Unix
