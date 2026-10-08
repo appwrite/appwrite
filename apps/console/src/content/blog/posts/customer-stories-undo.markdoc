@@ -1,0 +1,83 @@
+---
+layout: post
+title: Pioneering asset management solutions for the circular economy with UNDO
+description: Learn how UNDO has leveraged Appwrite to transform logistics and supply chain management for circular businesses, supporting 5 businesses with over 9000 articles within 6 months of its inception.
+date: 2024-07-09
+lastUpdated: 2026-06-29
+cover: /images/blog/case-study-undo/cover.avif
+timeToRead: 6
+author: aditya-oberai
+category: customer-stories
+faqs:
+  - question: "What is UNDO?"
+    answer: "UNDO is a low barrier-to-entry asset management platform for circular businesses (rental, resale, recycling models). It offers digital product passports via QR codes, asset tracking through lifecycle stages, and integrations with Odoo, WordPress, Shopify, SAP, and WooCommerce. It supports 5 customers with over 9000 tracked articles."
+  - question: "How does UNDO use Appwrite?"
+    answer: "UNDO uses [Appwrite Auth](/docs/products/auth) with Google OAuth for users, multiple [Appwrite Databases](/docs/products/databases) for data separation, [Appwrite Storage](/docs/products/storage) for QR code photos, [Appwrite Functions](/docs/products/functions) for scan analysis, Realtime for live scan updates, and [Appwrite Messaging](/docs/products/messaging) for anomaly alerts."
+  - question: "Can Appwrite be self-hosted on customer premises?"
+    answer: "Yes. UNDO self-hosts Appwrite on each customer's on-prem compute, which is required by their compliance policies. Appwrite is open source and runs in Docker, which makes it straightforward to deploy inside a customer's own infrastructure or air-gapped environment."
+  - question: "How long does it take to build an MVP with Appwrite?"
+    answer: "UNDO's solo developer shipped their MVP in 2 to 3 months. Because Appwrite handles auth, databases, storage, functions, realtime, and messaging out of the box, a small team can focus on product logic instead of building backend infrastructure from scratch."
+  - question: "What is a digital product passport?"
+    answer: "A digital product passport is a record that captures a product's materials, manufacturing process, care instructions, and recycling information, often accessed via a QR code on the item. EU regulations like Extended Producer Responsibility (EPR) are pushing companies to provide them for transparency."
+  - question: "Can Appwrite handle QR-code based asset tracking?"
+    answer: "Yes. Store QR codes (or their decoded payloads) in [Appwrite Databases](/docs/products/databases), upload scanned images to [Appwrite Storage](/docs/products/storage), and use [Appwrite Functions](/docs/products/functions) to update asset status on each scan. [Appwrite Realtime](/docs/products/databases) can push live updates to dashboards."
+---
+
+Over the past decade, Jonas Janssen has seen the circular economy grow in Belgium, resulting in sustainable business models that focus on rental, resale, and recycling for consumer companies. At his previous job as a CTO, he interacted with several customers, often sustainability-focused small and medium-sized businesses (SMBs). However, many of these companies mentioned the lack of software solutions for managing logistics and supply chains in circular businesses. Major solutions providers like Microsoft and SAP would build software with extensive feature sets and large prices that these companies neither needed nor could afford. Simply put, there was no software solution in the market for circular businesses with a low barrier of entry and reasonable pricing.
+
+Therefore, along with Maarten Tak, his friend and innovation consultant for circular businesses, Jonas co-founded UNDO to build a new solution for managing circular businesses.
+
+# Discovering the problem
+
+For two years, alongside their full-time jobs, Jonas and Maarten met with various circular businesses and companies to understand their problems. They discovered that circular businesses have based their logistics and supply chain policies on three major challenges:
+
+- **EU regulations:** Regulations such as the Extended Producer Regulations (EPR) have forced companies to become more transparent and accountable for their products’ lifecycles, from production to recycling.
+- **Rising raw materials costs:** Increased costs have pushed more companies to offer their products “*as a service”* or with a “*buy back”* policy so that they can maintain responsibility for their products’ lifespans.
+- **Changing consumer expectations:** Environmentally conscious consumers seek more sustainable brands and choose to buy pre-owned items instead of new ones. This has caused companies to consider tapping into the C2C market.
+
+In February of 2024, they discovered their product-market fit and started developing their solution.
+
+# Understanding UNDO
+
+UNDO is a low barrier-to-entry asset management platform allowing businesses to track and manage all their product stock digitally. It offers three core features:
+
+- **Digital twins:** Digital product passports allow all stakeholders to interact with a product via QR codes. This includes getting information on materials and manufacturing processes, product care instructions, recycling information, CTAs, etc.
+- **Asset tracking:** This lets you keep track of an asset’s location and lifecycle stage, effectively giving you insight into supply chain efficiency. Companies can use any device (mobile devices, tablets, or professional scanners) and integrate with any WHM system.
+- **E-commerce and ERP integrations:** Hybrid check-out systems (options that combine selling with rental and subscription systems), B2C and C2C templates for Odoo, WordPress, and Shopify, and pre-built APIs to integrate with systems such as SAP and WooCommerce.
+
+The product also includes miscellaneous features such as an AI assistant to get any information about the current state, location, or performance of your assets; automated, repeatable tasks to improve workflows; a physical device for your business that can be used as an on-site assistant for any relevant stakeholders, and more.
+
+{% call_to_action title="All-in-one development platform" description="Use built-in backend infrastructure and web hosting, all from a single place." point1="Start for free"  point2="Open source" point3="Support for over 13 SDKs" point4="Managed cloud solution" cta="Start building" url="https://cloud.appwrite.io/" /%}
+
+# How UNDO was built
+
+After discovering the product-market fit, Jonas rapidly started developing the solution. For the app client, he built micro-frontends using Svelte; however, as the solo developer on the product, he chose to use a Backend-as-a-Service platform. Jonas was already aware of Firebase, but the lack of self-hosting support prevented him from adopting it. At this point, he came across other options, such as Supabase; however, he picked [Appwrite](http://appwrite.io) for the following reasons:
+
+- Active developer community on [Discord](https://appwrite.io/discord)
+- Quality learning content on the [Appwrite YouTube channel](https://www.youtube.com/@Appwrite)
+- Visible culture of openness and transparency
+- Underlying services being written in PHP (his existing PHP knowledge made it a lot easier to understand and trust what is running under the hood)
+- High quality of [documentation](https://appwrite.io/docs)
+
+Currently, UNDO self-hosts Appwrite at all the customers’ on-premises compute, a standard requirement from their current customers due to their compliance policies. They leverage every major Appwrite product to develop the application, as mentioned:
+
+- Google OAuth via **Appwrite Authentication** is used for user registration and management
+- Multiple **Appwrite Databases** help bifurcate data and environments (as per customer requests)
+- **Appwrite Storage** is used to upload pictures of QR codes from the scan feature on mobile devices
+- **Appwrite Functions** are used to analyze the QR code scans and make updates to database tables
+- **Appwrite Realtime** helps get updates based on scanner interactions with the products’ QR codes
+- **Appwrite Messaging** is used to communicate about anomalies to stakeholders with admin privileges.
+
+# UNDO today
+
+Currently, UNDO has about **9000 articles** (assets they’re helping track) from **5 customers**, including [Kringwinkel Antwerpen and Bike Republic](https://undo.software/portfolio/kringwinkel-antwerpen-bike-republic/), [Something Green](https://undo.software/portfolio/something-green/), and [Porseleen](https://undo.software/portfolio/porseleen/). The founders have discovered their product-market fit and are focusing full-time on improving their offerings. Some of the upcoming challenges they’re currently tackling include:
+
+- Setting up a cloud version of UNDO on Appwrite Cloud for smaller clients
+- Managing their current customer pipeline
+- Developing a public freemium/demo version for people to see
+
+Appwrite enabled UNDO to go from idea to first customer rapidly. In Jonas’s words,
+
+> Thanks to Appwrite and advances in technology, we were able to get an MVP out in 2/3 months with 1 developer.
+
+We appreciate how UNDO is leveraging Appwrite to support businesses with eco-friendly, sustainable practices. We definitely look forward to their future endeavors. You can learn more about them by visiting their [website](https://undo.software/).

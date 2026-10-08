@@ -1,0 +1,247 @@
+---
+layout: article
+title: Querying rows
+description: Read and write PostgreSQL rows with SELECT, INSERT, UPDATE, and DELETE. Covers filtering, aggregation, pagination, and upserts.
+---
+
+Four statements do almost all the work in a relational database:
+
+- **SELECT** reads rows
+- **INSERT** adds new rows
+- **UPDATE** changes existing rows
+- **DELETE** removes rows
+
+SQL is declarative: a query describes the result you want, and the database's planner decides how to produce it, choosing between indexes, scans, and join strategies on its own. That's why the same query keeps working as data grows and indexes change.
+
+This page walks through each statement, plus the querying patterns you reach for daily: filtering, aggregation, pagination, and upserts.
+
+# Setup {% #setup %}
+
+The examples below work against a small product catalog. Create and seed it first:
+
+```sql
+CREATE TABLE products (
+    id    bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name  text NOT NULL,
+    price numeric(10, 2) NOT NULL,
+    stock integer NOT NULL DEFAULT 0
+);
+
+INSERT INTO products (name, price, stock) VALUES
+    ('Keyboard', 79.00, 120),
+    ('Mouse', 29.50, 200),
+    ('Monitor', 349.99, 14),
+    ('Webcam', 59.00, 0),
+    ('Desk mat', 19.90, 45);
+```
+
+# Read rows {% #select %}
+
+A `SELECT` statement has three jobs, each handled by its own clause: choose which columns to return, decide which rows qualify, and put them in order:
+
+```sql
+SELECT name, price
+FROM products
+WHERE stock > 0
+ORDER BY price DESC;
+```
+
+```text
+   name   | price
+----------+--------
+ Monitor  | 349.99
+ Keyboard |  79.00
+ Mouse    |  29.50
+ Desk mat |  19.90
+```
+
+Four of the five products come back: the Webcam is filtered out because its stock is 0, and the rest arrive sorted by price, highest first. The other columns still exist on those rows; the query just didn't ask for them. Without an `ORDER BY`, row order is arbitrary and can change between runs, so always order results the user will see.
+
+`WHERE` accepts any boolean expression, built from a handful of operators:
+
+- **Comparisons** (`=`, `<`, `>`, `<=`, `>=`, `<>`) work on numbers, text, and dates alike.
+- **BETWEEN** matches a range, bounds included.
+- **ILIKE** matches string patterns case-insensitively, where `%` stands for any sequence of characters (`LIKE` is the case-sensitive variant).
+- **IN** matches any value in a list.
+- **AND** and **OR** combine conditions, with parentheses to group them.
+
+```sql
+SELECT name FROM products WHERE price BETWEEN 20 AND 100;   -- range
+SELECT name FROM products WHERE name ILIKE '%mo%';          -- case-insensitive match
+SELECT name FROM products WHERE stock IN (0, 14);           -- membership
+SELECT name FROM products WHERE stock = 0 OR price < 25;    -- combined conditions
+```
+
+Avoid `SELECT *` in application code. Naming columns keeps results stable when the table gains columns later and avoids transferring data you don't use.
+
+# Insert rows {% #insert %}
+
+`INSERT` names the columns it provides and gives a value for each; omitted columns fall back to their defaults, like the auto-generated `id` here:
+
+```sql
+INSERT INTO products (name, price, stock)
+VALUES ('USB hub', 24.00, 80)
+RETURNING id, name;
+```
+
+`RETURNING` gives back any columns of the rows just written, so you get the generated `id` without a second query. It works on `UPDATE` and `DELETE` too.
+
+# Update rows {% #update %}
+
+`UPDATE` changes the columns you name on every row matching the `WHERE` clause:
+
+```sql
+UPDATE products
+SET price = price * 0.90
+WHERE stock > 100
+RETURNING name, price;
+```
+
+The `SET` expression can reference the row's current values, as the discount above does. Without a `WHERE` clause, `UPDATE` rewrites the entire table, so check the target set first with a `SELECT` using the same `WHERE` when running one by hand.
+
+# Delete rows {% #delete %}
+
+`DELETE` removes every row matching the `WHERE` clause:
+
+```sql
+DELETE FROM products
+WHERE stock = 0
+RETURNING name;
+```
+
+Without a `WHERE` clause, `DELETE FROM products` removes every row in the table. For hand-run maintenance, wrap the statement in a transaction so you can inspect the result and roll it back. See [Transactions](/docs/products/databases/postgresql/concepts/transactions).
+
+# Aggregate {% #aggregate %}
+
+An aggregate function computes a single value over a set of rows, such as a *count of orders* or a *total spend per customer*:
+
+- **count(*)** counts rows
+- **sum** and **avg** total and average a numeric column
+- **min** and **max** find the extremes
+
+The demonstration needs a table where several rows belong to each customer:
+
+```sql
+CREATE TABLE orders (
+    id       bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    customer text NOT NULL,
+    total    numeric(10, 2) NOT NULL
+);
+
+INSERT INTO orders (customer, total) VALUES
+    ('ada', 120.00), ('ada', 80.00), ('grace', 45.50),
+    ('grace', 30.00), ('grace', 25.00), ('linus', 999.99);
+```
+
+By default an aggregate covers every row in the table: `SELECT sum(total) FROM orders` returns one number, the total across all six orders. `GROUP BY customer` changes that. The database first gathers rows with the same customer value together, Ada's two orders, Grace's three, Linus's one, then runs the aggregate functions once for each of those groups. The result has one row per customer instead of one row for the whole table:
+
+```sql
+SELECT customer,
+       count(*)   AS orders,
+       sum(total) AS lifetime_value
+FROM orders
+GROUP BY customer
+HAVING sum(total) > 100
+ORDER BY lifetime_value DESC;
+```
+
+```text
+ customer | orders | lifetime_value
+----------+--------+----------------
+ linus    |      1 |         999.99
+ ada      |      2 |         200.00
+ grace    |      3 |         100.50
+```
+
+Six order rows became three result rows, one per customer:
+
+- Ada's two orders were summed into 200.00
+- Grace's three orders were summed into 100.50
+- Linus's single order stands alone at 999.99
+
+In a grouped query, every selected column must be either grouped on (like `customer`) or aggregated (like `sum(total)`), because each result row now represents many source rows.
+
+`WHERE` and `HAVING` both filter, but at different stages:
+
+- **WHERE** filters individual rows, before grouping. It cannot use aggregate results, because they haven't been computed yet.
+- **HAVING** filters the groups, after the aggregates are computed.
+
+Here `HAVING sum(total) > 100` keeps only customers whose orders total more than 100. Grace passes at 100.50; a threshold of 150 would exclude her.
+
+# Paginate {% #pagination %}
+
+Pagination splits a large result into pages. There are two ways to do it:
+
+- **Offset pagination** asks for "skip the first 20 rows, return the next 10". Simple, but the database still reads and discards every skipped row, so deep pages get slower and slower.
+- **Keyset pagination** asks for "return the 10 rows after the last one I saw". The database jumps straight to that position, so every page costs the same as the first.
+
+`LIMIT` and `OFFSET` are the offset approach:
+
+```sql
+SELECT id, name FROM products ORDER BY id LIMIT 2 OFFSET 2;
+```
+
+Keyset pagination filters on the last value seen instead:
+
+```sql
+SELECT id, name
+FROM products
+WHERE id > 2          -- last id from the previous page
+ORDER BY id
+LIMIT 2;
+```
+
+Keyset pagination stays fast at any depth because the index seeks straight to the boundary, provided the ordering columns are indexed. It requires a deterministic, unique ordering (a single column like `id`, or a composite) and can't jump to an arbitrary page number.
+
+# Upsert {% #upsert %}
+
+An upsert writes a row without knowing whether it already exists: insert it if it's new, update it if it's not. Stock counts, settings, and sync jobs all need this.
+
+The obvious approach, `SELECT` to check and then `INSERT` or `UPDATE` accordingly, has a race condition: another connection can insert the same key between your check and your write, and your insert fails.
+
+`INSERT ... ON CONFLICT` performs the check and the write as one atomic statement, so the race cannot happen:
+
+```sql
+CREATE TABLE inventory (
+    sku      text PRIMARY KEY,
+    quantity integer NOT NULL
+);
+
+INSERT INTO inventory (sku, quantity) VALUES ('KB-01', 10);
+
+-- Second write for the same key updates instead of failing
+INSERT INTO inventory (sku, quantity) VALUES ('KB-01', 5)
+ON CONFLICT (sku) DO UPDATE
+SET quantity = inventory.quantity + EXCLUDED.quantity
+RETURNING sku, quantity;
+```
+
+```text
+  sku  | quantity
+-------+----------
+ KB-01 |       15
+```
+
+What happened:
+
+- The first insert creates KB-01 with quantity 10.
+- The second insert collides with it on the primary key, so instead of failing, it runs the `DO UPDATE` clause: existing 10 plus incoming 5 gives 15.
+- `EXCLUDED` refers to the row that would have been inserted, which is how the update reaches the incoming values.
+
+Use `ON CONFLICT DO NOTHING` when duplicates should be silently ignored instead.
+
+# Subqueries and CTEs {% #ctes %}
+
+A common table expression (CTE) names an intermediate result so a complex query reads top to bottom:
+
+```sql
+WITH big_spenders AS (
+    SELECT customer
+    FROM orders
+    GROUP BY customer
+    HAVING sum(total) > 150
+)
+SELECT customer FROM big_spenders ORDER BY customer;
+```
+
+CTEs and subqueries are interchangeable in most positions. Prefer whichever keeps the query readable; PostgreSQL inlines CTEs into the surrounding query plan where possible, so there is normally no performance penalty.

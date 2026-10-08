@@ -101,7 +101,7 @@ For above example to work, make sure to setup `config.json` file too:
         "127.0.0.1",
         "172.17.0.0/16"
     ]
-  },
+  }
 }
 ```
 
@@ -110,20 +110,19 @@ For above example to work, make sure to setup `config.json` file too:
 Alternatively, you can load configs directly from a variable:
 
 ```php
-
 <?php
 
 require_once './vendor/autoload.php';
 
 use Utopia\Config\Attribute\Key;
 use Utopia\Config\Config;
-use Utopia\Config\Source\Variable;
 use Utopia\Config\Parser\None;
-use Utopia\Validator\Whitelist;
+use Utopia\Config\Source\Variable;
+use Utopia\Validator\WhiteList;
 
 class FirewallConfig
 {
-    #[Key('security-level', new Whitelist('high', 'low'), required: true)]
+    #[Key('security-level', new WhiteList(['high', 'low']), required: true)]
     public string $securityLevel;
 }
 
@@ -132,7 +131,7 @@ $config = Config::load(
         'security-level' => 'high',
     ]),
     parser: new None(),
-    FirewallConfig::class
+    className: FirewallConfig::class,
 );
 \var_dump($config);
 // $config->securityLevel
@@ -149,7 +148,7 @@ class FirewallConfig
     #[Key('ALLOW_IPS', new ArrayList(new Text(length: 100), length: 100), required: true)]
     public array $allowIps;
 
-    #[Key('CAPTCHA', new Whitelist(['enabled', 'disabled']), required: true)]
+    #[Key('CAPTCHA', new WhiteList(['enabled', 'disabled']), required: true)]
     public string $captcha;
 }
 
@@ -224,6 +223,16 @@ $config = Config::load(new Environment(), new None(), CredentialsConfig::class);
 // $config->$cachePass
 ```
 
+
+## Schema rules
+
+`Config::load()` throws `Load` when the schema or the data cannot produce a complete object:
+
+- Every property must be public, typed, and carry a `#[Key]` or `#[ConfigKey]` attribute, and the class must declare no methods.
+- A required key that is absent is an error.
+- An optional key (`required: false`) that is absent keeps the property's default. Without a default, a nullable property becomes `null`, and any other property is an error rather than being left uninitialised.
+
+`Parser\PHP` includes the contents, so they must start with `<?php`. Anything before the tag would be printed, so it is rejected with `Parse` instead.
 
 ## Registry
 

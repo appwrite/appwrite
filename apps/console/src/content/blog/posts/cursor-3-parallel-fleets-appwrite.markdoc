@@ -1,0 +1,69 @@
+---
+layout: post
+title: "Cursor 3: parallel agents, cloud agents, skills, and MCP"
+description: An overview of Cursor 3 - agent-first layout, cloud agents, the skills marketplace and MCP, and the integrated browser - with notes on using it alongside Appwrite.
+date: 2026-04-03
+lastUpdated: 2026-06-29
+cover: /images/blog/cursor-3-parallel-fleets-appwrite/cover.avif
+timeToRead: 7
+author: eldad-fux
+category: integrations
+featured: false
+faqs:
+  - question: "What is new in Cursor 3?"
+    answer: "Cursor 3 replaces the classic VS Code layout with an agent-first workspace. It adds parallel agents across repositories, long-running cloud agents that work on a remote VM, a marketplace for skills and MCP servers, and an integrated browser with a style editor for live UI editing."
+  - question: "How do I use Appwrite with Cursor 3?"
+    answer: "Install the Appwrite plugin from the Cursor Marketplace. It bundles Appwrite Skills (Markdown files that teach agents how to use the Appwrite SDKs) and MCP servers. Agents will discover and load the skills only when needed, which reduces token use and avoids hallucinated SDK methods."
+  - question: "What are Cursor cloud agents?"
+    answer: "Cloud agents are tasks you offload to a remote VM by prepending a prompt with &. They plan, execute, and test over longer horizons without local resources. When they finish, you get logs, recordings, and a live preview to review before merging changes."
+  - question: "What are Appwrite Skills?"
+    answer: "Appwrite Skills are open-source Markdown files that give AI agents language-specific knowledge of the Appwrite SDKs. They help agents generate accurate code for [Appwrite Auth](/docs/products/auth), [Databases](/docs/products/databases), [Functions](/docs/products/functions), and other products without making up methods."
+  - question: "Can I run multiple Cursor agents in parallel?"
+    answer: "Yes. The new Agents Window lets you run multiple agents across different repositories at the same time. For example, one agent can refactor [Appwrite Functions](/docs/products/functions) in a backend repo while another builds UI in a frontend repo, in parallel."
+  - question: "Does Cursor 3 work with Appwrite Realtime?"
+    answer: "Yes. The integrated browser and component tree make it easy to debug live state changes. When an agent updates subscription listeners, you can watch the UI react in real time without leaving the editor."
+---
+
+If you have been following the AI code editor space, you know that the "autocomplete" era is officially behind us. This week, the team at Cursor dropped **Cursor 3**, and it is not just a minor version bump - it is a complete reimagining of the IDE. For Appwrite developers, who are already used to "building like a team of hundreds" by offloading backend complexity, Cursor 3 is the perfect companion. It moves the needle from "AI that helps you write code" to "AI that helps you manage a fleet of developers." Here is everything you need to know about Cursor 3 and how it integrates with your Appwrite workflow.
+
+## 1. The "agent-first" interface
+
+Cursor 3 has moved away from the classic VS Code layout. It is now a **unified workspace** designed around **Agents**. Instead of opening a single chat window, you now have an **Agents Window** (`Cmd+Shift+P` - `Agents Window`). This allows you to run multiple agents in parallel across different repositories.
+
+![Cursor agent answering a question about the Appwrite codebase, with agent threads and Appwrite repositories in the sidebar.](/images/blog/cursor-3-parallel-fleets-appwrite/cursor-agent-appwrite-workspace.avif)
+
+> **Appwrite impact:** Imagine having one agent refactoring your Appwrite Functions in your `/backend` repo while another agent builds out the new Auth UI in your `/frontend` repo - simultaneously. You are not waiting for the AI to finish one task to start the next; you are orchestrating a team.
+
+## 2. Long-running cloud agents
+
+One of the most significant additions is the ability to hand off tasks to **Cloud Agents**. By prepending a message with `&`, you can push a local conversation to a cloud-based VM.
+
+- **Autonomy:** These agents plan, execute, and test over longer horizons without human intervention.
+- **Artifacts:** When the agent finishes, it does not just give you a diff; it provides logs, video recordings of its work, and even live previews.
+
+**Why this matters for you:** Setting up complex Appwrite Database schemas or writing intricate migration scripts can be time-consuming. You can now hand off a prompt like `& Migrate our current SQL users to Appwrite Auth and set up the corresponding tables` and walk away. The agent will handle the heavy lifting in the cloud and notify you when it is ready for review.
+
+## 3. Native Appwrite skills & MCP
+
+Appwrite recently introduced **Appwrite Skills** - open-source Markdown files that give AI agents deep, language-specific knowledge of Appwrite SDKs. Cursor 3 introduces a **Marketplace** for these types of skills and **Model Context Protocol (MCP)** servers. You can find the **Appwrite plugin** in the [Cursor Marketplace](https://cursor.com/marketplace/appwrite).
+
+![Appwrite plugin in the Cursor Marketplace showing available MCPs, skills, and commands.](/images/blog/cursor-3-parallel-fleets-appwrite/cursor-slash-skills-modes.avif)
+
+- **Context precision:** Agents in Cursor 3 now discover and load these skills only when needed, reducing token waste and preventing the "hallucination" of old SDK methods.
+- **CLI integration:** You can manage these directly from the new Cursor CLI using `/mcp enable` or `/rules`.
+
+## 4. The integrated browser & style editor
+
+Cursor 3 includes a built-in browser and component tree. You can move elements, update colors, and test layouts in real-time. The agent then instantly applies those CSS or React changes to your codebase. For those using **Appwrite Realtime**, this makes debugging live state changes incredibly visual. You can watch your UI update as the agent tweaks the subscription listeners in the background.
+
+## How to get started
+
+To try the new experience, ensure you have updated to the latest version and use the following shortcuts:
+
+- **Open agents window:** `Cmd+Shift+P` - `Agents Window`
+- **Switch to plan mode:** `/plan` (great for mapping out Appwrite Function logic)
+- **Invoke Appwrite skill:** Use the slash command menu in chat.
+
+Cursor 3 feels less like a traditional code editor and more like a system for building software faster. For Appwrite developers, it cuts down time spent on boilerplate, SDK wiring, and repetitive setup, so you can stay focused on product logic, user experience, and shipping. Combined with Appwrite, it gives small teams and solo builders a much more practical way to build ambitious products without the usual overhead.
+
+**Have you tried the new parallel fleets yet? Join the conversation in our [Discord](https://appwrite.io/discord) and show us what you are building**

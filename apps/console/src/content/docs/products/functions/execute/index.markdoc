@@ -1,0 +1,1065 @@
+---
+layout: article
+title: Execution
+description: Understand serverless function execution in Appwrite. Explore how triggers, events, and data flow enable dynamic execution of your code.
+difficulty: beginner
+readtime: 3
+---
+
+
+Appwrite Functions can be executed in several ways.
+Executions can be invoked through the Appwrite SDK and visiting its REST endpoint. Functions can also be triggered by events and scheduled executions.
+Here are all the different ways to consume your Appwrite Functions.
+
+# Execution modes {% #execution-modes %}
+
+Appwrite Functions support two execution modes: **synchronous** and **asynchronous**.
+
+## Synchronous executions {% #synchronous-executions %}
+
+Synchronous executions are those where Appwrite makes the request to the function runtime synchronously and waits for the response. The client making the request will wait until the function completes and receives the response directly.
+
+Synchronous executions are created via:
+- The [Create execution](/docs/references/cloud/client-web/functions#createExecution) endpoint where the `async` parameter is `false`
+- Requests to custom or auto-generated [domains](/docs/products/functions/execute#domains)
+
+Synchronous executions:
+- Return response bodies and headers directly to the client
+- Have a **30-second hard timeout limit** to discourage slow API calls that cause poor user experience in apps
+- Are ideal for short-running operations where you need response data quickly
+
+## Asynchronous executions {% #asynchronous-executions %}
+
+Asynchronous executions are added to a queue and processed by the function worker as background jobs.
+
+Asynchronous executions are created via:
+- The [Create execution](/docs/references/cloud/client-web/functions#createExecution) endpoint where the `async` parameter is `true`
+- Event triggers (when functions are triggered by [platform events](/docs/apis/events))
+- Scheduled executions (cron jobs or delayed executions)
+
+Asynchronous executions:
+- Have no timeout limitations beyond your function's configured timeout
+- Are ideal for background processing and event-driven workflows
+
+{% info title="Response body storage" %}
+Response bodies and headers are not stored anywhere, so they are only ever returned via synchronous executions.
+{% /info %}
+
+# Domains {% #domains %}
+You can execute a function through HTTP requests, using a browser or by sending an HTTP request.
+1. In the Appwrite Console's sidebar, click **Functions**.
+1. Under **Execute access**, set the access to `Any` so that anyone can execute the function. You will use [JWTs](/docs/products/auth/jwt) to authenticate users.
+1. Under the **Domains** tab, you'll find the generated domain from Appwrite and your custom domains. [Learn about adding a custom domain](/docs/products/functions/domains).
+
+```bash
+https://64d4d22db370ae41a32e.fra.appwrite.run
+```
+
+When requests are made to this domain, whether through a browser or through an HTTP request,
+the request information like request URL, request headers, and request body will be passed to the function.
+
+```bash
+curl -X POST https://64d4d22db370ae41a32e.fra.appwrite.run \
+-H "X-Custom-Header: 123" \
+-H "x-appwrite-user-jwt: <YOUR_JWT_KEY>" \
+-H "Content-Type: application/json" \
+-d '{"data":"this is json data"}'
+```
+
+Notice how a `x-appwrite-user-jwt` header is passed in the request, you will use this to authenticate users.
+[Learn more about JWTs](/docs/products/auth/jwt).
+
+This unlocks the ability for you to develop custom HTTP endpoints with Appwrite Functions.
+It also allows accepting incoming webhooks for handling online payments, hosting social platform bots, and much more.
+
+# SDK {% #sdk %}
+
+You can invoke your Appwrite Functions directly from the [Appwrite SDKs](/docs/sdks).
+
+{% tabs %}
+{% tabsitem #client title="Client SDKs" %}
+
+{% multicode %}
+```client-web
+import { Client, Functions } from "appwrite";
+
+const client = new Client();
+
+const functions = new Functions(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+;
+
+const promise = functions.createExecution({
+    functionId: '<FUNCTION_ID>',
+    body: '<BODY>',  // optional
+    async: false,  // optional
+    xpath: '<PATH>',  // optional
+    method: 'GET',  // optional
+    headers: {} // optional
+});
+
+promise.then(function (response) {
+    console.log(response); // Success
+}, function (error) {
+    console.log(error); // Failure
+});
+```
+```dart
+import 'package:appwrite/appwrite.dart';
+
+void main() { // Init SDK
+  Client client = Client();
+  Functions functions = Functions(client);
+
+  client
+    .setProject('<PROJECT_ID>') // Your project ID
+  ;
+  Future result = functions.createExecution(
+    functionId: '<FUNCTION_ID>',
+    body: '<BODY>', // optional
+    xasync: false, // optional
+    path: '<PATH>', // optional
+    method: 'GET', // optional
+    headers: {}, // optional
+  );
+
+  result
+    .then((response) {
+      print(response); // Success
+    }).catchError((error) {
+      print(error.response); // Failure
+  });
+}
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setProject("<PROJECT_ID>") // Your project ID
+
+let functions = Functions(client)
+
+let execution = try await functions.createExecution(
+  functionId: "<FUNCTION_ID>",
+  body: "<BODY>", // optional
+  async: xfalse, // optional
+  path: "<PATH>", // optional
+  method: "GET", // optional
+  headers: [:] // optional
+)
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.services.Functions
+
+val client = Client(context)
+    .setProject("<PROJECT_ID>") // Your project ID
+
+val functions = Functions(client)
+
+val response = functions.createExecution(
+    functionId = "<FUNCTION_ID>",
+    body = "<BODY>", // optional
+    async = false, // optional
+    path = "<PATH>", // optional
+    method = "GET", // optional
+    headers = mapOf( "a" to "b" ) // optional
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Functions;
+
+Client client = new Client(context)
+    .setProject("<PROJECT_ID>"); // Your project ID
+
+Functions functions = new Functions(client);
+
+functions.createExecution(
+    "<FUNCTION_ID>", // functionId
+    "<BODY>", // body (optional)
+    false, // async (optional)
+    "<PATH>", // path (optional)
+    "GET", // method (optional)
+    mapOf( "a" to "b" ) // headers (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        Log.d("Appwrite", result.toString());
+    })
+);
+```
+{% /multicode %}
+
+{% /tabsitem %}
+
+{% tabsitem #server title="Server SDKs" %}
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+// Init SDK
+const client = new sdk.Client();
+
+const functions = new sdk.Functions(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+;
+
+const promise = functions.createExecution({
+    functionId: '<FUNCTION_ID>',
+    body: '<BODY>',  // optional
+    async: false,  // optional
+    xpath: '<PATH>',  // optional
+    method: sdk.ExecutionMethod.GET,  // optional
+    headers: {} // optional
+});
+
+promise.then(function (response) {
+    console.log(response); // Success
+}, function (error) {
+    console.log(error); // Failure
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+// Init SDK
+let client = new sdk.Client();
+
+let functions = new sdk.Functions(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+;
+
+const promise = functions.createExecution({
+    functionId: '<FUNCTION_ID>',
+    body: '<BODY>',  // optional
+    async: false,  // optional
+    xpath: '<PATH>',  // optional
+    method: sdk.ExecutionMethod.GET,  // optional
+    headers: {} // optional
+});
+
+promise.then(function (response) {
+    console.log(response); // Success
+}, function (error) {
+    console.log(error); // Failure
+});
+```
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithProject("<PROJECT_ID>"),
+	)
+
+	functions := appwrite.NewFunctions(client)
+
+	execution, err := functions.CreateExecution(
+		"<FUNCTION_ID>", // functionId
+		functions.WithCreateExecutionBody("<BODY>"), // body (optional)
+		functions.WithCreateExecutionAsync(false), // async (optional)
+		functions.WithCreateExecutionPath("<PATH>"), // path (optional)
+		functions.WithCreateExecutionMethod("GET"), // method (optional)
+		functions.WithCreateExecutionHeaders(map[string]interface{}{})) // headers (optional)
+
+	fmt.Println(execution)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Functions;
+
+$client = new Client();
+
+$client
+    ->setProject('<PROJECT_ID>') // Your project ID
+;
+
+$functions = new Functions($client);
+
+$result = $functions->createExecution(
+    functionId: '<FUNCTION_ID>',
+    body: '<BODY>',  // optional
+    async: false,  // optional
+    path: '<PATH>',  // optional
+    method: 'GET',  // optional
+    headers: [] // optional
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.functions import Functions
+
+client = Client()
+
+(client
+  .set_project('<PROJECT_ID>') # Your project ID
+)
+
+functions = Functions(client)
+
+result = functions.create_execution(
+    function_id = '<FUNCTION_ID>',
+    body = '<BODY>',  # optional
+    async = False,  # optional
+    path = '<PATH>',  # optional
+    method = 'GET',  # optional
+    headers = {} # optional
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_project('<PROJECT_ID>') # Your project ID
+
+functions = Functions.new(client)
+
+response = functions.create_execution(
+    function_id: '<FUNCTION_ID>',
+    body: '<BODY>',  # optional
+    async: false,  # optional
+    path: '<PATH>',  # optional
+    method: 'GET',  # optional
+    headers: {} # optional
+)
+
+puts response.inspect
+```
+```csharp
+using Appwrite;
+using Appwrite.Services;
+using Appwrite.Models;
+
+var client = new Client()
+    .SetProject("<PROJECT_ID>"); // Your project ID
+
+var functions = new Functions(client);
+
+Execution result = await functions.CreateExecution(
+    functionId: "<FUNCTION_ID>"
+    body: "<BODY>" // optional
+    async: false // optional
+    path: "<PATH>" // optional
+    method: "GET" // optional
+    headers: [object]); // optional
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+void main() { // Init SDK
+  Client client = Client();
+  Functions functions = Functions(client);
+
+  client
+    .setProject('<PROJECT_ID>') // Your project ID
+  ;
+
+  Future result = functions.createExecution(
+    functionId: '<FUNCTION_ID>',
+    body: '<BODY>', // optional
+    xasync: false, // optional
+    path: '<PATH>', // optional
+    method: 'GET', // optional
+    headers: {}, // optional
+  );
+
+  result
+    .then((response) {
+      print(response); // Success
+    }).catchError((error) {
+      print(error.response); // Failure
+  });
+}
+```
+```kotlin
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Functions;
+
+Client client = new Client()
+    .setProject("<PROJECT_ID>"); // Your project ID
+
+Functions functions = new Functions(client);
+
+functions.createExecution(
+    "<FUNCTION_ID>", // functionId
+    "<BODY>", // body (optional)
+    false, // async (optional)
+    "<PATH>", // path (optional)
+    "GET", // method (optional)
+    mapOf( "a" to "b" ) // headers (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Functions;
+
+Client client = new Client()
+    .setProject("<PROJECT_ID>"); // Your project ID
+
+Functions functions = new Functions(client);
+
+functions.createExecution(
+    "<FUNCTION_ID>", // functionId
+    "<BODY>", // body (optional)
+    false, // async (optional)
+    "<PATH>", // path (optional)
+    "GET", // method (optional)
+    mapOf( "a" to "b" ) // headers (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setProject("<PROJECT_ID>") // Your project ID
+
+let functions = Functions(client)
+
+let execution = try await functions.createExecution(
+  functionId: "<FUNCTION_ID>",
+  body: "<BODY>", // optional
+  async: xfalse, // optional
+  path: "<PATH>", // optional
+  method: "GET", // optional
+  headers: [:] // optional
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::functions::Functions;
+use appwrite::enums::execution_method::ExecutionMethod;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_project("<PROJECT_ID>");
+
+    let functions = Functions::new(&client);
+
+    let execution = functions.create_execution(
+        "<FUNCTION_ID>",                             // functionId
+        Some("<BODY>"),                              // body (optional)
+        Some(false),                                 // async (optional)
+        Some("<PATH>"),                              // path (optional)
+        Some(ExecutionMethod::GET),                  // method (optional)
+        Some(json!({})),                             // headers (optional)
+        None,                                        // scheduledAt (optional)
+    ).await?;
+
+    println!("{:?}", execution);
+    Ok(())
+}
+```
+{% /multicode %}
+{% /tabsitem %}
+{% /tabs %}
+
+# Console {% #console %}
+Another easy way to test a function is directly in the Appwrite Console.
+You test a function by hitting the **Execute now** button, which will display a modal below.
+
+You'll be able to mock executions by configuring the path, method, headers, and body.
+
+{% only_dark %}
+![Create project screen](/images/docs/functions/execution/dark/execute-function.avif)
+{% /only_dark %}
+{% only_light %}
+![Create project screen](/images/docs/functions/execution/execute-function.avif)
+{% /only_light %}
+
+
+# Events {% #events %}
+
+Changes in Appwrite emit events. You can configure Functions to be executed in response to these events.
+
+1. In Appwrite Console, navigate to **Functions**.
+2. Click to open a function you wish to configure.
+3. Under the **Settings** tab, navigate to **Events**.
+4. Add one or multiple events as triggers for the function.
+5. Be careful to avoid selecting events that can be caused by the function itself. This can cause the function to trigger its own execution, resulting in infinite recursions.
+
+In these executions, the event that triggered the function will be passed as the header `x-appwrite-event` to the function.
+The `request.body` parameter will contain the event data. [Learn more about events](/docs/apis/events).
+
+You can use one of the following events.
+{% accordion %}
+{% accordion_item title="Authentication" %}
+{% partial file="auth-events.md" /%}
+{% /accordion_item %}
+{% accordion_item title="Databases" %}
+{% partial file="databases-events.md" /%}
+{% /accordion_item %}
+{% accordion_item title="Storage" %}
+{% partial file="storage-events.md" /%}
+{% /accordion_item %}
+{% accordion_item title="Functions" %}
+{% partial file="functions-events.md" /%}
+{% /accordion_item %}
+{% accordion_item title="Messaging" %}
+{% partial file="messaging-events.md" /%}
+{% /accordion_item %}
+{% /accordion %}
+
+# Schedule {% #schedule %}
+
+Appwrite supports scheduled function executions. You can schedule executions using [cron expressions](https://en.wikipedia.org/wiki/Cron) in the settings of your function. Cron supports recurring executions as frequently as **every minute**.
+
+Here are some cron expressions for common intervals:
+
+| Cron Expression  | Schedule              |
+| ---------------- | --------------------- |
+| `*/15 * * * *`   | Every 15 minutes      |
+| `0 * * * *`      | Every Hour            |
+| `0 0 * * *`      | Every day at 00:00    |
+| `0 0 * * 1`      | Every Monday at 00:00 |
+
+# Delayed executions {% #delayed-executions %}
+
+You can also delay function executions, which trigger the function only once at a future date and time. You can schedule a function execution using the Appwrite Console, a Client SDK, or a Server SDK.
+
+{% tabs %}
+{% tabsitem #console title="Console" %}
+To schedule an execution, navigate to **Your function** > **Executions** > **Execute now** > **Schedule** in the Appwrite Console.
+
+{% only_dark %}
+![Scheduled execution details screen](/images/docs/functions/execution/dark/scheduled-execution-function.avif)
+{% /only_dark %}
+{% only_light %}
+![Scheduled execution details screen](/images/docs/functions/execution/scheduled-execution-function.avif)
+{% /only_light %}
+{% /tabsitem %}
+
+{% tabsitem #client-sdk title="Client SDK" %}
+You can also schedule your function executions using a supported [Client SDK](/docs/sdks/#client).
+
+{% multicode %}
+
+```client-web
+import { Client, Functions, ExecutionMethod } from "appwrite";
+
+const client = new Client()
+    .setProject('<PROJECT_ID>'); // Your project ID
+
+const functions = new Functions(client);
+
+const result = await functions.createExecution({
+    functionId: '<FUNCTION_ID>',
+    body: '<BODY>', // optional
+    async: true, // Scheduled executions need to be async
+    xpath: '<PATH>', // optional
+    method: ExecutionMethod.GET, // optional
+    headers: {}, // optional
+    scheduledAt: '2020-10-15T06:38:00.000+00:00' // Schedule execution (optional)
+});
+
+console.log(result);
+```
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+Client client = Client()
+    .setProject('<PROJECT_ID>'); // Your project ID
+
+Functions functions = Functions(client);
+
+Execution result = await functions.createExecution(
+    functionId: '<FUNCTION_ID>', // functionId
+    body: '<BODY>', // optional
+    xasync: true, // Scheduled executions need to be async
+    path: '<PATH>', // optional
+    method: ExecutionMethod.gET, // optional
+    headers: {}, // optional
+    scheduledAt: '2020-10-15T06:38:00.000+00:00' // Schedule execution (optional)
+);
+```
+
+```client-react-native
+import { Client, Functions, ExecutionMethod } from "react-native-appwrite";
+
+const client = new Client()
+    .setProject('<PROJECT_ID>'); // Your project ID
+
+const functions = new Functions(client);
+
+const result = await functions.createExecution({
+    functionId: '<FUNCTION_ID>',
+    body: '<BODY>', // optional
+    async: true, // Scheduled executions need to be async
+    xpath: '<PATH>', // optional
+    method: ExecutionMethod.GET, // optional
+    headers: {}, // optional
+    scheduledAt: '2020-10-15T06:38:00.000+00:00' // Schedule execution (optional)
+});
+
+console.log(result);
+```
+
+```client-apple
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setProject("<PROJECT_ID>") // Your project ID
+
+let functions = Functions(client)
+
+let execution = try await functions.createExecution(
+    functionId: "<FUNCTION_ID>", // functionId
+    body: "<BODY>", // optional
+    async: true, // Scheduled executions need to be async
+    path: "<PATH>", // optional
+    method: .gET, // optional
+    headers: [:], // optional
+    scheduledAt: "2020-10-15T06:38:00.000+00:00" // Schedule execution (optional)
+)
+```
+
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Functions
+
+val client = Client(context)
+    .setProject("<PROJECT_ID>") // Your project ID
+
+val functions = Functions(client)
+
+val result = functions.createExecution(
+    functionId = "<FUNCTION_ID>", // functionId
+    body = "<BODY>", // (optional)
+    async = true, // Scheduled executions need to be async
+    path = "<PATH>", // (optional)
+    method = ExecutionMethod.GET, // (optional)
+    headers = mapOf( "a" to "b" ), // (optional)
+    scheduledAt = "2020-10-15T06:38:00.000+00:00" // Schedule execution (optional)
+)
+```
+
+```graphql
+mutation {
+    functionsCreateExecution(
+        functionId: "<FUNCTION_ID>",
+        body: "<BODY>",
+        async: true,
+        path: "<PATH>",
+        method: "GET",
+        headers: "{}",
+        scheduledAt: "2020-10-15T06:38:00.000+00:00"
+    ) {
+        _id
+        _createdAt
+        _updatedAt
+        _permissions
+        functionId
+        trigger
+        status
+        requestMethod
+        requestPath
+        requestHeaders {
+            name
+            value
+        }
+        responseStatusCode
+        responseBody
+        responseHeaders {
+            name
+            value
+        }
+        logs
+        errors
+        duration
+    }
+}
+```
+
+
+```http
+POST https://<REGION>.cloud.appwrite.io/v1/functions/<FUNCTION_ID>/executions HTTP/1.1
+X-Appwrite-Project: "<PROJECT_ID>"
+X-Appwrite-Response-Format: 1.5.0
+Content-Type: application/json
+
+{
+  "body": "<BODY>",
+  "async": true,
+  "path": "<PATH>",
+  "method": "GET",
+  "headers": {},
+  "scheduledAt": "2025-10-15T06:38:00.000+00:00"
+}
+```
+
+{% /multicode %}
+
+{% /tabsitem %}
+
+{% tabsitem #sdk title="Server SDK" %}
+You can also schedule your function executions using a supported [Server SDK](/docs/sdks/#server).
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+// Init SDK
+const client = new sdk.Client();
+
+const functions = new sdk.Functions(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+;
+
+const promise = functions.createExecution({
+    functionId: '<FUNCTION_ID>',
+    body: '<BODY>',
+    async: true,
+    xpath: '<PATH>',
+    method: sdk.ExecutionMethod.GET,
+    headers: {},
+    scheduledAt: '<SCHEDULED_AT>'
+});
+
+promise.then(function (response) {
+    console.log(response); // Success
+}, function (error) {
+    console.log(error); // Failure
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+// Init SDK
+let client = new sdk.Client();
+
+let functions = new sdk.Functions(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+;
+
+const promise = functions.createExecution({
+    functionId: '<FUNCTION_ID>',
+    body: '<BODY>',
+    async: true,
+    xpath: '<PATH>',
+    method: sdk.ExecutionMethod.GET,
+    headers: {},
+    scheduledAt: '<SCHEDULED_AT>'
+});
+
+promise.then(function (response) {
+    console.log(response); // Success
+}, function (error) {
+    console.log(error); // Failure
+});
+```
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithProject("<PROJECT_ID>"),
+	)
+
+	functions := appwrite.NewFunctions(client)
+
+	execution, err := functions.CreateExecution(
+		"<FUNCTION_ID>", // functionId
+		functions.WithCreateExecutionBody("<BODY>"), // body (optional)
+		functions.WithCreateExecutionAsync(true), // Scheduled executions need to be async
+		functions.WithCreateExecutionPath("<PATH>"), // path (optional)
+		functions.WithCreateExecutionMethod("GET"), // method (optional)
+		functions.WithCreateExecutionHeaders(map[string]interface{}{}), // headers (optional)
+		functions.WithCreateExecutionScheduledAt("2025-10-15T06:38:00.000+00:00")) // Schedule execution (optional)
+
+	fmt.Println(execution)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Functions;
+
+$client = new Client();
+
+$client
+    ->setProject('<PROJECT_ID>') // Your project ID
+;
+
+$functions = new Functions($client);
+
+$result = $functions->createExecution(
+    '<FUNCTION_ID>', // functionId
+    '<BODY>', // body (optional)
+    true, // Scheduled executions need to be async
+    '<PATH>', // path (optional)
+    ExecutionMethod.GET, // method (optional)
+    {}, // headers (optional)
+    '2020-10-15T06:38:00.000+00:00' // Schedule execution (optional)
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.functions import Functions
+
+client = Client()
+
+(client
+  .set_project('<PROJECT_ID>') # Your project ID
+)
+
+functions = Functions(client)
+
+result = functions.create_execution(
+    function_id = '<FUNCTION_ID>', # functionId
+    body = '<BODY>', # body (optional)
+    async = True, # Scheduled executions need to be async
+    path = '<PATH>', # path (optional)
+    method = ExecutionMethod.GET, # method (optional)
+    headers = {} # headers (optional)
+    scheduled_at = '2020-10-15T06:38:00.000+00:00' # Schedule execution (optional)
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_project('<PROJECT_ID>') # Your project ID
+
+functions = Functions.new(client)
+
+response = functions.create_execution(
+    function_id: '<FUNCTION_ID>', # functionId
+    body: '<BODY>', # body (optional)
+    async: true, # Scheduled executions need to be async
+    path: '<PATH>', # path (optional)
+    method: ExecutionMethod::GET, # method (optional)
+    headers: {} # headers (optional)
+    scheduled_at: '2020-10-15T06:38:00.000+00:00' # Schedule execution (optional)
+)
+
+puts response.inspect
+```
+```csharp
+using Appwrite;
+using Appwrite.Services;
+using Appwrite.Models;
+
+var client = new Client()
+    .SetProject("<PROJECT_ID>"); // Your project ID
+
+var functions = new Functions(client);
+
+Execution result = await functions.CreateExecution(
+    functionId: "<FUNCTION_ID>", // functionId
+    body: "<BODY>", // body (optional)
+    async: true, // Scheduled executions need to be async
+    path: "<PATH>", // path (optional)
+    method: ExecutionMethod.GET, // method (optional)
+    headers: [object] // headers (optional)
+    scheduledAt: "2020-10-15T06:38:00.000+00:00"; // Schedule execution (optional)
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+void main() { // Init SDK
+  Client client = Client();
+  Functions functions = Functions(client);
+
+  client
+    .setProject('<PROJECT_ID>') // Your project ID
+  ;
+
+  Future result = functions.createExecution(
+    functionId: '<FUNCTION_ID>', // functionId
+    body: '<BODY>', // (optional)
+    xasync: true, // Scheduled executions need to be async
+    path: '<PATH>', // (optional)
+    method: ExecutionMethod.GET, // (optional)
+    headers: {}, // (optional)
+    scheduledAt: '2020-10-15T06:38:00.000+00:00' // Schedule execution (optional)
+  );
+
+  result
+    .then((response) {
+      print(response); // Success
+    }).catchError((error) {
+      print(error.response); // Failure
+  });
+}
+```
+```kotlin
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Functions;
+
+Client client = new Client()
+    .setProject("<PROJECT_ID>"); // Your project ID
+
+Functions functions = new Functions(client);
+
+functions.createExecution(
+    "<FUNCTION_ID>", // functionId
+    "<BODY>", // body (optional)
+    true, // Scheduled executions need to be async
+    "<PATH>", // path (optional)
+    "GET", // method (optional)
+    mapOf( "a" to "b" ), // headers (optional)
+    "2020-10-15T06:38:00.000+00:00", // Schedule execution (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Functions;
+
+Client client = new Client()
+    .setProject("<PROJECT_ID>"); // Your project ID
+
+Functions functions = new Functions(client);
+
+functions.createExecution(
+    "<FUNCTION_ID>", // functionId
+    "<BODY>", // body (optional)
+    true, // Scheduled executions need to be async
+    "<PATH>", // path (optional)
+    ExecutionMethod.GET, // method (optional)
+    mapOf( "a" to "b" ), // headers (optional)
+    "2020-10-15T06:38:00.000+00:00" // Schedule execution (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setProject("<PROJECT_ID>") // Your project ID
+
+let functions = Functions(client)
+
+let execution = try await functions.createExecution(
+  functionId: "<FUNCTION_ID>",
+  body: "<BODY>", // optional
+  async: true, // Scheduled executions need to be async
+  path: "<PATH>", // optional
+  method: .gET, // optional
+  headers: [:] // optional
+  scheduledAt: "2020-10-15T06:38:00.000+00:00" // Schedule execution (optional)
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::functions::Functions;
+use appwrite::enums::execution_method::ExecutionMethod;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_project("<PROJECT_ID>");
+
+    let functions = Functions::new(&client);
+
+    let execution = functions.create_execution(
+        "<FUNCTION_ID>",                             // functionId
+        Some("<BODY>"),                              // body (optional)
+        Some(true),                                  // async - scheduled executions need to be async
+        Some("<PATH>"),                              // path (optional)
+        Some(ExecutionMethod::GET),                  // method (optional)
+        Some(json!({})),                             // headers (optional)
+        Some("2020-10-15T06:38:00.000+00:00"),       // scheduledAt (optional)
+    ).await?;
+
+    println!("{:?}", execution);
+    Ok(())
+}
+```
+{% /multicode %}
+
+{% /tabsitem %}
+{% /tabs %}
+
+# Permissions {% #permission %}
+
+Appwrite Functions can be executed using Client or Server SDKs. Client SDKs must be authenticated with an account that has been granted execution [permissions](/docs/advanced/security/permissions) on the function's settings page. Server SDKs require an API key with the correct scopes.
+
+If your function has a generated or custom domain, executions are not authenticated. Anyone visiting the configured domains will be considered a guest, so make sure to give `Any` execute permission in order for domain executions to work. If you need to enforce permissions for functions with a domain, use authentication methods like JWT.

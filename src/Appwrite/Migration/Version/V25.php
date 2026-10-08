@@ -154,6 +154,40 @@ class V25 extends Migration
                     } catch (Throwable $th) {
                         Console::warning("Failed to create index \"_key_expire\" from {$id}: {$th->getMessage()}");
                     }
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'passkey');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"passkey\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'authenticators':
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'identifier');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"identifier\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_identifier');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_identifier\" from {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'name');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"name\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'accessedAt');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"accessedAt\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_accessedAt');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_accessedAt\" from {$id}: {$th->getMessage()}");
+                    }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
@@ -281,7 +315,7 @@ class V25 extends Migration
                         Console::warning("Failed to create index \"_key_passwordPwned\" from {$id}: {$th->getMessage()}");
                     }
 
-                    // Added in 2.3.0 for custom user photos
+                    // Added in 2.4.0 for custom user photos
                     foreach (['photoId', 'photoSize'] as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);

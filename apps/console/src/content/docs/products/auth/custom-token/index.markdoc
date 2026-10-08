@@ -1,0 +1,267 @@
+---
+layout: article
+title: Custom token login
+description: Limitless authentication flow in Appwrite. Find out how to implement custom authentication flow or connect to 3rd party authentication providers.
+---
+
+Tokens are short-lived secrets created by an [Appwrite Server SDK](/docs/sdks#server) that can be exchanged for session by a [Client SDK](/docs/sdks#client) to log in users. You may already be familiar with tokens if you checked out [Magic URL login](/docs/products/auth/magic-url), [Email OTP login](/docs/products/auth/email-otp) or [Phone (SMS) login](/docs/products/auth/phone-sms).
+
+Custom token allows you to use [Server SDK](/docs/sdks#server) to generate tokens for your own implementations. This allows you to code your own authentication methods using Appwrite Functions or your own backend. You could implement username and password sign-in, captcha-protected authentication, phone call auth, and much more. Custom tokens also allow you to skip authentication which is useful when you integrate Appwrite with external authenticaion providers such as Auth0, TypingDNA, or any provider trusted by your users.
+
+# Create custom token {% #create-custom-token %}
+
+Once you have your server endpoint prepared either in an Appwrite Function or a server integration, you can use the [Create token](/docs/references/cloud/server-nodejs/users#createToken) endpoint of the [Users API](/docs/products/auth/users) to generate a token.
+
+{% multicode %}
+```server-nodejs
+import { Client, Users } from "node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')    // Your API Endpoint
+    .setProject('<PROJECT_ID>')                     // Your project ID
+    .setKey('<API_KEY>');                           // Your project API key
+
+const users = new Users(client);
+
+const token = await users.createToken({
+    userId: '<USER_ID>'
+});
+const secret = token.secret;
+```
+
+```php
+use Appwrite\Client;
+use Appwrite\Users;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')   // Your API Endpoint
+    ->setProject('<PROJECT_ID>')                    // Your project ID
+    ->setKey('<API_KEY>');                          // Your project API key
+
+$users = new Users($client);
+
+$token = $users->createToken('<USER_ID>');
+$secret = $token['secret'];
+```
+
+```python
+from appwrite.client import Client
+from appwrite.users import Users
+
+client = Client()
+
+(client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+  .set_project('<PROJECT_ID>')                  # Your project ID
+  .set_key('<API_KEY>')                         # Your project API key
+)
+
+users = Users(client)
+
+token = users.create_token(user_id='<USER_ID>')
+secret = token.secret
+```
+
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')   # Your API Endpoint
+    .set_project('<PROJECT_ID>')                    # Your project ID
+    .set_key('<API_KEY>')                           # Your project API key
+
+users = Users.new(client)
+
+token = users.create_token(user_id: '<USER_ID>')
+secret = token['secret']
+```
+
+```deno
+import { Client, Users } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')    // Your API Endpoint
+    .setProject('<PROJECT_ID>')                     // Your project ID
+    .setKey('<API_KEY>');                           // Your project API key
+
+const users = new Users(client);
+
+const token = await users.createToken({
+    userId: '[USER_ID]'
+});
+const secret = token.secret;
+```
+
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')    // Your API Endpoint
+    .setProject('<PROJECT_ID>')                     // Your project ID
+    .setKey('<API_KEY>');                           // Your project API key
+
+final users = Users(client);
+
+final token = await users.createToken('<USER_ID>');
+final secret = token.secret;
+```
+
+```kotlin
+import io.appwrite.Client
+import io.appwrite.Users
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")    // Your API Endpoint
+    .setProject("<PROJECT_ID>")                     // Your project ID
+    .setKey("<API_KEY>")                            // Your project API key
+
+val users = Users(client)
+
+val token = users.createToken("<USER_ID>")
+val secret = token.secret
+```
+
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")    // Your API Endpoint
+    .setProject("<PROJECT_ID>")                     // Your project ID
+    .setKey("<API_KEY>")                            // Your project API key
+
+let users = Users(client)
+
+let token = try await users.createToken("<USER_ID>")
+let secret = token.secret
+```
+
+```csharp
+using Appwrite;
+
+var client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")    // Your API Endpoint
+    .SetProject("<PROJECT_ID>")                     // Your project ID
+    .SetKey("<API_KEY>");                           // Your project API key
+
+var users = new Users(client);
+
+var token = await users.CreateToken("<USER_ID>");
+var secret = token.secret;
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::users::Users;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+        .set_project("<PROJECT_ID>")                 // Your project ID
+        .set_key("<API_KEY>");                        // Your project API key
+
+    let users = Users::new(&client);
+
+    let token = users.create_token(
+        "<USER_ID>",
+        None, // length (optional)
+        None, // expire (optional)
+    ).await?;
+
+    let secret = token.secret;
+    println!("{}", secret);
+    Ok(())
+}
+```
+{% /multicode %}
+
+The newly created token includes a `secret` which is 6 character long hexadecimal string. You can configure length of the secret and expiry when creating a token.
+
+If you are integrating with external authentication providers or implementing your own authentication, make sure to validate user authenticated properly before generating a token for them.
+
+If you are implementing token-based authentication flow, share the token secret with user over any channel of your choice instead of directly giving it to him in the response.
+
+If the client doesn't know the user's ID during authentication, we recommend to directly return user ID to the client as part of this step. If necessary, you can check if the user with an user ID exists first, and create a new user if needed.
+
+# Login {% #login %}
+
+Once the client receives a token secret, we can use it to authenticate the user in the application. Use the [Client SDK's](/docs/sdks#client) [Create session endpoint](/docs/references/cloud/server-nodejs/account#createSession) to exchange the token secret for a valid session, which logs the user.
+
+{% multicode %}
+
+```client-web
+import { Client, Account } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+const session = await account.createSession({
+    userId: '<USER_ID>',
+    secret: '<SECRET>'
+});
+```
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final account = Account(client);
+
+final session = await account.createSession(
+    userId: '<USER_ID>',
+    secret: '<SECRET>'
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>");
+
+let account = Account(client);
+
+let session = try await account.createSession(
+    userId: "<USER_ID>",
+    secret: "<SECRET>"
+);
+```
+
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Account
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>");
+
+val account = Account(client);
+
+val session = account.createSession(
+    userId = "<USER_ID>",
+    secret = "<SECRET>"
+);
+```
+
+```graphql
+mutation {
+    accountcreateSession(userId: "<USER_ID>", secret: "<SECRET>") {
+        _id
+        userId
+        provider
+        expire
+    }
+}
+```
+
+{% /multicode %}
+
+When the session is successfully created, the session is stored in a persistent manner and you can now do requests as authorized user from the application.

@@ -1,0 +1,26 @@
+---
+layout: article
+title: Storage
+description: Manage self-hosted storage options with Appwrite. Explore file storage, uploads, and customization in your self-hosted Appwrite environment.
+---
+
+Appwrite's Storage Service can be configured to store files locally, or with self-hosted and cloud storage services. 
+By default, Appwrite's Storage Service **stores files on your server's local storage**.
+If you expect large volumes of data or the need to have scalable data storage, you may choose to use a separate storage service.
+
+# Available adapters {% #available-adapters %}
+Appwrite supports AWS S3, Digital Ocean Spaces, Backblaze, Akamai Object Storage, and Wasabi as storage adapters. 
+Some of these services can be self-hosted, just like Appwrite.
+
+You can select which storage adapter to use by setting the `_APP_STORAGE_DEVICE` environment variable. Valid values are `local`, `s3`, `dospaces`, `backblaze`, `linode`, and `wasabi`. Each storage adapter requires its own set of additional environment variables to configure.
+
+{% arrow_link href="/docs/advanced/self-hosting/environment-variables" %}
+Learn more about storage environment variables 
+{% /arrow_link %}
+
+# Maximum file size {% #maximum-file-size %}
+
+The maximum size for a single file upload is controlled by the `_APP_STORAGE_LIMIT` environment variable, which defaults to 30 MB. 
+[Learn more about environment variables](/docs/advanced/self-hosting/environment-variables).
+
+{% partial file="update-variables.md" /%}
