@@ -11,7 +11,6 @@ use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\Attribute;
-use Utopia\Database\Capability;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -51,12 +50,6 @@ final class BootDatabaseTest extends TestCase
         $connection = new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 
         $adapter = new class ($connection) extends SQLite {
-            #[\Override]
-            public function supports(Capability $feature): bool
-            {
-                return $feature === Capability::Hostname || parent::supports($feature);
-            }
-
             #[\Override]
             public function hostname(): string
             {

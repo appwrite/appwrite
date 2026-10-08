@@ -6,11 +6,10 @@ namespace Tests\Unit\Database;
 
 use Appwrite\Database\Factory;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Utopia\Database\Adapter\ConnectedMemory;
 use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Cache;
-use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Attribute;
-use Utopia\Database\Capability;
 use Utopia\Database\Collection;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -46,9 +45,9 @@ final class FactoryTest extends TestCase
 
     private function factory(): Factory
     {
-        $adapter = new ConnectedAdapter();
+        $adapter = (new ConnectedMemory())->setHostname('mariadb');
         $pools = new Group();
-        $pools->add(new Pool(new Stack(), 'database_db_main', 1, static fn (): ConnectedAdapter => $adapter, 1.0));
+        $pools->add(new Pool(new Stack(), 'database_db_main', 1, static fn (): ConnectedMemory => $adapter, 1.0));
 
         return new Factory($pools, new Cache(new MemoryCache()), new Authorization());
     }
@@ -60,25 +59,5 @@ final class FactoryTest extends TestCase
             '$sequence' => '7',
             'database' => 'mysql://database_db_main',
         ]);
-    }
-}
-
-/**
- * Reports a hostname of its own, the way a pooled SQL connection reports the
- * host it dialled rather than the pool it was taken from. Without it the cache
- * key carries no hostname at all and the two paths cannot disagree.
- */
-final class ConnectedAdapter extends Memory
-{
-    #[\Override]
-    public function supports(Capability $feature): bool
-    {
-        return $feature === Capability::Hostname || parent::supports($feature);
-    }
-
-    #[\Override]
-    public function hostname(): string
-    {
-        return 'mariadb';
     }
 }
