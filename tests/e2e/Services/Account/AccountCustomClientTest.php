@@ -4175,6 +4175,48 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
+    public function testCreateAccountAfterOAuth2AccountDelete(): void
+    {
+        // A fresh project keeps the fixed mock OAuth email away from parallel tests.
+        $projectId = $this->getProject(true)['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->followMockOAuth2Flow('/account/sessions/oauth2/mock', ['x-appwrite-project' => $projectId]);
+        $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'useroauth@localhost.test',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+    }
+
     /**
      * The default OAuth success URL redirects straight to appwrite-callback-{project}://,
      * carrying the session the native SDKs store.
