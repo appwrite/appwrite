@@ -703,8 +703,8 @@ class Install extends Action
 
             if (!$useExistingConfig && $startIndex <= 1) {
                 $this->copyConfigFiles(match ($database) {
-                    'mongodb' => ['clickhouse-config.xml', 'mongo-entrypoint.sh', 'mongo-init.js'],
-                    default => ['clickhouse-config.xml'],
+                    'mongodb' => ['clickhouse-config.xml', 'clickhouse-init.sh', 'mongo-entrypoint.sh', 'mongo-init.js'],
+                    default => ['clickhouse-config.xml', 'clickhouse-init.sh'],
                 });
             }
 
@@ -1278,6 +1278,8 @@ class Install extends Action
                     $errorMsg = $lastError ? $lastError['message'] : 'Unknown error';
                     throw new \RuntimeException('Failed to copy ' . $file . ' to ' . $target . ': ' . $errorMsg);
                 }
+                // copy() drops the executable bit, which decides how the ClickHouse entrypoint runs its init script.
+                @chmod($target, fileperms($source) & 0777);
             }
         }
     }
