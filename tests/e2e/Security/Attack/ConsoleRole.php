@@ -24,7 +24,15 @@ final class ConsoleRole implements Attack
 
     public function applies(RouteTarget $route): bool
     {
-        return ! $route->allowsScopes(World::developerScopes());
+        if ($route->allowsScopes(World::developerScopes())) {
+            return false;
+        }
+        if ($route->allowsGuest(World::guestScopes())) {
+            return false;
+        }
+        // Session-scoped account routes succeed for any logged-in console
+        // user; that is not an organization-role escalation.
+        return ! $route->allowsScopes(['account', 'home', 'console']);
     }
 
     public function probe(RouteTarget $route, World $world, Probe $http): array

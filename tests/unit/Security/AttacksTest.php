@@ -47,7 +47,9 @@ final class AttacksTest extends TestCase
         $this->assertFalse($byName['ssrf-url']->applies($users));
         $this->assertTrue($byName['ssrf-url']->applies($image));
         $this->assertFalse($byName['scope-least-privilege']->applies($locale));
+        $this->assertFalse($byName['cross-tenant']->applies($locale));
         $this->assertTrue($byName['scope-least-privilege']->applies($users));
+        $this->assertTrue($byName['cross-tenant']->applies($users));
         $this->assertTrue($byName['sensitive-fields']->applies($locale));
     }
 }

@@ -22,7 +22,10 @@ final class CrossTenant implements Attack
 
     public function applies(RouteTarget $route): bool
     {
-        return ! $route->allowsScopes(['public', 'global']);
+        // Guest-callable routes succeed without a key or session; a foreign
+        // credential being ignored is not a tenant bypass.
+        return ! $route->allowsGuest(World::guestScopes())
+            && ! $route->allowsScopes(['public', 'global']);
     }
 
     public function probe(RouteTarget $route, World $world, Probe $http): array
@@ -43,20 +46,18 @@ final class CrossTenant implements Attack
             'Project A API key was accepted against project B',
         )];
 
-        if (! $route->allowsGuest(World::guestScopes())) {
-            $sessionOnOther = $http->call(
-                $route,
-                $world->sessionHeaders($world->projectB['id'], $world->userA['session']),
-                $ids,
-            );
-            $findings = [...$findings, ...$this->unexpected(
-                $route,
-                $http,
-                $sessionOnOther,
-                'session-a-on-project-b',
-                'Project A user session was accepted against project B',
-            )];
-        }
+        $sessionOnOther = $http->call(
+            $route,
+            $world->sessionHeaders($world->projectB['id'], $world->userA['session']),
+            $ids,
+        );
+        $findings = [...$findings, ...$this->unexpected(
+            $route,
+            $http,
+            $sessionOnOther,
+            'session-a-on-project-b',
+            'Project A user session was accepted against project B',
+        )];
 
         return $findings;
     }

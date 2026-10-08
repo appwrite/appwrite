@@ -22,7 +22,10 @@ final class ScopeLeastPrivilege implements Attack
 
     public function applies(RouteTarget $route): bool
     {
-        return ! $route->allowsScopes(World::keyScopes(['locale.read']));
+        // Guests already satisfy these scopes, so a limited key succeeding
+        // is the public surface, not a privilege bypass.
+        return ! $route->allowsGuest(World::guestScopes())
+            && ! $route->allowsScopes(World::keyScopes(['locale.read']));
     }
 
     public function probe(RouteTarget $route, World $world, Probe $http): array
