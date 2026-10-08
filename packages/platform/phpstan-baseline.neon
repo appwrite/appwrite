@@ -385,7 +385,7 @@ parameters:
 			path: src/Platform.php
 
 		-
-			message: '#^Parameter \#3 \$validator of method Utopia\\Servers\\Hook\:\:param\(\) expects \(callable\(\)\: mixed\)\|Utopia\\Validator, mixed given\.$#'
+			message: '#^Parameter \#3 \$validator of method Utopia\\Servers\\Hook\:\:param\(\) expects \(callable\(\)\: mixed\)\|Utopia\\Validator\\Validator, mixed given\.$#'
 			identifier: argument.type
 			count: 3
 			path: src/Platform.php

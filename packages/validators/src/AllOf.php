@@ -2,14 +2,12 @@
 
 namespace Utopia\Validator;
 
-use Utopia\Validator;
-
 /**
- * Ensure at least one validator from a list passed the check
+ * Ensure all of the validators from a list passed the check
  *
  * @package Utopia\Validator
  */
-class AnyOf extends Validator
+class AllOf extends Validator
 {
     protected ?Validator $failedRule = null;
 
@@ -18,18 +16,6 @@ class AnyOf extends Validator
      */
     public function __construct(protected array $validators, protected string $type = self::TYPE_MIXED)
     {
-    }
-
-    /**
-     * Get Validators
-     *
-     * Returns validators array
-     *
-     * @return array<Validator>
-     */
-    public function getValidators(): array
-    {
-        return $this->validators;
     }
 
     /**
@@ -56,14 +42,13 @@ class AnyOf extends Validator
         foreach ($this->validators as $rule) {
             $valid = $rule->isValid($value);
 
-            $this->failedRule = $rule;
-
-            if ($valid) {
-                return true;
+            if (!$valid) {
+                $this->failedRule = $rule;
+                return false;
             }
         }
 
-        return false;
+        return true;
     }
 
     /**

@@ -25,8 +25,9 @@
         }
     },
     "require": {
-        "php": ">=7.4",
-        "utopia-php/servers": "^0.4"
+        "php": ">=8.5",
+        "utopia-php/servers": "^0.4",
+        "utopia-php/validators": "^2.0"
     },
     "require-dev": {
         "swoole/ide-helper": "6.*"

@@ -186,7 +186,7 @@ Two steps with very different cost. Step A rides inside each absorb PR; step B i
 
 Each ships as a major on its mirror with a one-major `class_alias` shim for the old name (`src/compat.php`, autoloaded via `files`), so external consumers upgrade at their own pace. Appwrite and Cloud are updated in the same PR. When the last of the three lands, the bare `Utopia\` list leaves the root autoload for good.
 
-`client` took step B in `utopia-php/monorepo` and released it as `0.5.0` before its absorb, so it never joined the bare `Utopia\` list. Packages here are not installed by Composer, so `bin/monorepo autoload` copies each package's `autoload.files` into the root, which is how the shim loads in Appwrite. The shim registers its aliases up front and guarded: PHP never autoloads a name while checking a declared type, and a package's test run loads both the root and the package autoloader.
+`client` took step B in `utopia-php/monorepo` and released it as `0.5.0` before its absorb, so it never joined the bare `Utopia\` list. `validators` took step B here as `2.0.0`. Its siblings moved to the new base-class name in the same PR and require `^2.0`, so until 2.0.0 is on Packagist they install only `--linked`, which `check` now takes as `test` does. Packages here are not installed by Composer, so `bin/monorepo autoload` copies each package's `autoload.files` into the root, which is how the shim loads in Appwrite. The shim registers its aliases up front and guarded: PHP never autoloads a name while checking a declared type, and a package's test run loads both the root and the package autoloader.
 
 ## Phases
 
@@ -260,6 +260,8 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
 ### Phase 6. Standardise the breaking part of the shape
 
 `validators` and `console` (step B); `client` did it as `0.5.0` before its absorb. One PR per package: rename, `class_alias` shim, major release on the mirror, Appwrite call sites updated in the same PR. Remove the bare `Utopia\` list from the root map with the last one. Cloud follows through `server-ce`.
+
+Done: `console` in #14261 and `validators` in #14263. The root autoload no longer declares the bare `Utopia\` prefix, and `BARE` in `bin/monorepo` is empty, so `validate` rejects that prefix for every package.
 
 ### Phase 7. Retire the old homes and move Cloud
 

@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Utopia\Validator;
 
-use Utopia\Validator;
-
-class Nullable extends Validator
+/**
+ * Numeric
+ *
+ * Validate that an variable is numeric
+ */
+class Numeric extends Validator
 {
-    public function __construct(protected Validator $validator)
-    {
-    }
-
     /**
      * Get Description
      *
@@ -19,7 +18,7 @@ class Nullable extends Validator
      */
     public function getDescription(): string
     {
-        return $this->validator->getDescription() . ' or null';
+        return 'Value must be a valid number';
     }
 
     /**
@@ -39,25 +38,16 @@ class Nullable extends Validator
      */
     public function getType(): string
     {
-        return $this->validator->getType();
-    }
-
-    public function getValidator(): Validator
-    {
-        return $this->validator;
+        return self::TYPE_MIXED;
     }
 
     /**
      * Is valid
      *
-     * Validation will pass when $value is text with valid length.
+     * Validation will pass when $value is numeric.
      */
     public function isValid(mixed $value): bool
     {
-        if (\is_null($value)) {
-            return true;
-        }
-
-        return $this->validator->isValid($value);
+        return is_numeric($value);
     }
 }

@@ -70,14 +70,13 @@
             "Utopia\\Telemetry\\": "packages/telemetry/src",
             "Utopia\\Usage\\": "packages/usage/src",
             "Utopia\\UserAgent\\": "packages/user-agent/src",
+            "Utopia\\Validator\\": "packages/validators/src",
             "Utopia\\VCS\\": "packages/vcs/src",
-            "Utopia\\WebSocket\\": "packages/websocket/src",
-            "Utopia\\": [
-                "packages/validators/src"
-            ]
+            "Utopia\\WebSocket\\": "packages/websocket/src"
         },
         "files": [
-            "packages/console/src/compat.php"
+            "packages/console/src/compat.php",
+            "packages/validators/src/compat.php"
         ]
     },
     "autoload-dev": {

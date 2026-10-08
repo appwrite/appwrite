@@ -7,7 +7,7 @@ use Utopia\DNS\Message;
 use Utopia\DNS\Message\Question;
 use Utopia\DNS\Message\Record;
 use Utopia\Domains\Domain;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class DNS extends Validator
 {

@@ -11,8 +11,11 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Utopia\\": "src/"
-        }
+            "Utopia\\Validator\\": "src/"
+        },
+        "files": [
+            "src/compat.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Utopia\Validator;
 
 use Exception;
-use Utopia\Validator;
 
 /**
  * IP
