@@ -1,5 +1,3 @@
-'use client'
-
 import { ArrowUpRight } from 'lucide-react'
 import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
 import { HorizontalScrollFade } from '@/components/global/shared/HorizontalScrollFade'

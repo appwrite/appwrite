@@ -1,5 +1,3 @@
-'use client'
-
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDocsProject } from '@/components/pages/docs/project-context/DocsProjectContext'
 import {
