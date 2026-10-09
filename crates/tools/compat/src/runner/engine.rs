@@ -381,6 +381,12 @@ impl Engine {
                 } else {
                     format!("{op_name}[{}]", profile.name)
                 };
+                if profile.isolate {
+                    self.php = None;
+                    self.rust = None;
+                    self.configure("php", &ns_p)?;
+                    self.configure("rust", &ns_r)?;
+                }
                 let iterations = opts.iterations.unwrap_or(profile.iterations);
                 let mut rng = Rng::new(opts.seed ^ fnv(&title));
                 let masks: Vec<&Mask> = op.mask.iter().collect();

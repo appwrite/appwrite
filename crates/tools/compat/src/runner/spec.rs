@@ -95,6 +95,12 @@ pub struct FuzzSpec {
     pub args: Value,
     #[serde(default = "default_iterations")]
     pub iterations: u64,
+    /// Start fresh PHP and Rust driver processes for this profile, for
+    /// functions with process-wide state that other operations also touch
+    /// on one side only (PHP's PCRE cache and JIT switch, which the
+    /// engine's own functions such as `filter_var` fill too).
+    #[serde(default)]
+    pub isolate: bool,
 }
 
 fn default_iterations() -> u64 {

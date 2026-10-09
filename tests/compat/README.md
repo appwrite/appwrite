@@ -83,6 +83,8 @@ The dev stack must be running (`docker compose up -d`) for the PHP driver image 
 
 A large spec can be split: `spec.d/*.json` files hold more `ops`, `generators`, `waivers`, `tests_waived`, `quirks` and `deviations` (one file per area or owner), merged into `spec.json`; a name defined twice is an error.
 
+A fuzz profile with `"isolate": true` runs in fresh PHP and Rust driver processes, for functions with process-wide state that other operations touch on one side only (PHP's PCRE cache and JIT switch, which engine functions like `filter_var` also fill).
+
 `covers` and waiver patterns are exact symbols, `Class::*` or `Namespace\*`. Generators are documented in `crates/tools/compat/src/runner/generate.rs`.
 
 ### Cases
