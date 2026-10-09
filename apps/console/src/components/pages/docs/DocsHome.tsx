@@ -189,7 +189,9 @@ export function DocsHome({ variant = 'page' }: DocsHomeProps) {
         title="Then ask for what you want to build"
         description="When setup is done, open a new chat so your agent can use Appwrite MCP. Then pick a prompt below or describe what you want to build."
       >
-        <DocsFirstPrompts />
+        <DocsFirstPrompts
+          placement={variant === 'preview' ? 'console-preview' : 'docs-home'}
+        />
         <div className="mt-10">
           <DocsHomeSubheading>What your agent can use</DocsHomeSubheading>
           <DocsAgentCapabilities className="mt-4" />

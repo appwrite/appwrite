@@ -22,6 +22,12 @@ export type DocsOnboardingAgentId =
   | 'vscode'
   | 'other'
 
+/** Where an onboarding control sits, sent with its analytics events. */
+export type DocsOnboardingPlacement =
+  | 'docs-home'
+  | 'quick-start'
+  | 'console-preview'
+
 export type DocsManualSetupStep = {
   title: string
   description?: string

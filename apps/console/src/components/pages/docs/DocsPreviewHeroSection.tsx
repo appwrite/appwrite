@@ -31,7 +31,11 @@ export function DocsPreviewHeroSection() {
           no servers to set up.
         </p>
 
-        <DocsAgentPromptBar className="mt-5" size="compact" />
+        <DocsAgentPromptBar
+          placement="console-preview"
+          className="mt-5"
+          size="compact"
+        />
 
         <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
           <DocsRouteLink

@@ -112,6 +112,7 @@ export function View() {
           <ol className="pt-2">
             <Step number={1} title="Paste this prompt into your agent">
               <DocsAgentPromptBar
+                placement="quick-start"
                 agentId={agentId}
                 onAgentChange={setAgentId}
               />
@@ -136,7 +137,7 @@ export function View() {
                 Appwrite MCP. Then pick a prompt below or describe what you want
                 to build.
               </p>
-              <DocsFirstPrompts />
+              <DocsFirstPrompts placement="quick-start" />
             </Step>
           </ol>
 

@@ -16,12 +16,14 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { McpIcon } from '@/components/global/shared/McpIcon'
-import { analyticsAttrs } from '@/lib/analytics-actions'
+import { useAnalytics } from '@/hooks/use-analytics'
+import { ANALYTICS_ACTIONS } from '@/lib/analytics-actions'
 import {
   DOCS_AGENT_CAPABILITIES,
   DOCS_FIRST_PROMPTS,
   type DocsAgentCapability,
   type DocsFirstPrompt,
+  type DocsOnboardingPlacement,
 } from '@/lib/docs/agent-onboarding'
 import { cn } from '@/lib/utils'
 import { DocsRouteLink } from '../../DocsRouteLink'
@@ -40,17 +42,34 @@ const PROMPT_ICONS: Record<DocsFirstPrompt['icon'], LucideIcon> = {
   deploy: Globe,
 }
 
-function FirstPromptCard({ item }: { item: DocsFirstPrompt }) {
+function FirstPromptCard({
+  item,
+  placement,
+}: {
+  item: DocsFirstPrompt
+  placement: DocsOnboardingPlacement
+}) {
   const [copied, setCopied] = useState(false)
+  const { track } = useAnalytics()
   const Icon = PROMPT_ICONS[item.icon]
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(item.prompt)
+      track(ANALYTICS_ACTIONS['docs-first-prompt-copy'], {
+        prompt: item.icon,
+        placement,
+        result: 'copied',
+      })
       setCopied(true)
       toast.success('Prompt copied. Paste it into your agent.')
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
+      track(ANALYTICS_ACTIONS['docs-first-prompt-copy'], {
+        prompt: item.icon,
+        placement,
+        result: 'failed',
+      })
       toast.error('Failed to copy prompt')
     }
   }
@@ -62,7 +81,7 @@ function FirstPromptCard({ item }: { item: DocsFirstPrompt }) {
         onClick={() => void handleCopy()}
         aria-label={`Copy prompt: ${item.prompt}`}
         className={cn(CARD_CLASS, 'cursor-pointer')}
-        {...analyticsAttrs('docs-first-prompt-copy')}
+        data-analytics-track="manual"
       >
         <span className="flex items-center justify-between">
           <span className="flex size-8 items-center justify-center rounded-lg border border-border bg-muted/40">
@@ -91,11 +110,17 @@ function FirstPromptCard({ item }: { item: DocsFirstPrompt }) {
 }
 
 /** Follow-up prompts as cards. Clicking a card copies its prompt. */
-export function DocsFirstPrompts({ className }: { className?: string }) {
+export function DocsFirstPrompts({
+  placement,
+  className,
+}: {
+  placement: DocsOnboardingPlacement
+  className?: string
+}) {
   return (
     <ul className={cn(GRID_CLASS, className)}>
       {DOCS_FIRST_PROMPTS.map((item) => (
-        <FirstPromptCard key={item.title} item={item} />
+        <FirstPromptCard key={item.title} item={item} placement={placement} />
       ))}
     </ul>
   )

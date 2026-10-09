@@ -7,7 +7,8 @@ import { HorizontalScrollFade } from '@/components/global/shared/HorizontalScrol
 import { DocsProjectPicker } from '@/components/pages/docs/project-context/DocsProjectPicker'
 import { useDocsProject } from '@/components/pages/docs/project-context/DocsProjectContext'
 import { Button } from '@/components/ui/button'
-import { analyticsAttrs } from '@/lib/analytics-actions'
+import { useAnalytics } from '@/hooks/use-analytics'
+import { ANALYTICS_ACTIONS } from '@/lib/analytics-actions'
 import {
   generateAIChatDeeplink,
   getIDEById,
@@ -17,6 +18,7 @@ import {
   DOCS_ONBOARDING_AGENTS,
   getDocsOnboardingAgent,
   type DocsOnboardingAgentId,
+  type DocsOnboardingPlacement,
 } from '@/lib/docs/agent-onboarding'
 import { cn } from '@/lib/utils'
 import { DocsAgentIcon } from './DocsAgentIcon'
@@ -29,16 +31,21 @@ function displayUrl(url: string): string {
   return url.replace(/^https?:\/\//, '')
 }
 
-function useCopyPrompt(prompt: string) {
+function useCopyPrompt(
+  prompt: string,
+  onResult: (result: 'copied' | 'failed') => void,
+) {
   const [copied, setCopied] = useState(false)
 
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(prompt)
+      onResult('copied')
       setCopied(true)
       toast.success('Prompt copied. Paste it into your coding agent.')
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
+      onResult('failed')
       toast.error('Failed to copy prompt')
     }
   }
@@ -69,6 +76,8 @@ function PromptText({
 }
 
 type DocsAgentPromptBarProps = {
+  /** Where the card sits, sent with its analytics events. */
+  placement: DocsOnboardingPlacement
   /** `compact` is a single row without agent tabs, for narrow spots like the Console panel. */
   size?: 'default' | 'compact'
   /** Controlled agent, for pages that share the choice with other agent UI. */
@@ -82,19 +91,40 @@ type DocsAgentPromptBarProps = {
  * in the agent. The full prompt (with project details) is what gets copied.
  */
 export function DocsAgentPromptBar({
+  placement,
   size = 'default',
   agentId: controlledAgentId,
   onAgentChange,
   className,
 }: DocsAgentPromptBarProps) {
-  const { prompt, intro, setupUrl } = useDocsAgentPrompt()
+  const { prompt, project, intro, setupUrl } = useDocsAgentPrompt()
   const { isAuthenticated } = useDocsProject()
-  const { copied, copy } = useCopyPrompt(prompt)
+  const { track } = useAnalytics()
   const stored = useDocsOnboardingAgent()
 
   const agentId = controlledAgentId ?? stored.agentId
   const agent = getDocsOnboardingAgent(agentId)
   const setAgentId = onAgentChange ?? stored.setAgentId
+
+  // The compact card has no agent tabs, so its events carry no agent.
+  const eventProps = {
+    agent: size === 'compact' ? undefined : agent.id,
+    placement,
+    has_project: !!project,
+  }
+  const { copied, copy } = useCopyPrompt(prompt, (result) =>
+    track(ANALYTICS_ACTIONS['docs-agent-prompt-copy'], {
+      ...eventProps,
+      result,
+    }),
+  )
+
+  const selectAgent = (id: DocsOnboardingAgentId) => {
+    if (id !== agentId) {
+      track(ANALYTICS_ACTIONS['docs-agent-select'], { agent: id, placement })
+    }
+    setAgentId(id)
+  }
 
   const projectPicker = isAuthenticated ? (
     <DocsProjectPicker align="end" className="h-7" />
@@ -115,7 +145,7 @@ export function DocsAgentPromptBar({
             size="sm"
             className="h-8 shrink-0 text-[13px]"
             onClick={() => void copy()}
-            {...analyticsAttrs('docs-agent-prompt-copy')}
+            data-analytics-track="manual"
           >
             {copied ? (
               <Check className="size-3.5" aria-hidden />
@@ -140,6 +170,7 @@ export function DocsAgentPromptBar({
 
   const handleOpen = () => {
     if (!deeplink || !ide) return
+    track(ANALYTICS_ACTIONS['docs-agent-prompt-open'], eventProps)
     openAIChatDeeplink(deeplink)
     toast.success(`Opening ${ide.name}...`)
   }
@@ -170,14 +201,14 @@ export function DocsAgentPromptBar({
                   type="button"
                   role="tab"
                   aria-selected={selected}
-                  onClick={() => setAgentId(item.id)}
+                  onClick={() => selectAgent(item.id)}
                   className={cn(
                     'inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium transition-colors',
                     selected
                       ? 'bg-muted text-foreground'
                       : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
                   )}
-                  {...analyticsAttrs('docs-agent-select')}
+                  data-analytics-track="manual"
                 >
                   <DocsAgentIcon agent={item} className="size-3.5" />
                   {item.name}
@@ -209,7 +240,7 @@ export function DocsAgentPromptBar({
             size="sm"
             className="h-8 text-[13px]"
             onClick={() => void copy()}
-            {...analyticsAttrs('docs-agent-prompt-copy')}
+            data-analytics-track="manual"
           >
             {copied ? (
               <Check className="size-3.5" aria-hidden />
@@ -224,7 +255,7 @@ export function DocsAgentPromptBar({
               size="sm"
               className="h-8 text-[13px]"
               onClick={handleOpen}
-              {...analyticsAttrs('docs-agent-prompt-open')}
+              data-analytics-track="manual"
             >
               Open in {ide.name}
             </Button>

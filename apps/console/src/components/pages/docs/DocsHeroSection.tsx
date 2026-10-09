@@ -27,7 +27,10 @@ export function DocsHeroSection() {
             no servers to set up.
           </p>
 
-          <DocsAgentPromptBar className="mt-8 w-full text-start @[480px]:mt-10" />
+          <DocsAgentPromptBar
+            placement="docs-home"
+            className="mt-8 w-full text-start @[480px]:mt-10"
+          />
 
           <p className="mt-4 text-[13px] leading-6 text-muted-foreground">
             Your agent will ask you to sign in to Appwrite in your browser.{' '}
