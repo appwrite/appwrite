@@ -224,7 +224,7 @@ fn in_range(ip: &IpAddr, range: &str) -> bool {
 /// Client IP with trusted proxy handling (`Appwrite\Utopia\Request::getIP`).
 pub fn client_ip(
     remote: IpAddr,
-    headers: &http::HeaderMap,
+    headers: &utopia_http::Headers,
     trusted_headers: &[String],
     trusted_proxies: &[String],
 ) -> String {
@@ -234,9 +234,9 @@ pub fn client_ip(
     }
     for name in trusted_headers {
         let values: Vec<IpAddr> = headers
-            .get_all(name.as_str())
+            .get(name.as_str())
+            .unwrap_or(&[])
             .iter()
-            .filter_map(|v| v.to_str().ok())
             .flat_map(|v| v.split(','))
             .filter_map(|s| s.trim().parse::<IpAddr>().ok())
             .collect();
@@ -272,8 +272,8 @@ mod tests {
 
     #[test]
     fn ips() {
-        let mut h = http::HeaderMap::new();
-        h.insert("x-forwarded-for", "203.0.113.5, 10.0.0.2".parse().unwrap());
+        let mut h = utopia_http::Headers::new();
+        h.set("x-forwarded-for", "203.0.113.5, 10.0.0.2");
         let proxies = vec!["10.0.0.0/8".to_owned(), "172.16.0.0/12".to_owned()];
         let ip = client_ip("172.18.0.3".parse().unwrap(), &h, &["x-forwarded-for".to_owned()], &proxies);
         assert_eq!(ip, "203.0.113.5");

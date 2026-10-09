@@ -1,0 +1,875 @@
+{
+  "source": "packages/http/tests/FPMResponseTest.php",
+  "cases": [
+    {
+      "name": "set content type",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "content_type": [
+              "text/html",
+              "UTF-8"
+            ]
+          },
+          {
+            "get": "content_type"
+          }
+        ]
+      }
+    },
+    {
+      "name": "set status",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "status": 200
+          },
+          {
+            "get": "status"
+          },
+          {
+            "status": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "unknown status keeps the previous one",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "status": 418
+          },
+          {
+            "status": 299
+          }
+        ]
+      }
+    },
+    {
+      "name": "get status",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "status": 200
+          },
+          {
+            "get": "status"
+          }
+        ]
+      }
+    },
+    {
+      "name": "add header",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "add_header": [
+              "key",
+              "value"
+            ]
+          },
+          {
+            "get": "headers"
+          }
+        ]
+      }
+    },
+    {
+      "name": "add cookie",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "add_cookie": {
+              "name": "name",
+              "value": "value"
+            }
+          },
+          {
+            "add_cookie": {
+              "name": "cookieName",
+              "value": "cookieValue"
+            }
+          },
+          {
+            "get": "cookies"
+          }
+        ]
+      }
+    },
+    {
+      "name": "send",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "add_header": [
+              "key",
+              "value"
+            ]
+          },
+          {
+            "add_cookie": {
+              "name": "name",
+              "value": "value"
+            }
+          },
+          {
+            "send": "body"
+          },
+          {
+            "get": "is_sent"
+          },
+          {
+            "get": "size"
+          }
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/out/1"
+        ],
+        "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time"
+      }
+    },
+    {
+      "name": "send a minimal cookie",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "add_cookie": {
+              "name": "name"
+            }
+          },
+          {
+            "send": "body"
+          }
+        ]
+      }
+    },
+    {
+      "name": "redirect",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "redirect": [
+              "http://www.example.com"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "redirect with 300",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "redirect": [
+              "http://www.example.com",
+              300
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "redirect with an unknown status",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "redirect": [
+              "http://www.example.com",
+              299
+            ]
+          },
+          {
+            "get": "headers"
+          }
+        ]
+      }
+    },
+    {
+      "name": "text",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "text": "HELLO WORLD"
+          },
+          {
+            "get": "content_type"
+          }
+        ]
+      }
+    },
+    {
+      "name": "html",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "html": "<html></html>"
+          },
+          {
+            "get": "content_type"
+          }
+        ]
+      }
+    },
+    {
+      "name": "json",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "json": {
+              "lit": {
+                "key": "value"
+              }
+            }
+          },
+          {
+            "get": "content_type"
+          }
+        ]
+      }
+    },
+    {
+      "name": "json of a list and of an empty object",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "json": [
+              1,
+              "é",
+              "/"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "json of a scalar",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "json": "nope"
+          }
+        ]
+      }
+    },
+    {
+      "name": "jsonp",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "jsonp": [
+              "test",
+              {
+                "lit": {
+                  "key": "value"
+                }
+              }
+            ]
+          },
+          {
+            "get": "content_type"
+          }
+        ]
+      }
+    },
+    {
+      "name": "iframe",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "iframe": [
+              "test",
+              {
+                "lit": {
+                  "key": "value"
+                }
+              }
+            ]
+          },
+          {
+            "get": "content_type"
+          }
+        ]
+      }
+    },
+    {
+      "name": "no content",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "no_content": true
+          },
+          {
+            "get": "status"
+          }
+        ]
+      }
+    },
+    {
+      "name": "send once",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "send": "one"
+          },
+          {
+            "send": "two"
+          },
+          {
+            "chunk": [
+              "three",
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "chunks",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "add_header": [
+              "X-A",
+              "1"
+            ]
+          },
+          {
+            "chunk": [
+              "a",
+              false
+            ]
+          },
+          {
+            "add_header": [
+              "X-B",
+              "2"
+            ]
+          },
+          {
+            "chunk": [
+              "b",
+              false
+            ]
+          },
+          {
+            "chunk": [
+              "c",
+              true
+            ]
+          },
+          {
+            "chunk": [
+              "d",
+              true
+            ]
+          },
+          {
+            "get": "is_sent"
+          }
+        ]
+      }
+    },
+    {
+      "name": "chunks without payload",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "disable_payload": true
+          },
+          {
+            "chunk": [
+              "a",
+              false
+            ]
+          },
+          {
+            "chunk": [
+              "b",
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "payload switches",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "disable_payload": true
+          },
+          {
+            "enable_payload": true
+          },
+          {
+            "send": "x"
+          }
+        ]
+      }
+    },
+    {
+      "name": "no payload",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "disable_payload": true
+          },
+          {
+            "send": "x"
+          },
+          {
+            "get": "size"
+          }
+        ]
+      }
+    },
+    {
+      "name": "header operations",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "add_header": [
+              "A",
+              "1"
+            ]
+          },
+          {
+            "add_header": [
+              "a",
+              "2"
+            ]
+          },
+          {
+            "set_header": [
+              "B",
+              "3"
+            ]
+          },
+          {
+            "get": [
+              "header",
+              "A"
+            ]
+          },
+          {
+            "get": [
+              "header_line",
+              "a"
+            ]
+          },
+          {
+            "get": [
+              "header_line",
+              "missing",
+              "d"
+            ]
+          },
+          {
+            "get": [
+              "has_header",
+              "b"
+            ]
+          },
+          {
+            "remove_header": "B"
+          },
+          {
+            "get": [
+              "has_header",
+              "b"
+            ]
+          },
+          {
+            "get": "headers"
+          },
+          {
+            "set_header": [
+              "a",
+              "only"
+            ]
+          },
+          {
+            "get": "headers"
+          }
+        ]
+      }
+    },
+    {
+      "name": "content type replaces the header",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "set_header": [
+              "Content-Type",
+              "text/x"
+            ]
+          },
+          {
+            "add_header": [
+              "X-Z",
+              "z"
+            ]
+          },
+          {
+            "content_type": [
+              "application/json",
+              ""
+            ]
+          },
+          {
+            "send": "{}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "cookies: every attribute and removal",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "add_cookie": {
+              "name": "A",
+              "value": "v",
+              "expire": 1000,
+              "path": "/p",
+              "domain": "example.com",
+              "secure": true,
+              "httponly": true,
+              "samesite": "Lax"
+            }
+          },
+          {
+            "add_cookie": {
+              "name": "b",
+              "value": "x y",
+              "expire": 0,
+              "path": "",
+              "secure": false
+            }
+          },
+          {
+            "add_cookie": {
+              "name": "c",
+              "value": ""
+            }
+          },
+          {
+            "add_cookie": {
+              "name": "bad name",
+              "value": "v"
+            }
+          },
+          {
+            "remove_cookie": "b"
+          },
+          {
+            "get": "cookies"
+          },
+          {
+            "send": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "remove cookie leaves a gap",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "add_cookie": {
+              "name": "a",
+              "value": "1"
+            }
+          },
+          {
+            "add_cookie": {
+              "name": "b",
+              "value": "2"
+            }
+          },
+          {
+            "remove_cookie": "a"
+          },
+          {
+            "get": "cookies"
+          }
+        ]
+      }
+    },
+    {
+      "name": "compression: gzip",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "gzip"
+          },
+          {
+            "content_type": [
+              "text/plain"
+            ]
+          },
+          {
+            "send": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          {
+            "get": "size"
+          }
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/out/0",
+          "/wire/body",
+          "/wire/headers/content-length"
+        ],
+        "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time; compressed bytes depend on the compressor implementation (zlib, libbrotli vs the Rust encoders); the decoded body is compared"
+      }
+    },
+    {
+      "name": "compression: brotli by quality",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "gzip;q=0.5, br"
+          },
+          {
+            "content_type": [
+              "application/json; charset=UTF-8"
+            ]
+          },
+          {
+            "send": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          {
+            "get": "size"
+          }
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/out/0",
+          "/wire/body",
+          "/wire/headers/content-length"
+        ],
+        "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time; compressed bytes depend on the compressor implementation (zlib, libbrotli vs the Rust encoders); the decoded body is compared"
+      }
+    },
+    {
+      "name": "compression: not compressible",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "gzip"
+          },
+          {
+            "content_type": [
+              "image/png"
+            ]
+          },
+          {
+            "send": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          },
+          {
+            "get": "size"
+          }
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/out/0"
+        ],
+        "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time"
+      }
+    },
+    {
+      "name": "compression: below the minimum",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "gzip"
+          },
+          {
+            "content_type": [
+              "text/plain"
+            ]
+          },
+          {
+            "send": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          },
+          {
+            "get": "size"
+          }
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/out/0"
+        ],
+        "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time"
+      }
+    },
+    {
+      "name": "compression: identity wins",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "identity, gzip"
+          },
+          {
+            "content_type": [
+              "text/plain"
+            ]
+          },
+          {
+            "send": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          {
+            "get": "size"
+          }
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/out/0"
+        ],
+        "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time"
+      }
+    },
+    {
+      "name": "compression: already encoded",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "add_header": [
+              "Content-Encoding",
+              "custom"
+            ]
+          },
+          {
+            "accept_encoding": "gzip"
+          },
+          {
+            "content_type": [
+              "text/plain"
+            ]
+          },
+          {
+            "send": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          },
+          {
+            "get": "size"
+          }
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/out/0"
+        ],
+        "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time"
+      }
+    },
+    {
+      "name": "compression: unsupported",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "compression_supported": [
+              "deflate"
+            ]
+          },
+          {
+            "accept_encoding": "gzip"
+          },
+          {
+            "content_type": [
+              "text/plain"
+            ]
+          },
+          {
+            "send": "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg"
+          },
+          {
+            "get": "size"
+          }
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/out/0"
+        ],
+        "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time"
+      }
+    },
+    {
+      "name": "compression: custom minimum",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "compression_min_size": 10
+          },
+          {
+            "accept_encoding": "deflate"
+          },
+          {
+            "content_type": [
+              "text/css"
+            ]
+          },
+          {
+            "send": "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
+          },
+          {
+            "get": "size"
+          }
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/out/0",
+          "/wire/body",
+          "/wire/headers/content-length"
+        ],
+        "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time; compressed bytes depend on the compressor implementation (zlib, libbrotli vs the Rust encoders); the decoded body is compared"
+      }
+    }
+  ]
+}

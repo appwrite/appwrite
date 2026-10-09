@@ -1,0 +1,752 @@
+{
+  "source": "packages/http/tests/RouterTest.php",
+  "cases": [
+    {
+      "name": "match url",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "path": "/"
+          },
+          {
+            "path": "/about"
+          },
+          {
+            "path": "/about/me"
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/"
+          ],
+          [
+            "GET",
+            "/about"
+          ],
+          [
+            "GET",
+            "/about/me"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "match url with placeholders",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "path": "/blog"
+          },
+          {
+            "path": "/blog/authors"
+          },
+          {
+            "path": "/blog/authors/comments"
+          },
+          {
+            "path": "/blog/:post"
+          },
+          {
+            "path": "/blog/:post/comments"
+          },
+          {
+            "path": "/blog/:post/comments/:comment"
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/blog"
+          ],
+          [
+            "GET",
+            "/blog/authors"
+          ],
+          [
+            "GET",
+            "/blog/authors/comments"
+          ],
+          [
+            "GET",
+            "/blog/test"
+          ],
+          [
+            "GET",
+            "/blog/test/comments"
+          ],
+          [
+            "GET",
+            "/blog/test/comments/:comment"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "static segment over placeholder, enum first",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "methods": [
+              "PATCH"
+            ],
+            "path": "/v1/databases/:databaseId/collections/:collectionId/attributes/enum/:key"
+          },
+          {
+            "methods": [
+              "PATCH"
+            ],
+            "path": "/v1/databases/:databaseId/collections/:collectionId/attributes/:key/relationship"
+          }
+        ],
+        "match": [
+          [
+            "PATCH",
+            "/v1/databases/db/collections/col/attributes/enum/relationship"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "static segment over placeholder, relationship first",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "methods": [
+              "PATCH"
+            ],
+            "path": "/v1/databases/:databaseId/collections/:collectionId/attributes/:key/relationship"
+          },
+          {
+            "methods": [
+              "PATCH"
+            ],
+            "path": "/v1/databases/:databaseId/collections/:collectionId/attributes/enum/:key"
+          }
+        ],
+        "match": [
+          [
+            "PATCH",
+            "/v1/databases/db/collections/col/attributes/enum/relationship"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "match url with wildcard",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "path": "/"
+          },
+          {
+            "path": "/about"
+          },
+          {
+            "path": "/about/*"
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/"
+          ],
+          [
+            "GET",
+            "/about"
+          ],
+          [
+            "GET",
+            "/about/me"
+          ],
+          [
+            "GET",
+            "/about/you"
+          ],
+          [
+            "GET",
+            "/about/me/myself/i"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "match http method",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "path": "/"
+          },
+          {
+            "methods": [
+              "POST"
+            ],
+            "path": "/"
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/"
+          ],
+          [
+            "POST",
+            "/"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "match alias",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "path": "/target",
+            "aliases": [
+              "/alias",
+              "/alias2"
+            ]
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/target"
+          ],
+          [
+            "GET",
+            "/alias"
+          ],
+          [
+            "GET",
+            "/alias2"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "match multiple aliases",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "path": "/target",
+            "aliases": [
+              "/alias1",
+              "/alias2",
+              "/alias3"
+            ]
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/target"
+          ],
+          [
+            "GET",
+            "/alias1"
+          ],
+          [
+            "GET",
+            "/alias2"
+          ],
+          [
+            "GET",
+            "/alias3"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "match mix",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "path": "/",
+            "aliases": [
+              "/console/*",
+              "/auth/*",
+              "/invite",
+              "/login",
+              "/recover",
+              "/register/*"
+            ]
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/"
+          ],
+          [
+            "GET",
+            "/console"
+          ],
+          [
+            "GET",
+            "/invite"
+          ],
+          [
+            "GET",
+            "/login"
+          ],
+          [
+            "GET",
+            "/recover"
+          ],
+          [
+            "GET",
+            "/console/lorem/ipsum/dolor"
+          ],
+          [
+            "GET",
+            "/auth/lorem/ipsum"
+          ],
+          [
+            "GET",
+            "/register/lorem/ipsum"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "route with multiple methods",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "methods": [
+              "GET",
+              "POST"
+            ],
+            "path": "/userinfo",
+            "via": "routes"
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/userinfo"
+          ],
+          [
+            "POST",
+            "/userinfo"
+          ],
+          [
+            "PUT",
+            "/userinfo"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "route with a string method",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "methods": [
+              "GET"
+            ],
+            "path": "/userinfo",
+            "via": "routes"
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/userinfo"
+          ],
+          [
+            "POST",
+            "/userinfo"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "multiple methods and placeholder",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "methods": [
+              "GET",
+              "POST"
+            ],
+            "path": "/users/:id",
+            "via": "routes"
+          }
+        ],
+        "match": [
+          [
+            "POST",
+            "/users/abc-123"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "routes cross path aliases",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "methods": [
+              "GET",
+              "POST"
+            ],
+            "path": "/a",
+            "via": "routes",
+            "aliases": [
+              "/a-old"
+            ]
+          },
+          {
+            "methods": [
+              "POST"
+            ],
+            "path": "/b",
+            "via": "routes",
+            "aliases": [
+              "/b-old"
+            ]
+          },
+          {
+            "methods": [
+              "GET",
+              "POST"
+            ],
+            "path": "/c",
+            "via": "routes",
+            "aliases": [
+              "/b-old"
+            ]
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/a"
+          ],
+          [
+            "POST",
+            "/a"
+          ],
+          [
+            "GET",
+            "/a-old"
+          ],
+          [
+            "POST",
+            "/a-old"
+          ],
+          [
+            "GET",
+            "/b-old"
+          ],
+          [
+            "POST",
+            "/b-old"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "duplicate route method",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "methods": [
+              "POST"
+            ],
+            "path": "/userinfo"
+          },
+          {
+            "methods": [
+              "GET",
+              "POST"
+            ],
+            "path": "/userinfo",
+            "via": "routes"
+          },
+          {
+            "methods": [
+              "GET"
+            ],
+            "path": "/userinfo",
+            "via": "routes"
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/userinfo"
+          ],
+          [
+            "POST",
+            "/userinfo"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "override route method",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "methods": [
+              "POST"
+            ],
+            "path": "/userinfo"
+          },
+          {
+            "methods": [
+              "GET",
+              "POST",
+              "POST"
+            ],
+            "path": "/userinfo",
+            "via": "routes"
+          }
+        ],
+        "match": [
+          [
+            "POST",
+            "/userinfo"
+          ],
+          [
+            "GET",
+            "/userinfo"
+          ]
+        ],
+        "allow_override": true
+      }
+    },
+    {
+      "name": "unknown method",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "methods": [
+              "GET",
+              "TRACE"
+            ],
+            "path": "/userinfo",
+            "via": "routes"
+          },
+          {
+            "methods": [
+              "GET",
+              "POST"
+            ],
+            "path": "/userinfo",
+            "via": "routes"
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/userinfo"
+          ],
+          [
+            "POST",
+            "/userinfo"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "unknown method added directly",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "methods": [
+              "TRACE"
+            ],
+            "path": "/a"
+          },
+          {
+            "methods": [
+              "GET",
+              "TRACE"
+            ],
+            "path": "/b"
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/b"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "no methods",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "methods": [],
+            "path": "/userinfo",
+            "via": "routes"
+          }
+        ],
+        "match": []
+      }
+    },
+    {
+      "name": "match filename",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "path": "/robots.txt"
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/robots.txt"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "unknown route by path",
+      "op": "router.run",
+      "args": {
+        "routes": [],
+        "match": [
+          [
+            "GET",
+            "/404"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "unknown route by method",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "path": "/404"
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/404"
+          ],
+          [
+            "POST",
+            "/404"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "wildcard catches every method",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "path": "/x"
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/x"
+          ],
+          [
+            "GET",
+            "/y"
+          ],
+          [
+            "OPTIONS",
+            "/x"
+          ],
+          [
+            "HEAD",
+            "/x"
+          ]
+        ],
+        "wildcard": true
+      }
+    },
+    {
+      "name": "prepare paths",
+      "op": "router.run",
+      "args": {
+        "routes": [],
+        "match": [],
+        "prepare": [
+          "/",
+          "",
+          "/a/:b/c/:d",
+          "//a//:b",
+          "/a/0/b",
+          ":x",
+          "/::y/z"
+        ]
+      }
+    },
+    {
+      "name": "zero segments are dropped from templates",
+      "op": "router.run",
+      "args": {
+        "routes": [
+          {
+            "path": "/a/0/b"
+          },
+          {
+            "path": "/c/:id"
+          }
+        ],
+        "match": [
+          [
+            "GET",
+            "/a/b"
+          ],
+          [
+            "GET",
+            "/a/0/b"
+          ],
+          [
+            "GET",
+            "/c//d"
+          ],
+          [
+            "GET",
+            "//c/d"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "allow override is reported",
+      "op": "router.run",
+      "args": {
+        "routes": [],
+        "match": [],
+        "allow_override": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,863 @@
+{
+  "source": "packages/http/tests/SwooleRequestTest.php",
+  "cases": [
+    {
+      "name": "json body round trips: bare empty object",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "{\"data\":{}}"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "json body round trips: nested empty object",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "{\"data\":{\"inner\":{}}}"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "json body round trips: empty object beside a value",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "{\"data\":{\"a\":{},\"b\":1}}"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "json body round trips: empty object two levels down",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "{\"data\":{\"l1\":{\"l2\":{}}}}"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "json body round trips: empty object inside a list",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "{\"data\":{\"arr\":[{},{\"x\":1}]}}"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "json body round trips: populated object",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "{\"data\":{\"a\":1}}"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "json body round trips: empty object as the only param",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "{\"data\":{},\"other\":{}}"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "json body round trips: braces inside a string literal",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "{\"data\":{\"note\":\"braces {} in text\"}}"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "json body round trips: whitespace inside the empty object",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "{\"data\":{\"a\":{ }}}"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "json body round trips: newline inside the empty object",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "{\"data\":{\"a\":{\n}}}"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "json body round trips: empty list stays a list",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "{\"data\":{\"a\":[]}}"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "populated objects stay associative arrays",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "{\"data\":{\"a\":{},\"b\":{\"c\":1}}}"
+        },
+        "steps": [
+          {
+            "get": [
+              "payload",
+              "data"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "body without params: \"{}\"",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "{}"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "body without params: \"{ }\"",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "{ }"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "body without params: \"[]\"",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "[]"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "body without params: \"\"",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": ""
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "body without params: \"not json\"",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "not json"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "body without params: \"\\\"a string\\\"\"",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "\"a string\""
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "body without params: \"5\"",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "5"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "form body",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body": "data=value"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "trusts the forwarded protocol by default",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Host",
+              "localhost"
+            ],
+            [
+              "X-Forwarded-Proto",
+              "https"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "protocol"
+          }
+        ]
+      }
+    },
+    {
+      "name": "client scheme from a chain of proxies",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Host",
+              "localhost"
+            ],
+            [
+              "X-Forwarded-Proto",
+              "https, http"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "protocol"
+          }
+        ]
+      }
+    },
+    {
+      "name": "protocol header of any name",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Host",
+              "localhost"
+            ],
+            [
+              "X-CDN-Proto",
+              "https"
+            ]
+          ],
+          "trusted": {
+            "proto": [
+              "x-cdn-proto"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "protocol"
+          }
+        ]
+      }
+    },
+    {
+      "name": "stops trusting the forwarded protocol when another is named",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Host",
+              "localhost"
+            ],
+            [
+              "X-Forwarded-Proto",
+              "https"
+            ]
+          ],
+          "trusted": {
+            "proto": [
+              "x-cdn-proto"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "protocol"
+          }
+        ]
+      }
+    },
+    {
+      "name": "falls back to the request line",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Host",
+              "localhost"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "protocol"
+          }
+        ]
+      }
+    },
+    {
+      "name": "skips a header naming no known scheme",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Host",
+              "localhost"
+            ],
+            [
+              "X-CDN-Proto",
+              "gopher"
+            ],
+            [
+              "X-Forwarded-Proto",
+              "https"
+            ]
+          ],
+          "trusted": {
+            "proto": [
+              "x-cdn-proto",
+              "x-forwarded-proto"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "protocol"
+          }
+        ]
+      }
+    },
+    {
+      "name": "cookies: Swoole rules",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Cookie",
+              "a.b=1; a[x]=2; a[x]=3; =v; k=v=w; s=%2B+; t= sp ; u"
+            ],
+            [
+              "Cookie",
+              "dup=1; dup=2; c=\"q\""
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "cookies"
+          },
+          {
+            "get": [
+              "header",
+              "cookie"
+            ]
+          },
+          {
+            "get": [
+              "cookie",
+              "dup"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "cookie that is an array",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Cookie",
+              "a[]=1"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": [
+              "cookie",
+              "a"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "query: PHP variable rules",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/?a[b=1&c[d][e=2&f]=3&g[%20h]=4&i.j[k.l]=5&m[]=6&m[]=7&m[5]=8&m[]=9&%41=%42"
+        },
+        "steps": [
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "headers: duplicates and empty values",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "X-A",
+              "one"
+            ],
+            [
+              "x-a",
+              "two"
+            ],
+            [
+              "X-Empty",
+              ""
+            ],
+            [
+              "X-B",
+              "b"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "headers"
+          },
+          {
+            "get": [
+              "header_line",
+              "x-a"
+            ]
+          },
+          {
+            "get": [
+              "header_line",
+              "x-empty",
+              "default"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "multipart fields and files",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/up",
+          "headers": [
+            [
+              "Content-Type",
+              "multipart/form-data; boundary=\"XB\""
+            ]
+          ],
+          "body": "--XB\r\nContent-Disposition: form-data; name=\"a[x]\"\r\n\r\nv1\r\n--XB\r\nContent-Disposition: form-data; name=\"a[y][]\"\r\n\r\nv2\r\n--XB\r\nContent-Disposition: form-data; name=\"f\"; filename=\"hello.txt\"\r\nContent-Type: text/plain\r\n\r\nhello world\r\n--XB\r\nContent-Disposition: form-data; name=\"g[]\"; filename=\"b.json\"\r\nContent-Type: application/json\r\n\r\n{}\r\n--XB\r\nContent-Disposition: form-data; name=\"none\"; filename=\"\"\r\n\r\nzz\r\n--XB\r\nContent-Disposition: form-data; name=\"Up\"; filename=\"u.txt\"\r\n\r\nup\r\n--XB\r\ncontent-disposition: form-data; name=lower\r\n\r\nplain\r\n--XB--\r\n"
+        },
+        "steps": [
+          {
+            "get": "params"
+          },
+          {
+            "get": [
+              "files",
+              "f"
+            ]
+          },
+          {
+            "get": [
+              "files",
+              "g"
+            ]
+          },
+          {
+            "get": [
+              "files",
+              "none"
+            ]
+          },
+          {
+            "get": [
+              "files",
+              "Up"
+            ]
+          },
+          {
+            "get": [
+              "files",
+              "up"
+            ]
+          },
+          {
+            "get": [
+              "files",
+              "missing"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "content type set after parsing",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/",
+          "headers": [
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body": "{\"a\":1}"
+        },
+        "steps": [
+          {
+            "set_header": [
+              "content-type",
+              "application/json"
+            ]
+          },
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GET reads the query, POST the body",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/?q=1",
+          "headers": [
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body": "b=2"
+        },
+        "steps": [
+          {
+            "get": "params"
+          },
+          {
+            "set_method": "GET"
+          },
+          {
+            "get": "params"
+          },
+          {
+            "get": [
+              "param",
+              "q"
+            ]
+          },
+          {
+            "get": [
+              "param",
+              "zz",
+              "d"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

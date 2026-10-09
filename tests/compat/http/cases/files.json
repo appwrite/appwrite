@@ -1,0 +1,255 @@
+{
+  "source": "packages/http/src/Files.php",
+  "cases": [
+    {
+      "name": "load a directory",
+      "op": "files.run",
+      "args": {
+        "steps": [
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/index.html",
+              "<!DOCTYPE html><html></html>"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/css/site.css",
+              "body{}"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/js/app.js",
+              "x()"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/img/logo.svg",
+              "<svg/>"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/robots.txt",
+              "User-agent: *"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/data.json",
+              "{\"a\":1}"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/empty.txt",
+              ""
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/.hidden",
+              "x"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/skip.php",
+              "<?php"
+            ]
+          },
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/public/skip.phtml",
+              "x"
+            ]
+          },
+          {
+            "load": [
+              "/tmp/compat-fs/${ns}/public"
+            ]
+          },
+          {
+            "count": null
+          },
+          {
+            "is_loaded": "/index.html"
+          },
+          {
+            "is_loaded": "/css/site.css"
+          },
+          {
+            "is_loaded": "/.hidden"
+          },
+          {
+            "is_loaded": "/skip.php"
+          },
+          {
+            "mime": "/index.html"
+          },
+          {
+            "mime": "/css/site.css"
+          },
+          {
+            "mime": "/js/app.js"
+          },
+          {
+            "mime": "/img/logo.svg"
+          },
+          {
+            "mime": "/robots.txt"
+          },
+          {
+            "mime": "/data.json"
+          },
+          {
+            "mime": "/empty.txt"
+          },
+          {
+            "contents": "/css/site.css"
+          },
+          {
+            "contents": "/missing"
+          },
+          {
+            "mime": "/missing"
+          },
+          {
+            "load": [
+              "/tmp/compat-fs/${ns}/public"
+            ]
+          },
+          {
+            "count": null
+          },
+          {
+            "add_mime_type": "text/x"
+          },
+          {
+            "add_mime_type": "text/y"
+          },
+          {
+            "remove_mime_type": "text/x"
+          },
+          {
+            "remove_mime_type": "nope"
+          },
+          {
+            "mime_types": null
+          },
+          {
+            "reset": null
+          },
+          {
+            "count": null
+          },
+          {
+            "mime_types": null
+          },
+          {
+            "is_loaded": "/index.html"
+          }
+        ]
+      }
+    },
+    {
+      "name": "load a missing directory",
+      "op": "files.run",
+      "args": {
+        "steps": [
+          {
+            "load": [
+              "/tmp/compat-fs/${ns}/nope"
+            ]
+          },
+          {
+            "count": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "load with a root",
+      "op": "files.run",
+      "args": {
+        "steps": [
+          {
+            "write": [
+              "/tmp/compat-fs/${ns}/site/sub/a.css",
+              "a"
+            ]
+          },
+          {
+            "load": [
+              "/tmp/compat-fs/${ns}/site/sub",
+              "/tmp/compat-fs/${ns}/site"
+            ]
+          },
+          {
+            "count": null
+          },
+          {
+            "is_loaded": "/sub/a.css"
+          },
+          {
+            "is_loaded": "/a.css"
+          }
+        ]
+      }
+    },
+    {
+      "name": "static files are served by run()",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "write": [
+            [
+              "/tmp/compat-fs/${ns}/static/style.css",
+              "body{}"
+            ],
+            [
+              "/tmp/compat-fs/${ns}/static/sub/a.txt",
+              "hello"
+            ]
+          ],
+          "files": [
+            "/tmp/compat-fs/${ns}/static"
+          ],
+          "routes": [
+            {
+              "path": "/x",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "route"
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/style.css"
+          },
+          {
+            "method": "GET",
+            "uri": "/sub/a.txt"
+          },
+          {
+            "method": "GET",
+            "uri": "/x"
+          },
+          {
+            "method": "POST",
+            "uri": "/style.css"
+          }
+        ]
+      }
+    }
+  ]
+}

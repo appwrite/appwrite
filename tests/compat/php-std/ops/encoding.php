@@ -22,4 +22,9 @@ return [
     'encoding.stripslashes' => fn (array $a) => stripslashes(...$a),
     'encoding.quoted_printable_encode' => fn (array $a) => quoted_printable_encode(...$a),
     'encoding.quoted_printable_decode' => fn (array $a) => quoted_printable_decode(...$a),
+    'encoding.parse_str' => function (array $a) {
+        parse_str($a['string'], $result);
+
+        return $result;
+    },
 ];

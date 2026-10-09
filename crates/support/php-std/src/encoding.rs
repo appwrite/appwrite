@@ -970,3 +970,210 @@ mod tests {
         assert_eq!(htmlspecialchars(b"a\xFFb", HtmlFlags::from_php(3), true), b"");
     }
 }
+
+// ---------------------------------------------------------------------------
+// parse_str and request variable registration (main/php_variables.c)
+// ---------------------------------------------------------------------------
+
+/// `max_input_vars`: variables registered per input, PHP's default.
+pub const MAX_INPUT_VARS: usize = 1000;
+
+/// `max_input_nesting_level`: bracket levels in a variable name, PHP's default.
+pub const MAX_INPUT_NESTING_LEVEL: usize = 64;
+
+/// `parse_str($string, $result)`: `php_default_treat_data(PARSE_STRING)`
+/// with the default `arg_separator.input` (`&`), `max_input_vars` and
+/// `max_input_nesting_level`. Also how Swoole fills `$request->get` and,
+/// for `application/x-www-form-urlencoded` bodies, `$request->post`.
+///
+/// The input is a C string to the engine: it ends at the first NUL byte.
+pub fn parse_str(input: &[u8]) -> crate::zval::Array {
+    let input = c_str(input);
+    let mut array = crate::zval::Array::new();
+    let mut count = 0usize;
+    for var in input.split(|&b| b == b'&').filter(|t| !t.is_empty()) {
+        count += 1;
+        if count > MAX_INPUT_VARS {
+            break;
+        }
+        let (name, value) = match var.iter().position(|&b| b == b'=') {
+            Some(eq) => (&var[..eq], urldecode(&var[eq + 1..])),
+            None => (var, Vec::new()),
+        };
+        let name = urldecode(name);
+        register_variable(&mut array, &name, crate::zval::Zval::String(value), false);
+    }
+    array
+}
+
+/// `php_register_variable_ex($name, $value, $array)`: registers one request
+/// variable the way PHP fills `$_GET`, `$_POST` and `$_COOKIE`. Leading
+/// spaces are dropped, `.` and ` ` in the base name become `_`, `name[a][]`
+/// builds nested arrays (at most [`MAX_INPUT_NESTING_LEVEL`] levels; deeper
+/// names drop the whole variable), and an unterminated `[` is kept as `_`.
+///
+/// `keep_existing` is the `$_COOKIE` rule: a top-level name that is already
+/// set is not overwritten.
+pub fn register_variable(array: &mut crate::zval::Array, name: &[u8], value: crate::zval::Zval, keep_existing: bool) {
+    use crate::zval::{Key, Zval};
+
+    // The engine works on a NUL-terminated copy: everything from a NUL on is ignored.
+    let mut var: Vec<u8> = c_str(name).iter().copied().skip_while(|&b| b == b' ').collect();
+    let len_at = |buf: &[u8], from: usize| buf[from..].iter().position(|&b| b == 0).unwrap_or(buf.len() - from);
+    var.push(0);
+
+    let mut ip: Option<usize> = None;
+    let mut p = 0;
+    while var[p] != 0 {
+        match var[p] {
+            b' ' | b'.' => var[p] = b'_',
+            b'[' => {
+                ip = Some(p);
+                var[p] = 0;
+                break;
+            }
+            _ => {}
+        }
+        p += 1;
+    }
+    let var_len = p;
+    if var_len == 0 {
+        return;
+    }
+
+    // `index` is (start, len) into `var`, or None for `[]`.
+    let mut index: Option<(usize, usize)> = Some((0, var_len));
+    // Keys from the root to the array being filled.
+    let mut path: Vec<Key> = Vec::new();
+    let root_key = Key::from_bytes(&var[..var_len]);
+
+    if let Some(mut ip) = ip {
+        let mut nest_level = 0;
+        loop {
+            nest_level += 1;
+            if nest_level > MAX_INPUT_NESTING_LEVEL {
+                array.remove(&root_key);
+                return;
+            }
+            ip += 1;
+            let mut index_s = Some(ip);
+            if var[ip] == b' ' {
+                ip += 1;
+            }
+            let new_idx_len;
+            if var[ip] == b']' {
+                index_s = None;
+                new_idx_len = 0;
+            } else {
+                match var[ip..].iter().position(|&b| b == b']' || b == 0).filter(|&o| var[ip + o] == b']') {
+                    Some(o) => {
+                        ip += o;
+                        var[ip] = 0;
+                        new_idx_len = len_at(&var, index_s.unwrap_or(ip));
+                    }
+                    None => {
+                        // Not an index: un-terminate the name and keep it as a plain variable.
+                        let s = index_s.unwrap_or(ip);
+                        var[s - 1] = b'_';
+                        let mut q = s;
+                        while var[q] != 0 {
+                            if matches!(var[q], b' ' | b'.' | b'[') {
+                                var[q] = b'_';
+                            }
+                            q += 1;
+                        }
+                        if let Some((start, _)) = index {
+                            index = Some((start, len_at(&var, start)));
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Descend into (or create) the array at `index`.
+            let table = table_at(array, &path);
+            let key = match index {
+                None => match table.next_key() {
+                    Some(k) => {
+                        table.push(Zval::Array(crate::zval::Array::new()));
+                        Key::Int(k)
+                    }
+                    None => return,
+                },
+                Some((start, len)) => {
+                    let key = Key::from_bytes(&var[start..start + len]);
+                    match table.get_mut(&key) {
+                        Some(Zval::Array(_)) => {}
+                        Some(other) => *other = Zval::Array(crate::zval::Array::new()),
+                        None => table.insert(key.clone(), Zval::Array(crate::zval::Array::new())),
+                    }
+                    key
+                }
+            };
+            path.push(key);
+            index = index_s.map(|s| (s, new_idx_len));
+
+            ip += 1;
+            if var[ip] == b'[' {
+                var[ip] = 0;
+            } else {
+                break;
+            }
+        }
+    }
+
+    let table = table_at(array, &path);
+    match index {
+        None => {
+            table.push(value);
+        }
+        Some((start, len)) => {
+            let key = Key::from_bytes(&var[start..start + len]);
+            if keep_existing && path.is_empty() && table.get(&key).is_some() {
+                return;
+            }
+            table.insert(key, value);
+        }
+    }
+}
+
+/// The nested array `path` leads to (every step is an array by construction).
+fn table_at<'a>(array: &'a mut crate::zval::Array, path: &[crate::zval::Key]) -> &'a mut crate::zval::Array {
+    let mut table = array;
+    for key in path {
+        match table.get_mut(key) {
+            Some(crate::zval::Zval::Array(next)) => table = next,
+            _ => unreachable!("register_variable path steps are arrays"),
+        }
+    }
+    table
+}
+
+/// The bytes before the first NUL (how the engine sees a C string).
+fn c_str(s: &[u8]) -> &[u8] {
+    match s.iter().position(|&b| b == 0) {
+        Some(n) => &s[..n],
+        None => s,
+    }
+}
+
+#[cfg(test)]
+mod parse_str_tests {
+    use super::parse_str;
+    use crate::zval::Zval;
+    use serde_json::json;
+
+    fn parsed(s: &str) -> serde_json::Value {
+        Zval::Array(parse_str(s.as_bytes())).to_json().unwrap()
+    }
+
+    #[test]
+    fn parses_like_php() {
+        assert_eq!(parsed("x=1&y[]=2&y[]=3&a.b=4"), json!({"x": "1", "y": ["2", "3"], "a_b": "4"}));
+        assert_eq!(
+            parsed("a[b=1&c[d][e=2&f]=3&g[ h]=4&i.j[k.l]=5&m[]=6&m[]=7&m[5]=8&m[]=9"),
+            json!({"a_b": "1", "c": {"d": "2"}, "f]": "3", "g": {" h": "4"}, "i_j": {"k.l": "5"}, "m": {"0": "6", "1": "7", "5": "8", "6": "9"}})
+        );
+        assert_eq!(parsed("&&=x&+a=%41+"), json!({"a": "A "}));
+    }
+}

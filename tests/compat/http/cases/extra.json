@@ -1,0 +1,112 @@
+{
+  "source": "packages/http/src/Response.php",
+  "cases": [
+    {
+      "name": "trusted headers are normalized",
+      "op": "trusted.new",
+      "args": {
+        "ip": [
+          " X-Forwarded-For ",
+          "",
+          "0",
+          "X-Real-IP"
+        ],
+        "proto": [
+          "X-CDN"
+        ]
+      }
+    },
+    {
+      "name": "trusted headers default",
+      "op": "trusted.new",
+      "args": {
+        "ip": []
+      }
+    },
+    {
+      "name": "negotiate 'gzip, deflate, br' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "gzip, deflate, br",
+        "supported": []
+      }
+    },
+    {
+      "name": "negotiate 'gzip;q=0.5, br' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "gzip;q=0.5, br",
+        "supported": []
+      }
+    },
+    {
+      "name": "negotiate 'foo' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "foo",
+        "supported": []
+      }
+    },
+    {
+      "name": "negotiate '' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "",
+        "supported": []
+      }
+    },
+    {
+      "name": "negotiate '0' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "0",
+        "supported": []
+      }
+    },
+    {
+      "name": "negotiate 'identity, gzip' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "identity, gzip",
+        "supported": []
+      }
+    },
+    {
+      "name": "negotiate 'zstd;q=0, gzip;q=0.1' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "zstd;q=0, gzip;q=0.1",
+        "supported": []
+      }
+    },
+    {
+      "name": "negotiate 'br' ['gzip', 'brotli']",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "br",
+        "supported": [
+          "gzip",
+          "brotli"
+        ]
+      }
+    },
+    {
+      "name": "negotiate 'BR;q=0.2, GZIP;q=0.2' []",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "BR;q=0.2, GZIP;q=0.2",
+        "supported": []
+      }
+    },
+    {
+      "name": "negotiate 'gzip; q=0.9, deflate' ['deflate']",
+      "op": "compression.negotiate",
+      "args": {
+        "accept": "gzip; q=0.9, deflate",
+        "supported": [
+          "deflate"
+        ]
+      }
+    }
+  ]
+}

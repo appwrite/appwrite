@@ -514,3 +514,27 @@ mod tests {
         assert_eq!(Zval::from(&json!({"0": 1, "1": 2})).to_json().unwrap(), json!([1, 2]));
     }
 }
+
+// ---------------------------------------------------------------------------
+// Mutable access (php_register_variable_ex builds nested arrays in place)
+// ---------------------------------------------------------------------------
+
+impl Array {
+    /// `&$array[$key]`.
+    pub fn get_mut(&mut self, key: &Key) -> Option<&mut Zval> {
+        self.entries.get_mut(key)
+    }
+
+    /// `unset($array[$key])`, keeping the order of the other entries.
+    pub fn remove(&mut self, key: &Key) -> Option<Zval> {
+        self.entries.shift_remove(key)
+    }
+
+    /// The next key [`Array::push`] would use, or `None` when it would overflow.
+    pub fn next_key(&self) -> Option<i64> {
+        if self.next == Some(i64::MAX) && self.entries.contains_key(&Key::Int(i64::MAX)) {
+            return None;
+        }
+        Some(self.next.unwrap_or(0))
+    }
+}

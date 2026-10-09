@@ -1,0 +1,19 @@
+{
+  "source": "packages/http/tests/ModeTest.php",
+  "cases": [
+    {
+      "name": "process mode",
+      "op": "mode.settings",
+      "args": {
+        "mode": "HYPERLOOP_A"
+      }
+    },
+    {
+      "name": "coroutine mode",
+      "op": "mode.settings",
+      "args": {
+        "mode": "HYPERLOOP_B"
+      }
+    }
+  ]
+}

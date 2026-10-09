@@ -1,0 +1,195 @@
+{
+  "source": "packages/http/tests/RouteTest.php",
+  "cases": [
+    {
+      "name": "method",
+      "op": "route.inspect",
+      "args": {
+        "methods": "GET",
+        "path": "/",
+        "steps": [
+          {
+            "get": "method"
+          },
+          {
+            "get": "methods"
+          },
+          {
+            "get": "order"
+          }
+        ]
+      }
+    },
+    {
+      "name": "path",
+      "op": "route.inspect",
+      "args": {
+        "path": "/",
+        "steps": [
+          {
+            "get": "path"
+          },
+          {
+            "path": "/path"
+          },
+          {
+            "get": "path"
+          }
+        ]
+      }
+    },
+    {
+      "name": "description",
+      "op": "route.inspect",
+      "args": {
+        "steps": [
+          {
+            "get": "desc"
+          },
+          {
+            "desc": "new route"
+          },
+          {
+            "get": "desc"
+          }
+        ]
+      }
+    },
+    {
+      "name": "groups",
+      "op": "route.inspect",
+      "args": {
+        "steps": [
+          {
+            "get": "groups"
+          },
+          {
+            "groups": [
+              "api",
+              "homepage"
+            ]
+          },
+          {
+            "get": "groups"
+          }
+        ]
+      }
+    },
+    {
+      "name": "params",
+      "op": "route.inspect",
+      "args": {
+        "steps": [
+          {
+            "get": "params"
+          },
+          {
+            "param": [
+              "x",
+              ""
+            ]
+          },
+          {
+            "param": [
+              "y",
+              ""
+            ]
+          },
+          {
+            "get": "params"
+          }
+        ]
+      }
+    },
+    {
+      "name": "injections",
+      "op": "route.inspect",
+      "args": {
+        "steps": [
+          {
+            "get": "injections"
+          },
+          {
+            "inject": "user"
+          },
+          {
+            "inject": "time"
+          },
+          {
+            "get": "injections"
+          }
+        ]
+      }
+    },
+    {
+      "name": "labels",
+      "op": "route.inspect",
+      "args": {
+        "steps": [
+          {
+            "get": [
+              "label",
+              "key",
+              "default"
+            ]
+          },
+          {
+            "label": [
+              "key",
+              "value"
+            ]
+          },
+          {
+            "get": [
+              "label",
+              "key",
+              "default"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "hooks",
+      "op": "route.inspect",
+      "args": {
+        "steps": [
+          {
+            "get": "hook"
+          },
+          {
+            "hook": true
+          },
+          {
+            "get": "hook"
+          },
+          {
+            "hook": false
+          },
+          {
+            "get": "hook"
+          }
+        ]
+      }
+    },
+    {
+      "name": "methods deduplicated",
+      "op": "route.inspect",
+      "args": {
+        "methods": [
+          "GET",
+          "POST",
+          "GET"
+        ],
+        "steps": [
+          {
+            "get": "methods"
+          },
+          {
+            "get": "method"
+          }
+        ]
+      }
+    }
+  ]
+}

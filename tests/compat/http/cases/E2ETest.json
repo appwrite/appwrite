@@ -1,0 +1,2833 @@
+{
+  "source": [
+    "packages/http/tests/E2E/BaseTest.php",
+    "packages/http/tests/E2E/ResponseFPMTest.php",
+    "packages/http/tests/E2E/ResponseSwooleTest.php"
+  ],
+  "cases": [
+    {
+      "name": "responses",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Hello World!"
+                }
+              ]
+            },
+            {
+              "path": "/value/:value",
+              "params": [
+                {
+                  "key": "value",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "param": "value"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookies",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "header_line",
+                      "cookie"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookie/:key",
+              "params": [
+                {
+                  "key": "key",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "cookie",
+                      {
+                        "param": "key"
+                      },
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/set-cookie",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key1=value1"
+                  ]
+                },
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key2=value2"
+                  ]
+                },
+                {
+                  "send": "OK"
+                }
+              ]
+            },
+            {
+              "path": "/chunked",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "chunk": [
+                    "Hello ",
+                    false
+                  ]
+                },
+                {
+                  "chunk": [
+                    "World!",
+                    true
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/redirect",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "redirect": [
+                    "/"
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/humans.txt",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "no_content": true
+                }
+              ]
+            },
+            {
+              "path": "/aliased",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Aliased!"
+                }
+              ],
+              "aliases": [
+                "/aliased-1",
+                "/aliased-2",
+                "/aliased-3"
+              ]
+            },
+            {
+              "path": "/object",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "data",
+                  "default": [],
+                  "validator": {
+                    "any": true
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "json": {
+                    "map": [
+                      [
+                        "data",
+                        {
+                          "param": "data"
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/"
+          },
+          {
+            "method": "GET",
+            "uri": "/value/123"
+          },
+          {
+            "method": "GET",
+            "uri": "/chunked"
+          },
+          {
+            "method": "GET",
+            "uri": "/redirect"
+          },
+          {
+            "method": "GET",
+            "uri": "/humans.txt"
+          },
+          {
+            "method": "GET",
+            "uri": "/set-cookie"
+          },
+          {
+            "method": "GET",
+            "uri": "/aliased"
+          },
+          {
+            "method": "GET",
+            "uri": "/aliased-1"
+          },
+          {
+            "method": "GET",
+            "uri": "/aliased-2"
+          },
+          {
+            "method": "GET",
+            "uri": "/aliased-3"
+          }
+        ]
+      }
+    },
+    {
+      "name": "object param round trips #0",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Hello World!"
+                }
+              ]
+            },
+            {
+              "path": "/value/:value",
+              "params": [
+                {
+                  "key": "value",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "param": "value"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookies",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "header_line",
+                      "cookie"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookie/:key",
+              "params": [
+                {
+                  "key": "key",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "cookie",
+                      {
+                        "param": "key"
+                      },
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/set-cookie",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key1=value1"
+                  ]
+                },
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key2=value2"
+                  ]
+                },
+                {
+                  "send": "OK"
+                }
+              ]
+            },
+            {
+              "path": "/chunked",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "chunk": [
+                    "Hello ",
+                    false
+                  ]
+                },
+                {
+                  "chunk": [
+                    "World!",
+                    true
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/redirect",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "redirect": [
+                    "/"
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/humans.txt",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "no_content": true
+                }
+              ]
+            },
+            {
+              "path": "/aliased",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Aliased!"
+                }
+              ],
+              "aliases": [
+                "/aliased-1",
+                "/aliased-2",
+                "/aliased-3"
+              ]
+            },
+            {
+              "path": "/object",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "data",
+                  "default": [],
+                  "validator": {
+                    "any": true
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "json": {
+                    "map": [
+                      [
+                        "data",
+                        {
+                          "param": "data"
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "POST",
+            "uri": "/object",
+            "headers": [
+              [
+                "Content-Type",
+                "application/json"
+              ]
+            ],
+            "body": "{\"data\":{}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "object param round trips #1",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Hello World!"
+                }
+              ]
+            },
+            {
+              "path": "/value/:value",
+              "params": [
+                {
+                  "key": "value",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "param": "value"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookies",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "header_line",
+                      "cookie"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookie/:key",
+              "params": [
+                {
+                  "key": "key",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "cookie",
+                      {
+                        "param": "key"
+                      },
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/set-cookie",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key1=value1"
+                  ]
+                },
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key2=value2"
+                  ]
+                },
+                {
+                  "send": "OK"
+                }
+              ]
+            },
+            {
+              "path": "/chunked",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "chunk": [
+                    "Hello ",
+                    false
+                  ]
+                },
+                {
+                  "chunk": [
+                    "World!",
+                    true
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/redirect",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "redirect": [
+                    "/"
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/humans.txt",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "no_content": true
+                }
+              ]
+            },
+            {
+              "path": "/aliased",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Aliased!"
+                }
+              ],
+              "aliases": [
+                "/aliased-1",
+                "/aliased-2",
+                "/aliased-3"
+              ]
+            },
+            {
+              "path": "/object",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "data",
+                  "default": [],
+                  "validator": {
+                    "any": true
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "json": {
+                    "map": [
+                      [
+                        "data",
+                        {
+                          "param": "data"
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "POST",
+            "uri": "/object",
+            "headers": [
+              [
+                "Content-Type",
+                "application/json"
+              ]
+            ],
+            "body": "{\"data\":{\"inner\":{}}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "object param round trips #2",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Hello World!"
+                }
+              ]
+            },
+            {
+              "path": "/value/:value",
+              "params": [
+                {
+                  "key": "value",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "param": "value"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookies",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "header_line",
+                      "cookie"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookie/:key",
+              "params": [
+                {
+                  "key": "key",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "cookie",
+                      {
+                        "param": "key"
+                      },
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/set-cookie",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key1=value1"
+                  ]
+                },
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key2=value2"
+                  ]
+                },
+                {
+                  "send": "OK"
+                }
+              ]
+            },
+            {
+              "path": "/chunked",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "chunk": [
+                    "Hello ",
+                    false
+                  ]
+                },
+                {
+                  "chunk": [
+                    "World!",
+                    true
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/redirect",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "redirect": [
+                    "/"
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/humans.txt",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "no_content": true
+                }
+              ]
+            },
+            {
+              "path": "/aliased",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Aliased!"
+                }
+              ],
+              "aliases": [
+                "/aliased-1",
+                "/aliased-2",
+                "/aliased-3"
+              ]
+            },
+            {
+              "path": "/object",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "data",
+                  "default": [],
+                  "validator": {
+                    "any": true
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "json": {
+                    "map": [
+                      [
+                        "data",
+                        {
+                          "param": "data"
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "POST",
+            "uri": "/object",
+            "headers": [
+              [
+                "Content-Type",
+                "application/json"
+              ]
+            ],
+            "body": "{\"data\":{\"a\":{},\"b\":1}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "object param round trips #3",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Hello World!"
+                }
+              ]
+            },
+            {
+              "path": "/value/:value",
+              "params": [
+                {
+                  "key": "value",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "param": "value"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookies",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "header_line",
+                      "cookie"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookie/:key",
+              "params": [
+                {
+                  "key": "key",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "cookie",
+                      {
+                        "param": "key"
+                      },
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/set-cookie",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key1=value1"
+                  ]
+                },
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key2=value2"
+                  ]
+                },
+                {
+                  "send": "OK"
+                }
+              ]
+            },
+            {
+              "path": "/chunked",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "chunk": [
+                    "Hello ",
+                    false
+                  ]
+                },
+                {
+                  "chunk": [
+                    "World!",
+                    true
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/redirect",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "redirect": [
+                    "/"
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/humans.txt",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "no_content": true
+                }
+              ]
+            },
+            {
+              "path": "/aliased",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Aliased!"
+                }
+              ],
+              "aliases": [
+                "/aliased-1",
+                "/aliased-2",
+                "/aliased-3"
+              ]
+            },
+            {
+              "path": "/object",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "data",
+                  "default": [],
+                  "validator": {
+                    "any": true
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "json": {
+                    "map": [
+                      [
+                        "data",
+                        {
+                          "param": "data"
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "POST",
+            "uri": "/object",
+            "headers": [
+              [
+                "Content-Type",
+                "application/json"
+              ]
+            ],
+            "body": "{\"data\":{\"l1\":{\"l2\":{}}}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "object param round trips #4",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Hello World!"
+                }
+              ]
+            },
+            {
+              "path": "/value/:value",
+              "params": [
+                {
+                  "key": "value",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "param": "value"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookies",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "header_line",
+                      "cookie"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookie/:key",
+              "params": [
+                {
+                  "key": "key",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "cookie",
+                      {
+                        "param": "key"
+                      },
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/set-cookie",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key1=value1"
+                  ]
+                },
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key2=value2"
+                  ]
+                },
+                {
+                  "send": "OK"
+                }
+              ]
+            },
+            {
+              "path": "/chunked",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "chunk": [
+                    "Hello ",
+                    false
+                  ]
+                },
+                {
+                  "chunk": [
+                    "World!",
+                    true
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/redirect",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "redirect": [
+                    "/"
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/humans.txt",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "no_content": true
+                }
+              ]
+            },
+            {
+              "path": "/aliased",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Aliased!"
+                }
+              ],
+              "aliases": [
+                "/aliased-1",
+                "/aliased-2",
+                "/aliased-3"
+              ]
+            },
+            {
+              "path": "/object",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "data",
+                  "default": [],
+                  "validator": {
+                    "any": true
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "json": {
+                    "map": [
+                      [
+                        "data",
+                        {
+                          "param": "data"
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "POST",
+            "uri": "/object",
+            "headers": [
+              [
+                "Content-Type",
+                "application/json"
+              ]
+            ],
+            "body": "{\"data\":{\"arr\":[{},{\"x\":1}]}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "object param round trips #5",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Hello World!"
+                }
+              ]
+            },
+            {
+              "path": "/value/:value",
+              "params": [
+                {
+                  "key": "value",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "param": "value"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookies",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "header_line",
+                      "cookie"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookie/:key",
+              "params": [
+                {
+                  "key": "key",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "cookie",
+                      {
+                        "param": "key"
+                      },
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/set-cookie",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key1=value1"
+                  ]
+                },
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key2=value2"
+                  ]
+                },
+                {
+                  "send": "OK"
+                }
+              ]
+            },
+            {
+              "path": "/chunked",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "chunk": [
+                    "Hello ",
+                    false
+                  ]
+                },
+                {
+                  "chunk": [
+                    "World!",
+                    true
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/redirect",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "redirect": [
+                    "/"
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/humans.txt",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "no_content": true
+                }
+              ]
+            },
+            {
+              "path": "/aliased",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Aliased!"
+                }
+              ],
+              "aliases": [
+                "/aliased-1",
+                "/aliased-2",
+                "/aliased-3"
+              ]
+            },
+            {
+              "path": "/object",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "data",
+                  "default": [],
+                  "validator": {
+                    "any": true
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "json": {
+                    "map": [
+                      [
+                        "data",
+                        {
+                          "param": "data"
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "POST",
+            "uri": "/object",
+            "headers": [
+              [
+                "Content-Type",
+                "application/json"
+              ]
+            ],
+            "body": "{\"data\":{\"a\":1}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "cookie header: cookie1=value1",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Hello World!"
+                }
+              ]
+            },
+            {
+              "path": "/value/:value",
+              "params": [
+                {
+                  "key": "value",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "param": "value"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookies",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "header_line",
+                      "cookie"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookie/:key",
+              "params": [
+                {
+                  "key": "key",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "cookie",
+                      {
+                        "param": "key"
+                      },
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/set-cookie",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key1=value1"
+                  ]
+                },
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key2=value2"
+                  ]
+                },
+                {
+                  "send": "OK"
+                }
+              ]
+            },
+            {
+              "path": "/chunked",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "chunk": [
+                    "Hello ",
+                    false
+                  ]
+                },
+                {
+                  "chunk": [
+                    "World!",
+                    true
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/redirect",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "redirect": [
+                    "/"
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/humans.txt",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "no_content": true
+                }
+              ]
+            },
+            {
+              "path": "/aliased",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Aliased!"
+                }
+              ],
+              "aliases": [
+                "/aliased-1",
+                "/aliased-2",
+                "/aliased-3"
+              ]
+            },
+            {
+              "path": "/object",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "data",
+                  "default": [],
+                  "validator": {
+                    "any": true
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "json": {
+                    "map": [
+                      [
+                        "data",
+                        {
+                          "param": "data"
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/cookies",
+            "headers": [
+              [
+                "Cookie",
+                "cookie1=value1"
+              ]
+            ]
+          },
+          {
+            "method": "GET",
+            "uri": "/cookie/cookie1",
+            "headers": [
+              [
+                "Cookie",
+                "cookie1=value1"
+              ]
+            ]
+          },
+          {
+            "method": "GET",
+            "uri": "/cookie/cookie2",
+            "headers": [
+              [
+                "Cookie",
+                "cookie1=value1"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "cookie header: cookie1=value1; cookie2=value2",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Hello World!"
+                }
+              ]
+            },
+            {
+              "path": "/value/:value",
+              "params": [
+                {
+                  "key": "value",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "param": "value"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookies",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "header_line",
+                      "cookie"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookie/:key",
+              "params": [
+                {
+                  "key": "key",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "cookie",
+                      {
+                        "param": "key"
+                      },
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/set-cookie",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key1=value1"
+                  ]
+                },
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key2=value2"
+                  ]
+                },
+                {
+                  "send": "OK"
+                }
+              ]
+            },
+            {
+              "path": "/chunked",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "chunk": [
+                    "Hello ",
+                    false
+                  ]
+                },
+                {
+                  "chunk": [
+                    "World!",
+                    true
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/redirect",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "redirect": [
+                    "/"
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/humans.txt",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "no_content": true
+                }
+              ]
+            },
+            {
+              "path": "/aliased",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Aliased!"
+                }
+              ],
+              "aliases": [
+                "/aliased-1",
+                "/aliased-2",
+                "/aliased-3"
+              ]
+            },
+            {
+              "path": "/object",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "data",
+                  "default": [],
+                  "validator": {
+                    "any": true
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "json": {
+                    "map": [
+                      [
+                        "data",
+                        {
+                          "param": "data"
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/cookies",
+            "headers": [
+              [
+                "Cookie",
+                "cookie1=value1; cookie2=value2"
+              ]
+            ]
+          },
+          {
+            "method": "GET",
+            "uri": "/cookie/cookie1",
+            "headers": [
+              [
+                "Cookie",
+                "cookie1=value1; cookie2=value2"
+              ]
+            ]
+          },
+          {
+            "method": "GET",
+            "uri": "/cookie/cookie2",
+            "headers": [
+              [
+                "Cookie",
+                "cookie1=value1; cookie2=value2"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "cookie header: cookie1=value1;cookie2=value2",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Hello World!"
+                }
+              ]
+            },
+            {
+              "path": "/value/:value",
+              "params": [
+                {
+                  "key": "value",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "param": "value"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookies",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "header_line",
+                      "cookie"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookie/:key",
+              "params": [
+                {
+                  "key": "key",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "cookie",
+                      {
+                        "param": "key"
+                      },
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/set-cookie",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key1=value1"
+                  ]
+                },
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key2=value2"
+                  ]
+                },
+                {
+                  "send": "OK"
+                }
+              ]
+            },
+            {
+              "path": "/chunked",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "chunk": [
+                    "Hello ",
+                    false
+                  ]
+                },
+                {
+                  "chunk": [
+                    "World!",
+                    true
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/redirect",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "redirect": [
+                    "/"
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/humans.txt",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "no_content": true
+                }
+              ]
+            },
+            {
+              "path": "/aliased",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Aliased!"
+                }
+              ],
+              "aliases": [
+                "/aliased-1",
+                "/aliased-2",
+                "/aliased-3"
+              ]
+            },
+            {
+              "path": "/object",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "data",
+                  "default": [],
+                  "validator": {
+                    "any": true
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "json": {
+                    "map": [
+                      [
+                        "data",
+                        {
+                          "param": "data"
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/cookies",
+            "headers": [
+              [
+                "Cookie",
+                "cookie1=value1;cookie2=value2"
+              ]
+            ]
+          },
+          {
+            "method": "GET",
+            "uri": "/cookie/cookie1",
+            "headers": [
+              [
+                "Cookie",
+                "cookie1=value1;cookie2=value2"
+              ]
+            ]
+          },
+          {
+            "method": "GET",
+            "uri": "/cookie/cookie2",
+            "headers": [
+              [
+                "Cookie",
+                "cookie1=value1;cookie2=value2"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "cookie header: cookie1=value1=value2",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Hello World!"
+                }
+              ]
+            },
+            {
+              "path": "/value/:value",
+              "params": [
+                {
+                  "key": "value",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "param": "value"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookies",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "header_line",
+                      "cookie"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookie/:key",
+              "params": [
+                {
+                  "key": "key",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "cookie",
+                      {
+                        "param": "key"
+                      },
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/set-cookie",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key1=value1"
+                  ]
+                },
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key2=value2"
+                  ]
+                },
+                {
+                  "send": "OK"
+                }
+              ]
+            },
+            {
+              "path": "/chunked",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "chunk": [
+                    "Hello ",
+                    false
+                  ]
+                },
+                {
+                  "chunk": [
+                    "World!",
+                    true
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/redirect",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "redirect": [
+                    "/"
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/humans.txt",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "no_content": true
+                }
+              ]
+            },
+            {
+              "path": "/aliased",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Aliased!"
+                }
+              ],
+              "aliases": [
+                "/aliased-1",
+                "/aliased-2",
+                "/aliased-3"
+              ]
+            },
+            {
+              "path": "/object",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "data",
+                  "default": [],
+                  "validator": {
+                    "any": true
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "json": {
+                    "map": [
+                      [
+                        "data",
+                        {
+                          "param": "data"
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/cookies",
+            "headers": [
+              [
+                "Cookie",
+                "cookie1=value1=value2"
+              ]
+            ]
+          },
+          {
+            "method": "GET",
+            "uri": "/cookie/cookie1",
+            "headers": [
+              [
+                "Cookie",
+                "cookie1=value1=value2"
+              ]
+            ]
+          },
+          {
+            "method": "GET",
+            "uri": "/cookie/cookie2",
+            "headers": [
+              [
+                "Cookie",
+                "cookie1=value1=value2"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "cookie header: cookie1=v1; Cookie1=v2",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Hello World!"
+                }
+              ]
+            },
+            {
+              "path": "/value/:value",
+              "params": [
+                {
+                  "key": "value",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "param": "value"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookies",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "header_line",
+                      "cookie"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/cookie/:key",
+              "params": [
+                {
+                  "key": "key",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      64
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "send": {
+                    "request": [
+                      "cookie",
+                      {
+                        "param": "key"
+                      },
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/set-cookie",
+              "inject": [
+                "request",
+                "response"
+              ],
+              "action": [
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key1=value1"
+                  ]
+                },
+                {
+                  "add_header": [
+                    "Set-Cookie",
+                    "key2=value2"
+                  ]
+                },
+                {
+                  "send": "OK"
+                }
+              ]
+            },
+            {
+              "path": "/chunked",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "chunk": [
+                    "Hello ",
+                    false
+                  ]
+                },
+                {
+                  "chunk": [
+                    "World!",
+                    true
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/redirect",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "redirect": [
+                    "/"
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/humans.txt",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "no_content": true
+                }
+              ]
+            },
+            {
+              "path": "/aliased",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "Aliased!"
+                }
+              ],
+              "aliases": [
+                "/aliased-1",
+                "/aliased-2",
+                "/aliased-3"
+              ]
+            },
+            {
+              "path": "/object",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "data",
+                  "default": [],
+                  "validator": {
+                    "any": true
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "json": {
+                    "map": [
+                      [
+                        "data",
+                        {
+                          "param": "data"
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/cookies",
+            "headers": [
+              [
+                "Cookie",
+                "cookie1=v1; Cookie1=v2"
+              ]
+            ]
+          },
+          {
+            "method": "GET",
+            "uri": "/cookie/cookie1",
+            "headers": [
+              [
+                "Cookie",
+                "cookie1=v1; Cookie1=v2"
+              ]
+            ]
+          },
+          {
+            "method": "GET",
+            "uri": "/cookie/cookie2",
+            "headers": [
+              [
+                "Cookie",
+                "cookie1=v1; Cookie1=v2"
+              ]
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

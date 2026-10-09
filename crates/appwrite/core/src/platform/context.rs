@@ -42,7 +42,7 @@ pub struct Context {
     pub state: Arc<State>,
     pub request: Request,
     pub route: Arc<Route>,
-    pub path_params: Vec<(&'static str, Value)>,
+    pub path_params: Vec<(String, Value)>,
     pub started: Instant,
 
     pub project: Arc<Project>,
@@ -78,12 +78,12 @@ impl Context {
         state: Arc<State>,
         request: Request,
         route: Arc<Route>,
-        path_params: Vec<(&'static str, String)>,
+        path_params: Vec<(String, String)>,
     ) -> Self {
         let console = state.projects.console();
         let ip = crate::network::client_ip(
-            request.remote_addr,
-            &request.headers,
+            request.remote_addr().unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED)),
+            request.headers(),
             &state.config.trusted_headers,
             &state.config.trusted_proxies,
         );
@@ -250,7 +250,7 @@ impl Context {
 
     /// JSON response with PHP encoding.
     pub fn json<T: Serialize>(&self, status: StatusCode, model: &T) -> Response {
-        Response::json(status, crate::json::to_vec(model))
+        Response::json_bytes(status, crate::json::to_vec(model))
     }
 
     pub fn ok<T: Serialize>(&self, model: &T) -> Response {
@@ -262,7 +262,7 @@ impl Context {
     }
 
     pub fn no_content(&self) -> Response {
-        Response::no_content()
+        Response::no_content_response()
     }
 
     /// The `User-Agent` (with `X-Forwarded-User-Agent` for API keys).

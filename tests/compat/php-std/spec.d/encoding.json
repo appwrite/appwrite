@@ -579,6 +579,143 @@
           "iterations": 3000
         }
       ]
+    },
+    "encoding.parse_str": {
+      "doc": "parse_str($string, $result): $result",
+      "fuzz": [
+        {
+          "name": "pairs",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "repeat",
+                "part": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "concat",
+                      "parts": [
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "pick",
+                            "from": [
+                              "a",
+                              "b",
+                              "[",
+                              "]",
+                              ".",
+                              " ",
+                              "+",
+                              "_",
+                              "%5B",
+                              "%5D",
+                              "0",
+                              "1",
+                              "-",
+                              "%20",
+                              "%00",
+                              "%2E",
+                              "é",
+                              "[]",
+                              "[0]",
+                              "[ "
+                            ]
+                          },
+                          "sep": "",
+                          "min": 0,
+                          "max": 7
+                        },
+                        {
+                          "gen": "const",
+                          "value": "="
+                        },
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "pick",
+                            "from": [
+                              "a",
+                              "%2B",
+                              "+",
+                              "=",
+                              "%5B",
+                              ".",
+                              "é",
+                              "%20",
+                              "%00",
+                              "%41",
+                              "%FF",
+                              "%",
+                              "%4",
+                              "[",
+                              "]"
+                            ]
+                          },
+                          "sep": "",
+                          "min": 0,
+                          "max": 5
+                        }
+                      ]
+                    },
+                    {
+                      "gen": "repeat",
+                      "part": {
+                        "gen": "pick",
+                        "from": [
+                          "a",
+                          "b",
+                          "[",
+                          "]",
+                          ".",
+                          " ",
+                          "+",
+                          "_",
+                          "%5B",
+                          "%5D",
+                          "0",
+                          "1",
+                          "-",
+                          "%20",
+                          "%00",
+                          "%2E",
+                          "é",
+                          "[]",
+                          "[0]",
+                          "[ "
+                        ]
+                      },
+                      "sep": "",
+                      "min": 0,
+                      "max": 7
+                    }
+                  ]
+                },
+                "sep": "&",
+                "min": 0,
+                "max": 6
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "bytes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "string",
+                "alphabet": "x[]=&.%0 \u0000",
+                "min": 0,
+                "max": 16
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
     }
   },
   "generators": {

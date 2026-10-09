@@ -6,7 +6,7 @@
 use std::sync::Arc;
 
 use bytes::Bytes;
-use http::{HeaderName, HeaderValue, Method, StatusCode};
+use http::{Method, StatusCode};
 use serde_json::Value;
 use utopia_database::Param;
 use utopia_database::datetime;
@@ -43,10 +43,12 @@ pub(super) fn wildcard_route() -> Route {
 
 pub(super) async fn run(platform: &Platform, request: Request) -> Response {
     let state = platform.state.clone();
-    if request.method == Method::OPTIONS {
+    if request.method() == Method::OPTIONS {
         return preflight(&state, &request);
     }
-    let (route, params) = match platform.router.find(&request.method, &request.path) {
+    // `Http::match()`: HEAD runs as GET.
+    let method = if request.method() == Method::HEAD { Method::GET.as_str() } else { request.method() };
+    let (route, params) = match platform.router.find(method, request.path()) {
         Some(m) => (m.route.clone(), m.params),
         None => (platform.wildcard.clone(), Vec::new()),
     };
@@ -74,7 +76,7 @@ fn allowed_hostnames(
     if project_found && !project.is_console() && !project.id.is_empty() {
         allowed.extend(network::platform_hostnames(&project.platforms));
     }
-    if request.method == Method::OPTIONS {
+    if request.method() == Method::OPTIONS {
         let origin = request.header("origin").filter(|o| !o.is_empty()).or_else(|| request.header("referer"));
         if let Some(host) = origin.and_then(network::url_host) {
             allowed.push(host);
@@ -90,7 +92,7 @@ fn allowed_hostnames(
 }
 
 fn preflight(state: &Arc<super::State>, request: &Request) -> Response {
-    let mut response = Response::no_content();
+    let mut response = Response::no_content_response();
     let console = state.projects.console();
     let allowed = allowed_hostnames(state, &console, true, request);
     for (k, v) in network::cors_headers(request.header_or_empty("origin"), &allowed) {
@@ -273,7 +275,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     let mut scopes = unique_scopes;
 
     // Impersonators may discover users (list and get).
-    let discovery = ctx.request.method == Method::GET && matches!(ctx.route.path, "/v1/users" | "/v1/users/:userId");
+    let discovery = ctx.request.method() == Method::GET && matches!(ctx.route.path, "/v1/users" | "/v1/users/:userId");
     if discovery
         && !key_actor
         && let Some(user) = &ctx.user
@@ -595,7 +597,7 @@ pub(super) fn finalize(ctx: Context, result: Result<Response>) -> Response {
         Ok(response) => response,
         Err(error) => error_response(&state, &error),
     };
-    let is_error = response.status.as_u16() >= 400;
+    let is_error = response.status().as_u16() >= 400;
     for (k, v) in &cors {
         response.add(k, v);
     }
@@ -612,19 +614,22 @@ pub(super) fn finalize(ctx: Context, result: Result<Response>) -> Response {
         response.set("expires", "0");
         response.set("pragma", "no-cache");
     }
-    let speed = format!("{:.6}", ctx.started.elapsed().as_secs_f64());
-    if let Ok(v) = HeaderValue::from_str(&speed) {
-        response.add_header(HeaderName::from_static("x-debug-speed"), v);
-    }
-
-    let body: Bytes = response.body.clone();
-    response.compress(
-        ctx.request.header_or_empty("accept-encoding"),
-        Compression { enabled: state.config.compression, min_size: state.config.compression_min_size },
+    // `Response::send()`: compression, `X-Debug-Speed` (from the request start), then the body.
+    let body: Bytes = response.staged().cloned().unwrap_or_default();
+    response.set_started(ctx.started);
+    let accept = ctx.request.header_line_or("accept-encoding", "");
+    response.set_compression(
+        &accept,
+        &Compression {
+            enabled: state.config.compression,
+            min_size: state.config.compression_min_size,
+            supported: Vec::new(),
+        },
     );
+    response.flush();
 
     if !is_error {
-        shutdown::schedule(ctx, response.status, body, response.size());
+        shutdown::schedule(ctx, response.status(), body, response.size());
     }
     response
 }
@@ -642,7 +647,7 @@ pub(crate) fn error_response(state: &super::State, error: &Error) -> Response {
         version: VERSION,
         dev: if state.config.development { Some((error.location.file(), error.location.line())) } else { None },
     };
-    Response::json(
+    Response::json_bytes(
         StatusCode::from_u16(status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
         crate::json::to_vec(&model),
     )

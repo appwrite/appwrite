@@ -28,6 +28,7 @@ pub const OPS: &[&str] = &[
     "encoding.stripslashes",
     "encoding.quoted_printable_encode",
     "encoding.quoted_printable_decode",
+    "encoding.parse_str",
 ];
 
 /// The HTML functions' `$flags` (default `ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401`).
@@ -81,6 +82,7 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
         "encoding.stripslashes" => ok(bytes_value(&encoding::stripslashes(&s()?))),
         "encoding.quoted_printable_encode" => ok(bytes_value(&encoding::quoted_printable_encode(&s()?))),
         "encoding.quoted_printable_decode" => ok(bytes_value(&encoding::quoted_printable_decode(&s()?))),
+        "encoding.parse_str" => ok(super::json::wire(&php_std::zval::Zval::Array(encoding::parse_str(&s()?)))?),
         _ => Err(Fault::new(format!("php-std: unknown operation `{op}`"))),
     }
 }
