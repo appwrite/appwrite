@@ -473,6 +473,10 @@ impl Env<'_, '_> {
             "inject" => {
                 let name = php_string(a);
                 let Some(s) = scope else { return Ok(Value::Null) };
+                // Only what the hook declared reaches its callback.
+                if !s.injections().any(|n| n == name) {
+                    return Ok(Value::Null);
+                }
                 match name.as_str() {
                     "route" => s.route.map(|r| Value::String(r.path().to_owned())).unwrap_or(Value::Null),
                     "params" => {
@@ -773,6 +777,13 @@ fn validator(spec: &Value) -> Result<Box<dyn Validator>, Fault> {
     let (kind, a) =
         spec.as_object().and_then(|o| o.iter().next()).ok_or_else(|| Fault::new(format!("validator spec: {spec}")))?;
     let int = |i: usize, d: i64| a.get(i).and_then(Value::as_i64).unwrap_or(d);
+    let malformed = spec.as_object().is_some_and(|o| o.len() != 1)
+        || (matches!(kind.as_str(), "text" | "any_of") && !a.is_array())
+        || (kind == "whitelist" && !a.get(0).is_some_and(Value::is_array))
+        || (matches!(kind.as_str(), "integer" | "boolean") && !(a.is_boolean() || a.is_null()));
+    if malformed {
+        return Err(Fault::new(format!("validator spec: {spec}")));
+    }
     Ok(match kind.as_str() {
         "text" => Box::new(utopia_validators::Text::with_min(int(0, 0).max(0) as usize, int(1, 1).max(0) as usize)),
         "integer" => Box::new(utopia_validators::Integer { loose: a.as_bool().unwrap_or(false), ..Default::default() }),

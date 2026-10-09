@@ -1735,6 +1735,74 @@
         ],
         "error": null
       }
+    },
+    {
+      "name": "cookies Swoole refuses",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "add_cookie": {
+              "name": "a=b",
+              "value": "v"
+            }
+          },
+          {
+            "add_cookie": {
+              "name": "p",
+              "value": "v",
+              "path": "/a b"
+            }
+          },
+          {
+            "add_cookie": {
+              "name": "d",
+              "value": "v",
+              "domain": "a;b"
+            }
+          },
+          {
+            "add_cookie": {
+              "name": "y",
+              "value": "v",
+              "expire": 253402300800
+            }
+          },
+          {
+            "add_cookie": {
+              "name": "ok",
+              "value": "v;=,é",
+              "samesite": "whatever"
+            }
+          },
+          {
+            "send": ""
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>"
+          },
+          "order": [
+            "x-debug-speed"
+          ],
+          "cookies": [
+            false,
+            false,
+            false,
+            false,
+            "ok=v%3B%3D%2C%C3%A9; SameSite=whatever"
+          ],
+          "body": "",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [],
+        "error": null
+      }
     }
   ]
 }

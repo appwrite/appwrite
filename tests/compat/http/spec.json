@@ -56,7 +56,180 @@
           "/responses/*/wire/headers/expires"
         ],
         "reason": "X-Debug-Speed is the elapsed time; a static file's Expires header is the current time plus two years"
-      }
+      },
+      "fuzz": [
+        {
+          "name": "params",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "app": {
+                "gen": "const",
+                "value": {
+                  "error": [
+                    {
+                      "inject": [
+                        "error"
+                      ],
+                      "action": [
+                        {
+                          "emit": {
+                            "inject": "error"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "routes": [
+                    {
+                      "path": "/p/:id",
+                      "params": [
+                        {
+                          "key": "id",
+                          "default": "",
+                          "validator": {
+                            "text": [
+                              3,
+                              1
+                            ]
+                          },
+                          "optional": false
+                        },
+                        {
+                          "key": "t",
+                          "default": "t-def",
+                          "validator": {
+                            "text": [
+                              4,
+                              0
+                            ]
+                          },
+                          "optional": true,
+                          "aliases": [
+                            "alias"
+                          ]
+                        },
+                        {
+                          "key": "n",
+                          "default": 7,
+                          "validator": {
+                            "integer": true
+                          },
+                          "optional": true
+                        },
+                        {
+                          "key": "w",
+                          "default": "a",
+                          "validator": {
+                            "whitelist": [
+                              [
+                                "a",
+                                "1",
+                                "x"
+                              ],
+                              true
+                            ]
+                          },
+                          "optional": true
+                        },
+                        {
+                          "key": "b",
+                          "default": null,
+                          "validator": {
+                            "nullable": {
+                              "boolean": true
+                            }
+                          },
+                          "optional": true
+                        }
+                      ],
+                      "action": [
+                        {
+                          "emit": {
+                            "param": "id"
+                          }
+                        },
+                        {
+                          "emit": {
+                            "param": "t"
+                          }
+                        },
+                        {
+                          "emit": {
+                            "param": "n"
+                          }
+                        },
+                        {
+                          "emit": {
+                            "param": "w"
+                          }
+                        },
+                        {
+                          "emit": {
+                            "param": "b"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "requests": {
+                "gen": "array",
+                "min": 1,
+                "max": 1,
+                "items": {
+                  "gen": "object",
+                  "fields": {
+                    "method": {
+                      "gen": "const",
+                      "value": "GET"
+                    },
+                    "uri": {
+                      "gen": "concat",
+                      "parts": [
+                        {
+                          "gen": "const",
+                          "value": "/p/"
+                        },
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "pick",
+                            "from": [
+                              "a",
+                              "b",
+                              "1",
+                              "%20",
+                              "-"
+                            ]
+                          },
+                          "sep": "",
+                          "min": 0,
+                          "max": 4
+                        },
+                        {
+                          "gen": "const",
+                          "value": "?"
+                        },
+                        {
+                          "gen": "ref",
+                          "name": "param_query"
+                        }
+                      ]
+                    },
+                    "via": {
+                      "gen": "const",
+                      "value": "execute"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 1500
+        }
+      ]
     },
     "http.start": {
       "doc": "Builds an application and runs start(): start hooks in order, the error hooks when one fails.",
@@ -491,7 +664,245 @@
           "/out/*/x-debug-speed"
         ],
         "reason": "X-Debug-Speed is the elapsed time"
-      }
+      },
+      "fuzz": [
+        {
+          "name": "cookies and headers",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "steps": {
+                "gen": "array",
+                "min": 1,
+                "max": 4,
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "add_cookie": {
+                          "gen": "object",
+                          "fields": {
+                            "name": {
+                              "gen": "repeat",
+                              "part": {
+                                "gen": "pick",
+                                "from": [
+                                  "a",
+                                  "B",
+                                  " ",
+                                  ";",
+                                  "=",
+                                  ",",
+                                  "é",
+                                  "%",
+                                  "+",
+                                  "0",
+                                  "/",
+                                  "\"",
+                                  "\t"
+                                ]
+                              },
+                              "sep": "",
+                              "min": 0,
+                              "max": 5
+                            },
+                            "value": {
+                              "gen": "one_of",
+                              "of": [
+                                {
+                                  "gen": "null"
+                                },
+                                {
+                                  "gen": "repeat",
+                                  "part": {
+                                    "gen": "pick",
+                                    "from": [
+                                      "a",
+                                      "B",
+                                      " ",
+                                      ";",
+                                      "=",
+                                      ",",
+                                      "é",
+                                      "%",
+                                      "+",
+                                      "0",
+                                      "/",
+                                      "\"",
+                                      "\t"
+                                    ]
+                                  },
+                                  "sep": "",
+                                  "min": 0,
+                                  "max": 5
+                                }
+                              ]
+                            },
+                            "expire": {
+                              "gen": "pick",
+                              "from": [
+                                null,
+                                0,
+                                1000,
+                                -5
+                              ]
+                            },
+                            "path": {
+                              "gen": "pick",
+                              "from": [
+                                null,
+                                "",
+                                "/",
+                                "/a b"
+                              ]
+                            },
+                            "domain": {
+                              "gen": "pick",
+                              "from": [
+                                null,
+                                "",
+                                "example.com"
+                              ]
+                            },
+                            "secure": {
+                              "gen": "pick",
+                              "from": [
+                                null,
+                                true,
+                                false
+                              ]
+                            },
+                            "httponly": {
+                              "gen": "pick",
+                              "from": [
+                                null,
+                                true,
+                                false
+                              ]
+                            },
+                            "samesite": {
+                              "gen": "pick",
+                              "from": [
+                                null,
+                                "",
+                                "Lax",
+                                "None",
+                                "strict"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "add_header": {
+                          "gen": "array",
+                          "min": 2,
+                          "max": 2,
+                          "items": {
+                            "gen": "pick",
+                            "from": [
+                              "X-A",
+                              "x-a",
+                              "Content-Type",
+                              "Vary",
+                              "a",
+                              "b"
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "remove_cookie": {
+                          "gen": "pick",
+                          "from": [
+                            "a",
+                            "B",
+                            "b",
+                            ""
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "status": {
+                          "gen": "pick",
+                          "from": [
+                            200,
+                            204,
+                            299,
+                            418,
+                            0,
+                            600,
+                            306
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "content_type": {
+                          "gen": "array",
+                          "min": 1,
+                          "max": 2,
+                          "items": {
+                            "gen": "pick",
+                            "from": [
+                              "text/plain",
+                              "",
+                              "0",
+                              "UTF-8",
+                              "application/json"
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "gen": "const",
+                      "value": {
+                        "get": "cookies"
+                      }
+                    },
+                    {
+                      "gen": "const",
+                      "value": {
+                        "get": "headers"
+                      }
+                    },
+                    {
+                      "gen": "const",
+                      "value": {
+                        "send": "body"
+                      }
+                    },
+                    {
+                      "gen": "const",
+                      "value": {
+                        "chunk": [
+                          "c",
+                          false
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
     },
     "compression.negotiate": {
       "doc": "Compression::fromAcceptEncoding(accept, supported): the content encoding Response::send() picks, or null.",
@@ -1119,6 +1530,114 @@
       "sep": "&",
       "min": 0,
       "max": 6
+    },
+    "param_value": {
+      "gen": "repeat",
+      "part": {
+        "gen": "pick",
+        "from": [
+          "a",
+          "1",
+          "-",
+          "0",
+          "%20",
+          "x",
+          "9",
+          "B",
+          ".",
+          "%00",
+          "%C3%A9"
+        ]
+      },
+      "sep": "",
+      "min": 0,
+      "max": 6
+    },
+    "param_query": {
+      "gen": "repeat",
+      "part": {
+        "gen": "one_of",
+        "of": [
+          {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "const",
+                "value": "t="
+              },
+              {
+                "gen": "ref",
+                "name": "param_value"
+              }
+            ]
+          },
+          {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "const",
+                "value": "n="
+              },
+              {
+                "gen": "ref",
+                "name": "param_value"
+              }
+            ]
+          },
+          {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "const",
+                "value": "w="
+              },
+              {
+                "gen": "ref",
+                "name": "param_value"
+              }
+            ]
+          },
+          {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "const",
+                "value": "alias="
+              },
+              {
+                "gen": "ref",
+                "name": "param_value"
+              }
+            ]
+          },
+          {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "const",
+                "value": "b="
+              },
+              {
+                "gen": "ref",
+                "name": "param_value"
+              }
+            ]
+          },
+          {
+            "gen": "pick",
+            "from": [
+              "t",
+              "n[]=1",
+              "t[]=x",
+              "w",
+              "b[k]=v"
+            ]
+          }
+        ]
+      },
+      "sep": "&",
+      "min": 0,
+      "max": 4
     }
   },
   "waivers": {

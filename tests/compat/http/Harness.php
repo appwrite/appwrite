@@ -126,6 +126,14 @@ final class Harness
         }
         $kind = (string) array_key_first($spec);
         $a = $spec[$kind];
+        $list = \is_array($a) && array_is_list($a);
+        if (
+            (\in_array($kind, ['text', 'any_of'], true) && !$list)
+            || ($kind === 'whitelist' && !($list && \is_array($a[0] ?? null) && array_is_list($a[0])))
+            || (\in_array($kind, ['integer', 'boolean'], true) && !\is_bool($a ?? false))
+        ) {
+            throw new Fault('validator spec: ' . json_encode($spec));
+        }
 
         return match ($kind) {
             'text' => new Validator\Text((int) ($a[0] ?? 0), (int) ($a[1] ?? 1)),

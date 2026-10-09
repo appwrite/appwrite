@@ -130,9 +130,16 @@ impl Cookie {
     /// (Unix seconds), or `None` when Swoole refuses the name.
     pub fn header(&self, now: i64) -> Option<String> {
         let name = &self.name;
-        if name.is_empty()
-            || name.bytes().any(|b| matches!(b, b'=' | b',' | b';' | b' ' | b'\t' | b'\r' | b'\n' | 0x0B | 0x0C))
-        {
+        let forbidden =
+            |s: &str| s.bytes().any(|b| matches!(b, b',' | b';' | b' ' | b'\t' | b'\r' | b'\n' | 0x0B | 0x0C));
+        if name.is_empty() || name.contains('=') || forbidden(name) {
+            return None;
+        }
+        if self.path.as_deref().is_some_and(forbidden) || self.domain.as_deref().is_some_and(forbidden) {
+            return None;
+        }
+        // Expiry years past 9999 are refused.
+        if self.expire.is_some_and(|e| e >= 253_402_300_800) {
             return None;
         }
         let value = self.value.as_deref().unwrap_or("");
