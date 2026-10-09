@@ -2156,8 +2156,10 @@ dependencies = [
 name = "utopia-locale"
 version = "0.1.0"
 dependencies = [
- "serde_json",
- "tracing",
+ "indexmap",
+ "php-std",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]

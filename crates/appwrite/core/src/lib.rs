@@ -11,6 +11,7 @@
 //! | [`crypto`]    | the `encrypt` database filter                             |
 //! | [`database`]  | `Appwrite\Database`, collection documents and schemas     |
 //! | [`event`]     | `Appwrite\Event` publishers                               |
+//! | [`locale`]    | translations (`app/init.php` `Locale` setup, request locale) |
 //! | [`network`]   | `Appwrite\Network` (CORS, origin, IP)                     |
 //! | [`response`]  | `Appwrite\Utopia\Response` and models                     |
 //! | [`platform`]  | `Appwrite\Platform`: modules, routes, request lifecycle   |
@@ -27,6 +28,7 @@ pub mod error;
 pub mod event;
 pub mod geo;
 pub mod json;
+pub mod locale;
 pub mod locking;
 pub mod network;
 pub mod platform;
