@@ -790,6 +790,15 @@ final class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
 
         $this->awaitDeploymentIsBuilt($functionId, $deploymentId);
+
+        // The build outcome is published by the builds worker, not by a response
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$functionId}.deployments.{$deploymentId}.update"));
+
+            $this->assertSame($deploymentId, $webhook['data']['$id'] ?? null);
+            $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $webhook['data']['$createdAt'] ?? ''));
+            $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $webhook['data']['$updatedAt'] ?? ''));
+        }, 30000, 500);
     }
 
     public function testUpdateDeployment(): void
@@ -861,6 +870,10 @@ final class WebhooksCustomServerTest extends Scope
         $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.executions.{$executionId}.create"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
         $this->assertEquals('POST', $webhook['method']);
+        // The queued execution is answered from memory, and the event payload is a copy of that response
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $webhook['data']['$createdAt']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $webhook['data']['$updatedAt']));
+        $this->assertSame($execution['body']['$createdAt'], $webhook['data']['$createdAt']);
         $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
         $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         // $this->assertStringContainsString('functions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -878,11 +891,15 @@ final class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
 
         // wait for timeout function to complete
-        $this->assertEventually(function () use ($executionId, $id) {
+        $this->assertEventually(function () use ($execution, $executionId, $id) {
             $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.executions.{$executionId}.update"));
             $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
             $this->assertEquals('POST', $webhook['method']);
+            // The completed execution is published by the functions worker, not by a response
+            $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $webhook['data']['$createdAt'] ?? ''));
+            $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $webhook['data']['$updatedAt'] ?? ''));
+            $this->assertSame($execution['body']['$createdAt'], $webhook['data']['$createdAt']);
             $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
             $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
             // $this->assertStringContainsString('functions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);

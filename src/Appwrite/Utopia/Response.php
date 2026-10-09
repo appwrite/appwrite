@@ -618,6 +618,12 @@ class Response extends SwooleResponse
                 }
             }
 
+            if ($rule['type'] === Model::TYPE_DATETIME) {
+                $data->setAttribute($key, $rule['array']
+                    ? \array_map(Model::formatDatetime(...), $data[$key])
+                    : Model::formatDatetime($data[$key]));
+            }
+
             $output[$key] = $data[$key];
         }
 

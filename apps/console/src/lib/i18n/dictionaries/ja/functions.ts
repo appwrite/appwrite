@@ -70,7 +70,7 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Daily at midnight': '毎日 0 時',
   'Daily at noon': '毎日 12 時',
   'Data sovereignty, compliance': 'データ主権、コンプライアンス',
-  'Default': 'デフォルト',
+  Default: 'デフォルト',
   'DDoS Mitigation': 'DDoS 対策',
   'DDoS protection': 'DDoS 保護',
   'Delete deployment': 'デプロイを削除',
@@ -488,8 +488,6 @@ export const jaFunctionsDictionary: Record<string, string> = {
     'リポジトリの URL または owner/name は必須です',
   'Return immediately and run in the background. View the response on the executions tab when it completes.':
     '即座にレスポンスを返し、バックグラウンドで実行されます。完了したら実行タブでレスポンスを確認できます。',
-  'Run this function on a schedule using cron expressions.':
-    'Cron 式を使って、この関数をスケジュール実行できます。',
   'Run your function or connect a repository for deployments':
     '関数を実行するか、リポジトリを接続してデプロイできます',
   'Runs every 6 hours (00:00, 06:00, 12:00, 18:00)':
@@ -696,4 +694,22 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Trigger it': '実行する',
   'Run it over HTTP, on events in your project, or on a schedule.':
     'HTTP 経由、プロジェクト内のイベント、またはスケジュールで実行します。',
+  'Run this function on a schedule, every few minutes or with a cron expression.':
+    '数分ごとの間隔または Cron 式で、この関数をスケジュール実行します。',
+  'Schedule type': 'スケジュールの種類',
+  'Interval below your plan minimum': '間隔がプランの最小値を下回っています',
+  'This function keeps running on its current interval. A new interval must be {minutes} minutes or longer.':
+    'この関数は現在の間隔で引き続き実行されます。新しい間隔は {minutes} 分以上にする必要があります。',
+  'to use shorter intervals.': 'すると、より短い間隔を使用できます。',
+  'Your plan supports intervals of {minutes} minutes or longer.':
+    'ご利用のプランでは {minutes} 分以上の間隔を設定できます。',
+  'Upgrade to unlock': 'アップグレードで利用可能',
+  'Interval length': '間隔の長さ',
+  'Interval unit': '間隔の単位',
+  'Appwrite picks a fixed time within each interval for this function to spread load. Use cron if you need exact times.':
+    '負荷を分散するため、Appwrite が各間隔内でこの関数の固定の実行時刻を決めます。正確な時刻を指定する場合は Cron を使用してください。',
+  'Every day': '1 日ごと',
+  'Every {count} minutes': '{count} 分ごと',
+  'Every {count} hours': '{count} 時間ごと',
+  'Every {count} days': '{count} 日ごと',
 }

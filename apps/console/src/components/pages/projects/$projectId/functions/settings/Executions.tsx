@@ -4,6 +4,8 @@ import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import {
   useProjectFunction,
+  useProject,
+  useOrganizationPlan,
   buildFunctionUpdateParams,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -13,7 +15,12 @@ import { toast } from 'sonner'
 import { Plus, X } from 'lucide-react'
 import { EventEditorModal } from '@/components/global/shared/EventEditor'
 import { DOCS_LINK as EVENTS_DOCS_LINK } from '@/lib/events-editor/events-model'
-import { CronScheduleEditor } from '../CronScheduleEditor'
+import { FunctionScheduleEditor } from '../_components/FunctionScheduleEditor'
+import {
+  getFunctionIntervalMinimum,
+  getFunctionScheduleMode,
+  isIntervalAllowed,
+} from '@/lib/function-interval'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   SettingsCardsList,
@@ -33,6 +40,16 @@ export function View() {
     functionId,
   )
 
+  const { project } = useProject(projectId)
+  const { plan } = useOrganizationPlan(project?.teamId)
+  const intervalMinimum = getFunctionIntervalMinimum(plan)
+
+  const savedScheduleMode = getFunctionScheduleMode(func ?? {})
+  const savedInterval = func?.interval ?? 0
+  const [scheduleMode, setScheduleMode] =
+    useSyncStateFromServer(savedScheduleMode)
+  const [intervalMinutes, setIntervalMinutes] =
+    useSyncStateFromServer(savedInterval)
   const [schedule, setSchedule] = useSyncStateFromServer(func?.schedule || '')
   const [events, setEvents] = useSyncStateFromServer(func?.events || [])
   const [scopes, setScopes] = useSyncStateFromServer(func?.scopes || [])
@@ -103,7 +120,15 @@ export function View() {
   })
 
   const handleSaveSchedule = () => {
-    scheduleMutation.mutate({ schedule: schedule || undefined })
+    if (scheduleMode === 'interval') {
+      scheduleMutation.mutate({ interval: intervalMinutes, schedule: '' })
+      return
+    }
+    if (scheduleMode === 'cron') {
+      scheduleMutation.mutate({ schedule, interval: 0 })
+      return
+    }
+    scheduleMutation.mutate({ schedule: '', interval: 0 })
   }
 
   const handleSaveEvents = () => {
@@ -160,13 +185,24 @@ export function View() {
 
   if (!func) return null
 
+  const scheduleChanged =
+    scheduleMode !== savedScheduleMode ||
+    (scheduleMode === 'interval' && intervalMinutes !== savedInterval) ||
+    (scheduleMode === 'cron' && schedule !== (func.schedule || ''))
+  const scheduleValid =
+    scheduleMode === 'none' ||
+    (scheduleMode === 'interval' &&
+      isIntervalAllowed(intervalMinutes, intervalMinimum, savedInterval)) ||
+    (scheduleMode === 'cron' && schedule.trim() !== '')
+
   const cards: SettingsCardItem[] = [
     {
       id: 'schedule',
       search: {
         title: 'Schedule',
-        description: 'Run this function on a schedule using cron expressions.',
-        keywords: ['cron', 'scheduled', 'recurring'],
+        description:
+          'Run this function on a schedule, every few minutes or with a cron expression.',
+        keywords: ['cron', 'interval', 'scheduled', 'recurring'],
       },
       node: (
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -175,14 +211,23 @@ export function View() {
               {t('Schedule')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              {t('Run this function on a schedule using cron expressions.')}
+              {t(
+                'Run this function on a schedule, every few minutes or with a cron expression.',
+              )}
             </p>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4">
-            <CronScheduleEditor
-              value={schedule}
-              onChange={setSchedule}
+            <FunctionScheduleEditor
+              mode={scheduleMode}
+              onModeChange={setScheduleMode}
+              interval={intervalMinutes}
+              onIntervalChange={setIntervalMinutes}
+              schedule={schedule}
+              onScheduleChange={setSchedule}
+              savedInterval={savedInterval}
+              intervalMinimum={intervalMinimum}
+              orgId={project?.teamId}
               disabled={executionsPending}
             />
           </div>
@@ -190,7 +235,7 @@ export function View() {
             <Button
               size="sm"
               className="h-9 text-[13px]"
-              disabled={schedule === (func.schedule || '') || executionsPending}
+              disabled={!scheduleChanged || !scheduleValid || executionsPending}
               onClick={handleSaveSchedule}
             >
               {t('Update')}

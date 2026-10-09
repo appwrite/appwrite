@@ -30,6 +30,7 @@ use CzProject\GitPhp\Git;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\OpenAPI\Parser;
+use Utopia\OpenAPI\Specification;
 use Utopia\Platform\Action;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -280,6 +281,25 @@ class SDKs extends Action
                     $spec = file_get_contents($specPath);
                 }
 
+                $specification = $specFormat === 'static'
+                    ? Parser::parse([
+                        'openapi' => '3.0.0',
+                        'info' => [
+                            'title' => 'Appwrite',
+                            'description' => 'Appwrite backend as a service',
+                            'version' => $version,
+                            'license' => [
+                                'name' => 'BSD-3-Clause',
+                                'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
+                            ],
+                        ],
+                        'paths' => [],
+                    ])
+                    : Parser::parse($spec);
+                $serverVersion = $specFormat === 'static'
+                    ? $version
+                    : self::getServerVersion($specification);
+
                 $cover = 'https://github.com/appwrite/appwrite/raw/main/public/images/github.png';
                 $result = \realpath(__DIR__ . '/../../../../app') . '/sdks/' . $key . '-' . $language['key'];
                 $resultExamples = \realpath(__DIR__ . '/../../../..') . '/docs/examples/' . $version . '/' . $key . '-' . $language['key'];
@@ -292,7 +312,7 @@ class SDKs extends Action
                 $examples = ($examples) ? \file_get_contents($examples) : '';
                 $changelog = $language['changelog'] ?? '';
                 $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
-                $warning = '**This SDK targets Appwrite server version ' . $version . ' as shipped on Appwrite Cloud.** Self-hosted releases can lag behind Cloud — if you run an older self-hosted build, use a matching older SDK from [previous releases](' . $language['url'] . '/releases) when APIs differ.';
+                $warning = '**This SDK targets Appwrite server version ' . $serverVersion . ' as shipped on Appwrite Cloud.** Self-hosted releases can lag behind Cloud — if you run an older self-hosted build, use a matching older SDK from [previous releases](' . $language['url'] . '/releases) when APIs differ.';
                 $license = 'BSD-3-Clause';
                 $licenseContent = 'Copyright (c) ' . date('Y') . ' Appwrite (https://appwrite.io) and individual contributors.
 All rights reserved.
@@ -425,24 +445,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ? '  Generating examples...'
                     : '  Generating SDK...');
 
-                $sdk = new SDK(
-                    $config,
-                    $specFormat === 'static'
-                        ? Parser::parse([
-                            'openapi' => '3.0.0',
-                            'info' => [
-                                'title' => 'Appwrite',
-                                'description' => 'Appwrite backend as a service',
-                                'version' => $version,
-                                'license' => [
-                                    'name' => 'BSD-3-Clause',
-                                    'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
-                                ],
-                            ],
-                            'paths' => [],
-                        ])
-                        : Parser::parse($spec)
-                );
+                $sdk = new SDK($config, $specification);
 
                 $sdk
                     ->setName($language['name'])
@@ -662,6 +665,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $this->updateExistingPr($repoName, $gitBranch, $prTitle, $prBody, $platformName, $language['name'], $prUrls, $existingPrUrl);
             }
         }
+    }
+
+    private static function getServerVersion(Specification $specification): string
+    {
+        return \implode('.', \array_slice(\explode('.', $specification->info->version), 0, 2)) . '.x';
     }
 
     private function copyExamples(array $language, string $version, string $result, string $resultExamples): void
