@@ -1,0 +1,1352 @@
+{
+  "ops": {
+    "filter.filter_var": {
+      "doc": "filter_var($value, $filter, $options): the result (value, false or null) and the warning",
+      "covers": [
+        "filter_var()"
+      ],
+      "fuzz": [
+        {
+          "name": "int",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_int_value"
+              },
+              "filter": {
+                "gen": "const",
+                "value": 257
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_int_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "bool",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_bool_value"
+              },
+              "filter": {
+                "gen": "const",
+                "value": 258
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_bool_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "float",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_float_value"
+              },
+              "filter": {
+                "gen": "const",
+                "value": 259
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_float_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "ip",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_ip_value"
+              },
+              "filter": {
+                "gen": "const",
+                "value": 275
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_ip_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "url",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_url_value"
+              },
+              "filter": {
+                "gen": "const",
+                "value": 273
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_url_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "email",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_email_value"
+              },
+              "filter": {
+                "gen": "const",
+                "value": 274
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_email_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "domain",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_domain_value"
+              },
+              "filter": {
+                "gen": "const",
+                "value": 277
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_domain_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "mac",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_mac_value"
+              },
+              "filter": {
+                "gen": "const",
+                "value": 276
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_mac_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "regexp",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_raw_value"
+              },
+              "filter": {
+                "gen": "const",
+                "value": 272
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_regexp_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "default",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_raw_value"
+              },
+              "filter": {
+                "gen": "pick",
+                "from": [
+                  516,
+                  516,
+                  0,
+                  999,
+                  -1,
+                  256
+                ]
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_raw_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "generators": {
+    "filter_scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -1000,
+          "max": 1000
+        },
+        {
+          "gen": "int"
+        },
+        {
+          "gen": "float",
+          "min": -1000000.0,
+          "max": 1000000.0
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0.5,
+            -0.0,
+            1000000000000000.0,
+            1e+20,
+            1.5e-07,
+            123456789012345.0,
+            0.1,
+            {
+              "$float": "INF"
+            },
+            {
+              "$float": "NAN"
+            }
+          ]
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {},
+            [],
+            [
+              "1",
+              "2"
+            ],
+            {
+              "a": "1",
+              "b": [
+                "2"
+              ]
+            },
+            [
+              [
+                "x"
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    "filter_range": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -50,
+          "max": 50
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "10",
+            " 5",
+            "5abc",
+            "abc",
+            "1e2",
+            "-3.7",
+            2.9,
+            -1.5,
+            true,
+            false,
+            null,
+            "9999999999999999999999",
+            1e+30,
+            [
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    "filter_default": {
+      "gen": "pick",
+      "from": [
+        "d",
+        0,
+        -1,
+        null,
+        false,
+        true,
+        1.5,
+        [
+          1
+        ],
+        {
+          "k": "v"
+        }
+      ]
+    },
+    "filter_int_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": " +-0123456789xXoOabfABF\t\n\r\u000b\f.",
+          "min": 0,
+          "max": 8
+        },
+        {
+          "gen": "string",
+          "alphabet": "0123456789",
+          "min": 1,
+          "max": 21
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "0",
+            "-0",
+            "+0",
+            "00",
+            "0x",
+            "0X1a",
+            "0x1A",
+            "0o17",
+            "0O7",
+            "0o",
+            "017",
+            "08",
+            "0b1",
+            "9223372036854775807",
+            "9223372036854775808",
+            "-9223372036854775808",
+            "-9223372036854775809",
+            "0x7FFFFFFFFFFFFFFF",
+            "0xFFFFFFFFFFFFFFFF",
+            "0x10000000000000000",
+            "01777777777777777777777",
+            "02000000000000000000000",
+            " 42 ",
+            "4 2",
+            "1e3",
+            "",
+            " ",
+            "\t\n",
+            "+",
+            "-",
+            "12abc",
+            "١٢",
+            {
+              "$bytes": "MQA="
+            },
+            {
+              "$bytes": "/zE="
+            }
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "filter_scalar"
+        }
+      ]
+    },
+    "filter_int_options": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            1,
+            2,
+            3,
+            134217728,
+            134217730,
+            16777216,
+            67108864,
+            67108867,
+            33554432,
+            402653184
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "flags": {
+              "gen": "pick",
+              "from": [
+                0,
+                1,
+                2,
+                3,
+                134217728,
+                "3",
+                67108864
+              ]
+            },
+            "options": {
+              "gen": "object",
+              "fields": {
+                "min_range": {
+                  "gen": "ref",
+                  "name": "filter_range"
+                },
+                "max_range": {
+                  "gen": "ref",
+                  "name": "filter_range"
+                },
+                "default": {
+                  "gen": "ref",
+                  "name": "filter_default"
+                }
+              },
+              "optional": [
+                "min_range",
+                "max_range",
+                "default"
+              ]
+            }
+          },
+          "optional": [
+            "flags",
+            "options"
+          ]
+        }
+      ]
+    },
+    "filter_bool_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "onfyestrualsFTNY01 \t\n",
+          "min": 0,
+          "max": 6
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "1",
+            "0",
+            "true",
+            "false",
+            "on",
+            "off",
+            "yes",
+            "no",
+            "TRUE",
+            "On",
+            " yes ",
+            "",
+            " ",
+            "maybe",
+            "2",
+            "nope",
+            "\u000btrue\f",
+            "tru",
+            "falsey",
+            {
+              "$bytes": "b24A"
+            }
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "filter_scalar"
+        }
+      ]
+    },
+    "filter_bool_options": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            134217728,
+            67108864,
+            16777216,
+            201326592
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "flags": {
+              "gen": "pick",
+              "from": [
+                0,
+                134217728
+              ]
+            },
+            "options": {
+              "gen": "object",
+              "fields": {
+                "default": {
+                  "gen": "ref",
+                  "name": "filter_default"
+                }
+              },
+              "optional": [
+                "default"
+              ]
+            }
+          },
+          "optional": [
+            "flags",
+            "options"
+          ]
+        }
+      ]
+    },
+    "filter_float_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "0123456789.,'eE+- \t",
+          "min": 0,
+          "max": 10
+        },
+        {
+          "gen": "string",
+          "alphabet": "0123456789",
+          "min": 1,
+          "max": 25
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "1.5",
+            "-1.5",
+            "+.5",
+            ".",
+            "1.",
+            "1e5",
+            "1E-5",
+            "1e",
+            "e5",
+            "1,000",
+            "1,000.5",
+            "1.000,5",
+            "12,34",
+            "1,234,567",
+            "1'000",
+            "1 000",
+            "0e5",
+            "0.0",
+            "-0.0",
+            "1e400",
+            "1e-400",
+            "0x1A",
+            "",
+            " 7 ",
+            "1.5.5",
+            "NAN",
+            "INF",
+            {
+              "$bytes": "MQAwMDA="
+            },
+            {
+              "$bytes": "MQAwMDAuNQ=="
+            }
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "filter_scalar"
+        }
+      ]
+    },
+    "filter_float_options": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            4096,
+            8192,
+            16384,
+            12288,
+            134217728,
+            67108864
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "flags": {
+              "gen": "pick",
+              "from": [
+                0,
+                8192,
+                134217728
+              ]
+            },
+            "options": {
+              "gen": "object",
+              "fields": {
+                "decimal": {
+                  "gen": "pick",
+                  "from": [
+                    ".",
+                    ",",
+                    "",
+                    "ab",
+                    " ",
+                    {
+                      "$bytes": "AA=="
+                    }
+                  ]
+                },
+                "thousand": {
+                  "gen": "pick",
+                  "from": [
+                    ",",
+                    ".",
+                    " ",
+                    "'",
+                    "",
+                    ".,",
+                    {
+                      "$bytes": "AA=="
+                    },
+                    {
+                      "$bytes": "LAAu"
+                    }
+                  ]
+                },
+                "min_range": {
+                  "gen": "ref",
+                  "name": "filter_range"
+                },
+                "max_range": {
+                  "gen": "ref",
+                  "name": "filter_range"
+                },
+                "default": {
+                  "gen": "ref",
+                  "name": "filter_default"
+                }
+              },
+              "optional": [
+                "decimal",
+                "thousand",
+                "min_range",
+                "max_range",
+                "default"
+              ]
+            }
+          },
+          "optional": [
+            "flags",
+            "options"
+          ]
+        }
+      ]
+    },
+    "filter_ip_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "0123456789.",
+          "min": 0,
+          "max": 16
+        },
+        {
+          "gen": "string",
+          "alphabet": "0123456789abcdefABCDEF:.",
+          "min": 0,
+          "max": 24
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "127.0.0.1",
+            "10.0.0.1",
+            "172.16.5.4",
+            "172.32.0.1",
+            "192.168.1.1",
+            "100.64.0.1",
+            "169.254.1.1",
+            "192.0.0.1",
+            "192.0.2.1",
+            "192.88.99.1",
+            "198.18.0.1",
+            "198.51.100.1",
+            "203.0.113.1",
+            "240.0.0.1",
+            "255.255.255.255",
+            "0.0.0.0",
+            "8.8.8.8",
+            "1.2.3",
+            "1.2.3.4.5",
+            "01.2.3.4",
+            "256.1.1.1",
+            "1.2.3.04",
+            "::",
+            "::1",
+            "::ffff:1.2.3.4",
+            "64:ff9b::1",
+            "100::1",
+            "2001::1",
+            "2001:10::1",
+            "2001:db8::1",
+            "2002::1",
+            "fc00::1",
+            "fe80::1",
+            "2a00:1450:4001::1",
+            "1:2:3:4:5:6:7:8",
+            "1:2:3:4:5:6:7:8:9",
+            "1::2::3",
+            ":1:2",
+            "1:2:",
+            "1:2:3:4:5:6:1.2.3.4",
+            "::1.2.3.4",
+            "1::1.2.3.4",
+            "12345::1",
+            "[::1]",
+            "1.2.3.4 ",
+            "",
+            ":",
+            "::::"
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "filter_scalar"
+        }
+      ]
+    },
+    "filter_ip_options": {
+      "gen": "pick",
+      "from": [
+        0,
+        1048576,
+        2097152,
+        3145728,
+        4194304,
+        8388608,
+        536870912,
+        12582912,
+        9437184,
+        6291456,
+        538968064,
+        134217728,
+        67108864
+      ]
+    },
+    "filter_url_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "http",
+                "https",
+                "HTTP",
+                "ftp",
+                "mailto",
+                "news",
+                "file",
+                "foo+bar",
+                "1x",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "://",
+                ":",
+                ":/",
+                "//",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "user@",
+                "user:pass@",
+                "us%20er@",
+                "u%zz@",
+                "u^@",
+                ":p@",
+                "a b@"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "example.com",
+                "exa_mple.com",
+                "ex-ample.com",
+                "-bad.com",
+                "a..b",
+                "[::1]",
+                "[::1",
+                "1.2.3.4",
+                "localhost",
+                "",
+                "xn--bcher-kva.example",
+                "a.b.",
+                ".a",
+                "ex%41mple.com",
+                "é.com"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                ":80",
+                ":0",
+                ":65536",
+                ":x"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "/",
+                "/path",
+                "/a b",
+                "/a?b",
+                "?q=1",
+                "#f",
+                "/p?q#f",
+                "/p%20q",
+                "\\x"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "abcx:/?#@.%[]-_~ ",
+          "min": 0,
+          "max": 16
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "http://",
+            "http://a",
+            "//a.com",
+            "javascript:alert(1)",
+            "http://a.com/é",
+            "mailto:x@y.z",
+            "file:///etc/passwd",
+            "news:comp.lang",
+            "http://[::1]:8080/",
+            "http://user:pass@host/",
+            {
+              "$bytes": "aHR0cDovL2EuY29tLwA="
+            },
+            {
+              "$bytes": "aHR0cDovL2EuY29tL/8="
+            }
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "filter_scalar"
+        }
+      ]
+    },
+    "filter_url_options": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            262144,
+            524288,
+            786432,
+            134217728,
+            67108864
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "flags": {
+              "gen": "pick",
+              "from": [
+                0,
+                262144,
+                524288
+              ]
+            },
+            "options": {
+              "gen": "object",
+              "fields": {
+                "uri_parser_class": {
+                  "gen": "pick",
+                  "from": [
+                    null,
+                    "parse_url",
+                    "Uri\\Rfc3986\\Uri",
+                    "bogus",
+                    1
+                  ]
+                },
+                "default": {
+                  "gen": "ref",
+                  "name": "filter_default"
+                }
+              },
+              "optional": [
+                "uri_parser_class",
+                "default"
+              ]
+            }
+          },
+          "optional": [
+            "flags",
+            "options"
+          ]
+        }
+      ]
+    },
+    "filter_email_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "a",
+                "john.doe",
+                "x+y",
+                "\"quoted\"",
+                "\"a b\"",
+                ".a",
+                "a.",
+                "a..b",
+                "é",
+                "ü.ser",
+                "a\\b",
+                "!#$%&'*+-/=?^_`{|}~",
+                "",
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "@",
+                "@@",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "example.com",
+                "b.co",
+                "localhost",
+                "[1.2.3.4]",
+                "[IPv6:::1]",
+                "[IPv6:1:2:3:4:5:6:7:8]",
+                "xn--bcher-kva.ch",
+                "a-b.c",
+                "-a.com",
+                "a.-com",
+                "ex_ample.com",
+                "münchen.de",
+                "a.b.c.d.e",
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+                "1.2.3.4",
+                "a.123",
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "abc.@-+\"_é",
+          "min": 0,
+          "max": 12
+        },
+        {
+          "gen": "ref",
+          "name": "filter_scalar"
+        }
+      ]
+    },
+    "filter_email_options": {
+      "gen": "pick",
+      "from": [
+        0,
+        1048576,
+        134217728,
+        135266304,
+        67108864
+      ]
+    },
+    "filter_domain_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "abc-.0_A",
+          "min": 0,
+          "max": 12
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "string",
+                "alphabet": "abcdefgh",
+                "min": 1,
+                "max": 70
+              },
+              "min": 1,
+              "max": 5,
+              "sep": "."
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                ".",
+                ".."
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            ".",
+            "a.",
+            ".a",
+            "a..b",
+            "a-",
+            "-a",
+            "a-.b",
+            "a.-b",
+            "localhost",
+            "é.com",
+            "a_b.c",
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.",
+            {
+              "$bytes": "YS0AYg=="
+            },
+            {
+              "$bytes": "YQA="
+            }
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "filter_scalar"
+        }
+      ]
+    },
+    "filter_domain_options": {
+      "gen": "pick",
+      "from": [
+        0,
+        1048576,
+        134217728,
+        135266304,
+        67108864
+      ]
+    },
+    "filter_mac_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "0123456789abcdefABCDEF:-.xg",
+          "min": 14,
+          "max": 17
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "01:23:45:67:89:ab",
+            "01-23-45-67-89-AB",
+            "0123.4567.89ab",
+            "01:23:45:67:89",
+            "01:23-45:67:89:ab",
+            "0g:23:45:67:89:ab",
+            "0123.4567.89aG",
+            "01:23:45:67:89:ab ",
+            ""
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "filter_scalar"
+        }
+      ]
+    },
+    "filter_mac_options": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            134217728
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "options": {
+              "gen": "object",
+              "fields": {
+                "separator": {
+                  "gen": "pick",
+                  "from": [
+                    ":",
+                    "-",
+                    ".",
+                    "",
+                    "::"
+                  ]
+                },
+                "default": {
+                  "gen": "ref",
+                  "name": "filter_default"
+                }
+              },
+              "optional": [
+                "separator",
+                "default"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "filter_regexp_options": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "options": {
+              "gen": "object",
+              "fields": {
+                "regexp": {
+                  "gen": "ref",
+                  "name": "pcre_realistic"
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "options": {
+              "gen": "object",
+              "fields": {
+                "regexp": {
+                  "gen": "pick",
+                  "from": [
+                    1,
+                    null,
+                    "/(/",
+                    "/a/u"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "flags": {
+              "gen": "pick",
+              "from": [
+                0,
+                134217728
+              ]
+            },
+            "options": {
+              "gen": "object",
+              "fields": {
+                "default": {
+                  "gen": "ref",
+                  "name": "filter_default"
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0
+          ]
+        }
+      ]
+    },
+    "filter_raw_options": {
+      "gen": "pick",
+      "from": [
+        0,
+        4,
+        8,
+        512,
+        16,
+        32,
+        64,
+        256,
+        76,
+        48,
+        67108864,
+        16777216
+      ]
+    },
+    "filter_raw_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 10,
+          "tricky": 0.3
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "a&b",
+            "`x`",
+            "tab\there",
+            {
+              "$bytes": "AX//Jg=="
+            },
+            {
+              "$bytes": "AA=="
+            }
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "filter_scalar"
+        }
+      ]
+    }
+  },
+  "deviations": [
+    {
+      "symbol": "filter_var()",
+      "php": "The sanitizing filters other than FILTER_UNSAFE_RAW (FILTER_SANITIZE_*), FILTER_CALLBACK, and \"uri_parser_class\" => Uri\\WhatWg\\Url",
+      "reason": "Not ported: php_std::filter::filter_var() returns an Unsupported error for them"
+    }
+  ]
+}
