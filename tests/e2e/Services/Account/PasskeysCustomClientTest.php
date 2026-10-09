@@ -61,25 +61,32 @@ final class PasskeysCustomClientTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $headers, [
             'rpId' => 'example.com',
-            'origins' => ['https://example.com/', 'https://app.example.com:443', 'https://example.com:8443'],
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/project/policies/passkey', $headers);
         $this->assertSame('example.com', $response['body']['rpId']);
-        $this->assertSame(['https://example.com', 'https://app.example.com', 'https://example.com:8443'], $response['body']['origins']);
+        $this->assertSame([], $response['body']['origins']);
 
         $list = $this->client->call(Client::METHOD_GET, '/project/policies', $headers);
-        $this->assertContains('passkey', \array_column($list['body']['policies'], '$id'));
+        $policies = \array_column($list['body']['policies'], null, '$id');
+        $this->assertSame('example.com', $policies['passkey']['rpId']);
 
-        // Sparse: origins alone keep the RP ID
+        // Origins are read from the platforms, never written
+        $this->createWebPlatform($project, 'app.example.com');
+        $this->createWebPlatform($project, '*.example.com');
+        $this->createWebPlatform($project, 'other.dev');
+        $this->createWebPlatform($project, 'localhost');
+        $response = $this->client->call(Client::METHOD_GET, '/project/policies/passkey', $headers);
+        $this->assertSame(['https://app.example.com', 'https://*.example.com', 'http://localhost', 'https://localhost'], $response['body']['origins']);
+
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $headers, [
-            'origins' => ['https://example.com'],
+            'rpId' => '',
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
         $response = $this->client->call(Client::METHOD_GET, '/project/policies/passkey', $headers);
-        $this->assertSame('example.com', $response['body']['rpId']);
-        $this->assertSame(['https://example.com'], $response['body']['origins']);
+        $this->assertSame('', $response['body']['rpId']);
+        $this->assertSame(['http://localhost', 'https://localhost'], $response['body']['origins']);
 
         /**
          * Test for FAILURE
@@ -87,24 +94,11 @@ final class PasskeysCustomClientTest extends Scope
         foreach (['com', 'co.uk', 'github.io', '127.0.0.1', 'Example.com', 'exa_mple.com', 'https://example.com'] as $rpId) {
             $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $headers, [
                 'rpId' => $rpId,
-                'origins' => [],
             ]);
             $this->assertSame(400, $response['headers']['status-code'], $rpId);
         }
 
-        foreach (['http://example.com', 'https://evil.com', 'https://notexample.com', 'https://example.com/login', 'https://user:pass@example.com', 'https://example.com?next=1', 'example.com'] as $origin) {
-            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $headers, [
-                'rpId' => 'example.com',
-                'origins' => [$origin],
-            ]);
-            $this->assertSame(400, $response['headers']['status-code'], $origin);
-        }
-
-        // HTTP is only for localhost as the RP ID
-        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $headers, [
-            'rpId' => 'localhost',
-            'origins' => ['http://localhost:3000', 'http://127.0.0.1:3000'],
-        ]);
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $headers);
         $this->assertSame(400, $response['headers']['status-code']);
 
         // Clients cannot configure the relying party
@@ -231,7 +225,7 @@ final class PasskeysCustomClientTest extends Scope
     public function testRegistrationFailures(): void
     {
         $project = $this->getProject(true);
-        $this->configurePasskeys($project);
+        $platformId = $this->configurePasskeys($project);
         [$user, $session] = $this->createUserWithSession($project);
         [, $otherSession] = $this->createUserWithSession($project);
 
@@ -250,7 +244,7 @@ final class PasskeysCustomClientTest extends Scope
 
         // Wrong origin
         $challenge = $start($session);
-        $response = $verify($challenge, (new Authenticator())->register($challenge['body']['publicKey'], 'http://localhost:4000'), $session);
+        $response = $verify($challenge, (new Authenticator())->register($challenge['body']['publicKey'], 'http://127.0.0.1:3000'), $session);
         $this->assertSame(401, $response['headers']['status-code']);
         $this->assertSame('user_passkey_invalid', $response['body']['type']);
 
@@ -306,7 +300,8 @@ final class PasskeysCustomClientTest extends Scope
 
         // Relying party changes invalidate outstanding challenges
         $challenge = $start($session);
-        $this->configurePasskeys($project, ['http://localhost:3000', 'http://localhost:5000']);
+        $response = $this->client->call(Client::METHOD_DELETE, '/project/platforms/' . $platformId, $this->getServerHeaders($project));
+        $this->assertSame(204, $response['headers']['status-code']);
         $response = $verify($challenge, (new Authenticator())->register($challenge['body']['publicKey'], self::ORIGIN), $session);
         $this->assertSame(401, $response['headers']['status-code']);
         $this->assertSame('user_invalid_token', $response['body']['type']);
@@ -378,7 +373,7 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame('user_invalid_token', $second['body']['type']);
 
         // Wrong origin, wrong RP ID, cross-origin iframe, missing user verification
-        $this->assertSame(401, $this->signIn($project, $authenticator, origin: 'http://localhost:4000')['headers']['status-code']);
+        $this->assertSame(401, $this->signIn($project, $authenticator, origin: 'http://127.0.0.1:3000')['headers']['status-code']);
         $this->assertSame(401, $this->signIn($project, $authenticator, rpId: 'example.com')['headers']['status-code']);
         $this->assertSame(401, $this->signIn($project, $authenticator, crossOrigin: true)['headers']['status-code']);
         $authenticator->userVerified = false;
@@ -529,7 +524,6 @@ final class PasskeysCustomClientTest extends Scope
         $this->client->call(Client::METHOD_POST, '/account/passkeys', $this->getSessionHeaders($project, $session));
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $this->getServerHeaders($project), [
             'rpId' => 'example.com',
-            'origins' => ['https://example.com'],
         ]);
         $this->assertSame(400, $response['headers']['status-code']);
 
@@ -537,13 +531,12 @@ final class PasskeysCustomClientTest extends Scope
 
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $this->getServerHeaders($project), [
             'rpId' => 'example.com',
-            'origins' => ['https://example.com'],
         ]);
         $this->assertSame(400, $response['headers']['status-code']);
 
-        // Origins can still change
+        // Setting the same relying party ID again is not a change
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $this->getServerHeaders($project), [
-            'origins' => ['http://localhost:3000', 'http://localhost:5173'],
+            'rpId' => 'localhost',
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
     }
@@ -555,9 +548,6 @@ final class PasskeysCustomClientTest extends Scope
             'rpId' => 'example.com',
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
-        $response = $this->client->call(Client::METHOD_GET, '/project/policies/passkey', $this->getServerHeaders($project));
-        $this->assertSame('example.com', $response['body']['rpId']);
-        $this->assertSame([], $response['body']['origins']);
         $this->enablePasskeys($project, true);
 
         /**
@@ -572,7 +562,6 @@ final class PasskeysCustomClientTest extends Scope
          * Test for SUCCESS
          */
         $this->createWebPlatform($project, 'app.example.com');
-        $this->createWebPlatform($project, '*.example.com');
         [$user, $session] = $this->createUserWithSession($project);
         $headers = $this->getSessionHeaders($project, $session);
 
@@ -593,10 +582,21 @@ final class PasskeysCustomClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        // Only the platforms' own origins: not other subdomains, ports, schemes, or wildcard platforms
-        foreach (['https://evil.example.com', 'https://app.example.com:8443', 'http://app.example.com', 'https://other.dev'] as $origin) {
+        // Only the platforms' own origins: not other subdomains, ports, schemes or domains
+        foreach (['https://eu.example.com', 'https://app.example.com:8443', 'http://app.example.com', 'https://other.dev'] as $origin) {
             $this->assertSame(401, $this->signIn($project, $authenticator, $origin)['headers']['status-code'], $origin);
         }
+
+        /**
+         * Test for SUCCESS
+         */
+        // A wildcard platform covers its subdomains, but not the domain itself
+        $this->createWebPlatform($project, '*.example.com');
+        $this->assertSame(201, $this->signIn($project, $authenticator, 'https://eu.example.com')['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
 
         $this->assertSame(401, $this->signIn($project, $authenticator, 'https://example.com')['headers']['status-code']);
 
@@ -611,16 +611,6 @@ final class PasskeysCustomClientTest extends Scope
         ]);
         $this->assertSame(201, $response['headers']['status-code'], \json_encode($response['body']));
         $this->assertSame(201, $this->signIn($project, $authenticator, 'https://example.com')['headers']['status-code']);
-
-        /**
-         * Test for FAILURE
-         */
-        // Listed origins replace the web platforms
-        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $this->getServerHeaders($project), [
-            'origins' => ['https://example.com'],
-        ]);
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(401, $this->signIn($project, $authenticator, 'https://app.example.com')['headers']['status-code']);
     }
 
     public function testLocalhostWebPlatformNeedsNoPolicy(): void
@@ -1248,18 +1238,17 @@ final class PasskeysCustomClientTest extends Scope
         return $authenticator;
     }
 
-    /**
-     * @param array<string> $origins
-     */
-    private function configurePasskeys(array $project, array $origins = [self::ORIGIN]): void
+    private function configurePasskeys(array $project): string
     {
+        $platformId = $this->createWebPlatform($project, 'localhost');
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $this->getServerHeaders($project), [
             'rpId' => 'localhost',
-            'origins' => $origins,
         ]);
         $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
 
         $this->enablePasskeys($project, true);
+
+        return $platformId;
     }
 
     private function createWebPlatform(array $project, string $hostname): string
