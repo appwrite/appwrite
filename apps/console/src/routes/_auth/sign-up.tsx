@@ -169,7 +169,7 @@ function SignUpPage() {
       const account = await refreshConsoleAccountAfterAuth(queryClient)
 
       // Cloud requires a verified console account before org/project APIs work.
-      // Skip post-auth provisioning until after /verify-email; that page sends the link and handles it.
+      // Skip post-auth provisioning until after /verify-email; that page handles it.
       if (requiresConsoleEmailVerification(account)) {
         navigate({
           to: '/verify-email',
