@@ -114,10 +114,11 @@ class TransactionState
         array $queries = []
     ): array {
         $dbForDatabases = ($this->getDatabasesDB)($database);
-        // If no transaction, use normal database retrieval
         if ($transactionId === null) {
-            return $dbForDatabases->find($collectionId, $queries);
+            return Listing::read($dbForDatabases, $collectionId, $queries);
         }
+
+        $this->assertNotAggregated($queries);
 
         $state = $this->getTransactionState($transactionId);
         $committedDocs = $dbForDatabases->find($collectionId, $queries);
@@ -181,6 +182,8 @@ class TransactionState
             return $dbForDatabases->count($collectionId, $queries, APP_LIMIT_COUNT);
         }
 
+        $this->assertNotAggregated($queries);
+
         $state = $this->getTransactionState($transactionId);
         $baseCount = $dbForDatabases->count($collectionId, $queries, APP_LIMIT_COUNT);
 
@@ -224,6 +227,19 @@ class TransactionState
         }
 
         return max(0, $adjustedCount);
+    }
+
+    /**
+     * Staged changes overlay documents by ID, and an aggregated row has none to overlay.
+     *
+     * @param array<Query> $queries
+     * @throws Exception\Query
+     */
+    private function assertNotAggregated(array $queries): void
+    {
+        if (Listing::aggregates($queries)) {
+            throw new Exception\Query("Aggregate and groupBy queries cannot read a transaction's uncommitted changes. Run them outside the transaction.");
+        }
     }
 
     /**

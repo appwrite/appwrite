@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documen
 use Appwrite\Databases\CursorLookup;
 use Appwrite\Databases\Joins;
 use Appwrite\Databases\ListCache;
+use Appwrite\Databases\Listing;
 use Appwrite\Databases\Queries;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Extend\Exception;
@@ -154,10 +155,11 @@ class XList extends Action
         $dbStart = \microtime(true);
 
         try {
-            $selectQueries = Query::groupByType($queries)->selections;
-            $find = $selectQueries !== []
-                ? fn () => $dbForDatabases->find($collectionTableId, $queries)
-                : fn () => $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
+            $find = match (true) {
+                Listing::aggregates($queries) => fn (): array => Listing::rows($dbForDatabases, $collectionTableId, $queries),
+                Query::groupByType($queries)->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $queries),
+                default => fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $queries)),
+            };
 
             if ($transactionId !== null) {
                 $documents = $transactionState->listDocuments($database, $collectionTableId, $transactionId, $queries);
