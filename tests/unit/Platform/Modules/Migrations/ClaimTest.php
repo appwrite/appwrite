@@ -237,7 +237,7 @@ final class ClaimTest extends TestCase
         );
 
         $stored = $this->database->getDocument('migrations', $terminal->getId());
-        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('failed', $stored->getAttribute('status'));
         $this->assertSame('finished', $stored->getAttribute('stage'));
         $this->assertSame($claimed->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
         $this->assertNotSame('attempt-terminal', $stored->getAttribute('attemptId'));
@@ -354,11 +354,11 @@ final class ClaimTest extends TestCase
         );
 
         $stored = $this->database->getDocument('migrations', $terminal->getId());
-        $this->assertSame('pending', $claimed->getAttribute('status'));
+        $this->assertSame('failed', $claimed->getAttribute('status'));
         $this->assertSame('finished', $claimed->getAttribute('stage'));
         $this->assertIsString($claimed->getAttribute('attemptId'));
         $this->assertNotSame($terminal->getAttribute('attemptId'), $claimed->getAttribute('attemptId'));
-        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('failed', $stored->getAttribute('status'));
         $this->assertSame('finished', $stored->getAttribute('stage'));
         $this->assertSame($claimed->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
 
@@ -388,8 +388,11 @@ final class ClaimTest extends TestCase
             platform: [],
             publisher: new MigrationPublisher($publisher, new Queue('migrations')),
         );
-        $this->assertSame('pending', $again->getAttribute('status'), 'Main accepted a retry until the worker picked the migration up');
-        $this->assertCount(1, $publisher->getEvents('migrations'), 'A retry claimed but not yet picked up is not published twice');
+        $this->assertSame('failed', $again->getAttribute('status'), 'Main kept a retried migration failed until the worker started it');
+        $events = $publisher->getEvents('migrations');
+        $this->assertCount(2, $events, 'Main published every retry');
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume('project-1', $message), 'A retry superseded before a worker started it is dropped');
+        $message = MigrationMessage::fromArray($events[1]);
 
         $delivery = $claims->consume('project-1', $message);
         $this->assertInstanceOf(Delivery::class, $delivery);
@@ -417,7 +420,7 @@ final class ClaimTest extends TestCase
         $retry = $claims->reclaim($project->getId(), $terminal->getId());
 
         $stored = $this->database->getDocument('migrations', $terminal->getId());
-        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('failed', $stored->getAttribute('status'));
         $this->assertSame('finished', $stored->getAttribute('stage'));
         $this->assertNotSame('attempt-terminal', $stored->getAttribute('attemptId'));
         $this->assertSame($stored->getAttribute('attemptId'), $retry->migration->getAttribute('attemptId'));
@@ -1381,7 +1384,7 @@ final class ClaimTest extends TestCase
             platform: [],
             publisher: new MigrationPublisher(new MockPublisher(), new Queue('migrations')),
         );
-        $this->assertSame('pending', $retried->getAttribute('status'));
+        $this->assertSame('failed', $retried->getAttribute('status'));
         $this->assertNotSame('attempt-b', $retried->getAttribute('attemptId'));
     }
 
@@ -1441,8 +1444,8 @@ final class ClaimTest extends TestCase
             publisher: new MigrationPublisher($publisher, new Queue('migrations')),
         );
 
-        $this->assertSame('pending', $claimed->getAttribute('status'));
-        $this->assertSame('finished', $claimed->getAttribute('stage'));
+        $this->assertSame('failed', $claimed->getAttribute('status'));
+        $this->assertSame($stage, $claimed->getAttribute('stage'), 'Main kept the failed migration as it was until the worker started it');
         $this->assertNotSame('attempt-terminal', $claimed->getAttribute('attemptId'));
         $events = $publisher->getEvents('migrations');
         $this->assertCount(1, $events);
@@ -1488,7 +1491,7 @@ final class ClaimTest extends TestCase
         $this->assertSame('migrating', $stored->getAttribute('stage'));
     }
 
-    public function testConcurrentRetryClaimHasSingleWinnerAfterLeaseExpires(): void
+    public function testARetryWhileAnotherIsPublishedSupersedesIt(): void
     {
         $terminal = $this->createFailedMigration();
         $claims = new Claim($this->database, $this->locks());
@@ -1500,7 +1503,11 @@ final class ClaimTest extends TestCase
             public function publish(Queue $queue, array $payload): bool
             {
                 $this->published++;
-                ($this->duringEnqueue ?? throw new \LogicException('Missing concurrent retry'))();
+                $duringEnqueue = $this->duringEnqueue;
+                $this->duringEnqueue = null;
+                if ($duringEnqueue !== null) {
+                    $duringEnqueue();
+                }
 
                 return true;
             }
@@ -1551,11 +1558,11 @@ final class ClaimTest extends TestCase
             publisher: $migrationPublisher,
         );
 
-        $this->assertSame(1, $publisher->published);
-        $this->assertSame(0, $refusals, 'a retry arriving while the claimed one is published is accepted without a second delivery');
-        $this->assertSame($claimed->getAttribute('attemptId'), $this->database
+        $this->assertSame(2, $publisher->published, 'Main published every retry');
+        $this->assertSame(0, $refusals, 'a retry arriving while the claimed one is published supersedes it');
+        $this->assertNotSame($claimed->getAttribute('attemptId'), $this->database
             ->getDocument('migrations', $terminal->getId())
-            ->getAttribute('attemptId'));
+            ->getAttribute('attemptId'), 'only the latest claim owns the migration');
     }
 
     public function testCompetingClaimForTheSameMigrationIsRefusedWhileTheLockIsHeld(): void
@@ -1594,7 +1601,7 @@ final class ClaimTest extends TestCase
         $stored = $this->database->getDocument('migrations', $terminal->getId());
         $this->assertSame($claimed->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
         $this->assertNotSame('attempt-terminal', $stored->getAttribute('attemptId'));
-        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('failed', $stored->getAttribute('status'));
         $this->assertSame('finished', $stored->getAttribute('stage'));
     }
 
@@ -1630,7 +1637,7 @@ final class ClaimTest extends TestCase
 
         foreach ([$first->getId() => $claimed, $second->getId() => $concurrent] as $id => $expected) {
             $stored = $this->database->getDocument('migrations', $id);
-            $this->assertSame('pending', $stored->getAttribute('status'));
+            $this->assertSame('failed', $stored->getAttribute('status'));
             $this->assertSame('finished', $stored->getAttribute('stage'));
             $this->assertSame($expected->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
         }
@@ -1673,7 +1680,7 @@ final class ClaimTest extends TestCase
             publisher: $migrationPublisher,
         );
 
-        $this->assertSame('pending', $claimed->getAttribute('status'));
+        $this->assertSame('failed', $claimed->getAttribute('status'));
         $this->assertCount(1, $publisher->getEvents('migrations'));
     }
 
@@ -1702,7 +1709,7 @@ final class ClaimTest extends TestCase
 
         $this->assertInstanceOf(Contention::class, $concurrent, 'a delivery of the migration being reclaimed must wait for the reclaim');
         $stored = $this->database->getDocument('migrations', $terminal->getId());
-        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('failed', $stored->getAttribute('status'));
         $this->assertSame('finished', $stored->getAttribute('stage'));
         $this->assertSame($retry->migration->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
 

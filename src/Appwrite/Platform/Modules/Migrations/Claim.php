@@ -241,7 +241,9 @@ final readonly class Claim
      * for a worker that runs the attempt itself: pass `message()` of the
      * result to the worker, and consume() accepts it exactly once. The
      * terminal document is a separate immutable snapshot of the failed
-     * attempt; the live document becomes pending.
+     * attempt. The live document keeps main's visible state, failed, until a
+     * worker starts the attempt: only its attempt changes, and a later claim
+     * supersedes one no worker has started.
      */
     public function reclaim(string $projectId, string $migrationId): Retry
     {
@@ -272,8 +274,6 @@ final readonly class Claim
                     return new Retry(
                         migration: $this->write($migration, new Document([
                             'attemptId' => Id::unique(),
-                            'status' => self::STATUS_PENDING,
-                            'stage' => self::STAGE_FINISHED,
                         ])),
                         terminal: $terminal,
                     );
@@ -285,8 +285,8 @@ final readonly class Claim
     /**
      * Persist a retry claim before publishing it. If publishing fails, restore
      * the failed attempt unless a newer claim already moved past this one. A
-     * retry that is claimed but not yet picked up is accepted again without
-     * publishing a second delivery.
+     * retry repeated before a worker starts the claimed one supersedes it, as
+     * main published every retry; only the latest generation is consumed.
      *
      * @param array<string, mixed> $platform
      */
@@ -300,14 +300,6 @@ final readonly class Claim
             return $this->retryUnclaimed($project, $migrationId, $platform, $publisher);
         }
 
-        $live = $this->database->getDocument('migrations', $migrationId);
-        if (
-            $live->getAttribute('status') === self::STATUS_PENDING
-            && $live->getAttribute('stage') === self::STAGE_FINISHED
-        ) {
-            return $live;
-        }
-
         $retry = $this->reclaim($project->getId(), $migrationId);
 
         try {
@@ -316,16 +308,9 @@ final readonly class Claim
             }
         } catch (\Throwable $error) {
             $this->withGeneration($retry->migration, function (Document $live) use ($retry): void {
-                if (
-                    $live->getAttribute('status') === self::STATUS_PENDING
-                    && $live->getAttribute('stage') === self::STAGE_FINISHED
-                ) {
-                    $this->write($live, new Document([
-                        'attemptId' => $retry->terminal->getAttribute('attemptId'),
-                        'status' => $retry->terminal->getAttribute('status'),
-                        'stage' => $retry->terminal->getAttribute('stage'),
-                    ]));
-                }
+                $this->write($live, new Document([
+                    'attemptId' => $retry->terminal->getAttribute('attemptId'),
+                ]));
             });
 
             throw $error;
@@ -436,10 +421,8 @@ final readonly class Claim
                         $retry = $terminal !== null
                             && $terminal->getId() === $migrationId
                             && $terminal->getAttribute('status') === self::STATUS_FAILED
-                            && $queued->getAttribute('status') === self::STATUS_PENDING
-                            && $queued->getAttribute('stage') === self::STAGE_FINISHED
-                            && $live->getAttribute('status') === self::STATUS_PENDING
-                            && $live->getAttribute('stage') === self::STAGE_FINISHED
+                            && $queued->getAttribute('status') === self::STATUS_FAILED
+                            && $live->getAttribute('status') === self::STATUS_FAILED
                             && ($terminalAttemptId === null || $terminalAttemptId !== $liveAttemptId);
                         $legacyRetry = $terminal === null
                             && $queued->getAttribute('status') === self::STATUS_PENDING

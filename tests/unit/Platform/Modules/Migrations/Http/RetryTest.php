@@ -20,6 +20,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Filter;
 use Utopia\Database\Permission;
+use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Lock\Exception\Contention;
@@ -88,7 +89,7 @@ final class RetryTest extends TestCase
         $this->assertCount(1, $this->publisher->getEvents('migrations') ?? []);
     }
 
-    public function testRetryRepeatedBeforeTheWorkerStartsAnswersNoContentAsOnMain(): void
+    public function testRetryRepeatedBeforeTheWorkerStartsIsPublishedAgainAsOnMain(): void
     {
         $this->failedMigration();
         $locks = static fn (string $key, int $ttl, callable $callback, float $timeout): mixed => $callback();
@@ -96,7 +97,26 @@ final class RetryTest extends TestCase
         $this->retry($this->noContent(), $locks);
         $this->retry($this->noContent(), $locks);
 
-        $this->assertCount(1, $this->publisher->getEvents('migrations') ?? [], 'The repeated retry is not delivered twice');
+        $this->assertCount(2, $this->publisher->getEvents('migrations') ?? [], 'Main published every retry; only the latest claim is consumed');
+    }
+
+    #[DataProvider('schemas')]
+    public function testAClaimedRetryStillListsAndReadsAsFailedAsOnMain(bool $ready): void
+    {
+        $this->failedMigration();
+        if (!$ready) {
+            $this->database->deleteAttribute('databases', 'migrationAttemptId');
+        }
+
+        $this->retry($this->noContent(), static fn (string $key, int $ttl, callable $callback, float $timeout): mixed => $callback());
+
+        $this->assertSame('failed', $this->database->getDocument('migrations', 'migration-1')->getAttribute('status'), 'Main kept a retried migration failed until the worker started it');
+        $this->assertSame(
+            ['migration-1'],
+            \array_map(static fn (Document $migration): string => $migration->getId(), $this->database->find('migrations', [Query::equal('status', ['failed'])])),
+            'A status filter must return the retried migration as on main',
+        );
+        $this->assertSame([], $this->database->find('migrations', [Query::equal('status', ['pending'])]));
     }
 
     public function testRetryWhileAnotherRequestHoldsItsClaimAnswersNoContent(): void

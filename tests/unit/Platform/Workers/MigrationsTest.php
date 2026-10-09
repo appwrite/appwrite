@@ -598,7 +598,7 @@ final class MigrationsTest extends TestCase
             publisher: new MigrationPublisher($migrationPublisher, new Queue('migrations')),
         );
 
-        $this->assertSame('pending', $retried->getAttribute('status'));
+        $this->assertSame('failed', $retried->getAttribute('status'));
         $this->assertSame('finished', $retried->getAttribute('stage'));
         $this->assertNotSame('attempt-1', $retried->getAttribute('attemptId'));
         $queued = MigrationMessage::fromArray($migrationPublisher->getEvents('migrations')[0]);
@@ -752,7 +752,7 @@ final class MigrationsTest extends TestCase
         $stored = $database->getDocument('migrations', $migration->getId());
         $this->assertNotSame('', $worker->newAttempt);
         $this->assertSame($worker->newAttempt, $stored->getAttribute('attemptId'));
-        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('failed', $stored->getAttribute('status'));
         $this->assertSame('finished', $stored->getAttribute('stage'));
         $this->assertSame([], $stored->getAttribute('resourceData'));
         $this->assertSame(0, $realtime->triggers);

@@ -63,7 +63,7 @@ final class DeletesTest extends TestCase
             publisher: new MigrationPublisher($publisher, new Queue('migrations')),
         );
 
-        $this->assertSame('pending', $retried->getAttribute('status'));
+        $this->assertSame('failed', $retried->getAttribute('status'));
         $this->assertSame('finished', $retried->getAttribute('stage'));
         $this->assertNotSame('attempt-1', $retried->getAttribute('attemptId'));
         $queued = MigrationMessage::fromArray($publisher->getEvents('migrations')[0]);
@@ -129,7 +129,7 @@ final class DeletesTest extends TestCase
         $stored = $database->getDocument('migrations', $late->getId());
         $this->assertNotSame('', $newAttempt);
         $this->assertSame($newAttempt, $stored->getAttribute('attemptId'));
-        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('failed', $stored->getAttribute('status'));
         $this->assertSame('finished', $stored->getAttribute('stage'));
     }
 
