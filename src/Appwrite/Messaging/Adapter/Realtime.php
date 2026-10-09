@@ -970,6 +970,16 @@ class Realtime extends MessagingAdapter
                     $channels[] = 'teams.' . $parts[1];
                 }
                 $roles = [Role::team(ID::custom($parts[1]))->toString()];
+                // The subject's team role is gone by the time this delete is delivered:
+                // permissionsChanged re-resolves their connections first, and the event
+                // is addressed only to team:{teamId}. Include their user role so that
+                // client still receives it. Teammates match the team role.
+                if ($parts[2] === 'memberships' && ($parts[4] ?? '') === 'delete') {
+                    $userId = $payload->getAttribute('userId', '');
+                    if (\is_string($userId) && $userId !== '') {
+                        $roles[] = Role::user(ID::custom($userId))->toString();
+                    }
+                }
                 break;
             case 'databases':
             case 'tablesdb':
