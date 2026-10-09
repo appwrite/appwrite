@@ -35,20 +35,6 @@ pub enum BraKind {
     Cond,
 }
 
-impl BraKind {
-    pub fn is_assert(self) -> bool {
-        matches!(
-            self,
-            BraKind::Assert
-                | BraKind::AssertNot
-                | BraKind::AssertBack
-                | BraKind::AssertBackNot
-                | BraKind::AssertNa
-                | BraKind::AssertBackNa
-        )
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum KetKind {
     Ket,
@@ -61,17 +47,38 @@ pub enum KetKind {
 pub enum Op {
     End,
     Item(Lit),
-    Rep { lit: Lit, min: u32, max: u32, kind: RepKind },
+    Rep {
+        lit: Lit,
+        min: u32,
+        max: u32,
+        kind: RepKind,
+    },
     /// Back reference; `groups` has several entries for a duplicated name
     /// (the first set one is used).
-    Ref { groups: Box<[u32]>, caseless: bool, min: u32, max: u32, lazy: bool, repeated: bool },
+    Ref {
+        groups: Box<[u32]>,
+        caseless: bool,
+        min: u32,
+        max: u32,
+        lazy: bool,
+        repeated: bool,
+    },
     Assert(Assert),
     SetSom,
     /// `empty`: the `OP_S...` form of a repeated group that could match an
     /// empty string.
-    Bra { kind: BraKind, link: usize, empty: bool },
-    Alt { link: usize },
-    Ket { bra: usize, kind: KetKind },
+    Bra {
+        kind: BraKind,
+        link: usize,
+        empty: bool,
+    },
+    Alt {
+        link: usize,
+    },
+    Ket {
+        bra: usize,
+        kind: KetKind,
+    },
     BraZero,
     BraMinZero,
     SkipZero,
@@ -82,7 +89,10 @@ pub enum Op {
     CondTrue,
     CondFalse,
     Reverse(u32),
-    VReverse { min: u32, max: u32 },
+    VReverse {
+        min: u32,
+        max: u32,
+    },
     Recurse(u32),
     Close(u32),
     Accept,
@@ -114,6 +124,175 @@ pub struct Program {
     pub top_backref: u32,
     pub has_cr_or_lf: bool,
     pub dupcap_used: bool,
+    /// How the PCRE2 JIT lays out its stack for this pattern (see
+    /// [`JitLayout`]).
+    pub jit: JitLayout,
+}
+
+/// The JIT's stack usage that does not depend on the subject: the words an
+/// iterator inside a repeated group keeps per entry (`rep`, by position;
+/// iterators elsewhere use a fixed slot), whether a capturing group saves
+/// its previous offsets in a fixed slot (`optimized`, by group: not when a
+/// back reference or condition refers to it) and what a recursion into a
+/// group saves (`recurse`, by group).
+#[derive(Debug, Clone, Default)]
+pub struct JitLayout {
+    pub rep: Vec<u8>,
+    pub optimized: Vec<bool>,
+    pub recurse: Vec<u32>,
+    /// By position of an atomic group: the words of the frame it saves
+    /// (two per capturing group inside, `get_framesize()`).
+    pub once_frame: Vec<u32>,
+}
+
+impl JitLayout {
+    /// `set_private_data_ptrs()` and the parts of `check_opcode_types()`
+    /// that decide stack usage.
+    pub fn new(code: &[Op], top_bracket: u32, group_start: &[usize]) -> JitLayout {
+        let ket_of = |pc: usize| {
+            let mut k = pc;
+            while let Op::Bra { link, .. } | Op::Alt { link } = code[k] {
+                k = link;
+            }
+            k
+        };
+        let mut optimized = vec![true; top_bracket as usize + 1];
+        for op in code {
+            match op {
+                Op::Ref { groups, .. } | Op::CondRef(groups) => {
+                    for &g in groups.iter() {
+                        optimized[g as usize] = false;
+                    }
+                }
+                Op::Bra { kind: BraKind::CapturePos(n), .. } => optimized[*n as usize] = false,
+                _ => {}
+            }
+        }
+        // Iterators inside a repeated group keep their state on the stack.
+        let mut rep = vec![0u8; code.len()];
+        let mut end: Option<usize> = None;
+        for (pc, op) in code.iter().enumerate() {
+            match op {
+                Op::Bra { .. } => {
+                    if end.is_none_or(|e| pc >= e) {
+                        let ket = ket_of(pc);
+                        end = match code[ket] {
+                            Op::Ket { kind: KetKind::Ket, .. } if !replicated(code, pc, ket) => None,
+                            _ => Some(ket + 1),
+                        };
+                    }
+                }
+                Op::Rep { lit, min, max, kind } if end.is_some_and(|e| pc < e) => {
+                    rep[pc] = iterator_words(lit, *min, *max, *kind);
+                }
+                _ => {}
+            }
+        }
+        // A recursion saves the group's captures (beyond its own) and two
+        // more words.
+        let mut recurse = vec![0u32; top_bracket as usize + 1];
+        for (g, &start) in group_start.iter().enumerate() {
+            if start == usize::MAX {
+                continue;
+            }
+            let ket = ket_of(start);
+            let inner = code[start + 1..ket]
+                .iter()
+                .filter(|op| matches!(op, Op::Bra { kind: BraKind::Capture(_) | BraKind::CapturePos(_), .. }))
+                .count() as u32;
+            recurse[g] = 2 + 2 * inner;
+        }
+        let mut once_frame = vec![0u32; code.len()];
+        for (pc, op) in code.iter().enumerate() {
+            if let Op::Bra { kind: BraKind::Once, .. } = op {
+                let ket = ket_of(pc);
+                once_frame[pc] = 2 * code[pc + 1..ket]
+                    .iter()
+                    .filter(|op| matches!(op, Op::Bra { kind: BraKind::Capture(_) | BraKind::CapturePos(_), .. }))
+                    .count() as u32;
+            }
+        }
+        JitLayout { rep, optimized, recurse, once_frame }
+    }
+}
+
+/// Whether the group at `bra` is the first of copies the compiler made for
+/// a quantifier (`(?:ab){3}`, `(?:ab){1,3}`), which the JIT runs as a loop
+/// (`detect_repeat()`).
+fn replicated(code: &[Op], bra: usize, ket: usize) -> bool {
+    if !matches!(
+        code[bra],
+        Op::Bra { kind: BraKind::Bra | BraKind::Capture(_) | BraKind::Cond | BraKind::Once, empty: false, .. }
+    ) {
+        return false;
+    }
+    let len = ket + 1 - bra;
+    let same = |at: usize| at + len <= code.len() && (0..len).all(|i| same_op(&code[bra + i], &code[at + i], bra, at));
+    let mut next = ket + 1;
+    let mut copies = 1;
+    while same(next) {
+        next += len;
+        copies += 1;
+    }
+    match copies {
+        2 => false,
+        1 => {
+            // Optional copies, the outer ones wrapped in a group.
+            matches!(code.get(next), Some(Op::BraZero | Op::BraMinZero))
+                && matches!(code.get(next + 1), Some(Op::Bra { kind: BraKind::Bra, .. }))
+                && same(next + 2)
+        }
+        _ => true,
+    }
+}
+
+/// Two ops equal up to where their links point (relative to `a` and `b`).
+fn same_op(x: &Op, y: &Op, a: usize, b: usize) -> bool {
+    match (x, y) {
+        (Op::Bra { kind: k1, link: l1, empty: e1 }, Op::Bra { kind: k2, link: l2, empty: e2 }) => {
+            k1 == k2 && e1 == e2 && l1 - a == l2 - b
+        }
+        (Op::Alt { link: l1 }, Op::Alt { link: l2 }) => l1 - a == l2 - b,
+        (Op::Ket { bra: b1, kind: k1 }, Op::Ket { bra: b2, kind: k2 }) => k1 == k2 && b1 - a == b2 - b,
+        _ => format!("{x:?}") == format!("{y:?}"),
+    }
+}
+
+/// The stack words a non-possessive iterator keeps when it has no fixed
+/// slot (`CASE_ITERATOR_PRIVATE_DATA_*`, `get_class_iterator_size()`), by
+/// the opcode PCRE2 compiles the repeat to.
+fn iterator_words(lit: &Lit, min: u32, max: u32, kind: RepKind) -> u8 {
+    if kind == RepKind::Possessive || min == max {
+        return 0;
+    }
+    let lazy = kind == RepKind::Lazy;
+    if matches!(lit, Lit::Class(_)) {
+        return match (min, max) {
+            (0 | 1, UNLIMITED) => {
+                if lazy {
+                    1
+                } else {
+                    2
+                }
+            }
+            (0, 1) => 1,
+            (_, UNLIMITED) => {
+                if lazy {
+                    1
+                } else {
+                    2
+                }
+            }
+            _ => (max - min).min(2) as u8,
+        };
+    }
+    if max == UNLIMITED {
+        if lazy { 1 } else { 2 }
+    } else if (min == 0 && max == 1) || (min >= 2 && max - min == 1) {
+        1
+    } else {
+        2
+    }
 }
 
 struct Gen {
@@ -150,6 +329,7 @@ pub fn lower(tree: &Tree) -> Program {
         top_backref: tree.top_backref,
         has_cr_or_lf: tree.has_cr_or_lf,
         dupcap_used: tree.dupcap_used,
+        jit: JitLayout::default(),
     }
 }
 
@@ -183,10 +363,10 @@ impl Gen {
         condition: impl FnOnce(&mut Self),
     ) -> usize {
         let bra = self.emit(Op::Bra { kind, link: 0, empty });
-        if let BraKind::Capture(n) | BraKind::CapturePos(n) = kind {
-            if self.group_start[n as usize] == usize::MAX {
-                self.group_start[n as usize] = bra;
-            }
+        if let BraKind::Capture(n) | BraKind::CapturePos(n) = kind
+            && self.group_start[n as usize] == usize::MAX
+        {
+            self.group_start[n as usize] = bra;
         }
         condition(self);
         let mut last = bra;
@@ -520,10 +700,8 @@ impl Gen {
             }
             _ => self.group_node(gk, branches, ket, pos, s),
         }
-        if pos {
-            if let Some(z) = brazero {
-                self.code[z] = Op::BraPosZero;
-            }
+        if pos && let Some(z) = brazero {
+            self.code[z] = Op::BraPosZero;
         }
     }
 }

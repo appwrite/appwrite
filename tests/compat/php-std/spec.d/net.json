@@ -331,7 +331,10 @@
         "gen": "ref",
         "name": "net_idn_flags"
        }
-      }
+      },
+      "optional": [
+       "flags"
+      ]
      },
      "iterations": 6000
     },
@@ -348,7 +351,10 @@
         "gen": "ref",
         "name": "net_idn_flags"
        }
-      }
+      },
+      "optional": [
+       "flags"
+      ]
      },
      "iterations": 4000
     }
@@ -373,7 +379,10 @@
         "gen": "ref",
         "name": "net_idn_flags"
        }
-      }
+      },
+      "optional": [
+       "flags"
+      ]
      },
      "iterations": 6000
     },
@@ -390,7 +399,10 @@
         "gen": "ref",
         "name": "net_idn_flags"
        }
-      }
+      },
+      "optional": [
+       "flags"
+      ]
      },
      "iterations": 4000
     }
@@ -9141,5 +9153,27 @@
    ]
   }
  },
- "deviations": []
+ "deviations": [],
+ "quirks": [
+  {
+   "symbol": "idn_to_ascii()",
+   "description": "IDNA_DEFAULT is nontransitional both ways (48) since PHP 8.4, while ICU's own default (0) is transitional: faß.de becomes xn--fa-hia.de with the default flags and fass.de with flags 0",
+   "case": "net.json#idn_to_ascii transitional maps sharp s"
+  },
+  {
+   "symbol": "idn_to_ascii()",
+   "description": "Without IDNA_USE_STD3_RULES any ASCII is valid in a label, spaces and NUL included (UTS #46 since Unicode 15.1)",
+   "case": "net.json#idn_to_ascii space without STD3 rules"
+  },
+  {
+   "symbol": "idn_to_utf8()",
+   "description": "With flags 0 idn_to_utf8() maps deviation characters too (ß.de becomes ss.de)",
+   "case": "net.json#idn_to_utf8 transitional maps sharp s"
+  },
+  {
+   "symbol": "ip2long()",
+   "description": "Octets with leading zeros are rejected (the C library's inet_pton())",
+   "case": "net.json#ip2long leading zero is rejected"
+  }
+ ]
 }

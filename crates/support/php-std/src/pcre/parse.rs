@@ -9,8 +9,8 @@
 
 use std::ops::Range;
 
-use super::unicode::{self, CTYPE_LCLETTER, CTYPE_LETTER, CTYPE_SPACE, CTYPE_WORD};
 use super::ucd;
+use super::unicode::{self, CTYPE_LCLETTER, CTYPE_LETTER, CTYPE_SPACE, CTYPE_WORD};
 
 pub const META_END: u32 = 0x8000_0000;
 pub const META_ALT: u32 = 0x8001_0000;
@@ -105,6 +105,7 @@ pub const ESC_S_LOWER: u32 = 9;
 pub const ESC_W: u32 = 10;
 pub const ESC_W_LOWER: u32 = 11;
 pub const ESC_N: u32 = 12;
+#[allow(dead_code)] // PCRE2's escape numbering, kept whole.
 pub const ESC_DUM: u32 = 13;
 pub const ESC_C: u32 = 14;
 pub const ESC_P: u32 = 15;
@@ -125,7 +126,10 @@ pub const ESC_UB: u32 = 29;
 
 /// Compile option bits (PCRE2 values).
 pub mod opt {
+    // PHP never sets these two; they complete PCRE2's option bits.
+    #[allow(dead_code)]
     pub const ALLOW_EMPTY_CLASS: u32 = 0x0000_0001;
+    #[allow(dead_code)]
     pub const ALT_BSUX: u32 = 0x0000_0002;
     pub const CASELESS: u32 = 0x0000_0008;
     pub const DOLLAR_ENDONLY: u32 = 0x0000_0010;
@@ -231,8 +235,6 @@ pub struct NamedGroup {
 #[derive(Debug, Clone)]
 pub struct Parsed {
     pub meta: Vec<u32>,
-    /// Where the regex starts after `(*...)` start-of-pattern items.
-    pub skip: usize,
     pub bracount: u32,
     pub names: Vec<NamedGroup>,
     pub has_lookbehind: bool,
@@ -371,7 +373,6 @@ pub fn parse(pattern: &[u8], options: u32, xoptions: u32) -> Result<Parsed, Comp
     p.parse_regex().map_err(|code| CompileError { code, offset: p.ptr })?;
     Ok(Parsed {
         meta: p.out,
-        skip,
         bracount: p.bracount,
         names: p.names,
         has_lookbehind: p.has_lookbehind,
@@ -719,7 +720,6 @@ impl<'a> Parser<'a> {
                         if end - q > 1 && self.pat[q] == b'U' && self.pat[q + 1] == b'+' {
                             if utf {
                                 p = q + 2;
-                                escape = 0;
                                 // Continue with \x{ handling (COME_FROM_NU).
                                 let r = self.hex_brace(&mut p);
                                 *ptr = p;
@@ -810,9 +810,7 @@ impl<'a> Parser<'a> {
                             let oldptr = p;
                             let mut q = p - 1;
                             match self.read_number(&mut q, -1, (i32::MAX / 10 - 1) as u32, 0) {
-                                Ok(Some(s))
-                                    if s < 10 || self.pat[oldptr - 1] >= b'8' || s <= self.bracount as i32 =>
-                                {
+                                Ok(Some(s)) if s < 10 || self.pat[oldptr - 1] >= b'8' || s <= self.bracount as i32 => {
                                     p = q;
                                     if s > MAX_GROUP_NUMBER as i32 {
                                         *ptr = p;
@@ -1219,7 +1217,7 @@ impl<'a> Parser<'a> {
             Newline::Any => {
                 let (c, len) = if self.utf { unicode::utf8_at(self.pat, p) } else { (u32::from(b), 1) };
                 match c {
-                    0x0a | 0x0b | 0x0c => Some(len),
+                    0x0a..=0x0c => Some(len),
                     0x0d => Some(if self.pat.get(p + 1) == Some(&b'\n') { 2 } else { 1 }),
                     0x85 | 0x2028 | 0x2029 => Some(len),
                     _ => None,
@@ -1393,7 +1391,11 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            if c == u32::from(b'(') && end - self.ptr >= 2 && self.pat[self.ptr] == b'?' && self.pat[self.ptr + 1] == b'#' {
+            if c == u32::from(b'(')
+                && end - self.ptr >= 2
+                && self.pat[self.ptr] == b'?'
+                && self.pat[self.ptr + 1] == b'#'
+            {
                 loop {
                     self.ptr += 1;
                     if self.ptr >= end || self.pat[self.ptr] == b')' {
@@ -1507,14 +1509,17 @@ impl<'a> Parser<'a> {
                                 let r = self.get_ucp(&mut p);
                                 self.ptr = p;
                                 let (negated, ptype, pdata) = r?;
-                                let escape = if negated { if escape == ESC_P { ESC_P_LOWER } else { ESC_P } } else { escape };
+                                let escape =
+                                    if negated { if escape == ESC_P { ESC_P_LOWER } else { ESC_P } } else { escape };
                                 self.push(META_ESCAPE + escape);
                                 self.push((ptype << 16) | pdata);
                                 okquantifier = true;
                             }
                             ESC_G_LOWER | ESC_K_LOWER => {
                                 if self.ptr >= end
-                                    || (self.pat[self.ptr] != b'{' && self.pat[self.ptr] != b'<' && self.pat[self.ptr] != b'\'')
+                                    || (self.pat[self.ptr] != b'{'
+                                        && self.pat[self.ptr] != b'<'
+                                        && self.pat[self.ptr] != b'\'')
                                 {
                                     return Err(if escape == ESC_G_LOWER { 57 } else { 69 });
                                 }
@@ -1666,7 +1671,11 @@ impl<'a> Parser<'a> {
                                 return Err(95);
                             };
                             if prev_expect_cond_assert > 0 && !(META_LOOKAHEAD..=META_LOOKBEHINDNOT).contains(&meta) {
-                                return Err(if meta == META_LOOKAHEAD_NA || meta == META_LOOKBEHIND_NA { 98 } else { 28 });
+                                return Err(if meta == META_LOOKAHEAD_NA || meta == META_LOOKBEHIND_NA {
+                                    98
+                                } else {
+                                    28
+                                });
                             }
                             match meta {
                                 META_ATOMIC => {
@@ -1727,7 +1736,8 @@ impl<'a> Parser<'a> {
                                 (b"SKIP", META_SKIP, 0),
                                 (b"THEN", META_THEN, 0),
                             ];
-                            let Some(&(_, vmeta, has_arg)) = VERBS.iter().find(|(n, _, _)| *n == &self.pat[name.clone()])
+                            let Some(&(_, vmeta, has_arg)) =
+                                VERBS.iter().find(|(n, _, _)| *n == &self.pat[name.clone()])
                             else {
                                 return Err(60);
                             };
@@ -2058,8 +2068,11 @@ impl<'a> Parser<'a> {
                                                     self.ptr += 1;
                                                 }
                                                 _ => {
-                                                    *xoptset |=
-                                                        X_ASCII_BSD | X_ASCII_BSS | X_ASCII_BSW | X_ASCII_DIGIT | X_ASCII_POSIX
+                                                    *xoptset |= X_ASCII_BSD
+                                                        | X_ASCII_BSS
+                                                        | X_ASCII_BSW
+                                                        | X_ASCII_DIGIT
+                                                        | X_ASCII_POSIX
                                                 }
                                             }
                                         }
@@ -2294,7 +2307,9 @@ impl<'a> Parser<'a> {
         const RANGE_OK_LITERAL: u8 = 3;
         let end = self.end();
 
-        if end - self.ptr >= 6 && (&self.pat[self.ptr..self.ptr + 6] == b"[:<:]]" || &self.pat[self.ptr..self.ptr + 6] == b"[:>:]]") {
+        if end - self.ptr >= 6
+            && (&self.pat[self.ptr..self.ptr + 6] == b"[:<:]]" || &self.pat[self.ptr..self.ptr + 6] == b"[:>:]]")
+        {
             self.push(META_ESCAPE + ESC_B_LOWER);
             if self.pat[self.ptr + 2] == b'<' {
                 self.push(META_LOOKAHEAD);
@@ -2469,7 +2484,9 @@ impl<'a> Parser<'a> {
                         match escape {
                             ESC_N => return Err(71),
                             ESC_H | ESC_H_LOWER | ESC_V | ESC_V_LOWER => self.push(META_ESCAPE + escape),
-                            ESC_D | ESC_D_LOWER | ESC_S | ESC_S_LOWER | ESC_W | ESC_W_LOWER => self.handle_escdsw(escape),
+                            ESC_D | ESC_D_LOWER | ESC_S | ESC_S_LOWER | ESC_W | ESC_W_LOWER => {
+                                self.handle_escdsw(escape)
+                            }
                             ESC_P | ESC_P_LOWER => {
                                 let mut p = self.ptr;
                                 let r = self.get_ucp(&mut p);

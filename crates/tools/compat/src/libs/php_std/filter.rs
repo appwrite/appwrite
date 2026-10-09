@@ -30,7 +30,9 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
                     PhpValue::Array(a) => Options::Array(a),
                     _ => return Err(Fault::new("argument `options` must be an int or an array")),
                 },
-                Some(v) => Options::Flags(v.as_i64().ok_or_else(|| Fault::new("argument `options` must be an int or an array"))?),
+                Some(v) => Options::Flags(
+                    v.as_i64().ok_or_else(|| Fault::new("argument `options` must be an int or an array"))?,
+                ),
             };
             Ok(match filter::filter_var(&value, filter, &options) {
                 Ok(f) => {
@@ -56,15 +58,17 @@ fn decode(v: &Value) -> Result<PhpValue, Fault> {
             None => PhpValue::Float(n.as_f64().unwrap_or(0.0)),
         },
         Value::String(s) => PhpValue::Str(s.as_bytes().to_vec()),
-        Value::Array(list) => {
-            PhpValue::Array(list.iter().enumerate().map(|(i, v)| Ok((Key::Int(i as i64), decode(v)?))).collect::<Result<_, Fault>>()?)
-        }
+        Value::Array(list) => PhpValue::Array(
+            list.iter().enumerate().map(|(i, v)| Ok((Key::Int(i as i64), decode(v)?))).collect::<Result<_, Fault>>()?,
+        ),
         Value::Object(o) => {
             if o.is_empty() {
                 PhpValue::Object
             } else if let Some(b) = o.get("$bytes").filter(|_| o.len() == 1) {
-                PhpValue::Str(bytes(&Value::Object(Map::from_iter([("$bytes".to_owned(), b.clone())])))
-                    .ok_or_else(|| Fault::new("invalid $bytes"))?)
+                PhpValue::Str(
+                    bytes(&Value::Object(Map::from_iter([("$bytes".to_owned(), b.clone())])))
+                        .ok_or_else(|| Fault::new("invalid $bytes"))?,
+                )
             } else if o.len() == 1 && o.contains_key("$float") {
                 PhpValue::Float(float(v).ok_or_else(|| Fault::new("invalid $float"))?)
             } else {

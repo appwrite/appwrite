@@ -149,7 +149,7 @@ fn get_long(v: &Value, warning: &mut Option<Vec<u8>>) -> i64 {
         Value::Bool(true) => 1,
         Value::Int(i) => *i,
         Value::Float(f) => {
-            if !f.is_finite() || !(-9.223_372_036_854_775_808e18..9.223_372_036_854_775_808e18).contains(f) {
+            if !f.is_finite() || !(-TWO_POW_63..TWO_POW_63).contains(f) {
                 *warning = Some(
                     format!("The float {} is not representable as an int, cast occurred", number::gcvt(*f, -1, 'E'))
                         .into_bytes(),
@@ -181,11 +181,14 @@ fn get_double(v: &Value) -> f64 {
 }
 
 /// `zend_dval_to_lval()`: modular for out-of-range values, 0 for non-finite.
+/// 2^63, the first double past `ZEND_LONG_MAX` (which rounds to it).
+const TWO_POW_63: f64 = 9_223_372_036_854_775_808.0;
+
 fn dval_to_lval(d: f64) -> i64 {
     if !d.is_finite() {
         return 0;
     }
-    if d >= -9.223_372_036_854_775_808e18 && d < 9.223_372_036_854_775_808e18 {
+    if (-TWO_POW_63..TWO_POW_63).contains(&d) {
         return d as i64;
     }
     let two64 = 18_446_744_073_709_551_616.0_f64;
@@ -198,7 +201,7 @@ fn dval_to_lval(d: f64) -> i64 {
             return 0;
         }
     }
-    if dmod > 9.223_372_036_854_775_807e18 {
+    if dmod > TWO_POW_63 {
         dmod -= two64;
     }
     dmod as i64
@@ -209,10 +212,10 @@ fn dval_to_lval_cap(d: f64) -> i64 {
     if !d.is_finite() {
         return 0;
     }
-    if d >= 9.223_372_036_854_775_808e18 {
+    if d >= TWO_POW_63 {
         return i64::MAX;
     }
-    if d < -9.223_372_036_854_775_808e18 {
+    if d < -TWO_POW_63 {
         return i64::MIN;
     }
     d as i64
@@ -315,10 +318,10 @@ fn strtod(s: &[u8]) -> f64 {
 
 /// `convert_to_string()` of a scalar; `NAN` warns (PHP 8.5).
 fn to_php_string(v: &Value, warning: &mut Option<Vec<u8>>) -> Vec<u8> {
-    if let Value::Float(f) = v {
-        if f.is_nan() {
-            *warning = Some(b"unexpected NAN value was coerced to string".to_vec());
-        }
+    if let Value::Float(f) = v
+        && f.is_nan()
+    {
+        *warning = Some(b"unexpected NAN value was coerced to string".to_vec());
     }
     match v {
         Value::Null | Value::Bool(false) => Vec::new(),
@@ -448,7 +451,10 @@ pub fn filter_var(value: &Value, filter: i64, options: &Options) -> Result<Filte
     }
     if flags & FILTER_REQUIRE_ARRAY != 0 {
         if flags & FILTER_THROW_ON_FAILURE != 0 {
-            return Err(Error::new(FAILED, format!("filter validation failed: not an array (got {})", type_name(value))));
+            return Err(Error::new(
+                FAILED,
+                format!("filter validation failed: not an array (got {})", type_name(value)),
+            ));
         }
         return Ok(Filtered { value: failure(flags), warning });
     }
@@ -501,7 +507,8 @@ fn zval_filter(
             Outcome::Failed => {
                 if flags & FILTER_THROW_ON_FAILURE != 0 {
                     let shown = s.iter().position(|&b| b == 0).map_or(&s[..], |n| &s[..n]);
-                    let mut m = format!("filter validation failed: filter {} not satisfied by '", filter_name(filter)).into_bytes();
+                    let mut m = format!("filter validation failed: filter {} not satisfied by '", filter_name(filter))
+                        .into_bytes();
                     m.extend_from_slice(shown);
                     m.push(b'\'');
                     return Err(Error::new(FAILED, m));
@@ -512,15 +519,10 @@ fn zval_filter(
     };
     // handle_default
     if let Some(opts) = opts {
-        let replace = if flags & FILTER_NULL_ON_FAILURE != 0 {
-            result == Value::Null
-        } else {
-            result == Value::Bool(false)
-        };
-        if replace {
-            if let Some(d) = lookup(opts, "default") {
-                return Ok(d.clone());
-            }
+        let replace =
+            if flags & FILTER_NULL_ON_FAILURE != 0 { result == Value::Null } else { result == Value::Bool(false) };
+        if replace && let Some(d) = lookup(opts, "default") {
+            return Ok(d.clone());
         }
     }
     Ok(result)
@@ -555,13 +557,16 @@ fn run_filter(
             }
             let decimal = match str_opt("decimal") {
                 Some(d) if d.len() != 1 => {
-                    return Err(Error::new("ValueError", "filter_var(): \"decimal\" option must be one character long"));
+                    return Err(Error::new(
+                        "ValueError",
+                        "filter_var(): \"decimal\" option must be one character long",
+                    ));
                 }
                 Some(d) => d[0],
                 None => b'.',
             };
             let thousand: Vec<u8> = match str_opt("thousand") {
-                Some(t) if t.is_empty() => {
+                Some([]) => {
                     return Err(Error::new("ValueError", "filter_var(): \"thousand\" option must not be empty"));
                 }
                 // A C string: strchr() stops at the first NUL.
@@ -570,7 +575,8 @@ fn run_filter(
             };
             let min = opt("min_range").map(get_double);
             let max = opt("max_range").map(get_double);
-            Ok(validate_float(s, flags, decimal, &thousand, min, max).map_or(Outcome::Failed, |f| Outcome::Ok(Value::Float(f))))
+            Ok(validate_float(s, flags, decimal, &thousand, min, max)
+                .map_or(Outcome::Failed, |f| Outcome::Ok(Value::Float(f))))
         }
         FILTER_VALIDATE_REGEXP => {
             let Some(re) = str_opt("regexp") else {
@@ -582,15 +588,18 @@ fn run_filter(
             }
             Ok(if matched == Some(true) { Outcome::Ok(Value::Str(s.to_vec())) } else { Outcome::Failed })
         }
-        FILTER_VALIDATE_DOMAIN => {
-            Ok(if validate_domain(s, flags & FILTER_FLAG_HOSTNAME != 0) { Outcome::Ok(Value::Str(s.to_vec())) } else { Outcome::Failed })
-        }
+        FILTER_VALIDATE_DOMAIN => Ok(if validate_domain(s, flags & FILTER_FLAG_HOSTNAME != 0) {
+            Outcome::Ok(Value::Str(s.to_vec()))
+        } else {
+            Outcome::Failed
+        }),
         FILTER_VALIDATE_URL => {
             let parser = match opts.and_then(|o| lookup(o, "uri_parser_class")) {
                 Some(Value::Str(p)) => Some(p.as_slice()),
                 _ => None,
             };
-            validate_url(s, flags, parser).map(|ok| if ok { Outcome::Ok(Value::Str(s.to_vec())) } else { Outcome::Failed })
+            validate_url(s, flags, parser)
+                .map(|ok| if ok { Outcome::Ok(Value::Str(s.to_vec())) } else { Outcome::Failed })
         }
         FILTER_VALIDATE_EMAIL => {
             if s.len() > 320 {
@@ -603,11 +612,16 @@ fn run_filter(
             }
             Ok(if matched == Some(true) { Outcome::Ok(Value::Str(s.to_vec())) } else { Outcome::Failed })
         }
-        FILTER_VALIDATE_IP => Ok(if validate_ip(s, flags) { Outcome::Ok(Value::Str(s.to_vec())) } else { Outcome::Failed }),
+        FILTER_VALIDATE_IP => {
+            Ok(if validate_ip(s, flags) { Outcome::Ok(Value::Str(s.to_vec())) } else { Outcome::Failed })
+        }
         FILTER_VALIDATE_MAC => {
             let sep = match str_opt("separator") {
                 Some(d) if d.len() != 1 => {
-                    return Err(Error::new("ValueError", "filter_var(): \"separator\" option must be one character long"));
+                    return Err(Error::new(
+                        "ValueError",
+                        "filter_var(): \"separator\" option must be one character long",
+                    ));
                 }
                 Some(d) => Some(d[0]),
                 None => None,
@@ -966,12 +980,12 @@ fn validate_url(s: &[u8], flags: i64, parser: Option<&[u8]>) -> Result<bool, Err
             query: own(u.raw_query()),
         }
     };
-    if let Some(scheme) = &parts.scheme {
-        if scheme.eq_ignore_ascii_case(b"http") || scheme.eq_ignore_ascii_case(b"https") {
-            let Some(host) = &parts.host else { return Ok(false) };
-            if php_parse_url && !is_valid_ipv6_hostname(host) && !validate_domain(host, true) {
-                return Ok(false);
-            }
+    if let Some(scheme) = &parts.scheme
+        && (scheme.eq_ignore_ascii_case(b"http") || scheme.eq_ignore_ascii_case(b"https"))
+    {
+        let Some(host) = &parts.host else { return Ok(false) };
+        if php_parse_url && !is_valid_ipv6_hostname(host) && !validate_domain(host, true) {
+            return Ok(false);
         }
     }
     let Some(scheme) = &parts.scheme else { return Ok(false) };
@@ -984,7 +998,8 @@ fn validate_url(s: &[u8], flags: i64, parser: Option<&[u8]>) -> Result<bool, Err
         return Ok(false);
     }
     if php_parse_url
-        && (parts.user.as_ref().is_some_and(|u| !is_userinfo_valid(u)) || parts.pass.as_ref().is_some_and(|p| !is_userinfo_valid(p)))
+        && (parts.user.as_ref().is_some_and(|u| !is_userinfo_valid(u))
+            || parts.pass.as_ref().is_some_and(|p| !is_userinfo_valid(p)))
     {
         return Ok(false);
     }
@@ -1072,10 +1087,10 @@ fn validate_ipv6(s: &[u8], mut ip: Option<&mut [i32; 8]>) -> bool {
                 if compressed_pos >= 0 {
                     return false;
                 }
-                if let Some(ip) = ip.as_deref_mut() {
-                    if blocks < 8 {
-                        ip[blocks as usize] = -1;
-                    }
+                if let Some(ip) = ip.as_deref_mut()
+                    && blocks < 8
+                {
+                    ip[blocks as usize] = -1;
                 }
                 compressed_pos = blocks;
                 blocks += 1;
@@ -1104,10 +1119,10 @@ fn validate_ipv6(s: &[u8], mut ip: Option<&mut [i32; 8]>) -> bool {
             n += 1;
             i += 1;
         }
-        if let Some(ip) = ip.as_deref_mut() {
-            if blocks < 8 {
-                ip[blocks as usize] = num as i32;
-            }
+        if let Some(ip) = ip.as_deref_mut()
+            && blocks < 8
+        {
+            ip[blocks as usize] = num as i32;
         }
         if !(1..=4).contains(&n) {
             return false;
@@ -1145,6 +1160,8 @@ fn validate_ipv6(s: &[u8], mut ip: Option<&mut [i32; 8]>) -> bool {
 
 /// `ipv4_get_status_flags()`: `(global, reserved, private)`, or `None`
 /// for an address in no special block.
+// One branch per block of PHP's table, in its order.
+#[allow(clippy::if_same_then_else)]
 fn ipv4_flags(ip: &[i32; 4]) -> Option<(bool, bool, bool)> {
     let r = |g, r, p| Some((g, r, p));
     if ip[0] == 0 {
@@ -1183,6 +1200,8 @@ fn ipv4_flags(ip: &[i32; 4]) -> Option<(bool, bool, bool)> {
 }
 
 /// `ipv6_get_status_flags()`.
+// One branch per block of PHP's table, in its order.
+#[allow(clippy::if_same_then_else)]
 fn ipv6_flags(ip: &[i32; 8]) -> Option<(bool, bool, bool)> {
     let r = |g, r, p| Some((g, r, p));
     let zeros = |n: usize| ip[..n].iter().all(|&x| x == 0);
@@ -1286,18 +1305,19 @@ fn validate_mac(s: &[u8], expected: Option<u8>) -> bool {
 /// `php_filter_unsafe_raw()`.
 fn unsafe_raw(s: &[u8], flags: i64) -> Value {
     if flags != 0 && !s.is_empty() {
-        let stripped: Vec<u8> = if flags & (FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK) != 0 {
-            s.iter()
-                .copied()
-                .filter(|&c| {
-                    !((c >= 127 && flags & FILTER_FLAG_STRIP_HIGH != 0)
-                        || (c < 32 && flags & FILTER_FLAG_STRIP_LOW != 0)
-                        || (c == b'`' && flags & FILTER_FLAG_STRIP_BACKTICK != 0))
-                })
-                .collect()
-        } else {
-            s.to_vec()
-        };
+        let stripped: Vec<u8> =
+            if flags & (FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK) != 0 {
+                s.iter()
+                    .copied()
+                    .filter(|&c| {
+                        !((c >= 127 && flags & FILTER_FLAG_STRIP_HIGH != 0)
+                            || (c < 32 && flags & FILTER_FLAG_STRIP_LOW != 0)
+                            || (c == b'`' && flags & FILTER_FLAG_STRIP_BACKTICK != 0))
+                    })
+                    .collect()
+            } else {
+                s.to_vec()
+            };
         let encode = |c: u8| {
             (c == b'&' && flags & FILTER_FLAG_ENCODE_AMP != 0)
                 || (c < 32 && flags & FILTER_FLAG_ENCODE_LOW != 0)
@@ -1346,7 +1366,10 @@ mod tests {
         assert_eq!(fv("http://exa_mple.com", FILTER_VALIDATE_URL, 0), Value::Bool(false));
         assert_eq!(fv("a@b.co", FILTER_VALIDATE_EMAIL, 0), Value::Str(b"a@b.co".to_vec()));
         assert_eq!(fv("a@b", FILTER_VALIDATE_EMAIL, 0), Value::Bool(false));
-        assert_eq!(fv("ex-ample.com", FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME), Value::Str(b"ex-ample.com".to_vec()));
+        assert_eq!(
+            fv("ex-ample.com", FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME),
+            Value::Str(b"ex-ample.com".to_vec())
+        );
         assert_eq!(fv("01:23:45:67:89:ab", FILTER_VALIDATE_MAC, 0), Value::Str(b"01:23:45:67:89:ab".to_vec()));
     }
 }

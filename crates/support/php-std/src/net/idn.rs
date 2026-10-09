@@ -23,8 +23,10 @@ use icu_normalizer::uts46::Uts46MapperBorrowed;
 use icu_properties::CodePointMapData;
 use icu_properties::props::{BidiClass, GeneralCategory, GeneralCategoryGroup, JoiningType, Script};
 
-/// `IDNA_DEFAULT`.
-pub const IDNA_DEFAULT: i64 = 0;
+/// `IDNA_DEFAULT`, the default `$flags`: nontransitional processing both
+/// ways (`IDNA_NONTRANSITIONAL_TO_ASCII | IDNA_NONTRANSITIONAL_TO_UNICODE`)
+/// since PHP 8.4. ICU's own default (0) is transitional.
+pub const IDNA_DEFAULT: i64 = 0x30;
 /// `IDNA_ALLOW_UNASSIGNED` (ignored by UTS #46).
 pub const IDNA_ALLOW_UNASSIGNED: i64 = 1;
 /// `IDNA_USE_STD3_RULES`: ASCII other than letters, digits, `-` and `.` is disallowed.
@@ -78,9 +80,16 @@ const SEVERE_ERRORS: u32 = IDNA_ERROR_LEADING_COMBINING_MARK
     | IDNA_ERROR_INVALID_ACE_LABEL;
 
 /// The `$flags` argument: `IDNA_*` option bits. PHP passes the integer to
-/// ICU as an unsigned 32-bit value and ignores unknown bits.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+/// ICU as an unsigned 32-bit value and ignores unknown bits. The default is
+/// [`IDNA_DEFAULT`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Flags(u32);
+
+impl Default for Flags {
+    fn default() -> Self {
+        Flags(IDNA_DEFAULT as u32)
+    }
+}
 
 impl Flags {
     /// The flags from PHP's integer (truncated to 32 bits like PHP's
@@ -1063,7 +1072,15 @@ mod tests {
     }
 
     #[test]
-    fn transitional_by_default() {
+    fn nontransitional_by_default() {
+        let default = |s: &str| to_ascii(s.as_bytes(), Flags::default()).unwrap();
+        assert_eq!(default("faß.de").as_deref(), Some(&b"xn--fa-hia.de"[..]));
+        let default = |s: &str| to_utf8(s.as_bytes(), Flags::default()).unwrap();
+        assert_eq!(default("faß.de").as_deref(), Some("faß.de".as_bytes()));
+    }
+
+    #[test]
+    fn transitional_with_flags_0() {
         assert_eq!(ascii("faß.de", 0).as_deref(), Some("fass.de"));
         assert_eq!(ascii("faß.de", IDNA_NONTRANSITIONAL_TO_ASCII).as_deref(), Some("xn--fa-hia.de"));
         assert_eq!(utf8("xn--fa-hia.de", 0).as_deref(), Some("faß.de"));

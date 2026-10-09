@@ -7,14 +7,8 @@ use serde_json::{Map, Value};
 
 use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes_value};
 
-pub const OPS: &[&str] = &[
-    "net.ip2long",
-    "net.long2ip",
-    "net.inet_pton",
-    "net.inet_ntop",
-    "net.idn_to_ascii",
-    "net.idn_to_utf8",
-];
+pub const OPS: &[&str] =
+    &["net.ip2long", "net.long2ip", "net.inet_pton", "net.inet_ntop", "net.idn_to_ascii", "net.idn_to_utf8"];
 
 pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
     let a = Args(args);

@@ -4150,23 +4150,22 @@
     "pcre_limit_start": {
       "gen": "pick",
       "from": [
-        "(*LIMIT_MATCH=1)",
-        "(*LIMIT_MATCH=2)",
-        "(*LIMIT_MATCH=3)",
-        "(*LIMIT_MATCH=5)",
-        "(*LIMIT_MATCH=10)",
-        "(*LIMIT_MATCH=30)",
-        "(*LIMIT_MATCH=100)",
-        "(*LIMIT_MATCH=1000)",
+        "(*NO_JIT)(*LIMIT_MATCH=1)",
+        "(*NO_JIT)(*LIMIT_MATCH=2)",
+        "(*NO_JIT)(*LIMIT_MATCH=3)",
+        "(*NO_JIT)(*LIMIT_MATCH=5)",
+        "(*NO_JIT)(*LIMIT_MATCH=10)",
+        "(*NO_JIT)(*LIMIT_MATCH=30)",
+        "(*NO_JIT)(*LIMIT_MATCH=100)",
+        "(*NO_JIT)(*LIMIT_MATCH=1000)",
         "(*LIMIT_DEPTH=1)",
         "(*LIMIT_DEPTH=2)",
         "(*LIMIT_DEPTH=5)",
         "(*LIMIT_DEPTH=20)",
-        "(*NO_JIT)(*LIMIT_MATCH=3)",
-        "(*NO_JIT)(*LIMIT_MATCH=20)",
+        "(*NO_JIT)(*LIMIT_DEPTH=1)",
         "(*NO_JIT)(*LIMIT_DEPTH=2)",
         "(*NO_JIT)(*LIMIT_DEPTH=10)",
-        "(*LIMIT_DEPTH=3)(*LIMIT_MATCH=50)(*NOTEMPTY)"
+        "(*NO_JIT)(*LIMIT_DEPTH=3)(*LIMIT_MATCH=50)(*NOTEMPTY)"
       ]
     },
     "pcre_limit_pattern": {
@@ -4280,6 +4279,58 @@
       ]
     }
   },
-  "deviations": [],
-  "quirks": []
+  "deviations": [
+    {
+      "symbol": "preg_match()",
+      "php": "PHP runs patterns in the PCRE2 JIT with a 192 KiB stack (pcre.jit=1, applies to every preg_* function): deep recursion and long runs of group repetitions fail with PREG_JIT_STACKLIMIT_ERROR after a number of iterations set by the JIT's stack frame layout (4095 repetitions of (?:a|b)*, 24574 of (?:ab)*, 4915 levels of (a(?1)?b)), and a recursion that never consumes input runs until that stack or pcre.backtrack_limit gives out",
+      "reason": "php_std keeps the words the JIT's code would hold on that stack (exec::JIT_STACK_WORDS, from allocate_stack() in pcre2_jit_compile.c): groups, alternatives, captures, BRAZERO and iterators in repeated groups match PHP's limits exactly, recursion only approximately (within a word per level for simple recursions). How deep a recursive pattern may go, and which limit error a recursion that never consumes input reports (PREG_JIT_STACKLIMIT_ERROR or PREG_BACKTRACK_LIMIT_ERROR, e.g. ~(*NOTEMPTY)(?R)*?~u), can differ. Matches that stay within PHP's limits are identical"
+    },
+    {
+      "symbol": "preg_match()",
+      "php": "Under the JIT a pattern's own (*LIMIT_MATCH=n) counts the steps where the generated code calls count_match(); the JIT also loops replicated groups such as (?:x){1,3} and skips retries it knows to fail",
+      "reason": "php_std counts the JIT's steps for iterators, group ends, BRAZERO and recursion, which reproduces where pcre.backtrack_limit (1000000) runs out on backtracking-heavy patterns, but not the replicated-group loops: a small (*LIMIT_MATCH=n) can run out at a different step under the JIT. The interpreter's counting ((*NO_JIT), the retry after an empty match) is exact and fuzzed"
+    },
+    {
+      "symbol": "preg_match()",
+      "php": "(*LIMIT_HEAP=n) limits the interpreter's frame memory; PHP reuses one match data block across calls, so whether a small limit is hit depends on earlier calls",
+      "reason": "Not modelled: php_std parses (*LIMIT_HEAP=n) and ignores it"
+    },
+    {
+      "symbol": "preg_match()",
+      "php": "(*UTF) without the u modifier: PHP passes PCRE2_NO_UTF_CHECK, so an invalid UTF-8 subject is undefined behaviour in PCRE2",
+      "reason": "php_std does not reproduce undefined behaviour; patterns starting with (*UTF) are fuzzed with valid UTF-8 subjects"
+    }
+  ],
+  "quirks": [
+    {
+      "symbol": "preg_match()",
+      "description": "(*NOTEMPTY) is ignored when PHP calls pcre2_jit_match() (no UTF check needed) and honoured by pcre2_match() (the interpreter, or the JIT after a UTF check)",
+      "case": "pcre.json#JIT ignores (*NOTEMPTY)"
+    },
+    {
+      "symbol": "preg_match_all()",
+      "description": "Under the JIT a lookbehind with a variable-length branch sees its own position as the end of the subject (\\z, $, \\b and lookaheads inside it)",
+      "case": "pcre.json#JIT ends the subject at a variable-length lookbehind"
+    },
+    {
+      "symbol": "preg_match_all()",
+      "description": "Under the JIT, backtracking into a non-atomic lookbehind that already succeeded retries it against the real end of the subject and continues where that retry ended",
+      "case": "pcre.json#JIT resumes after a non-atomic lookbehind retried at the subject end"
+    },
+    {
+      "symbol": "preg_match_all()",
+      "description": "Under the JIT a (*SKIP:NAME) without its (*MARK:NAME) ends a negative or conditional assertion like (*SKIP); the interpreter ignores it",
+      "case": "pcre.json#JIT treats an unmatched SKIP name in a negative assertion as SKIP"
+    },
+    {
+      "symbol": "preg_match()",
+      "description": "The JIT stack overflows (PREG_JIT_STACKLIMIT_ERROR) after 4095 iterations of (?:a|b)* while a possessive repeat needs no stack",
+      "case": "pcre.json#JIT stack overflows at 4096 iterations of (?:a|b)*"
+    },
+    {
+      "symbol": "preg_last_error()",
+      "description": "preg_last_error() keeps the previous error across calls that never reach a pattern",
+      "case": "pcre.json#last error survives a call without patterns"
+    }
+  ]
 }

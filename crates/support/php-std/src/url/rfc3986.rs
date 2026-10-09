@@ -458,12 +458,13 @@ fn remove_dot_segments(segments: &mut Vec<Cow<'_, [u8]>>, relative: bool, has_ho
         let mut removed = false;
         if seg == b"." {
             let mut remove = true;
-            if i == 0 && has_next {
-                if segments[1].is_empty() && !has_host {
-                    remove = false;
-                } else if relative && segments[1].contains(&b':') {
-                    remove = false;
-                }
+            // A leading "." stays before an empty segment (no host) or, in a
+            // relative reference, before a segment with a colon.
+            if i == 0
+                && has_next
+                && ((segments[1].is_empty() && !has_host) || (relative && segments[1].contains(&b':')))
+            {
+                remove = false;
             }
             if remove {
                 removed = true;

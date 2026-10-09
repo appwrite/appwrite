@@ -6,7 +6,10 @@
 
 use super::lookbehind::LOOKBEHIND_MAX;
 use super::parse::{opt::*, *};
-use super::unicode::{self, CBITS, CBIT_CNTRL, CBIT_DIGIT, CBIT_GRAPH, CBIT_LOWER, CBIT_PRINT, CBIT_PUNCT, CBIT_SPACE, CBIT_UPPER, CBIT_WORD, CBIT_XDIGIT};
+use super::unicode::{
+    self, CBIT_CNTRL, CBIT_DIGIT, CBIT_GRAPH, CBIT_LOWER, CBIT_PRINT, CBIT_PUNCT, CBIT_SPACE, CBIT_UPPER, CBIT_WORD,
+    CBIT_XDIGIT, CBITS,
+};
 
 /// A single-character item: matches exactly one character (or `\R`/`\X`
 /// sequences) and can be repeated without groups.
@@ -17,7 +20,11 @@ pub enum Lit {
     CharI(u32),
     Not(u32),
     NotI(u32),
-    Prop { neg: bool, ptype: u32, pdata: u32 },
+    Prop {
+        neg: bool,
+        ptype: u32,
+        pdata: u32,
+    },
     Any,
     AllAny,
     AnyByte,
@@ -38,7 +45,12 @@ pub enum Class {
     Map([u8; 32]),
     /// Characters > 255 always match.
     NMap([u8; 32]),
-    X { negated: bool, has_prop: bool, map: Option<[u8; 32]>, items: Vec<XItem> },
+    X {
+        negated: bool,
+        has_prop: bool,
+        map: Option<[u8; 32]>,
+        items: Vec<XItem>,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -90,7 +102,12 @@ pub enum GroupKind {
     Capture(u32),
     Atomic,
     ScriptRun,
-    Look { behind: bool, negated: bool, atomic: bool, reverse: Vec<Reverse> },
+    Look {
+        behind: bool,
+        negated: bool,
+        atomic: bool,
+        reverse: Vec<Reverse>,
+    },
     Cond(Cond),
     /// A `(?(DEFINE)...)` group: never run in line.
     Define,
@@ -101,14 +118,29 @@ pub enum Node {
     Lit(Lit),
     Assert(Assert),
     SetSom,
-    Ref { groups: Vec<u32>, caseless: bool },
+    Ref {
+        groups: Vec<u32>,
+        caseless: bool,
+    },
     Recurse(u32),
     /// `empty`: the group could match an empty string (`compile_regex()`
     /// returned a negative value), which selects the `OP_S...` forms.
-    Group { kind: GroupKind, branches: Vec<Vec<Node>>, empty: bool },
-    Repeat { node: Box<Node>, min: u32, max: u32, kind: RepKind },
+    Group {
+        kind: GroupKind,
+        branches: Vec<Vec<Node>>,
+        empty: bool,
+    },
+    Repeat {
+        node: Box<Node>,
+        min: u32,
+        max: u32,
+        kind: RepKind,
+    },
     /// `(*ACCEPT)`: close these captures (innermost first), then accept.
-    Accept { close: Vec<u32>, in_assert: bool },
+    Accept {
+        close: Vec<u32>,
+        in_assert: bool,
+    },
     Fail,
     Mark(u32),
     Commit(Option<u32>),
@@ -147,7 +179,6 @@ pub struct Tree {
     pub names: Vec<(Vec<u8>, u32)>,
     /// Verb arguments (`(*MARK:name)` ...), indexed by the ids in nodes.
     pub marks: Vec<Vec<u8>>,
-    pub has_lookbehind: bool,
     /// First and required code units of the whole pattern.
     pub units: Units,
     /// The pattern can match an empty string (`PCRE2_MATCH_EMPTY`).
@@ -255,7 +286,6 @@ pub fn build(meta: &[u32], pat: &[u8], parsed: &Parsed, xoptions: u32) -> Result
         top_bracket: parsed.bracount,
         names,
         marks: b.marks,
-        has_lookbehind: parsed.has_lookbehind,
         units,
         match_empty: compiled.empty,
         had_accept: b.had_accept,
@@ -329,9 +359,7 @@ impl<'a> Builder<'a> {
         if options & CASELESS != 0 {
             if self.utf || self.ucp {
                 let set = unicode::caseset(c);
-                if set != 0
-                    && (xoptions & X_CASELESS_RESTRICT == 0 || super::ucd::CASELESS_SETS[set as usize] > 127)
-                {
+                if set != 0 && (xoptions & X_CASELESS_RESTRICT == 0 || super::ucd::CASELESS_SETS[set as usize] > 127) {
                     return Node::Lit(Lit::Prop { neg: false, ptype: PT_CLIST, pdata: set });
                 }
             }
@@ -478,7 +506,10 @@ impl<'a> Builder<'a> {
             }
             let previous_matched_char = matched_char;
             matched_char = false;
-            if cond_assert && first_item && !(item >= META_END && matches!(meta, META_CALLOUT_NUMBER | META_CALLOUT_STRING)) {
+            if cond_assert
+                && first_item
+                && !(item >= META_END && matches!(meta, META_CALLOUT_NUMBER | META_CALLOUT_STRING))
+            {
                 first_item = false;
                 if item >= META_END
                     && matches!(
@@ -677,7 +708,11 @@ impl<'a> Builder<'a> {
                     if compiled.branches.len() > 1 && self.deferred.is_none() {
                         self.deferred = Some((54, offset));
                     }
-                    out.push(Node::Group { kind: GroupKind::Define, branches: compiled.branches, empty: compiled.empty });
+                    out.push(Node::Group {
+                        kind: GroupKind::Define,
+                        branches: compiled.branches,
+                        empty: compiled.empty,
+                    });
                 }
                 META_COND_NUMBER => {
                     let offset = self.meta[self.p + 1] as usize;
@@ -706,16 +741,31 @@ impl<'a> Builder<'a> {
                     let ge = self.meta[self.p + 1] > 0;
                     let (major, minor) = (self.meta[self.p + 2], self.meta[self.p + 3]);
                     self.p += 4;
-                    let value = if ge { 10 > major || (10 == major && 44 >= minor) } else { major == 10 && minor == 44 };
-                    let node =
-                        self.compile_cond(Cond::Value(value), options, xoptions, offset_var, &mut st, &mut matched_char, false)?;
+                    let value =
+                        if ge { 10 > major || (10 == major && 44 >= minor) } else { major == 10 && minor == 44 };
+                    let node = self.compile_cond(
+                        Cond::Value(value),
+                        options,
+                        xoptions,
+                        offset_var,
+                        &mut st,
+                        &mut matched_char,
+                        false,
+                    )?;
                     out.push(node);
                 }
                 META_COND_ASSERT => {
                     self.p += 1;
                     // The assertion is the first item of the first branch.
-                    let node =
-                        self.compile_cond(Cond::Value(false), options, xoptions, offset_var, &mut st, &mut matched_char, true)?;
+                    let node = self.compile_cond(
+                        Cond::Value(false),
+                        options,
+                        xoptions,
+                        offset_var,
+                        &mut st,
+                        &mut matched_char,
+                        true,
+                    )?;
                     out.push(node);
                 }
                 META_LOOKAHEAD | META_LOOKAHEADNOT | META_LOOKAHEAD_NA | META_LOOKBEHIND | META_LOOKBEHINDNOT
@@ -798,7 +848,11 @@ impl<'a> Builder<'a> {
                     let kind = match meta {
                         META_MINMAX_PLUS | META_ASTERISK_PLUS | META_PLUS_PLUS | META_QUERY_PLUS => RepKind::Possessive,
                         META_MINMAX_QUERY | META_ASTERISK_QUERY | META_PLUS_QUERY | META_QUERY_QUERY => {
-                            if greedy_default(options) == RepKind::Greedy { RepKind::Lazy } else { RepKind::Greedy }
+                            if greedy_default(options) == RepKind::Greedy {
+                                RepKind::Lazy
+                            } else {
+                                RepKind::Greedy
+                            }
                         }
                         _ => greedy_default(options),
                     };
@@ -826,12 +880,13 @@ impl<'a> Builder<'a> {
                             Node::Group { kind: gk, branches, .. }
                                 if min > 1
                                     && !(matches!(gk, GroupKind::Define)
-                                        || matches!(gk, GroupKind::Cond(Cond::Value(false))) && branches.len() == 1) =>
+                                        || matches!(gk, GroupKind::Cond(Cond::Value(false)))
+                                            && branches.len() == 1)
+                                    && st.groupsetfirstcu
+                                    && st.u.reqcuflags >= REQ_NONE =>
                             {
-                                if st.groupsetfirstcu && st.u.reqcuflags >= REQ_NONE {
-                                    st.u.reqcu = st.u.firstcu;
-                                    st.u.reqcuflags = st.u.firstcuflags;
-                                }
+                                st.u.reqcu = st.u.firstcu;
+                                st.u.reqcuflags = st.u.firstcuflags;
                             }
                             _ => {}
                         }
@@ -1012,7 +1067,8 @@ impl<'a> Builder<'a> {
         let mut empty = false;
         loop {
             let mut branch = Vec::new();
-            let r = self.compile_branch(&mut options, &mut xoptions, &mut branch, cond_assert && branches.is_empty())?;
+            let r =
+                self.compile_branch(&mut options, &mut xoptions, &mut branch, cond_assert && branches.is_empty())?;
             if r.okreturn < 0 {
                 empty = true;
             }
@@ -1394,7 +1450,14 @@ struct RangeCtx {
 }
 
 /// `add_to_class()`: returns the number of characters < 256 added.
-fn add_to_class(classbits: &mut [u8; 32], xitems: &mut Vec<XItem>, options: u32, xoptions: u32, start: u32, end: u32) -> u32 {
+fn add_to_class(
+    classbits: &mut [u8; 32],
+    xitems: &mut Vec<XItem>,
+    options: u32,
+    xoptions: u32,
+    start: u32,
+    end: u32,
+) -> u32 {
     let ctx = RangeCtx { start, end };
     add_to_class_internal(classbits, xitems, options, xoptions, &ctx, start, end)
 }
@@ -1425,7 +1488,15 @@ fn add_to_class_internal(
             while let Some(r) = get_othercase_range(&mut c, end, restricted) {
                 match r {
                     OtherCase::Set(set, except) => {
-                        n8 += add_list_internal(classbits, xitems, options, xoptions, ctx, unicode::caseless_set(set), Some(except));
+                        n8 += add_list_internal(
+                            classbits,
+                            xitems,
+                            options,
+                            xoptions,
+                            ctx,
+                            unicode::caseless_set(set),
+                            Some(except),
+                        );
                     }
                     OtherCase::Range(oc, od) => {
                         if oc >= ctx.start && od <= ctx.end {

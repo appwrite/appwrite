@@ -16,21 +16,28 @@
 //! The engine is a port, not a translation to another regex dialect: the
 //! pattern parser (`parse_regex()`), the lookbehind checks, the compiler
 //! (`compile_branch()`, including class construction and caseless sets),
-//! the matcher (`match()`, with PCRE2's backtracking frames, so verbs,
-//! recursion, conditions, atomic groups and `\K` behave identically) and the
-//! Unicode 15.0.0 tables. Patterns are delimited and take modifiers exactly
-//! as `pcre_get_compiled_regex_cache()` parses them (`/i m n s x A D r S X U
-//! u J`), and compile errors produce PHP's warning text, with PCRE2's error
-//! messages and offsets.
+//! auto-possessification (`auto_possessify()`), the matcher (`match()`, with
+//! PCRE2's backtracking frames, so verbs, recursion, conditions, atomic
+//! groups and `\K` behave identically, and the match and depth limits run
+//! out at the same step) and the Unicode 15.0.0 tables. Patterns are
+//! delimited and take modifiers exactly as `pcre_get_compiled_regex_cache()`
+//! parses them (`/i m n s x A D r S X U u J`), and compile errors produce
+//! PHP's warning text, with PCRE2's error messages and offsets.
 //!
-//! PHP runs patterns with the PCRE2 JIT, and retries an empty match with
-//! the interpreter; both produce the same results, which this module
-//! reproduces, including PHP's UTF-8 checks (only from the start offset
-//! moved back by the longest lookbehind) and the JIT's report of a
-//! recursion loop as a JIT stack overflow. Not reproduced: where exactly
-//! the backtracking limit (`pcre.backtrack_limit`) and the JIT stack run
-//! out, since they depend on the machine code the JIT generates; this module
-//! counts backtracking frames like the interpreter does.
+//! PHP runs patterns with the PCRE2 JIT (`pcre2_jit_match()`, or
+//! `pcre2_match()` when the subject needs a UTF-8 check) and retries an
+//! empty match with the interpreter. The matcher runs in both modes and
+//! reproduces where the JIT differs from the interpreter: it ignores
+//! `(*NOTEMPTY)` when called directly, ends the subject at a lookbehind
+//! with a variable-length branch (and keeps that end like a register when
+//! backtracking into a non-atomic lookbehind), lets an unmatched
+//! `(*SKIP:NAME)` end a negative assertion, has no recursion-loop check,
+//! counts match steps where its code calls `count_match()` (so
+//! `pcre.backtrack_limit` runs out at the same subject length), and fails a
+//! JIT compilation (disabling the JIT for the process) for `\C` in UTF mode
+//! and backtracking verbs in non-atomic assertions. The 192 KiB JIT stack is
+//! approximated by a budget of backtracking frames; see the `pcre`
+//! deviations in `tests/compat/php-std/spec.d/pcre.json`.
 //!
 //! Every function here is checked against the real PHP function by
 //! `bin/compat fuzz php-std` (operations `pcre.*`).
@@ -43,15 +50,19 @@ mod compile;
 mod exec;
 mod lookbehind;
 mod parse;
+mod possess;
 mod program;
 mod study;
 mod ucd;
 mod unicode;
 
 use exec::{Exec, MatchData, Matcher, UNSET};
-use study::StartInfo;
-use parse::{opt, Bsr, Newline};
+use parse::{Bsr, Newline, opt};
 use program::{BraKind, Op, Program};
+use study::StartInfo;
+
+/// The Unicode version of PCRE2's tables (PHP's "PCRE Unicode Version").
+pub const UNICODE_VERSION: &str = ucd::UNICODE_VERSION;
 
 pub const PREG_PATTERN_ORDER: i64 = 1;
 pub const PREG_SET_ORDER: i64 = 2;
@@ -143,10 +154,10 @@ impl Array {
     }
 
     fn insert_new(&mut self, key: Key, value: Value) {
-        if let Key::Int(i) = key {
-            if i >= self.next {
-                self.next = i.saturating_add(1);
-            }
+        if let Key::Int(i) = key
+            && i >= self.next
+        {
+            self.next = i.saturating_add(1);
         }
         self.entries.push((key, value));
     }
@@ -391,7 +402,11 @@ impl Regex {
             }
         }
         let tree = compile::build(&meta, pattern, &parsed, xoptions)?;
-        let prog = program::lower(&tree);
+        let mut prog = program::lower(&tree);
+        if parsed.options & opt::NO_AUTO_POSSESS == 0 {
+            possess::auto_possessify(&mut prog.code, parsed.options & opt::UTF != 0, parsed.options & opt::UCP != 0);
+        }
+        prog.jit = program::JitLayout::new(&prog.code, prog.top_bracket, &prog.group_start);
         let mut names = vec![None; prog.top_bracket as usize + 1];
         for (name, number) in &prog.names {
             names[*number as usize] = Some(name.clone());
@@ -515,11 +530,7 @@ impl Regex {
     /// subject first. `known_valid`: PHP already knows the subject string is
     /// valid UTF-8 (`is_known_valid_utf8()`).
     fn first_call(&self, known_valid: bool) -> Call {
-        if self.php_utf && !known_valid {
-            Call::Checked
-        } else {
-            Call::Fast
-        }
+        if self.php_utf && !known_valid { Call::Checked } else { Call::Fast }
     }
 
     /// `calculate_unit_length()`.
@@ -622,7 +633,9 @@ struct Globals {
 
 fn globals() -> &'static Mutex<Globals> {
     static GLOBALS: OnceLock<Mutex<Globals>> = OnceLock::new();
-    GLOBALS.get_or_init(|| Mutex::new(Globals { jit: true, error: PregError::None, order: VecDeque::new(), cache: HashMap::new() }))
+    GLOBALS.get_or_init(|| {
+        Mutex::new(Globals { jit: true, error: PregError::None, order: VecDeque::new(), cache: HashMap::new() })
+    })
 }
 
 fn lock() -> std::sync::MutexGuard<'static, Globals> {
@@ -653,7 +666,10 @@ pub fn set_jit(enabled: bool) {
 /// a miss. `Err` carries the warning of a pattern that does not compile;
 /// `Ok` may carry the warning of a pattern the JIT could not compile, which
 /// switches the JIT off for the rest of the process, as PHP does.
-fn cached(func: &str, regex: &[u8]) -> Result<(Arc<Regex>, Option<Vec<u8>>), Vec<u8>> {
+/// A compiled pattern and the warning its JIT compilation emitted.
+type Cached = (Arc<Regex>, Option<Vec<u8>>);
+
+fn cached(func: &str, regex: &[u8]) -> Result<Cached, Vec<u8>> {
     let mut g = lock();
     if let Some(re) = g.cache.get(regex) {
         return Ok((re.clone(), None));
@@ -723,11 +739,7 @@ fn contains_no_jit(pattern: &[u8]) -> bool {
 
 fn match_value(subject: &[u8], start: usize, end: usize, unmatched_as_null: bool) -> Value {
     if start == UNSET {
-        if unmatched_as_null {
-            Value::Null
-        } else {
-            Value::Str(Vec::new())
-        }
+        if unmatched_as_null { Value::Null } else { Value::Str(Vec::new()) }
     } else {
         Value::Str(subject[start..end].to_vec())
     }
@@ -751,7 +763,14 @@ fn add_named(out: &mut Array, name: &[u8], val: Value, unmatched: bool) {
 }
 
 /// `add_offset_pair()`.
-fn add_offset_pair(out: &mut Array, subject: &[u8], start: usize, end: usize, name: Option<&[u8]>, unmatched_as_null: bool) {
+fn add_offset_pair(
+    out: &mut Array,
+    subject: &[u8],
+    start: usize,
+    end: usize,
+    name: Option<&[u8]>,
+    unmatched_as_null: bool,
+) {
     let p = if start == UNSET {
         pair(if unmatched_as_null { Value::Null } else { Value::Str(Vec::new()) }, -1)
     } else {
@@ -784,7 +803,12 @@ pub fn preg_match(pattern: &[u8], subject: &[u8], flags: i64, offset: i64) -> Re
 }
 
 /// `preg_match_all($pattern, $subject, $matches, $flags, $offset)`.
-pub fn preg_match_all(pattern: &[u8], subject: &[u8], flags: i64, offset: i64) -> Result<Preg<MatchResult>, ArgumentError> {
+pub fn preg_match_all(
+    pattern: &[u8],
+    subject: &[u8],
+    flags: i64,
+    offset: i64,
+) -> Result<Preg<MatchResult>, ArgumentError> {
     match_impl("preg_match_all", pattern, subject, true, flags, offset)
 }
 
@@ -819,7 +843,9 @@ fn match_impl(
         unmatched_as_null = flags & PREG_UNMATCHED_AS_NULL != 0;
         if flags & 0xff != 0 {
             subpats_order = flags & 0xff;
-            if (global && !(PREG_PATTERN_ORDER..=PREG_SET_ORDER).contains(&subpats_order)) || (!global && subpats_order != 0) {
+            if (global && !(PREG_PATTERN_ORDER..=PREG_SET_ORDER).contains(&subpats_order))
+                || (!global && subpats_order != 0)
+            {
                 return Err(ArgumentError::value(format!("{func}(): Argument #4 ($flags) must be a PREG_* constant")));
             }
         }
@@ -831,7 +857,11 @@ fn match_impl(
         start_offset as usize
     };
     let done = |result: Value, matches: Array, error: PregError, warning: Option<Vec<u8>>| {
-        Ok(Preg { value: MatchResult { result, matches: Some(matches) }, error, warning: warning.or(jit_warning.clone()) })
+        Ok(Preg {
+            value: MatchResult { result, matches: Some(matches) },
+            error,
+            warning: warning.or(jit_warning.clone()),
+        })
     };
     if start_offset2 > len {
         return done(Value::Bool(false), matches, set_last_error(PregError::Internal), None);
@@ -923,10 +953,10 @@ fn match_impl(
     }
     if let Some(sets) = match_sets {
         for (i, set) in sets.into_iter().enumerate() {
-            if re.name_count > 0 {
-                if let Some(name) = &re.names[i] {
-                    matches.update(Key::Str(name.clone()), Value::Array(set.clone()));
-                }
+            if re.name_count > 0
+                && let Some(name) = &re.names[i]
+            {
+                matches.update(Key::Str(name.clone()), Value::Array(set.clone()));
             }
             matches.push(Value::Array(set));
         }
@@ -1027,7 +1057,7 @@ fn replace_impl(
     let len = subject.len();
     let mut result: Option<Vec<u8>> = None;
     let mut last_end_offset = 0usize;
-    let mut start_offset = 0usize;
+    let mut start_offset;
     let mut count = re.call(subject, 0, re.first_call(false));
     loop {
         let mut piece = last_end_offset;
@@ -1121,6 +1151,7 @@ fn limit_of(limit: i64) -> usize {
 }
 
 /// Runs one compiled-or-failed regex over a subject (`php_pcre_replace()`).
+#[allow(clippy::too_many_arguments)]
 fn replace_one(
     func: &str,
     regex: &[u8],
@@ -1162,30 +1193,40 @@ pub fn preg_replace(
     let mut error = preg_last_error();
     let mut warning = None;
     let mut count = 0i64;
-    let mut in_subject = |subject: &[u8], count: &mut i64, error: &mut PregError, warning: &mut Option<Vec<u8>>| -> Option<Vec<u8>> {
-        match pattern {
-            StrOrArray::Str(p) => {
-                let StrOrArray::Str(r) = replacement else { unreachable!() };
-                replace_one("preg_replace", p, subject, &mut Replacement::Template(r), limit, count, error, warning)
-            }
-            StrOrArray::Array(patterns) => {
-                let mut current = subject.to_vec();
-                let mut replace_idx = 0;
-                for (_, p) in patterns {
-                    let r: Vec<u8> = match replacement {
-                        StrOrArray::Str(r) => r.to_vec(),
-                        StrOrArray::Array(rs) => {
-                            let r = rs.get(replace_idx).map(|(_, r)| r.clone()).unwrap_or_default();
-                            replace_idx += 1;
-                            r
-                        }
-                    };
-                    current = replace_one("preg_replace", p, &current, &mut Replacement::Template(&r), limit, count, error, warning)?;
+    let in_subject =
+        |subject: &[u8], count: &mut i64, error: &mut PregError, warning: &mut Option<Vec<u8>>| -> Option<Vec<u8>> {
+            match pattern {
+                StrOrArray::Str(p) => {
+                    let StrOrArray::Str(r) = replacement else { unreachable!() };
+                    replace_one("preg_replace", p, subject, &mut Replacement::Template(r), limit, count, error, warning)
                 }
-                Some(current)
+                StrOrArray::Array(patterns) => {
+                    let mut current = subject.to_vec();
+                    let mut replace_idx = 0;
+                    for (_, p) in patterns {
+                        let r: Vec<u8> = match replacement {
+                            StrOrArray::Str(r) => r.to_vec(),
+                            StrOrArray::Array(rs) => {
+                                let r = rs.get(replace_idx).map(|(_, r)| r.clone()).unwrap_or_default();
+                                replace_idx += 1;
+                                r
+                            }
+                        };
+                        current = replace_one(
+                            "preg_replace",
+                            p,
+                            &current,
+                            &mut Replacement::Template(&r),
+                            limit,
+                            count,
+                            error,
+                            warning,
+                        )?;
+                    }
+                    Some(current)
+                }
             }
-        }
-    };
+        };
     let result = match subject {
         StrOrArray::Str(s) => match in_subject(s, &mut count, &mut error, &mut warning) {
             Some(r) => Value::Str(r),
@@ -1218,29 +1259,37 @@ pub fn preg_replace_callback(
     let mut warning = None;
     let mut count = 0i64;
     let func = "preg_replace_callback";
-    let mut in_subject = |subject: &[u8], count: &mut i64, error: &mut PregError, warning: &mut Option<Vec<u8>>| -> Option<Vec<u8>> {
-        match pattern {
-            StrOrArray::Str(p) => {
-                replace_one(func, p, subject, &mut Replacement::Callback { func: callback, flags }, limit, count, error, warning)
-            }
-            StrOrArray::Array(patterns) => {
-                let mut current = subject.to_vec();
-                for (_, p) in patterns {
-                    current = replace_one(
-                        func,
-                        p,
-                        &current,
-                        &mut Replacement::Callback { func: callback, flags },
-                        limit,
-                        count,
-                        error,
-                        warning,
-                    )?;
+    let mut in_subject =
+        |subject: &[u8], count: &mut i64, error: &mut PregError, warning: &mut Option<Vec<u8>>| -> Option<Vec<u8>> {
+            match pattern {
+                StrOrArray::Str(p) => replace_one(
+                    func,
+                    p,
+                    subject,
+                    &mut Replacement::Callback { func: callback, flags },
+                    limit,
+                    count,
+                    error,
+                    warning,
+                ),
+                StrOrArray::Array(patterns) => {
+                    let mut current = subject.to_vec();
+                    for (_, p) in patterns {
+                        current = replace_one(
+                            func,
+                            p,
+                            &current,
+                            &mut Replacement::Callback { func: callback, flags },
+                            limit,
+                            count,
+                            error,
+                            warning,
+                        )?;
+                    }
+                    Some(current)
                 }
-                Some(current)
             }
-        }
-    };
+        };
     let result = match subject {
         StrOrArray::Str(s) => match in_subject(s, &mut count, &mut error, &mut warning) {
             Some(r) => Value::Str(r),
@@ -1467,8 +1516,13 @@ mod tests {
     fn match_all_and_replace() {
         let r = preg_match_all(b"/a*?/", b"aaa", 0, 0).unwrap();
         assert_eq!(r.value.result, Value::Int(7));
-        let r = preg_replace(&StrOrArray::Str(b"/(\\w+) (\\w+)/"), &StrOrArray::Str(b"$2 ${1}\\\\"), &StrOrArray::Str(b"hello world"), -1)
-            .unwrap();
+        let r = preg_replace(
+            &StrOrArray::Str(b"/(\\w+) (\\w+)/"),
+            &StrOrArray::Str(b"$2 ${1}\\\\"),
+            &StrOrArray::Str(b"hello world"),
+            -1,
+        )
+        .unwrap();
         assert_eq!(r.value.result, Value::Str(b"world hello\\".to_vec()));
         let r = preg_split(b"/\\s*/", b"a b", -1, PREG_SPLIT_NO_EMPTY);
         assert_eq!(strs(&r.value), ["a", "b"]);
@@ -1479,9 +1533,15 @@ mod tests {
     fn compile_failures() {
         let r = preg_match(b"/(abc/", b"x", 0, 0).unwrap();
         assert_eq!(r.value.result, Value::Bool(false));
-        assert_eq!(r.warning.unwrap(), b"preg_match(): Compilation failed: missing closing parenthesis at offset 4".to_vec());
+        assert_eq!(
+            r.warning.unwrap(),
+            b"preg_match(): Compilation failed: missing closing parenthesis at offset 4".to_vec()
+        );
         let r = preg_match(b"abc", b"x", 0, 0).unwrap();
-        assert_eq!(r.warning.unwrap(), b"preg_match(): Delimiter must not be alphanumeric, backslash, or NUL byte".to_vec());
+        assert_eq!(
+            r.warning.unwrap(),
+            b"preg_match(): Delimiter must not be alphanumeric, backslash, or NUL byte".to_vec()
+        );
         let r = preg_match(b"/abc/k", b"x", 0, 0).unwrap();
         assert_eq!(r.warning.unwrap(), b"preg_match(): Unknown modifier 'k'".to_vec());
     }

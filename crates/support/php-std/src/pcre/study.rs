@@ -8,10 +8,10 @@
 //! `(*COMMIT)`, a recursion loop or the backtracking limit at such a
 //! position behaves differently without them.
 
-use super::compile::{Assert, Class, Lit, XItem, REQ_CASELESS, REQ_NONE, REQ_VARY};
-use super::parse::{opt, PT_CLIST};
+use super::compile::{Assert, Class, Lit, REQ_CASELESS, REQ_NONE, REQ_VARY, XItem};
+use super::parse::{PT_CLIST, opt};
 use super::program::{BraKind, Op, Program, UNLIMITED};
-use super::unicode::{self, CBITS, CBIT_DIGIT, CBIT_SPACE, CBIT_WORD};
+use super::unicode::{self, CBIT_DIGIT, CBIT_SPACE, CBIT_WORD, CBITS};
 
 /// What `pcre2_match()` uses to find start positions.
 #[derive(Debug, Clone, Default)]
@@ -177,7 +177,10 @@ impl<'a> Study<'a> {
     fn first_significant_code(&self, mut pc: usize, skipassert: bool) -> usize {
         loop {
             match &self.code[pc] {
-                Op::Bra { kind: BraKind::AssertNot | BraKind::AssertBack | BraKind::AssertBackNot | BraKind::AssertBackNa, .. } => {
+                Op::Bra {
+                    kind: BraKind::AssertNot | BraKind::AssertBack | BraKind::AssertBackNot | BraKind::AssertBackNa,
+                    ..
+                } => {
                     if !skipassert {
                         return pc;
                     }
@@ -501,8 +504,8 @@ impl<'a> Study<'a> {
     /// The class bit map handling of `set_start_bits()` (`HANDLE_CLASSMAP`).
     fn class_map_bits(&mut self, map: &[u8; 32]) {
         if self.utf {
-            for c in 0..16 {
-                self.bits[c] |= map[c];
+            for (bit, m) in self.bits.iter_mut().zip(&map[..16]) {
+                *bit |= m;
             }
             let mut c = 128u32;
             while c < 256 {
@@ -514,8 +517,8 @@ impl<'a> Study<'a> {
                 c += 1;
             }
         } else {
-            for c in 0..32 {
-                self.bits[c] |= map[c];
+            for (bit, m) in self.bits.iter_mut().zip(map) {
+                *bit |= m;
             }
         }
     }
@@ -578,10 +581,26 @@ impl<'a> Study<'a> {
             let mut try_next = true;
             while try_next {
                 match &code[tcode] {
-                    Op::Accept | Op::AssertAccept | Op::Close(_) | Op::Commit(_) | Op::End | Op::Fail | Op::Mark(_)
-                    | Op::Prune(_) | Op::Recurse(_) | Op::Ref { .. } | Op::Reverse(_) | Op::VReverse { .. }
-                    | Op::SetSom | Op::Skip | Op::SkipArg(_) | Op::Then(_) | Op::CondRef(_) | Op::CondRecurse(_)
-                    | Op::CondFalse | Op::CondTrue => return SSB_FAIL,
+                    Op::Accept
+                    | Op::AssertAccept
+                    | Op::Close(_)
+                    | Op::Commit(_)
+                    | Op::End
+                    | Op::Fail
+                    | Op::Mark(_)
+                    | Op::Prune(_)
+                    | Op::Recurse(_)
+                    | Op::Ref { .. }
+                    | Op::Reverse(_)
+                    | Op::VReverse { .. }
+                    | Op::SetSom
+                    | Op::Skip
+                    | Op::SkipArg(_)
+                    | Op::Then(_)
+                    | Op::CondRef(_)
+                    | Op::CondRecurse(_)
+                    | Op::CondFalse
+                    | Op::CondTrue => return SSB_FAIL,
                     Op::Bra { kind: BraKind::Cond, .. } => return SSB_FAIL,
                     Op::Assert(a) => match a {
                         Assert::Circ => tcode += 1,
@@ -699,9 +718,8 @@ impl<'a> Study<'a> {
                             tcode = ncode;
                             continue;
                         }
-                        match self.group_bits(&mut tcode, &mut try_next, depth) {
-                            Some(rc) => return rc,
-                            None => {}
+                        if let Some(rc) = self.group_bits(&mut tcode, &mut try_next, depth) {
+                            return rc;
                         }
                     }
                     Op::Bra { kind, .. } => match kind {
@@ -800,9 +818,9 @@ impl<'a> Study<'a> {
     /// The group bracket that a back reference or recursion to group `n`
     /// refers to (`PRIV(find_bracket)`), searching from `from`.
     fn find_bracket(&self, from: usize, n: u32) -> Option<usize> {
-        (from..self.code.len()).find(|&pc| {
-            matches!(self.code[pc], Op::Bra { kind: BraKind::Capture(k) | BraKind::CapturePos(k), .. } if k == n)
-        })
+        (from..self.code.len()).find(
+            |&pc| matches!(self.code[pc], Op::Bra { kind: BraKind::Capture(k) | BraKind::CapturePos(k), .. } if k == n),
+        )
     }
 
     /// `find_minlength()`: the minimum length of the group at `pc`, or a
@@ -1048,4 +1066,3 @@ impl<'a> Study<'a> {
         Ok(d)
     }
 }
-

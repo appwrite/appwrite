@@ -65,8 +65,8 @@ impl<'a> Checker<'a> {
                 }
                 META_ATOMIC | META_CAPTURE | META_COND_ASSERT | META_COND_DEFINE | META_COND_NAME
                 | META_COND_NUMBER | META_COND_RNAME | META_COND_RNUMBER | META_COND_VERSION | META_LOOKAHEAD
-                | META_LOOKAHEADNOT | META_LOOKAHEAD_NA | META_LOOKBEHIND | META_LOOKBEHINDNOT
-                | META_LOOKBEHIND_NA | META_NOCAPTURE | META_SCRIPT_RUN => nestlevel += 1,
+                | META_LOOKAHEADNOT | META_LOOKAHEAD_NA | META_LOOKBEHIND | META_LOOKBEHINDNOT | META_LOOKBEHIND_NA
+                | META_NOCAPTURE | META_SCRIPT_RUN => nestlevel += 1,
                 META_ALT => {
                     if nestlevel == 0 && skiptype == PSKIP_ALT {
                         return Some(p);
@@ -86,7 +86,8 @@ impl<'a> Checker<'a> {
     }
 
     /// `get_grouplength()`: `p` is the first item inside the group; on
-    /// return it is at the closing `META_KET`.
+    /// return it is at the closing `META_KET`. (PCRE2's argument list.)
+    #[allow(clippy::too_many_arguments)]
     fn get_grouplength(
         &mut self,
         p: &mut usize,
@@ -472,7 +473,13 @@ impl<'a> Checker<'a> {
 
     /// `set_lookbehind_lengths()`: `p` is at the lookbehind META item; on
     /// return it is at the final `META_KET`.
-    fn set_lookbehind_lengths(&mut self, p: &mut usize, errcode: &mut i32, lc: &mut i32, recurses: &mut Vec<usize>) -> bool {
+    fn set_lookbehind_lengths(
+        &mut self,
+        p: &mut usize,
+        errcode: &mut i32,
+        lc: &mut i32,
+        recurses: &mut Vec<usize>,
+    ) -> bool {
         let mut bptr = *p;
         let gbptr = bptr;
         let offset = self.meta[bptr + 1] as usize;
@@ -522,7 +529,13 @@ impl<'a> Checker<'a> {
     }
 
     /// `check_lookbehinds()`. Returns 0 or an error code.
-    pub fn check_lookbehinds(&mut self, mut p: usize, retptr: Option<&mut usize>, recurses: &mut Vec<usize>, lc: &mut i32) -> i32 {
+    pub fn check_lookbehinds(
+        &mut self,
+        mut p: usize,
+        retptr: Option<&mut usize>,
+        recurses: &mut Vec<usize>,
+        lc: &mut i32,
+    ) -> i32 {
         let mut errorcode = 0;
         let mut nestlevel = 0i32;
         self.erroroffset = UNSET;

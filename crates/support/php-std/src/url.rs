@@ -95,7 +95,17 @@ pub fn parse_url(url: &[u8]) -> Option<Url<'_>> {
 
 impl<'a> Url<'a> {
     fn empty(input: &'a [u8]) -> Self {
-        Url { input, scheme: None, host: None, port: None, user: None, pass: None, path: None, query: None, fragment: None }
+        Url {
+            input,
+            scheme: None,
+            host: None,
+            port: None,
+            user: None,
+            pass: None,
+            path: None,
+            query: None,
+            fragment: None,
+        }
     }
 
     fn part(&self, r: &Option<Range<usize>>) -> Option<Cow<'a, [u8]>> {
