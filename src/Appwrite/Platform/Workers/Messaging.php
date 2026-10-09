@@ -708,8 +708,9 @@ class Messaging extends Action
             return [];
         }
 
-        // A target with no provider id resolves to the default (the Appwrite MQTT provider, which carries
-        // no device token), so only targets with an explicit provider are read.
+        // Each target is classified by its resolved provider below, not by the query: a target with no
+        // provider id inherits the default, which is a wakeable device when that default is APNS/FCM but
+        // the MQTT channel itself (no token) when it is Appwrite.
         /** @var array<string, array<string, true>> $tokens  provider id => (identifier => true) */
         $tokens = [];
         $cursor = null;
@@ -718,7 +719,6 @@ class Messaging extends Action
             $queries = [
                 Query::equal('userId', \array_keys($mqttUsers)),
                 Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
-                Query::isNotNull('providerId'),
                 Query::select(['$sequence', 'providerId', 'identifier', 'expired']),
                 Query::orderAsc('$sequence'),
                 Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
@@ -742,7 +742,7 @@ class Messaging extends Action
                     continue;
                 }
 
-                $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId'), $providers, $default);
+                $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId') ?? '', $providers, $default);
 
                 // The Appwrite provider is the MQTT channel we are waking into; a disabled/missing one
                 // falls back to it. Only a real native push provider carries a wake.

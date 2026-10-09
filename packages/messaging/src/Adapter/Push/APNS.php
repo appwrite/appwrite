@@ -84,11 +84,15 @@ class APNS extends PushAdapter
             };
         }
 
-        // A content-available push with no alert is a background notification. Apple requires it to be
-        // sent with the `background` push type and priority 5 — it rejects priority 10 for background —
-        // so a silent wake reaches a suspended app rather than being dropped.
+        // A content-available push with no user-facing content is a background notification. Apple
+        // requires it to be sent with the `background` push type and priority 5 — it rejects priority 10,
+        // and also rejects a background push that carries an alert, sound, critical flag, or badge — so a
+        // silent wake reaches a suspended app rather than being dropped.
         $background = \is_null($message->getTitle())
             && \is_null($message->getBody())
+            && \is_null($message->getSound())
+            && \is_null($message->getCritical())
+            && \is_null($message->getBadge())
             && (int) $message->getContentAvailable() === 1;
         $pushType = $background ? 'background' : 'alert';
         if ($background) {

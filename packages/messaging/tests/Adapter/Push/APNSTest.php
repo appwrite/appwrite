@@ -38,6 +38,25 @@ final class APNSTest extends TestCase
     }
 
     /**
+     * A content-available push that also carries a badge is not background-eligible: APNs rejects a
+     * background push with a badge, so it must stay an alert push.
+     */
+    public function testContentAvailableWithBadgeStaysAlert(): void
+    {
+        $stub = new APNSStub($this->authKey(), 'keyId', 'teamId', 'com.example.app');
+
+        $stub->send(new Push(
+            to: ['token'],
+            data: ['k' => 'v'],
+            badge: 3,
+            contentAvailable: true,
+        ));
+
+        $this->assertContains('apns-push-type: alert', $stub->capturedHeaders);
+        $this->assertNotContains('apns-push-type: background', $stub->capturedHeaders);
+    }
+
+    /**
      * A regular notification keeps the alert push type and sends its priority as an HTTP header.
      */
     public function testAlertUsesAlertPushType(): void
