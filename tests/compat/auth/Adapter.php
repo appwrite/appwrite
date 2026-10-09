@@ -556,8 +556,9 @@ final class Adapter implements Base
      */
     private static function ceremonyOnce(array $a): array|string
     {
-        $origin = 'http://localhost:3000';
-        $ceremony = new Ceremony(new RelyingParty('localhost', 'Test', [$origin]));
+        $origin = isset($a['origin']) ? (string) $a['origin'] : 'http://localhost:3000';
+        $origins = isset($a['origins']) ? \array_map(strval(...), (array) $a['origins']) : [$origin];
+        $ceremony = new Ceremony(new RelyingParty(isset($a['rp_id']) ? (string) $a['rp_id'] : 'localhost', 'Test', $origins));
         $challenge = $ceremony->register('user@example.com', 'User', []);
         $signIn = ($a['phase'] ?? 'register') === 'sign-in';
         $authenticator = ['key' => (string) $a['key'], 'credential_id' => '0kzTk-rTMQXiw5KPbsDZlQ', 'origin' => $origin];
@@ -586,6 +587,7 @@ final class Adapter implements Base
         $request = $ceremony->authenticate();
         $user = self::map($challenge->options['user'] ?? [])['id'] ?? '';
         $response = Authenticator::respond(['kind' => 'authenticate', 'options' => $request->options, 'counter' => 1, 'user_handle' => $user]
+            + (isset($a['sign_in_origin']) ? ['origin' => (string) $a['sign_in_origin']] : [])
             + $authenticator + $overrides(['extensions', 'signature']));
 
         return self::credential($ceremony->verifyAuthentication($request->state, $response, $registered->record));

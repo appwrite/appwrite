@@ -1860,7 +1860,7 @@
       "doc": "fixture: a compact JWS of json_encode(header).json_encode(claims) (or raw_header/raw_claims) signed HS256 or RS256 with key"
     },
     "passkeys.ceremony_once": {
-      "doc": "new Ceremony on localhost, register(), the test authenticator's response with hex-encoded overrides, then verifyRegistration() (phase register) or a sign-in through verifyAuthentication() (phase sign-in): one call, for fuzzing; CBOR declaring a string of 64 MiB or more returns a fixed 'skipped' string on both sides (webauthn-lib's fread() of the declared length exhausts PHP's memory)",
+      "doc": "new Ceremony on localhost (or `rp_id`, with `origins`; the authenticator answers from `origin`, and from `sign_in_origin` when signing in), register(), the test authenticator's response with hex-encoded overrides, then verifyRegistration() (phase register) or a sign-in through verifyAuthentication() (phase sign-in): one call, for fuzzing; CBOR declaring a string of 64 MiB or more returns a fixed 'skipped' string on both sides (webauthn-lib's fread() of the declared length exhausts PHP's memory)",
       "covers": [
         "Utopia\\Auth\\Passkeys\\Ceremony::verifyRegistration",
         "Utopia\\Auth\\Passkeys\\Ceremony::verifyAuthentication"
@@ -3429,6 +3429,53 @@
             }
           },
           "iterations": 500
+        },
+        {
+          "name": "origins",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "key": {
+                "gen": "const",
+                "value": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n"
+              },
+              "phase": {
+                "gen": "pick",
+                "from": [
+                  "register",
+                  "sign-in"
+                ]
+              },
+              "rp_id": {
+                "gen": "pick",
+                "from": [
+                  "localhost",
+                  "example.com"
+                ]
+              },
+              "origins": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "passkey_origin"
+                },
+                "min": 0,
+                "max": 3
+              },
+              "origin": {
+                "gen": "ref",
+                "name": "passkey_origin"
+              },
+              "sign_in_origin": {
+                "gen": "ref",
+                "name": "passkey_origin"
+              }
+            },
+            "optional": [
+              "sign_in_origin"
+            ]
+          },
+          "iterations": 3000
         }
       ]
     }
@@ -4464,6 +4511,169 @@
           "min": 0,
           "max": 10,
           "tricky": 0.5
+        }
+      ]
+    },
+    "passkey_origin": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "https",
+                "http",
+                "http",
+                "HTTPS",
+                "ftp",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "://",
+                "://",
+                "://",
+                "://",
+                ":",
+                ":/"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "user@",
+                ":pw@"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "localhost",
+                "localhost",
+                "localhost",
+                "example.com",
+                "app.example.com",
+                "eu.app.example.com",
+                "evilexample.com",
+                ".example.com",
+                "*.example.com",
+                "*.localhost",
+                "*",
+                "LOCALHOST",
+                "App.Example.com",
+                "[::1]",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                "",
+                ":3000",
+                ":5173",
+                ":443",
+                ":80",
+                ":8443",
+                ":0",
+                ":",
+                ":99999"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                "",
+                "",
+                "",
+                "/",
+                "/login",
+                "?",
+                "#f"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "http",
+                "http",
+                "https"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "://localhost",
+                "://localhost",
+                "://*.example.com",
+                "://app.example.com",
+                "://example.com"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                ":3000",
+                ":5173",
+                ":443",
+                ":80"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                "",
+                "/"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "http://localhost",
+            "http://localhost",
+            "https://localhost",
+            "http://localhost:3000",
+            "https://*.example.com",
+            "https://*.example.com",
+            "https://example.com",
+            "android:apk-key-hash:abc",
+            "http:///bad",
+            "*",
+            "",
+            "http://localhost/"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "url",
+          "min": 0,
+          "max": 24
         }
       ]
     }

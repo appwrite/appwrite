@@ -996,8 +996,16 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         ))),
         "passkeys.authenticator" => Outcome::Ok(authenticator::respond(&a)?),
         "passkeys.ceremony_once" => {
-            let origin = "http://localhost:3000";
-            let ceremony = Ceremony::new(RelyingParty::new("localhost", "Test", vec![origin.to_owned()]));
+            let origin = a.opt_str("origin")?.unwrap_or("http://localhost:3000");
+            let origins = match a.opt("origins") {
+                Some(Value::Array(list)) => list
+                    .iter()
+                    .map(|o| o.as_str().map(str::to_owned).ok_or_else(|| Fault::new("origins must be strings")))
+                    .collect::<Result<_, _>>()?,
+                _ => vec![origin.to_owned()],
+            };
+            let rp_id = a.opt_str("rp_id")?.unwrap_or("localhost");
+            let ceremony = Ceremony::new(RelyingParty::new(rp_id, "Test", origins));
             let challenge = tri!(ceremony.register(b"user@example.com", b"User", &[]));
             let sign_in = a.opt_str("phase")? == Some("sign-in");
             let options = from_array(&challenge.options);
@@ -1026,7 +1034,8 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 let request = tri!(ceremony.authenticate());
                 let mut args = json!({
                     "kind": "authenticate", "key": a.str("key")?, "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
-                    "origin": origin, "options": from_array(&request.options), "counter": 1,
+                    "origin": a.opt_str("sign_in_origin")?.unwrap_or(origin),
+                    "options": from_array(&request.options), "counter": 1,
                     "user_handle": options["user"]["id"],
                 });
                 hex_overrides(&a, &mut args, &["extensions", "signature"])?;

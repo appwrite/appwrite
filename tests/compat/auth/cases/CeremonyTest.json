@@ -6184,6 +6184,2392 @@
       ]
     },
     {
+      "name": "portless localhost origin allows any port",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "localhost",
+            "name": "Test",
+            "origins": [
+              "http://localhost"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "localhost",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "http://localhost:5173"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.authenticate",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            }
+          },
+          "bind": "au",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rpId": "localhost",
+              "allowCredentials": [],
+              "userVerification": "required"
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "authenticate",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "au",
+              "path": "/options"
+            },
+            "origin": "http://localhost:3000",
+            "counter": 1,
+            "user_handle": {
+              "$ref": "ch",
+              "path": "/options/user/id"
+            }
+          },
+          "bind": "acred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MdAAAAAQ",
+              "signature": "<masked>",
+              "userHandle": "<masked>"
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "au",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "acred"
+            },
+            "record": {
+              "$ref": "reg",
+              "path": "/record"
+            }
+          },
+          "bind": "signed",
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 1,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "reg",
+              "path": "/identifier"
+            },
+            "b": {
+              "$ref": "signed",
+              "path": "/identifier"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "passkeys.authenticate",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            }
+          },
+          "bind": "au2",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rpId": "localhost",
+              "allowCredentials": [],
+              "userVerification": "required"
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "authenticate",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "au2",
+              "path": "/options"
+            },
+            "origin": "https://localhost:3000",
+            "counter": 2,
+            "user_handle": {
+              "$ref": "ch",
+              "path": "/options/user/id"
+            }
+          },
+          "bind": "acred2",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MdAAAAAg",
+              "signature": "<masked>",
+              "userHandle": "<masked>"
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "au2",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "acred2"
+            },
+            "record": {
+              "$ref": "reg",
+              "path": "/record"
+            }
+          },
+          "bind": "signed2",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: Invalid origin. Not in the list of allowed origins."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "portless localhost origin rejects a path",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "localhost",
+            "name": "Test",
+            "origins": [
+              "http://localhost"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "localhost",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "http://localhost:5173/login"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: Invalid origin. Not in the list of allowed origins."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "wildcard origin allows subdomains (subdomain)",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "example.com",
+            "name": "Test",
+            "origins": [
+              "https://*.example.com"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "example.com",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "https://app.example.com",
+            "rp_id": "example.com"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUo3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUddAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "wildcard origin allows subdomains (nested subdomain)",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "example.com",
+            "name": "Test",
+            "origins": [
+              "https://*.example.com"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "example.com",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "https://eu.app.example.com",
+            "rp_id": "example.com"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUo3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUddAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "wildcard origin allows subdomains (apex)",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "example.com",
+            "name": "Test",
+            "origins": [
+              "https://*.example.com"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "example.com",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "https://example.com",
+            "rp_id": "example.com"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUo3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUddAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Origin \"https://example.com\" is not allowed."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "wildcard origin allows subdomains (lookalike)",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "example.com",
+            "name": "Test",
+            "origins": [
+              "https://*.example.com"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "example.com",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "https://evilexample.com",
+            "rp_id": "example.com"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUo3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUddAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Origin \"https://evilexample.com\" is not allowed."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "wildcard origin allows subdomains (http)",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "example.com",
+            "name": "Test",
+            "origins": [
+              "https://*.example.com"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "example.com",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "http://app.example.com",
+            "rp_id": "example.com"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUo3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUddAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Origin \"http://app.example.com\" is not allowed."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "wildcard origin allows subdomains (port)",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "example.com",
+            "name": "Test",
+            "origins": [
+              "https://*.example.com"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "example.com",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "https://app.example.com:8443",
+            "rp_id": "example.com"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUo3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUddAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Origin \"https://app.example.com:8443\" is not allowed."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "wildcard origin allows subdomains (path)",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "example.com",
+            "name": "Test",
+            "origins": [
+              "https://*.example.com"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "example.com",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "https://app.example.com/login",
+            "rp_id": "example.com"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUo3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUddAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Origin \"https://app.example.com/login\" is not allowed."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "portless origin allows only the default port outside localhost",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "example.com",
+            "name": "Test",
+            "origins": [
+              "https://example.com"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "example.com",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "https://example.com:8443",
+            "rp_id": "example.com"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUo3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUddAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: Invalid origin. Not in the list of allowed origins."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a wildcard origin matches a host that is only its suffix",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "example.com",
+            "name": "Test",
+            "origins": [
+              "https://*.example.com"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "example.com",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "https://.example.com",
+            "rp_id": "example.com"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUo3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUddAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a wildcard origin with the default port written out",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "example.com",
+            "name": "Test",
+            "origins": [
+              "https://*.example.com"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "example.com",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "https://app.example.com:443",
+            "rp_id": "example.com"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUo3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUddAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Origin \"https://app.example.com:443\" is not allowed."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a wildcard origin next to an exact one",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "example.com",
+            "name": "Test",
+            "origins": [
+              "https://*.example.com",
+              "https://example.com"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "example.com",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "https://example.com",
+            "rp_id": "example.com"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUo3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUddAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an origin with credentials does not match a wildcard",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "example.com",
+            "name": "Test",
+            "origins": [
+              "https://*.example.com"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "example.com",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "https://user@app.example.com",
+            "rp_id": "example.com"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUo3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUddAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Origin \"https://user@app.example.com\" is not allowed."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an explicit localhost port does not allow other ports",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "localhost",
+            "name": "Test",
+            "origins": [
+              "http://localhost:3000"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "localhost",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "http://localhost:5173"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: Invalid origin. Not in the list of allowed origins."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a portless localhost origin allows any port only on a localhost RP ID",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "example.com",
+            "name": "Test",
+            "origins": [
+              "http://localhost"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "example.com",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "http://localhost:3000",
+            "rp_id": "example.com"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUo3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUddAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: Invalid origin. Not in the list of allowed origins."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a portless localhost origin with a trailing slash allows no other port",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "localhost",
+            "name": "Test",
+            "origins": [
+              "http://localhost/"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "localhost",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "http://localhost:3000"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: Invalid origin. Not in the list of allowed origins."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an unparseable allowed origin fails verification",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "localhost",
+            "name": "Test",
+            "origins": [
+              "http:///bad"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "localhost",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "http://localhost:3000"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: Invalid origin: http:///bad"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an unparseable response origin with a wildcard allowed",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "localhost",
+            "name": "Test",
+            "origins": [
+              "https://*.localhost"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "localhost",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "http:///bad"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Origin \"http:///bad\" is not allowed."
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "fingerprint ignores origin order",
       "steps": [
         {
@@ -6246,7 +8632,7 @@
       ]
     },
     {
-      "name": "a relying party without origins requires https on the RP ID",
+      "name": "a relying party without origins allows no origin",
       "steps": [
         {
           "op": "passkeys.ceremony",
@@ -6349,7 +8735,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Credential verification failed: Invalid scheme. HTTPS required."
+              "message": "Origin \"http://localhost:3000\" is not allowed."
             }
           }
         }

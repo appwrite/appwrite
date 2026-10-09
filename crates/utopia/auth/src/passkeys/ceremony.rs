@@ -11,6 +11,7 @@ use sha2::{Digest, Sha256};
 use super::RelyingParty;
 use super::cbor::{self, Item};
 use super::cose::{Algorithm, PublicKey};
+use super::origin::LOCALHOST;
 use crate::Error;
 use crate::hash::{hash_equals, random_bytes};
 
@@ -841,6 +842,64 @@ fn is_subdomain_of(sub: &[u8], domain: &[u8]) -> bool {
     [b".", sub].concat().ends_with(&[b".", domain].concat())
 }
 
+/// `CheckAllowedOrigins`: `scheme://host[:port]` origins and raw facet
+/// identifiers (such as `android:apk-key-hash:...`) matched verbatim.
+struct Origins {
+    full: Vec<Vec<u8>>,
+    raw: Vec<Vec<u8>>,
+}
+
+impl Origins {
+    /// `new CheckAllowedOrigins($allowedOrigins)`, which the validator builds
+    /// before running any check.
+    fn parse(allowed: &[Vec<u8>]) -> Result<Self, Vec<u8>> {
+        let mut origins = Self { full: Vec::new(), raw: Vec::new() };
+        for entry in allowed {
+            let Some(p) = parse_url(entry) else {
+                return Err([b"Invalid origin: ", &entry[..]].concat());
+            };
+            match (p.scheme(), p.host()) {
+                (Some(scheme), Some(host)) => origins.full.push(build_origin(&scheme, &host, p.port())),
+                (Some(_), None) => origins.raw.push(entry.clone()),
+                (None, host) => {
+                    let host = host.map(|h| h.into_owned()).unwrap_or_else(|| entry.clone());
+                    origins.full.push(build_origin(b"https", &host, None));
+                }
+            }
+        }
+        Ok(origins)
+    }
+
+    /// `process()`. The ceremony never passes an empty list, so the library's
+    /// fallback to the RP ID does not apply.
+    fn check(&self, origin: &[u8]) -> Result<(), Vec<u8>> {
+        if self.raw.iter().any(|r| r == origin) {
+            return Ok(());
+        }
+        let Some(parsed) = parse_url(origin) else {
+            return Err("Invalid origin. Unable to parse the origin.".into());
+        };
+        if let (Some(scheme), Some(host)) = (parsed.scheme(), parsed.host()) {
+            if self.full.contains(&build_origin(&scheme, &host, parsed.port())) {
+                return Ok(());
+            }
+            let subdomain = self.full.iter().any(|f| {
+                let Some(a) = parse_url(f) else {
+                    return false;
+                };
+                match (a.scheme(), a.host()) {
+                    (Some(s), Some(h)) => s == scheme && a.port() == parsed.port() && is_subdomain_of(&host, &h),
+                    _ => false,
+                }
+            });
+            if subdomain {
+                return Err("Invalid origin. Subdomains are not allowed.".into());
+            }
+        }
+        Err("Invalid origin. Not in the list of allowed origins.".into())
+    }
+}
+
 impl Ceremony {
     pub fn new(relying_party: RelyingParty) -> Self {
         Self { relying_party }
@@ -912,7 +971,8 @@ impl Ceremony {
             return Err(passkey("Expected an attestation response."));
         }
         assert_same_origin(&response)?;
-        let record = self.check_registration(&options, &response).map_err(failed)?;
+        let allowed = self.allowed_origins(&response.client().origin)?;
+        let record = self.check_registration(&options, &response, &allowed).map_err(failed)?;
         Ok(Credential { identifier: identifier(&record.id), record: record.to_array() })
     }
 
@@ -925,17 +985,76 @@ impl Ceremony {
             return Err(passkey("Expected an assertion response."));
         }
         assert_same_origin(&response)?;
+        let allowed = self.allowed_origins(&response.client().origin)?;
         let stored = Record::decode(record)?;
         let backup_eligible = stored.backup_eligible;
-        let verified = self.check_assertion(stored, &options, &response).map_err(failed)?;
+        let verified = self.check_assertion(stored, &options, &response, &allowed).map_err(failed)?;
         if backup_eligible.is_some() && verified.backup_eligible != backup_eligible {
             return Err(passkey("Backup eligibility changed."));
         }
         Ok(Credential { identifier: identifier(&verified.id), record: verified.to_array() })
     }
 
+    /// `getAllowedOrigins()`: the exact origins to check a response against. A
+    /// portless localhost origin allows any port, since development servers
+    /// pick their own, and a wildcard origin such as `https://*.example.com`
+    /// allows any subdomain on the default port.
+    fn allowed_origins(&self, origin: &[u8]) -> Result<Vec<Vec<u8>>, Error> {
+        let parts = parse_url(origin);
+        let plain = parts.as_ref().is_some_and(|p| {
+            p.scheme().is_some()
+                && p.host().is_some()
+                && p.path().is_none()
+                && p.query().is_none()
+                && p.fragment().is_none()
+                && p.user().is_none()
+        });
+        let scheme = parts.as_ref().and_then(|p| p.scheme()).unwrap_or_default();
+        let host = parts.as_ref().and_then(|p| p.host()).unwrap_or_default();
+        let port = parts.as_ref().and_then(|p| p.port());
+        let wildcard = [&scheme[..], b"://*"].concat();
+        let mut origins: Vec<Vec<u8>> = Vec::new();
+        for allowed in &self.relying_party.origins {
+            let allowed = allowed.as_bytes();
+            if !allowed.contains(&b'*') {
+                origins.push(allowed.to_vec());
+            } else if plain
+                && port.is_none()
+                && allowed.starts_with(&[&wildcard[..], b"."].concat())
+                && host.ends_with(&allowed[wildcard.len()..])
+            {
+                origins.push(origin.to_vec());
+            }
+        }
+        if plain
+            && port.is_some()
+            && self.relying_party.id == LOCALHOST
+            && *host == *LOCALHOST.as_bytes()
+            && origins.contains(&[&scheme[..], b"://", LOCALHOST.as_bytes()].concat())
+        {
+            origins.push(origin.to_vec());
+        }
+        // An empty list would let the library fall back to matching the RP ID alone.
+        if origins.is_empty() {
+            return Err(passkey([b"Origin \"", origin, b"\" is not allowed."].concat()));
+        }
+        let mut unique: Vec<Vec<u8>> = Vec::with_capacity(origins.len());
+        for o in origins {
+            if !unique.contains(&o) {
+                unique.push(o);
+            }
+        }
+        Ok(unique)
+    }
+
     /// `AuthenticatorAttestationResponseValidator::check()`.
-    fn check_registration(&self, options: &Options, response: &Response) -> Result<Record, Vec<u8>> {
+    fn check_registration(
+        &self,
+        options: &Options,
+        response: &Response,
+        allowed: &[Vec<u8>],
+    ) -> Result<Record, Vec<u8>> {
+        let origins = Origins::parse(allowed)?;
         let Response::Attestation { auth, transports, fmt, .. } = response else {
             return Err("Expected an attestation response.".into());
         };
@@ -957,7 +1076,7 @@ impl Ceremony {
             backup_status: None,
             uv_initialized: None,
         };
-        self.check_client_data(options, response)?;
+        self.check_client_data(options, response, &origins)?;
         self.check_rp_id_hash(options, response)?;
         check_presence_and_verification(options, auth)?;
         let key = PublicKey::from_cbor(public_key)?;
@@ -978,7 +1097,14 @@ impl Ceremony {
     }
 
     /// `AuthenticatorAssertionResponseValidator::check()`.
-    fn check_assertion(&self, mut record: Record, options: &Options, response: &Response) -> Result<Record, Vec<u8>> {
+    fn check_assertion(
+        &self,
+        mut record: Record,
+        options: &Options,
+        response: &Response,
+        allowed: &[Vec<u8>],
+    ) -> Result<Record, Vec<u8>> {
+        let origins = Origins::parse(allowed)?;
         let Response::Assertion { auth, signature, user_handle, client } = response else {
             return Err("Expected an assertion response.".into());
         };
@@ -991,7 +1117,7 @@ impl Ceremony {
         {
             return Err("Invalid user handle".into());
         }
-        self.check_client_data(options, response)?;
+        self.check_client_data(options, response, &origins)?;
         self.check_rp_id_hash(options, response)?;
         check_presence_and_verification(options, auth)?;
         let key = PublicKey::from_cbor(&record.public_key)?;
@@ -1015,7 +1141,7 @@ impl Ceremony {
     }
 
     /// `CheckClientDataCollectorType`, `CheckChallenge`, `CheckAllowedOrigins`.
-    fn check_client_data(&self, options: &Options, response: &Response) -> Result<(), Vec<u8>> {
+    fn check_client_data(&self, options: &Options, response: &Response, origins: &Origins) -> Result<(), Vec<u8>> {
         let client = response.client();
         if client.kind != b"webauthn.get" && client.kind != b"webauthn.create" {
             return Err("No client data collector found.".into());
@@ -1023,66 +1149,7 @@ impl Ceremony {
         if options.challenge.is_empty() || !hash_equals(&options.challenge, &client.challenge) {
             return Err("Invalid challenge.".into());
         }
-        self.check_origin(options, &client.origin)
-    }
-
-    fn check_origin(&self, options: &Options, origin: &[u8]) -> Result<(), Vec<u8>> {
-        let mut full: Vec<Vec<u8>> = Vec::new();
-        let mut raw: Vec<Vec<u8>> = Vec::new();
-        for allowed in &self.relying_party.origins {
-            let Some(p) = parse_url(allowed.as_bytes()) else {
-                return Err(format!("Invalid origin: {allowed}").into());
-            };
-            match (p.scheme(), p.host()) {
-                (Some(scheme), Some(host)) => full.push(build_origin(&scheme, &host, p.port())),
-                (Some(_), None) => raw.push(allowed.as_bytes().to_vec()),
-                (None, host) => {
-                    let host = host.map(|h| h.into_owned()).unwrap_or_else(|| allowed.as_bytes().to_vec());
-                    full.push(build_origin(b"https", &host, None));
-                }
-            }
-        }
-        if raw.iter().any(|r| r == origin) {
-            return Ok(());
-        }
-        let Some(parsed) = parse_url(origin) else {
-            return Err("Invalid origin. Unable to parse the origin.".into());
-        };
-        let origin_host = parsed.host().map(|h| h.into_owned()).unwrap_or_else(|| origin.to_vec());
-        if !full.is_empty() || !raw.is_empty() {
-            if let (Some(scheme), Some(host)) = (parsed.scheme(), parsed.host()) {
-                if full.contains(&build_origin(&scheme, &host, parsed.port())) {
-                    return Ok(());
-                }
-                let subdomain = full.iter().any(|f| {
-                    let Some(a) = parse_url(f) else {
-                        return false;
-                    };
-                    match (a.scheme(), a.host()) {
-                        (Some(s), Some(h)) => s == scheme && a.port() == parsed.port() && is_subdomain_of(&host, &h),
-                        _ => false,
-                    }
-                });
-                if subdomain {
-                    return Err("Invalid origin. Subdomains are not allowed.".into());
-                }
-            }
-            return Err("Invalid origin. Not in the list of allowed origins.".into());
-        }
-        let facet = options.rp_id.clone().unwrap_or_else(|| self.relying_party.id.as_bytes().to_vec());
-        if parsed.scheme().as_deref() != Some(b"https".as_slice()) {
-            return Err("Invalid scheme. HTTPS required.".into());
-        }
-        if facet.is_empty() {
-            return Err("Invalid origin. Unable to determine the facet ID.".into());
-        }
-        if origin_host == facet {
-            return Ok(());
-        }
-        if is_subdomain_of(&origin_host, &facet) {
-            return Err("Invalid origin. Subdomains are not allowed.".into());
-        }
-        Err("Invalid origin.".into())
+        origins.check(&client.origin)
     }
 
     /// `CheckRelyingPartyIdIdHash`.
