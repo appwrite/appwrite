@@ -63,10 +63,25 @@ export function isSpecificationAllowedInPlan(
   return spec.enabled !== false
 }
 
+function formatSpecificationMemory(memory: number): string {
+  if (memory < 1024) return `${memory} MB`
+  const binaryGb = memory / 1024
+  const decimalGb = memory / 1000
+  const gb =
+    Math.abs(binaryGb - Math.round(binaryGb)) <=
+    Math.abs(decimalGb - Math.round(decimalGb))
+      ? binaryGb
+      : decimalGb
+  const rounded = Math.round(gb * 10) / 10
+  return `${rounded} GB`
+}
+
 export function formatSpecificationLabel(spec?: {
   cpus?: number | string
   memory?: number | string
 } | null): string | undefined {
   if (spec?.cpus == null || spec?.memory == null) return undefined
-  return `${spec.cpus} CPU, ${spec.memory}MB RAM`
+  const memory = Number(spec.memory)
+  if (!Number.isFinite(memory)) return undefined
+  return `${spec.cpus} CPU · ${formatSpecificationMemory(memory)}`
 }
