@@ -48,9 +48,7 @@ export function ActivityActiveFilterChips({
   onClearAllFilters: () => void
 }) {
   const t = useT()
-  const keys = Array.from(filterMap.keys()).filter(
-    (key) => key.c !== 'time' && key.c !== 'sdk',
-  )
+  const keys = Array.from(filterMap.keys()).filter((key) => key.c !== 'time')
 
   if (keys.length === 0) return null
 

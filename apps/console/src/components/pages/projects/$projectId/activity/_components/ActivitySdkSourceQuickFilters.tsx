@@ -50,10 +50,12 @@ export function ActivitySdkSourceQuickFilters({
             onClick={() => onToggle(option.value)}
             className={cn(
               'border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground',
+              'aria-pressed:bg-accent aria-pressed:text-foreground',
+              'dark:aria-pressed:bg-accent dark:aria-pressed:text-foreground',
+              'aria-pressed:hover:bg-accent aria-pressed:hover:text-foreground',
               serviceHeaderFiltersButton,
               'rounded-s-none border-s-0',
               isLast ? 'rounded-e-md' : 'rounded-e-none',
-              active && 'bg-accent text-foreground',
             )}
           >
             {option.value === ACTIVITY_SDK_SOURCE_MCP ? (
