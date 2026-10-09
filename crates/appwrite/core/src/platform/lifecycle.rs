@@ -378,7 +378,7 @@ async fn resolve_user(ctx: &mut Context) -> Result<()> {
         .request
         .cookie(&cookie_name)
         .or_else(|| ctx.request.cookie(&format!("{cookie_name}_legacy")))
-        .map(|c| utopia_auth::store::decode(&c))
+        .map(utopia_auth::store::decode)
         .unwrap_or_default();
     if store.0.is_empty()
         && store.1.is_empty()

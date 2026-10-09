@@ -655,6 +655,78 @@ async fn statements(list: &[Value], env: &mut Env<'_, '_>, out: &Out) -> Result<
 }
 
 // ---------------------------------------------------------------------------
+// Telemetry
+// ---------------------------------------------------------------------------
+
+/// Values by instrument, in the order of their first write.
+type Recorded = Arc<Mutex<Vec<(String, Vec<f64>)>>>;
+
+/// `Utopia\Telemetry\Adapter\Test`: values by instrument, instruments in
+/// the order of their first write.
+#[derive(Default)]
+struct TestTelemetry {
+    recorded: Recorded,
+}
+
+struct TestInstrument {
+    name: String,
+    recorded: Recorded,
+}
+
+impl TestInstrument {
+    fn push(&self, value: f64) {
+        let mut recorded = self.recorded.lock().unwrap_or_else(|e| e.into_inner());
+        match recorded.iter_mut().find(|(n, _)| *n == self.name) {
+            Some((_, values)) => values.push(value),
+            None => recorded.push((self.name.clone(), vec![value])),
+        }
+    }
+}
+
+impl utopia_http::telemetry::Histogram for TestInstrument {
+    fn record(&self, value: f64, _attributes: &utopia_http::telemetry::Attributes) {
+        self.push(value);
+    }
+}
+
+impl utopia_http::telemetry::UpDownCounter for TestInstrument {
+    fn add(&self, value: i64, _attributes: &utopia_http::telemetry::Attributes) {
+        self.push(value as f64);
+    }
+}
+
+impl utopia_http::telemetry::Telemetry for TestTelemetry {
+    fn histogram(
+        &self,
+        name: &str,
+        _unit: &str,
+        _boundaries: Option<&[f64]>,
+    ) -> Arc<dyn utopia_http::telemetry::Histogram> {
+        Arc::new(TestInstrument { name: name.to_owned(), recorded: self.recorded.clone() })
+    }
+
+    fn up_down_counter(&self, name: &str, _unit: &str) -> Arc<dyn utopia_http::telemetry::UpDownCounter> {
+        Arc::new(TestInstrument { name: name.to_owned(), recorded: self.recorded.clone() })
+    }
+}
+
+impl TestTelemetry {
+    fn values(&self, name: &str) -> Vec<f64> {
+        let recorded = self.recorded.lock().unwrap_or_else(|e| e.into_inner());
+        recorded.iter().find(|(n, _)| n == name).map(|(_, v)| v.clone()).unwrap_or_default()
+    }
+
+    /// Up-down counters first, then histograms (the Test adapter's arrays).
+    fn order(&self) -> Vec<String> {
+        let recorded = self.recorded.lock().unwrap_or_else(|e| e.into_inner());
+        let names: Vec<String> = recorded.iter().map(|(n, _)| n.clone()).collect();
+        let (counters, histograms): (Vec<String>, Vec<String>) =
+            names.into_iter().partition(|n| n == "http.server.active_requests");
+        counters.into_iter().chain(histograms).collect()
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Validators
 // ---------------------------------------------------------------------------
 
@@ -902,7 +974,12 @@ fn build(app: &Value, out: &Out) -> Result<(Http, Vec<Value>), Fault> {
 async fn run(a: &Args<'_>) -> Result<Value, Fault> {
     let out: Out = Arc::new(Mutex::new(Vec::new()));
     let empty = json!({});
-    let (http, setup) = build(a.opt("app").unwrap_or(&empty), &out)?;
+    let (mut http, setup) = build(a.opt("app").unwrap_or(&empty), &out)?;
+    let telemetry = Arc::new(TestTelemetry::default());
+    if a.opt_bool("telemetry")?.unwrap_or(false) {
+        http.set_telemetry(&*telemetry);
+    }
+    let http = http;
     let mut responses = Vec::new();
     for spec in a.opt("requests").and_then(Value::as_array).into_iter().flatten() {
         take(&out);
@@ -933,7 +1010,18 @@ async fn run(a: &Args<'_>) -> Result<Value, Fault> {
         }
         responses.push(result);
     }
-    Ok(json!({"setup": setup, "responses": responses}))
+    let mut result = json!({"setup": setup, "responses": responses});
+    if a.opt_bool("telemetry")?.unwrap_or(false) {
+        let values = |name: &str| telemetry.values(name);
+        result["telemetry"] = json!({
+            "instruments": telemetry.order(),
+            "active": values("http.server.active_requests").iter().map(|v| *v as i64).collect::<Vec<_>>(),
+            "durations": values("http.server.request.duration").len(),
+            "request_sizes": values("http.server.request.body.size").iter().map(|v| *v as i64).collect::<Vec<_>>(),
+            "response_sizes": values("http.server.response.body.size").len(),
+        });
+    }
+    Ok(result)
 }
 
 async fn start(a: &Args<'_>) -> Result<Value, Fault> {

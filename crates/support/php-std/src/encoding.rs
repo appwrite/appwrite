@@ -928,49 +928,6 @@ pub fn html_entity_decode(s: &[u8], flags: HtmlFlags) -> Cow<'_, [u8]> {
     unescape(s, flags, true)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn url_like_php() {
-        assert_eq!(urlencode(b"a b~c&"), "a+b%7Ec%26");
-        assert_eq!(rawurlencode(b"a b~c&"), "a%20b~c%26");
-        assert_eq!(urldecode(b"a+b%2"), b"a b%2");
-    }
-
-    #[test]
-    fn query_like_php() {
-        let data = json!({"a": 1, "b": [1, {"c": "x y"}], "0": true, "n": null});
-        assert_eq!(
-            http_build_query(&data, b"p", None, QueryEncoding::Rfc1738),
-            b"a=1&b%5B0%5D=1&b%5B1%5D%5Bc%5D=x+y&p0=1"
-        );
-    }
-
-    #[test]
-    fn base64_like_php() {
-        assert_eq!(base64_encode(b"ab"), "YWI=");
-        assert_eq!(base64_decode(b"YW I=", true).unwrap(), b"ab");
-        assert_eq!(base64_decode(b"YWI=x", true), None);
-        assert_eq!(base64_decode(b"Y!WI", false).unwrap(), b"ab");
-    }
-
-    #[test]
-    fn html_like_php() {
-        let f = HtmlFlags::DEFAULT;
-        assert_eq!(
-            htmlspecialchars(b"<a href='x'>&amp;</a>", f, true),
-            b"&lt;a href=&#039;x&#039;&gt;&amp;amp;&lt;/a&gt;"
-        );
-        assert_eq!(htmlspecialchars(b"&amp; &bogus;", f, false), b"&amp; &amp;bogus;");
-        assert_eq!(htmlentities("café".as_bytes(), f, true), b"caf&eacute;");
-        assert_eq!(html_entity_decode(b"&eacute;&#x41;&apos;", f).as_ref(), "éA&apos;".as_bytes());
-        assert_eq!(htmlspecialchars(b"a\xFFb", HtmlFlags::from_php(3), true), b"");
-    }
-}
-
 // ---------------------------------------------------------------------------
 // parse_str and request variable registration (main/php_variables.c)
 // ---------------------------------------------------------------------------
@@ -1154,6 +1111,49 @@ fn c_str(s: &[u8]) -> &[u8] {
     match s.iter().position(|&b| b == 0) {
         Some(n) => &s[..n],
         None => s,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn url_like_php() {
+        assert_eq!(urlencode(b"a b~c&"), "a+b%7Ec%26");
+        assert_eq!(rawurlencode(b"a b~c&"), "a%20b~c%26");
+        assert_eq!(urldecode(b"a+b%2"), b"a b%2");
+    }
+
+    #[test]
+    fn query_like_php() {
+        let data = json!({"a": 1, "b": [1, {"c": "x y"}], "0": true, "n": null});
+        assert_eq!(
+            http_build_query(&data, b"p", None, QueryEncoding::Rfc1738),
+            b"a=1&b%5B0%5D=1&b%5B1%5D%5Bc%5D=x+y&p0=1"
+        );
+    }
+
+    #[test]
+    fn base64_like_php() {
+        assert_eq!(base64_encode(b"ab"), "YWI=");
+        assert_eq!(base64_decode(b"YW I=", true).unwrap(), b"ab");
+        assert_eq!(base64_decode(b"YWI=x", true), None);
+        assert_eq!(base64_decode(b"Y!WI", false).unwrap(), b"ab");
+    }
+
+    #[test]
+    fn html_like_php() {
+        let f = HtmlFlags::DEFAULT;
+        assert_eq!(
+            htmlspecialchars(b"<a href='x'>&amp;</a>", f, true),
+            b"&lt;a href=&#039;x&#039;&gt;&amp;amp;&lt;/a&gt;"
+        );
+        assert_eq!(htmlspecialchars(b"&amp; &bogus;", f, false), b"&amp; &amp;bogus;");
+        assert_eq!(htmlentities("café".as_bytes(), f, true), b"caf&eacute;");
+        assert_eq!(html_entity_decode(b"&eacute;&#x41;&apos;", f).as_ref(), "éA&apos;".as_bytes());
+        assert_eq!(htmlspecialchars(b"a\xFFb", HtmlFlags::from_php(3), true), b"");
     }
 }
 

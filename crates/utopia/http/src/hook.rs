@@ -89,11 +89,20 @@ impl Resources {
     }
 }
 
+/// Builds a param's default from its injections.
+pub type DefaultFactory = Arc<dyn Fn(&[Resource]) -> Value + Send + Sync>;
+
+/// Builds a param's validator from its injections.
+pub type ValidatorFactory = Arc<dyn Fn(&[Resource]) -> Arc<dyn Validator> + Send + Sync>;
+
+/// A hook's resolved arguments: params by key, then injections by name.
+pub(crate) type Arguments = (Vec<(String, Value)>, Vec<(String, Option<Resource>)>);
+
 /// A param's default: a value, or a factory called with its injections.
 #[derive(Clone)]
 pub enum Default {
     Value(Value),
-    Factory(Arc<dyn Fn(&[Resource]) -> Value + Send + Sync>),
+    Factory(DefaultFactory),
 }
 
 impl Default {
@@ -112,7 +121,7 @@ impl From<Value> for Default {
 #[derive(Clone)]
 pub enum Check {
     Validator(Arc<dyn Validator>),
-    Factory(Arc<dyn Fn(&[Resource]) -> Arc<dyn Validator> + Send + Sync>),
+    Factory(ValidatorFactory),
 }
 
 impl<V: Validator + 'static> From<V> for Check {
@@ -421,21 +430,21 @@ impl Http {
         values: &PathParams,
         request: &crate::params::Params,
         context: &Resources,
-    ) -> Result<(Vec<(String, Value)>, Vec<(String, Option<Resource>)>)> {
+    ) -> Result<Arguments> {
         let mut args = Vec::with_capacity(hook.params.len());
         for (key, param) in &hook.params {
             let mut request_key = key.as_str();
-            if !request.contains_key(key) {
-                if let Some(alias) = param.aliases.iter().find(|a| request.contains_key(a.as_str())) {
-                    request_key = alias;
-                }
+            if !request.contains_key(key)
+                && let Some(alias) = param.aliases.iter().find(|a| request.contains_key(a.as_str()))
+            {
+                request_key = alias;
             }
             let in_values = |k: &str| values.iter().find(|(n, _)| n == k).map(|(_, v)| v);
             let mut values_key = key.as_str();
-            if in_values(key).is_none() {
-                if let Some(alias) = param.aliases.iter().find(|a| in_values(a).is_some()) {
-                    values_key = alias;
-                }
+            if in_values(key).is_none()
+                && let Some(alias) = param.aliases.iter().find(|a| in_values(a).is_some())
+            {
+                values_key = alias;
             }
             let mut exists_in_request = request.contains_key(request_key);
             let path_value = in_values(values_key);

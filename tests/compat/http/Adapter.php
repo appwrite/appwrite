@@ -18,6 +18,7 @@ use Utopia\Http\Route;
 use Utopia\Http\Router;
 use Utopia\Http\TrustedHeaders;
 use Utopia\Http\View;
+use Utopia\Telemetry\Adapter\Test as TestTelemetry;
 
 /**
  * Maps tests/compat/http/spec.json operations onto utopia-php/http.
@@ -126,7 +127,12 @@ final class Adapter implements Base
      */
     private static function run(array $a): array
     {
-        [$http, $server, $setup] = self::build($a['app'] ?? []);
+        [$http, $server, $setup] = self::build((array) ($a['app'] ?? []));
+        $telemetry = null;
+        if (!empty($a['telemetry'])) {
+            $telemetry = new TestTelemetry();
+            $http->setTelemetry($telemetry);
+        }
         $responses = [];
         foreach ($a['requests'] ?? [] as $spec) {
             Harness::$out = [];
@@ -156,8 +162,19 @@ final class Adapter implements Base
             $responses[] = $result;
         }
         Http::reset();
+        $out = ['setup' => $setup, 'responses' => $responses];
+        if ($telemetry !== null) {
+            $values = fn (?object $instrument): array => $instrument === null ? [] : (get_object_vars($instrument)['values'] ?? []);
+            $out['telemetry'] = [
+                'instruments' => [...array_keys($telemetry->upDownCounters), ...array_keys($telemetry->histograms)],
+                'active' => $values($telemetry->upDownCounters['http.server.active_requests'] ?? null),
+                'durations' => \count($values($telemetry->histograms['http.server.request.duration'] ?? null)),
+                'request_sizes' => $values($telemetry->histograms['http.server.request.body.size'] ?? null),
+                'response_sizes' => \count($values($telemetry->histograms['http.server.response.body.size'] ?? null)),
+            ];
+        }
 
-        return ['setup' => $setup, 'responses' => $responses];
+        return $out;
     }
 
     /**
@@ -166,7 +183,7 @@ final class Adapter implements Base
      */
     private static function start(array $a): array
     {
-        [$http, , $setup] = self::build($a['app'] ?? []);
+        [$http, , $setup] = self::build((array) ($a['app'] ?? []));
         $error = null;
         try {
             $http->start();
@@ -369,17 +386,17 @@ final class Adapter implements Base
                     'new' => (function () use (&$views, $v) {
                         $views[$v[0]] = new View($v[1] ?? '');
 
-                        return null;
+                        return;
                     })(),
-                    'set_param' => $view->setParam($v[1], $v[2], $v[3] ?? true) ? null : null,
+                    'set_param' => self::none($view->setParam($v[1], $v[2], $v[3] ?? true)),
                     'get_param' => $view->getParam($v[1], $v[2] ?? null),
-                    'set_path' => $view->setPath($v[1]) ? null : null,
-                    'set_rendered' => $view->setRendered($v[1] ?? true) ? null : null,
+                    'set_path' => self::none($view->setPath($v[1])),
+                    'set_rendered' => self::none($view->setRendered($v[1] ?? true)),
                     'is_rendered' => $view->isRendered(),
                     'print' => $view->print($v[1], $v[2] ?? ''),
                     'render' => $view->render($v[1] ?? true),
                     'exec' => $view->exec(array_map(fn ($name) => $views[$name], $v[1])),
-                    'set_parent' => $view->setParent($views[$v[1]]) ? null : null,
+                    'set_parent' => self::none($view->setParent($views[$v[1]])),
                     'parent' => (function () use ($view, $views) {
                         $parent = $view->getParent();
 
@@ -437,6 +454,14 @@ final class Adapter implements Base
         }
 
         return $out;
+    }
+
+    /**
+     * A step whose fluent return value is not reported.
+     */
+    private static function none(mixed $ignored): mixed
+    {
+        return null;
     }
 
     /**

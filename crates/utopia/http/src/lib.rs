@@ -45,6 +45,7 @@ mod request;
 mod response;
 mod router;
 mod server;
+pub mod telemetry;
 mod trusted;
 mod view;
 

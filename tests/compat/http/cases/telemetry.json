@@ -1,0 +1,62 @@
+{
+  "source": "packages/http/src/Http.php",
+  "cases": [
+    {
+      "name": "server metrics of run()",
+      "op": "http.run",
+      "args": {
+        "telemetry": true,
+        "app": {
+          "routes": [
+            {
+              "path": "/x/:id",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "ok"
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/x/1",
+            "headers": [
+              [
+                "Host",
+                "h"
+              ],
+              [
+                "X-A",
+                "b"
+              ]
+            ]
+          },
+          {
+            "method": "POST",
+            "uri": "/missing",
+            "headers": [
+              [
+                "Host",
+                "h"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "no metrics before a request",
+      "op": "http.run",
+      "args": {
+        "telemetry": true,
+        "app": {},
+        "requests": []
+      }
+    }
+  ]
+}

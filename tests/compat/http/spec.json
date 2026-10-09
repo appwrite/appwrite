@@ -17,7 +17,7 @@
   "state": [],
   "ops": {
     "http.run": {
-      "doc": "Builds an application from `app` (mode, allow_override, compression, resources, files, init/shutdown/options/error/start/request hooks, routes with methods, aliases, groups, params, injections and action statements, wildcard) and dispatches each of `requests` (parsed by Swoole on PHP) through run() or execute(). Returns route registration results and, per request, what the server adapter was asked to send (status, headers, cookies as Set-Cookie lines, body), the values actions emitted and the error run() raised.",
+      "doc": "Builds an application from `app` (mode, allow_override, compression, resources, files, init/shutdown/options/error/start/request hooks, routes with methods, aliases, groups, params, injections and action statements, wildcard) and dispatches each of `requests` (parsed by Swoole on PHP) through run() or execute(). Returns route registration results and, per request, what the server adapter was asked to send (status, headers, cookies as Set-Cookie lines, body), the values actions emitted and the error run() raised. With `telemetry`, the server metrics run() recorded through a test telemetry adapter (counts for the time-dependent ones).",
       "covers": [
         "Utopia\\Http\\Http::__construct",
         "Utopia\\Http\\Http::get",
@@ -46,7 +46,9 @@
         "Utopia\\Http\\Http::setCompressionSupported",
         "Utopia\\Http\\Route::alias",
         "Utopia\\Http\\Route::hook",
-        "Utopia\\Http\\Adapter\\Swoole\\Request::__construct"
+        "Utopia\\Http\\Adapter\\Swoole\\Request::__construct",
+        "Utopia\\Http\\Http::setTelemetry",
+        "Utopia\\Http\\Adapter::setTelemetry"
       ],
       "mask": {
         "paths": [
@@ -1130,7 +1132,9 @@
     "Utopia\\Http\\Adapter\\Swoole\\Response::end": "Output primitive of the Swoole adapter: recorded by Capture.php, counterpart utopia_http::Wire.",
     "Utopia\\Http\\Adapter\\Swoole\\Response::sendHeader": "Output primitive of the Swoole adapter: recorded by Capture.php, counterpart utopia_http::Wire."
   },
-  "tests_waived": {},
+  "tests_waived": {
+    "packages/http/tests/SwooleServerTelemetryTest.php": "Asserts which Swoole worker, coroutine and reactor gauges Adapter\\Swoole\\Server::setTelemetry registers outside worker 0: Swoole runtime statistics with no Rust counterpart (the server adapter is waived as runtime plumbing). The HTTP server metrics Http::setTelemetry records are compared in cases/telemetry.json."
+  },
   "quirks": [],
   "deviations": []
 }

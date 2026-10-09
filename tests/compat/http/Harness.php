@@ -84,11 +84,11 @@ final class Harness
     public static function request(array $spec): Request
     {
         $target = (string) ($spec['uri'] ?? '/');
-        if (!\in_array($spec['method'] ?? 'GET', self::METHODS, true) || !ctype_graph($target) || !(str_starts_with($target, '/')|| str_starts_with($target, 'http://') || str_starts_with($target, 'https://'))) {
+        if (!\in_array($spec['method'] ?? 'GET', self::METHODS, true) || !ctype_graph($target) || !(str_starts_with($target, '/') || str_starts_with($target, 'http://') || str_starts_with($target, 'https://'))) {
             throw new Fault('a request line needs a known method and a target');
         }
         $swoole = SwooleRequest::create();
-        $body =\array_key_exists('body_json', $spec) ? (string) json_encode($spec['body_json']) : (string) ($spec['body'] ?? '');
+        $body = \array_key_exists('body_json', $spec) ? (string) json_encode($spec['body_json']) : (string) ($spec['body'] ?? '');
         $head = '';
         $length = false;
         foreach ($spec['headers'] ?? [] as $header) {
@@ -117,7 +117,7 @@ final class Harness
     }
 
     /**
-     * @param array<string, mixed> $spec
+     * A validator from its description (`{"text": [length, min]}`, ...).
      */
     public static function validator(mixed $spec): Rule
     {

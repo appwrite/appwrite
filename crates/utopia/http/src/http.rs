@@ -16,6 +16,7 @@ use crate::params::Params;
 use crate::request::Request;
 use crate::response::Response;
 use crate::router::{Match, PathParams, Router};
+use crate::telemetry::{Attribute, Instruments, NoTelemetry, Telemetry};
 
 /// The running mode (`Http::MODE_TYPE_*`).
 pub mod mode {
@@ -29,6 +30,14 @@ pub mod mode {
 pub struct RouteMatch {
     pub id: usize,
     pub params: PathParams,
+}
+
+/// Where a hook runs: the matched route, its path params and the request params.
+#[derive(Clone, Copy)]
+struct At<'a> {
+    route: Option<&'a Route>,
+    values: &'a PathParams,
+    params: &'a Params,
 }
 
 /// The application.
@@ -46,6 +55,7 @@ pub struct Http {
     compression: Option<Compression>,
     resources: Arc<Resources>,
     timezone: String,
+    instruments: Instruments,
 }
 
 impl Default for Http {
@@ -161,6 +171,7 @@ impl Http {
             compression: None,
             resources: Arc::new(Resources::new()),
             timezone: timezone.to_owned(),
+            instruments: Instruments::new(&NoTelemetry),
         }
     }
 
@@ -169,6 +180,11 @@ impl Http {
     /// `setCompression($enabled)`, `setCompressionMinSize()`, `setCompressionSupported()`.
     pub fn set_compression(&mut self, compression: Option<Compression>) {
         self.compression = compression;
+    }
+
+    /// `setTelemetry($telemetry)`: where the server metrics go.
+    pub fn set_telemetry(&mut self, telemetry: &dyn Telemetry) {
+        self.instruments = Instruments::new(telemetry);
     }
 
     /// The compression settings, when enabled.
@@ -371,16 +387,14 @@ impl Http {
     async fn call(
         &self,
         hook: &Hook,
-        values: &PathParams,
-        params: &Params,
-        route: Option<&Route>,
+        at: At<'_>,
         request: &Request,
         response: &mut Response,
         context: &Arc<Resources>,
     ) -> Result<()> {
-        let (args, injected) = self.arguments(hook, values, params, context)?;
+        let (args, injected) = self.arguments(hook, at.values, at.params, context)?;
         let Some(action) = hook.get_action() else { return Ok(()) };
-        let scope = Scope { http: self, request, response, route, path: values, context, args, injected };
+        let scope = Scope { http: self, request, response, route: at.route, path: at.values, context, args, injected };
         action(scope).await
     }
 
@@ -413,11 +427,11 @@ impl Http {
                 let result: Result<()> = async {
                     for group in &groups {
                         for hook in self.options.iter().filter(|h| h.in_group(group)) {
-                            self.call(hook, &empty, params, route, request, response, context).await?;
+                            self.call(hook, At { values: &empty, params, route }, request, response, context).await?;
                         }
                     }
                     for hook in self.options.iter().filter(|h| h.in_group("*")) {
-                        self.call(hook, &empty, params, route, request, response, context).await?;
+                        self.call(hook, At { values: &empty, params, route }, request, response, context).await?;
                     }
                     Ok(())
                 }
@@ -425,7 +439,7 @@ impl Http {
                 if let Err(e) = result {
                     for hook in self.errors.iter().filter(|h| h.in_group("*")) {
                         context.set("error", Arc::new(e.clone()));
-                        self.call(hook, &empty, params, route, request, response, context).await?;
+                        self.call(hook, At { values: &empty, params, route }, request, response, context).await?;
                     }
                 }
                 return Ok(());
@@ -435,7 +449,7 @@ impl Http {
                 let empty = PathParams::new();
                 for hook in self.errors.iter().filter(|h| h.in_group("*")) {
                     context.set("error", Arc::new(Error::http("Not Found", 404)));
-                    self.call(hook, &empty, params, None, request, response, context).await?;
+                    self.call(hook, At { values: &empty, params, route: None }, request, response, context).await?;
                 }
                 return Ok(());
             };
@@ -446,25 +460,26 @@ impl Http {
             let result: Result<()> = async {
                 if route.hooks() {
                     for hook in self.init.iter().filter(|h| h.in_group("*")) {
-                        self.call(hook, values, params, Some(route), request, response, context).await?;
+                        self.call(hook, At { values, params, route: Some(route) }, request, response, context).await?;
                     }
                 }
                 for group in groups {
                     for hook in self.init.iter().filter(|h| h.in_group(group)) {
-                        self.call(hook, values, params, Some(route), request, response, context).await?;
+                        self.call(hook, At { values, params, route: Some(route) }, request, response, context).await?;
                     }
                 }
                 if !response.is_sent() {
-                    self.call(route.hook(), values, params, Some(route), request, response, context).await?;
+                    self.call(route.hook(), At { values, params, route: Some(route) }, request, response, context)
+                        .await?;
                 }
                 for group in groups {
                     for hook in self.shutdown.iter().filter(|h| h.in_group(group)) {
-                        self.call(hook, values, params, Some(route), request, response, context).await?;
+                        self.call(hook, At { values, params, route: Some(route) }, request, response, context).await?;
                     }
                 }
                 if route.hooks() {
                     for hook in self.shutdown.iter().filter(|h| h.in_group("*")) {
-                        self.call(hook, values, params, Some(route), request, response, context).await?;
+                        self.call(hook, At { values, params, route: Some(route) }, request, response, context).await?;
                     }
                 }
                 Ok(())
@@ -476,14 +491,15 @@ impl Http {
                 for group in groups {
                     for hook in self.errors.iter().filter(|h| h.in_group(group)) {
                         if let Err(failure) =
-                            self.call(hook, values, params, Some(route), request, response, context).await
+                            self.call(hook, At { values, params, route: Some(route) }, request, response, context).await
                         {
                             return Err(Error::handler(&failure, e));
                         }
                     }
                 }
                 for hook in self.errors.iter().filter(|h| h.in_group("*")) {
-                    if let Err(failure) = self.call(hook, values, params, Some(route), request, response, context).await
+                    if let Err(failure) =
+                        self.call(hook, At { values, params, route: Some(route) }, request, response, context).await
                     {
                         return Err(Error::handler(&failure, e));
                     }
@@ -498,6 +514,32 @@ impl Http {
     /// [`Http::execute`]. `context` is the request's context (a child of
     /// [`Http::resources`]).
     pub async fn run(&self, request: &Request, response: &mut Response, context: &Arc<Resources>) -> Result<()> {
+        let method = Attribute::Str(request.method().to_owned());
+        let scheme = Attribute::Str(request.protocol());
+        self.instruments
+            .active_requests
+            .add(1, &[("http.request.method", method.clone()), ("url.scheme", scheme.clone())]);
+        let start = std::time::Instant::now();
+        self.run_internal(request, response, context).await?;
+        let duration = start.elapsed().as_secs_f64();
+        let route = match self.find(request) {
+            Some(m) if !m.route.path().is_empty() => Attribute::Str(m.route.path().to_owned()),
+            _ => Attribute::None,
+        };
+        let attributes = [
+            ("url.scheme", scheme.clone()),
+            ("http.request.method", method.clone()),
+            ("http.route", route),
+            ("http.response.status_code", Attribute::Int(i64::from(response.status_code()))),
+        ];
+        self.instruments.request_duration.record(duration, &attributes);
+        self.instruments.request_body_size.record(request.size() as f64, &attributes);
+        self.instruments.response_body_size.record(response.size() as f64, &attributes);
+        self.instruments.active_requests.add(-1, &[("http.request.method", method), ("url.scheme", scheme)]);
+        Ok(())
+    }
+
+    async fn run_internal(&self, request: &Request, response: &mut Response, context: &Arc<Resources>) -> Result<()> {
         if let Some(compression) = &self.compression {
             let accept = request.header_line_or("accept-encoding", "");
             response.set_compression(&accept, compression);
@@ -508,10 +550,15 @@ impl Http {
         let empty = PathParams::new();
         let none = Params::new();
         for hook in &self.request {
-            if let Err(e) = self.call(hook, &empty, &none, None, request, response, context).await {
+            if let Err(e) =
+                self.call(hook, At { values: &empty, params: &none, route: None }, request, response, context).await
+            {
                 context.set("error", Arc::new(e.clone()));
                 for error in self.errors.iter().filter(|h| h.in_group("*")) {
-                    if let Err(failure) = self.call(error, &empty, &none, None, request, response, context).await {
+                    if let Err(failure) = self
+                        .call(error, At { values: &empty, params: &none, route: None }, request, response, context)
+                        .await
+                    {
                         return Err(Error::handler(&failure, e));
                     }
                 }
@@ -546,11 +593,21 @@ impl Http {
         let empty = PathParams::new();
         let none = Params::new();
         for hook in &self.start {
-            if let Err(e) = self.call(hook, &empty, &none, None, &request, &mut response, &self.resources).await {
+            if let Err(e) = self
+                .call(hook, At { values: &empty, params: &none, route: None }, &request, &mut response, &self.resources)
+                .await
+            {
                 self.resources.set("error", Arc::new(e.clone()));
                 for error in self.errors.iter().filter(|h| h.in_group("*")) {
-                    if let Err(failure) =
-                        self.call(error, &empty, &none, None, &request, &mut response, &self.resources).await
+                    if let Err(failure) = self
+                        .call(
+                            error,
+                            At { values: &empty, params: &none, route: None },
+                            &request,
+                            &mut response,
+                            &self.resources,
+                        )
+                        .await
                     {
                         return Err(Error::handler(&failure, e));
                     }
