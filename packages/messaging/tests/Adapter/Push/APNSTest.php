@@ -60,6 +60,22 @@ final class APNSTest extends TestCase
     }
 
     /**
+     * A data-only push still carries an `aps` dictionary, which APNs requires on every payload.
+     */
+    public function testDataOnlyKeepsApsDictionary(): void
+    {
+        $stub = new APNSStub($this->authKey(), 'keyId', 'teamId', 'com.example.app');
+
+        $stub->send(new Push(
+            to: ['token'],
+            data: ['k' => 'v'],
+        ));
+
+        $this->assertArrayHasKey('aps', $stub->capturedBodies[0]);
+        $this->assertSame(['k' => 'v'], $stub->capturedBodies[0]['data']);
+    }
+
+    /**
      * A regular notification keeps the alert push type and sends its priority as an HTTP header.
      */
     public function testAlertUsesAlertPushType(): void

@@ -101,6 +101,12 @@ class APNS extends PushAdapter
             $priority = '5';
         }
 
+        // APNs requires every payload to contain an `aps` dictionary. A data-only push populates none of
+        // its keys, so default it to an (object-encoded) empty dictionary rather than leave it absent.
+        if (empty($payload['aps'])) {
+            $payload['aps'] = (object) [];
+        }
+
         $claims = [
             'iss' => $this->teamId,   // Issuer
             'iat' => time(),         // Issued at time

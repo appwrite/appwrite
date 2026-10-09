@@ -724,7 +724,7 @@ class Messaging extends Action
                 $queries = [
                     $scope,
                     Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
-                    Query::select(['$sequence', 'userId', 'providerId']),
+                    Query::select(['$sequence', 'userId', 'providerId', 'expired']),
                     Query::orderAsc('$sequence'),
                     Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
                 ];
@@ -743,6 +743,12 @@ class Messaging extends Action
                 $cursor = $targets[$count - 1];
 
                 foreach ($targets as $target) {
+                    // Expired targets are dropped before sending (see groupTargetsByProvider), so an
+                    // expired Appwrite target is not an MQTT delivery and must not demote a live native one.
+                    if ($target->getAttribute('expired')) {
+                        continue;
+                    }
+
                     $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId') ?? '', $providers, $default);
                     if ($provider->getAttribute('provider') === 'appwrite') {
                         $mqttUsers[$target->getAttribute('userId')] = true;
