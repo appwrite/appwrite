@@ -922,6 +922,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Open in tool': 'ツールで開く',
   'Manual setup': '手動セットアップ',
   'Clone starter': 'スターターをクローン',
+  'Copy .env.example to .env and set values': '.env.example を .env にコピーして値を設定',
   'Install and run': 'インストールして実行',
   'Demo URL': 'デモ URL',
   'Send a ping': 'ping を送信',

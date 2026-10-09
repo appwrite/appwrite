@@ -74,7 +74,18 @@ const CONFIG_FILES = {
   apple: 'Appwrite.xcconfig', // surfaced to the app via Info.plist
 }
 
-const content = getEnvExample(sdk, 'client', framework, using, endpoint, projectId)
+const example = getEnvExample(sdk, 'client', framework, using, endpoint, projectId)
+// The React Native snippet sends EXPO_PUBLIC_APPWRITE_PLATFORM as the request
+// origin, and the dialog fills it with a placeholder. QA apps are built with
+// APP_ID, which is the platform registered on the QA project.
+const appId = process.env.APP_ID
+const content =
+  sdk === 'react-native' && appId
+    ? example.replace(
+        /^EXPO_PUBLIC_APPWRITE_PLATFORM=.*$/m,
+        `EXPO_PUBLIC_APPWRITE_PLATFORM=${appId}`,
+      )
+    : example
 const target =
   sdk in CONFIG_FILES
     ? join(appDir, CONFIG_FILES[sdk])

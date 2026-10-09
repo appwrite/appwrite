@@ -1399,6 +1399,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Clone the starter, drop in your credentials, then run the app and send a ping to confirm the link.':
     'שכפלו את פרויקט ההתחלה, הזינו את פרטי הגישה שלכם, ואז הריצו את האפליקציה ושלחו ping לאישור החיבור.',
   'Clone starter': 'שכפול פרויקט התחלה',
+  'Copy .env.example to .env and set values': 'העתיקו את .env.example ל-.env והגדירו את הערכים',
   'Install and run': 'התקנה והרצה',
   'Demo URL': 'כתובת הדגמה',
   'Send a ping': 'שליחת ping',
