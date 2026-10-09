@@ -88,8 +88,8 @@ impl Sha {
     }
 }
 
-/// `hash($algo, $data)` for the algorithm a `version` option names (php-std
-/// ports ext/hash's algorithms that need no large constant tables).
+/// `hash($algo, $data)` for the algorithm a `version` option names (any of
+/// `hash_algos()`, through php-std).
 fn digest(algo: &[u8], data: &[u8]) -> Result<String, Error> {
     php_std::string::hash(algo, data)
         .ok_or_else(|| Error::Value("hash(): Argument #1 ($algo) must be a valid hashing algorithm".into()))
