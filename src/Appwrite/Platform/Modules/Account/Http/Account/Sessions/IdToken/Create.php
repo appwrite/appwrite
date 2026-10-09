@@ -420,7 +420,7 @@ class Create extends Action
                     throw new Exception(Exception::GENERAL_BAD_REQUEST);
                 }
                 $user->setAttributes($userWithEmail->getArrayCopy());
-                // The provider vouched for this address (or its canonical form on the same domain), so adopting the account confirms it
+                // The provider verified this address, or its canonical form on the same domain
                 if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
                     $user->setAttribute('emailVerification', true);
                 }
