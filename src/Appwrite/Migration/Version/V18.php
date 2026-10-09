@@ -83,16 +83,16 @@ class V18 extends Migration
      */
     private function migrateCollections(): void
     {
-        foreach ($this->projectCollections() as $collection) {
+        foreach ($this->collections as $collection) {
             $id = $collection['$id'];
 
             Console::log("Migrating Collection \"{$id}\"");
 
             foreach ($collection['attributes'] ?? [] as $attribute) {
-                if ($attribute->type !== ColumnType::Double) {
+                if ($attribute['type'] !== ColumnType::Double->value) {
                     continue;
                 }
-                $this->changeAttributeInternalType($id, $attribute->key, 'DOUBLE');
+                $this->changeAttributeInternalType($id, $attribute['$id'], 'DOUBLE');
             }
 
             try {

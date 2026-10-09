@@ -178,7 +178,14 @@ abstract class Migration
      */
     public function forEachDocument(callable $callback): void
     {
-        foreach ($this->projectCollections() as $collection) {
+        $projectInternalId = $this->project->getSequence();
+
+        $collections = match ($projectInternalId) {
+            'console' => $this->collections['console'],
+            default => $this->collections['projects'],
+        };
+
+        foreach ($collections as $collection) {
             // Only migrate top-level collections
             if ($collection['$collection'] !== Database::METADATA) {
                 continue;
@@ -210,17 +217,6 @@ abstract class Migration
                 }
             }
         }
-    }
-
-    /**
-     * @return array<string, array<string, mixed>>
-     */
-    protected function projectCollections(): array
-    {
-        return match ($this->project->getSequence()) {
-            'console' => $this->collections['console'],
-            default => $this->collections['projects'],
-        };
     }
 
     /**
