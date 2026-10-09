@@ -1,8 +1,5 @@
 import { PlatformType, type Models } from '@appwrite.io/console'
 
-/** The server rejects more origins than this. */
-export const MAX_PASSKEY_ORIGINS = 10
-
 /** The server rejects a longer relying party ID (the maximum length of a domain name). */
 export const MAX_PASSKEY_RP_ID_LENGTH = 253
 
@@ -42,47 +39,39 @@ function webHostnames(platforms: PasskeyPlatform[]): string[] {
   )
 }
 
-export function hasLocalhostPlatform(platforms: PasskeyPlatform[]): boolean {
+function hasLocalhostPlatform(platforms: PasskeyPlatform[]): boolean {
   return webHostnames(platforms).includes(LOCALHOST)
 }
 
 /**
- * Origins the server allows when the policy lists none, mirroring
- * `Appwrite\Auth\Passkey\Ceremony::getOrigins()`.
+ * Where passkeys work for a relying party ID, mirroring
+ * `Appwrite\Auth\Passkey\Ceremony::getOrigins()`: web platforms on the
+ * domain (wildcards included), the domain itself for Apple apps, and
+ * localhost when it is a web platform. Previews an unsaved domain; the saved
+ * policy carries the server's own list.
  */
 export function platformPasskeyOrigins(
   rpId: string,
   platforms: PasskeyPlatform[],
 ): string[] {
-  if (rpId === '') return []
   const origins = new Set<string>()
-  if (rpId === LOCALHOST) {
-    if (hasLocalhostPlatform(platforms)) origins.add('http://localhost')
-    return [...origins]
-  }
-  if (platforms.some((platform) => platform.type === PlatformType.Apple)) {
-    origins.add(`https://${rpId}`)
-  }
-  for (const hostname of webHostnames(platforms)) {
-    if (hostname.includes('*')) continue
-    if (hostname === rpId || hostname.endsWith(`.${rpId}`)) {
-      origins.add(`https://${hostname}`)
+  if (rpId !== '' && rpId !== LOCALHOST) {
+    if (platforms.some((platform) => platform.type === PlatformType.Apple)) {
+      origins.add(`https://${rpId}`)
+    }
+    for (const hostname of webHostnames(platforms)) {
+      const domain = hostname.startsWith('*.') ? hostname.slice(2) : hostname
+      if (domain.includes('*')) continue
+      if (domain === rpId || domain.endsWith(`.${rpId}`)) {
+        origins.add(`https://${hostname}`)
+      }
     }
   }
+  if (hasLocalhostPlatform(platforms)) {
+    origins.add('http://localhost')
+    origins.add('https://localhost')
+  }
   return [...origins]
-}
-
-/** Passkeys fail closed: sign-in needs a relying party with at least one origin, or a localhost platform. */
-export function isPasskeyReady(
-  policy: PasskeyPolicy,
-  platforms: PasskeyPlatform[],
-): boolean {
-  if (hasLocalhostPlatform(platforms)) return true
-  if (policy.rpId === '') return false
-  return (
-    policy.origins.length > 0 ||
-    platformPasskeyOrigins(policy.rpId, platforms).length > 0
-  )
 }
 
 /**
@@ -121,12 +110,6 @@ export function suggestPasskeyRpIds(
   )
 }
 
-/** Matches the server's normalisation closely enough to compare for changes. */
-export function normalizePasskeyOrigin(origin: string): string {
-  const trimmed = origin.trim()
-  return trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed
-}
-
 /**
  * Light client-side checks for obvious mistakes. The server is authoritative
  * (public suffixes, port normalisation), so anything subtle is left to it.
@@ -147,36 +130,6 @@ export function passkeyRpIdError(rpId: string): string | null {
   }
   if (!rpId.includes('.') || rpId.startsWith('.') || rpId.endsWith('.')) {
     return 'Enter a domain like example.com, or localhost.'
-  }
-  return null
-}
-
-export function passkeyOriginError(
-  origin: string,
-  rpId: string,
-): string | null {
-  let url: URL
-  try {
-    url = new URL(origin)
-  } catch {
-    return 'Enter a full origin, like https://example.com.'
-  }
-  const isLocalhost = url.hostname === 'localhost'
-  if (url.protocol !== 'https:' && !(url.protocol === 'http:' && isLocalhost)) {
-    return 'Origins must use https://, or http:// on localhost.'
-  }
-  if (url.username || url.password) {
-    return 'Origins cannot include credentials.'
-  }
-  if (url.pathname !== '/' || url.search || url.hash) {
-    return 'Origins cannot include a path, query or fragment.'
-  }
-  if (
-    rpId !== '' &&
-    url.hostname !== rpId &&
-    !url.hostname.endsWith(`.${rpId}`)
-  ) {
-    return 'Origins must be on the relying party ID or one of its subdomains.'
   }
   return null
 }

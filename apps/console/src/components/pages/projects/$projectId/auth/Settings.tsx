@@ -10,7 +10,6 @@ import {
   useUpdateAuthMethod,
 } from '@/lib/react-query/hooks'
 import { authMethodsRecordFromProject } from '@/lib/project-settings'
-import { isPasskeyReady } from '@/lib/passkey-policy'
 import { usePasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -126,7 +125,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   const mockNumbers = security.authMockNumbers ?? []
   const { platforms } = usePlatforms(projectId)
   const { sitesDomain, functionsDomain } = useConsoleVariables()
-  const passkeyReady = isPasskeyReady(security.authPasskey, platforms)
+  const passkeyReady = security.authPasskey.origins.length > 0
   const [passkeySetupOpen, setPasskeySetupOpen] = useState(false)
   const passkeysAllowed = usePasskeysAllowed()
   const visibleAuthMethods = useMemo(

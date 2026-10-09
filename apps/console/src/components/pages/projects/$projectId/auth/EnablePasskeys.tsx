@@ -15,8 +15,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useUpdatePasskeyPolicy } from '@/lib/react-query/hooks/auth'
 import {
   MAX_PASSKEY_RP_ID_LENGTH,
-  hasLocalhostPlatform,
-  isPasskeyReady,
   passkeyRpIdError,
   platformPasskeyOrigins,
   suggestPasskeyRpIds,
@@ -24,6 +22,7 @@ import {
   type PasskeyPolicy,
 } from '@/lib/passkey-policy'
 import { cn } from '@/lib/utils'
+import { PasskeyOrigins } from './PasskeyOrigins'
 import { useT } from '@/lib/i18n/translate'
 
 const OTHER = 'other'
@@ -50,7 +49,6 @@ export function EnablePasskeys({
   const t = useT()
   const fieldId = useId()
   const mutation = useUpdatePasskeyPolicy(projectId)
-  const localhost = hasLocalhostPlatform(platforms)
 
   const suggestions = useMemo(() => {
     const domains = suggestPasskeyRpIds(platforms, sharedDomains)
@@ -74,12 +72,8 @@ export function EnablePasskeys({
 
   const rpId = choice === OTHER ? custom.trim() : choice
   const rpIdError = choice === OTHER ? passkeyRpIdError(rpId) : null
-  const origins =
-    policy.origins.length > 0 && rpId === policy.rpId
-      ? policy.origins
-      : platformPasskeyOrigins(rpId, platforms)
-  const ready =
-    rpIdError === null && isPasskeyReady({ rpId, origins }, platforms)
+  const origins = platformPasskeyOrigins(rpId, platforms)
+  const ready = rpIdError === null && origins.length > 0
   const pending = mutation.isPending
 
   const handleEnable = () => {
@@ -88,9 +82,8 @@ export function EnablePasskeys({
       onOpenChange(false)
       return
     }
-    // Custom origins belong to the old domain; the dialog promised the platform origins.
     mutation.mutate(
-      { rpId, origins: [] },
+      { rpId },
       {
         onSuccess: () => {
           onEnable()
@@ -175,7 +168,7 @@ export function EnablePasskeys({
             <p className="text-[12px] font-medium text-foreground">
               {t('Passkeys will work on')}
             </p>
-            {origins.length === 0 && !localhost ? (
+            {origins.length === 0 ? (
               <p className="flex items-start gap-1.5 text-[12px] text-muted-foreground">
                 <TriangleAlert className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                 <span>
@@ -196,19 +189,7 @@ export function EnablePasskeys({
                 </span>
               </p>
             ) : (
-              <ul className="space-y-1 text-[12px] font-mono text-muted-foreground">
-                {origins
-                  .filter((origin) => origin !== 'http://localhost')
-                  .map((origin) => (
-                    <li key={origin}>{origin}</li>
-                  ))}
-                {localhost && (
-                  <li>
-                    http://localhost{' '}
-                    <span className="font-sans">{t('(any port)')}</span>
-                  </li>
-                )}
-              </ul>
+              <PasskeyOrigins origins={origins} />
             )}
           </div>
 
