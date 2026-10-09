@@ -21,7 +21,7 @@
           -2.5,
           0.0001,
           1e+20,
-          0.00001,
+          1e-05,
           123456789.0
         ]
       },
@@ -151,7 +151,7 @@
       "args": {
         "format": "%g %g %g %.3g %G %g",
         "values": [
-          0.00001234,
+          1.234e-05,
           123456789.0,
           100000.0,
           1234.5,
@@ -1087,6 +1087,96 @@
           "class": "ValueError",
           "message": "min(): Argument #1 ($value) must contain at least one element"
         }
+      }
+    },
+    {
+      "name": "arith add overflows to float",
+      "op": "format.arith",
+      "args": {
+        "op": "+",
+        "a": 9223372036854775807,
+        "b": 1
+      }
+    },
+    {
+      "name": "arith sub overflows to float",
+      "op": "format.arith",
+      "args": {
+        "op": "-",
+        "a": -9223372036854775808,
+        "b": 1
+      }
+    },
+    {
+      "name": "arith mul overflows to float",
+      "op": "format.arith",
+      "args": {
+        "op": "*",
+        "a": 4294967296,
+        "b": 4294967296
+      }
+    },
+    {
+      "name": "arith exact division is an integer",
+      "op": "format.arith",
+      "args": {
+        "op": "/",
+        "a": 1048576,
+        "b": 1024
+      }
+    },
+    {
+      "name": "arith inexact division is a float",
+      "op": "format.arith",
+      "args": {
+        "op": "/",
+        "a": 1,
+        "b": 1048576
+      }
+    },
+    {
+      "name": "arith min int by -1",
+      "op": "format.arith",
+      "args": {
+        "op": "/",
+        "a": -9223372036854775808,
+        "b": -1
+      }
+    },
+    {
+      "name": "arith division by zero",
+      "op": "format.arith",
+      "args": {
+        "op": "/",
+        "a": 1,
+        "b": 0
+      }
+    },
+    {
+      "name": "arith division by float zero",
+      "op": "format.arith",
+      "args": {
+        "op": "/",
+        "a": 0,
+        "b": 0.0
+      }
+    },
+    {
+      "name": "array_sum empty",
+      "op": "format.array_sum",
+      "args": {
+        "array": []
+      }
+    },
+    {
+      "name": "array_sum mixed",
+      "op": "format.array_sum",
+      "args": {
+        "array": [
+          1,
+          0.5,
+          9223372036854775807
+        ]
       }
     }
   ]

@@ -49,7 +49,7 @@ fn serve() {
         .with_target(false)
         .init();
 
-    let workers = utopia_system::env_int("_APP_RUST_WORKERS", utopia_system::cpus() as i64).max(1) as usize;
+    let workers = appwrite_core::config::env_int("_APP_RUST_WORKERS", appwrite_core::config::cpus() as i64).max(1) as usize;
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(workers)
         .max_blocking_threads((workers * 4).max(8))

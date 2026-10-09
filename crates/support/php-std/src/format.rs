@@ -25,6 +25,10 @@ use crate::number;
 use crate::string::Error;
 use crate::value::Number;
 
+mod arith;
+
+pub use arith::{add, array_sum, div, mul, sub};
+
 /// `INT_MAX`, the bound of `sprintf` widths, precisions and argument numbers.
 const INT_MAX: i64 = i32::MAX as i64;
 

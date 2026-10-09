@@ -38,7 +38,7 @@ impl Module for Health {
 
 /// Blocking probe used by `appwrite-rust health` (no curl needed in the image).
 pub fn probe() -> i32 {
-    let port = utopia_system::env_int("_APP_RUST_PORT", 8080);
+    let port = appwrite_core::config::env_int("_APP_RUST_PORT", 8080);
     let Ok(mut stream) = TcpStream::connect(("127.0.0.1", port as u16)) else { return 1 };
     let _ = stream.set_read_timeout(Some(Duration::from_secs(3)));
     let request = "GET /v1/health/version HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";

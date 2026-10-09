@@ -6,7 +6,19 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
-use utopia_system::{env, env_int, env_or, env_raw};
+use utopia_system::{env, env_or, env_raw};
+
+/// An integer setting: the variable (trimmed) when it is set, not empty or
+/// `"0"`, and an integer; `default` otherwise.
+pub fn env_int(name: &str, default: i64) -> i64 {
+    env(name).and_then(|v| v.trim().parse().ok()).unwrap_or(default)
+}
+
+/// Number of CPUs available to the process (sizes the Rust runtime's
+/// worker and connection pools).
+pub fn cpus() -> usize {
+    std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1)
+}
 
 /// Database connection settings for one pool.
 #[derive(Debug, Clone)]
@@ -125,7 +137,7 @@ impl Config {
             }
         }
 
-        let cpus = utopia_system::cpus();
+        let cpus = cpus();
         Self {
             development: env_or("_APP_ENV", "production") == "development",
             edition: env_or("_APP_EDITION", "self-hosted"),

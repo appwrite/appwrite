@@ -29,6 +29,8 @@ pub const OPS: &[&str] = &[
     "format.min",
     "format.max_array",
     "format.min_array",
+    "format.arith",
+    "format.array_sum",
 ];
 
 /// `$bytes` strings decoded up front, so [`Arg`]s can borrow them.
@@ -117,6 +119,20 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
             let f = if op == "format.max_array" { format::max_array } else { format::min_array };
             done(f(&values).map(number_value))
         }
+        "format.arith" => {
+            let (x, y) = (number(a.value("a")?)?, number(a.value("b")?)?);
+            Ok(match a.str("op")? {
+                "+" => Outcome::Ok(number_value(format::add(x, y))),
+                "-" => Outcome::Ok(number_value(format::sub(x, y))),
+                "*" => Outcome::Ok(number_value(format::mul(x, y))),
+                "/" => match format::div(x, y) {
+                    Some(n) => Outcome::Ok(number_value(n)),
+                    None => Outcome::err("DivisionByZeroError", "Division by zero"),
+                },
+                other => return Err(Fault::new(format!("unknown operator {other}"))),
+            })
+        }
+        "format.array_sum" => Ok(Outcome::Ok(number_value(format::array_sum(numbers(a.array("array")?)?)))),
         _ => Err(Fault::new(format!("php-std: unknown operation `{op}`"))),
     }
 }

@@ -1,0 +1,750 @@
+{
+  "source": "packages/system/tests/CgroupMemoryTest.php",
+  "cases": [
+    {
+      "name": "v2 limit",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "536870912\n",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 512,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "536870912\n",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "v1 limit",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory/memory.limit_in_bytes": "268435456\n",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 256,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory/memory.limit_in_bytes": "268435456\n",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "v2 takes precedence",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "536870912",
+                "/sys/fs/cgroup/memory/memory.limit_in_bytes": "268435456",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 512,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "536870912",
+                "/sys/fs/cgroup/memory/memory.limit_in_bytes": "268435456",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "missing cgroups",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "v2 unlimited",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "max\n",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "max\n",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "v2 unlimited takes precedence",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "max",
+                "/sys/fs/cgroup/memory/memory.limit_in_bytes": "268435456",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "max",
+                "/sys/fs/cgroup/memory/memory.limit_in_bytes": "268435456",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "v1 unlimited sentinel",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory/memory.limit_in_bytes": "9223372036854771712",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory/memory.limit_in_bytes": "9223372036854771712",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "v1 negative unlimited",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory/memory.limit_in_bytes": "-1",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory/memory.limit_in_bytes": "-1",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "limit exceeds host",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "17179869184",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "17179869184",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "round down to MiB",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "1572864",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 1,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "1572864",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "sub MiB limit",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "524288",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 0,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "524288",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "zero limit",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "0",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 0,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "0",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty limit",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid limit",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "invalid",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "invalid",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "negative limit",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "-2",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "-2",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "fractional bytes",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "536870912.5",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "536870912.5",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "overflow",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "18446744073709551615",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": "18446744073709551615",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "read failure",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": false,
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": false,
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "v1 fallback on read failure",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemory",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": false,
+                "/sys/fs/cgroup/memory/memory.limit_in_bytes": "268435456",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 256,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getMemoryTotal",
+            "machine": {
+              "os": "Linux",
+              "files": {
+                "/sys/fs/cgroup/memory.max": false,
+                "/sys/fs/cgroup/memory/memory.limit_in_bytes": "268435456",
+                "/proc/meminfo": "MemTotal:       8388608 kB\n"
+              }
+            }
+          },
+          "expect": {
+            "value": 8192,
+            "sleeps": []
+          }
+        }
+      ]
+    }
+  ]
+}
