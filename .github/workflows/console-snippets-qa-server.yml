@@ -395,7 +395,9 @@ jobs:
             start: cargo run -q
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Check Appwrite variables and API key secret
         run: |
@@ -405,7 +407,7 @@ jobs:
           fi
 
       - name: Install mise
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
         with:
           install: false
 
@@ -457,27 +459,27 @@ jobs:
 
       - name: Install Rust
         if: startsWith(matrix.id, 'rust')
-        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # stable
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
 
       - name: Install Swift
         if: startsWith(matrix.id, 'swift')
-        uses: swift-actions/setup-swift@v2
+        uses: swift-actions/setup-swift@7ca6abe6b3b0e8b5421b88be48feee39cbf52c6a # v2.4.0
         with:
           swift-version: "6.1"
 
       - name: Install Dart
         if: startsWith(matrix.id, 'dart')
-        uses: dart-lang/setup-dart@v1
+        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
 
       - name: Install Ruby
         if: startsWith(matrix.id, 'ruby')
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
         with:
           ruby-version: "3.3"
 
       - name: Install PHP
         if: startsWith(matrix.id, 'php')
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
           php-version: "8.4"
 
@@ -565,7 +567,7 @@ jobs:
 
       - name: Upload QA reports and logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: connect-qa-server-${{ matrix.id }}
           path: apps/console/tests/connect-qa/server/artifacts/
