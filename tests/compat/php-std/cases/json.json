@@ -1,0 +1,1858 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "inf is an error",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          1,
+          {
+            "$float": "INF"
+          }
+        ]
+      },
+      "expect": {
+        "json": false,
+        "error": 7,
+        "message": "Inf and NaN cannot be JSON encoded"
+      }
+    },
+    {
+      "name": "nan with partial output is 0",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          {
+            "$float": "NAN"
+          }
+        ],
+        "flags": 512
+      },
+      "expect": {
+        "json": "[0]",
+        "error": 7,
+        "message": "Inf and NaN cannot be JSON encoded"
+      }
+    },
+    {
+      "name": "utf8 error after inf wins",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          {
+            "$float": "INF"
+          },
+          {
+            "$bytes": "/w=="
+          }
+        ]
+      },
+      "expect": {
+        "json": false,
+        "error": 5,
+        "message": "Malformed UTF-8 characters, possibly incorrectly encoded"
+      }
+    },
+    {
+      "name": "utf8 error stops before inf",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          {
+            "$bytes": "/w=="
+          },
+          {
+            "$float": "INF"
+          }
+        ]
+      },
+      "expect": {
+        "json": false,
+        "error": 5,
+        "message": "Malformed UTF-8 characters, possibly incorrectly encoded"
+      }
+    },
+    {
+      "name": "partial: last error wins (utf8)",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          {
+            "$float": "INF"
+          },
+          {
+            "$bytes": "/w=="
+          }
+        ],
+        "flags": 512
+      },
+      "expect": {
+        "json": "[0,null]",
+        "error": 5,
+        "message": "Malformed UTF-8 characters, possibly incorrectly encoded"
+      }
+    },
+    {
+      "name": "partial: last error wins (inf)",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          {
+            "$bytes": "/w=="
+          },
+          {
+            "$float": "INF"
+          }
+        ],
+        "flags": 512
+      },
+      "expect": {
+        "json": "[null,0]",
+        "error": 7,
+        "message": "Inf and NaN cannot be JSON encoded"
+      }
+    },
+    {
+      "name": "invalid key does not stop encoding",
+      "op": "json.encode",
+      "args": {
+        "v": {
+          "a": 1,
+          "x": {
+            "k": {
+              "$float": "INF"
+            }
+          }
+        }
+      },
+      "expect": {
+        "json": false,
+        "error": 7,
+        "message": "Inf and NaN cannot be JSON encoded"
+      }
+    },
+    {
+      "name": "partial: invalid key becomes empty",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          {
+            "ok": 1
+          },
+          {
+            "$bytes": "/w=="
+          }
+        ],
+        "flags": 512
+      },
+      "expect": {
+        "json": "[{\"ok\":1},null]",
+        "error": 5,
+        "message": "Malformed UTF-8 characters, possibly incorrectly encoded"
+      }
+    },
+    {
+      "name": "depth error",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          [
+            [
+              1
+            ]
+          ]
+        ],
+        "depth": 1
+      },
+      "expect": {
+        "json": false,
+        "error": 1,
+        "message": "Maximum stack depth exceeded"
+      }
+    },
+    {
+      "name": "partial depth error keeps output",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          [
+            [
+              1
+            ]
+          ]
+        ],
+        "flags": 512,
+        "depth": 1
+      },
+      "expect": {
+        "json": "[[[1]]]",
+        "error": 1,
+        "message": "Maximum stack depth exceeded"
+      }
+    },
+    {
+      "name": "partial depth overwrites utf8",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          1,
+          [
+            2,
+            {
+              "$bytes": "/w=="
+            }
+          ]
+        ],
+        "flags": 512,
+        "depth": 1
+      },
+      "expect": {
+        "json": "[1,[2,null]]",
+        "error": 1,
+        "message": "Maximum stack depth exceeded"
+      }
+    },
+    {
+      "name": "depth zero fails on arrays only",
+      "op": "json.encode",
+      "args": {
+        "v": 1,
+        "depth": 0
+      },
+      "expect": {
+        "json": "1",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "depth zero array",
+      "op": "json.encode",
+      "args": {
+        "v": [],
+        "depth": 0
+      },
+      "expect": {
+        "json": false,
+        "error": 1,
+        "message": "Maximum stack depth exceeded"
+      }
+    },
+    {
+      "name": "negative depth",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          1
+        ],
+        "depth": -1
+      },
+      "expect": {
+        "json": false,
+        "error": 1,
+        "message": "Maximum stack depth exceeded"
+      }
+    },
+    {
+      "name": "depth is cast to int",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          1
+        ],
+        "depth": 4294967297
+      },
+      "expect": {
+        "json": "[1]",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "substitute overlong",
+      "op": "json.encode",
+      "args": {
+        "v": {
+          "$bytes": "YeCAgGI="
+        },
+        "flags": 2097152
+      },
+      "expect": {
+        "json": "\"a\\ufffdb\"",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "substitute truncated",
+      "op": "json.encode",
+      "args": {
+        "v": {
+          "$bytes": "YeCgYg=="
+        },
+        "flags": 2097152
+      },
+      "expect": {
+        "json": "\"a\\ufffdb\"",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "substitute beyond U+10FFFF",
+      "op": "json.encode",
+      "args": {
+        "v": {
+          "$bytes": "YfSQgIBi"
+        },
+        "flags": 2097152
+      },
+      "expect": {
+        "json": "\"a\\ufffdb\"",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "substitute raw with unescaped unicode",
+      "op": "json.encode",
+      "args": {
+        "v": {
+          "$bytes": "Yf9i"
+        },
+        "flags": 2097408
+      },
+      "expect": {
+        "json": "\"a�b\"",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "ignore invalid utf-8",
+      "op": "json.encode",
+      "args": {
+        "v": {
+          "$bytes": "Yf/Dqe2ggGI="
+        },
+        "flags": 1048576
+      },
+      "expect": {
+        "json": "\"a\\u00e9b\"",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "line terminators escaped with unescaped unicode",
+      "op": "json.encode",
+      "args": {
+        "v": "  ",
+        "flags": 256
+      },
+      "expect": {
+        "json": "\"\\u2028\\u2029\"",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "line terminators raw with both flags",
+      "op": "json.encode",
+      "args": {
+        "v": "  ",
+        "flags": 2304
+      },
+      "expect": {
+        "json": "\"  \"",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "default escaping",
+      "op": "json.encode",
+      "args": {
+        "v": "😀/<>&'\"\\\b\f\n\r\t\u0000\u001fé"
+      },
+      "expect": {
+        "json": "\"\\ud83d\\ude00\\/<>&'\\\"\\\\\\b\\f\\n\\r\\t\\u0000\\u001f\\u00e9\"",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "hex flags",
+      "op": "json.encode",
+      "args": {
+        "v": "😀/<>&'\"",
+        "flags": 79
+      },
+      "expect": {
+        "json": "\"\\ud83d\\ude00/\\u003C\\u003E\\u0026\\u0027\\u0022\"",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "pretty print",
+      "op": "json.encode",
+      "args": {
+        "v": {
+          "a": [],
+          "b": [
+            1,
+            2
+          ],
+          "c": {},
+          "d": {
+            "e": {
+              "f": 1
+            }
+          }
+        },
+        "flags": 128
+      },
+      "expect": {
+        "json": "{\n    \"a\": [],\n    \"b\": [\n        1,\n        2\n    ],\n    \"c\": {},\n    \"d\": {\n        \"e\": {\n            \"f\": 1\n        }\n    }\n}",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "pretty print empty",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          [],
+          {}
+        ],
+        "flags": 128
+      },
+      "expect": {
+        "json": "[\n    [],\n    {}\n]",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "force object",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          1,
+          [
+            2
+          ],
+          {}
+        ],
+        "flags": 16
+      },
+      "expect": {
+        "json": "{\"0\":1,\"1\":{\"0\":2},\"2\":{}}",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "numeric check",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          " 1",
+          "1 ",
+          "1e3",
+          "1E+3",
+          ".5",
+          "1.",
+          "-0",
+          "-0.0",
+          "0x1A",
+          "1e999",
+          "-1e999",
+          "9223372036854775807",
+          "9223372036854775808",
+          "-9223372036854775808",
+          "-9223372036854775808 ",
+          "-9223372036854775809",
+          "00012",
+          "+5",
+          " \t\n1\r",
+          "1e",
+          "1e+",
+          "NAN",
+          "INF",
+          "1_000",
+          "١٢",
+          "0.1",
+          "1.5e-7",
+          "123456789012345678901234567890",
+          "\u000b1\f",
+          "1\u0000",
+          "-.5",
+          "+.5e1",
+          "0e0",
+          "-",
+          ".",
+          "e1",
+          "1.5.5",
+          "0009223372036854775808"
+        ],
+        "flags": 32
+      },
+      "expect": {
+        "json": "[1,1,1000,1000,0.5,1,0,-0,\"0x1A\",\"1e999\",\"-1e999\",9223372036854775807,9.223372036854776e+18,-9223372036854775808,-9.223372036854776e+18,-9.223372036854776e+18,12,5,1,\"1e\",\"1e+\",\"NAN\",\"INF\",\"1_000\",\"\\u0661\\u0662\",0.1,1.5e-7,1.2345678901234568e+29,1,\"1\\u0000\",-0.5,5,0,\"-\",\".\",\"e1\",\"1.5.5\",9.223372036854776e+18]",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "numeric check keeps keys",
+      "op": "json.encode",
+      "args": {
+        "v": {
+          "1 ": " 2",
+          "x": "1e3"
+        },
+        "flags": 32
+      },
+      "expect": {
+        "json": "{\"1 \":2,\"x\":1000}",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "numeric check with zero fraction",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          "1.0",
+          "1e3",
+          "5"
+        ],
+        "flags": 1056
+      },
+      "expect": {
+        "json": "[1.0,1000.0,5]",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "preserve zero fraction",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          1.0,
+          1e+25,
+          -0.0,
+          0.1,
+          100.0,
+          1000000000000000.0
+        ],
+        "flags": 1024
+      },
+      "expect": {
+        "json": "[1.0,1.0e+25,-0.0,0.1,100.0,1000000000000000.0]",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "floats with serialize_precision -1",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          0.1,
+          1e+25,
+          1000000000000000.0,
+          100000000000000.0,
+          1e-7,
+          0.00001,
+          0.0001,
+          -0.0,
+          1.0,
+          100.0,
+          0.30000000000000004,
+          1.7976931348623157e+308,
+          5e-324,
+          123456789.12345678,
+          1.5,
+          -2.5e-300,
+          9007199254740992.0,
+          1e+21,
+          1.2345678901234568e+17
+        ]
+      },
+      "expect": {
+        "json": "[0.1,1.0e+25,1000000000000000,100000000000000,1.0e-7,1.0e-5,0.0001,-0,1,100,0.30000000000000004,1.7976931348623157e+308,5.0e-324,123456789.12345678,1.5,-2.5e-300,9007199254740992,1.0e+21,1.2345678901234568e+17]",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "list detection",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          {
+            "0": "a",
+            "1": "b"
+          },
+          {
+            "1": "a",
+            "0": "b"
+          },
+          {
+            "0": "a",
+            "2": "b"
+          },
+          {
+            "-0": 1
+          },
+          {
+            "01": 1
+          }
+        ]
+      },
+      "expect": {
+        "json": "[[\"a\",\"b\"],{\"1\":\"a\",\"0\":\"b\"},{\"0\":\"a\",\"2\":\"b\"},{\"-0\":1},{\"01\":1}]",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "stdClass",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          {},
+          {
+            "a": {}
+          }
+        ]
+      },
+      "expect": {
+        "json": "[{},{\"a\":{}}]",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "integer keys",
+      "op": "json.encode",
+      "args": {
+        "v": {
+          "9223372036854775807": 1,
+          "-9223372036854775808": 2,
+          "9223372036854775808": 3
+        }
+      },
+      "expect": {
+        "json": "{\"9223372036854775807\":1,\"-9223372036854775808\":2,\"9223372036854775808\":3}",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "empty string key and value",
+      "op": "json.encode",
+      "args": {
+        "v": {
+          "": ""
+        }
+      },
+      "expect": {
+        "json": "{\"\":\"\"}",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "big integers",
+      "op": "json.encode",
+      "args": {
+        "v": [
+          9223372036854775807,
+          -9223372036854775808,
+          18446744073709551615
+        ]
+      },
+      "expect": {
+        "json": "[9223372036854775807,-9223372036854775808,1.8446744073709552e+19]",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "library flags: database redis payload",
+      "op": "json.encode",
+      "args": {
+        "v": {
+          "$id": "a/b",
+          "n": 1.0,
+          "s": "é"
+        },
+        "flags": 4195584
+      },
+      "expect": {
+        "json": "{\"$id\":\"a\\/b\",\"n\":1.0,\"s\":\"é\"}",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "library flags: mongodb command",
+      "op": "json.encode",
+      "args": {
+        "v": {
+          "collection": "a/b",
+          "q": {
+            "$in": [
+              1,
+              "x"
+            ]
+          }
+        },
+        "flags": 64
+      },
+      "expect": {
+        "json": "{\"collection\":\"a/b\",\"q\":{\"$in\":[1,\"x\"]}}",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "library flags: clickhouse row",
+      "op": "json.encode",
+      "args": {
+        "v": {
+          "u": "é/😀",
+          "f": 0.5
+        },
+        "flags": 320
+      },
+      "expect": {
+        "json": "{\"u\":\"é/😀\",\"f\":0.5}",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "throw: message",
+      "op": "json.encode_throw",
+      "args": {
+        "v": [
+          {
+            "$float": "INF"
+          }
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "JsonException",
+          "message": "Inf and NaN cannot be JSON encoded"
+        }
+      }
+    },
+    {
+      "name": "throw: utf8 message",
+      "op": "json.encode_throw",
+      "args": {
+        "v": {
+          "$bytes": "/w=="
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "JsonException",
+          "message": "Malformed UTF-8 characters, possibly incorrectly encoded"
+        }
+      }
+    },
+    {
+      "name": "throw: depth message",
+      "op": "json.encode_throw",
+      "args": {
+        "v": [
+          [
+            1
+          ]
+        ],
+        "depth": 1
+      },
+      "expect": {
+        "$error": {
+          "class": "JsonException",
+          "message": "Maximum stack depth exceeded"
+        }
+      }
+    },
+    {
+      "name": "throw with partial output does not throw",
+      "op": "json.encode_throw",
+      "args": {
+        "v": [
+          {
+            "$float": "INF"
+          }
+        ],
+        "flags": 512
+      },
+      "expect": "[0]"
+    },
+    {
+      "name": "throw: success",
+      "op": "json.encode_throw",
+      "args": {
+        "v": {
+          "a": [
+            1,
+            2.5,
+            null,
+            true
+          ]
+        },
+        "flags": 320
+      },
+      "expect": "{\"a\":[1,2.5,null,true]}"
+    },
+    {
+      "name": "serde_json model: empty object is stdClass",
+      "op": "json.encode_value",
+      "args": {
+        "v": {
+          "a": {},
+          "b": []
+        }
+      },
+      "expect": {
+        "json": "{\"a\":{},\"b\":[]}",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "serde_json model: numeric keys",
+      "op": "json.encode_value",
+      "args": {
+        "v": {
+          "0": 1,
+          "1": 2
+        }
+      },
+      "expect": {
+        "json": "[1,2]",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "serde_json model: u64 is a float",
+      "op": "json.encode_value",
+      "args": {
+        "v": [
+          18446744073709551615,
+          9223372036854775808
+        ]
+      },
+      "expect": {
+        "json": "[1.8446744073709552e+19,9.223372036854776e+18]",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "depth checked before the next token",
+      "op": "json.decode",
+      "args": {
+        "s": "[\u0001",
+        "assoc": true,
+        "depth": 1
+      },
+      "expect": {
+        "value": null,
+        "error": 1,
+        "message": "Maximum stack depth exceeded"
+      }
+    },
+    {
+      "name": "depth checked before a nested token",
+      "op": "json.decode",
+      "args": {
+        "s": "[[\u0001",
+        "assoc": true,
+        "depth": 2
+      },
+      "expect": {
+        "value": null,
+        "error": 1,
+        "message": "Maximum stack depth exceeded"
+      }
+    },
+    {
+      "name": "empty array needs depth 2",
+      "op": "json.decode",
+      "args": {
+        "s": "[]",
+        "assoc": true,
+        "depth": 1
+      },
+      "expect": {
+        "value": null,
+        "error": 1,
+        "message": "Maximum stack depth exceeded"
+      }
+    },
+    {
+      "name": "scalar at depth 1",
+      "op": "json.decode",
+      "args": {
+        "s": "1",
+        "depth": 1
+      },
+      "expect": {
+        "value": 1,
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "unterminated string is a control character error",
+      "op": "json.decode",
+      "args": {
+        "s": "\"abc"
+      },
+      "expect": {
+        "value": null,
+        "error": 3,
+        "message": "Control character error, possibly incorrectly encoded"
+      }
+    },
+    {
+      "name": "NUL after the value",
+      "op": "json.decode",
+      "args": {
+        "s": "1\u0000"
+      },
+      "expect": {
+        "value": null,
+        "error": 3,
+        "message": "Control character error, possibly incorrectly encoded"
+      }
+    },
+    {
+      "name": "NUL alone",
+      "op": "json.decode",
+      "args": {
+        "s": "\u0000"
+      },
+      "expect": {
+        "value": null,
+        "error": 3,
+        "message": "Control character error, possibly incorrectly encoded"
+      }
+    },
+    {
+      "name": "NUL-prefixed property name",
+      "op": "json.decode",
+      "args": {
+        "s": "{\"\\u0000a\":1 x",
+        "assoc": false
+      },
+      "expect": {
+        "value": null,
+        "error": 9,
+        "message": "The decoded property name is invalid"
+      }
+    },
+    {
+      "name": "NUL-prefixed key is fine in arrays",
+      "op": "json.decode",
+      "args": {
+        "s": "{\"\\u0000a\":1}",
+        "assoc": true
+      },
+      "expect": {
+        "value": {
+          "\u0000a": 1
+        },
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "empty property name",
+      "op": "json.decode",
+      "args": {
+        "s": "{\"\":1}",
+        "assoc": false
+      },
+      "expect": {
+        "value": {
+          "": 1
+        },
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "state mismatch array",
+      "op": "json.decode",
+      "args": {
+        "s": "[1}"
+      },
+      "expect": {
+        "value": null,
+        "error": 2,
+        "message": "State mismatch (invalid or malformed JSON)"
+      }
+    },
+    {
+      "name": "state mismatch object",
+      "op": "json.decode",
+      "args": {
+        "s": "{]"
+      },
+      "expect": {
+        "value": null,
+        "error": 2,
+        "message": "State mismatch (invalid or malformed JSON)"
+      }
+    },
+    {
+      "name": "state mismatch after member",
+      "op": "json.decode",
+      "args": {
+        "s": "{\"a\":1]"
+      },
+      "expect": {
+        "value": null,
+        "error": 2,
+        "message": "State mismatch (invalid or malformed JSON)"
+      }
+    },
+    {
+      "name": "trailing comma",
+      "op": "json.decode",
+      "args": {
+        "s": "[1,}"
+      },
+      "expect": {
+        "value": null,
+        "error": 4,
+        "message": "Syntax error"
+      }
+    },
+    {
+      "name": "lone high surrogate",
+      "op": "json.decode",
+      "args": {
+        "s": "\"\\ud800\""
+      },
+      "expect": {
+        "value": null,
+        "error": 10,
+        "message": "Single unpaired UTF-16 surrogate in unicode escape"
+      }
+    },
+    {
+      "name": "lone low surrogate",
+      "op": "json.decode",
+      "args": {
+        "s": "\"\\udc00\""
+      },
+      "expect": {
+        "value": null,
+        "error": 10,
+        "message": "Single unpaired UTF-16 surrogate in unicode escape"
+      }
+    },
+    {
+      "name": "surrogate pair",
+      "op": "json.decode",
+      "args": {
+        "s": "\"\\ud83d\\ude00\\uD834\\uDD1E\""
+      },
+      "expect": {
+        "value": "😀𝄞",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "short unicode escape",
+      "op": "json.decode",
+      "args": {
+        "s": "\"\\u12\""
+      },
+      "expect": {
+        "value": null,
+        "error": 4,
+        "message": "Syntax error"
+      }
+    },
+    {
+      "name": "invalid escape",
+      "op": "json.decode",
+      "args": {
+        "s": "\"\\a\""
+      },
+      "expect": {
+        "value": null,
+        "error": 4,
+        "message": "Syntax error"
+      }
+    },
+    {
+      "name": "invalid utf-8 outside a string",
+      "op": "json.decode",
+      "args": {
+        "s": {
+          "$bytes": "/w=="
+        }
+      },
+      "expect": {
+        "value": null,
+        "error": 5,
+        "message": "Malformed UTF-8 characters, possibly incorrectly encoded"
+      }
+    },
+    {
+      "name": "valid utf-8 outside a string",
+      "op": "json.decode",
+      "args": {
+        "s": "é"
+      },
+      "expect": {
+        "value": null,
+        "error": 4,
+        "message": "Syntax error"
+      }
+    },
+    {
+      "name": "invalid utf-8 inside a string",
+      "op": "json.decode",
+      "args": {
+        "s": {
+          "$bytes": "ImH/YiI="
+        }
+      },
+      "expect": {
+        "value": null,
+        "error": 5,
+        "message": "Malformed UTF-8 characters, possibly incorrectly encoded"
+      }
+    },
+    {
+      "name": "substitute per invalid byte",
+      "op": "json.decode",
+      "args": {
+        "s": {
+          "$bytes": "ImHgoGL/Ig=="
+        },
+        "flags": 2097152
+      },
+      "expect": {
+        "value": "a��b�",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "ignore invalid bytes",
+      "op": "json.decode",
+      "args": {
+        "s": {
+          "$bytes": "ImHgoGL/Ig=="
+        },
+        "flags": 1048576
+      },
+      "expect": {
+        "value": "ab",
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "substitute in keys",
+      "op": "json.decode",
+      "args": {
+        "s": {
+          "$bytes": "eyL/IjoxfQ=="
+        },
+        "assoc": true,
+        "flags": 2097152
+      },
+      "expect": {
+        "value": {
+          "�": 1
+        },
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "invalid utf-8 outside a string with substitute",
+      "op": "json.decode",
+      "args": {
+        "s": {
+          "$bytes": "W/9d"
+        },
+        "flags": 2097152
+      },
+      "expect": {
+        "value": null,
+        "error": 5,
+        "message": "Malformed UTF-8 characters, possibly incorrectly encoded"
+      }
+    },
+    {
+      "name": "minus zero is an integer",
+      "op": "json.decode",
+      "args": {
+        "s": "-0"
+      },
+      "expect": {
+        "value": 0,
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "minus zero float",
+      "op": "json.decode",
+      "args": {
+        "s": "-0.0"
+      },
+      "expect": {
+        "value": -0.0,
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "huge exponent is INF",
+      "op": "json.decode",
+      "args": {
+        "s": "[1e400,-1e400]"
+      },
+      "expect": {
+        "value": [
+          {
+            "$float": "INF"
+          },
+          {
+            "$float": "-INF"
+          }
+        ],
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "int min",
+      "op": "json.decode",
+      "args": {
+        "s": "-9223372036854775808"
+      },
+      "expect": {
+        "value": -9223372036854775808,
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "int max",
+      "op": "json.decode",
+      "args": {
+        "s": "9223372036854775807"
+      },
+      "expect": {
+        "value": 9223372036854775807,
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "bigint becomes float",
+      "op": "json.decode",
+      "args": {
+        "s": "[9223372036854775808,-9223372036854775809,12345678901234567890]"
+      },
+      "expect": {
+        "value": [
+          9.223372036854776e+18,
+          -9.223372036854776e+18,
+          1.2345678901234567e+19
+        ],
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "bigint as string",
+      "op": "json.decode",
+      "args": {
+        "s": "[9223372036854775808,-9223372036854775809,1.5e3]",
+        "flags": 2
+      },
+      "expect": {
+        "value": [
+          "9223372036854775808",
+          "-9223372036854775809",
+          1500.0
+        ],
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "list-like object in assoc mode",
+      "op": "json.decode",
+      "args": {
+        "s": "{\"0\":1,\"1\":2}",
+        "assoc": true
+      },
+      "expect": {
+        "value": [
+          1,
+          2
+        ],
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "reversed keys in assoc mode",
+      "op": "json.decode",
+      "args": {
+        "s": "{\"1\":1,\"0\":2}",
+        "assoc": true
+      },
+      "expect": {
+        "value": {
+          "1": 1,
+          "0": 2
+        },
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "list-like object in object mode",
+      "op": "json.decode",
+      "args": {
+        "s": "{\"0\":1,\"1\":2}",
+        "assoc": false
+      },
+      "expect": {
+        "value": {
+          "0": 1,
+          "1": 2
+        },
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "duplicate keys keep the first position",
+      "op": "json.decode",
+      "args": {
+        "s": "{\"a\":1,\"b\":2,\"a\":3}",
+        "assoc": false
+      },
+      "expect": {
+        "value": {
+          "a": 3,
+          "b": 2
+        },
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "duplicate numeric keys",
+      "op": "json.decode",
+      "args": {
+        "s": "{\"1\":1,\"01\":2,\"1\":3}",
+        "assoc": true
+      },
+      "expect": {
+        "value": {
+          "1": 3,
+          "01": 2
+        },
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "empty object assoc",
+      "op": "json.decode",
+      "args": {
+        "s": "{}",
+        "assoc": true
+      },
+      "expect": {
+        "value": [],
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "empty object",
+      "op": "json.decode",
+      "args": {
+        "s": "{\"a\":{}}",
+        "assoc": false
+      },
+      "expect": {
+        "value": {
+          "a": {}
+        },
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "object as array flag",
+      "op": "json.decode",
+      "args": {
+        "s": "{\"a\":{}}",
+        "flags": 1
+      },
+      "expect": {
+        "value": {
+          "a": []
+        },
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "assoc false overrides the flag",
+      "op": "json.decode",
+      "args": {
+        "s": "{\"a\":1}",
+        "assoc": false,
+        "flags": 1
+      },
+      "expect": {
+        "value": {
+          "a": 1
+        },
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "empty input",
+      "op": "json.decode",
+      "args": {
+        "s": ""
+      },
+      "expect": {
+        "value": null,
+        "error": 4,
+        "message": "Syntax error"
+      }
+    },
+    {
+      "name": "empty input wins over depth",
+      "op": "json.decode",
+      "args": {
+        "s": "",
+        "depth": 0
+      },
+      "expect": {
+        "value": null,
+        "error": 4,
+        "message": "Syntax error"
+      }
+    },
+    {
+      "name": "depth zero",
+      "op": "json.decode",
+      "args": {
+        "s": "1",
+        "depth": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "json_decode(): Argument #3 ($depth) must be greater than 0"
+        }
+      }
+    },
+    {
+      "name": "depth beyond int",
+      "op": "json.decode",
+      "args": {
+        "s": "1",
+        "depth": 2147483648
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "json_decode(): Argument #3 ($depth) must be less than 2147483647"
+        }
+      }
+    },
+    {
+      "name": "whitespace",
+      "op": "json.decode",
+      "args": {
+        "s": " \r\n\t[ 1 , \"a\" ]\n "
+      },
+      "expect": {
+        "value": [
+          1,
+          "a"
+        ],
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "vertical tab is a control character",
+      "op": "json.decode",
+      "args": {
+        "s": "\u000b1"
+      },
+      "expect": {
+        "value": null,
+        "error": 3,
+        "message": "Control character error, possibly incorrectly encoded"
+      }
+    },
+    {
+      "name": "literals are case sensitive",
+      "op": "json.decode",
+      "args": {
+        "s": "TRUE"
+      },
+      "expect": {
+        "value": null,
+        "error": 4,
+        "message": "Syntax error"
+      }
+    },
+    {
+      "name": "parser stack: 4998 nested arrays",
+      "op": "json.validate",
+      "args": {
+        "s": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+        "depth": 100000
+      },
+      "expect": {
+        "valid": true,
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "parser stack: 4999 nested arrays",
+      "op": "json.validate",
+      "args": {
+        "s": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+        "depth": 100000
+      },
+      "expect": {
+        "valid": false,
+        "error": 4,
+        "message": "Syntax error"
+      }
+    },
+    {
+      "name": "parser stack: 4999 nested arrays (decode)",
+      "op": "json.decode",
+      "args": {
+        "s": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+        "assoc": true,
+        "depth": 100000
+      },
+      "expect": {
+        "value": null,
+        "error": 4,
+        "message": "Syntax error"
+      }
+    },
+    {
+      "name": "parser stack: 2499 nested objects",
+      "op": "json.validate",
+      "args": {
+        "s": "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":1}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}",
+        "depth": 100000
+      },
+      "expect": {
+        "valid": true,
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "parser stack: 2500 nested objects",
+      "op": "json.validate",
+      "args": {
+        "s": "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":1}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}",
+        "depth": 100000
+      },
+      "expect": {
+        "valid": false,
+        "error": 4,
+        "message": "Syntax error"
+      }
+    },
+    {
+      "name": "parser stack: 2499 arrays after a comma",
+      "op": "json.validate",
+      "args": {
+        "s": "[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,1]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+        "depth": 100000
+      },
+      "expect": {
+        "valid": true,
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "parser stack: 2500 arrays after a comma",
+      "op": "json.validate",
+      "args": {
+        "s": "[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,[1,1]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+        "depth": 100000
+      },
+      "expect": {
+        "valid": false,
+        "error": 4,
+        "message": "Syntax error"
+      }
+    },
+    {
+      "name": "parser stack: 1666 objects after a member",
+      "op": "json.validate",
+      "args": {
+        "s": "{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":1}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}",
+        "depth": 100000
+      },
+      "expect": {
+        "valid": true,
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "parser stack: 1667 objects after a member",
+      "op": "json.validate",
+      "args": {
+        "s": "{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":{\"a\":1,\"b\":1}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}",
+        "depth": 100000
+      },
+      "expect": {
+        "valid": false,
+        "error": 4,
+        "message": "Syntax error"
+      }
+    },
+    {
+      "name": "parser stack before depth",
+      "op": "json.validate",
+      "args": {
+        "s": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[",
+        "depth": 5500
+      },
+      "expect": {
+        "valid": false,
+        "error": 4,
+        "message": "Syntax error"
+      }
+    },
+    {
+      "name": "depth before parser stack",
+      "op": "json.validate",
+      "args": {
+        "s": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[",
+        "depth": 4000
+      },
+      "expect": {
+        "valid": false,
+        "error": 1,
+        "message": "Maximum stack depth exceeded"
+      }
+    },
+    {
+      "name": "throw: syntax",
+      "op": "json.decode_throw",
+      "args": {
+        "s": "[1,]"
+      },
+      "expect": {
+        "$error": {
+          "class": "JsonException",
+          "message": "Syntax error"
+        }
+      }
+    },
+    {
+      "name": "throw: empty",
+      "op": "json.decode_throw",
+      "args": {
+        "s": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "JsonException",
+          "message": "Syntax error"
+        }
+      }
+    },
+    {
+      "name": "throw: value",
+      "op": "json.decode_throw",
+      "args": {
+        "s": "{\"a\":[1,2]}",
+        "assoc": true
+      },
+      "expect": {
+        "a": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "name": "throw: depth",
+      "op": "json.decode_throw",
+      "args": {
+        "s": "[[1]]",
+        "depth": 2
+      },
+      "expect": {
+        "$error": {
+          "class": "JsonException",
+          "message": "Maximum stack depth exceeded"
+        }
+      }
+    },
+    {
+      "name": "serde_json model: list-like objects become arrays",
+      "op": "json.decode_value",
+      "args": {
+        "s": "{\"0\":\"a\",\"1\":{\"1\":1,\"0\":2},\"2\":{}}"
+      },
+      "expect": {
+        "value": [
+          "a",
+          {
+            "1": 1,
+            "0": 2
+          },
+          []
+        ],
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "serde_json model: bigint as string",
+      "op": "json.decode_value",
+      "args": {
+        "s": "[9223372036854775808]",
+        "flags": 2
+      },
+      "expect": {
+        "value": [
+          "9223372036854775808"
+        ],
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "serde_json model: duplicate keys",
+      "op": "json.decode_value",
+      "args": {
+        "s": "{\"a\":1,\"b\":2,\"a\":3}"
+      },
+      "expect": {
+        "value": {
+          "a": 3,
+          "b": 2
+        },
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "validate: NUL-prefixed key is valid",
+      "op": "json.validate",
+      "args": {
+        "s": "{\"\\u0000a\":1}"
+      },
+      "expect": {
+        "valid": true,
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "validate: invalid flag",
+      "op": "json.validate",
+      "args": {
+        "s": "1",
+        "flags": 1
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "json_validate(): Argument #3 ($flags) must be a valid flag (allowed flags: JSON_INVALID_UTF8_IGNORE)"
+        }
+      }
+    },
+    {
+      "name": "validate: ignore",
+      "op": "json.validate",
+      "args": {
+        "s": {
+          "$bytes": "Iv8i"
+        },
+        "flags": 1048576
+      },
+      "expect": {
+        "valid": true,
+        "error": 0,
+        "message": "No error"
+      }
+    },
+    {
+      "name": "validate: empty",
+      "op": "json.validate",
+      "args": {
+        "s": ""
+      },
+      "expect": {
+        "valid": false,
+        "error": 4,
+        "message": "Syntax error"
+      }
+    },
+    {
+      "name": "validate: depth zero",
+      "op": "json.validate",
+      "args": {
+        "s": "1",
+        "depth": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "json_validate(): Argument #2 ($depth) must be greater than 0"
+        }
+      }
+    }
+  ]
+}

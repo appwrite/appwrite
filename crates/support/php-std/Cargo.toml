@@ -9,5 +9,6 @@ publish.workspace = true
 
 [dependencies]
 getrandom.workspace = true
+indexmap.workspace = true
 rustix.workspace = true
 serde_json.workspace = true

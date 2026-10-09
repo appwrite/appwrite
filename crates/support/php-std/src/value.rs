@@ -140,6 +140,13 @@ pub fn numeric_str_ex(s: &str) -> Option<(Number, i8)> {
     }
     if !is_float {
         if let Ok(v) = t.parse::<i64>() {
+            // The engine's overflow check `strcmp`s the 19 digits up to the
+            // end of the string, trailing whitespace included: "-9223372036854775808 "
+            // compares greater than "9223372036854775808" and becomes a float.
+            let trailing_ws = t.len() != s.trim_start_matches(is_ws).len();
+            if v == i64::MIN && trailing_ws {
+                return Some((Number::Float(v as f64), -1));
+            }
             return Some((Number::Int(v), 0));
         }
         let oflow = if bytes[0] == b'-' { -1 } else { 1 };
