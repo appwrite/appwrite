@@ -241,6 +241,22 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "how-we-trained-our-own-model",
+    "href": "/blog/post/how-we-trained-our-own-model",
+    "title": "How we trained our own AI model for image cropping",
+    "description": "Appwrite Cloud uses FocalNet, a 4.76M-parameter AI model, to crop images with gravity=auto. Here is how we trained it to match human crop preferences.",
+    "date": "2026-09-28",
+    "lastUpdated": "2026-09-28",
+    "timeToRead": 14,
+    "author": "torsten-dittmann",
+    "category": "ai, open-source",
+    "featured": false,
+    "unlisted": false,
+    "draft": false,
+    "cover": "/images/blog/how-we-trained-our-own-model/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "add-google-one-tap-to-your-web-app",
     "href": "/blog/post/add-google-one-tap-to-your-web-app",
     "title": "Add Google One Tap sign-in to your web app with Appwrite",
