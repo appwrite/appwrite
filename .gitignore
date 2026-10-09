@@ -1,5 +1,6 @@
 /.vscode/
 /vendor/
+/target/
 /node_modules/
 /tests/resources/storage/
 /tests/resources/functions/**/code.tar.gz
@@ -35,3 +36,4 @@ auth.json
 src/Appwrite/Platform/Modules/Databases/_semgrep_prove/
 /packages/*/composer.linked.json
 /packages/*/composer.linked.lock
+/benchmark-results/

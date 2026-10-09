@@ -1,0 +1,22 @@
+[package]
+name = "utopia-database"
+description = "Document database layer that shares storage with utopia-php/database (PostgreSQL)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+bytes.workspace = true
+chrono.workspace = true
+deadpool-postgres.workspace = true
+futures-util.workspace = true
+getrandom.workspace = true
+hex.workspace = true
+md-5.workspace = true
+serde_json.workspace = true
+tokio-postgres.workspace = true
+tracing.workspace = true
+utopia-cache.workspace = true
+utopia-validators.workspace = true

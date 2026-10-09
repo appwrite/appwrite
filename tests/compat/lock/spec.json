@@ -1,0 +1,166 @@
+{
+  "lib": "lock",
+  "description": "utopia-php/lock: Redis leases (Distributed), in-process Mutex and Semaphore, flock(2) files.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/lock/src"
+    ],
+    "tests": [
+      "packages/lock/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/lock"
+  },
+  "services": [
+    "redis"
+  ],
+  "state": [
+    "redis"
+  ],
+  "state_mask": {
+    "redis": {
+      "paths": [
+        "/*/value"
+      ],
+      "reason": "lease values are tokens embedding the host name, process id and time of acquisition"
+    }
+  },
+  "ops": {
+    "distributed.new": {
+      "doc": "new Distributed($redis, key, ttl?)",
+      "covers": [
+        "Utopia\\Lock\\Distributed::__construct"
+      ]
+    },
+    "mutex.new": {
+      "doc": "new Mutex()",
+      "covers": [
+        "Utopia\\Lock\\Mutex::__construct"
+      ]
+    },
+    "semaphore.new": {
+      "doc": "new Semaphore(permits)",
+      "covers": [
+        "Utopia\\Lock\\Semaphore::__construct"
+      ]
+    },
+    "file.new": {
+      "doc": "new File(path, mode?)",
+      "covers": [
+        "Utopia\\Lock\\File::__construct"
+      ]
+    },
+    "lock.acquire": {
+      "doc": "$lock->acquire(timeout?) on any lock",
+      "covers": [
+        "Utopia\\Lock\\Distributed::acquire",
+        "Utopia\\Lock\\Mutex::acquire",
+        "Utopia\\Lock\\Semaphore::acquire",
+        "Utopia\\Lock\\File::acquire"
+      ]
+    },
+    "lock.try_acquire": {
+      "doc": "$lock->tryAcquire()",
+      "covers": [
+        "Utopia\\Lock\\Distributed::tryAcquire",
+        "Utopia\\Lock\\Mutex::tryAcquire",
+        "Utopia\\Lock\\Semaphore::tryAcquire",
+        "Utopia\\Lock\\File::tryAcquire"
+      ]
+    },
+    "lock.release": {
+      "doc": "$lock->release()",
+      "covers": [
+        "Utopia\\Lock\\Distributed::release",
+        "Utopia\\Lock\\Mutex::release",
+        "Utopia\\Lock\\Semaphore::release",
+        "Utopia\\Lock\\File::release"
+      ]
+    },
+    "lock.with_lock": {
+      "doc": "$lock->withLock(fn => result | throw RuntimeException(throw), timeout?)",
+      "covers": [
+        "Utopia\\Lock\\Distributed::withLock",
+        "Utopia\\Lock\\Mutex::withLock",
+        "Utopia\\Lock\\Semaphore::withLock",
+        "Utopia\\Lock\\File::withLock"
+      ]
+    },
+    "lock.concurrency": {
+      "doc": "`tasks` coroutines/tasks each holding the lock `hold_ms` via withLock(timeout): {count, max, contention}"
+    },
+    "lock.acquire_elapsed": {
+      "doc": "acquire(timeout) and whether the time it took is in [at_least, below)"
+    },
+    "distributed.refresh": {
+      "doc": "$lock->refresh()",
+      "covers": [
+        "Utopia\\Lock\\Distributed::refresh"
+      ]
+    },
+    "distributed.is_held": {
+      "doc": "$lock->isHeld()",
+      "covers": [
+        "Utopia\\Lock\\Distributed::isHeld"
+      ]
+    },
+    "distributed.adopt": {
+      "doc": "$lock->adopt(token)",
+      "covers": [
+        "Utopia\\Lock\\Distributed::adopt"
+      ]
+    },
+    "distributed.token": {
+      "doc": "$lock->token(); bind it to compare or adopt it",
+      "covers": [
+        "Utopia\\Lock\\Distributed::token"
+      ],
+      "mask": {
+        "paths": [
+          ""
+        ],
+        "reason": "a token embeds the host name, process id and time of acquisition"
+      }
+    },
+    "distributed.has_token": {
+      "doc": "$lock->token() !== null"
+    },
+    "distributed.set_logger": {
+      "doc": "$lock->setLogger(collect messages)",
+      "covers": [
+        "Utopia\\Lock\\Distributed::setLogger"
+      ]
+    },
+    "distributed.logs": {
+      "doc": "distinct messages collected since set_logger, sorted"
+    },
+    "distributed.retry_spread": {
+      "doc": "DistributedTest::testWaitersDoNotRetryInLockstep: {observed, spread > 10ms}"
+    },
+    "redis.set": {
+      "doc": "fixture: SET key value EX ex"
+    },
+    "redis.get": {
+      "doc": "fixture: GET key (false when missing)"
+    },
+    "redis.del": {
+      "doc": "fixture: DEL key"
+    },
+    "redis.ttl": {
+      "doc": "fixture: TTL key > 0"
+    }
+  },
+  "generators": {},
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Lock\\File::__construct",
+      "php": "`$mode` is any int: values other than LOCK_SH (1) and LOCK_EX (2) raise a ValueError on the first acquire, or for LOCK_UN (3) make every acquire succeed without locking.",
+      "reason": "utopia_lock::Mode has only Exclusive and Shared."
+    }
+  ]
+}

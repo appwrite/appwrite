@@ -35,6 +35,13 @@ abstract class Scope extends TestCase
 
     protected function setUp(): void
     {
+        // Point the suite at the proxy (e.g. http://appwrite.test/v1) to exercise
+        // services that Traefik routes to the Rust API.
+        $endpoint = System::getEnv('_APP_E2E_ENDPOINT', '');
+        if ($endpoint !== '') {
+            $this->endpoint = $endpoint;
+        }
+
         $this->client = new Client();
         $this->client->setEndpoint($this->endpoint);
 

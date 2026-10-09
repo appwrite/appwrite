@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# The PHP side of bin/compat: runs tests/compat/php/driver.php in a throwaway
+# container of the dev image, with this checkout's tests/ and packages/
+# mounted, on the dev stack's network (so `redis`, `postgresql` resolve).
+# Works from any git worktree, not only the checkout the stack runs from.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+exec docker run --rm -i \
+    --network "${COMPAT_NETWORK:-appwrite}" \
+    -v "$PWD/tests:/usr/src/code/tests" \
+    -v "$PWD/packages:/usr/src/code/packages" \
+    -w /usr/src/code \
+    --entrypoint php \
+    "${COMPAT_IMAGE:-appwrite-dev}" \
+    -d display_errors=stderr -d memory_limit=1G tests/compat/php/driver.php

@@ -1,0 +1,14 @@
+[package]
+name = "utopia-emails"
+description = "Email parsing, canonicalisation and classification (utopia-php/emails)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+fancy-regex.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+utopia-validators.workspace = true

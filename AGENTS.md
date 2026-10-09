@@ -65,6 +65,21 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 - **docs/** -- references, tutorials, SDK getting-started notes, [release process](docs/releases.md)
 - **tests/e2e/**, **tests/unit/** -- tests; **public/** -- fonts, images, generated SDKs
 
+## Rust
+
+The API is migrating to Rust service by service ([rfc/rust.md](rfc/rust.md)). Rust lives in `crates/` (Cargo workspace at the root, never in `packages/`):
+
+- `crates/utopia/<name>`: generic Utopia crates
+- `crates/appwrite/core`: lifecycle, auth, models and events
+- `crates/appwrite/<service>`: one module per migrated service
+- `crates/appwrite/server`: the binary
+- `crates/support/php-std`: PHP engine semantics shared by Utopia crates
+- `crates/tools/compat`: `bin/compat`, the PHP ↔ Rust compatibility tester
+
+A Utopia library is converted in full, to the standard in [crates/CONVERSION.md](crates/CONVERSION.md), and proven with `bin/compat check <lib>` ([tests/compat](tests/compat/README.md)): 100% of the PHP API covered, every PHP test class ported, zero differences on cases and fuzzed inputs. Status: [tests/compat/STATUS.md](tests/compat/STATUS.md).
+
+Traefik routes migrated paths to the `appwrite-rust` container (compose profile `rust`). Both runtimes share PostgreSQL, Redis, queues and caches. When changing a migrated service, change PHP and Rust together, or only Rust if the PHP route is no longer served. Run the PHP E2E suite through the proxy with `_APP_E2E_ENDPOINT=http://appwrite.test/v1`. Checks: `cargo fmt --all`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`.
+
 ## Console
 
 Console and UI work uses the code in `apps/console`. Follow [apps/console/AGENTS.md](apps/console/AGENTS.md) for that app's agent guidance.

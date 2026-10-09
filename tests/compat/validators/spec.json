@@ -1,0 +1,23 @@
+{
+  "lib": "validators",
+  "description": "",
+  "complete": false,
+  "php": {
+    "src": [
+      "packages/validators/src"
+    ],
+    "tests": [
+      "packages/validators/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/validators"
+  },
+  "services": [],
+  "state": [],
+  "ops": {},
+  "generators": {},
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": []
+}

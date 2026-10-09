@@ -1,0 +1,39 @@
+[package]
+name = "appwrite-core"
+description = "Appwrite domain core for Rust: request lifecycle, auth, models, events and platform extension points."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+aes-gcm.workspace = true
+base64.workspace = true
+bytes.workspace = true
+chrono.workspace = true
+futures-util.workspace = true
+hex.workspace = true
+hmac.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+hyper.workspace = true
+hyper-util = { workspace = true, features = ["client-legacy", "http1"] }
+serde.workspace = true
+serde_json.workspace = true
+sha1.workspace = true
+sha2.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+utopia-auth.workspace = true
+utopia-cache.workspace = true
+utopia-database.workspace = true
+utopia-dsn.workspace = true
+utopia-emails.workspace = true
+utopia-http.workspace = true
+utopia-locale.workspace = true
+utopia-lock.workspace = true
+utopia-queue.workspace = true
+utopia-system.workspace = true
+utopia-user-agent.workspace = true
+utopia-validators.workspace = true

@@ -1,0 +1,430 @@
+{
+  "source": "packages/lock/tests/FileTest.php",
+  "cases": [
+    {
+      "name": "acquire and release",
+      "steps": [
+        {
+          "op": "file.new",
+          "args": {
+            "path": "/tmp/${ns}.lock"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "file.new",
+          "args": {
+            "path": "/tmp/${ns}.lock"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a second handle cannot acquire while one holds",
+      "steps": [
+        {
+          "op": "file.new",
+          "args": {
+            "path": "/tmp/${ns}.lock"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "file.new",
+          "args": {
+            "path": "/tmp/${ns}.lock"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "lock.acquire_elapsed",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            },
+            "timeout": 0.1,
+            "at_least": 0.05,
+            "below": 1.0
+          },
+          "expect": {
+            "acquired": false,
+            "within": true
+          }
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "withLock releases on exception",
+      "steps": [
+        {
+          "op": "file.new",
+          "args": {
+            "path": "/tmp/${ns}.lock"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.with_lock",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            },
+            "throw": "inner"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "inner"
+            }
+          }
+        },
+        {
+          "op": "file.new",
+          "args": {
+            "path": "/tmp/${ns}.lock"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "contention thrown on timeout",
+      "steps": [
+        {
+          "op": "file.new",
+          "args": {
+            "path": "/tmp/${ns}.lock"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "file.new",
+          "args": {
+            "path": "/tmp/${ns}.lock"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.with_lock",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            },
+            "timeout": 0.1
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Lock\\Exception\\Contention",
+              "message": "Failed to acquire file lock on /tmp/${ns}.lock within timeout"
+            }
+          }
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "missing directory",
+      "steps": [
+        {
+          "op": "file.new",
+          "args": {
+            "path": "/tmp/${ns}-missing/x.lock"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Lock\\Exception",
+              "message": "Lock file directory does not exist: /tmp/${ns}-missing"
+            }
+          }
+        },
+        {
+          "op": "lock.acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            },
+            "timeout": 0.05
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Lock\\Exception",
+              "message": "Lock file directory does not exist: /tmp/${ns}-missing"
+            }
+          }
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "shared locks coexist, exclusive waits",
+      "steps": [
+        {
+          "op": "file.new",
+          "args": {
+            "path": "/tmp/${ns}.lock",
+            "mode": 1
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "file.new",
+          "args": {
+            "path": "/tmp/${ns}.lock",
+            "mode": 1
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "file.new",
+          "args": {
+            "path": "/tmp/${ns}.lock",
+            "mode": 2
+          },
+          "bind": "x",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "s1"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "s2"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "x"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "s1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "s2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "x"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "s1"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "x"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

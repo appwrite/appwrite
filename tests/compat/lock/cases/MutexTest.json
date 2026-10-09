@@ -1,0 +1,188 @@
+{
+  "source": "packages/lock/tests/MutexTest.php",
+  "cases": [
+    {
+      "name": "serializes eight coroutines",
+      "steps": [
+        {
+          "op": "mutex.new",
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.concurrency",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            },
+            "tasks": 8,
+            "hold_ms": 5,
+            "timeout": -1
+          },
+          "expect": {
+            "count": 8,
+            "max": 1,
+            "contention": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "times out under contention",
+      "steps": [
+        {
+          "op": "mutex.new",
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.concurrency",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            },
+            "tasks": 2,
+            "hold_ms": 200,
+            "timeout": 0.05
+          },
+          "expect": {
+            "count": 1,
+            "max": 1,
+            "contention": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "try acquire fails when held",
+      "steps": [
+        {
+          "op": "mutex.new",
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.acquire",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "release is idempotent",
+      "steps": [
+        {
+          "op": "mutex.new",
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.acquire",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "acquire with a timeout on a held mutex fails",
+      "steps": [
+        {
+          "op": "mutex.new",
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.acquire",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.acquire",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            },
+            "timeout": 0.05
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

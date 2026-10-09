@@ -1,0 +1,11 @@
+[package]
+name = "utopia-dsn"
+description = "DSN parsing compatible with utopia-php/dsn."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+form_urlencoded.workspace = true

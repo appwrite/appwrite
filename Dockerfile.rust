@@ -1,0 +1,41 @@
+# syntax=docker/dockerfile:1.7
+#
+# Appwrite Rust API (crates/). Runs next to the PHP API; Traefik routes the
+# migrated services to it. See rfc/rust.md.
+#
+#   docker build -f Dockerfile.rust -t appwrite/rust .
+#
+# The build context is filtered by Dockerfile.rust.dockerignore.
+
+ARG RUST_VERSION=1.88
+
+FROM rust:${RUST_VERSION}-slim-bookworm AS builder
+
+WORKDIR /usr/src/appwrite
+
+COPY Cargo.toml Cargo.lock rustfmt.toml ./
+COPY crates ./crates
+
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,target=/usr/src/appwrite/target \
+    cargo build --release --locked -p appwrite-server \
+    && cp target/release/appwrite-rust /usr/local/bin/appwrite-rust
+
+FROM gcr.io/distroless/cc-debian12:nonroot AS production
+
+# Static data shared with the PHP API (same files, same semantics).
+COPY packages/emails/data/free-domains.php packages/emails/data/disposable-domains.php /usr/src/code/packages/emails/data/
+COPY app/config/locale/translations /usr/src/code/app/config/locale/translations
+COPY app/assets/security/10k-common-passwords /usr/src/code/app/assets/security/10k-common-passwords
+
+COPY --from=builder /usr/local/bin/appwrite-rust /usr/local/bin/appwrite-rust
+
+ENV _APP_RUST_ASSETS=/usr/src/code \
+    _APP_RUST_PORT=8080
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=5s --timeout=3s --retries=12 CMD ["/usr/local/bin/appwrite-rust", "health"]
+
+ENTRYPOINT ["/usr/local/bin/appwrite-rust"]

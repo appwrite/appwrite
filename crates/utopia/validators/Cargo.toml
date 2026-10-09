@@ -1,0 +1,12 @@
+[package]
+name = "utopia-validators"
+description = "Request parameter validators with Utopia semantics and messages."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+php-std.workspace = true
+serde_json.workspace = true
