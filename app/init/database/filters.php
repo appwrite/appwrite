@@ -92,7 +92,6 @@ Database::addFilter(
                     foreach ($options as $key => $value) {
                         $attribute->setAttribute($key, $value);
                     }
-                    $attribute->removeAttribute('options');
                     break;
 
                 case ColumnType::String->value:
