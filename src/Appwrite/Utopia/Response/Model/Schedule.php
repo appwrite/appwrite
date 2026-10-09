@@ -63,6 +63,7 @@ class Schedule extends Model
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Minutes between runs. 0 when the schedule has no interval.',
                 'default' => 0,
+                'required' => false,
                 'example' => 60,
             ])
             ->addRule('data', [
