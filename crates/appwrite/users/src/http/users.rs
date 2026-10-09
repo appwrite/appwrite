@@ -1,7 +1,7 @@
 //! `POST/GET /v1/users`, `GET/DELETE /v1/users/:userId`.
 
 use serde_json::{Value, json};
-use utopia_auth::Hash;
+use utopia_auth::hashes::Plaintext;
 use utopia_database::sql::Builder;
 use utopia_database::{FindOptions, FromRow, Param, Query, QueryGroups};
 use utopia_http::Response;
@@ -50,7 +50,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
 
     let user = base::create_user(
         ctx,
-        NewUser { hash: Hash::Plaintext, user_id, email, password, phone, name, password_pwned },
+        NewUser { hash: Box::new(Plaintext::new()), user_id, email, password, phone, name, password_pwned },
     )
     .await?;
     Ok(ctx.created(&UserModel { user: &user, render: ctx.render() }))

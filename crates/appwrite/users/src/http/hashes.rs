@@ -1,6 +1,7 @@
 //! Import users with pre-hashed passwords (`POST /v1/users/<algorithm>`).
 
-use utopia_auth::{Hash, HashError};
+use utopia_auth::Hash;
+use utopia_auth::hashes::{Argon2, Bcrypt, Md5, PHPass, Scrypt, ScryptModified, Sha};
 use utopia_http::Response;
 use utopia_validators::{Integer, Text, WhiteList};
 
@@ -30,7 +31,7 @@ fn name(ctx: &Context) -> Result<Option<String>> {
     ctx.optional_str("name", "", &Text::new(128))
 }
 
-async fn finish(ctx: &mut Context, c: Common, name: Option<String>, hash: Hash) -> Result<Response> {
+async fn finish(ctx: &mut Context, c: Common, name: Option<String>, hash: Box<dyn Hash>) -> Result<Response> {
     let user = base::create_user(
         ctx,
         NewUser {
@@ -48,26 +49,26 @@ async fn finish(ctx: &mut Context, c: Common, name: Option<String>, hash: Hash) 
 }
 
 /// Setter failures that PHP does not catch surface as 500 errors.
-fn uncaught(e: HashError) -> Error {
+fn uncaught(e: utopia_auth::Error) -> Error {
     Error::internal(e.to_string())
 }
 
 pub async fn argon2(ctx: &mut Context) -> Result<Response> {
     let c = common(ctx)?;
     let n = name(ctx)?;
-    finish(ctx, c, n, Hash::argon2_default()).await
+    finish(ctx, c, n, Box::new(Argon2::new())).await
 }
 
 pub async fn bcrypt(ctx: &mut Context) -> Result<Response> {
     let c = common(ctx)?;
     let n = name(ctx)?;
-    finish(ctx, c, n, Hash::bcrypt_default()).await
+    finish(ctx, c, n, Box::new(Bcrypt::new())).await
 }
 
 pub async fn md5(ctx: &mut Context) -> Result<Response> {
     let c = common(ctx)?;
     let n = name(ctx)?;
-    finish(ctx, c, n, Hash::Md5).await
+    finish(ctx, c, n, Box::new(Md5::new())).await
 }
 
 pub async fn sha(ctx: &mut Context) -> Result<Response> {
@@ -90,14 +91,17 @@ pub async fn sha(ctx: &mut Context) -> Result<Response> {
         ]),
     )?;
     let n = name(ctx)?;
-    let hash = Hash::sha(version.as_deref()).map_err(uncaught)?;
-    finish(ctx, c, n, hash).await
+    let mut hash = Sha::new();
+    if let Some(version) = version.as_deref().filter(|v| !v.is_empty()) {
+        hash.set_version_name(version.as_bytes()).map_err(uncaught)?;
+    }
+    finish(ctx, c, n, Box::new(hash)).await
 }
 
 pub async fn phpass(ctx: &mut Context) -> Result<Response> {
     let c = common(ctx)?;
     let n = name(ctx)?;
-    finish(ctx, c, n, Hash::phpass_default()).await
+    finish(ctx, c, n, Box::new(PHPass::new())).await
 }
 
 pub async fn scrypt(ctx: &mut Context) -> Result<Response> {
@@ -110,9 +114,14 @@ pub async fn scrypt(ctx: &mut Context) -> Result<Response> {
     let length = ctx.required("passwordLength", &int)?;
     let n = name(ctx)?;
     let as_int = |v: &serde_json::Value| v.as_i64().unwrap_or(0);
-    let hash =
-        Hash::scrypt(&salt, as_int(&cpu), as_int(&memory), as_int(&parallel), as_int(&length)).map_err(uncaught)?;
-    finish(ctx, c, n, hash).await
+    let mut hash = Scrypt::new();
+    hash.set_salt(salt.as_bytes())
+        .and_then(|h| h.set_cpu_cost(as_int(&cpu)))
+        .and_then(|h| h.set_memory_cost(as_int(&memory)))
+        .and_then(|h| h.set_parallel_cost(as_int(&parallel)))
+        .and_then(|h| h.set_length(as_int(&length)))
+        .map_err(uncaught)?;
+    finish(ctx, c, n, Box::new(hash)).await
 }
 
 pub async fn scrypt_modified(ctx: &mut Context) -> Result<Response> {
@@ -121,9 +130,13 @@ pub async fn scrypt_modified(ctx: &mut Context) -> Result<Response> {
     let separator = ctx.required_str("passwordSaltSeparator", &Text::new(128))?;
     let signer = ctx.required_str("passwordSignerKey", &Text::new(128))?;
     let n = name(ctx)?;
-    let hash = Hash::scrypt_modified(&salt, &separator, &signer).map_err(|e| match e {
-        HashError::InvalidArgument(m) => Error::with_message(ErrorType::GeneralArgumentInvalid, m),
-        other => Error::internal(other.to_string()),
-    })?;
-    finish(ctx, c, n, hash).await
+    let mut hash = ScryptModified::new();
+    hash.set_salt(salt.as_bytes())
+        .and_then(|h| h.set_salt_separator(separator.as_bytes()))
+        .and_then(|h| h.set_signer_key(signer.as_bytes()))
+        .map_err(|e| match e {
+            utopia_auth::Error::InvalidArgument(m) => Error::with_message(ErrorType::GeneralArgumentInvalid, m),
+            other => Error::internal(other.to_string()),
+        })?;
+    finish(ctx, c, n, Box::new(hash)).await
 }

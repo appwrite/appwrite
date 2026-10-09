@@ -71,6 +71,12 @@ pub async fn get_recovery_codes(ctx: &mut Context) -> Result<Response> {
     Ok(ctx.ok(&MfaRecoveryCodesModel { recovery_codes: &user.mfa_recovery_codes }))
 }
 
+/// `Type::generateBackupCodes()`: six 10-character hex tokens.
+fn backup_codes() -> Result<Vec<String>> {
+    let token = utopia_auth::proofs::Token::new(10).map_err(|e| Error::internal(e.to_string()))?;
+    Ok((0..6).map(|_| token.token()).collect())
+}
+
 async fn store_codes(ctx: &mut Context, user: &User, codes: &[String]) -> Result<()> {
     let encrypted: Vec<String> = codes.iter().map(|c| crypto::encrypt_env(c)).collect();
     base::update_user(ctx, user, vec![("mfaRecoveryCodes", Param::string_list(&encrypted))]).await?;
@@ -85,7 +91,7 @@ pub async fn create_recovery_codes(ctx: &mut Context) -> Result<Response> {
     if !user.mfa_recovery_codes.is_empty() {
         return Err(Error::new(ErrorType::UserRecoveryCodesAlreadyExists));
     }
-    let codes = utopia_auth::proofs::backup_codes();
+    let codes = backup_codes()?;
     store_codes(ctx, &user, &codes).await?;
     Ok(ctx.created(&MfaRecoveryCodesModel { recovery_codes: &codes }))
 }
@@ -97,7 +103,7 @@ pub async fn update_recovery_codes(ctx: &mut Context) -> Result<Response> {
     if user.mfa_recovery_codes.is_empty() {
         return Err(Error::new(ErrorType::UserRecoveryCodesNotFound));
     }
-    let codes = utopia_auth::proofs::backup_codes();
+    let codes = backup_codes()?;
     store_codes(ctx, &user, &codes).await?;
     Ok(ctx.ok(&MfaRecoveryCodesModel { recovery_codes: &codes }))
 }

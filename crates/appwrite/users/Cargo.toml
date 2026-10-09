@@ -14,6 +14,7 @@ futures-util.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+php-std.workspace = true
 utopia-auth.workspace = true
 utopia-database.workspace = true
 utopia-emails.workspace = true

@@ -30,7 +30,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     require_server(ctx)?;
     let user = base::user_or_404(ctx, &user_id, Relations::NONE).await?;
 
-    let secret = utopia_auth::proofs::token(256);
+    let secret = utopia_auth::proofs::Token::default().token();
     let user_agent = ctx.user_agent("UNKNOWN");
     let detected = utopia_user_agent::detect(&user_agent);
     let duration = ctx.project.auth_int("duration", 31_536_000);
@@ -41,7 +41,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
         ("userId", Param::text(user.id.as_str())),
         ("userInternalId", Param::Text(user.sequence.to_string())),
         ("provider", Param::text("server")),
-        ("secret", Param::Text(crypto::encrypt_env(&utopia_auth::proofs::sha256(&secret)))),
+        ("secret", Param::Text(crypto::encrypt_env(&base::token_hash(&secret)?))),
         ("userAgent", Param::Text(user_agent)),
         ("factors", Param::string_list(&["server".to_owned()])),
         ("ip", Param::text(ctx.ip.as_str())),
@@ -66,7 +66,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     db.purge_cached_document("users", &user.id).await;
     ctx.metric("sessions", 1);
 
-    let encoded = utopia_auth::store::encode(&user.id, &secret);
+    let encoded = base::session_store(&user.id, &secret)?;
     let country_name = country_name(ctx, &country);
     let model = SessionModel {
         session: &session,
@@ -150,14 +150,14 @@ pub async fn token(ctx: &mut Context) -> Result<Response> {
     let expire = Range::value(&expire).unwrap_or(900);
     let user = base::user_or_404(ctx, &user_id, Relations::NONE).await?;
 
-    let secret = utopia_auth::proofs::token(length);
+    let secret = utopia_auth::proofs::Token::new(length as i64).map_err(|e| Error::internal(e.to_string()))?.token();
     let expire_at = datetime::add_seconds(datetime::now(), expire);
     let id = utopia_database::id::unique();
     let columns = vec![
         ("userId", Param::text(user.id.as_str())),
         ("userInternalId", Param::Text(user.sequence.to_string())),
         ("type", Param::Int4(8)),
-        ("secret", Param::Text(crypto::encrypt_env(&utopia_auth::proofs::sha256(&secret)))),
+        ("secret", Param::Text(crypto::encrypt_env(&base::token_hash(&secret)?))),
         ("expire", Param::Timestamp(expire_at)),
         ("userAgent", Param::Text(ctx.user_agent("UNKNOWN"))),
         ("ip", Param::text(ctx.ip.as_str())),

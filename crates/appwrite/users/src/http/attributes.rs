@@ -1,7 +1,7 @@
 //! User attribute updates (`/v1/users/:userId/<attribute>`).
 
 use serde_json::Value;
-use utopia_auth::Hash;
+use utopia_auth::proofs::Password;
 use utopia_database::sql::Builder;
 use utopia_database::{Param, datetime};
 use utopia_emails::{EmailValidator, Metadata};
@@ -168,7 +168,11 @@ async fn finish_password(ctx: &mut Context, user: &User, password: String, pwned
 
     let kind = user.hash.clone().unwrap_or_else(|| "argon2".to_owned());
     let options = user.hash_options.clone().unwrap_or(Value::Null);
-    let current = Hash::from_stored(&kind, &options).map_err(|e| Error::internal(e.to_string()))?;
+    let options = match php_std::zval::Zval::from(&options) {
+        php_std::zval::Zval::Array(a) => a,
+        _ => php_std::zval::Array::new(),
+    };
+    let current = Password::create_hash(&kind, &options).map_err(|e| Error::internal(e.to_string()))?;
 
     let limit = ctx.project.auth_int("passwordHistory", 0);
     let mut history = user.password_history.clone();
@@ -179,7 +183,10 @@ async fn finish_password(ctx: &mut Context, user: &User, password: String, pwned
             if !(8..=256).contains(&candidate.len()) {
                 return true;
             }
-            entries.iter().filter(|h| !h.is_empty()).any(|h| current.verify(&candidate, h))
+            entries
+                .iter()
+                .filter(|h| !h.is_empty())
+                .any(|h| current.verify(candidate.as_bytes(), h.as_bytes()).unwrap_or(false))
         })
         .await
         .map_err(|e| Error::internal(e.to_string()))?;
@@ -204,7 +211,7 @@ async fn finish_password(ctx: &mut Context, user: &User, password: String, pwned
             ("passwordPwned", Param::opt_bool(pwned)),
             ("passwordUpdate", Param::Timestamp(datetime::now())),
             ("hash", Param::text(proof.name())),
-            ("hashOptions", Param::Text(appwrite_core::json::to_string(&proof.options()))),
+            ("hashOptions", Param::Text(appwrite_core::json::to_string(&base::hash_options(proof.as_ref())))),
         ],
     )
     .await?;

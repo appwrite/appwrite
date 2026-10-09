@@ -28,6 +28,7 @@ sha1.workspace = true
 sha2.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+php-std.workspace = true
 utopia-auth.workspace = true
 utopia-cache.workspace = true
 utopia-database.workspace = true

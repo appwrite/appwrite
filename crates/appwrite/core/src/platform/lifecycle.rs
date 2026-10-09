@@ -368,6 +368,20 @@ async fn load_team_id(platform_db: &utopia_database::Database, team_internal_id:
 
 const USER_RELATIONS: Relations = Relations { targets: false, sessions: true, memberships: true, authenticators: true };
 
+/// The `id` and `secret` of a session store (`Utopia\Auth\Store::decode()`),
+/// empty when missing.
+fn session_store(data: &str) -> (String, String) {
+    let mut store = utopia_auth::Store::new();
+    store.decode(data.as_bytes());
+    let field = |key: &[u8]| match store.property(key) {
+        Some(php_std::zval::Zval::String(s)) => String::from_utf8_lossy(s).into_owned(),
+        Some(php_std::zval::Zval::Int(i)) => i.to_string(),
+        Some(php_std::zval::Zval::Float(f)) => php_std::number::to_string(*f),
+        _ => String::new(),
+    };
+    (field(b"id"), field(b"secret"))
+}
+
 async fn resolve_user(ctx: &mut Context) -> Result<()> {
     let state = ctx.state.clone();
     let cookie_name =
@@ -376,13 +390,13 @@ async fn resolve_user(ctx: &mut Context) -> Result<()> {
         .request
         .cookie(&cookie_name)
         .or_else(|| ctx.request.cookie(&format!("{cookie_name}_legacy")))
-        .map(|c| utopia_auth::store::decode(&c))
+        .map(|c| session_store(&c))
         .unwrap_or_default();
     if store.0.is_empty()
         && store.1.is_empty()
         && let Some(h) = ctx.request.header("x-appwrite-session")
     {
-        store = utopia_auth::store::decode(h);
+        store = session_store(h);
     }
     ctx.response_headers.push(("x-debug-fallback", "false".to_owned()));
     if store.0.is_empty() && store.1.is_empty() {
@@ -391,7 +405,7 @@ async fn resolve_user(ctx: &mut Context) -> Result<()> {
             && let Ok(Value::Object(map)) = serde_json::from_str::<Value>(raw)
             && let Some(Value::String(v)) = map.get(&cookie_name)
         {
-            store = utopia_auth::store::decode(v);
+            store = session_store(v);
         }
     }
 

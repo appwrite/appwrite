@@ -155,11 +155,14 @@ pub fn session_verify<'a>(sessions: &'a [Session], secret: &str) -> Option<&'a S
     if secret.is_empty() {
         return None;
     }
-    let hashed = utopia_auth::proofs::sha256(secret);
+    // `Proofs\Token` with the `Sha` hash (SHA-256 hex), as Appwrite stores session secrets.
+    let Ok(hashed) = utopia_auth::Hash::hash(&utopia_auth::hashes::Sha::new(), secret.as_bytes()) else {
+        return None;
+    };
     let now = datetime::now();
     sessions.iter().find(|s| {
         s.provider.is_some()
-            && s.secret.as_deref().map(|stored| utopia_auth::hash_equals(stored, &hashed)).unwrap_or(false)
+            && s.secret.as_deref().map(|stored| utopia_auth::hash_equals(stored.as_bytes(), &hashed)).unwrap_or(false)
             && s.expire.map(|e| e >= now).unwrap_or(false)
     })
 }
