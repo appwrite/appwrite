@@ -1,0 +1,556 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "strlen counts characters",
+      "op": "mb.strlen",
+      "args": {
+        "string": "héllo 😀"
+      },
+      "expect": 7
+    },
+    {
+      "name": "strlen counts each invalid sequence once",
+      "op": "mb.strlen",
+      "args": {
+        "string": {
+          "$bytes": "4oLwn5iAgA=="
+        }
+      },
+      "expect": 3
+    },
+    {
+      "name": "strlen 8bit",
+      "op": "mb.strlen",
+      "args": {
+        "string": "héllo",
+        "encoding": "8bit"
+      },
+      "expect": 6
+    },
+    {
+      "name": "substr negative start",
+      "op": "mb.substr",
+      "args": {
+        "string": "héllo",
+        "start": -3,
+        "length": 2
+      },
+      "expect": "ll"
+    },
+    {
+      "name": "substr re-encodes invalid sequences",
+      "op": "mb.substr",
+      "args": {
+        "string": {
+          "$bytes": "Yf9iYw=="
+        },
+        "start": 1,
+        "length": 2
+      },
+      "expect": "?b"
+    },
+    {
+      "name": "substr PHP_INT_MIN",
+      "op": "mb.substr",
+      "args": {
+        "string": "a",
+        "start": -9223372036854775808
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "mb_substr(): Argument #2 ($start) must be between -9223372036854775807 and 9223372036854775807"
+        }
+      }
+    },
+    {
+      "name": "strcut keeps characters whole",
+      "op": "mb.strcut",
+      "args": {
+        "string": "日本語",
+        "start": 1,
+        "length": 4
+      },
+      "expect": "日"
+    },
+    {
+      "name": "str_split by lead bytes, not re-encoded",
+      "op": "mb.str_split",
+      "args": {
+        "string": {
+          "$bytes": "4oJh8A=="
+        }
+      },
+      "expect": [
+        {
+          "$bytes": "4oJh"
+        },
+        {
+          "$bytes": "8A=="
+        }
+      ]
+    },
+    {
+      "name": "str_split length 2",
+      "op": "mb.str_split",
+      "args": {
+        "string": "日本語",
+        "length": 2
+      },
+      "expect": [
+        "日本",
+        "語"
+      ]
+    },
+    {
+      "name": "str_split zero length",
+      "op": "mb.str_split",
+      "args": {
+        "string": "a",
+        "length": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "mb_str_split(): Argument #2 ($length) must be greater than 0"
+        }
+      }
+    },
+    {
+      "name": "strtolower final sigma",
+      "op": "mb.strtolower",
+      "args": {
+        "string": "ΟΔΥΣΣΕΥΣ ΣΑΣ Σ"
+      },
+      "expect": "οδυσσευς σας σ"
+    },
+    {
+      "name": "strtolower sigma before case-ignorable then cased",
+      "op": "mb.strtolower",
+      "args": {
+        "string": "ΣΑΣ.Σ ΑΣ'"
+      },
+      "expect": "σασ.ς ας'"
+    },
+    {
+      "name": "strtolower invalid UTF-8 becomes ?",
+      "op": "mb.strtolower",
+      "args": {
+        "string": {
+          "$bytes": "Qf9C4oI="
+        }
+      },
+      "expect": "a?b?"
+    },
+    {
+      "name": "strtolower sigma look-behind across PHP's 64-codepoint chunks",
+      "op": "mb.strtolower",
+      "args": {
+        "string": "A''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''Σ"
+      },
+      "expect": "a''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''σ"
+    },
+    {
+      "name": "strtolower dotted capital I",
+      "op": "mb.strtolower",
+      "args": {
+        "string": "İSTANBUL"
+      },
+      "expect": "i̇stanbul"
+    },
+    {
+      "name": "strtoupper special casing",
+      "op": "mb.strtoupper",
+      "args": {
+        "string": "ßﬃŉǰ ᾀ"
+      },
+      "expect": "SSFFIʼNJ̌ ἈΙ"
+    },
+    {
+      "name": "convert_case title",
+      "op": "mb.convert_case",
+      "args": {
+        "string": "hello WORLD it's 1st ǆungla",
+        "mode": 2
+      },
+      "expect": "Hello World It's 1St ǅungla"
+    },
+    {
+      "name": "convert_case fold",
+      "op": "mb.convert_case",
+      "args": {
+        "string": "ẞß ﬁ",
+        "mode": 3
+      },
+      "expect": "ssss fi"
+    },
+    {
+      "name": "convert_case upper simple",
+      "op": "mb.convert_case",
+      "args": {
+        "string": "ß ﬃ",
+        "mode": 4
+      },
+      "expect": "ß ﬃ"
+    },
+    {
+      "name": "convert_case lower simple has no final sigma",
+      "op": "mb.convert_case",
+      "args": {
+        "string": "ΣΑΣ",
+        "mode": 5
+      },
+      "expect": "σασ"
+    },
+    {
+      "name": "convert_case title simple",
+      "op": "mb.convert_case",
+      "args": {
+        "string": "ǆa ßa",
+        "mode": 6
+      },
+      "expect": "ǅa ßa"
+    },
+    {
+      "name": "convert_case fold simple",
+      "op": "mb.convert_case",
+      "args": {
+        "string": "ẞ ΣΑΣ",
+        "mode": 7
+      },
+      "expect": "ß σασ"
+    },
+    {
+      "name": "ucfirst full title case",
+      "op": "mb.ucfirst",
+      "args": {
+        "string": "ßa"
+      },
+      "expect": "Ssa"
+    },
+    {
+      "name": "ucfirst unchanged returns the input",
+      "op": "mb.ucfirst",
+      "args": {
+        "string": {
+          "$bytes": "QWL/"
+        }
+      },
+      "expect": {
+        "$bytes": "QWL/"
+      }
+    },
+    {
+      "name": "ucfirst re-encodes the rest",
+      "op": "mb.ucfirst",
+      "args": {
+        "string": {
+          "$bytes": "YWL/"
+        }
+      },
+      "expect": "Ab?"
+    },
+    {
+      "name": "lcfirst",
+      "op": "mb.lcfirst",
+      "args": {
+        "string": "ǅungla"
+      },
+      "expect": "ǆungla"
+    },
+    {
+      "name": "strpos counts characters",
+      "op": "mb.strpos",
+      "args": {
+        "haystack": "日本語日本語",
+        "needle": "語",
+        "offset": 3
+      },
+      "expect": 5
+    },
+    {
+      "name": "strpos negative offset",
+      "op": "mb.strpos",
+      "args": {
+        "haystack": "日本語日本語",
+        "needle": "日",
+        "offset": -2
+      },
+      "expect": false
+    },
+    {
+      "name": "strpos offset outside",
+      "op": "mb.strpos",
+      "args": {
+        "haystack": "日本",
+        "needle": "日",
+        "offset": 3
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "mb_strpos(): Argument #3 ($offset) must be contained in argument #1 ($haystack)"
+        }
+      }
+    },
+    {
+      "name": "strrpos negative offset",
+      "op": "mb.strrpos",
+      "args": {
+        "haystack": "abcabc",
+        "needle": "bc",
+        "offset": -3
+      },
+      "expect": 1
+    },
+    {
+      "name": "stripos simple folding",
+      "op": "mb.stripos",
+      "args": {
+        "haystack": "xǅungla",
+        "needle": "ǆ"
+      },
+      "expect": 1
+    },
+    {
+      "name": "stripos does not expand ß",
+      "op": "mb.stripos",
+      "args": {
+        "haystack": "STRASSE",
+        "needle": "ß"
+      },
+      "expect": false
+    },
+    {
+      "name": "strripos",
+      "op": "mb.strripos",
+      "args": {
+        "haystack": "ΣσςΣ",
+        "needle": "σ"
+      },
+      "expect": 3
+    },
+    {
+      "name": "strstr before needle",
+      "op": "mb.strstr",
+      "args": {
+        "haystack": "user@例え.jp",
+        "needle": "@",
+        "before_needle": true
+      },
+      "expect": "user"
+    },
+    {
+      "name": "strrchr",
+      "op": "mb.strrchr",
+      "args": {
+        "haystack": "a/b/c",
+        "needle": "/"
+      },
+      "expect": "/c"
+    },
+    {
+      "name": "stristr",
+      "op": "mb.stristr",
+      "args": {
+        "haystack": "ÀBÇ",
+        "needle": "bç"
+      },
+      "expect": "BÇ"
+    },
+    {
+      "name": "strrichr not found",
+      "op": "mb.strrichr",
+      "args": {
+        "haystack": "abc",
+        "needle": "x"
+      },
+      "expect": false
+    },
+    {
+      "name": "substr_count invalid sequences match invalid sequences",
+      "op": "mb.substr_count",
+      "args": {
+        "haystack": {
+          "$bytes": "/2H/Yf4="
+        },
+        "needle": {
+          "$bytes": "/w=="
+        }
+      },
+      "expect": 3
+    },
+    {
+      "name": "substr_count empty needle",
+      "op": "mb.substr_count",
+      "args": {
+        "haystack": "a",
+        "needle": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "mb_substr_count(): Argument #2 ($needle) must not be empty"
+        }
+      }
+    },
+    {
+      "name": "str_pad characters",
+      "op": "mb.str_pad",
+      "args": {
+        "string": "日本",
+        "length": 7,
+        "pad_string": "é😀",
+        "pad_type": 2
+      },
+      "expect": "é😀日本é😀é"
+    },
+    {
+      "name": "str_pad empty pad",
+      "op": "mb.str_pad",
+      "args": {
+        "string": "a",
+        "length": 5,
+        "pad_string": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "mb_str_pad(): Argument #3 ($pad_string) must not be empty"
+        }
+      }
+    },
+    {
+      "name": "trim default Unicode white space",
+      "op": "mb.trim",
+      "args": {
+        "string": "　  a b "
+      },
+      "expect": "a b"
+    },
+    {
+      "name": "trim re-encodes the rest",
+      "op": "mb.trim",
+      "args": {
+        "string": {
+          "$bytes": "IGH/IA=="
+        }
+      },
+      "expect": "a?"
+    },
+    {
+      "name": "trim custom characters",
+      "op": "mb.trim",
+      "args": {
+        "string": "éaéba",
+        "characters": "aé"
+      },
+      "expect": "b"
+    },
+    {
+      "name": "ltrim",
+      "op": "mb.ltrim",
+      "args": {
+        "string": "  a  "
+      },
+      "expect": "a  "
+    },
+    {
+      "name": "rtrim",
+      "op": "mb.rtrim",
+      "args": {
+        "string": "  a  "
+      },
+      "expect": "  a"
+    },
+    {
+      "name": "check_encoding surrogate",
+      "op": "mb.check_encoding",
+      "args": {
+        "value": {
+          "$bytes": "7aCA"
+        }
+      },
+      "expect": false
+    },
+    {
+      "name": "check_encoding overlong",
+      "op": "mb.check_encoding",
+      "args": {
+        "value": {
+          "$bytes": "wK8="
+        }
+      },
+      "expect": false
+    },
+    {
+      "name": "scrub",
+      "op": "mb.scrub",
+      "args": {
+        "string": {
+          "$bytes": "YeKCYvA="
+        }
+      },
+      "expect": "a?b?"
+    },
+    {
+      "name": "convert_encoding to UTF-8",
+      "op": "mb.convert_encoding",
+      "args": {
+        "string": {
+          "$bytes": "YeKCYvA="
+        },
+        "to_encoding": "UTF-8"
+      },
+      "expect": "a?b?"
+    },
+    {
+      "name": "ord",
+      "op": "mb.ord",
+      "args": {
+        "string": "😀a"
+      },
+      "expect": 128512
+    },
+    {
+      "name": "ord invalid",
+      "op": "mb.ord",
+      "args": {
+        "string": {
+          "$bytes": "/w=="
+        }
+      },
+      "expect": false
+    },
+    {
+      "name": "ord empty",
+      "op": "mb.ord",
+      "args": {
+        "string": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "mb_ord(): Argument #1 ($string) must not be empty"
+        }
+      }
+    },
+    {
+      "name": "chr surrogate",
+      "op": "mb.chr",
+      "args": {
+        "codepoint": 55296
+      },
+      "expect": false
+    },
+    {
+      "name": "chr",
+      "op": "mb.chr",
+      "args": {
+        "codepoint": 128512
+      },
+      "expect": "😀"
+    }
+  ]
+}

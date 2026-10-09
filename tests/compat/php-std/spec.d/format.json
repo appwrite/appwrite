@@ -1,0 +1,1434 @@
+{
+  "ops": {
+    "format.sprintf": {
+      "doc": "sprintf($format, ...$values)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "format": {
+                "gen": "ref",
+                "name": "format_format"
+              },
+              "values": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "format_value"
+                },
+                "min": 0,
+                "max": 4
+              }
+            }
+          },
+          "iterations": 6000,
+          "name": "specs"
+        },
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "format": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "const",
+                    "value": "%"
+                  },
+                  {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "const",
+                        "value": ""
+                      },
+                      {
+                        "gen": "concat",
+                        "parts": [
+                          {
+                            "gen": "const",
+                            "value": "."
+                          },
+                          {
+                            "gen": "string",
+                            "alphabet": "0123456789",
+                            "min": 1,
+                            "max": 2
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "f",
+                      "F",
+                      "e",
+                      "E",
+                      "g",
+                      "G",
+                      "h",
+                      "H"
+                    ]
+                  }
+                ]
+              },
+              "values": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "format_float"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "format_special"
+                    }
+                  ]
+                },
+                "min": 1,
+                "max": 1
+              }
+            }
+          },
+          "iterations": 6000,
+          "name": "floats"
+        },
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "format": {
+                "gen": "string",
+                "alphabet": "%sdfeg-+ 0'.*$1234abl",
+                "min": 0,
+                "max": 10
+              },
+              "values": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "int",
+                      "min": -3,
+                      "max": 40
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        2147483648,
+                        -2,
+                        64
+                      ]
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "format_value"
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 3
+              }
+            }
+          },
+          "iterations": 4000,
+          "name": "chaos"
+        },
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "format": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "const",
+                    "value": "%"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "",
+                      "-",
+                      "0",
+                      "+",
+                      "'#"
+                    ]
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "*",
+                      "*1$",
+                      "*2$",
+                      "5"
+                    ]
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "",
+                      ".*",
+                      ".*2$",
+                      ".3",
+                      "."
+                    ]
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "s",
+                      "d",
+                      "f",
+                      "g",
+                      "e",
+                      "x"
+                    ]
+                  }
+                ]
+              },
+              "values": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "int",
+                      "min": -3,
+                      "max": 30
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        -1,
+                        2147483648,
+                        "5",
+                        2.0
+                      ]
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "format_value"
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 3
+              }
+            }
+          },
+          "iterations": 3000,
+          "name": "stars"
+        }
+      ]
+    },
+    "format.vsprintf": {
+      "doc": "vsprintf($format, $values)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "format": {
+                "gen": "ref",
+                "name": "format_format"
+              },
+              "values": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "format_value"
+                },
+                "min": 0,
+                "max": 4
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "format.number_format": {
+      "doc": "number_format($num, $decimals, $decimal_separator, $thousands_separator)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "num": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "format_float"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "format_int"
+                  }
+                ]
+              },
+              "decimals": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -25,
+                    "max": 25
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      320,
+                      400,
+                      -400,
+                      -9223372036854775808
+                    ]
+                  }
+                ]
+              },
+              "decimal_separator": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      ".",
+                      ",",
+                      "",
+                      "::",
+                      "é",
+                      null
+                    ]
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "min": 0,
+                    "max": 2
+                  }
+                ]
+              },
+              "thousands_separator": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      ",",
+                      ".",
+                      "",
+                      " ",
+                      " ",
+                      null
+                    ]
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "min": 0,
+                    "max": 2
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "decimals",
+              "decimal_separator",
+              "thousands_separator"
+            ]
+          },
+          "iterations": 6000
+        }
+      ]
+    },
+    "format.round": {
+      "doc": "round($num, $precision, $mode) with PHP's pre-rounding",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "num": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "format_float"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "format_int"
+                  },
+                  {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "float",
+                        "min": -10,
+                        "max": 10
+                      },
+                      {
+                        "gen": "float",
+                        "min": -1000,
+                        "max": 1000
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          0.285,
+                          1.955,
+                          5.045,
+                          5.055,
+                          -0.5,
+                          0.5,
+                          1.5,
+                          2.5,
+                          -1.5,
+                          0.049999999999999996,
+                          1e-30,
+                          1.23e-25,
+                          4.5e-23
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "precision": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -20,
+                    "max": 20
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      22,
+                      23,
+                      24,
+                      25,
+                      30,
+                      -22,
+                      -23,
+                      -24,
+                      -30,
+                      308,
+                      330,
+                      -330,
+                      9223372036854775807,
+                      -9223372036854775808
+                    ]
+                  }
+                ]
+              },
+              "mode": {
+                "gen": "int",
+                "min": 1,
+                "max": 8
+              }
+            },
+            "optional": [
+              "precision",
+              "mode"
+            ]
+          },
+          "iterations": 8000
+        }
+      ]
+    },
+    "format.floor": {
+      "doc": "floor($num)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "num": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "format_float"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "format_int"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "format.ceil": {
+      "doc": "ceil($num)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "num": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "format_float"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "format_int"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "format.abs": {
+      "doc": "abs($num)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "num": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "format_float"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "format_int"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "format.fmod": {
+      "doc": "fmod($num1, $num2)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "num1": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "format_float"
+                  },
+                  {
+                    "gen": "float",
+                    "min": -100,
+                    "max": 100,
+                    "integral": true
+                  }
+                ]
+              },
+              "num2": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "format_float"
+                  },
+                  {
+                    "gen": "float",
+                    "min": -10,
+                    "max": 10,
+                    "integral": true
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0.0,
+                      -0.0
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "format.fdiv": {
+      "doc": "fdiv($num1, $num2)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "num1": {
+                "gen": "ref",
+                "name": "format_float"
+              },
+              "num2": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "format_float"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0.0,
+                      -0.0
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "format.intdiv": {
+      "doc": "intdiv($num1, $num2)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "num1": {
+                "gen": "ref",
+                "name": "format_int"
+              },
+              "num2": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "format_int"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0,
+                      -1,
+                      1,
+                      2,
+                      -2
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "format.intval": {
+      "doc": "intval($value, $base): (int) casts and strtol bases",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "format_value"
+              }
+            }
+          },
+          "iterations": 6000,
+          "name": "cast"
+        },
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "format_numeric_string"
+              },
+              "base": {
+                "gen": "pick",
+                "from": [
+                  10,
+                  0,
+                  2,
+                  8,
+                  16,
+                  36,
+                  1,
+                  37,
+                  -1,
+                  3,
+                  7
+                ]
+              }
+            }
+          },
+          "iterations": 6000,
+          "name": "bases"
+        }
+      ]
+    },
+    "format.floatval": {
+      "doc": "floatval($value): (float) casts",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "format_value"
+              }
+            }
+          },
+          "iterations": 6000
+        }
+      ]
+    },
+    "format.boolval": {
+      "doc": "boolval($value): (bool) casts",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "format_value"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "format.max": {
+      "doc": "max($value, ...$values) of numbers",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "values": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "format_int"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "format_float"
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        1,
+                        1.0,
+                        9007199254740992,
+                        9007199254740993,
+                        9007199254740992.0,
+                        9223372036854775807,
+                        -9223372036854775808,
+                        {
+                          "$float": "NAN"
+                        },
+                        {
+                          "$float": "INF"
+                        },
+                        {
+                          "$float": "-INF"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "min": 2,
+                "max": 5
+              }
+            }
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "format.max_array": {
+      "doc": "max($value) of an array of numbers",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "format_int"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "format_float"
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        1,
+                        1.0,
+                        9007199254740992,
+                        9007199254740993,
+                        9007199254740992.0,
+                        9223372036854775807,
+                        -9223372036854775808,
+                        {
+                          "$float": "NAN"
+                        },
+                        {
+                          "$float": "INF"
+                        },
+                        {
+                          "$float": "-INF"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 5
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "format.min": {
+      "doc": "min($value, ...$values) of numbers",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "values": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "format_int"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "format_float"
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        1,
+                        1.0,
+                        9007199254740992,
+                        9007199254740993,
+                        9007199254740992.0,
+                        9223372036854775807,
+                        -9223372036854775808,
+                        {
+                          "$float": "NAN"
+                        },
+                        {
+                          "$float": "INF"
+                        },
+                        {
+                          "$float": "-INF"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "min": 2,
+                "max": 5
+              }
+            }
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "format.min_array": {
+      "doc": "min($value) of an array of numbers",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "format_int"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "format_float"
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        1,
+                        1.0,
+                        9007199254740992,
+                        9007199254740993,
+                        9007199254740992.0,
+                        9223372036854775807,
+                        -9223372036854775808,
+                        {
+                          "$float": "NAN"
+                        },
+                        {
+                          "$float": "INF"
+                        },
+                        {
+                          "$float": "-INF"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 5
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "format_float": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "float",
+          "min": -1000000.0,
+          "max": 1000000.0
+        },
+        {
+          "gen": "float",
+          "min": -1000,
+          "max": 1000
+        },
+        {
+          "gen": "float",
+          "min": -1e+300,
+          "max": 1e+300
+        },
+        {
+          "gen": "float",
+          "min": -1e-300,
+          "max": 1e-300
+        },
+        {
+          "gen": "float",
+          "min": -1e-05,
+          "max": 1e-05
+        },
+        {
+          "gen": "float",
+          "min": -1e+20,
+          "max": 1e+20,
+          "integral": true
+        },
+        {
+          "gen": "ref",
+          "name": "format_special"
+        }
+      ]
+    },
+    "format_special": {
+      "gen": "pick",
+      "from": [
+        0.0,
+        -0.0,
+        0.5,
+        -0.5,
+        1.5,
+        2.5,
+        -2.5,
+        0.285,
+        1.005,
+        1.955,
+        5.055,
+        0.1,
+        0.30000000000000004,
+        0.125,
+        1000000000000000.0,
+        1e+16,
+        1e+21,
+        1e+22,
+        1e+23,
+        1.7976931348623157e+308,
+        5e-324,
+        2.2250738585072014e-308,
+        4503599627370496.0,
+        4503599627370495.5,
+        9007199254740992.0,
+        9.223372036854776e+18,
+        -9.223372036854776e+18,
+        1.8446744073709552e+19,
+        123456789.98765433,
+        0.000123456,
+        999.9999,
+        99.995,
+        1e-07,
+        3e-05,
+        12345.6789,
+        {
+          "$float": "INF"
+        },
+        {
+          "$float": "-INF"
+        },
+        {
+          "$float": "NAN"
+        }
+      ]
+    },
+    "format_int": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -1000,
+          "max": 1000
+        },
+        {
+          "gen": "int",
+          "min": -9223372036854775808,
+          "max": 9223372036854775807
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            1,
+            -1,
+            255,
+            256,
+            65,
+            9223372036854775807,
+            -9223372036854775808,
+            4503599627370496,
+            9007199254740993,
+            9007199254740992,
+            -9007199254740992
+          ]
+        }
+      ]
+    },
+    "format_numeric_string": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": " \t\n+-0123456789.eE",
+          "min": 0,
+          "max": 10
+        },
+        {
+          "gen": "string",
+          "alphabet": "0123456789",
+          "min": 18,
+          "max": 22
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "string",
+              "alphabet": " \t",
+              "min": 0,
+              "max": 2
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "-",
+                "+"
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "0123456789",
+              "min": 0,
+              "max": 21
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                ".",
+                "e",
+                "e+",
+                "e-",
+                "E5",
+                ".5e-3",
+                "abc",
+                " ",
+                "x"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                " ",
+                "-",
+                "+",
+                " -"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0x",
+                "0X",
+                "0b",
+                "0B",
+                "0o",
+                "0",
+                ""
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "0123456789abcdefABCDEFxgz",
+              "min": 0,
+              "max": 8
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "12abc",
+            " 1e3",
+            "0x1A",
+            "1e1000",
+            "-1e1000",
+            "9223372036854775807",
+            "9223372036854775808",
+            "-9223372036854775808",
+            "-9223372036854775809",
+            "9223372036854775808e+",
+            "9223372036854775807e-",
+            "1e",
+            "1e+",
+            ".5",
+            "5.",
+            ".",
+            "-.5e2",
+            "- 5",
+            "INF",
+            "NAN",
+            "1_000",
+            "١٢٣",
+            "\u0000",
+            "1\u00002",
+            " ",
+            "",
+            "00000000000000000000001",
+            "18446744073709551616"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 8,
+          "tricky": 0.5
+        }
+      ]
+    },
+    "format_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "format_int"
+        },
+        {
+          "gen": "ref",
+          "name": "format_float"
+        },
+        {
+          "gen": "ref",
+          "name": "format_special"
+        },
+        {
+          "gen": "ref",
+          "name": "format_numeric_string"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            true,
+            false,
+            null,
+            [],
+            [
+              1
+            ],
+            {
+              "a": 1
+            },
+            {}
+          ]
+        }
+      ]
+    },
+    "format_spec": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "const",
+          "value": "%"
+        },
+        {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "const",
+              "value": ""
+            },
+            {
+              "gen": "const",
+              "value": ""
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "1$",
+                "2$",
+                "3$",
+                "4$"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "-+ 0",
+          "min": 0,
+          "max": 3
+        },
+        {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "const",
+              "value": ""
+            },
+            {
+              "gen": "const",
+              "value": ""
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "'*",
+                "'x",
+                "'0",
+                "'-"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "const",
+              "value": ""
+            },
+            {
+              "gen": "string",
+              "alphabet": "0123456789",
+              "min": 1,
+              "max": 2
+            }
+          ]
+        },
+        {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "const",
+              "value": ""
+            },
+            {
+              "gen": "const",
+              "value": ""
+            },
+            {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "const",
+                  "value": "."
+                },
+                {
+                  "gen": "string",
+                  "alphabet": "0123456789",
+                  "min": 0,
+                  "max": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "const",
+              "value": ""
+            },
+            {
+              "gen": "const",
+              "value": ""
+            },
+            {
+              "gen": "const",
+              "value": ""
+            },
+            {
+              "gen": "const",
+              "value": "l"
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "s",
+            "d",
+            "u",
+            "f",
+            "F",
+            "e",
+            "E",
+            "g",
+            "G",
+            "h",
+            "H",
+            "o",
+            "x",
+            "X",
+            "b",
+            "c",
+            "%"
+          ]
+        }
+      ]
+    },
+    "format_format": {
+      "gen": "repeat",
+      "part": {
+        "gen": "one_of",
+        "of": [
+          {
+            "gen": "ref",
+            "name": "format_spec"
+          },
+          {
+            "gen": "ref",
+            "name": "format_spec"
+          },
+          {
+            "gen": "string",
+            "alphabet": "ab -|",
+            "min": 0,
+            "max": 3
+          }
+        ]
+      },
+      "sep": "",
+      "min": 1,
+      "max": 4
+    }
+  },
+  "deviations": [
+    {
+      "symbol": "round() $mode",
+      "php": "an int outside 1..8 throws ValueError (round(): Argument #3 ($mode) must be a valid rounding mode (RoundingMode::*))",
+      "reason": "php_std::format::RoundingMode is an enum; RoundingMode::from_php maps PHP's values"
+    },
+    {
+      "symbol": "max() / min() of non-numbers",
+      "php": "mixed values compare with zend_compare (strings, arrays, booleans, null)",
+      "reason": "php_std::format::max/min take numbers, the only values the libraries pass; mixed comparison belongs to a zend_compare port"
+    },
+    {
+      "symbol": "sprintf() 'Unknown format specifier' with a non-ASCII byte",
+      "php": "the exception message holds the raw byte, which is not valid UTF-8",
+      "reason": "php_std::string::Error messages are UTF-8 strings; the byte is replaced by U+FFFD"
+    },
+    {
+      "symbol": "sprintf() field widths of 2^31 - 1 bytes or more",
+      "php": "a fatal error (Field width ... is too long) that ends the process",
+      "reason": "a fatal error has no Rust equivalent; Rust formats the field. The fuzz profiles keep widths below it"
+    }
+  ],
+  "quirks": [
+    {
+      "symbol": "sprintf() %e %f %g of NAN and INF",
+      "description": "the width is ignored, and with '+' and '0' padding PHP writes the sign and drops the first character: '%+05f' of NAN is '+aN', of INF '+NF'",
+      "case": "format.json#sprintf NaN and INF with sign and zero padding (quirk)"
+    },
+    {
+      "symbol": "round() with |precision| > 22",
+      "description": "PHP uses C pow(10, n); the PHP image links musl, whose pow is one ULP high for n = 23, 126 and 210, which changes results such as round(4.5e-23, 23) = 5.0E-23",
+      "case": "format.json#round with musl pow(10, 23) (quirk)"
+    },
+    {
+      "symbol": "(int) / intval() of strings",
+      "description": "for 19 digits followed by 'e+' or 'e-' without exponent digits, PHP compares the digits one position late against PHP_INT_MIN's and returns the wrapped integer: (int) '9223372036854775808e+' is PHP_INT_MIN",
+      "case": "format.json#intval 19 digits and an empty signed exponent (quirk)"
+    }
+  ]
+}

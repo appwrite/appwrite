@@ -1,0 +1,1112 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "strtolower is ASCII only",
+      "op": "string.strtolower",
+      "args": {
+        "string": "ÀBC Ä"
+      },
+      "expect": "Àbc Ä"
+    },
+    {
+      "name": "strtoupper keeps invalid UTF-8",
+      "op": "string.strtoupper",
+      "args": {
+        "string": {
+          "$bytes": "YWLDKP8="
+        }
+      },
+      "expect": {
+        "$bytes": "QULDKP8="
+      }
+    },
+    {
+      "name": "ucfirst non-letter",
+      "op": "string.ucfirst",
+      "args": {
+        "string": "éa"
+      },
+      "expect": "éa"
+    },
+    {
+      "name": "lcfirst",
+      "op": "string.lcfirst",
+      "args": {
+        "string": "ABC"
+      },
+      "expect": "aBC"
+    },
+    {
+      "name": "ucwords default separators",
+      "op": "string.ucwords",
+      "args": {
+        "string": "hello\tworld\nfoo-bar baz_qux"
+      },
+      "expect": "Hello\tWorld\nFoo-bar Baz_qux"
+    },
+    {
+      "name": "ucwords custom separators",
+      "op": "string.ucwords",
+      "args": {
+        "string": "hello-world foo",
+        "separators": "-"
+      },
+      "expect": "Hello-World foo"
+    },
+    {
+      "name": "ucwords tests the uppercased previous byte (quirk)",
+      "op": "string.ucwords",
+      "args": {
+        "string": "aab",
+        "separators": "A"
+      },
+      "expect": "AAB"
+    },
+    {
+      "name": "trim default characters",
+      "op": "string.trim",
+      "args": {
+        "string": "\u0000\u000b \t\n\rx\r\n \u0000"
+      },
+      "expect": "x"
+    },
+    {
+      "name": "trim keeps form feed",
+      "op": "string.trim",
+      "args": {
+        "string": "\fx\f"
+      },
+      "expect": "\fx\f"
+    },
+    {
+      "name": "trim with a range",
+      "op": "string.trim",
+      "args": {
+        "string": "abcxyzcba",
+        "characters": "a..c"
+      },
+      "expect": "xyz"
+    },
+    {
+      "name": "trim with a range missing its right end",
+      "op": "string.trim",
+      "args": {
+        "string": "a..b.",
+        "characters": "a.."
+      },
+      "expect": "b"
+    },
+    {
+      "name": "trim with a decreasing range",
+      "op": "string.trim",
+      "args": {
+        "string": "z.a-mid-a.z",
+        "characters": "z..a"
+      },
+      "expect": "-mid-"
+    },
+    {
+      "name": "trim with a range missing its left end",
+      "op": "string.trim",
+      "args": {
+        "string": "..z.",
+        "characters": "..z"
+      },
+      "expect": ""
+    },
+    {
+      "name": "ltrim",
+      "op": "string.ltrim",
+      "args": {
+        "string": "0012300",
+        "characters": "0"
+      },
+      "expect": "12300"
+    },
+    {
+      "name": "rtrim",
+      "op": "string.rtrim",
+      "args": {
+        "string": "1.500",
+        "characters": "0"
+      },
+      "expect": "1.5"
+    },
+    {
+      "name": "str_pad both, odd padding",
+      "op": "string.str_pad",
+      "args": {
+        "string": "ab",
+        "length": 7,
+        "pad_string": "-=",
+        "pad_type": 2
+      },
+      "expect": "-=ab-=-"
+    },
+    {
+      "name": "str_pad left cuts the pad",
+      "op": "string.str_pad",
+      "args": {
+        "string": "5",
+        "length": 4,
+        "pad_string": "é",
+        "pad_type": 0
+      },
+      "expect": {
+        "$bytes": "w6nDNQ=="
+      }
+    },
+    {
+      "name": "str_pad shorter length returns input",
+      "op": "string.str_pad",
+      "args": {
+        "string": "abc",
+        "length": 2,
+        "pad_string": ""
+      },
+      "expect": "abc"
+    },
+    {
+      "name": "str_pad empty pad",
+      "op": "string.str_pad",
+      "args": {
+        "string": "abc",
+        "length": 5,
+        "pad_string": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "str_pad(): Argument #3 ($pad_string) must not be empty"
+        }
+      }
+    },
+    {
+      "name": "substr negative offset",
+      "op": "string.substr",
+      "args": {
+        "string": "abcdef",
+        "offset": -2
+      },
+      "expect": "ef"
+    },
+    {
+      "name": "substr negative length",
+      "op": "string.substr",
+      "args": {
+        "string": "abcdef",
+        "offset": 1,
+        "length": -1
+      },
+      "expect": "bcde"
+    },
+    {
+      "name": "substr offset past the end",
+      "op": "string.substr",
+      "args": {
+        "string": "abc",
+        "offset": 5
+      },
+      "expect": ""
+    },
+    {
+      "name": "substr PHP_INT_MIN",
+      "op": "string.substr",
+      "args": {
+        "string": "abc",
+        "offset": -9223372036854775808,
+        "length": -9223372036854775808
+      },
+      "expect": ""
+    },
+    {
+      "name": "substr cuts a multi-byte character",
+      "op": "string.substr",
+      "args": {
+        "string": "é",
+        "offset": 1
+      },
+      "expect": {
+        "$bytes": "qQ=="
+      }
+    },
+    {
+      "name": "strpos empty needle",
+      "op": "string.strpos",
+      "args": {
+        "haystack": "abc",
+        "needle": "",
+        "offset": 2
+      },
+      "expect": 2
+    },
+    {
+      "name": "strpos negative offset",
+      "op": "string.strpos",
+      "args": {
+        "haystack": "abcabc",
+        "needle": "a",
+        "offset": -3
+      },
+      "expect": 3
+    },
+    {
+      "name": "strpos offset outside",
+      "op": "string.strpos",
+      "args": {
+        "haystack": "abc",
+        "needle": "a",
+        "offset": 4
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "strpos(): Argument #3 ($offset) must be contained in argument #1 ($haystack)"
+        }
+      }
+    },
+    {
+      "name": "stripos ASCII only",
+      "op": "string.stripos",
+      "args": {
+        "haystack": "xÉÉ",
+        "needle": "é"
+      },
+      "expect": false
+    },
+    {
+      "name": "strrpos negative offset limits the start",
+      "op": "string.strrpos",
+      "args": {
+        "haystack": "ababab",
+        "needle": "ab",
+        "offset": -3
+      },
+      "expect": 2
+    },
+    {
+      "name": "strrpos empty needle",
+      "op": "string.strrpos",
+      "args": {
+        "haystack": "abc",
+        "needle": "",
+        "offset": -1
+      },
+      "expect": 2
+    },
+    {
+      "name": "strripos single byte",
+      "op": "string.strripos",
+      "args": {
+        "haystack": "aXbx",
+        "needle": "X",
+        "offset": -2
+      },
+      "expect": 1
+    },
+    {
+      "name": "strripos offset outside",
+      "op": "string.strripos",
+      "args": {
+        "haystack": "abc",
+        "needle": "ab",
+        "offset": -4
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "strripos(): Argument #3 ($offset) must be contained in argument #1 ($haystack)"
+        }
+      }
+    },
+    {
+      "name": "str_contains empty needle",
+      "op": "string.str_contains",
+      "args": {
+        "haystack": "",
+        "needle": ""
+      },
+      "expect": true
+    },
+    {
+      "name": "strstr before needle",
+      "op": "string.strstr",
+      "args": {
+        "haystack": "user@example.com",
+        "needle": "@",
+        "before_needle": true
+      },
+      "expect": "user"
+    },
+    {
+      "name": "stristr",
+      "op": "string.stristr",
+      "args": {
+        "haystack": "HayStack",
+        "needle": "st"
+      },
+      "expect": "Stack"
+    },
+    {
+      "name": "strrchr uses the first byte of the needle",
+      "op": "string.strrchr",
+      "args": {
+        "haystack": "a/b/c",
+        "needle": "/x"
+      },
+      "expect": "/c"
+    },
+    {
+      "name": "strpbrk empty list",
+      "op": "string.strpbrk",
+      "args": {
+        "string": "abc",
+        "characters": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "strpbrk(): Argument #2 ($characters) must be a non-empty string"
+        }
+      }
+    },
+    {
+      "name": "substr_count empty needle",
+      "op": "string.substr_count",
+      "args": {
+        "haystack": "abc",
+        "needle": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "substr_count(): Argument #2 ($needle) must not be empty"
+        }
+      }
+    },
+    {
+      "name": "substr_count length outside",
+      "op": "string.substr_count",
+      "args": {
+        "haystack": "aaaa",
+        "needle": "a",
+        "offset": 1,
+        "length": 5
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "substr_count(): Argument #4 ($length) must be contained in argument #1 ($haystack)"
+        }
+      }
+    },
+    {
+      "name": "substr_count non-overlapping",
+      "op": "string.substr_count",
+      "args": {
+        "haystack": "aaaa",
+        "needle": "aa"
+      },
+      "expect": 2
+    },
+    {
+      "name": "strspn with offset and negative length",
+      "op": "string.strspn",
+      "args": {
+        "string": "42 is the answer",
+        "characters": "1234567890",
+        "offset": 1,
+        "length": -10
+      },
+      "expect": 1
+    },
+    {
+      "name": "strcspn",
+      "op": "string.strcspn",
+      "args": {
+        "string": "abcd",
+        "characters": "cd"
+      },
+      "expect": 2
+    },
+    {
+      "name": "substr_replace negative values",
+      "op": "string.substr_replace",
+      "args": {
+        "string": "Hello",
+        "replace": "J",
+        "offset": -5,
+        "length": -4
+      },
+      "expect": "Jello"
+    },
+    {
+      "name": "substr_replace arrays of strings, offsets and lengths",
+      "op": "string.substr_replace",
+      "args": {
+        "string": {
+          "a": "abc",
+          "7": "defg",
+          "x": 12
+        },
+        "replace": [
+          "X"
+        ],
+        "offset": [
+          1,
+          "2"
+        ],
+        "length": [
+          1
+        ]
+      },
+      "expect": {
+        "a": "aXc",
+        "7": "de",
+        "x": ""
+      }
+    },
+    {
+      "name": "substr_replace string with an array replacement uses the first",
+      "op": "string.substr_replace",
+      "args": {
+        "string": "abc",
+        "replace": [
+          "X",
+          "Y"
+        ],
+        "offset": 1,
+        "length": 1
+      },
+      "expect": "aXc"
+    },
+    {
+      "name": "substr_compare case-insensitive",
+      "op": "string.substr_compare",
+      "args": {
+        "haystack": "abcde",
+        "needle": "BC",
+        "offset": 1,
+        "length": 2,
+        "case_insensitive": true
+      },
+      "expect": 0
+    },
+    {
+      "name": "substr_compare offset outside",
+      "op": "string.substr_compare",
+      "args": {
+        "haystack": "a",
+        "needle": "b",
+        "offset": 5
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "substr_compare(): Argument #3 ($offset) must be contained in argument #1 ($haystack)"
+        }
+      }
+    },
+    {
+      "name": "strcmp returns the byte difference",
+      "op": "string.strcmp",
+      "args": {
+        "string1": "a",
+        "string2": "c"
+      },
+      "expect": -2
+    },
+    {
+      "name": "strcmp by length",
+      "op": "string.strcmp",
+      "args": {
+        "string1": "ab",
+        "string2": "abcd"
+      },
+      "expect": -1
+    },
+    {
+      "name": "strcasecmp",
+      "op": "string.strcasecmp",
+      "args": {
+        "string1": "HELLO",
+        "string2": "hellp"
+      },
+      "expect": -1
+    },
+    {
+      "name": "strncmp negative length",
+      "op": "string.strncmp",
+      "args": {
+        "string1": "a",
+        "string2": "b",
+        "length": -1
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "strncmp(): Argument #3 ($length) must be greater than or equal to 0"
+        }
+      }
+    },
+    {
+      "name": "strncasecmp",
+      "op": "string.strncasecmp",
+      "args": {
+        "string1": "Hello",
+        "string2": "hELLO world",
+        "length": 5
+      },
+      "expect": 0
+    },
+    {
+      "name": "str_replace counts",
+      "op": "string.str_replace",
+      "args": {
+        "search": "a",
+        "replace": "bb",
+        "subject": "banana"
+      },
+      "expect": [
+        "bbbnbbnbb",
+        3
+      ]
+    },
+    {
+      "name": "str_replace array search, string replace",
+      "op": "string.str_replace",
+      "args": {
+        "search": [
+          "a",
+          "b"
+        ],
+        "replace": "b",
+        "subject": "ab"
+      },
+      "expect": [
+        "bb",
+        3
+      ]
+    },
+    {
+      "name": "str_replace shorter replace array",
+      "op": "string.str_replace",
+      "args": {
+        "search": [
+          "a",
+          "",
+          "c"
+        ],
+        "replace": [
+          "1",
+          "2"
+        ],
+        "subject": "abc"
+      },
+      "expect": [
+        "1b",
+        2
+      ]
+    },
+    {
+      "name": "str_replace array subject keeps keys and converts",
+      "op": "string.str_replace",
+      "args": {
+        "search": "1",
+        "replace": "x",
+        "subject": {
+          "k": "a1",
+          "7": 11,
+          "0": 1.5
+        }
+      },
+      "expect": [
+        {
+          "k": "ax",
+          "7": "xx",
+          "0": "x.5"
+        },
+        4
+      ]
+    },
+    {
+      "name": "str_replace scalar search values",
+      "op": "string.str_replace",
+      "args": {
+        "search": [
+          1,
+          true,
+          null,
+          0.5
+        ],
+        "replace": "_",
+        "subject": "1 0.5 null"
+      },
+      "expect": [
+        "_ _ null",
+        2
+      ]
+    },
+    {
+      "name": "str_ireplace",
+      "op": "string.str_ireplace",
+      "args": {
+        "search": "AB",
+        "replace": "x",
+        "subject": "abAbaB"
+      },
+      "expect": [
+        "xxx",
+        3
+      ]
+    },
+    {
+      "name": "strtr characters, extra ignored",
+      "op": "string.strtr",
+      "args": {
+        "string": "Hi all",
+        "from": "ai",
+        "to": "eoXYZ"
+      },
+      "expect": "Ho ell"
+    },
+    {
+      "name": "strtr pairs, longest first",
+      "op": "string.strtr",
+      "args": {
+        "string": "Hi all, I said hello",
+        "from": {
+          "Hi": "Hello",
+          "Hi all": "Hey",
+          "hello": "hi"
+        }
+      },
+      "expect": "Hey, I said hi"
+    },
+    {
+      "name": "strtr integer keys",
+      "op": "string.strtr",
+      "args": {
+        "string": "1 10 100",
+        "from": {
+          "1": "one",
+          "10": "ten"
+        }
+      },
+      "expect": "one ten ten0"
+    },
+    {
+      "name": "strtr empty key ignored",
+      "op": "string.strtr",
+      "args": {
+        "string": "abc",
+        "from": {
+          "": "x",
+          "b": "y"
+        }
+      },
+      "expect": "ayc"
+    },
+    {
+      "name": "explode positive limit",
+      "op": "string.explode",
+      "args": {
+        "separator": ",",
+        "string": "a,b,c",
+        "limit": 2
+      },
+      "expect": [
+        "a",
+        "b,c"
+      ]
+    },
+    {
+      "name": "explode zero limit",
+      "op": "string.explode",
+      "args": {
+        "separator": ",",
+        "string": "a,b,c",
+        "limit": 0
+      },
+      "expect": [
+        "a,b,c"
+      ]
+    },
+    {
+      "name": "explode negative limit",
+      "op": "string.explode",
+      "args": {
+        "separator": ",",
+        "string": "a,b,c",
+        "limit": -1
+      },
+      "expect": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "name": "explode negative limit without separator",
+      "op": "string.explode",
+      "args": {
+        "separator": ",",
+        "string": "abc",
+        "limit": -1
+      },
+      "expect": []
+    },
+    {
+      "name": "explode empty string",
+      "op": "string.explode",
+      "args": {
+        "separator": ",",
+        "string": ""
+      },
+      "expect": [
+        ""
+      ]
+    },
+    {
+      "name": "explode empty separator",
+      "op": "string.explode",
+      "args": {
+        "separator": "",
+        "string": "a"
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "explode(): Argument #1 ($separator) must not be empty"
+        }
+      }
+    },
+    {
+      "name": "implode mixed values",
+      "op": "string.implode",
+      "args": {
+        "separator": ",",
+        "array": [
+          1,
+          0.30000000000000004,
+          true,
+          false,
+          null,
+          "x",
+          [
+            1
+          ],
+          1e+25,
+          -0.0
+        ]
+      },
+      "expect": "1,0.3,1,,,x,Array,1.0E+25,-0"
+    },
+    {
+      "name": "implode stdClass",
+      "op": "string.implode",
+      "args": {
+        "separator": ",",
+        "array": [
+          "a",
+          {}
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Object of class stdClass could not be converted to string"
+        }
+      }
+    },
+    {
+      "name": "implode_values",
+      "op": "string.implode_values",
+      "args": {
+        "separator": "|",
+        "array": [
+          1.5,
+          100.0,
+          1000000000000000.0,
+          "é"
+        ]
+      },
+      "expect": "1.5|100|1.0E+15|é"
+    },
+    {
+      "name": "strval float precision 14",
+      "op": "string.strval",
+      "args": {
+        "value": 0.1
+      },
+      "expect": "0.1"
+    },
+    {
+      "name": "strval exponent",
+      "op": "string.strval",
+      "args": {
+        "value": 1000000000000000.0
+      },
+      "expect": "1.0E+15"
+    },
+    {
+      "name": "strval negative zero",
+      "op": "string.strval",
+      "args": {
+        "value": -0.0
+      },
+      "expect": "-0"
+    },
+    {
+      "name": "strval array",
+      "op": "string.strval",
+      "args": {
+        "value": [
+          1,
+          2
+        ]
+      },
+      "expect": "Array"
+    },
+    {
+      "name": "str_split",
+      "op": "string.str_split",
+      "args": {
+        "string": "abcde",
+        "length": 2
+      },
+      "expect": [
+        "ab",
+        "cd",
+        "e"
+      ]
+    },
+    {
+      "name": "str_split empty",
+      "op": "string.str_split",
+      "args": {
+        "string": ""
+      },
+      "expect": []
+    },
+    {
+      "name": "str_split zero length",
+      "op": "string.str_split",
+      "args": {
+        "string": "abc",
+        "length": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "str_split(): Argument #2 ($length) must be greater than 0"
+        }
+      }
+    },
+    {
+      "name": "chunk_split longer than input",
+      "op": "string.chunk_split",
+      "args": {
+        "string": "abc",
+        "length": 5,
+        "separator": "|"
+      },
+      "expect": "abc|"
+    },
+    {
+      "name": "wordwrap default",
+      "op": "string.wordwrap",
+      "args": {
+        "string": "The quick brown fox sat over the lazy dog",
+        "width": 15,
+        "break": "\n"
+      },
+      "expect": "The quick brown\nfox sat over\nthe lazy dog"
+    },
+    {
+      "name": "wordwrap cut",
+      "op": "string.wordwrap",
+      "args": {
+        "string": "A very long woooooooooooord.",
+        "width": 8,
+        "break": "\n",
+        "cut_long_words": true
+      },
+      "expect": "A very\nlong\nwooooooo\nooooord."
+    },
+    {
+      "name": "wordwrap break at the end is not an existing break (8.5.10 quirk)",
+      "op": "string.wordwrap",
+      "args": {
+        "string": "-",
+        "width": -1,
+        "break": "-",
+        "cut_long_words": true
+      },
+      "expect": "--"
+    },
+    {
+      "name": "wordwrap width 0 with cut",
+      "op": "string.wordwrap",
+      "args": {
+        "string": "a b",
+        "width": 0,
+        "cut_long_words": true
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "wordwrap(): Argument #4 ($cut_long_words) cannot be true when argument #2 ($width) is 0"
+        }
+      }
+    },
+    {
+      "name": "wordwrap empty break",
+      "op": "string.wordwrap",
+      "args": {
+        "string": "a b",
+        "break": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "wordwrap(): Argument #3 ($break) must not be empty"
+        }
+      }
+    },
+    {
+      "name": "nl2br",
+      "op": "string.nl2br",
+      "args": {
+        "string": "a\r\nb\n\rc\rd\ne"
+      },
+      "expect": "a<br />\r\nb<br />\n\rc<br />\rd<br />\ne"
+    },
+    {
+      "name": "nl2br html",
+      "op": "string.nl2br",
+      "args": {
+        "string": "a\nb",
+        "use_xhtml": false
+      },
+      "expect": "a<br>\nb"
+    },
+    {
+      "name": "str_repeat negative",
+      "op": "string.str_repeat",
+      "args": {
+        "string": "a",
+        "times": -1
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "str_repeat(): Argument #2 ($times) must be greater than or equal to 0"
+        }
+      }
+    },
+    {
+      "name": "strrev bytes",
+      "op": "string.strrev",
+      "args": {
+        "string": "aé"
+      },
+      "expect": {
+        "$bytes": "qcNh"
+      }
+    },
+    {
+      "name": "ord empty",
+      "op": "string.ord",
+      "args": {
+        "character": ""
+      },
+      "expect": 0
+    },
+    {
+      "name": "chr wraps",
+      "op": "string.chr",
+      "args": {
+        "codepoint": -1
+      },
+      "expect": {
+        "$bytes": "/w=="
+      }
+    },
+    {
+      "name": "quotemeta",
+      "op": "string.quotemeta",
+      "args": {
+        "string": "1+1=2?"
+      },
+      "expect": "1\\+1=2\\?"
+    },
+    {
+      "name": "addcslashes range and octal",
+      "op": "string.addcslashes",
+      "args": {
+        "string": "foo[bar]\u0000ÿ\n",
+        "characters": "A..Z\u0000..\u001f[]..ÿ"
+      },
+      "expect": "foo\\[bar\\]\\000\\303\\277\\n"
+    },
+    {
+      "name": "stripcslashes",
+      "op": "string.stripcslashes",
+      "args": {
+        "string": "a\\x41\\101\\n\\q\\x\\777\\"
+      },
+      "expect": {
+        "$bytes": "YUFBCnF4/1w="
+      }
+    },
+    {
+      "name": "ctype_digit",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": "123"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_digit empty",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_space vertical tab",
+      "op": "string.ctype_space",
+      "args": {
+        "text": "\u000b\f"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_alpha non-ASCII",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": "é"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_xdigit",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": "AbC09"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_punct",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": "!@#~"
+      },
+      "expect": true
+    }
+  ]
+}
