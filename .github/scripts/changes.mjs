@@ -1,8 +1,9 @@
 // Decides what a CI run tests from the files it changed, using .github/ci/e2e.json.
 // A file no rule claims runs every lane, so a gap in the map costs time, not coverage.
-// Release branches and manual runs test everything, and on a push any server
-// change runs every lane, since the nightly channel ships the newest green commit
-// on main.
+// Release branches (the nightly builds from them) and manual runs test
+// everything. On a push, any server change runs every lane: PRs that each ran
+// a subset are checked together after merge. A push with no server change has
+// no server code to test that the previous push didn't.
 
 import { execFileSync } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
