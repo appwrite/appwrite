@@ -8,6 +8,7 @@ use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Attribute;
+use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Index;
@@ -373,13 +374,15 @@ class DatabaseTest extends TestCase
     private static function describeDeclaredAttribute(array $declared): array
     {
         /** @var array{'$id': string, type: string, size: int, required: bool, signed: bool, array: bool, filters: array<string>, format?: string} $declared */
+        $canonical = Attribute::fromArray($declared)->apply(new AttributeUpdate());
+
         return [
             'key' => $declared['$id'],
             'type' => ColumnType::from($declared['type']),
-            'size' => $declared['size'],
+            'size' => $canonical->size,
             'required' => $declared['required'],
             'default' => null,
-            'signed' => $declared['signed'],
+            'signed' => $canonical->signed,
             'array' => $declared['array'],
             'format' => ($declared['format'] ?? '') ?: null,
             'filters' => $declared['filters'],
