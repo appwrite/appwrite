@@ -1896,21 +1896,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 undefined,
                 'UI & tools',
               ),
-              createDebugFeatureFlagItem(
-                'Project agents',
-                'Project Agents page (/agents). New projects land on it from the project root; off always opens Overview.',
-                'showProjectAgents',
-                overrides.showProjectAgents,
-                (checked) => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    showProjectAgents: checked,
-                  }))
-                  setDebugOverride('showProjectAgents', checked)
-                },
-                undefined,
-                'UI & tools',
-              ),
               ...(import.meta.env.DEV
                 ? [
                     createDebugFeatureFlagItem(
