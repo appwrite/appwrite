@@ -191,21 +191,13 @@ function MetricTab({
   /** Omitted for aggregate-only metrics: the tab shows a value, no plot. */
   onClick?: () => void
 }) {
+  const [open, setOpen] = useState(false)
+  const [infoHovered, setInfoHovered] = useState(false)
   const interactive = !!onClick
-  const valueClassName = cn(
-    'text-[20px] font-semibold',
-    isActive || !interactive ? 'text-foreground' : 'text-foreground/80',
-    USAGE_CHART_FADE_IN_CLASS_NAME,
-  )
-  const valueNode =
-    value === undefined ? null : (
-      <AnimatedCounter
-        value={value}
-        formatDisplay={format}
-        className={valueClassName}
-      />
-    )
-  return (
+  // Card-owned tooltip: exact count, or why the figure is unavailable.
+  // Not on the value itself so hover works anywhere on the metric.
+  const tooltip = hint ?? exact
+  const card = (
     <div
       // A div with button semantics, because the info hint inside it is
       // itself a button and buttons cannot be nested.
@@ -223,7 +215,6 @@ function MetricTab({
             'aria-pressed': isActive,
           }
         : {})}
-      title={hint}
       className={cn(
         'flex min-w-0 select-none flex-col items-start gap-0.5 overflow-hidden rounded-md border px-3 py-1.5 text-start transition-colors',
         interactive &&
@@ -240,7 +231,12 @@ function MetricTab({
         <span className="truncate" title={label}>
           {label}
         </span>
-        <MetricInfo info={info} />
+        <span
+          onPointerEnter={() => setInfoHovered(true)}
+          onPointerLeave={() => setInfoHovered(false)}
+        >
+          <MetricInfo info={info} />
+        </span>
       </span>
       <span className="flex items-baseline gap-x-2 whitespace-nowrap">
         {unavailable || value === undefined ? (
@@ -249,25 +245,36 @@ function MetricTab({
           </span>
         ) : (
           <>
-            {exact ? (
-              <UiTooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-flex" aria-label={exact}>
-                    {valueNode}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[12px] tabular-nums">
-                  {exact}
-                </TooltipContent>
-              </UiTooltip>
-            ) : (
-              valueNode
-            )}
+            <AnimatedCounter
+              value={value}
+              formatDisplay={format}
+              className={cn(
+                'text-[20px] font-semibold',
+                isActive || !interactive
+                  ? 'text-foreground'
+                  : 'text-foreground/80',
+                USAGE_CHART_FADE_IN_CLASS_NAME,
+              )}
+            />
             <ChangeBadge change={change} invert={invert} />
           </>
         )}
       </span>
     </div>
+  )
+
+  if (!tooltip) return card
+
+  return (
+    <UiTooltip open={open && !infoHovered} onOpenChange={setOpen}>
+      <TooltipTrigger asChild>{card}</TooltipTrigger>
+      <TooltipContent
+        side="top"
+        className={cn('text-[12px]', !hint && 'tabular-nums')}
+      >
+        {tooltip}
+      </TooltipContent>
+    </UiTooltip>
   )
 }
 
