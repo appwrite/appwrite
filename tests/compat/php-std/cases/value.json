@@ -121,6 +121,75 @@
         "b": []
       },
       "expect": false
+    },
+    {
+      "name": "numeric strings compare as numbers",
+      "op": "value.loose_str_eq",
+      "args": {
+        "a": "1e3",
+        "b": "1000"
+      },
+      "expect": true
+    },
+    {
+      "name": "overflowing integer strings compare as strings",
+      "op": "value.loose_str_eq",
+      "args": {
+        "a": "9223372036854775808",
+        "b": "9223372036854775809"
+      },
+      "expect": false
+    },
+    {
+      "name": "a binary string equals only itself",
+      "op": "value.loose_str_eq",
+      "args": {
+        "a": {
+          "$bytes": "Mf8="
+        },
+        "b": "1"
+      },
+      "expect": false
+    },
+    {
+      "name": "whitespace around numeric strings",
+      "op": "value.loose_str_eq",
+      "args": {
+        "a": " 1",
+        "b": "1 "
+      },
+      "expect": true
+    },
+    {
+      "name": "NAN is never smaller or equal",
+      "op": "value.le_numbers",
+      "args": {
+        "a": {
+          "$float": "NAN"
+        },
+        "b": {
+          "$float": "NAN"
+        }
+      },
+      "expect": false
+    },
+    {
+      "name": "integers compare exactly",
+      "op": "value.le_numbers",
+      "args": {
+        "a": 9223372036854775807,
+        "b": 9223372036854775806
+      },
+      "expect": false
+    },
+    {
+      "name": "an integer and a float compare as floats",
+      "op": "value.le_numbers",
+      "args": {
+        "a": 9223372036854775807,
+        "b": 9.223372036854776e+18
+      },
+      "expect": true
     }
   ]
 }

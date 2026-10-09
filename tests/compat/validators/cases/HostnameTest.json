@@ -1,0 +1,687 @@
+{
+  "source": "packages/validators/tests/HostnameTest.php",
+  "cases": [
+    {
+      "name": "testCanValidateHostname",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Hostname",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "myweb.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "httpmyweb.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "httpsmyweb.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "wsmyweb.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "wssmyweb.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "vercel.app"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "web.vercel.app"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "my-web.vercel.app"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "my-project.my-web.vercel.app"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "my-commit.my-project.my-web.vercel.app"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "myapp.co.uk"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "*.myapp.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "myapp.*"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "https://myweb.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "ws://myweb.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "wss://myweb.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "http://myweb.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "http://myweb.com:3000"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "http://myweb.com/blog"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "myweb.com:80"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "myweb.com:3000"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "myweb.com/blog"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "myweb.com/blog/article1"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "bestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomain.sk"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "bestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomainbestdomain.ska"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateHostnamesWithAllowList",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Hostname",
+            "args": {
+              "allowList": [
+                "myweb.vercel.app",
+                "myweb.com",
+                "*.myapp.com"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "myweb.vercel.app"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "myweb.vercel.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "myweb2.vercel.app"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "vercel.app"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "mycommit.myweb.vercel.app"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "myweb.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "myweb.eu"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "project.myweb.eu"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "commit.project.myweb.eu"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "project1.myapp.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "project2.myapp.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "project-with-dash.myapp.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "anything.myapp.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "commit.anything.myapp.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "anything.myapp.eu"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "myapp.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Hostname",
+            "args": {
+              "allowList": [
+                "localhost"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "localhost"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateHostnamesWithWildcard",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Hostname",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "*"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Hostname",
+            "args": {
+              "allowList": [
+                "netlify.*"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "netlify.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "netlify.eu"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "netlify.app"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Hostname",
+            "args": {
+              "allowList": [
+                "*.*.app.io"
+              ]
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "app.io"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "project.app.io"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "commit.project.app.io"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "api.commit.project.app.io"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Hostname",
+            "args": {
+              "allowList": [
+                "*"
+              ]
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "*"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "localhost"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "anything"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "anything.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "anything.with.subdomains.eu"
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

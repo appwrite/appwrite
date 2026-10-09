@@ -23,7 +23,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let email = ctx.optional("email", Value::Null, &Nullable(EmailValidator::default()))?;
     let phone = ctx.optional("phone", Value::Null, &Nullable(Phone::default()))?;
     let state = ctx.state.clone();
-    let password_validator = Nullable(AllOf(vec![
+    let password_validator = Nullable(AllOf::new(vec![
         Box::new(PasswordStrength::from_policy(ctx.project.auth("passwordStrength"), false)) as Box<dyn Validator + '_>,
         Box::new(PasswordDictionary {
             dictionary: &state.dictionary,

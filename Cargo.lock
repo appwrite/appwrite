@@ -2200,6 +2200,7 @@ version = "0.1.0"
 dependencies = [
  "php-std",
  "serde_json",
+ "thiserror",
 ]
 
 [[package]]
