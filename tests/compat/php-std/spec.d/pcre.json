@@ -1633,6 +1633,79 @@
           "isolate": true
         }
       ]
+    },
+    "pcre.compiled": {
+      "doc": "Regex::compiled($pattern) once, then the groups of preg_match($pattern, $subject, $m) === 1 (Regex::captures) and preg_match($pattern, $subject) === 1 (Regex::is_match)",
+      "fuzz": [
+        {
+          "name": "jit",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_any_pattern_jit"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              }
+            }
+          }
+        },
+        {
+          "name": "limits",
+          "iterations": 1500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_limit_pattern"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              }
+            }
+          }
+        },
+        {
+          "name": "realistic",
+          "iterations": 1500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_realistic"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              }
+            }
+          }
+        },
+        {
+          "name": "generated",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_any_pattern"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              }
+            }
+          }
+        }
+      ]
     }
   },
   "generators": {

@@ -18,6 +18,7 @@ pub const OPS: &[&str] = &[
     "pcre.preg_split",
     "pcre.preg_quote",
     "pcre.preg_grep",
+    "pcre.compiled",
 ];
 
 pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
@@ -138,6 +139,24 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
             let mut o = Map::new();
             o.insert("result".into(), php_value(&p.value));
             report(o, &p)
+        }
+        "pcre.compiled" => {
+            let subject = a.bytes("subject")?;
+            let mut o = Map::new();
+            match pcre::Regex::compiled(&a.bytes("pattern")?) {
+                Ok(re) => {
+                    let captures = re.captures(&subject).map_or(Value::Null, |c| {
+                        Value::Array((0..c.len()).map(|i| bytes_value(c.get(i).unwrap_or_default())).collect())
+                    });
+                    o.insert("captures".into(), captures);
+                    o.insert("matched".into(), Value::Bool(re.is_match(&subject)));
+                }
+                Err(_) => {
+                    o.insert("captures".into(), Value::Null);
+                    o.insert("matched".into(), Value::Bool(false));
+                }
+            }
+            Outcome::Ok(Value::Object(o))
         }
         _ => return Err(Fault::new(format!("php-std: unknown operation `{op}`"))),
     })
