@@ -31,6 +31,26 @@ final class MigrationTest extends TestCase
         $this->assertSame($visible, $document->getAttribute('stage'), 'Main never stored a finalizing stage; it was still migrating while the success hooks ran.');
     }
 
+    /**
+     * @return \Iterator<string, array{string, string, string}>
+     */
+    public static function statuses(): \Iterator
+    {
+        yield 'a claimed retry the worker has not started reads as failed' => ['pending', 'finished', 'failed'];
+        yield 'a new migration stays pending' => ['pending', 'init', 'pending'];
+        yield 'a running migration' => ['processing', 'processing', 'processing'];
+        yield 'a failed migration' => ['failed', 'finished', 'failed'];
+        yield 'a completed migration' => ['completed', 'finished', 'completed'];
+    }
+
+    #[DataProvider('statuses')]
+    public function testClientsSeeMainsStatus(string $status, string $stage, string $visible): void
+    {
+        $document = (new Migration())->filter(new Document(['status' => $status, 'stage' => $stage]));
+
+        $this->assertSame($visible, $document->getAttribute('status'), 'Main kept a retried migration failed until the worker started it.');
+    }
+
     public function testResourceDataKeepsMainsDocumentation(): void
     {
         $rule = (new Migration())->getRules()['resourceData'];

@@ -179,6 +179,14 @@ class Migration extends Model
             $document->setAttribute('stage', Claim::STAGE_MIGRATING);
         }
 
+        // A claimed retry the worker has not picked up yet: main stored nothing until the worker started.
+        if (
+            $document->getAttribute('status') === Claim::STATUS_PENDING
+            && $document->getAttribute('stage') === Claim::STAGE_FINISHED
+        ) {
+            $document->setAttribute('status', Claim::STATUS_FAILED);
+        }
+
         foreach (['statusCounters', 'options'] as $attribute) {
             $value = $document->getAttribute($attribute);
             if (\is_array($value) && empty($value)) {

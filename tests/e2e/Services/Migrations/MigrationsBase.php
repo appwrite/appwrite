@@ -317,6 +317,9 @@ trait MigrationsBase
         $this->assertSame(204, $retry['headers']['status-code'], 'Main answered a retry with no content');
         $this->assertEmpty($retry['body']);
 
+        $retried = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
+        $this->assertContains($retried['body']['status'], ['failed', 'processing'], 'Main kept a retried migration failed until the worker started it');
+
         $completed = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, $headers);
         $this->assertContains($completed['headers']['status-code'], [204, 409], 'A repeated retry is accepted until the worker picks the migration up, then refused');
         if ($completed['headers']['status-code'] === 409) {
