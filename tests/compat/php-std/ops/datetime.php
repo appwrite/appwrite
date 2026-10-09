@@ -45,9 +45,7 @@ return [
             return $now;
         }
         $d = new DateTimeImmutable($a['s'], $zone($a['tz'] ?? null));
-        $tz = $d->getTimezone();
-
-        return [$d->getTimestamp(), $d->getOffset(), $d->getMicrosecond(), $tz === false ? false : $tz->getName()];
+        return [$d->getTimestamp(), $d->getOffset(), $d->getMicrosecond(), $d->getTimezone()->getName()];
     }),
     'datetime.format' => fn (array $a) => $catching(fn () => (new DateTimeImmutable($a['at']))->setTimezone(new DateTimeZone($a['tz']))->format($a['format'])),
     'datetime.modify' => fn (array $a) => $catching(fn () => $dependsOnNow($a['base'])
