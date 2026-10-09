@@ -184,14 +184,7 @@ $register->set('pools', function () {
             $resource = match ($dsnScheme) {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                    return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, [
-                        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-                        \PDO::ATTR_TIMEOUT => 3, // Seconds
-                        \PDO::ATTR_PERSISTENT => false,
-                        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                        \PDO::ATTR_EMULATE_PREPARES => true,
-                        \PDO::ATTR_STRINGIFY_FETCHES => true
-                    ]);
+                    return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, APP_DATABASE_PDO_ATTRIBUTES + [\PDO::ATTR_PERSISTENT => false]);
                 },
                 'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     try {
@@ -204,14 +197,7 @@ $register->set('pools', function () {
                     }
                 },
                 'postgresql' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                    return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};connect_timeout=3", $dsnUser, $dsnPass, array(
-                        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-                        \PDO::ATTR_TIMEOUT => 3, // Seconds
-                        \PDO::ATTR_PERSISTENT => false,
-                        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                        \PDO::ATTR_EMULATE_PREPARES => true,
-                        \PDO::ATTR_STRINGIFY_FETCHES => true
-                    ));
+                    return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};connect_timeout=3", $dsnUser, $dsnPass, APP_DATABASE_PDO_ATTRIBUTES + [\PDO::ATTR_PERSISTENT => false]);
                 },
                 default => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass) {
                     $redis = new \Redis();
@@ -306,14 +292,7 @@ $register->set('db', function () {
     $dbSchema = System::getEnv('_APP_DB_SCHEMA', '');
     $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'postgresql');
     $dsn = '';
-    $pdoAttributes = [
-        \PDO::ATTR_TIMEOUT => 3,
-        \PDO::ATTR_PERSISTENT => true,
-        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-        \PDO::ATTR_EMULATE_PREPARES => true,
-        \PDO::ATTR_STRINGIFY_FETCHES => true,
-    ];
+    $pdoAttributes = APP_DATABASE_PDO_ATTRIBUTES + [\PDO::ATTR_PERSISTENT => true];
 
     switch ($dbAdapter) {
         case 'mongodb':
