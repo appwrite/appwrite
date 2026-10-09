@@ -9,6 +9,7 @@ use Appwrite\Utopia\Response\Model;
 use Exception;
 use JsonException;
 use Swoole\Http\Response as SwooleHTTPResponse;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
@@ -618,12 +619,33 @@ class Response extends SwooleResponse
                 }
             }
 
+            if ($rule['type'] === Model::TYPE_DATETIME) {
+                $data->setAttribute($key, $rule['array']
+                    ? \array_map($this->formatDatetime(...), $data[$key])
+                    : $this->formatDatetime($data[$key]));
+            }
+
             $output[$key] = $data[$key];
         }
 
         $this->payload = $output;
 
         return $this->payload;
+    }
+
+    /**
+     * Datetimes created in memory (never read back through the database `datetime` filter)
+     * are in the database format `Y-m-d H:i:s.v`. Normalise them to the documented
+     * ISO 8601 format with timezone. Values already carrying the `T` separator and
+     * empty values are returned unchanged.
+     */
+    private function formatDatetime(mixed $value): mixed
+    {
+        if (!\is_string($value) || $value === '' || ($value[10] ?? '') !== ' ') {
+            return $value;
+        }
+
+        return DateTime::formatTz($value);
     }
 
     /**

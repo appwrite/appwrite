@@ -861,6 +861,10 @@ final class WebhooksCustomServerTest extends Scope
         $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.executions.{$executionId}.create"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
         $this->assertEquals('POST', $webhook['method']);
+        // The queued execution is answered from memory, and the event payload is a copy of that response
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $webhook['data']['$createdAt']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $webhook['data']['$updatedAt']));
+        $this->assertSame($execution['body']['$createdAt'], $webhook['data']['$createdAt']);
         $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
         $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         // $this->assertStringContainsString('functions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
