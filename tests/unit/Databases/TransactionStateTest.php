@@ -25,33 +25,29 @@ final class TransactionStateTest extends TestCase
 {
     private const string MOVIES = 'database_1_collection_1';
 
-    private Authorization $authorization;
-
-    private Database $store;
-
     private TransactionState $state;
 
     protected function setUp(): void
     {
-        $this->authorization = new Authorization();
-        $this->authorization->addRole(Role::any()->toString());
+        $authorization = new Authorization();
+        $authorization->addRole(Role::any()->toString());
 
-        $this->store = new Database(new SQLite(new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION])), new Cache(new None()));
-        $this->store
-            ->setAuthorization($this->authorization)
+        $store = new Database(new SQLite(new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION])), new Cache(new None()));
+        $store
+            ->setAuthorization($authorization)
             ->setDatabase('transactionState')
             ->setNamespace('transaction_state_' . \uniqid());
-        $this->store->create();
-        $this->store->createCollection(Collection::create(
+        $store->create();
+        $store->createCollection(Collection::create(
             id: self::MOVIES,
             attributes: [Attribute::string('genre', size: 32), Attribute::integer('year')],
             permissions: [Permission::read(Role::any()), Permission::create(Role::any())],
         ));
         foreach ([['drama', 2000], ['drama', 2002], ['comedy', 1990]] as [$genre, $year]) {
-            $this->store->createDocument(self::MOVIES, new Document(['genre' => $genre, 'year' => $year]));
+            $store->createDocument(self::MOVIES, new Document(['genre' => $genre, 'year' => $year]));
         }
 
-        $this->state = new TransactionState($this->store, $this->authorization, fn (): Database => $this->store, new User());
+        $this->state = new TransactionState($store, $authorization, fn (): Database => $store, new User());
     }
 
     public function testListOutsideATransactionReturnsDocuments(): void

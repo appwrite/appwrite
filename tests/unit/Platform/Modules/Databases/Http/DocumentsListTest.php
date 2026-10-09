@@ -45,8 +45,6 @@ final class DocumentsListTest extends TestCase
 
     private Database $dbForProject;
 
-    private ListCacheTestCache $cache;
-
     protected function setUp(): void
     {
         $this->authorization = new Authorization();
@@ -81,7 +79,7 @@ final class DocumentsListTest extends TestCase
             'indexes' => [],
         ]);
 
-        $this->cache = new ListCacheTestCache();
+        $cache = new ListCacheTestCache();
         $this->dbForProject = $this->createStub(Database::class);
         $this->dbForProject->method('getDocument')->willReturnCallback(
             static fn (string $collectionId): Document => match ($collectionId) {
@@ -90,7 +88,7 @@ final class DocumentsListTest extends TestCase
                 default => new Document(),
             }
         );
-        $this->dbForProject->method('getCache')->willReturn($this->cache);
+        $this->dbForProject->method('getCache')->willReturn($cache);
         $this->dbForProject->method('getAuthorization')->willReturn($this->authorization);
     }
 

@@ -12,6 +12,7 @@ use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Relationship;
 use Utopia\Database\RelationshipSide;
 use Utopia\Database\RelationshipType;
 use Utopia\Database\Validator\Authorization;
@@ -54,7 +55,7 @@ final class SubQueryAttributesTest extends TestCase
         [$relationship, $title] = $attributes[0]->key === 'actors' ? $attributes : \array_reverse($attributes);
         $this->assertSame('title', $title->key);
         $this->assertSame(ColumnType::Relationship, $relationship->type);
-        $this->assertNotNull($relationship->relationship);
+        $this->assertInstanceOf(Relationship::class, $relationship->relationship);
         $this->assertSame('actors', $relationship->relationship->relatedCollection);
         $this->assertSame(RelationshipType::ManyToMany, $relationship->relationship->type);
         $this->assertTrue($relationship->relationship->twoWay);
