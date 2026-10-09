@@ -667,7 +667,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         }
     }
 
-    public static function getServerVersion(Specification $specification): string
+    private static function getServerVersion(Specification $specification): string
     {
         return \implode('.', \array_slice(\explode('.', $specification->info->version), 0, 2)) . '.x';
     }
