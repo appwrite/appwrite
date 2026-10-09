@@ -138,7 +138,14 @@ pub fn coverage(engine: &mut Engine, lib: &str) -> Result<Coverage, String> {
             c.uncovered.push(symbol.clone());
         }
     }
-    for p in covers.iter().map(|p| p.as_str()).chain(spec.waivers.keys().map(String::as_str)) {
+    // A library with no PHP source (php-std: engine built-ins) has nothing to
+    // inventory, so its `covers` are documentation and cannot dangle.
+    let patterns: Vec<&str> = if spec.php.src.is_empty() {
+        Vec::new()
+    } else {
+        covers.iter().map(|p| p.as_str()).chain(spec.waivers.keys().map(String::as_str)).collect()
+    };
+    for p in patterns {
         if !used.contains(p) && !inventory.iter().any(|s| matches(p, s)) {
             c.dangling.push(p.to_owned());
         }
