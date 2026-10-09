@@ -3,6 +3,19 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "ai-on-call-agent-appwrite-functions",
+    "href": "/blog/post/ai-on-call-agent-appwrite-functions",
+    "title": "Build an AI on-call agent for background Appwrite Functions",
+    "description": "Build an on-call agent that finds failed Appwrite Function executions, groups repeats into incidents, diagnoses them with GPT-6 Luna, and emails the team once.",
+    "date": "2026-10-09",
+    "lastUpdated": "2026-10-09",
+    "timeToRead": 20,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/ai-on-call-agent-appwrite-functions/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "android-sdk-r8-support",
     "href": "/blog/post/android-sdk-r8-support",
     "title": "R8 code shrinking now works with the Appwrite Android SDK",
