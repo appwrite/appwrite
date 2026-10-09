@@ -13,13 +13,13 @@ import {
   getActivityCountryCode,
   getActivityCountryDisplayName,
   hasHumanEmail,
-  isMcpSdkActivity,
   userTypeBadge,
 } from '@/components/pages/projects/$projectId/activity/activity-utils'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useCountryLookups } from '@/lib/react-query/hooks'
 import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/UserTypeAvatar'
-import { McpIcon } from '@/components/global/shared/McpIcon'
+import { ActivitySdkSourceBadge } from '@/components/pages/projects/$projectId/activity/ActivitySdkSourceBadge'
+import { ActivityResourceIdentity } from '@/components/pages/projects/$projectId/activity/_components/ActivityResourceIdentity'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -29,22 +29,15 @@ import {
 } from '@/components/ui/tooltip'
 import {
   Activity,
-  Database,
-  FileText,
-  Folder,
-  Globe,
   Link2,
   LogIn,
   LogOut,
   Monitor,
   Pencil,
   Plus,
-  Server,
   Trash2,
   Upload,
-  User,
   Zap,
-  ListChecks,
 } from '@/lib/icons'
 import type { ActivityUiResourceType } from '@/lib/activity-resource-path'
 import { useT } from '@/lib/i18n/translate'
@@ -107,49 +100,6 @@ const actionColors: Record<ActionType, string> = {
   login: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
   logout: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
   view: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
-}
-
-const resourceIcons: Record<ResourceType, React.ReactNode> = {
-  document: <FileText className="h-4 w-4" />,
-  collection: <Folder className="h-4 w-4" />,
-  database: <Database className="h-4 w-4" />,
-  file: <FileText className="h-4 w-4" />,
-  bucket: <Folder className="h-4 w-4" />,
-  function: <Zap className="h-4 w-4" />,
-  user: <User className="h-4 w-4" />,
-  team: <User className="h-4 w-4" />,
-  site: <Globe className="h-4 w-4" />,
-  rule: <ListChecks className="h-4 w-4" />,
-  project: <Server className="h-4 w-4" />,
-}
-
-/** Same layout as the activity table Resource column: icon left, id/name, then type. */
-function ActivityResourcePrimary({
-  resourceType,
-  resourceId,
-  resourceLabel,
-}: {
-  resourceType: ResourceType
-  resourceId: string | null | undefined
-  resourceLabel: string
-}) {
-  const t = useT()
-  const primary = resourceId?.trim() || resourceLabel.trim() || '-'
-  return (
-    <div className="flex min-w-0 items-center gap-2.5">
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-        {resourceIcons[resourceType]}
-      </div>
-      <div className="min-w-0 flex flex-col gap-1">
-        <p className="break-words text-[13px] font-medium leading-snug text-foreground">
-          {primary}
-        </p>
-        <p className="text-[11px] capitalize text-muted-foreground">
-          {t(resourceType)}
-        </p>
-      </div>
-    </div>
-  )
 }
 
 function DetailSection({
@@ -365,10 +315,13 @@ export function ActivityLogDrawer({
                       </span>
                     </div>
                     <div className="mt-1.5">
-                      <ActivityResourcePrimary
-                        resourceType={resourceType}
-                        resourceId={event.resourceId}
-                        resourceLabel={display.resourceName}
+                      <ActivityResourceIdentity
+                        resourceType={
+                          event.resourceType?.trim() || resourceType
+                        }
+                        resourceId={
+                          event.resourceId?.trim() || display.resourceName
+                        }
                       />
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -380,6 +333,7 @@ export function ActivityLogDrawer({
                       >
                         {t(badge.label)}
                       </span>
+                      <ActivitySdkSourceBadge event={event} />
                       <span className="text-[12px] text-muted-foreground">
                         <DateTooltip
                           date={event.time}
@@ -404,28 +358,12 @@ export function ActivityLogDrawer({
                           t('Unknown')
                         }
                         actorId={event.actorId}
+                        actorEmail={event.actorEmail}
                         projectId={projectId}
                       />
-                      <div className="flex min-w-0 items-center gap-1.5">
-                        <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
-                          {formatValue(event.actorName)}
-                        </p>
-                        {isMcpSdkActivity(event) ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span
-                                className="inline-flex shrink-0 text-muted-foreground"
-                                aria-label={t('Via MCP')}
-                              >
-                                <McpIcon className="h-3.5 w-3.5" />
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                              {t('Via MCP')}
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : null}
-                      </div>
+                      <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
+                        {formatValue(event.actorName)}
+                      </p>
                     </div>
                   </DetailField>
                   <DetailField
@@ -441,14 +379,17 @@ export function ActivityLogDrawer({
                     </p>
                   </DetailField>
                   <DetailField label={t('Actor type')}>
-                    <span
-                      className={cn(
-                        'inline-flex rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
-                        badge.tone,
-                      )}
-                    >
-                      {formatValue(event.actorType)}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span
+                        className={cn(
+                          'inline-flex rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
+                          badge.tone,
+                        )}
+                      >
+                        {formatValue(event.actorType)}
+                      </span>
+                      <ActivitySdkSourceBadge event={event} />
+                    </div>
                   </DetailField>
                   <DetailField label={t('Actor ID')}>
                     {event.actorId?.trim() ? (
@@ -465,10 +406,13 @@ export function ActivityLogDrawer({
               <DetailSection title={t('Resource')}>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <DetailField label={t('Resource')} className="sm:col-span-2">
-                    <ActivityResourcePrimary
-                      resourceType={resourceType}
-                      resourceId={event.resourceId}
-                      resourceLabel={display.resourceName}
+                    <ActivityResourceIdentity
+                      resourceType={
+                        event.resourceType?.trim() || resourceType
+                      }
+                      resourceId={
+                        event.resourceId?.trim() || display.resourceName
+                      }
                     />
                   </DetailField>
                   {event.resourceType?.trim() ? (
