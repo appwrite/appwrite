@@ -52,7 +52,7 @@ mod tests {
 
     #[test]
     fn overflow_and_division_like_php() {
-        assert_eq!(add(Number::Int(i64::MAX), Number::Int(1)), Number::Float(9.223372036854775808e18));
+        assert_eq!(add(Number::Int(i64::MAX), Number::Int(1)), Number::Float(2f64.powi(63)));
         assert_eq!(div(Number::Int(10), Number::Int(5)), Some(Number::Int(2)));
         assert_eq!(div(Number::Int(1), Number::Int(2)), Some(Number::Float(0.5)));
         assert_eq!(div(Number::Int(1), Number::Float(0.0)), None);

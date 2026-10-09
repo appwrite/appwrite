@@ -76,42 +76,42 @@ fn translations(v: &Value) -> Result<Translations, Fault> {
     }
 }
 
-/// getText()'s `$default` (absent: the dynamic key) and `$placeholders`
-/// (values cast to string as PHP does).
-fn text_args(args: &Value) -> Result<(Option<Option<String>>, Vec<(String, String)>), Fault> {
-    let missing = match args.get("default") {
-        None => None,
-        Some(Value::Null) => Some(None),
-        Some(Value::String(s)) => Some(Some(s.clone())),
-        Some(_) => return Err(Fault::new("default must be a string or null")),
-    };
-    let placeholders = match args.get("placeholders") {
+/// getText()'s `$placeholders` (values cast to string as PHP does).
+fn placeholders(args: &Value) -> Result<Vec<(String, String)>, Fault> {
+    Ok(match args.get("placeholders") {
         None | Some(Value::Null) => Vec::new(),
         Some(Value::Object(o)) => o
             .iter()
             .map(|(k, v)| {
-                Ok((k.clone(), php_std::value::to_string(v).ok_or_else(|| Fault::new("placeholder values are scalars"))?))
+                Ok((
+                    k.clone(),
+                    php_std::value::to_string(v).ok_or_else(|| Fault::new("placeholder values are scalars"))?,
+                ))
             })
             .collect::<Result<_, Fault>>()?,
         Some(Value::Array(a)) => a
             .iter()
             .enumerate()
             .map(|(i, v)| {
-                Ok((i.to_string(), php_std::value::to_string(v).ok_or_else(|| Fault::new("placeholder values are scalars"))?))
+                Ok((
+                    i.to_string(),
+                    php_std::value::to_string(v).ok_or_else(|| Fault::new("placeholder values are scalars"))?,
+                ))
             })
             .collect::<Result<_, Fault>>()?,
         Some(_) => return Err(Fault::new("placeholders must be an object")),
-    };
-    Ok((missing, placeholders))
+    })
 }
 
 fn text(locale: &Locale<'_>, key: &str, args: &Value) -> Result<Outcome, Fault> {
-    let (missing, placeholders) = text_args(args)?;
-    let missing = match &missing {
+    // getText()'s `$default`: absent is the dynamic key.
+    let missing = match args.get("default") {
         None => Missing::Key,
-        Some(None) => Missing::Null,
-        Some(Some(s)) => Missing::Text(s),
+        Some(Value::Null) => Missing::Null,
+        Some(Value::String(s)) => Missing::Text(s),
+        Some(_) => return Err(Fault::new("default must be a string or null")),
     };
+    let placeholders = placeholders(args)?;
     let pairs: Vec<(&str, &str)> = placeholders.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
     Ok(match locale.text(key, missing, &pairs) {
         Ok(Some(t)) => Outcome::Ok(Value::String(t.into_owned())),
@@ -183,7 +183,10 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 } else {
                     locale.set_fallback(a.str("name")?).map(|_| ())
                 };
-                r.map(|()| State { default: locale.default().to_owned(), fallback: locale.fallback().map(str::to_owned) })
+                r.map(|()| State {
+                    default: locale.default().to_owned(),
+                    fallback: locale.fallback().map(str::to_owned),
+                })
             };
             match result {
                 Ok(next) => {

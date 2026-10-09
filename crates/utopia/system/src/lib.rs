@@ -641,9 +641,7 @@ impl<H: Host> System<H> {
         let start = self.proc_stat().await?;
         self.host.sleep(seconds).await;
         let end = self.proc_stat().await?;
-        let busy = |t: &CpuTimes| {
-            [t.nice, t.system, t.irq, t.softirq, t.steal].into_iter().fold(t.user, format::add)
-        };
+        let busy = |t: &CpuTimes| [t.nice, t.system, t.irq, t.softirq, t.steal].into_iter().fold(t.user, format::add);
         let (prev_idle, idle) = (format::add(start.idle, start.iowait), format::add(end.idle, end.iowait));
         let (prev_total, total) = (format::add(prev_idle, busy(&start)), format::add(idle, busy(&end)));
         let total_diff = format::sub(total, prev_total);
@@ -704,7 +702,8 @@ impl<H: Host> System<H> {
                 Key::Str(b"options".to_vec()),
                 Value::Array(vec![(Key::Str(b"min_range".to_vec()), Value::Int(0))]),
             )]);
-            if let Ok(filtered) = php_std::filter::filter_var(&Value::Str(contents.to_vec()), FILTER_VALIDATE_INT, &options)
+            if let Ok(filtered) =
+                php_std::filter::filter_var(&Value::Str(contents.to_vec()), FILTER_VALIDATE_INT, &options)
                 && let Value::Int(limit) = filtered.value
             {
                 return Some(limit);
@@ -745,10 +744,12 @@ impl<H: Host> System<H> {
     }
 
     fn disk_stats(&self) -> Result<IndexMap<String, Vec<Vec<u8>>>, Error> {
-        let mut disks =
-            diskstats(&self.host.read("/proc/diskstats").unwrap_or_default()).ok_or_else(|| exception("Unable to read /proc/diskstats"))?;
+        let mut disks = diskstats(&self.host.read("/proc/diskstats").unwrap_or_default())
+            .ok_or_else(|| exception("Unable to read /proc/diskstats"))?;
         disks.retain(|_, fields| {
-            fields.get(2).is_some_and(|name| !INVALID_DISKS.iter().any(|f| php_std::string::str_contains(name, f.as_bytes())))
+            fields
+                .get(2)
+                .is_some_and(|name| !INVALID_DISKS.iter().any(|f| php_std::string::str_contains(name, f.as_bytes())))
         });
         Ok(disks)
     }
@@ -759,7 +760,8 @@ impl<H: Host> System<H> {
         let first = self.disk_stats()?;
         self.host.sleep(seconds).await;
         let second = self.disk_stats()?;
-        let field = |fields: Option<&Vec<Vec<u8>>>, i: usize| intval_read(fields.and_then(|f| f.get(i)).map(Vec::as_slice));
+        let field =
+            |fields: Option<&Vec<Vec<u8>>>, i: usize| intval_read(fields.and_then(|f| f.get(i)).map(Vec::as_slice));
         let delta = |a: i64, b: i64| {
             let bytes = format::mul(format::sub(Number::Int(a), Number::Int(b)), Number::Int(512));
             format::div(bytes, Number::Int(1_048_576)).unwrap_or(Number::Int(0))
@@ -806,7 +808,9 @@ impl<H: Host> System<H> {
         total_row(&mut usage);
         Ok(usage
             .into_iter()
-            .map(|(k, (d, u))| (k, Traffic { download: d.unwrap_or(Number::Int(0)), upload: u.unwrap_or(Number::Int(0)) }))
+            .map(|(k, (d, u))| {
+                (k, Traffic { download: d.unwrap_or(Number::Int(0)), upload: u.unwrap_or(Number::Int(0)) })
+            })
             .collect())
     }
 }

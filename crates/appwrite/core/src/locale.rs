@@ -39,7 +39,9 @@ impl Translations {
             // Unlike PHP, a file that is not JSON is skipped rather than
             // registered as a language every lookup fails on.
             let mut candidate = Languages::new();
-            if candidate.insert_json(&code, &content).is_ok() && Locale::new(&candidate, &code).is_ok_and(|l| l.translations().is_ok()) {
+            if candidate.insert_json(&code, &content).is_ok()
+                && Locale::new(&candidate, &code).is_ok_and(|l| l.translations().is_ok())
+            {
                 if let Err(e) = languages.insert_json(code, &content) {
                     tracing::warn!(file = %path.display(), error = %e, "translation file skipped");
                 }

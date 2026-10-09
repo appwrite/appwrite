@@ -21,7 +21,7 @@
           -2.5,
           0.0001,
           1e+20,
-          1e-05,
+          0.00001,
           123456789.0
         ]
       },
@@ -151,7 +151,7 @@
       "args": {
         "format": "%g %g %g %.3g %G %g",
         "values": [
-          1.234e-05,
+          0.00001234,
           123456789.0,
           100000.0,
           1234.5,
@@ -1096,7 +1096,8 @@
         "op": "+",
         "a": 9223372036854775807,
         "b": 1
-      }
+      },
+      "expect": 9.223372036854776e+18
     },
     {
       "name": "arith sub overflows to float",
@@ -1105,7 +1106,8 @@
         "op": "-",
         "a": -9223372036854775808,
         "b": 1
-      }
+      },
+      "expect": -9.223372036854776e+18
     },
     {
       "name": "arith mul overflows to float",
@@ -1114,7 +1116,8 @@
         "op": "*",
         "a": 4294967296,
         "b": 4294967296
-      }
+      },
+      "expect": 1.8446744073709552e+19
     },
     {
       "name": "arith exact division is an integer",
@@ -1123,7 +1126,8 @@
         "op": "/",
         "a": 1048576,
         "b": 1024
-      }
+      },
+      "expect": 1024
     },
     {
       "name": "arith inexact division is a float",
@@ -1132,7 +1136,8 @@
         "op": "/",
         "a": 1,
         "b": 1048576
-      }
+      },
+      "expect": 9.5367431640625e-7
     },
     {
       "name": "arith min int by -1",
@@ -1141,7 +1146,8 @@
         "op": "/",
         "a": -9223372036854775808,
         "b": -1
-      }
+      },
+      "expect": 9.223372036854776e+18
     },
     {
       "name": "arith division by zero",
@@ -1150,6 +1156,12 @@
         "op": "/",
         "a": 1,
         "b": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "DivisionByZeroError",
+          "message": "Division by zero"
+        }
       }
     },
     {
@@ -1159,6 +1171,12 @@
         "op": "/",
         "a": 0,
         "b": 0.0
+      },
+      "expect": {
+        "$error": {
+          "class": "DivisionByZeroError",
+          "message": "Division by zero"
+        }
       }
     },
     {
@@ -1166,7 +1184,8 @@
       "op": "format.array_sum",
       "args": {
         "array": []
-      }
+      },
+      "expect": 0
     },
     {
       "name": "array_sum mixed",
@@ -1177,7 +1196,8 @@
           0.5,
           9223372036854775807
         ]
-      }
+      },
+      "expect": 9.223372036854776e+18
     }
   ]
 }

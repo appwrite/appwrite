@@ -348,10 +348,7 @@ mod tests {
         let l = languages();
         assert_eq!(Locale::new(&l, "xx").unwrap_err(), Error::Exception("Locale not found".into()));
         let locale = Locale::new(&l, "he-IL").unwrap();
-        assert_eq!(
-            locale.text("world", Missing::Key, &[]).unwrap_err().to_string(),
-            "Key named \"world\" not found"
-        );
+        assert_eq!(locale.text("world", Missing::Key, &[]).unwrap_err().to_string(), "Key named \"world\" not found");
         let mut l = Languages::new();
         l.insert_json("bad", b"{").unwrap();
         l.insert_json("num", b"5").unwrap();

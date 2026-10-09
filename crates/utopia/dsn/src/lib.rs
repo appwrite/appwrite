@@ -67,8 +67,8 @@ impl Dsn {
     /// the input, or the scheme or host is missing or empty (or `"0"`, which
     /// PHP's `empty()` also treats as missing).
     pub fn parse(dsn: &str) -> Result<Self, Error> {
-        let url = php_std::url::parse_url(dsn.as_bytes())
-            .ok_or(Error::InvalidArgument("Unable to parse DSN: malformed"))?;
+        let url =
+            php_std::url::parse_url(dsn.as_bytes()).ok_or(Error::InvalidArgument("Unable to parse DSN: malformed"))?;
         let scheme = url.scheme().filter(|s| !blank(s));
         let host = url.host().filter(|h| !blank(h));
         let (Some(scheme), Some(host)) = (scheme, host) else {
@@ -137,9 +137,9 @@ impl Dsn {
         match params.get(&Key::from_bytes(key.as_bytes())) {
             None => Ok(None),
             Some(Zval::String(value)) => Ok(Some(value)),
-            Some(_) => Err(Error::Type(
-                "Utopia\\DSN\\DSN::getParam(): Return value must be of type string, array returned",
-            )),
+            Some(_) => {
+                Err(Error::Type("Utopia\\DSN\\DSN::getParam(): Return value must be of type string, array returned"))
+            }
         }
     }
 
@@ -190,7 +190,9 @@ mod tests {
 
     #[test]
     fn refuses_without_quoting_credentials() {
-        for dsn in ["s3://AKIAKEY:SECRETKEY@/backups", "//AKIAKEY:SECRETKEY@localhost/db", "AKIAKEY:SECRETKEY@localhost"] {
+        for dsn in
+            ["s3://AKIAKEY:SECRETKEY@/backups", "//AKIAKEY:SECRETKEY@localhost/db", "AKIAKEY:SECRETKEY@localhost"]
+        {
             let e = Dsn::parse(dsn).unwrap_err();
             let printed = format!("{e} {e:?}");
             assert!(!printed.contains("AKIAKEY") && !printed.contains("SECRETKEY"), "{printed}");

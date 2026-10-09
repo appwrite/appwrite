@@ -107,7 +107,8 @@ fn path(name: &[u8]) -> Option<Path> {
     let mut buf = Vec::with_capacity(name.len() - start + 1);
     buf.extend_from_slice(&name[start..]);
     buf.push(0);
-    let cstr = |buf: &[u8], from: usize| -> usize { buf[from..].iter().position(|&b| b == 0).map_or(buf.len(), |n| from + n) };
+    let cstr =
+        |buf: &[u8], from: usize| -> usize { buf[from..].iter().position(|&b| b == 0).map_or(buf.len(), |n| from + n) };
 
     let mut p = 0;
     let mut bracket = None;

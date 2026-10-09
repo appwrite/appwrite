@@ -96,7 +96,8 @@ enum Returned {
     Int(i64),
     Float(f64),
     Bool(bool),
-    Rows(Vec<(String, (&'static str, Number, &'static str, Number))>),
+    /// `getIOUsage()` / `getNetworkUsage()` rows, as PHP's array encodes.
+    Rows(Map<String, Value>),
 }
 
 fn number(n: Number) -> Value {
@@ -113,33 +114,43 @@ impl Returned {
             Returned::Int(i) => Value::from(*i),
             Returned::Float(f) => float_value(*f),
             Returned::Bool(b) => Value::Bool(*b),
-            Returned::Rows(rows) => Value::Object(
-                rows.iter()
-                    .map(|(k, (a, x, b, y))| (k.clone(), json!({ *a: number(*x), *b: number(*y) })))
-                    .collect::<Map<_, _>>(),
-            ),
+            Returned::Rows(rows) => Value::Object(rows.clone()),
         }
     }
 
     /// The type of the result and the facts `SystemTest` asserts on it.
     fn shape(&self) -> Value {
-        let sign = |f: f64| if f > 0.0 { 1 } else if f < 0.0 { -1 } else { 0 };
+        let sign = |f: f64| {
+            if f > 0.0 {
+                1
+            } else if f < 0.0 {
+                -1
+            } else {
+                0
+            }
+        };
         match self {
             Returned::Str(s) => json!({"type": "string", "empty": s.is_empty()}),
             Returned::Int(i) => json!({"type": "int", "sign": i.signum()}),
             Returned::Float(f) => json!({"type": "float", "sign": sign(*f)}),
             Returned::Bool(_) => json!({"type": "bool"}),
-            Returned::Rows(rows) => json!({"type": "array", "total": rows.iter().any(|(k, _)| k == "total")}),
+            Returned::Rows(rows) => json!({"type": "array", "total": rows.contains_key("total")}),
         }
     }
 }
 
 fn io(rows: utopia_system::IndexMap<String, Io>) -> Returned {
-    Returned::Rows(rows.into_iter().map(|(k, r)| (k, ("read", r.read, "write", r.write))).collect())
+    Returned::Rows(
+        rows.into_iter().map(|(k, r)| (k, json!({"read": number(r.read), "write": number(r.write)}))).collect(),
+    )
 }
 
 fn traffic(rows: utopia_system::IndexMap<String, Traffic>) -> Returned {
-    Returned::Rows(rows.into_iter().map(|(k, r)| (k, ("download", r.download, "upload", r.upload))).collect())
+    Returned::Rows(
+        rows.into_iter()
+            .map(|(k, r)| (k, json!({"download": number(r.download), "upload": number(r.upload)})))
+            .collect(),
+    )
 }
 
 async fn run<H: Host>(system: &System<H>, a: &Args<'_>) -> Result<Result<Returned, Error>, Fault> {
