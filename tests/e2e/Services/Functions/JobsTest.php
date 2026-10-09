@@ -47,7 +47,7 @@ final class JobsTest extends TestCase
 
     #[PreserveGlobalState(false)]
     #[RunInSeparateProcess]
-    public function testJobsUsesConfiguredBuildTimeoutForSubmission(): void
+    public function testJobsSubmissionKeepsMainsThirtySecondTimeout(): void
     {
         $socket = \stream_socket_server('tcp://127.0.0.1:0', $errorCode, $errorMessage);
         $this->assertIsResource($socket, $errorMessage);
@@ -89,7 +89,12 @@ final class JobsTest extends TestCase
         $jobs = $container->get('jobs');
         $this->assertInstanceOf(Jobs::class, $jobs);
 
-        $this->expectException(TimeoutException::class);
-        $jobs->create('test', 'openruntimes/test', 'true');
+        try {
+            $jobs->create('test', 'openruntimes/test', 'true');
+        } catch (TimeoutException) {
+            $this->fail('Main submitted jobs with a 30 second timeout, independent of _APP_COMPUTE_BUILD_TIMEOUT');
+        }
+
+        $this->addToAssertionCount(1);
     }
 }
