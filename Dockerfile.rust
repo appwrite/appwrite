@@ -13,6 +13,11 @@ FROM rust:${RUST_VERSION}-slim-bookworm AS builder
 
 WORKDIR /usr/src/appwrite
 
+# OpenSSL headers for utopia-auth's RSA keys; the runtime image ships libssl3.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends pkg-config libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY Cargo.toml Cargo.lock rustfmt.toml ./
 COPY crates ./crates
 

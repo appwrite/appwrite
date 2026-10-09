@@ -2,12 +2,11 @@
 //! normalized CBOR map, and the signature algorithms the ceremony accepts
 //! (ES256, RS256), with cose-lib's checks and messages.
 
+use openssl::bn::BigNum;
 use php_std::zval::{Array, Key, Zval};
-use rsa::pkcs1v15::{Signature as RsaSignature, VerifyingKey};
-use rsa::{BigUint, RsaPublicKey};
-use sha2::Sha256;
 
 use super::cbor::{self, Stream};
+use crate::jwt::{self, key::RsaPublicKey};
 
 /// COSE algorithm identifiers the ceremony offers (`pubKeyCredParams`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -211,14 +210,10 @@ impl PublicKey {
         if n.iter().all(|b| *b == 0) {
             return Err("Invalid RSA key. The modulus shall not be zero".into());
         }
-        let Ok(key) = RsaPublicKey::new(BigUint::from_bytes_be(n), BigUint::from_bytes_be(e)) else {
-            return Ok(false);
-        };
-        let Ok(signature) = RsaSignature::try_from(signature) else {
-            return Ok(false);
-        };
-        use rsa::signature::Verifier as _;
-        Ok(VerifyingKey::<Sha256>::new(key).verify(data, &signature).is_ok())
+        let key = BigNum::from_slice(n)
+            .and_then(|n| Ok((n, BigNum::from_slice(e)?)))
+            .and_then(|(n, e)| RsaPublicKey::from_public_components(n, e));
+        Ok(key.is_ok_and(|key| jwt::key::verify(key, data, signature)))
     }
 }
 

@@ -80,13 +80,15 @@ icu_normalizer = { version = "2.3", default-features = false, features = ["compi
 icu_properties = { version = "2.3", default-features = false, features = ["compiled_data"] }
 md-5 = "0.10"
 md2 = "0.10"
+# RSA keys and PKCS#1 v1.5 signatures (RS256 JWTs and passkeys, utopia-auth) on
+# the system OpenSSL, the library PHP's openssl_* functions call: same key limits,
+# constant-time private key operations (the `rsa` crate is open to RUSTSEC-2023-0071).
+openssl = "0.10"
 # NIST P-256 ECDSA (ES256 passkeys, utopia-auth); RustCrypto, pure Rust.
 p256 = { version = "0.13", default-features = false, features = ["ecdsa", "pkcs8", "std"] }
 mimalloc = { version = "0.1", default-features = false }
 redis = { version = "0.32", default-features = false, features = ["tokio-comp", "aio", "connection-manager", "script"] }
 regex = "1"
-# RSA PKCS#1 v1.5 signatures and PEM keys (RS256 JWTs and passkeys, utopia-auth); RustCrypto, pure Rust.
-rsa = { version = "0.9", features = ["sha2", "getrandom"] }
 ripemd = "0.1"
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 rustix = { version = "1", default-features = false, features = ["std", "fs", "system"] }

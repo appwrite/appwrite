@@ -4,7 +4,7 @@
 //! Time is an argument (`now`, Unix seconds) wherever PHP calls `time()`.
 
 mod issuer;
-mod key;
+pub(crate) mod key;
 mod verifier;
 
 pub use issuer::{AccessToken, Asymmetric, IdToken, Jwt, RefreshToken, Symmetric};

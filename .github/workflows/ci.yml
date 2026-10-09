@@ -1247,6 +1247,13 @@ jobs:
           rustup toolchain install "${RUST_VERSION}" --profile minimal
           rustup default "${RUST_VERSION}"
 
+      - name: Install OpenSSL headers
+        run: |
+          if ! pkg-config --exists openssl 2>/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends pkg-config libssl-dev
+          fi
+
       - name: Run compat
         env:
           COMPAT_SEED: ${{ github.run_number }}

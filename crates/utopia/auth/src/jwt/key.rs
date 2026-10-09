@@ -1,17 +1,20 @@
-//! RSA keys as PHP's OpenSSL functions read and write them (PEM).
+//! RSA keys as PHP's OpenSSL functions read and write them (PEM), on OpenSSL
+//! itself: same key limits as PHP, and constant-time private key operations.
 
+use openssl::hash::MessageDigest;
+use openssl::pkey::{HasPublic, Id, PKey};
+use openssl::rsa::RsaRef;
+use openssl::sign::{Signer, Verifier};
+use p256::ecdsa::signature::Signer as _;
+use p256::pkcs8::DecodePrivateKey;
 use php_std::encoding::base64_decode;
-use rsa::pkcs1::{DecodeRsaPrivateKey, DecodeRsaPublicKey};
-use rsa::pkcs1v15::{Signature, SigningKey, VerifyingKey};
-use rsa::pkcs8::{DecodePrivateKey, DecodePublicKey, EncodePrivateKey, EncodePublicKey, LineEnding};
-use rsa::signature::{SignatureEncoding, Signer, Verifier as _};
-use rsa::traits::PublicKeyParts;
-use rsa::{RsaPrivateKey, RsaPublicKey};
-use sha2::Sha256;
 
 use crate::Error;
 
-const RSA_OID: &str = "1.2.840.113549.1.1.1";
+/// An RSA public key.
+pub(crate) type RsaPublicKey = openssl::rsa::Rsa<openssl::pkey::Public>;
+/// An RSA private key.
+type RsaPrivateKey = openssl::rsa::Rsa<openssl::pkey::Private>;
 
 /// A PEM-encoded RSA key pair, as `Issuers\Asymmetric::generateKeyPair()` returns it.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -26,15 +29,17 @@ pub struct KeyPair {
 pub fn generate_key_pair(bits: i64) -> Result<KeyPair, Error> {
     let failed = || Error::Exception("Unable to generate an RSA key pair".into());
     // OpenSSL refuses keys below 512 bits (PHP warns and returns false).
-    let bits = usize::try_from(bits).ok().filter(|b| *b >= 512).ok_or_else(failed)?;
-    let key = RsaPrivateKey::new(&mut rsa::rand_core::OsRng, bits).map_err(|_| failed())?;
-    let private_key =
-        key.to_pkcs8_pem(LineEnding::LF).map_err(|_| Error::Exception("Unable to export the private key".into()))?;
-    let public_key = key
-        .to_public_key()
-        .to_public_key_pem(LineEnding::LF)
-        .map_err(|_| Error::Exception("Unable to export the public key".into()))?;
-    Ok(KeyPair { private_key: private_key.to_string(), public_key })
+    let bits = u32::try_from(bits).ok().filter(|b| *b >= 512).ok_or_else(failed)?;
+    let key = RsaPrivateKey::generate(bits).and_then(PKey::from_rsa).map_err(|_| failed())?;
+    let pem = |pem: Result<Vec<u8>, _>, kind: &str| {
+        pem.ok()
+            .and_then(|p| String::from_utf8(p).ok())
+            .ok_or_else(|| Error::Exception(format!("Unable to export the {kind} key")))
+    };
+    Ok(KeyPair {
+        private_key: pem(key.private_key_to_pem_pkcs8(), "private")?,
+        public_key: pem(key.public_key_to_pem(), "public")?,
+    })
 }
 
 /// The PEM blocks of `input` as OpenSSL's PEM reader sees them: a
@@ -113,11 +118,11 @@ pub(crate) enum Public {
 }
 
 fn spki_key(der: &[u8]) -> Option<Public> {
-    let spki = rsa::pkcs8::spki::SubjectPublicKeyInfoRef::try_from(der).ok()?;
-    if spki.algorithm.oid.to_string() != RSA_OID {
+    let key = PKey::public_key_from_der(der).ok()?;
+    if key.id() != Id::RSA {
         return Some(Public::Other);
     }
-    RsaPublicKey::from_public_key_der(der).ok().map(Public::Rsa)
+    key.rsa().ok().map(Public::Rsa)
 }
 
 /// `openssl_pkey_get_public($pem)`: the key of the first PEM certificate,
@@ -136,7 +141,9 @@ pub(crate) fn public_key(pem: &[u8]) -> Option<Public> {
     for (label, der) in &blocks {
         match (*label, der) {
             (b"PUBLIC KEY", Some(der)) => return spki_key(der),
-            (b"RSA PUBLIC KEY", Some(der)) => return RsaPublicKey::from_pkcs1_der(der).ok().map(Public::Rsa),
+            (b"RSA PUBLIC KEY", Some(der)) => {
+                return RsaPublicKey::public_key_from_der_pkcs1(der).ok().map(Public::Rsa);
+            }
             (b"PUBLIC KEY" | b"RSA PUBLIC KEY", None) => return None,
             _ => {}
         }
@@ -146,7 +153,7 @@ pub(crate) fn public_key(pem: &[u8]) -> Option<Public> {
 
 /// A private key `openssl_pkey_get_private()` accepts and this port can sign with.
 pub(crate) enum Private {
-    Rsa(Box<RsaPrivateKey>),
+    Rsa(RsaPrivateKey),
     /// A NIST P-256 key: OpenSSL signs with ECDSA whatever `alg` the header claims.
     P256(p256::ecdsa::SigningKey),
 }
@@ -161,11 +168,11 @@ pub(crate) fn private_key(pem: &[u8]) -> Option<Private> {
             continue;
         };
         return match label {
-            b"PRIVATE KEY" => RsaPrivateKey::from_pkcs8_der(&der)
-                .map(|k| Private::Rsa(Box::new(k)))
-                .ok()
-                .or_else(|| p256::ecdsa::SigningKey::from_pkcs8_der(&der).ok().map(Private::P256)),
-            b"RSA PRIVATE KEY" => RsaPrivateKey::from_pkcs1_der(&der).ok().map(|k| Private::Rsa(Box::new(k))),
+            b"PRIVATE KEY" => match PKey::private_key_from_pkcs8(&der) {
+                Ok(key) if key.id() == Id::RSA => key.rsa().ok().map(Private::Rsa),
+                _ => p256::ecdsa::SigningKey::from_pkcs8_der(&der).ok().map(Private::P256),
+            },
+            b"RSA PRIVATE KEY" => RsaPrivateKey::private_key_from_der(&der).ok().map(Private::Rsa),
             b"EC PRIVATE KEY" => {
                 p256::SecretKey::from_sec1_der(&der).ok().map(|k| Private::P256(p256::ecdsa::SigningKey::from(k)))
             }
@@ -180,13 +187,13 @@ pub struct Rsa;
 
 impl Rsa {
     /// The big-endian modulus `n`, without leading zeros.
-    pub fn modulus(key: &RsaPublicKey) -> Vec<u8> {
-        key.n().to_bytes_be()
+    pub fn modulus<T: HasPublic>(key: &RsaRef<T>) -> Vec<u8> {
+        key.n().to_vec()
     }
 
     /// The big-endian public exponent `e`.
-    pub fn exponent(key: &RsaPublicKey) -> Vec<u8> {
-        key.e().to_bytes_be()
+    pub fn exponent<T: HasPublic>(key: &RsaRef<T>) -> Vec<u8> {
+        key.e().to_vec()
     }
 }
 
@@ -195,7 +202,12 @@ impl Rsa {
 pub(crate) fn sign(key: Private, input: &[u8]) -> Result<Vec<u8>, Error> {
     let failed = || Error::Exception("Unable to sign the token".into());
     match key {
-        Private::Rsa(key) => SigningKey::<Sha256>::new(*key).try_sign(input).map(|s| s.to_vec()).map_err(|_| failed()),
+        Private::Rsa(key) => {
+            let key = PKey::from_rsa(key).map_err(|_| failed())?;
+            Signer::new(MessageDigest::sha256(), &key)
+                .and_then(|mut signer| signer.sign_oneshot_to_vec(input))
+                .map_err(|_| failed())
+        }
         Private::P256(key) => {
             let signature: p256::ecdsa::Signature = key.try_sign(input).map_err(|_| failed())?;
             Ok(signature.to_der().as_bytes().to_vec())
@@ -205,8 +217,7 @@ pub(crate) fn sign(key: Private, input: &[u8]) -> Result<Vec<u8>, Error> {
 
 /// `openssl_verify(...) === 1`.
 pub(crate) fn verify(key: RsaPublicKey, input: &[u8], signature: &[u8]) -> bool {
-    let Ok(signature) = Signature::try_from(signature) else {
-        return false;
-    };
-    VerifyingKey::<Sha256>::new(key).verify(input, &signature).is_ok()
+    PKey::from_rsa(key)
+        .and_then(|key| Verifier::new(MessageDigest::sha256(), &key)?.verify_oneshot(signature, input))
+        .unwrap_or(false)
 }

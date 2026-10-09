@@ -15,9 +15,9 @@ hex.workspace = true
 hmac.workspace = true
 indexmap.workspace = true
 md-5.workspace = true
+openssl.workspace = true
 p256.workspace = true
 php-std.workspace = true
-rsa.workspace = true
 serde_json.workspace = true
-sha2 = { workspace = true, features = ["oid"] }
+sha2.workspace = true
 thiserror.workspace = true
