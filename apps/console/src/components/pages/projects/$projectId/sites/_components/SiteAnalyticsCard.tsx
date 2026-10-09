@@ -2,15 +2,7 @@ import { useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { AnalyticsDimension, type Models } from '@appwrite.io/console'
 import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from 'recharts'
-import {
-  Bot,
-  Download,
-  Eye,
-  Globe,
-  MousePointerClick,
-  Plus,
-  Users,
-} from 'lucide-react'
+import { Bot, Download, Globe, Plus, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip as UiTooltip,
@@ -268,21 +260,18 @@ function TrendChart({
 }
 
 function MiniStat({
-  icon: Icon,
   label,
   value,
   change,
   invert,
 }: {
-  icon: typeof Users
   label: string
   value: string | null
   change?: number
   invert?: boolean
 }) {
   return (
-    <div className="flex h-[52px] min-w-0 items-center gap-2.5 rounded-lg border border-border/60 bg-background/40 px-3">
-      <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+    <div className="flex h-[52px] min-w-0 items-center rounded-lg border border-border/60 bg-background/40 px-3">
       <div className="min-w-0">
         <p className="truncate text-[11px] text-muted-foreground">{label}</p>
         <p className="flex h-5 items-baseline gap-1.5">
@@ -447,8 +436,7 @@ export function SiteAnalyticsCard({
         {resolving || property ? (
           <div className={LEFT_COLUMN_CLASS}>
             <div className="h-[60px]">
-              <p className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                <Users className="h-3.5 w-3.5" />
+              <p className="text-[12px] text-muted-foreground">
                 {t('Visitors')}
               </p>
               <div className="mt-1.5 flex h-[34px] items-baseline gap-2.5">
@@ -478,20 +466,17 @@ export function SiteAnalyticsCard({
             </div>
             <div className="grid grid-cols-3 gap-2">
               <MiniStat
-                icon={Eye}
                 label={t('Pageviews')}
                 value={resolving ? null : value((s) => formatNumber(s.pageviews))}
                 change={change(stats?.pageviews, previousStats?.pageviews)}
               />
               <MiniStat
-                icon={MousePointerClick}
                 label={t('Bounce rate')}
                 value={resolving ? null : value((s) => formatPercent(s.bounceRate))}
                 change={change(stats?.bounceRate, previousStats?.bounceRate)}
                 invert
               />
               <MiniStat
-                icon={Globe}
                 label={t('Visit duration')}
                 value={resolving ? null : value((s) => formatDuration(s.visitDuration))}
                 change={change(stats?.visitDuration, previousStats?.visitDuration)}
@@ -603,7 +588,7 @@ export function SiteAnalyticsCard({
             {/* Only once stats say there's no traffic: never flashes in. */}
             {statsLoaded && !hasTraffic ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 className="h-9 text-[13px]"
                 onClick={() => setInstallOpen(true)}
@@ -612,7 +597,12 @@ export function SiteAnalyticsCard({
                 {t('Install tracking')}
               </Button>
             ) : null}
-            <Button size="sm" className="h-9 text-[13px]" asChild>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9 text-[13px]"
+              asChild
+            >
               <Link
                 to="/projects/$projectId/analytics/$propertyId"
                 params={{ projectId, propertyId: property.$id }}
@@ -629,7 +619,12 @@ export function SiteAnalyticsCard({
                 : t('Add a domain to this site first.')}
             </p>
             {canCreate && primaryDomain ? (
-              <Button size="sm" className="h-9 text-[13px]" asChild>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-9 text-[13px]"
+                asChild
+              >
                 <Link
                   to="/projects/$projectId/analytics/add"
                   params={{ projectId }}
@@ -643,7 +638,12 @@ export function SiteAnalyticsCard({
               <UiTooltip>
                 <TooltipTrigger asChild>
                   <span tabIndex={0}>
-                    <Button size="sm" className="h-9 text-[13px]" disabled>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="h-9 text-[13px]"
+                      disabled
+                    >
                       <Plus className="me-1.5 h-4 w-4" />
                       {t('Add analytics')}
                     </Button>

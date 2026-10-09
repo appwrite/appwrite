@@ -32,7 +32,7 @@ import {
   type AnalyticsChartInterval,
   type AnalyticsCompareMode,
 } from '@/lib/react-query/hooks'
-import { isUsageChartIntervalValidForRange } from '@/lib/usage/chart-interval'
+import { isUsageChartIntervalTooFineForRange } from '@/lib/usage/chart-interval'
 import { normalizeUsageDateRangeSelection } from '@/lib/usage/usage-date-range'
 import {
   ANALYTICS_DATE_RANGE_PRESET_GROUPS,
@@ -286,7 +286,7 @@ export function View({
   // Hourly buckets are capped at 31 days, same rule as the Usage charts.
   const resolvedInterval: AnalyticsChartInterval =
     chartInterval === '1h' &&
-    !isUsageChartIntervalValidForRange('1h', dateRange)
+    isUsageChartIntervalTooFineForRange('1h', dateRange)
       ? '1d'
       : chartInterval
 

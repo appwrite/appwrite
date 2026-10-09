@@ -62,3 +62,11 @@ export function isSpecificationAllowedInPlan(
 ): boolean {
   return spec.enabled !== false
 }
+
+export function formatSpecificationLabel(spec?: {
+  cpus?: number | string
+  memory?: number | string
+} | null): string | undefined {
+  if (spec?.cpus == null || spec?.memory == null) return undefined
+  return `${spec.cpus} CPU, ${spec.memory}MB RAM`
+}

@@ -14,6 +14,11 @@ import {
 import { MARKETING_SITE_TEMPLATES_PROJECT_ID } from '@/lib/sites/site-template-wizard'
 import { pageTitle } from '@/lib/utils/page-title'
 import { translate } from '@/lib/i18n/translate'
+import {
+  getProductOgImageUrl,
+  PRODUCT_OG_IMAGE_HEIGHT,
+  PRODUCT_OG_IMAGE_WIDTH,
+} from '@/lib/products/og-image'
 import { stringifyJsonLd } from '@/lib/seo/json-ld'
 
 export const Route = createFileRoute('/_marketing/products/$productId')({
@@ -36,19 +41,14 @@ export const Route = createFileRoute('/_marketing/products/$productId')({
       ? translate(content.metaTitle)
       : product.name
     const metaDescription = translate(content.metaDescription)
-    const ogImageSubtitle =
-      content.metaDescription.trim() !== product.name.trim()
-        ? metaDescription
-        : translate(product.tagline)
-
     return {
       ...getMarketingRouteHead({
         canonicalPath: `/products/${params.productId}`,
         pageName,
         description: metaDescription,
-        ogImageEyebrow: 'Products',
-        ogImageTitle: pageName,
-        ogImageSubtitle,
+        ogImage: getProductOgImageUrl(params.productId),
+        ogImageWidth: PRODUCT_OG_IMAGE_WIDTH,
+        ogImageHeight: PRODUCT_OG_IMAGE_HEIGHT,
       }),
       scripts: content.faq.length
         ? [
@@ -72,7 +72,6 @@ export const Route = createFileRoute('/_marketing/products/$productId')({
     }
   },
   loader: async ({ params, context }) => {
-
     if (typeof window !== 'undefined' && params.productId === 'sites') {
       const { queryClient } = context
       await Promise.all([
@@ -99,6 +98,5 @@ function ProductPage() {
 
   const content = getProductContent(productId)
 
-  return (<ProductPageLayout content={content} />
-    )
+  return <ProductPageLayout content={content} />
 }

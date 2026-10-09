@@ -102,6 +102,7 @@ function FunctionLayoutContent() {
         const tabFromPath = pathParts[functionIndex + 2]
         if (
           [
+            'overview',
             'deployments',
             'executions',
             'domains',
@@ -115,7 +116,7 @@ function FunctionLayoutContent() {
       }
     }
 
-    return 'deployments'
+    return 'overview'
   }, [location.pathname])
 
   const { data: func, isLoading } = useProjectFunction(projectId, functionId)
@@ -224,9 +225,18 @@ function FunctionLayoutContent() {
   const tabs: Tab[] = useMemo(() => {
     const base: Tab[] = [
       {
+        id: 'overview',
+        label: t('Overview'),
+        to: '/projects/$projectId/functions/$functionId',
+        params: {
+          projectId: projectId as string,
+          functionId: functionId as string,
+        },
+      },
+      {
         id: 'deployments',
         label: t('Deployments'),
-        to: '/projects/$projectId/functions/$functionId',
+        to: '/projects/$projectId/functions/$functionId/deployments',
         params: {
           projectId: projectId as string,
           functionId: functionId as string,

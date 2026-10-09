@@ -12,30 +12,22 @@ import {
 } from '@/lib/utils/overlay-lock'
 import {
   useParams,
-  Link,
   useNavigate,
   useLocation,
+  useSearch,
 } from '@tanstack/react-router'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import {
-  Info,
   Clock,
   Trash2,
   XCircle,
   GitBranch,
   GitCommit,
-  Shield,
-  CheckCircle2,
-  HelpCircle,
-  Lock,
   Download,
   RefreshCw,
   Play,
   FileCode,
   Package,
-  ChevronDown,
-  ExternalLink,
-  ScrollText,
 } from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import {
@@ -47,27 +39,13 @@ import {
   canDownloadDeploymentBuildOutput,
   isDeploymentInProgress,
   isDeploymentTimeout,
-  isLatestBuildAfterResourceUpdate,
   DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
 } from '@/lib/utils/deployment-status'
-import {
-  applySettingsRedeploySuccess,
-  cacheUpdatedFunctionOrSite,
-  clearSettingsRedeployPending,
-} from '@/lib/utils/settings-redeploy-alert'
 import { getDeploymentRepositoryWebUrl } from '@/lib/utils/deployment-repository-url'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
-import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import { DeploymentListRowContextMenu } from '@/components/global/shared/DeploymentListRowContextMenu'
@@ -98,49 +76,26 @@ import {
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Label } from '@/components/ui/label'
-import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
 import { formatDecimalBytes } from '@/lib/utils/byte-display-unit'
-import { proxyRuleServesActiveDeployment } from '@/lib/utils/proxy-domains'
 import {
-  useProject,
   useProjectFunction,
   useFunctionDeployments,
   useFunctionDeployment,
-  useFunctionDomains,
-  useProjectRuntimes,
-  useFunctionSpecifications,
-  functionDeploymentQueryOptions,
   Dependencies,
   deleteFunctionDeployment,
   cancelFunctionDeployment,
   DEFAULT_PAGE_SIZE,
-  buildFunctionUpdateParams,
 } from '@/lib/react-query/hooks'
-import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
-import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import {
-  getFirstEnabledSpecification,
-  hasUnavailableSpecifications,
-  isSpecificationAllowedInPlan,
-  SpecificationType,
-} from '@/lib/specifications'
 import { sdk } from '@/lib/appwrite/sdk'
-import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import { getVcsProvider } from '@/lib/vcs/providers'
 import { DeploymentDownloadType, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
-import { Route } from '@/routes/_public/projects.$projectId.functions.$functionId.index'
-import { CreateExecutionDrawer } from './CreateExecutionDrawer'
 import { useCreateDeployment } from '../shared/CreateDeploymentContext'
 import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
 import { DeploymentsToolbarContext } from './Layout'
 import { getQueryParam, queryParamToMap } from '@/lib/table-filters'
-import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
-import { domainUrl } from '@/lib/domains/url'
 
 function formatSize(bytes: number | bigint): string {
   return formatDecimalBytes(bytes)
@@ -217,10 +172,9 @@ export function View() {
   const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
-  const { project } = useProject(projectId)
   const navigate = useNavigate()
   const location = useLocation()
-  const search = Route.useSearch()
+  const search = useSearch({ strict: false }) as { page?: number }
   const urlPage = search.page ?? 1
   // Derive filter from location so we use the same source as the Layout (handles TanStack Router parsed search object)
   const filterMap = useMemo(() => {
@@ -251,12 +205,6 @@ export function View() {
     new Set(),
   )
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [deleteActiveDialogOpen, setDeleteActiveDialogOpen] = useState(false)
-  const [runtimeLimitsDialogOpen, setRuntimeLimitsDialogOpen] = useState(false)
-  const [selectedSpecification, setSelectedSpecification] = useState<string>('')
-  const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
-  const [activateDialogOpen, setActivateDialogOpen] = useState(false)
-  const [executeDrawerOpen, setExecuteDrawerOpen] = useState(false)
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
   const [cancelTargetDeploymentId, setCancelTargetDeploymentId] = useState<
     string | null
@@ -385,119 +333,6 @@ export function View() {
     })
   }, [projectId, functionId, queryClient])
 
-  // Fetch domains for the function (filter by active deployment)
-  // Use same params as domains tab to share cache
-  const { data: domainsData } = useFunctionDomains(
-    projectId,
-    functionId,
-    0,
-    DOMAINS_DEFAULT_PAGE_SIZE,
-    '',
-  )
-
-  // Fetch runtimes to get runtime name
-  const { data: runtimesData } = useProjectRuntimes(projectId)
-
-  // Fetch specifications to get resource limits
-  const { data: specificationsData } = useFunctionSpecifications(
-    projectId,
-    SpecificationType.Runtimes,
-  )
-
-  // Filter domains for active deployment and sort by length (shortest first), limit to 3
-  const activeDomains = useMemo(() => {
-    const filtered =
-      domainsData?.rules?.filter((rule) =>
-        proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
-      ) || []
-    return filtered
-      .sort((a, b) => a.domain.length - b.domain.length)
-      .slice(0, 3)
-  }, [domainsData?.rules, activeDeployment?.$id])
-
-  // Check if there are more domains than displayed
-  const totalActiveDomains =
-    domainsData?.rules?.filter((rule) =>
-      proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
-    ).length || 0
-  const hasMoreDomains = totalActiveDomains > activeDomains.length
-
-  // Get runtime name
-  const runtimeName =
-    runtimesData?.runtimes?.find((r) => r.$id === func?.runtime)?.name ||
-    func?.runtime ||
-    'N/A'
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const specifications = specificationsData?.specifications || []
-
-  // Get runtime specification info (used for executions)
-  const specification = specifications.find(
-    (spec) => spec.slug === func?.runtimeSpecification,
-  )
-  const specificationText = specification
-    ? `${specification.cpus} CPU, ${specification.memory}MB RAM`
-    : t('Not set')
-
-  // Get VCS provider info
-  const vcsProvider = activeDeployment
-    ? detectVcsProvider(activeDeployment)
-    : null
-
-  // Initialize selected specification when dialog opens
-  useEffect(() => {
-    if (runtimeLimitsDialogOpen && specifications.length > 0) {
-      const currentSpec = func?.runtimeSpecification
-      if (currentSpec) {
-        const spec = specifications.find((s) => s.slug === currentSpec)
-        if (spec && isSpecificationAllowedInPlan(spec)) {
-          setSelectedSpecification(currentSpec)
-        } else {
-          const firstEnabled = getFirstEnabledSpecification(specifications)
-          setSelectedSpecification(firstEnabled?.slug || '')
-        }
-      } else {
-        const firstEnabled = getFirstEnabledSpecification(specifications)
-        setSelectedSpecification(firstEnabled?.slug || '')
-      }
-    }
-  }, [runtimeLimitsDialogOpen, func?.runtimeSpecification, specifications])
-
-  // Update function specification mutation
-  const updateSpecificationMutation = useMutation({
-    mutationFn: async (specificationSlug: string) => {
-      if (!projectId || !functionId || !func)
-        throw new Error('Project ID, Function ID, and Function are required')
-      if (!specificationSlug)
-        throw new Error('A specification must be selected')
-      const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.functions.update(
-        buildFunctionUpdateParams(func, {
-          runtimeSpecification: specificationSlug,
-        }),
-      )
-    },
-    onSuccess: (updated) => {
-      toast.success(t('Runtime limits updated successfully'))
-      cacheUpdatedFunctionOrSite(
-        queryClient,
-        ['function', 'project', projectId, functionId],
-        updated,
-      )
-      queryClient.invalidateQueries({
-        queryKey: ['functions', 'project', projectId],
-      })
-      setRuntimeLimitsDialogOpen(false)
-    },
-    onError: (error: unknown) => {
-      toast.error(error.message || t('Failed to update runtime limits'))
-    },
-  })
-
-  const handleSaveSpecification = () => {
-    updateSpecificationMutation.mutate(selectedSpecification)
-  }
-
   const createDeployment = useCreateDeployment()
 
   // Clear selection when navigating between pages
@@ -505,119 +340,6 @@ export function View() {
     setSelectedDeployments(new Set())
     setDeleteDialogOpen(false)
   }, [displayedPage])
-
-  const isBuilding =
-    activeDeployment?.status === 'building' ||
-    activeDeployment?.status === 'processing'
-
-  const handleDownloadSource = () => {
-    if (!projectId || !functionId || !activeDeployment) return
-    try {
-      const projectSdk = sdk.forProject(projectId)
-      const url = projectSdk.functions.getDeploymentDownload({
-        functionId,
-        deploymentId: activeDeployment.$id,
-        type: DeploymentDownloadType.Source,
-      })
-      const urlWithMode = withAdminMode(url)
-      window.open(urlWithMode, '_blank')
-      toast.success(t('Download started'))
-    } catch {
-      toast.error(t('Failed to download source code'))
-    }
-  }
-
-  const handleDownloadBuild = () => {
-    if (!projectId || !functionId || !activeDeployment) return
-    if (!canDownloadDeploymentBuildOutput(activeDeployment.status)) return
-    try {
-      const projectSdk = sdk.forProject(projectId)
-      const url = projectSdk.functions.getDeploymentDownload({
-        functionId,
-        deploymentId: activeDeployment.$id,
-        type: DeploymentDownloadType.Output,
-      })
-      const urlWithMode = withAdminMode(url)
-      window.open(urlWithMode, '_blank')
-      toast.success(t('Download started'))
-    } catch {
-      toast.error(t('Failed to download build output'))
-    }
-  }
-
-  // Redeploy mutation
-  const redeployMutation = useMutation({
-    mutationFn: async () => {
-      if (!projectId || !functionId || !activeDeployment) {
-        throw new Error(
-          'Project ID, Function ID, and Deployment ID are required',
-        )
-      }
-      const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.functions.createDuplicateDeployment({
-        functionId,
-        deploymentId: activeDeployment.$id,
-      })
-    },
-    onSuccess: async (deployment) => {
-      if (!projectId || !functionId) return
-      await applySettingsRedeploySuccess(queryClient, {
-        resourceType: 'function',
-        projectId,
-        resourceId: functionId,
-        resourceQueryKey: ['function', 'project', projectId, functionId],
-        deploymentQueryKey: functionDeploymentQueryOptions(
-          projectId,
-          functionId,
-          deployment.$id,
-        ).queryKey,
-        deploymentsQueryKey: ['deployments', 'function', projectId, functionId],
-        deployment,
-      })
-      toast.success(t('Deployment rebuild started'))
-      setRedeployDialogOpen(false)
-    },
-    onError: (error: Error) => {
-      if (projectId && functionId) {
-        clearSettingsRedeployPending(
-          queryClient,
-          'function',
-          projectId,
-          functionId,
-        )
-      }
-      toast.error(error.message || t('Failed to redeploy'))
-    },
-  })
-
-  // Activate mutation (disabled for active deployment, but included for consistency)
-  const activateMutation = useMutation({
-    mutationFn: async () => {
-      if (!projectId || !functionId || !activeDeployment) {
-        throw new Error(
-          'Project ID, Function ID, and Deployment ID are required',
-        )
-      }
-      const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.functions.updateFunctionDeployment({
-        functionId,
-        deploymentId: activeDeployment.$id,
-      })
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['deployments', 'function', projectId, functionId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId],
-      })
-      toast.success(t('Deployment activated successfully'))
-      setActivateDialogOpen(false)
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || t('Failed to activate deployment'))
-    },
-  })
 
   // Cancel build mutation (stop the build, deployment remains with status canceled)
   const cancelBuildMutation = useMutation({
@@ -662,36 +384,6 @@ export function View() {
         queryKey: ['function', 'project', projectId, functionId],
       })
       toast.success(t('Deployment deleted successfully'))
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || t('Failed to delete deployment'))
-    },
-  })
-
-  // Delete mutation for active deployment
-  const deleteActiveMutation = useMutation({
-    mutationFn: async () => {
-      if (!projectId || !functionId || !activeDeployment) {
-        throw new Error(
-          'Project ID, Function ID, and Deployment ID are required',
-        )
-      }
-      throw new Error(
-        t(
-          'Cannot delete the active deployment. Please activate another deployment first.',
-        ),
-      )
-    },
-    onSuccess: async () => {
-      // Refetch deployments list so the UI updates (list uses refetchOnMount: false)
-      await queryClient.refetchQueries({
-        queryKey: ['deployments', 'function', projectId, functionId],
-      })
-      await queryClient.refetchQueries({
-        queryKey: ['function', 'project', projectId, functionId],
-      })
-      toast.success(t('Deployment deleted successfully'))
-      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete deployment'))
@@ -824,522 +516,8 @@ export function View() {
 
   return (
     <div ref={scrollContainerRef} className="flex-1">
-      <div className="mx-auto w-full max-w-7xl px-4 pt-6 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
-        <div className="space-y-6">
-          {isBuilding &&
-            (func?.live !== false ||
-              isLatestBuildAfterResourceUpdate(func, activeDeployment)) && (
-            <div className="border-b border-border bg-blue-500/5">
-              <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
-                <Alert
-                  variant="default"
-                  className="border-blue-500/30 bg-transparent"
-                >
-                  <Info className="h-4 w-4 text-blue-500 shrink-0" />
-                  <AlertDescription className="flex flex-1 items-center justify-between gap-3 text-[12px] text-blue-600/80 dark:text-blue-400/80">
-                    <span>
-                      {t('Your function is currently being redeployed.')}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="shrink-0 border-blue-500/40 text-blue-600 hover:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/10"
-                      onClick={() => {
-                        setCancelTargetDeploymentId(
-                          activeDeployment?.$id ?? null,
-                        )
-                        setCancelBuildDialogOpen(true)
-                      }}
-                      disabled={cancelBuildMutation.isPending}
-                    >
-                      {t('Cancel build')}
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              </div>
-            </div>
-          )}
-
-          {/* Active Deployment Card */}
-          {activeDeployment && activeDeployment.status === 'ready' && (
-            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-              <div className="px-6 py-4">
-                <h3 className="text-[15px] font-semibold text-foreground">
-                  {t('Active deployment')}
-                </h3>
-              </div>
-              <div className="border-t border-border" />
-              <div className="px-6 py-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {/* Deployed */}
-                  <div>
-                    <div className="text-[12px] text-muted-foreground mb-1.5">
-                      {t('Deployed')}
-                    </div>
-                    <div className="text-[13px] text-foreground">
-                      <DateTooltip date={activeDeployment.$createdAt} />
-                    </div>
-                  </div>
-
-                  {/* Build duration */}
-                  {(activeDeployment.buildDuration ||
-                    isDeploymentInProgress(activeDeployment.status)) &&
-                    !isDeploymentTimeout(
-                      activeDeployment.status,
-                      activeDeployment.$createdAt,
-                    ) && (
-                      <div>
-                        <div className="text-[12px] text-muted-foreground mb-1.5">
-                          {t('Build duration')}
-                        </div>
-                        <div className="text-[13px] text-foreground">
-                          {isDeploymentInProgress(activeDeployment.status)
-                            ? formatDuration(
-                                Math.max(
-                                  0,
-                                  Math.floor(
-                                    (Date.now() -
-                                      new Date(
-                                        activeDeployment.$createdAt,
-                                      ).getTime()) /
-                                      1000,
-                                  ),
-                                ),
-                              )
-                            : formatDuration(activeDeployment.buildDuration)}
-                        </div>
-                      </div>
-                    )}
-
-                  {/* Total size */}
-                  <div>
-                    <div className="text-[12px] text-muted-foreground mb-1.5">
-                      {t('Total size')}
-                    </div>
-                    <div className="text-[13px] text-foreground">
-                      {formatSize(
-                        (activeDeployment.buildSize || 0) +
-                          (activeDeployment.sourceSize || 0),
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Source */}
-                  {vcsProvider &&
-                    activeDeployment.providerRepositoryOwner &&
-                    activeDeployment.providerRepositoryName && (
-                      <div>
-                        <div className="text-[12px] text-muted-foreground mb-1.5">
-                          {t('Source')}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[13px] text-foreground min-w-0">
-                          {vcsProvider.icon}
-                          {(() => {
-                            const repoUrl =
-                              getDeploymentRepositoryWebUrl(activeDeployment)
-                            const label = `${activeDeployment.providerRepositoryOwner}/${activeDeployment.providerRepositoryName}`
-                            return repoUrl ? (
-                              <a
-                                href={repoUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="truncate link-neutral"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                {label}
-                              </a>
-                            ) : (
-                              <span className="truncate">{label}</span>
-                            )
-                          })()}
-                        </div>
-                      </div>
-                    )}
-
-                  {/* Runtime */}
-                  <div>
-                    <div className="text-[12px] text-muted-foreground mb-1.5">
-                      {t('Runtime')}
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[13px] text-foreground">
-                      <RuntimeIcon runtime={func?.runtime || ''} size="sm" />
-                      <span className="font-mono">{runtimeName}</span>
-                    </div>
-                  </div>
-
-                  {/* Runtime Limits */}
-                  <div>
-                    <div className="text-[12px] text-muted-foreground mb-1.5">
-                      {t('Runtime limits')}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[13px] text-foreground font-mono">
-                        {specificationText}
-                      </span>
-                      <button
-                        onClick={() => setRuntimeLimitsDialogOpen(true)}
-                        className="text-[11px] text-muted-foreground hover:text-foreground underline cursor-pointer"
-                      >
-                        {t('Update')}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Global CDN */}
-                  <div>
-                    <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-1.5">
-                      <span>{t('Global CDN')}</span>
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="inline-flex items-center justify-center"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="right" className="max-w-xs">
-                            <p className="text-[12px] font-medium mb-1.5 text-background">
-                              {t('Content Delivery Network')}
-                            </p>
-                            <p className="text-[11px] text-background/90">
-                              {t(
-                                "Appwrite's CDN provides global coverage with 120+ points of presence worldwide, reducing latency through edge caching and content optimization. All content is delivered over TLS for secure, encrypted connections.", // pragma: allowlist secret
-                              )}
-                            </p>
-                            <DocsRouteLink
-                              href="/docs/products/network/cdn"
-                              className="link-neutral text-[11px] mt-1.5 inline-block"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {t('Learn more →')}
-                            </DocsRouteLink>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      <span className="text-[13px] font-medium text-foreground">
-                        {t('Connected')}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* DDoS protection */}
-                  <div>
-                    <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-1.5">
-                      <span>{t('DDoS protection')}</span>
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="inline-flex items-center justify-center"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="right" className="max-w-xs">
-                            <p className="text-[12px] font-medium mb-1.5 text-background">
-                              {t('DDoS Mitigation')}
-                            </p>
-                            <p className="text-[11px] text-background/90">
-                              {t(
-                                "Appwrite's network includes built-in DDoS mitigation to protect against distributed denial-of-service attacks, ensuring uninterrupted access to your functions and maintaining high availability even during high traffic loads.", // pragma: allowlist secret
-                              )}
-                            </p>
-                            <DocsRouteLink
-                              href="/docs/products/network"
-                              className="link-neutral text-[11px] mt-1.5 inline-block"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {t('Learn more →')}
-                            </DocsRouteLink>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Shield className="h-4 w-4 text-green-500" />
-                      <span className="text-[13px] font-medium text-foreground">
-                        {t('Active')}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Domains */}
-                <div className="mt-4 pt-4 border-t border-border">
-                  <div className="text-[12px] text-muted-foreground mb-1.5">
-                    {t('Domains')}
-                  </div>
-                  {activeDomains.length > 0 ? (
-                    <>
-                      <div className="flex flex-col gap-1">
-                        {activeDomains.map((rule) => (
-                          <a
-                            key={rule.$id}
-                            href={domainUrl(rule.domain)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-[13px] font-mono link-neutral"
-                          >
-                            {rule.domain}
-                            <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
-                          </a>
-                        ))}
-                      </div>
-                      {hasMoreDomains && (
-                        <p className="text-[11px] text-muted-foreground mt-1.5">
-                          +{totalActiveDomains - activeDomains.length}{' '}
-                          {t('more')}
-                        </p>
-                      )}
-                      <div
-                        className={cn(
-                          RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
-                          'flex flex-wrap items-center gap-2',
-                        )}
-                      >
-                        <Button
-                          variant="link"
-                          size="sm"
-                          className="h-auto p-0 text-[13px] font-medium"
-                          asChild
-                        >
-                          <Link
-                            to="/projects/$projectId/functions/$functionId/domains"
-                            params={{
-                              projectId: projectId!,
-                              functionId: functionId!,
-                            }}
-                          >
-                            {t('View all domains')}
-                            {hasMoreDomains && (
-                              <Badge
-                                variant="secondary"
-                                className="ms-1.5 h-4 min-w-4 px-1 text-[10px] font-semibold tabular-nums"
-                              >
-                                +{totalActiveDomains - activeDomains.length}
-                              </Badge>
-                            )}
-                          </Link>
-                        </Button>
-                        <span className="text-muted-foreground/60">·</span>
-                        <Button
-                          variant="link"
-                          size="sm"
-                          className="h-auto p-0 text-[13px] font-medium"
-                          asChild
-                        >
-                          <Link
-                            to="/projects/$projectId/functions/$functionId/domains"
-                            params={{
-                              projectId: projectId!,
-                              functionId: functionId!,
-                            }}
-                          >
-                            {t('Add domain')}
-                          </Link>
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <div
-                      className={cn(
-                        RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
-                        'flex flex-wrap items-center gap-2',
-                      )}
-                    >
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-[13px] font-medium"
-                        asChild
-                      >
-                        <Link
-                          to="/projects/$projectId/functions/$functionId/domains"
-                          params={{
-                            projectId: projectId!,
-                            functionId: functionId!,
-                          }}
-                        >
-                          {t('View all domains')}
-                        </Link>
-                      </Button>
-                      <span className="text-muted-foreground/60">·</span>
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-[13px] font-medium"
-                        asChild
-                      >
-                        <Link
-                          to="/projects/$projectId/functions/$functionId/domains"
-                          params={{
-                            projectId: projectId!,
-                            functionId: functionId!,
-                          }}
-                        >
-                          {t('Add domain')}
-                        </Link>
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end [&>*]:w-full sm:[&>*]:w-auto [&_button]:w-full [&_button]:justify-start sm:[&_button]:w-auto sm:[&_button]:justify-center [&_a]:w-full [&_a]:justify-start sm:[&_a]:w-auto sm:[&_a]:justify-center">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9 text-[13px]"
-                    >
-                      <Download className="me-1.5 h-4 w-4" />
-                      {t('Download')}
-                      <ChevronDown className="ms-auto sm:ms-1.5 h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="z-[200]">
-                    <DropdownMenuItem onClick={handleDownloadSource}>
-                      <MenuItemContent icon={FileCode}>
-                        {t('Source code')}
-                      </MenuItemContent>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={handleDownloadBuild}
-                      disabled={
-                        !canDownloadDeploymentBuildOutput(activeDeployment?.status)
-                      }
-                      title={
-                        !canDownloadDeploymentBuildOutput(activeDeployment?.status)
-                          ? t(
-                              'Build output is only available for ready deployments.',
-                            )
-                          : undefined
-                      }
-                    >
-                      <MenuItemContent icon={Package}>
-                        {t('Build output')}
-                      </MenuItemContent>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setRedeployDialogOpen(true)}
-                  disabled={redeployMutation.isPending}
-                  className="h-9 text-[13px]"
-                >
-                  <RefreshCw className="me-1.5 h-4 w-4" />
-                  {t('Redeploy')}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    navigate({
-                      to: '/projects/$projectId/functions/$functionId/deployments/$deploymentId',
-                      params: {
-                        projectId: projectId!,
-                        functionId: functionId!,
-                        deploymentId: activeDeployment.$id,
-                      },
-                    })
-                  }}
-                  className="h-9 text-[13px]"
-                >
-                  <ScrollText className="me-1.5 h-4 w-4" />
-                  {t('Build logs')}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setExecuteDrawerOpen(true)}
-                  className="h-9 text-[13px]"
-                >
-                  <Play className="me-1.5 h-4 w-4" />
-                  {t('Execute')}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Building State */}
-          {isBuilding && (
-            <div className="flex h-full items-center justify-center py-16">
-              <div className="text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                  <Clock className="h-5 w-5 text-muted-foreground animate-spin" />
-                </div>
-                <p className="mb-1 text-[14px] font-medium text-foreground">
-                  {t('Deployment is still building')}
-                </p>
-                <p className="mb-4 text-[13px] text-muted-foreground">
-                  {t(
-                    "This may take a few minutes. We'll update automatically when it's ready.",
-                  )}
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (activeDeployment) {
-                      navigate({
-                        to: '/projects/$projectId/functions/$functionId/deployments/$deploymentId',
-                        params: {
-                          projectId: projectId!,
-                          functionId: functionId!,
-                          deploymentId: activeDeployment.$id,
-                        },
-                      })
-                    }
-                  }}
-                >
-                  {t('View logs')}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* No Active Deployment */}
-          {!activeDeployment && !isBuilding && (
-            <div className="flex h-full items-center justify-center py-16">
-              <div className="text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                  <Clock className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <p className="mb-1 text-[14px] font-medium text-foreground">
-                  {t('There is no active deployment')}
-                </p>
-                <p className="mb-4 text-[13px] text-muted-foreground">
-                  {t('Create your first deployment to activate this function.')}
-                </p>
-                {createDeployment && (
-                  <CreateDeploymentDropdown
-                    onSelectGit={createDeployment.openGitModal}
-                    onSelectCli={createDeployment.openCliModal}
-                    onSelectManual={createDeployment.openManualModal}
-                  />
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Deployments filter + create (below active deployment card) */}
-        <div
-          className={cn(
-            'mt-6',
-            deploymentsToolbar && 'space-y-4',
-          )}
-        >
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
+        <div className={cn(deploymentsToolbar && 'space-y-4')}>
           {deploymentsToolbar ? (
             <div className="flex flex-wrap items-center justify-between gap-4">
               {deploymentsToolbar}
@@ -1516,7 +694,7 @@ export function View() {
                                             href={repoUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="link-neutral truncate"
+                                            className="truncate no-underline hover:text-foreground"
                                             onClick={(e) => e.stopPropagation()}
                                           >
                                             {label}
@@ -2055,130 +1233,6 @@ export function View() {
         </div>
       )}
 
-      {/* Runtime Limits Update Dialog */}
-      {specifications.length > 0 && (
-        <Dialog
-          open={runtimeLimitsDialogOpen}
-          onOpenChange={setRuntimeLimitsDialogOpen}
-        >
-          <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 text-start">
-              <DialogTitle>{t('Update Runtime Limits')}</DialogTitle>
-              <DialogDescription className="text-[13px] mt-2">
-                {t('Select the runtime specification for your function')}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="border-t border-border" />
-
-            <div className="px-6 pb-4 pt-0">
-              <RadioGroup
-                value={selectedSpecification}
-                onValueChange={(value) => {
-                  const spec = specifications.find((s) => s.slug === value)
-                  if (spec && !isSpecificationAllowedInPlan(spec)) return
-                  setSelectedSpecification(value)
-                }}
-                className="space-y-2"
-              >
-                <div className="rounded-lg border border-border bg-card/50 overflow-hidden divide-y divide-border max-h-[320px] overflow-y-auto">
-                  {specifications.map((spec) => {
-                    const isSelected = selectedSpecification === spec.slug
-                    const isEnabled = isSpecificationAllowedInPlan(spec)
-                    return (
-                      <div
-                        key={spec.slug}
-                        className="first:rounded-t-lg last:rounded-b-lg [&:not(:first-child)]:border-t-0"
-                      >
-                        <RadioGroupItem
-                          value={spec.slug}
-                          id={`spec-${spec.slug}`}
-                          className="peer sr-only"
-                          disabled={!isEnabled}
-                        />
-                        <Label
-                          htmlFor={`spec-${spec.slug}`}
-                          className={cn(
-                            'flex items-center gap-3 px-3 py-2.5 transition-colors',
-                            isEnabled && 'cursor-pointer hover:bg-accent',
-                            isSelected && isEnabled && 'bg-accent',
-                            !isEnabled && 'cursor-not-allowed opacity-60',
-                          )}
-                          onClick={(e) => {
-                            if (!isEnabled) {
-                              e.preventDefault()
-                              e.stopPropagation()
-                            }
-                          }}
-                        >
-                          <div className="shrink-0">
-                            <div
-                              className={cn(
-                                'h-3.5 w-3.5 rounded-full border-2 flex items-center justify-center transition-colors',
-                                isSelected && isEnabled
-                                  ? 'border-foreground'
-                                  : 'border-muted-foreground',
-                                !isEnabled && 'border-muted-foreground/50',
-                              )}
-                            >
-                              {isSelected && isEnabled && (
-                                <div className="h-1.5 w-1.5 rounded-full bg-foreground" />
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex flex-col min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[13px] font-medium text-foreground">
-                                {spec.cpus} CPU, {spec.memory}MB RAM
-                              </span>
-                              {!isEnabled && (
-                                <Lock className="h-3 w-3 text-muted-foreground shrink-0" />
-                              )}
-                            </div>
-                            <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                              {!isEnabled
-                                ? t('Upgrade to unlock this specification')
-                                : spec.slug}
-                            </span>
-                          </div>
-                        </Label>
-                      </div>
-                    )
-                  })}
-                </div>
-              </RadioGroup>
-              {hasUnavailableSpecifications(specifications) && (
-                <div className="mt-3">
-                  <SpecificationsUpgradeNote
-                    orgId={project?.teamId}
-                    showContactSales
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setRuntimeLimitsDialogOpen(false)}
-                disabled={updateSpecificationMutation.isPending}
-              >
-                {t('Cancel')}
-              </Button>
-              <Button
-                onClick={handleSaveSpecification}
-                disabled={
-                  !selectedSpecification ||
-                  selectedSpecification === func?.runtimeSpecification ||
-                  updateSpecificationMutation.isPending
-                }
-              >
-                {t('Update')}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
       {/* Bulk Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
@@ -2225,46 +1279,6 @@ export function View() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Delete Confirmation Dialog for Active Deployment */}
-      {activeDeployment && (
-        <Dialog
-          open={deleteActiveDialogOpen}
-          onOpenChange={setDeleteActiveDialogOpen}
-        >
-          <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 pb-4 text-start">
-              <DialogTitle>{t('Delete deployment')}</DialogTitle>
-            </DialogHeader>
-            <div className="border-t border-border" />
-            <div className="px-6 pb-4 pt-4">
-              <DialogDescription className="text-[13px] mb-4">
-                {t(
-                  'Are you sure you want to delete this deployment? This action cannot be undone.',
-                )}
-              </DialogDescription>
-              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
-            </div>
-            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setDeleteActiveDialogOpen(false)}
-                className="h-9 text-[13px]"
-              >
-                {t('Cancel')}
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => deleteActiveMutation.mutate()}
-                disabled={deleteActiveMutation.isPending}
-                className="h-9 text-[13px]"
-              >
-                {t('Delete')}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
 
       {/* Delete confirmation for a list row */}
       <Dialog
@@ -2385,89 +1399,6 @@ export function View() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Redeploy Confirmation Dialog for Active Deployment */}
-      {activeDeployment && (
-        <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
-          <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 pb-4 text-start">
-              <DialogTitle>{t('Redeploy deployment')}</DialogTitle>
-            </DialogHeader>
-            <div className="border-t border-border" />
-            <div className="px-6 pb-4 pt-4">
-              <DialogDescription className="text-[13px] mb-4">
-                {t(
-                  "This will create a new build for this deployment using the current function configuration. The original deployment's code will be preserved and used for the new build.",
-                )}
-              </DialogDescription>
-              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
-            </div>
-            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setRedeployDialogOpen(false)}
-                disabled={redeployMutation.isPending}
-                className="h-9 text-[13px]"
-              >
-                {t('Cancel')}
-              </Button>
-              <Button
-                variant="default"
-                onClick={() => redeployMutation.mutate()}
-                disabled={redeployMutation.isPending}
-                className="h-9 text-[13px]"
-              >
-                {t('Redeploy')}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Activate Confirmation Dialog for Active Deployment */}
-      {activeDeployment && (
-        <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
-          <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 pb-4 text-start">
-              <DialogTitle>{t('Activate deployment')}</DialogTitle>
-            </DialogHeader>
-            <div className="border-t border-border" />
-            <div className="px-6 pb-4 pt-4">
-              <DialogDescription className="text-[13px] mb-4">
-                {t(
-                  'This will switch the active deployment to this one. All traffic will be routed to this deployment once activated.',
-                )}
-              </DialogDescription>
-              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
-            </div>
-            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setActivateDialogOpen(false)}
-                disabled={activateMutation.isPending}
-                className="h-9 text-[13px]"
-              >
-                {t('Cancel')}
-              </Button>
-              <Button
-                variant="default"
-                onClick={() => activateMutation.mutate()}
-                disabled={activateMutation.isPending}
-                className="h-9 text-[13px]"
-              >
-                {t('Activate')}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      <CreateExecutionDrawer
-        open={executeDrawerOpen}
-        onOpenChange={setExecuteDrawerOpen}
-        functionId={functionId!}
-        func={func}
-      />
     </div>
   )
 }

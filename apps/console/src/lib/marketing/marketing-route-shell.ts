@@ -77,6 +77,7 @@ export function isExcludedMarketingSiteLayoutPath(
   }
   if (normalized === '/debug' || normalized.startsWith('/debug/')) return true
   if (normalized === '/reset') return true
+  if (normalized === '/og' || normalized.startsWith('/og/')) return true
   return false
 }
 

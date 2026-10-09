@@ -299,6 +299,7 @@ import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteImport } 
 import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.index'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.deployments'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdExecutionsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.executions'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdSecurityRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.security'
@@ -381,6 +382,7 @@ import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdRolesRouteIm
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.sql'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.visualizer'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.deployments.index'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains.index'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains.add'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.index'
@@ -2092,6 +2094,12 @@ const PublicProjectsProjectIdFunctionsFunctionIdIndexRoute =
     path: '/',
     getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
   } as any)
+const PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteImport.update({
+    id: '/deployments',
+    path: '/deployments',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
+  } as any)
 const PublicProjectsProjectIdFunctionsFunctionIdDomainsRoute =
   PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteImport.update({
     id: '/domains',
@@ -2607,6 +2615,13 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRoute =
         PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
     } as any,
   )
+const PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () =>
+      PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRoute,
+  } as any)
 const PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRoute =
   PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRouteImport.update({
     id: '/',
@@ -3001,9 +3016,10 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute =
 const PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute =
   PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRouteImport.update(
     {
-      id: '/deployments/$deploymentId/',
-      path: '/deployments/$deploymentId/',
-      getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
+      id: '/$deploymentId/',
+      path: '/$deploymentId/',
+      getParentRoute: () =>
+        PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRoute,
     } as any,
   )
 const PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRoute =
@@ -3628,6 +3644,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteWithChildren
   '/projects/$projectId/databases/mysql/$databaseId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteWithChildren
   '/projects/$projectId/databases/postgres/$databaseId': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteWithChildren
+  '/projects/$projectId/functions/$functionId/deployments': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteWithChildren
   '/projects/$projectId/functions/$functionId/domains': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteWithChildren
   '/projects/$projectId/functions/$functionId/executions': typeof PublicProjectsProjectIdFunctionsFunctionIdExecutionsRoute
   '/projects/$projectId/functions/$functionId/security': typeof PublicProjectsProjectIdFunctionsFunctionIdSecurityRoute
@@ -3736,6 +3753,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
   '/projects/$projectId/databases/mysql/$databaseId/': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
   '/projects/$projectId/databases/postgres/$databaseId/': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
+  '/projects/$projectId/functions/$functionId/deployments/': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRoute
   '/projects/$projectId/functions/$functionId/domains/': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRoute
   '/projects/$projectId/functions/$functionId/settings/': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRoute
   '/projects/$projectId/messaging/providers/$providerId/': typeof PublicProjectsProjectIdMessagingProvidersProviderIdIndexRoute
@@ -4144,6 +4162,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/$dbKind/$databaseId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
   '/projects/$projectId/databases/mysql/$databaseId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
   '/projects/$projectId/databases/postgres/$databaseId': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
+  '/projects/$projectId/functions/$functionId/deployments': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRoute
   '/projects/$projectId/functions/$functionId/domains': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRoute
   '/projects/$projectId/functions/$functionId/settings': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRoute
   '/projects/$projectId/messaging/providers/$providerId': typeof PublicProjectsProjectIdMessagingProvidersProviderIdIndexRoute
@@ -4498,6 +4517,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/$dbKind/$databaseId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteWithChildren
   '/_public/projects/$projectId/databases/mysql/$databaseId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteWithChildren
   '/_public/projects/$projectId/databases/postgres/$databaseId': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteWithChildren
+  '/_public/projects/$projectId/functions/$functionId/deployments': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteWithChildren
   '/_public/projects/$projectId/functions/$functionId/domains': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteWithChildren
   '/_public/projects/$projectId/functions/$functionId/executions': typeof PublicProjectsProjectIdFunctionsFunctionIdExecutionsRoute
   '/_public/projects/$projectId/functions/$functionId/security': typeof PublicProjectsProjectIdFunctionsFunctionIdSecurityRoute
@@ -4606,6 +4626,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
   '/_public/projects/$projectId/databases/mysql/$databaseId/': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
+  '/_public/projects/$projectId/functions/$functionId/deployments/': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRoute
   '/_public/projects/$projectId/functions/$functionId/domains/': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRoute
   '/_public/projects/$projectId/functions/$functionId/settings/': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRoute
   '/_public/projects/$projectId/messaging/providers/$providerId/': typeof PublicProjectsProjectIdMessagingProvidersProviderIdIndexRoute
@@ -4959,6 +4980,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId'
     | '/projects/$projectId/databases/mysql/$databaseId'
     | '/projects/$projectId/databases/postgres/$databaseId'
+    | '/projects/$projectId/functions/$functionId/deployments'
     | '/projects/$projectId/functions/$functionId/domains'
     | '/projects/$projectId/functions/$functionId/executions'
     | '/projects/$projectId/functions/$functionId/security'
@@ -5067,6 +5089,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/'
     | '/projects/$projectId/databases/mysql/$databaseId/'
     | '/projects/$projectId/databases/postgres/$databaseId/'
+    | '/projects/$projectId/functions/$functionId/deployments/'
     | '/projects/$projectId/functions/$functionId/domains/'
     | '/projects/$projectId/functions/$functionId/settings/'
     | '/projects/$projectId/messaging/providers/$providerId/'
@@ -5475,6 +5498,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId'
     | '/projects/$projectId/databases/mysql/$databaseId'
     | '/projects/$projectId/databases/postgres/$databaseId'
+    | '/projects/$projectId/functions/$functionId/deployments'
     | '/projects/$projectId/functions/$functionId/domains'
     | '/projects/$projectId/functions/$functionId/settings'
     | '/projects/$projectId/messaging/providers/$providerId'
@@ -5828,6 +5852,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId'
     | '/_public/projects/$projectId/databases/mysql/$databaseId'
     | '/_public/projects/$projectId/databases/postgres/$databaseId'
+    | '/_public/projects/$projectId/functions/$functionId/deployments'
     | '/_public/projects/$projectId/functions/$functionId/domains'
     | '/_public/projects/$projectId/functions/$functionId/executions'
     | '/_public/projects/$projectId/functions/$functionId/security'
@@ -5936,6 +5961,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/'
     | '/_public/projects/$projectId/databases/mysql/$databaseId/'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/'
+    | '/_public/projects/$projectId/functions/$functionId/deployments/'
     | '/_public/projects/$projectId/functions/$functionId/domains/'
     | '/_public/projects/$projectId/functions/$functionId/settings/'
     | '/_public/projects/$projectId/messaging/providers/$providerId/'
@@ -8085,6 +8111,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
     }
+    '/_public/projects/$projectId/functions/$functionId/deployments': {
+      id: '/_public/projects/$projectId/functions/$functionId/deployments'
+      path: '/deployments'
+      fullPath: '/projects/$projectId/functions/$functionId/deployments'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
+    }
     '/_public/projects/$projectId/functions/$functionId/domains': {
       id: '/_public/projects/$projectId/functions/$functionId/domains'
       path: '/domains'
@@ -8659,6 +8692,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
     }
+    '/_public/projects/$projectId/functions/$functionId/deployments/': {
+      id: '/_public/projects/$projectId/functions/$functionId/deployments/'
+      path: '/'
+      fullPath: '/projects/$projectId/functions/$functionId/deployments/'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRoute
+    }
     '/_public/projects/$projectId/functions/$functionId/domains/': {
       id: '/_public/projects/$projectId/functions/$functionId/domains/'
       path: '/'
@@ -9011,10 +9051,10 @@ declare module '@tanstack/react-router' {
     }
     '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId/': {
       id: '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId/'
-      path: '/deployments/$deploymentId'
+      path: '/$deploymentId'
       fullPath: '/projects/$projectId/functions/$functionId/deployments/$deploymentId/'
       preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRoute
     }
     '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId/': {
       id: '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId/'
@@ -10414,6 +10454,24 @@ const PublicProjectsProjectIdFirewallRouteWithChildren =
     PublicProjectsProjectIdFirewallRouteChildren,
   )
 
+interface PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteChildren {
+  PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRoute
+  PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute
+}
+
+const PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteChildren: PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteChildren =
+  {
+    PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRoute:
+      PublicProjectsProjectIdFunctionsFunctionIdDeploymentsIndexRoute,
+    PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute:
+      PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute,
+  }
+
+const PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteWithChildren =
+  PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRoute._addFileChildren(
+    PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteChildren,
+  )
+
 interface PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteChildren {
   PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRoute
   PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRoute
@@ -10463,17 +10521,19 @@ const PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteWithChildren =
   )
 
 interface PublicProjectsProjectIdFunctionsFunctionIdRouteChildren {
+  PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteWithChildren
   PublicProjectsProjectIdFunctionsFunctionIdDomainsRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteWithChildren
   PublicProjectsProjectIdFunctionsFunctionIdExecutionsRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdExecutionsRoute
   PublicProjectsProjectIdFunctionsFunctionIdSecurityRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSecurityRoute
   PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteWithChildren
   PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute
   PublicProjectsProjectIdFunctionsFunctionIdIndexRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
-  PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute
 }
 
 const PublicProjectsProjectIdFunctionsFunctionIdRouteChildren: PublicProjectsProjectIdFunctionsFunctionIdRouteChildren =
   {
+    PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRoute:
+      PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteWithChildren,
     PublicProjectsProjectIdFunctionsFunctionIdDomainsRoute:
       PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteWithChildren,
     PublicProjectsProjectIdFunctionsFunctionIdExecutionsRoute:
@@ -10486,8 +10546,6 @@ const PublicProjectsProjectIdFunctionsFunctionIdRouteChildren: PublicProjectsPro
       PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute,
     PublicProjectsProjectIdFunctionsFunctionIdIndexRoute:
       PublicProjectsProjectIdFunctionsFunctionIdIndexRoute,
-    PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute:
-      PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute,
   }
 
 const PublicProjectsProjectIdFunctionsFunctionIdRouteWithChildren =
