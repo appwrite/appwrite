@@ -39,7 +39,7 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
           BEFORE: ${{ github.event.before }}
           MERGE_BASE: ${{ github.event.merge_group.base_sha }}
-        run: bash .github/scripts/changes.sh
+        run: node .github/scripts/changes.mjs
 
   checks:
     name: Console / Checks
