@@ -31,9 +31,10 @@ pub enum Error {
     /// `Utopia\Auth\Verifiers\VerificationException`.
     #[error("{0}")]
     Verification(String),
-    /// `Utopia\Auth\OAuth2\InvalidPromptException`.
-    #[error("{0}")]
-    InvalidPrompt(String),
+    /// `Utopia\Auth\OAuth2\InvalidPromptException`. Its message quotes the
+    /// request's prompt value, which need not be UTF-8.
+    #[error("{}", String::from_utf8_lossy(.0))]
+    InvalidPrompt(Vec<u8>),
     /// `Utopia\Auth\OAuth2\InvalidRequestUriException`.
     #[error("{0}")]
     InvalidRequestUri(String),
@@ -82,9 +83,17 @@ impl Error {
         }
     }
 
-    /// The message, as PHP's `getMessage()`.
-    pub fn message(&self) -> &str {
+    /// The message as PHP's `getMessage()` returns it (bytes: it can quote input).
+    pub fn message_bytes(&self) -> &[u8] {
         match self {
+            Error::InvalidPrompt(m) => m,
+            other => other.text(),
+        }
+    }
+
+    fn text(&self) -> &[u8] {
+        match self {
+            Error::InvalidPrompt(m) => m,
             Error::Exception(m)
             | Error::InvalidArgument(m)
             | Error::Runtime(m)
@@ -94,13 +103,17 @@ impl Error {
             | Error::Type(m)
             | Error::Json(m)
             | Error::Verification(m)
-            | Error::InvalidPrompt(m)
             | Error::InvalidRequestUri(m)
             | Error::InvalidResource(m)
             | Error::InvalidClientMetadata(m)
             | Error::Passkey(m)
-            | Error::Counter(m) => m,
+            | Error::Counter(m) => m.as_bytes(),
         }
+    }
+
+    /// The message, as PHP's `getMessage()` (lossy where it quotes non-UTF-8 input).
+    pub fn message(&self) -> std::borrow::Cow<'_, str> {
+        String::from_utf8_lossy(self.text())
     }
 
     pub(crate) fn json(e: php_std::json::Error) -> Error {

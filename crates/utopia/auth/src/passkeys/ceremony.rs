@@ -997,7 +997,7 @@ impl Ceremony {
         if auth.sign_count != 0 || record.counter != 0 {
             Counter
                 .check(record.counter, record.backup_eligible, auth.sign_count)
-                .map_err(|e| e.message().to_owned())?;
+                .map_err(|e| e.message().into_owned())?;
         }
         record.counter = auth.sign_count;
         record.backup_eligible = Some(auth.has(FLAG_BE));

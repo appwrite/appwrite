@@ -154,6 +154,27 @@
           }
         }
       ]
+    },
+    {
+      "name": "an invalid value that is not UTF-8 is quoted as is",
+      "steps": [
+        {
+          "op": "prompts.from_string",
+          "args": {
+            "prompt": {
+              "$bytes": "bG9naW4g/w=="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidPromptException",
+              "message": {
+                "$bytes": "SW52YWxpZCBwcm9tcHQgdmFsdWUgJ/8nLg=="
+              }
+            }
+          }
+        }
+      ]
     }
   ]
 }

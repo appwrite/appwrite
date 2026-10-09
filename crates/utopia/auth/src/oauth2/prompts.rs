@@ -12,10 +12,7 @@ impl Prompts {
         let mut prompts = Vec::new();
         for value in prompt.split(|b| *b == b' ').filter(|v| !v.is_empty()) {
             let Some(p) = Prompt::from_name(value) else {
-                return Err(Error::InvalidPrompt(format!(
-                    "Invalid prompt value '{}'.",
-                    String::from_utf8_lossy(value)
-                )));
+                return Err(Error::InvalidPrompt([b"Invalid prompt value '", value, b"'."].concat()));
             };
             if !prompts.contains(&p) {
                 prompts.push(p);

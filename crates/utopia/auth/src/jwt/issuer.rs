@@ -56,7 +56,7 @@ fn sign(
     typ: &str,
     alg: &str,
     key_id: Option<&[u8]>,
-    claims: &Array,
+    claims: Array,
     signature: impl FnOnce(&[u8]) -> Result<Vec<u8>, Error>,
 ) -> Result<String, Error> {
     let mut header = Array::with_capacity(3);
@@ -67,7 +67,7 @@ fn sign(
     }
     let encode = |v: Zval| json::encode(&v, Flags::THROW_ON_ERROR, json::DEFAULT_DEPTH).map_err(Error::json);
     let header = encode(Zval::Array(header))?;
-    let claims = encode(Zval::Array(claims.clone()))?;
+    let claims = encode(Zval::Array(claims))?;
     let input = format!("{}.{}", base64url_encode(header.as_bytes()), base64url_encode(claims.as_bytes()));
     let signature = signature(input.as_bytes())?;
     Ok(format!("{input}.{}", base64url_encode(&signature)))
@@ -116,7 +116,7 @@ impl Symmetric {
     }
 
     /// Signs `claims` as an HS256 JWS of type `typ`.
-    pub fn sign(&self, typ: &str, claims: &Array) -> Result<String, Error> {
+    pub fn sign(&self, typ: &str, claims: Array) -> Result<String, Error> {
         sign(typ, "HS256", self.key_id.as_deref(), claims, |input| {
             let mut mac = Hmac::<Sha256>::new_from_slice(&self.secret).expect("HMAC takes any key length");
             mac.update(input);
@@ -192,7 +192,7 @@ impl Asymmetric {
     }
 
     /// Signs `claims` as an RS256 JWS of type `typ`.
-    pub fn sign(&self, typ: &str, claims: &Array) -> Result<String, Error> {
+    pub fn sign(&self, typ: &str, claims: Array) -> Result<String, Error> {
         let kid = self.key_id()?;
         sign(typ, "RS256", Some(&kid), claims, |input| {
             let key = key::private_key(&self.private_key)
@@ -235,7 +235,7 @@ impl Jwt {
         set(&mut out, Claim::Audience, audience.to_zval());
         set(&mut out, Claim::IssuedAt, Zval::Int(now));
         set(&mut out, Claim::Expiration, add(now, duration));
-        self.0.sign("JWT", &out)
+        self.0.sign("JWT", out)
     }
 }
 
@@ -268,7 +268,7 @@ impl RefreshToken {
         if !scopes.is_empty() {
             set(&mut out, Claim::Scope, Zval::String(scopes.join(&b' ')));
         }
-        self.0.sign("JWT", &out)
+        self.0.sign("JWT", out)
     }
 }
 
@@ -314,7 +314,7 @@ impl AccessToken {
         if !scopes.is_empty() {
             set(&mut out, Claim::Scope, Zval::String(scopes.join(&b' ')));
         }
-        self.0.sign("at+jwt", &out)
+        self.0.sign("at+jwt", out)
     }
 }
 
@@ -360,7 +360,7 @@ impl IdToken {
         if let Some(code) = present(code) {
             set(&mut out, Claim::CodeHash, Zval::String(left_half_hash(code).into_bytes()));
         }
-        self.0.sign("JWT", &out)
+        self.0.sign("JWT", out)
     }
 }
 

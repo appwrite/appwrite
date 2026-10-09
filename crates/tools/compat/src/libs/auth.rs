@@ -177,7 +177,7 @@ fn list(value: Option<&Value>) -> Vec<Zval> {
 }
 
 fn err(e: Error) -> Outcome {
-    Outcome::err(e.php_class(), e.message())
+    Outcome::err_bytes(e.php_class(), e.message_bytes())
 }
 
 fn bytes(v: Vec<u8>) -> Outcome {
