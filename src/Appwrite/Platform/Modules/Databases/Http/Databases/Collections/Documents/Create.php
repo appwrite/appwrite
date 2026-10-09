@@ -285,7 +285,7 @@ class Create extends Action
         };
 
         $dbForDatabases = $getDatabasesDB($database, $collection);
-        $relationshipValues = new RelationshipValues($dbForProject, $database, $authorization, $isAPIKey || $isPrivilegedUser ? null : $dbForDatabases);
+        $relationshipValues = new RelationshipValues($dbForProject, $database, $authorization, $isAPIKey || $isPrivilegedUser ? null : $dbForDatabases, fn (array $relation): array => $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser));
 
         $documents = \array_map(function ($document) use ($collection, $permissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser, $relationshipValues) {
             $document['$collection'] = $collection->getId();
@@ -307,7 +307,6 @@ class Create extends Action
             $document['$id'] = $sourceId === CustomId::UNIQUE ? Id::unique() : $sourceId;
             $document = $relationshipValues->prepare($document, $collection);
             $document = $this->removeReadonlyAttributes($document, $isAPIKey || $isPrivilegedUser);
-            $this->validateTimestamps($document);
             $document = new Document($document);
             $setPermissions($document, $permissions);
 
@@ -382,6 +381,10 @@ class Create extends Action
                     ->dynamic($mockDocument, $this->getResponseModel());
             }
             return;
+        }
+
+        foreach ($documents as $document) {
+            $this->validateTimestamps($document->getArrayCopy(), $dbForDatabases);
         }
 
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();

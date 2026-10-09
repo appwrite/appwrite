@@ -194,9 +194,8 @@ class Upsert extends Action
 
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions ?? [];
-        $data = (new RelationshipValues($dbForProject, $database, $authorization, $isAPIKey || $isPrivilegedUser ? null : $dbForDatabases))->prepare($data, $collection);
+        $data = (new RelationshipValues($dbForProject, $database, $authorization, $isAPIKey || $isPrivilegedUser ? null : $dbForDatabases, fn (array $relation): array => $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser)))->prepare($data, $collection);
         $data = $this->removeReadonlyAttributes($data, $isAPIKey || $isPrivilegedUser);
-        $this->validateTimestamps($data);
         $newDocument = new Document($data);
 
         // Handle transaction staging
@@ -263,6 +262,8 @@ class Upsert extends Action
                 ->dynamic($mockDocument, $this->getResponseModel());
             return;
         }
+
+        $this->validateTimestamps($data, $dbForDatabases);
 
         $upserted = [];
         try {

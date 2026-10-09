@@ -269,6 +269,38 @@ final class RelationshipValuesTest extends TestCase
         $this->assertSame($permissions, $prepared['artist']['$permissions'], 'API keys and privileged users are not checked');
     }
 
+    public function testTheStripRunsOnRelatedDocumentsAtEveryDepthAndNowhereElse(): void
+    {
+        $collections = self::collections();
+        $values = new RelationshipValues(
+            $this->catalog($collections),
+            new Document(['$id' => 'music', '$sequence' => self::DATABASE_SEQUENCE]),
+            new Authorization(),
+            strip: static function (array $relation): array {
+                unset($relation['$databaseId']);
+
+                return $relation;
+            },
+        );
+
+        $prepared = $values->prepare([
+            '$databaseId' => 'top',
+            'title' => ['$id' => 'value', '$databaseId' => 'kept'],
+            'artist' => [
+                '$id' => 'artist1',
+                '$databaseId' => 'music',
+                'label' => ['$id' => 'label1', '$databaseId' => 'music'],
+            ],
+            'tracks' => [['$id' => 'track1', '$databaseId' => 'music']],
+        ], $collections['albums']);
+
+        $this->assertSame('top', $prepared['$databaseId'], 'The caller strips the top-level document itself');
+        $this->assertSame('kept', $prepared['title']['$databaseId'], 'Main stripped only along relationships');
+        $this->assertArrayNotHasKey('$databaseId', $prepared['artist']);
+        $this->assertArrayNotHasKey('$databaseId', $prepared['artist']['label']);
+        $this->assertArrayNotHasKey('$databaseId', $prepared['tracks'][0]);
+    }
+
     /**
      * @param array<string, mixed> $document
      */

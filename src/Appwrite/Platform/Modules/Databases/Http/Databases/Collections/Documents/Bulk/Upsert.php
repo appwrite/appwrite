@@ -120,7 +120,6 @@ class Upsert extends Action
                 $document = $this->parseOperators($document, $collection);
             }
             $document = $this->removeReadonlyAttributes($document, privileged: true);
-            $this->validateTimestamps($document);
             $documents[$key] = new Document($document);
         }
 
@@ -173,6 +172,9 @@ class Upsert extends Action
         }
 
         $dbForDatabases = $getDatabasesDB($database);
+        foreach ($documents as $document) {
+            $this->validateTimestamps($document->getArrayCopy(), $dbForDatabases);
+        }
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $upserted = [];
 

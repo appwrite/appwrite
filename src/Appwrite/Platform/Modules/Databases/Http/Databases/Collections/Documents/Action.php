@@ -205,17 +205,21 @@ abstract class Action extends DatabasesAction
     }
 
     /**
+     * Refuses a timestamp the database's own structure check refuses, with its message, before the Mongo adapter
+     * casts it and fails.
+     *
      * @param array<string, mixed> $data
      */
-    protected function validateTimestamps(array $data): void
+    protected function validateTimestamps(array $data, Database $database): void
     {
-        $validator = new DatetimeValidator();
+        $limits = $database->profile()->limits;
+        $validator = new DatetimeValidator(min: $limits->minDateTime, max: $limits->maxDateTime);
         foreach (['$createdAt', '$updatedAt'] as $attribute) {
             if (!isset($data[$attribute]) || $data[$attribute] === '') {
                 continue;
             }
             if (!\is_string($data[$attribute]) || !$validator->isValid($data[$attribute])) {
-                throw new Exception($this->getStructureException(), $validator->getDescription());
+                throw new Exception($this->getStructureException(), 'Invalid document structure: Attribute "' . $attribute . '" has invalid type. ' . $validator->getDescription());
             }
         }
     }
@@ -364,19 +368,6 @@ abstract class Action extends DatabasesAction
         if (!$privileged) {
             foreach ($this->removableAttributes['privileged'] ?? [] as $attribute) {
                 unset($document[$attribute]);
-            }
-        }
-
-        foreach ($document as $key => $value) {
-            if ($value instanceof Document || (\is_array($value) && !\array_is_list($value) && isset($value['$id']))) {
-                $document[$key] = $this->removeReadonlyAttributes($value, $privileged);
-            } elseif (\is_array($value) && \array_is_list($value)) {
-                foreach ($value as $index => $child) {
-                    if ($child instanceof Document || (\is_array($child) && isset($child['$id']))) {
-                        $value[$index] = $this->removeReadonlyAttributes($child, $privileged);
-                    }
-                }
-                $document[$key] = $value;
             }
         }
 

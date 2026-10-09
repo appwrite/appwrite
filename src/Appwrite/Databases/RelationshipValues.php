@@ -16,6 +16,8 @@ use Utopia\Database\Validator\Authorization;
  *
  * Given the database holding the related documents, the permissions a nested document carries are checked against
  * the stored related document, so a caller can only grant roles it holds. API keys and privileged users pass none.
+ *
+ * Given a read-only filter, it runs on every nested related document, as main stripped them along relationships.
  */
 final readonly class RelationshipValues
 {
@@ -24,6 +26,7 @@ final readonly class RelationshipValues
         private Document $database,
         private Authorization $authorization,
         private ?Database $dbForDatabases = null,
+        private ?\Closure $strip = null,
     ) {
     }
 
@@ -53,6 +56,9 @@ final readonly class RelationshipValues
                 $this->validate($relation);
 
                 if ($isDocument) {
+                    if ($this->strip !== null) {
+                        $relation = ($this->strip)($relation);
+                    }
                     $relatedCollection ??= $this->authorization->skip(fn (): Document => $this->dbForProject->getDocument(
                         'database_' . $this->database->getSequence(),
                         (string) $relationship->getAttribute('relatedCollection', '')
