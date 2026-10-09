@@ -17,6 +17,7 @@ path = "src/bin/compat-driver.rs"
 
 [dependencies]
 base64.workspace = true
+bytes.workspace = true
 futures-util.workspace = true
 redis.workspace = true
 serde.workspace = true

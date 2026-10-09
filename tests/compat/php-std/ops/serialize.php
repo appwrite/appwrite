@@ -2,6 +2,10 @@
 
 // serialize.*: serialize/unserialize and var_export formats.
 
+use Tests\Compat\PhpStd\Typed;
+
+require_once __DIR__ . '/../Typed.php';
+
 /**
  * Runs $call and returns its result with the warnings and deprecations it
  * emitted (unserialize() reports its errors that way).
@@ -25,15 +29,21 @@ $withWarnings = static function (callable $call): array {
 };
 
 return [
-    'serialize.serialize' => fn (array $a) => serialize($a['v']),
+    'serialize.serialize' => fn (array $a) => serialize(Typed::decode($a['v'])),
     // The same call; the Rust side serializes the serde_json::Value model directly.
     'serialize.serialize_value' => fn (array $a) => serialize($a['v']),
-    'serialize.var_export' => fn (array $a) => var_export($a['v'], true),
+    'serialize.var_export' => fn (array $a) => var_export(Typed::decode($a['v']), true),
     'serialize.var_export_value' => fn (array $a) => var_export($a['v'], true),
     'serialize.unserialize' => function (array $a) use ($withWarnings) {
         [$value, $warnings] = $withWarnings(fn () => unserialize($a['s'], $a['options'] ?? []));
 
         return ['value' => $value, 'warnings' => $warnings];
+    },
+    // unserialize() as an exact typed dump (stdClass with properties, key types).
+    'serialize.unserialize_typed' => function (array $a) use ($withWarnings) {
+        [$value, $warnings] = $withWarnings(fn () => unserialize($a['s'], $a['options'] ?? []));
+
+        return ['value' => Typed::dump($value), 'warnings' => $warnings];
     },
     // serialize(unserialize($s)): compares what was read byte for byte (binary keys included).
     'serialize.roundtrip' => function (array $a) use ($withWarnings) {

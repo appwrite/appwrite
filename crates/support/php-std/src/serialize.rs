@@ -5,19 +5,21 @@
 //!
 //! | PHP | Rust |
 //! |---|---|
-//! | `serialize($value)` | [`serialize`] (any [`PhpValue`]: [`Zval`] or `serde_json::Value`) |
+//! | `serialize($value)` | [`serialize`] ([`Value`]) |
 //! | `unserialize($data, ['max_depth' => $n])` | [`unserialize`], [`Options`] |
 //! | `var_export($value, true)` | [`var_export`] |
 //! | warnings `unserialize()` emits | [`Unserialized::warnings`], [`Error::Failed`] |
 //!
 //! Values are scalars, arrays and `stdClass` objects. Floats use
-//! `serialize_precision = -1` (`d:0.1;`, `d:1.0E+25;`, `d:INF;`).
+//! `serialize_precision = -1` (`d:0.1;`, `d:1.0E+25;`, `d:INF;`). An
+//! [`Value::Ext`] object is written as its [`Extension::to_array`] (PHP code
+//! serializes `getArrayCopy()`, not the object).
 //!
 //! `unserialize` reads every format PHP writes for those values (`N`, `b`,
 //! `i`, `d`, `s`, `S`, `a`, `O`/`C` of `stdClass`, and the `r`/`R`
 //! back-references), with PHP's error offsets, warnings and depth limit.
 //! Back-references resolve to the value at that slot when they are read,
-//! which is what PHP produces for data `serialize` writes; [`Zval`] has no
+//! which is what PHP produces for data `serialize` writes; [`Value`] has no
 //! references or object identity, so they become copies. Objects of other
 //! classes, enums (`E:`), and back-references to a container that is still
 //! being read (recursive structures) cannot be represented and fail with
@@ -28,41 +30,46 @@ use std::fmt;
 use indexmap::IndexMap;
 
 use crate::number;
-use crate::zval::{Array, Key, KeyRef, Object, PhpValue, View, Zval};
+use crate::types::{Array, ArrayKey, Extension, KeyRef, Str, Value};
 
 // ---------------------------------------------------------------------------
 // serialize (ext/standard/var.c)
 // ---------------------------------------------------------------------------
 
 /// `serialize($value)`: PHP's byte string.
-pub fn serialize<V: PhpValue>(value: &V) -> Vec<u8> {
+pub fn serialize<X: Extension>(value: &Value<X>) -> Vec<u8> {
     let mut out = Vec::new();
     serialize_into(&mut out, value);
     out
 }
 
-fn serialize_into<V: PhpValue>(out: &mut Vec<u8>, value: &V) {
-    match value.view() {
-        View::Null => out.extend_from_slice(b"N;"),
-        View::Bool(b) => out.extend_from_slice(if b { b"b:1;" } else { b"b:0;" }),
-        View::Int(i) => {
+/// `serialize($value)`, appended to `out`.
+pub fn serialize_into<X: Extension>(out: &mut Vec<u8>, value: &Value<X>) {
+    match value {
+        Value::Null => out.extend_from_slice(b"N;"),
+        Value::Bool(b) => out.extend_from_slice(if *b { b"b:1;" } else { b"b:0;" }),
+        Value::Int(i) => {
             out.extend_from_slice(b"i:");
             out.extend_from_slice(i.to_string().as_bytes());
             out.push(b';');
         }
-        View::Float(f) => {
+        Value::Float(f) => {
             out.extend_from_slice(b"d:");
-            out.extend_from_slice(number::gcvt(f, -1, 'E').as_bytes());
+            out.extend_from_slice(number::gcvt(*f, -1, 'E').as_bytes());
             out.push(b';');
         }
-        View::Str(s) => serialize_string(out, s),
-        View::Array(entries) => {
+        Value::Str(s) => serialize_string(out, s),
+        Value::Array(a) => {
             out.extend_from_slice(b"a:");
-            nested::<V>(out, entries);
+            nested(out, a);
         }
-        View::Object(entries) => {
+        Value::Object(a) => {
             out.extend_from_slice(b"O:8:\"stdClass\":");
-            nested::<V>(out, entries);
+            nested(out, a);
+        }
+        Value::Ext(x) => {
+            out.extend_from_slice(b"a:");
+            nested(out, &x.to_array());
         }
     }
 }
@@ -76,10 +83,10 @@ fn serialize_string(out: &mut Vec<u8>, s: &[u8]) {
 }
 
 /// `php_var_serialize_nested_data`.
-fn nested<'a, V: PhpValue + 'a>(out: &mut Vec<u8>, entries: V::Entries<'a>) {
+fn nested<X: Extension>(out: &mut Vec<u8>, entries: &Array<X>) {
     out.extend_from_slice(entries.len().to_string().as_bytes());
     out.extend_from_slice(b":{");
-    for (key, value) in entries {
+    for (key, value) in entries.iter() {
         match key {
             KeyRef::Int(i) => {
                 out.extend_from_slice(b"i:");
@@ -99,7 +106,7 @@ fn nested<'a, V: PhpValue + 'a>(out: &mut Vec<u8>, entries: V::Entries<'a>) {
 
 /// `var_export($value, true)`: PHP source code for the value, as bytes
 /// (string contents are copied verbatim).
-pub fn var_export<V: PhpValue>(value: &V) -> Vec<u8> {
+pub fn var_export<X: Extension>(value: &Value<X>) -> Vec<u8> {
     let mut out = Vec::new();
     export(&mut out, value, 1);
     out
@@ -125,27 +132,29 @@ fn quoted(out: &mut Vec<u8>, s: &[u8], nul: bool) {
 }
 
 /// `php_var_export_ex`.
-fn export<V: PhpValue>(out: &mut Vec<u8>, value: &V, level: usize) {
-    match value.view() {
-        View::Null => out.extend_from_slice(b"NULL"),
-        View::Bool(b) => out.extend_from_slice(if b { b"true" } else { b"false" }),
-        View::Int(i64::MIN) => out.extend_from_slice(b"-9223372036854775807-1"),
-        View::Int(i) => out.extend_from_slice(i.to_string().as_bytes()),
-        View::Float(f) => {
+fn export<X: Extension>(out: &mut Vec<u8>, value: &Value<X>, level: usize) {
+    match value {
+        Value::Null => out.extend_from_slice(b"NULL"),
+        Value::Bool(b) => out.extend_from_slice(if *b { b"true" } else { b"false" }),
+        Value::Int(i64::MIN) => out.extend_from_slice(b"-9223372036854775807-1"),
+        Value::Int(i) => out.extend_from_slice(i.to_string().as_bytes()),
+        Value::Float(f) => {
+            let f = *f;
             let s = number::gcvt(f, -1, 'E');
             out.extend_from_slice(s.as_bytes());
             if f.is_finite() && !s.contains('.') {
                 out.extend_from_slice(b".0");
             }
         }
-        View::Str(s) => quoted(out, s, true),
-        View::Array(entries) => {
+        Value::Str(s) => quoted(out, s, true),
+        Value::Ext(x) => export(out, &Value::Array(x.to_array()), level),
+        Value::Array(entries) => {
             if level > 1 {
                 out.push(b'\n');
                 spaces(out, level - 1);
             }
             out.extend_from_slice(b"array (\n");
-            for (key, v) in entries {
+            for (key, v) in entries.iter() {
                 spaces(out, level + 1);
                 match key {
                     KeyRef::Int(i) => out.extend_from_slice(i.to_string().as_bytes()),
@@ -160,13 +169,13 @@ fn export<V: PhpValue>(out: &mut Vec<u8>, value: &V, level: usize) {
             }
             out.push(b')');
         }
-        View::Object(entries) => {
+        Value::Object(entries) => {
             if level > 1 {
                 out.push(b'\n');
                 spaces(out, level - 1);
             }
             out.extend_from_slice(b"(object) array(\n");
-            for (key, v) in entries {
+            for (key, v) in entries.iter() {
                 spaces(out, level + 2);
                 match key {
                     KeyRef::Int(i) => out.extend_from_slice(i.to_string().as_bytes()),
@@ -219,7 +228,7 @@ impl Default for Options {
 /// (for example `unserialize(): Extra data starting at offset 4 of 5 bytes`).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Unserialized {
-    pub value: Zval,
+    pub value: Value,
     pub warnings: Vec<String>,
 }
 
@@ -232,7 +241,7 @@ pub enum Error {
     Failed { offset: Option<usize>, warnings: Vec<String> },
     /// An invalid option: PHP throws `ValueError` with this message.
     Value(String),
-    /// Data PHP reads into something [`Zval`] cannot hold: objects of other
+    /// Data PHP reads into something [`Value`] cannot hold: objects of other
     /// classes (or `__PHP_Incomplete_Class`), enums, or a back-reference to
     /// a container still being read (a recursive structure).
     Unsupported(&'static str),
@@ -306,13 +315,13 @@ type CellId = usize;
 
 enum Cell {
     Null,
-    Value(Zval),
+    Value(Value),
     Array {
-        entries: IndexMap<Key, CellId>,
+        entries: IndexMap<ArrayKey, CellId>,
         done: bool,
     },
     Object {
-        props: IndexMap<Vec<u8>, CellId>,
+        props: IndexMap<Str, CellId>,
         done: bool,
     },
     /// A back-reference that makes the value recursive (PHP shares the
@@ -341,7 +350,7 @@ const HT_MAX_SIZE: i64 = 0x4000_0000;
 /// What a key read produced (`php_var_unserialize_internal` without `var_hash`).
 enum KeyValue {
     Int(i64),
-    Str(Vec<u8>),
+    Str(Str),
     /// A value that cannot be a key (`N;`, `b:..;`, `d:..;`).
     Other,
 }
@@ -443,7 +452,7 @@ impl Unserializer<'_> {
         Some(mantissa_end)
     }
 
-    fn set(&mut self, cell: CellId, value: Zval) {
+    fn set(&mut self, cell: CellId, value: Value) {
         self.cells[cell] = Cell::Value(value);
     }
 
@@ -484,20 +493,20 @@ impl Unserializer<'_> {
             }
             (b'N', b';') => {
                 *p = start + 2;
-                self.set(cell, Zval::Null);
+                self.set(cell, Value::Null);
                 Ok(true)
             }
             (b'b', b':') if matches!(self.at(start + 2), b'0' | b'1') && self.at(start + 3) == b';' => {
                 *p = start + 4;
                 let b = self.at(start + 2) == b'1';
-                self.set(cell, Zval::Bool(b));
+                self.set(cell, Value::Bool(b));
                 Ok(true)
             }
             (b'i', b':') => {
                 let Some(end) = self.iv(start + 2).filter(|&e| self.at(e) == b';') else { return Ok(false) };
                 *p = end + 1;
                 let (i, _) = self.parse_iv2(start + 2);
-                self.set(cell, Zval::Int(i));
+                self.set(cell, Value::Int(i));
                 Ok(true)
             }
             (b'd', b':') => {
@@ -506,19 +515,19 @@ impl Unserializer<'_> {
                 {
                     if rest.starts_with(text) {
                         *p = start + 2 + text.len();
-                        self.set(cell, Zval::Float(value));
+                        self.set(cell, Value::Float(value));
                         return Ok(true);
                     }
                 }
                 let Some(end) = self.number(start + 2).filter(|&e| self.at(e) == b';') else { return Ok(false) };
                 *p = end + 1;
                 let text = std::str::from_utf8(&self.buf[start + 2..end]).unwrap_or("0");
-                self.set(cell, Zval::Float(strtod(text)));
+                self.set(cell, Value::Float(strtod(text)));
                 Ok(true)
             }
             (b's' | b'S', b':') => {
                 let Some(s) = self.string(p, start)? else { return Ok(false) };
-                self.set(cell, Zval::String(s));
+                self.set(cell, Value::Str(s));
                 Ok(true)
             }
             (b'a', b':') => {
@@ -551,7 +560,7 @@ impl Unserializer<'_> {
 
     /// `"s:" uiv ":" ["]` and `"S:" uiv ":" ["]` at `start`: the string, or
     /// `None` after setting `p` where PHP reports the error.
-    fn string(&mut self, p: &mut usize, start: usize) -> Result<Option<Vec<u8>>, Error> {
+    fn string(&mut self, p: &mut usize, start: usize) -> Result<Option<Str>, Error> {
         let escaped = self.at(start) == b'S';
         let Some(cursor) = self.uiv_then(start + 2, b':').filter(|&e| self.at(e) == b'"').map(|e| e + 1) else {
             return Ok(None);
@@ -585,9 +594,9 @@ impl Unserializer<'_> {
                 }
                 i += 1;
             }
-            (out, i)
+            (Str::from(out), i)
         } else {
-            (self.buf[cursor..cursor + len].to_vec(), cursor + len)
+            (Str::copy_from(&self.buf[cursor..cursor + len]), cursor + len)
         };
         if self.at(cursor) != b'"' {
             *p = cursor;
@@ -701,7 +710,7 @@ impl Unserializer<'_> {
             }
             let class = if incomplete { "__PHP_Incomplete_Class" } else { "stdClass" };
             self.warn(format!("Class {class} has no unserializer"));
-            self.cells[cell] = Cell::Value(Zval::Object(Object::new()));
+            self.cells[cell] = Cell::Value(Value::Object(Array::new()));
             *p += datalen as usize + 1;
             return Ok(true);
         }
@@ -838,9 +847,9 @@ impl Unserializer<'_> {
                     let Some(key) = self.key(p)? else { return Ok(false) };
                     target = match (key, object) {
                         (KeyValue::Other, _) => return Ok(false),
-                        (KeyValue::Int(i), false) => self.child(cell, Key::Int(i)),
-                        (KeyValue::Str(s), false) => self.child(cell, Key::from_bytes(&s)),
-                        (KeyValue::Int(i), true) => self.prop(cell, i.to_string().into_bytes()),
+                        (KeyValue::Int(i), false) => self.child(cell, ArrayKey::Int(i)),
+                        (KeyValue::Str(s), false) => self.child(cell, ArrayKey::normalize(s)),
+                        (KeyValue::Int(i), true) => self.prop(cell, Str::from(i.to_string())),
                         (KeyValue::Str(s), true) => self.prop(cell, s),
                     };
                     break;
@@ -859,7 +868,7 @@ impl Unserializer<'_> {
     }
 
     /// The location of `key` in the array at `cell` (reused when the key repeats).
-    fn child(&mut self, cell: CellId, key: Key) -> CellId {
+    fn child(&mut self, cell: CellId, key: ArrayKey) -> CellId {
         let next = self.cells.len();
         let Cell::Array { entries, .. } = &mut self.cells[cell] else { unreachable!() };
         let id = *entries.entry(key).or_insert(next);
@@ -871,7 +880,7 @@ impl Unserializer<'_> {
         id
     }
 
-    fn prop(&mut self, cell: CellId, name: Vec<u8>) -> CellId {
+    fn prop(&mut self, cell: CellId, name: Str) -> CellId {
         let next = self.cells.len();
         let Cell::Object { props, .. } = &mut self.cells[cell] else { unreachable!() };
         let id = *props.entry(name).or_insert(next);
@@ -888,21 +897,21 @@ impl Unserializer<'_> {
         loop {
             match &self.cells[cell] {
                 Cell::Recursive(target) => cell = *target,
-                Cell::Object { .. } | Cell::Value(Zval::Object(_)) => return true,
+                Cell::Object { .. } | Cell::Value(Value::Object(_)) => return true,
                 _ => return false,
             }
         }
     }
 
     /// The value at a location now (without recursion).
-    fn materialize(&self, root: CellId) -> Result<Zval, Error> {
+    fn materialize(&self, root: CellId) -> Result<Value, Error> {
         enum Slot<'c> {
-            Key(&'c Key),
-            Prop(&'c [u8]),
+            Key(&'c ArrayKey),
+            Prop(&'c Str),
         }
         enum Partial {
             Array(Array),
-            Object(Object),
+            Object(Array),
         }
         struct Frame<'c> {
             partial: Partial,
@@ -911,11 +920,11 @@ impl Unserializer<'_> {
         }
         let mut stack: Vec<Frame<'_>> = Vec::new();
         let mut visit = Some(root);
-        let mut done: Option<Zval> = None;
+        let mut done: Option<Value> = None;
         loop {
             if let Some(cell) = visit.take() {
                 match &self.cells[cell] {
-                    Cell::Null => done = Some(Zval::Null),
+                    Cell::Null => done = Some(Value::Null),
                     Cell::Value(v) => done = Some(v.clone()),
                     Cell::Array { done: false, .. } | Cell::Object { done: false, .. } | Cell::Recursive(_) => {
                         return Err(Error::Unsupported("reference to a container that is still being read"));
@@ -926,7 +935,7 @@ impl Unserializer<'_> {
                         next: 0,
                     }),
                     Cell::Object { props, .. } => stack.push(Frame {
-                        partial: Partial::Object(Object::new()),
+                        partial: Partial::Object(Array::new()),
                         children: props.iter().map(|(k, &c)| (Slot::Prop(k), c)).collect(),
                         next: 0,
                     }),
@@ -935,8 +944,12 @@ impl Unserializer<'_> {
             let Some(frame) = stack.last_mut() else { return Ok(done.unwrap_or_default()) };
             if let Some(value) = done.take() {
                 match (&mut frame.partial, &frame.children[frame.next - 1].0) {
-                    (Partial::Array(a), Slot::Key(k)) => a.insert((*k).clone(), value),
-                    (Partial::Object(o), Slot::Prop(name)) => o.set(name.to_vec(), value),
+                    (Partial::Array(a), Slot::Key(k)) => {
+                        a.set((*k).clone(), value);
+                    }
+                    (Partial::Object(o), Slot::Prop(name)) => {
+                        o.set(ArrayKey::Str((*name).clone()), value);
+                    }
                     _ => unreachable!(),
                 }
             }
@@ -945,8 +958,8 @@ impl Unserializer<'_> {
                 frame.next += 1;
             } else if let Some(frame) = stack.pop() {
                 done = Some(match frame.partial {
-                    Partial::Array(a) => Zval::Array(a),
-                    Partial::Object(o) => Zval::Object(o),
+                    Partial::Array(a) => Value::Array(a),
+                    Partial::Object(o) => Value::Object(o),
                 });
             }
         }
@@ -974,6 +987,8 @@ mod tests {
     use super::*;
     use serde_json::json;
 
+    type V = Value<crate::types::Never>;
+
     fn u(s: &str) -> Result<Unserialized, Error> {
         unserialize(s.as_bytes(), &Options::default())
     }
@@ -982,7 +997,7 @@ mod tests {
     fn serializes_like_php() {
         let v = json!([1.0, 0.1, 1e25, -0.0, "a", {"x": true, "5": null}, {}]);
         assert_eq!(
-            String::from_utf8(serialize(&v)).unwrap(),
+            String::from_utf8(serialize(&V::from_json(&v))).unwrap(),
             r#"a:7:{i:0;d:1;i:1;d:0.1;i:2;d:1.0E+25;i:3;d:-0;i:4;s:1:"a";i:5;a:2:{s:1:"x";b:1;i:5;N;}i:6;O:8:"stdClass":0:{}}"#
         );
     }
@@ -991,20 +1006,20 @@ mod tests {
     fn exports_like_php() {
         let v = json!({"a": [1, {}], "k'": "x\u{0}y"});
         assert_eq!(
-            String::from_utf8(var_export(&v)).unwrap(),
+            String::from_utf8(var_export(&V::from_json(&v))).unwrap(),
             "array (\n  'a' => \n  array (\n    0 => 1,\n    1 => \n    (object) array(\n    ),\n  ),\n  'k\\'' => 'x' . \"\\0\" . 'y',\n)"
         );
-        assert_eq!(String::from_utf8(var_export(&json!(1.0))).unwrap(), "1.0");
-        assert_eq!(String::from_utf8(var_export(&json!(i64::MIN))).unwrap(), "-9223372036854775807-1");
+        assert_eq!(String::from_utf8(var_export(&V::from_json(&json!(1.0)))).unwrap(), "1.0");
+        assert_eq!(String::from_utf8(var_export(&V::from_json(&json!(i64::MIN)))).unwrap(), "-9223372036854775807-1");
     }
 
     #[test]
     fn unserializes_like_php() {
-        assert_eq!(u("i:+0005;").unwrap().value, Zval::Int(5));
-        assert_eq!(u("d:5.;").unwrap().value, Zval::Float(5.0));
-        assert_eq!(u("d:.5e1;").unwrap().value, Zval::Float(5.0));
+        assert_eq!(u("i:+0005;").unwrap().value, Value::Int(5));
+        assert_eq!(u("d:5.;").unwrap().value, Value::Float(5.0));
+        assert_eq!(u("d:.5e1;").unwrap().value, Value::Float(5.0));
         let r = u("a:3:{i:0;i:1;i:0;i:2;i:1;R:2;}").unwrap().value;
-        assert_eq!(r.to_json().unwrap(), json!([2, 2]));
+        assert_eq!(r.to_json(), json!([2, 2]));
         assert_eq!(
             u("i:5;x").unwrap().warnings,
             vec!["unserialize(): Extra data starting at offset 4 of 5 bytes".to_string()]
