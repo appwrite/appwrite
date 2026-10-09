@@ -38,6 +38,10 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       server: ${{ steps.changes.outputs.server }}
+      services: ${{ steps.changes.outputs.services }}
+      groups: ${{ steps.changes.outputs.groups }}
+      databases: ${{ steps.changes.outputs.databases }}
+      modes: ${{ steps.changes.outputs.modes }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -53,7 +57,7 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
           BEFORE: ${{ github.event.before }}
           MERGE_BASE: ${{ github.event.merge_group.base_sha }}
-        run: bash .github/scripts/changes.sh
+        run: node .github/scripts/changes.mjs
 
   dependencies:
     name: Checks / Dependencies
@@ -310,92 +314,6 @@ jobs:
         with:
           sarif_file: semgrep.sarif
           category: 'semgrep-custom'
-
-  matrix:
-    name: Tests / Matrix
-    needs: changes
-    if: needs.changes.outputs.server == 'true'
-    runs-on: ubuntu-24.04
-    outputs:
-      databases: ${{ steps.generate.outputs.databases }}
-      modes: ${{ steps.generate.outputs.modes }}
-      services: ${{ steps.generate.outputs.services }}
-    steps:
-      - name: Generate matrix
-        id: generate
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          script: |
-            const services = [
-              { name: 'Account',           runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Avatars',           runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Console',           runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Databases',         runner: 'e2e-large', functional: false, processes: 3, documentsdb: true, embedding: true },
-              { name: 'TablesDB',          runner: 'e2e-large', functional: false, processes: 3 },
-              { name: 'Functions',         runner: 'e2e',       functional: false, processes: null },
-              { name: 'FunctionsSchedule', runner: 'e2e',       functional: true,  processes: null },
-              { name: 'GraphQL',           runner: 'e2e',       functional: false, processes: null },
-              { name: 'Health',            runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Advisor',           runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Locale',            runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Projects',          runner: 'e2e',       functional: true,  processes: null, documentsdb: true },
-              { name: 'Realtime',          runner: 'e2e',       functional: false, processes: null, documentsdb: true },
-              { name: 'Sites',             runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Proxy',             runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Storage',           runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Tokens',            runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Teams',             runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Usage',             runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Users',             runner: 'e2e',       functional: true,  processes: null },
-              { name: 'ProjectWebhooks',   runner: 'e2e',       functional: false, processes: null },
-              { name: 'Webhooks',          runner: 'e2e',       functional: true,  processes: null },
-              { name: 'VCSGitHub',         runner: 'e2e',       functional: true,  processes: null },
-              { name: 'VCSGitea',          runner: 'e2e',       functional: false, processes: null },
-              { name: 'Messaging',         runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Notifications',     runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Migrations',        runner: 'e2e',       functional: true,  processes: 1, documentsdb: true },
-              { name: 'Project',           runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Organization',      runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Presences',         runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Mqtt',              runner: 'e2e',       functional: false, processes: 1 },
-            ];
-            core.setOutput('services', JSON.stringify(services));
-
-            const pr = context.payload.pull_request;
-            const group = context.payload.merge_group;
-            const range = pr
-              ? { base: pr.base.sha, head: pr.head.sha }
-              : group && { base: group.base_sha, head: group.head_sha };
-
-            const isDatabaseVersionChanged = async () => {
-              const getContent = (ref) => github.rest.repos.getContent({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                path: 'composer.lock',
-                ref,
-              });
-
-              const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
-              const [{ data: base }, { data: head }] = await Promise.all([
-                getContent(range.base),
-                getContent(range.head),
-              ]);
-
-              const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
-              return getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
-            };
-
-            const fullMatrix = context.eventName === 'workflow_dispatch'
-              || (range && await isDatabaseVersionChanged());
-
-            if (fullMatrix) {
-              core.setOutput('databases', JSON.stringify(['MariaDB', 'PostgreSQL', 'MongoDB']));
-              core.setOutput('modes', JSON.stringify(['dedicated', 'shared']));
-              return;
-            }
-
-            core.setOutput('databases', JSON.stringify(['PostgreSQL']));
-            core.setOutput('modes', JSON.stringify(['dedicated']));
 
   packages:
     name: Packages / Changed
@@ -708,16 +626,17 @@ jobs:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
     runs-on: gcrunner=${{ github.run_id }}/runner=${{ matrix.service.runner }}
     timeout-minutes: 20
-    needs: [build, matrix]
+    needs: [build, changes]
+    if: needs.changes.outputs.services != '[]'
     permissions:
       contents: read
       packages: read
     strategy:
       fail-fast: false
       matrix:
-        database: ${{ fromJSON(needs.matrix.outputs.databases) }}
-        mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
-        service: ${{ fromJSON(needs.matrix.outputs.services) }}
+        database: ${{ fromJSON(needs.changes.outputs.databases) }}
+        mode: ${{ fromJSON(needs.changes.outputs.modes) }}
+        service: ${{ fromJSON(needs.changes.outputs.services) }}
     env:
       SERVICE: ${{ matrix.service.name }}
       DATABASE: ${{ matrix.database }}
@@ -863,57 +782,22 @@ jobs:
           echo "=== Appwrite Logs ==="
           docker compose logs --timestamps
 
+  # Lanes that need a special stack. Queue Retry retries a whole queue's failed jobs,
+  # as an operator would, so it runs where no other test's jobs are in flight.
   e2e_grouped:
     name: Tests / E2E / ${{ matrix.config.label }} (${{ matrix.mode }})
     runs-on: gcrunner=${{ github.run_id }}/runner=e2e
     timeout-minutes: 35
-    needs: [build, matrix]
+    needs: [build, changes]
+    if: needs.changes.outputs.groups != '[]'
     permissions:
       contents: read
       packages: read
     strategy:
       fail-fast: false
       matrix:
-        mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
-        config:
-          - label: Abuse
-            group: abuseEnabled
-            path: /usr/src/code/tests/e2e
-            options_abuse: enabled
-            storage_antivirus: disabled
-            compose_profiles: ''
-            wait: ''
-          - label: Screenshots
-            group: screenshots
-            path: /usr/src/code/tests/e2e/Services/Sites
-            options_abuse: disabled
-            storage_antivirus: disabled
-            compose_profiles: ''
-            wait: executor
-          - label: Antivirus
-            group: antivirus
-            path: /usr/src/code/tests/e2e/Services/Storage
-            options_abuse: disabled
-            storage_antivirus: enabled
-            compose_profiles: antivirus
-            wait: clamav
-          - label: S3 Storage
-            group: s3
-            path: /usr/src/code/tests/e2e/Services
-            options_abuse: disabled
-            storage_antivirus: disabled
-            compose_profiles: s3
-            wait: executor
-            storage_device: s3
-          # These tests retry a whole queue's failed jobs, as an operator would, so they run
-          # where no other test's jobs are in flight.
-          - label: Queue Retry
-            group: queueRetry
-            path: /usr/src/code/tests/e2e/Services
-            options_abuse: disabled
-            storage_antivirus: disabled
-            compose_profiles: ''
-            wait: executor
+        mode: ${{ fromJSON(needs.changes.outputs.modes) }}
+        config: ${{ fromJSON(needs.changes.outputs.groups) }}
     env:
       # Shared tables mode connects every pool at boot, including the MongoDB-only DocumentsDB.
       COMPOSE_PROFILES: ${{ matrix.mode == 'shared' && format('mongodb,{0}', matrix.config.compose_profiles) || matrix.config.compose_profiles }}
@@ -1225,7 +1109,6 @@ jobs:
       - locale
       - workflows
       - static-rules
-      - matrix
       - packages
       - package
       - build
