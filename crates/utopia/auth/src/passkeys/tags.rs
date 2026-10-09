@@ -6,6 +6,8 @@
 //! extension, which the reference runtime does not load: their constructor
 //! throws, so they never decode.
 
+use std::collections::HashMap;
+
 use php_std::zval::{Array, Object, Zval};
 
 use super::cbor::{Item, half_float};
@@ -334,6 +336,7 @@ pub(crate) fn normalize(tag: u128, content: &Item) -> Result<Zval, Vec<u8>> {
             }
             Zval::Array(out)
         }
+        40 | 1040 => multi_dimensional(tag == 40, content)?,
         52 | 54 => Zval::String(ip(if tag == 52 { 4 } else { 16 }, content)?),
         100 => match content {
             Item::Int(s) if s.parse::<i64>().ok().and_then(|d| d.checked_mul(86_400)).is_some() => object(DATE_TIME),
@@ -348,12 +351,75 @@ pub(crate) fn normalize(tag: u128, content: &Item) -> Result<Zval, Vec<u8>> {
             })
         }
         1004 => match content {
+            Item::Text(t) if t.contains(&0) => {
+                return fail(
+                    "DateTimeImmutable::createFromFormat(): Argument #2 ($datetime) must not contain any null bytes",
+                );
+            }
             Item::Text(t) if is_date(t) => object(DATE_TIME),
             _ => return fail(DATE),
         },
         t if element_size(t).is_some() => typed_array(t, bytes(content).unwrap_or_default())?,
         _ => passthrough(content)?,
     })
+}
+
+/// `AbstractMultiDimensionalArrayTag::normalize()`: the flat values folded
+/// into nested lists, row-major (tag 40) or column-major (tag 1040). Built
+/// level by level from the innermost lists, so long dimension lists do not
+/// recurse.
+fn multi_dimensional(row_major: bool, content: &Item) -> Result<Zval, Vec<u8>> {
+    let list = items(content);
+    let mut dims = Vec::new();
+    for d in items(&list[0]) {
+        let Item::Int(s) = d else { return fail("Invalid dimensions. Expected Unsigned Integer objects.") };
+        let Ok(v) = s.parse::<i64>() else { return fail("Invalid dimensions. The value is too large.") };
+        dims.push(v as usize);
+    }
+    let values: Vec<Zval> = match list[1].normalize()? {
+        Zval::Array(a) => a.iter().map(|(_, v)| v.clone()).collect(),
+        _ => return fail("Invalid values. Expected a List object or a typed array tag."),
+    };
+    let mismatch = || fail("Invalid data. The dimensions do not match the number of values.");
+    let mut expected = 1usize;
+    for d in &dims {
+        expected = expected.saturating_mul(*d);
+        if expected > values.len() {
+            return mismatch();
+        }
+    }
+    if expected != values.len() {
+        return mismatch();
+    }
+    let n = dims.len();
+    let mut strides = vec![0usize; n];
+    let mut stride = 1usize;
+    let order: Vec<usize> = if row_major { (0..n).rev().collect() } else { (0..n).collect() };
+    for k in order {
+        strides[k] = stride;
+        stride = stride.saturating_mul(dims[k]);
+    }
+    // The offsets each level's lists start at.
+    let mut levels = vec![vec![0usize]];
+    for k in 0..n - 1 {
+        let (count, step) = (dims[k], strides[k]);
+        let next: Vec<usize> = levels[k].iter().flat_map(|o| (0..count).map(move |i| o + i * step)).collect();
+        levels.push(next);
+    }
+    let mut built: HashMap<usize, Zval> = HashMap::new();
+    for k in (0..n).rev() {
+        let mut level = HashMap::new();
+        for &o in &levels[k] {
+            let mut out = Array::new();
+            for i in 0..dims[k] {
+                let at = o + i * strides[k];
+                out.push(if k == n - 1 { values[at].clone() } else { built.get(&at).cloned().unwrap_or_default() });
+            }
+            level.insert(o, Zval::Array(out));
+        }
+        built = level;
+    }
+    Ok(built.remove(&0).unwrap_or_default())
 }
 
 /// `getChunks()` decoded as the typed array's element type.
@@ -509,9 +575,17 @@ fn is_date(t: &[u8]) -> bool {
     if !number(y, 4) || !number(m, 2) || !number(d, 2) {
         return false;
     }
-    let parse = |p: &[u8]| std::str::from_utf8(p).ok().and_then(|s| s.parse::<u32>().ok()).unwrap_or(0);
-    let (y, m, d) = (parse(y), parse(m), parse(d));
-    let leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+    valid_date(number_of(y), number_of(m), number_of(d))
+}
+
+/// A run of ASCII digits as a number.
+pub(crate) fn number_of(p: &[u8]) -> u32 {
+    std::str::from_utf8(p).ok().and_then(|s| s.parse::<u32>().ok()).unwrap_or(0)
+}
+
+/// timelib's `timelib_valid_date()`: a parse without "The parsed date was invalid".
+pub(crate) fn valid_date(y: u32, m: u32, d: u32) -> bool {
+    let leap = (y.is_multiple_of(4) && !y.is_multiple_of(100)) || y.is_multiple_of(400);
     let days = match m {
         1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
         4 | 6 | 9 | 11 => 30,

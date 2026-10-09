@@ -412,6 +412,12 @@ pub(crate) fn is_rfc3339(s: &[u8]) -> bool {
     if s[10] != b'T' || !digits(11..13) || s[13] != b':' || !digits(14..16) || s[16] != b':' || !digits(17..19) {
         return false;
     }
+    // Parsed exactly: no "The parsed date/time was invalid" warning (a leap
+    // second, :60, is read as :59 and added back).
+    let n = |r: std::ops::Range<usize>| tags::number_of(&s[r]);
+    if !tags::valid_date(n(0..4), n(5..7), n(8..10)) || n(11..13) > 23 || n(14..16) > 59 || n(17..19) > 60 {
+        return false;
+    }
     let mut rest = &s[19..];
     if let Some(r) = rest.strip_prefix(b".") {
         let n = r.iter().take_while(|b| b.is_ascii_digit()).count();

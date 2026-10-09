@@ -26831,6 +26831,639 @@
           }
         }
       ]
+    },
+    {
+      "name": "multi-dimensional array tags",
+      "steps": [
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d828828102830102036761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. The dimensions do not match the number of values."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d8288282020284010203046761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, array given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d9041082820203860001020304056761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, array given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d82882811bffffffffffffffff806761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid dimensions. The value is too large."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d82882820200806761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. The dimensions do not match the number of values."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d82882820005806761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, array given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d828828101c241016761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid values. Expected a List object or a typed array tag."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d828828102d8404201026761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, array given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d828828103d8404201026761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. The dimensions do not match the number of values."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d904108298280101010101010101010101010101010101010101010101010101010101010101010101010101010181076761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, array given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d8288282010282d903ec6a323032312d31332d3031016761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "date tags",
+      "steps": [
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec68323032302d312d356761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6832302d30312d30316761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6b30323032302d30312d30316761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6b323032302d30312d3031206761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6b2b323032302d30312d30316761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6b20323032302d30312d30316761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6a323032302d30302d31306761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6a323032302d30312d33326761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6a303030302d30312d30316761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6a323032302d30322d32396761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6a313930302d30322d32396761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6a323030302d30322d32396761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6b323032302d30312d3031786761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6b78323032302d30312d30316761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6b323032302d2d30312d30316761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec69323032302d30312d316761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6a393939392d31322d33316761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec67323032302d312d6761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec606761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec74323032302d30312d30315430303a30303a30305a6761747453746d74a068617574684461746140"
+          },
+          "expect": "skipped: a declared length of 64 MiB or more"
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6b323032302d31322d3331006761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: DateTimeImmutable::createFromFormat(): Argument #2 ($datetime) must not contain any null bytes"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d864246761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d8641b00004000000000006761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d8643b7fffffffffffffff6761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c11b7fffffffffffffff6761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c13b00000010000000006761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c1fb43abc16d674ec8006761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c074323032302d30312d30315430303a30303a36305a6761747453746d74a068617574684461746140"
+          },
+          "expect": "skipped: a declared length of 64 MiB or more"
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c0781c323032302d30312d30315430303a30303a30302e313233343536375a6761747453746d74a068617574684461746140"
+          },
+          "expect": "skipped: a declared length of 64 MiB or more"
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c07819323032302d30322d33305430303a30303a30302b30313a30306761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c074323032302d30312d30315432343a30303a30305a6761747453746d74a068617574684461746140"
+          },
+          "expect": "skipped: a declared length of 64 MiB or more"
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c074323032302d30312d30315432333a36303a30305a6761747453746d74a068617574684461746140"
+          },
+          "expect": "skipped: a declared length of 64 MiB or more"
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c074323032302d30312d30315432333a35393a36305a6761747453746d74a068617574684461746140"
+          },
+          "expect": "skipped: a declared length of 64 MiB or more"
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c07819323032302d30312d30315430303a30303a30302b32353a30306761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c074323032312d30322d32395430303a30303a30305a6761747453746d74a068617574684461746140"
+          },
+          "expect": "skipped: a declared length of 64 MiB or more"
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c07819323032302d30312d30315430303a30303a30302b30353a39396761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        }
+      ]
     }
   ]
 }
