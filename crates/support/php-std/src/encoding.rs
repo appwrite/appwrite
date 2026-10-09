@@ -9,6 +9,7 @@
 //! |---|---|
 //! | `urlencode`, `rawurlencode`, `urldecode`, `rawurldecode` | [`urlencode`], [`rawurlencode`], [`urldecode`], [`rawurldecode`] |
 //! | `http_build_query` | [`http_build_query`] with [`QueryEncoding`] |
+//! | `parse_str` | [`parse_str`] |
 //! | `base64_encode`, `base64_decode` | [`base64_encode`], [`base64_decode`] |
 //! | `bin2hex`, `hex2bin` | [`bin2hex`], [`hex2bin`] |
 //! | `htmlspecialchars`, `htmlentities` | [`htmlspecialchars`], [`htmlentities`] with [`HtmlFlags`] |
@@ -25,6 +26,9 @@
 //! `bin/compat fuzz php-std` (operations `encoding.*`).
 
 mod html_tables;
+mod query;
+
+pub use query::parse_str;
 
 use std::borrow::Cow;
 

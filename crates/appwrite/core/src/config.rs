@@ -111,15 +111,16 @@ impl Config {
             databases.clear();
             for entry in raw.split(',') {
                 let Some((name, dsn)) = entry.split_once('=') else { continue };
-                let Some(parsed) = utopia_dsn::Dsn::parse(dsn.trim()) else { continue };
+                let Ok(parsed) = utopia_dsn::Dsn::parse(dsn.trim()) else { continue };
+                let text = |b: Option<&[u8]>| b.map(|b| String::from_utf8_lossy(b).into_owned()).unwrap_or_default();
                 databases.push(DatabaseDsn {
                     name: name.trim().to_owned(),
-                    scheme: parsed.scheme,
-                    host: parsed.host,
-                    port: parsed.port.unwrap_or(5432),
-                    user: parsed.user.unwrap_or_default(),
-                    password: parsed.password.unwrap_or_default(),
-                    database: parsed.path.unwrap_or_default(),
+                    scheme: parsed.scheme().to_owned(),
+                    host: parsed.host().to_owned(),
+                    port: parsed.port().unwrap_or(5432),
+                    user: text(parsed.user()),
+                    password: text(parsed.password()),
+                    database: parsed.path().to_owned(),
                 });
             }
         }

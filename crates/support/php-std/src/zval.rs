@@ -183,6 +183,16 @@ impl Array {
         self.entries.get(key)
     }
 
+    pub fn get_mut(&mut self, key: &Key) -> Option<&mut Zval> {
+        self.entries.get_mut(key)
+    }
+
+    /// `unset($array[$key])`: later entries keep their order; the next free
+    /// integer key is unchanged, as in PHP.
+    pub fn remove(&mut self, key: &Key) -> Option<Zval> {
+        self.entries.shift_remove(key)
+    }
+
     pub fn iter(&self) -> indexmap::map::Iter<'_, Key, Zval> {
         self.entries.iter()
     }

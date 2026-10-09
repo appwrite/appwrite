@@ -2120,7 +2120,8 @@ dependencies = [
 name = "utopia-dsn"
 version = "0.1.0"
 dependencies = [
- "form_urlencoded",
+ "php-std",
+ "thiserror",
 ]
 
 [[package]]

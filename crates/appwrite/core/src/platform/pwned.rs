@@ -218,12 +218,14 @@ impl Pwned {
             "mock" => Ok(Pwned::Mock),
             "hibp" => Ok(Pwned::Hibp(Arc::new(Remote::new(HIBP_ENDPOINT.to_owned(), String::new())?))),
             "appwrite" => {
-                let dsn = utopia_dsn::Dsn::parse(dsn).ok_or("Invalid _APP_PWNED_PASSWORDS_DSN")?;
-                let scheme = if dsn.param("tls").as_deref() == Some("true") { "https" } else { "http" };
-                let port = dsn.port.map(|p| format!(":{p}")).unwrap_or_default();
-                let path = dsn.path.as_deref().filter(|p| !p.is_empty()).unwrap_or(APPWRITE_PATH);
-                let endpoint = format!("{scheme}://{}{port}/{path}", dsn.host);
-                Ok(Pwned::Appwrite(Arc::new(Remote::new(endpoint, dsn.user.unwrap_or_default())?)))
+                let dsn = utopia_dsn::Dsn::parse(dsn).map_err(|_| "Invalid _APP_PWNED_PASSWORDS_DSN")?;
+                let tls = matches!(dsn.param("tls"), Ok(Some(b"true")));
+                let scheme = if tls { "https" } else { "http" };
+                let port = dsn.port().map(|p| format!(":{p}")).unwrap_or_default();
+                let path = Some(dsn.path()).filter(|p| !p.is_empty()).unwrap_or(APPWRITE_PATH);
+                let endpoint = format!("{scheme}://{}{port}/{path}", dsn.host());
+                let user = dsn.user().map(|u| String::from_utf8_lossy(u).into_owned()).unwrap_or_default();
+                Ok(Pwned::Appwrite(Arc::new(Remote::new(endpoint, user)?)))
             }
             other => Err(format!("Unknown _APP_PWNED_PASSWORDS_DSN scheme: {other}")),
         }
