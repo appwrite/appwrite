@@ -127,8 +127,15 @@ export function DocsProjectProvider({ children }: { children: ReactNode }) {
       : null
 
   // Drop a project the account can no longer open (deleted, or access removed).
-  // Other failures, such as a network error, keep the choice.
-  const { error: projectError } = useQuery(projectQueryOptions(candidate?.id))
+  // Other failures, such as a network error, keep the choice. The shared
+  // project query never refetches on its own, so check access again on mount
+  // and focus instead of trusting a cached response.
+  const { error: projectError } = useQuery({
+    ...projectQueryOptions(candidate?.id),
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+  })
   const projectUnavailable = isProjectUnavailableError(projectError)
   useEffect(() => {
     if (projectUnavailable) setProject(null)
