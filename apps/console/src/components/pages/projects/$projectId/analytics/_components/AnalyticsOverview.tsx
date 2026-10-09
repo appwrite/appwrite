@@ -24,6 +24,11 @@ import {
 import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { AnimatedCounter } from '@/components/global/shared/AnimatedCounter'
 import { Button } from '@/components/ui/button'
+import {
+  Tooltip as UiTooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { UsageChartBrushReferenceArea } from '../../usage/_components/UsageChartBrushReferenceArea'
 import {
   OVERVIEW_CHART_HEIGHT,
@@ -57,9 +62,11 @@ import {
 } from './chart-series'
 import {
   formatDuration,
+  formatExactNumber,
   formatNumber,
   formatPercent,
   formatRatio,
+  isCompactNumber,
 } from './format'
 
 const CURRENT_COLOR = 'var(--chart-brand)'
@@ -161,6 +168,7 @@ function MetricTab({
   info,
   value,
   format,
+  exact,
   change,
   invert,
   isActive,
@@ -172,6 +180,8 @@ function MetricTab({
   info: AnalyticsMetricInfoKey
   value: number | undefined
   format: (value: number) => string
+  /** Exact digits shown on hover when the displayed value is compact (1.2K). */
+  exact?: string
   change: number | undefined
   invert?: boolean
   isActive: boolean
@@ -182,6 +192,19 @@ function MetricTab({
   onClick?: () => void
 }) {
   const interactive = !!onClick
+  const valueClassName = cn(
+    'text-[20px] font-semibold',
+    isActive || !interactive ? 'text-foreground' : 'text-foreground/80',
+    USAGE_CHART_FADE_IN_CLASS_NAME,
+  )
+  const valueNode =
+    value === undefined ? null : (
+      <AnimatedCounter
+        value={value}
+        formatDisplay={format}
+        className={valueClassName}
+      />
+    )
   return (
     <div
       // A div with button semantics, because the info hint inside it is
@@ -226,15 +249,20 @@ function MetricTab({
           </span>
         ) : (
           <>
-            <AnimatedCounter
-              value={value}
-              formatDisplay={format}
-              className={cn(
-                'text-[20px] font-semibold',
-                isActive || !interactive ? 'text-foreground' : 'text-foreground/80',
-                USAGE_CHART_FADE_IN_CLASS_NAME,
-              )}
-            />
+            {exact ? (
+              <UiTooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex" aria-label={exact}>
+                    {valueNode}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[12px] tabular-nums">
+                  {exact}
+                </TooltipContent>
+              </UiTooltip>
+            ) : (
+              valueNode
+            )}
             <ChangeBadge change={change} invert={invert} />
           </>
         )}
@@ -634,6 +662,11 @@ export function AnalyticsOverview({
               info={tab.info}
               value={tab.value}
               format={tab.format}
+              exact={
+                tab.axis === 'count' && isCompactNumber(tab.value)
+                  ? formatExactNumber(tab.value)
+                  : undefined
+              }
               change={tab.change}
               invert={tab.invert}
               isActive={activeMetric.key === tab.key}
