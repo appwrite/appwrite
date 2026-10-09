@@ -36,17 +36,16 @@ impl Translations {
             }
             let Some(code) = path.file_stem().and_then(|s| s.to_str()).map(str::to_owned) else { continue };
             let Ok(content) = tokio::fs::read(&path).await else { continue };
-            // Unlike PHP, a file that is not JSON is skipped rather than
-            // registered as a language every lookup fails on.
-            let mut candidate = Languages::new();
-            if candidate.insert_json(&code, &content).is_ok()
-                && Locale::new(&candidate, &code).is_ok_and(|l| l.translations().is_ok())
-            {
-                if let Err(e) = languages.insert_json(code, &content) {
-                    tracing::warn!(file = %path.display(), error = %e, "translation file skipped");
-                }
-            } else {
-                tracing::warn!(file = %path.display(), "translation file skipped");
+            // Unlike PHP, a file that is not a JSON object of strings is
+            // skipped rather than registered as a language lookups fail on.
+            let mut parsed = Languages::new();
+            let texts = match parsed.insert_json(&code, &content) {
+                Ok(()) => Locale::with(&parsed, code.clone(), None).translations().ok().cloned(),
+                Err(_) => None,
+            };
+            match texts {
+                Some(texts) => languages.insert(code, texts),
+                None => tracing::warn!(file = %path.display(), "translation file skipped"),
             }
         }
         Self { languages }
@@ -107,5 +106,14 @@ mod tests {
         assert_eq!(t.text("en", "countries.--", Some("Unknown")), "Unknown");
         assert_eq!(t.text("en", "nope", None), "{{nope}}");
         assert_eq!(t.text("fr", "countries.us", None), "United States");
+    }
+
+    #[tokio::test]
+    async fn loads_the_shipped_translations() {
+        let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../app/config/locale/translations");
+        let t = Translations::load(&dir).await;
+        assert!(t.has("en") && t.has("de-at") && t.has("ar-ma"));
+        assert_eq!(t.text("de", "countries.us", None), "Vereinigte Staaten");
+        assert_eq!(t.text("xx", "locale.country.unknown", None), "Unknown");
     }
 }

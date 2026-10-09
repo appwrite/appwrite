@@ -743,6 +743,130 @@
           "message": "Unable to parse DSN: host is required"
         }
       }
+    },
+    {
+      "name": "empty user",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://@h",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "scheme": "x",
+        "user": "",
+        "password": null,
+        "host": "h",
+        "port": null,
+        "path": "",
+        "query": null,
+        "params": [
+          ""
+        ]
+      }
+    },
+    {
+      "name": "empty port",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://h:",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "scheme": "x",
+        "user": null,
+        "password": null,
+        "host": "h",
+        "port": null,
+        "path": "",
+        "query": null,
+        "params": [
+          ""
+        ]
+      }
+    },
+    {
+      "name": "scheme only",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "a:",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: host is required"
+        }
+      }
+    },
+    {
+      "name": "query only",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "?a=1",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: scheme is required"
+        }
+      }
+    },
+    {
+      "name": "fragment only",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "#f",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: scheme is required"
+        }
+      }
+    },
+    {
+      "name": "port without host",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://:80",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: malformed"
+        }
+      }
+    },
+    {
+      "name": "triple slash",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x:///db",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: malformed"
+        }
+      }
     }
   ]
 }
