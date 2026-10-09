@@ -44,6 +44,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "ai-onboarding-agent-appwrite-functions-sites",
+    "href": "/blog/post/ai-onboarding-agent-appwrite-functions-sites",
+    "title": "Build an AI onboarding agent that follows users for weeks on Appwrite Functions",
+    "description": "Build an invoicing app on Appwrite Sites with an AI agent that follows each new user for two weeks and schedules its own checks with delayed executions.",
+    "date": "2026-10-05",
+    "lastUpdated": "2026-10-05",
+    "timeToRead": 16,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/ai-onboarding-agent-appwrite-functions-sites/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "firewall-network-rules-premium-geo-db",
     "href": "/blog/post/firewall-network-rules-premium-geo-db",
     "title": "Stop IP-rotating bots with network-based Appwrite Firewall rules",
