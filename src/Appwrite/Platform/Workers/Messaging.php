@@ -243,17 +243,21 @@ class Messaging extends Action
         $deliveryErrors = [];
         $hasRecipients = false;
 
+        // Users reached over MQTT for user-/target-addressed sends. Only an Appwrite-provider target
+        // delivers on the reserved users/<userId> topic, so a native target is safe to turn into a silent
+        // wake only when its user is here. Accumulated across pages — the explicit recipients are a bounded
+        // set — so a user whose Appwrite and native targets land in different $sequence pages is still
+        // recognised. Topic campaigns are unbounded, so their MQTT-reached users are computed per page to
+        // keep memory O(page).
+        $mqttUsers = [];
+
         foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as [$page, $perUser]) {
             /**
              * @var array<callable> $tasks
              */
             $tasks = [];
 
-            // Users this page actually reaches over MQTT, keyed off whether an Appwrite provider is among
-            // the recipients' providers — not off which provider is default. Only an Appwrite-provider
-            // target delivers on the reserved users/<userId> topic, so a native target is safe to turn
-            // into a silent wake only when its user is here; otherwise it is that user's only channel.
-            $mqttUsers = [];
+            $pageMqttUsers = [];
             if ($providerType === MESSAGE_TYPE_PUSH) {
                 foreach ($page as $providerId => $identifiers) {
                     if ($this->resolveProvider($dbForProject, $providerId, $providers, $default)->getAttribute('provider') !== 'appwrite') {
@@ -262,10 +266,14 @@ class Messaging extends Action
 
                     foreach ($identifiers as $userId) {
                         if (!empty($userId)) {
-                            $mqttUsers[$userId] = true;
+                            $pageMqttUsers[$userId] = true;
                         }
                     }
                 }
+            }
+
+            if ($perUser) {
+                $mqttUsers += $pageMqttUsers;
             }
 
             foreach ($page as $providerId => $identifiers) {
@@ -337,10 +345,10 @@ class Messaging extends Action
                 }
             }
 
-            // Topic campaign: wake the MQTT-reached users' registered native devices. Additive to any
-            // native subscribers, so a user reached only through a native target still gets a payload.
-            if (!$perUser && $mqttUsers !== []) {
-                foreach ($this->wakeTasks($mqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore) as $task) {
+            // Topic campaign: wake the page's MQTT-reached users' registered native devices. Additive to
+            // any native subscribers, so a user reached only through a native target still gets a payload.
+            if (!$perUser && $pageMqttUsers !== []) {
+                foreach ($this->wakeTasks($pageMqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore) as $task) {
                     $tasks[] = $task;
                 }
             }
