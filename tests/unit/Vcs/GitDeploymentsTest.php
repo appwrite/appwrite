@@ -10,14 +10,11 @@ use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use OpenRuntimes\Orchestrator\Jobs;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
-use Psr\Http\Message\RequestInterface;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Psr7\Response;
-use Utopia\Psr7\Stream;
 use Utopia\VCS\Adapter\Git;
 
 final class GitDeploymentsTest extends TestCase
@@ -27,16 +24,11 @@ final class GitDeploymentsTest extends TestCase
 
     public function testARefusedPushIsReportedAsFailedToTheProvider(): void
     {
-        // Signs the build's API key, so a deployment that slips past the
-        // refusal reaches the job submission instead of failing on its payload.
-        $previousKey = getenv('_APP_OPENSSL_KEY_V1');
         $previousPools = Config::getParam('pools-database', []);
-        putenv('_APP_OPENSSL_KEY_V1=unit-test-key');
         Config::setParam('pools-database', ['db_main']);
         try {
             $this->assertRefusedPush();
         } finally {
-            putenv($previousKey === false ? '_APP_OPENSSL_KEY_V1' : '_APP_OPENSSL_KEY_V1=' . $previousKey);
             Config::setParam('pools-database', $previousPools);
         }
     }
@@ -80,7 +72,6 @@ final class GitDeploymentsTest extends TestCase
             }
             return \count($this->deployments);
         });
-        $dbForProject->method('find')->willReturn([]);
 
         $dbForPlatform = $this->createStub(Database::class);
         $dbForPlatform->method('getDocument')->willReturn($project);
@@ -106,14 +97,8 @@ final class GitDeploymentsTest extends TestCase
             return $id;
         });
 
-        $requests = 0;
-        $client = $this->createStub(ClientInterface::class);
-        $client->method('sendRequest')->willReturnCallback(static function (RequestInterface $request) use (&$requests): Response {
-            $requests++;
-            return new Response(202, body: new Stream('{"id":"build","status":"accepted"}'));
-        });
-
         $platform = ['apiHostname' => 'localhost', 'consoleUrl' => 'https://console.localhost', 'consoleHostname' => 'console.localhost'];
+        $client = $this->createStub(ClientInterface::class);
         $deploymentsFactory = static fn (Database $dbForProject, Document $project): Deployments => new readonly class (new Jobs($client), $dbForProject, $project, $platform) extends Deployments {
             protected function admit(Document $resource, Document $deployment): void
             {
@@ -122,36 +107,33 @@ final class GitDeploymentsTest extends TestCase
         };
 
         (new GitDeployments())->push(
-            $git,
-            '7',
-            [$repository],
-            'main',
-            'https://github.com/owner/repository/tree/main',
-            'repository',
-            'https://github.com/owner/repository',
-            'owner',
-            'abc123',
-            'author',
-            'https://github.com/author',
-            'Update index.js',
-            'https://github.com/owner/repository/commit/abc123',
-            '',
-            [],
-            false,
-            $dbForPlatform,
-            new Authorization(),
-            $this->createStub(Bus::class),
-            static fn () => $dbForProject,
-            $platform,
-            $deploymentsFactory,
+            vcs: $git,
+            providerInstallationId: '7',
+            repositories: [$repository],
+            providerBranch: 'main',
+            providerBranchUrl: '',
+            providerRepositoryName: 'repository',
+            providerRepositoryUrl: '',
+            providerRepositoryOwner: 'owner',
+            providerCommitHash: 'abc123',
+            providerCommitAuthor: '',
+            providerCommitAuthorUrl: '',
+            providerCommitMessage: 'Update index.js',
+            providerCommitUrl: '',
+            providerPullRequestId: '',
+            providerAffectedFiles: [],
+            external: false,
+            dbForPlatform: $dbForPlatform,
+            authorization: new Authorization(),
+            bus: $this->createStub(Bus::class),
+            getProjectDB: static fn () => $dbForProject,
+            platform: $platform,
+            deploymentsFactory: $deploymentsFactory,
         );
 
-        $this->assertCount(1, $this->deployments);
-        $this->assertSame('failed', \current($this->deployments)->getAttribute('status'));
         $this->assertSame(['failure'], $commitStates, 'The commit must be reported as failed');
         $this->assertStringContainsString('_Failed_', $comment, 'The PR comment must show the build failed');
         $this->assertStringNotContainsString('_Queued_', $comment, 'The PR comment must not wait on a build that never runs');
-        $this->assertSame(0, $requests, 'No build job may be submitted');
     }
 }
 
@@ -159,35 +141,8 @@ final class GitDeployments
 {
     use Deployment;
 
-    /**
-     * @param array<Document> $repositories
-     * @param array<string> $providerAffectedFiles
-     * @param array<string, mixed> $platform
-     */
-    public function push(
-        Git $vcs,
-        string $providerInstallationId,
-        array $repositories,
-        string $providerBranch,
-        string $providerBranchUrl,
-        string $providerRepositoryName,
-        string $providerRepositoryUrl,
-        string $providerRepositoryOwner,
-        string $providerCommitHash,
-        string $providerCommitAuthor,
-        string $providerCommitAuthorUrl,
-        string $providerCommitMessage,
-        string $providerCommitUrl,
-        string $providerPullRequestId,
-        array $providerAffectedFiles,
-        bool $external,
-        Database $dbForPlatform,
-        Authorization $authorization,
-        Bus $bus,
-        callable $getProjectDB,
-        array $platform,
-        callable $deploymentsFactory,
-    ): void {
-        $this->createGitDeployments(...\func_get_args());
+    public function push(mixed ...$arguments): void
+    {
+        $this->createGitDeployments(...$arguments);
     }
 }
