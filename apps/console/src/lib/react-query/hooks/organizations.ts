@@ -47,10 +47,7 @@ import {
 const ESTIMATION_STALE_TIME = 5 * 60 * 1000
 const EMPTY_ESTIMATION_INVITES: string[] = []
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import {
-  resolveOrganizationCanonicalPlan,
-  type CanonicalPlanId,
-} from '@/lib/utils/plan-filter'
+import { resolveOrganizationCanonicalPlan } from '@/lib/utils/plan-filter'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
