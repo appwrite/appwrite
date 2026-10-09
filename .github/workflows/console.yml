@@ -2,6 +2,7 @@ name: Console
 
 on:
   pull_request:
+  merge_group:
   push:
     branches:
       - main
@@ -37,6 +38,7 @@ jobs:
           REF: ${{ github.ref }}
           BASE_REF: ${{ github.base_ref }}
           BEFORE: ${{ github.event.before }}
+          MERGE_BASE: ${{ github.event.merge_group.base_sha }}
         run: bash .github/scripts/changes.sh
 
   checks:
@@ -270,3 +272,22 @@ jobs:
           E2E_TEST_PASSWORD: ${{ secrets.CONSOLE_E2E_TEST_PASSWORD }}
           SESSION: ${{ needs.session.outputs.session }}
         run: bash .github/scripts/console/delete-session.sh
+
+  # The one required check: skipped jobs pass (change detection skips untouched
+  # areas), failed or cancelled ones fail.
+  gate:
+    name: Console
+    if: always()
+    needs: [changes, checks, session, e2e, session-cleanup]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check results
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          jq -r 'to_entries[] | "\(.value.result)\t\(.key)"' <<< "$NEEDS"
+          failed=$(jq -r '[to_entries[] | select(.value.result == "failure" or .value.result == "cancelled") | .key] | join(", ")' <<< "$NEEDS")
+          if [ -n "$failed" ]; then
+            echo "::error::Jobs did not pass: $failed"
+            exit 1
+          fi
