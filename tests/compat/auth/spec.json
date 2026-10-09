@@ -475,7 +475,15 @@
       "covers": [
         "Utopia\\Auth\\Passkeys\\Ceremony::register",
         "Utopia\\Auth\\Passkeys\\Challenge::__construct"
-      ]
+      ],
+      "mask": {
+        "paths": [
+          "/options/challenge",
+          "/options/user/id",
+          "/state"
+        ],
+        "reason": "the challenge and a new user handle are random; cases answer them and compare handles with $equal"
+      }
     },
     "passkeys.authenticate": {
       "doc": "$ceremony->authenticate() as {options, state}",
@@ -501,17 +509,37 @@
       "covers": [
         "Utopia\\Auth\\Passkeys\\Ceremony::verifyRegistration",
         "Utopia\\Auth\\Passkeys\\Credential::__construct"
-      ]
+      ],
+      "mask": {
+        "paths": [
+          "/record/userHandle"
+        ],
+        "reason": "the user handle register() drew at random"
+      }
     },
     "passkeys.verify_authentication": {
       "doc": "$ceremony->verifyAuthentication(state, credential, record) as {identifier, record}",
       "covers": [
         "Utopia\\Auth\\Passkeys\\Ceremony::verifyAuthentication",
         "Utopia\\Auth\\Passkeys\\Counter::check"
-      ]
+      ],
+      "mask": {
+        "paths": [
+          "/record/userHandle"
+        ],
+        "reason": "the user handle register() drew at random"
+      }
     },
     "passkeys.authenticator": {
-      "doc": "fixture: a software ES256 authenticator (port of tests/Passkeys/Authenticator.php) answering options for one key and credential id"
+      "doc": "fixture: a software ES256 authenticator (port of tests/Passkeys/Authenticator.php) answering options for one key and credential id",
+      "mask": {
+        "paths": [
+          "/response/clientDataJSON",
+          "/response/signature",
+          "/response/userHandle"
+        ],
+        "reason": "client data quotes the random challenge; OpenSSL's ECDSA nonce is random (Rust's is RFC 6979); the user handle is random"
+      }
     },
     "fixture.matches": {
       "doc": "fixture: preg_match(pattern, value)"

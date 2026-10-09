@@ -163,12 +163,59 @@ fn b64_decode(s: &[u8], url: bool, strict: bool) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
-/// `Base64UrlSafe::decodeNoPadding()`.
+/// `Base64UrlSafe::decodeNoPadding()`: strict, with libsodium doing the decoding.
 fn decode_no_padding(s: &[u8]) -> Result<Vec<u8>, String> {
-    if !s.is_empty() && s.len() % 4 == 0 && s[s.len() - 1] == b'=' {
+    let len = s.len();
+    if len == 0 {
+        return Ok(vec![]);
+    }
+    if len % 4 == 0 && (s[len - 1] == b'=' || s[len - 2] == b'=') {
         return Err("decodeNoPadding() doesn't tolerate padding".into());
     }
+    if len % 4 == 1 || s[len - 1] == b'=' {
+        return Err("Incorrect padding".into());
+    }
     b64_decode(s, true, true)
+        .map_err(|_| "sodium_base642bin(): Argument #1 ($string) must be a valid base64 string".into())
+}
+
+/// PHP's name for a value's type in a `TypeError` (`true`/`false` for booleans).
+fn given(value: Option<&Zval>) -> &'static str {
+    match value {
+        None | Some(Zval::Null) => "null",
+        Some(Zval::Bool(true)) => "true",
+        Some(Zval::Bool(false)) => "false",
+        Some(Zval::Int(_)) => "int",
+        Some(Zval::Float(_)) => "float",
+        Some(Zval::String(_)) => "string",
+        Some(Zval::Array(_)) => "array",
+        Some(Zval::Object(_)) => "stdClass",
+    }
+}
+
+const DENORMALIZERS: &str = "/usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer";
+
+#[derive(Clone, Copy)]
+enum Decoder {
+    Lenient,
+    NoPadding,
+}
+
+/// A response field, or the `TypeError` webauthn-lib's denormalizers raise when it is not a string.
+fn string_field<'a>(a: &'a Array, name: &str, decoder: Decoder, file: &str, line: u32) -> Result<&'a [u8], String> {
+    match get(a, name) {
+        Some(Zval::String(s)) => Ok(s),
+        other => {
+            let (func, param) = match decoder {
+                Decoder::Lenient => ("Webauthn\\Util\\Base64::decode", "$data"),
+                Decoder::NoPadding => ("ParagonIE\\ConstantTime\\Base64::decodeNoPadding", "$encodedString"),
+            };
+            Err(format!(
+                "{func}(): Argument #1 ({param}) must be of type string, {} given, called in {DENORMALIZERS}/{file}.php on line {line}",
+                given(other)
+            ))
+        }
+    }
 }
 
 /// webauthn-lib's `Util\Base64::decode()`: base64url, else standard base64.
@@ -501,8 +548,14 @@ struct ClientData {
 
 impl ClientData {
     fn parse(raw: Vec<u8>) -> Result<Self, String> {
-        let Zval::Array(data) = decode_json(&raw)? else {
-            return Err("Invalid client data.".into());
+        let data = match decode_json(&raw)? {
+            Zval::Array(data) => data,
+            other => {
+                return Err(format!(
+                    "Webauthn\\CollectedClientData::create(): Argument #2 ($data) must be of type array, {} given, called in {DENORMALIZERS}/CollectedClientDataDenormalizer.php on line 27",
+                    given(Some(&other))
+                ));
+            }
         };
         let kind = match get_set(&data, "type") {
             Some(Zval::String(t)) if !t.is_empty() => t.clone(),
@@ -520,11 +573,25 @@ impl ClientData {
             Some(Zval::String(o)) if !o.is_empty() => o.clone(),
             _ => return Err("Invalid parameter \"origin\". Shall be a non-empty string.".into()),
         };
-        let top_origin = get_set(&data, "topOrigin").cloned();
+        let top_origin = match get_set(&data, "topOrigin") {
+            None => None,
+            Some(t @ Zval::String(_)) => Some(t.clone()),
+            other => {
+                return Err(format!(
+                    "Cannot assign {} to property Webauthn\\CollectedClientData::$topOrigin of type ?string",
+                    given(other)
+                ));
+            }
+        };
         let cross_origin = match get_set(&data, "crossOrigin") {
             None => false,
             Some(Zval::Bool(b)) => *b,
-            Some(_) => return Err("Invalid parameter \"crossOrigin\".".into()),
+            other => {
+                return Err(format!(
+                    "Cannot assign {} to property Webauthn\\CollectedClientData::$crossOrigin of type bool",
+                    given(other)
+                ));
+            }
         };
         Ok(ClientData { raw, kind, challenge, origin, top_origin, cross_origin })
     }
@@ -612,25 +679,27 @@ impl Response {
     }
 }
 
-fn required_string<'a>(a: &'a Array, name: &str) -> Result<&'a [u8], String> {
-    string(a, name).ok_or_else(|| format!("The parameter \"{name}\" is missing or invalid."))
-}
-
 fn attestation_object(data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), String> {
     let mut at = 0;
     let parsed = cbor_item(data, &mut at)?;
-    let Cbor::Map(map) = parsed else {
-        return Err("Invalid attestation object. Unexpected object.".into());
-    };
     if at != data.len() {
         return Err("Invalid attestation object. Presence of extra bytes.".into());
     }
+    let map = match parsed {
+        Cbor::Map(map) => map,
+        _ => vec![],
+    };
     let field = |name: &str| map.iter().find(|(k, _)| matches!(k, Cbor::Text(t) if t == name)).map(|(_, v)| v);
     let Some(auth) = field("authData") else {
         return Err("Invalid attestation object. Missing \"authData\" field.".into());
     };
     let fmt = match field("fmt") {
         Some(Cbor::Text(f)) => f.clone(),
+        None => {
+            return Err(format!(
+                "Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, null given, called in {DENORMALIZERS}/AttestationStatementDenormalizer.php on line 25"
+            ));
+        }
         _ => return Err("Invalid attestation object".into()),
     };
     if fmt != "none" {
@@ -668,25 +737,37 @@ fn decode_credential(credential: &Array) -> Result<(Vec<u8>, Response), Error> {
             return Err("Invalid ID".into());
         }
         let response = if get(response, "attestationObject").is_some() {
-            let client = decode_no_padding(required_string(response, "clientDataJSON")?)?;
-            let object = decode_any(required_string(response, "attestationObject")?)?;
+            let file = "AuthenticatorAttestationResponseDenormalizer";
+            let client = decode_no_padding(string_field(response, "clientDataJSON", Decoder::NoPadding, file, 27)?)?;
+            let object = decode_any(string_field(response, "attestationObject", Decoder::Lenient, file, 28)?)?;
             let client = ClientData::parse(client)?;
             let (fmt, auth) = attestation_object(&object)?;
             let transports = match get_set(response, "transports") {
                 None => Zval::Array(Array::new()),
                 Some(t @ Zval::Array(_)) => t.clone(),
-                Some(_) => return Err("Invalid transports".into()),
+                Some(other) => {
+                    return Err(format!(
+                        "Webauthn\\AuthenticatorAttestationResponse::create(): Argument #3 ($transports) must be of type array, {} given, called in {DENORMALIZERS}/{file}.php on line 45",
+                        given(Some(other))
+                    ));
+                }
             };
             Response::Attestation { client, auth: AuthData::parse(auth)?, fmt, transports }
         } else if get(response, "signature").is_some() {
-            let auth = decode_any(required_string(response, "authenticatorData")?)?;
-            let signature = decode_any(required_string(response, "signature")?)?;
-            let client = decode_no_padding(required_string(response, "clientDataJSON")?)?;
+            let file = "AuthenticatorAssertionResponseDenormalizer";
+            let auth = decode_any(string_field(response, "authenticatorData", Decoder::Lenient, file, 28)?)?;
+            let signature = decode_any(string_field(response, "signature", Decoder::Lenient, file, 29)?)?;
+            let client = decode_no_padding(string_field(response, "clientDataJSON", Decoder::NoPadding, file, 30)?)?;
             let user_handle = match get_set(response, "userHandle") {
                 None => None,
                 Some(Zval::String(h)) if h.is_empty() => Some(vec![]),
                 Some(Zval::String(h)) => Some(decode_any(h)?),
-                Some(_) => return Err("Invalid user handle".into()),
+                Some(other) => {
+                    return Err(format!(
+                        "Webauthn\\Util\\Base64::decode(): Argument #1 ($data) must be of type string, {} given, called in {DENORMALIZERS}/{file}.php on line 33",
+                        given(Some(other))
+                    ));
+                }
             };
             let client = ClientData::parse(client)?;
             Response::Assertion { client, auth: AuthData::parse(auth)?, signature, user_handle }
