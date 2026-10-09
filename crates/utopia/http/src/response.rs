@@ -923,4 +923,16 @@ mod tests {
         assert_eq!(r.wire().cookies[0].name, "name");
         assert!(r.set_status_code(0).is_err());
     }
+
+    /// `getSize()`: every `name: value` line, two bytes between lines, and the body.
+    #[test]
+    fn size_counts_header_lines_and_body() {
+        let mut r = Response::new();
+        r.add_header("A", "1").add_header("a", "22").set_content_type("text/plain", "");
+        r.send(b"hello");
+        let speed = r.header("x-debug-speed")[0].len();
+        let lines = ["a: 1".len(), "a: 22".len(), "x-debug-speed: ".len() + speed, "content-type: text/plain".len()];
+        let expected = lines.iter().sum::<usize>() + 2 /* second a */ + 2 * 2 /* three names */ + 5;
+        assert_eq!(r.size(), expected);
+    }
 }
