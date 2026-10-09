@@ -16,6 +16,21 @@
             "get": "content_type"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": null,
+          "headers": [],
+          "order": [],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": false
+        },
+        "out": [
+          "text/html; charset=UTF-8"
+        ],
+        "error": null
       }
     },
     {
@@ -33,6 +48,26 @@
             "status": 0
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": null,
+          "headers": [],
+          "order": [],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": false
+        },
+        "out": [
+          200
+        ],
+        "error": {
+          "class": "Utopia\\Http\\Exception",
+          "message": "Unknown HTTP status code",
+          "code": 0,
+          "previous": null
+        }
       }
     },
     {
@@ -47,6 +82,24 @@
             "status": 299
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": null,
+          "headers": [],
+          "order": [],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": false
+        },
+        "out": [],
+        "error": {
+          "class": "Utopia\\Http\\Exception",
+          "message": "Unknown HTTP status code",
+          "code": 0,
+          "previous": null
+        }
       }
     },
     {
@@ -61,6 +114,21 @@
             "get": "status"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": null,
+          "headers": [],
+          "order": [],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": false
+        },
+        "out": [
+          200
+        ],
+        "error": null
       }
     },
     {
@@ -78,6 +146,25 @@
             "get": "headers"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": null,
+          "headers": [],
+          "order": [],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": false
+        },
+        "out": [
+          {
+            "key": [
+              "value"
+            ]
+          }
+        ],
+        "error": null
       }
     },
     {
@@ -101,6 +188,42 @@
             "get": "cookies"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": null,
+          "headers": [],
+          "order": [],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": false
+        },
+        "out": [
+          [
+            {
+              "name": "name",
+              "value": "value",
+              "expire": null,
+              "path": null,
+              "domain": null,
+              "secure": null,
+              "httponly": null,
+              "samesite": null
+            },
+            {
+              "name": "cookiename",
+              "value": "cookieValue",
+              "expire": null,
+              "path": null,
+              "domain": null,
+              "secure": null,
+              "httponly": null,
+              "samesite": null
+            }
+          ]
+        ],
+        "error": null
       }
     },
     {
@@ -136,6 +259,32 @@
           "/out/1"
         ],
         "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time"
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "key": [
+              "value"
+            ],
+            "x-debug-speed": "<masked>"
+          },
+          "order": [
+            "key",
+            "x-debug-speed"
+          ],
+          "cookies": [
+            "name=value"
+          ],
+          "body": "body",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [
+          true,
+          "<masked>"
+        ],
+        "error": null
       }
     },
     {
@@ -152,6 +301,25 @@
             "send": "body"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>"
+          },
+          "order": [
+            "x-debug-speed"
+          ],
+          "cookies": [
+            "name=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0"
+          ],
+          "body": "body",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [],
+        "error": null
       }
     },
     {
@@ -165,6 +333,27 @@
             ]
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 301,
+          "headers": {
+            "location": [
+              "http://www.example.com"
+            ],
+            "x-debug-speed": "<masked>"
+          },
+          "order": [
+            "location",
+            "x-debug-speed"
+          ],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [],
+        "error": null
       }
     },
     {
@@ -179,6 +368,27 @@
             ]
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 300,
+          "headers": {
+            "location": [
+              "http://www.example.com"
+            ],
+            "x-debug-speed": "<masked>"
+          },
+          "order": [
+            "location",
+            "x-debug-speed"
+          ],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [],
+        "error": null
       }
     },
     {
@@ -196,6 +406,24 @@
             "get": "headers"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": null,
+          "headers": [],
+          "order": [],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": false
+        },
+        "out": [],
+        "error": {
+          "class": "Utopia\\Http\\Exception",
+          "message": "Unknown HTTP status code",
+          "code": 0,
+          "previous": null
+        }
       }
     },
     {
@@ -210,6 +438,29 @@
             "get": "content_type"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/plain; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "HELLO WORLD",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [
+          "text/plain; charset=UTF-8"
+        ],
+        "error": null
       }
     },
     {
@@ -224,6 +475,29 @@
             "get": "content_type"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/html; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "<html></html>",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [
+          "text/html; charset=UTF-8"
+        ],
+        "error": null
       }
     },
     {
@@ -242,6 +516,29 @@
             "get": "content_type"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "application/json; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "{\"key\":\"value\"}",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [
+          "application/json; charset=UTF-8"
+        ],
+        "error": null
       }
     },
     {
@@ -257,6 +554,27 @@
             ]
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "application/json; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "[1,\"é\",\"\\/\"]",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [],
+        "error": null
       }
     },
     {
@@ -268,6 +586,24 @@
             "json": "nope"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": null,
+          "headers": [],
+          "order": [],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": false
+        },
+        "out": [],
+        "error": {
+          "class": "Exception",
+          "message": "Invalid JSON input var",
+          "code": 0,
+          "previous": null
+        }
       }
     },
     {
@@ -289,6 +625,29 @@
             "get": "content_type"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/javascript; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "parent.test({\"key\":\"value\"});",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [
+          "text/javascript; charset=UTF-8"
+        ],
+        "error": null
       }
     },
     {
@@ -310,6 +669,29 @@
             "get": "content_type"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/html; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "<script type=\"text/javascript\">window.parent.test({\"key\":\"value\"});</script>",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [
+          "text/html; charset=UTF-8"
+        ],
+        "error": null
       }
     },
     {
@@ -324,6 +706,25 @@
             "get": "status"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 204,
+          "headers": {
+            "x-debug-speed": "<masked>"
+          },
+          "order": [
+            "x-debug-speed"
+          ],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [
+          204
+        ],
+        "error": null
       }
     },
     {
@@ -344,6 +745,23 @@
             ]
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>"
+          },
+          "order": [
+            "x-debug-speed"
+          ],
+          "cookies": [],
+          "body": "one",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [],
+        "error": null
       }
     },
     {
@@ -391,6 +809,29 @@
             "get": "is_sent"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-a": [
+              "1"
+            ],
+            "x-debug-speed": "<masked>"
+          },
+          "order": [
+            "x-a",
+            "x-debug-speed"
+          ],
+          "cookies": [],
+          "body": "abc",
+          "writes": 3,
+          "ended": true
+        },
+        "out": [
+          true
+        ],
+        "error": null
       }
     },
     {
@@ -414,6 +855,23 @@
             ]
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>"
+          },
+          "order": [
+            "x-debug-speed"
+          ],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [],
+        "error": null
       }
     },
     {
@@ -431,6 +889,23 @@
             "send": "x"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>"
+          },
+          "order": [
+            "x-debug-speed"
+          ],
+          "cookies": [],
+          "body": "x",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [],
+        "error": null
       }
     },
     {
@@ -448,6 +923,25 @@
             "get": "size"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>"
+          },
+          "order": [
+            "x-debug-speed"
+          ],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [
+          0
+        ],
+        "error": null
       }
     },
     {
@@ -520,6 +1014,39 @@
             "get": "headers"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": null,
+          "headers": [],
+          "order": [],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": false
+        },
+        "out": [
+          [
+            "1",
+            "2"
+          ],
+          "1, 2",
+          "d",
+          true,
+          false,
+          {
+            "a": [
+              "1",
+              "2"
+            ]
+          },
+          {
+            "a": [
+              "only"
+            ]
+          }
+        ],
+        "error": null
       }
     },
     {
@@ -549,6 +1076,31 @@
             "send": "{}"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "content-type": [
+              "application/json"
+            ],
+            "x-z": [
+              "z"
+            ],
+            "x-debug-speed": "<masked>"
+          },
+          "order": [
+            "content-type",
+            "x-z",
+            "x-debug-speed"
+          ],
+          "cookies": [],
+          "body": "{}",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [],
+        "error": null
       }
     },
     {
@@ -599,6 +1151,60 @@
             "send": ""
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>"
+          },
+          "order": [
+            "x-debug-speed"
+          ],
+          "cookies": [
+            "a=v; expires=Thu, 01-Jan-1970 00:16:40 GMT; Max-Age=0; path=/p; domain=example.com; secure; HttpOnly; SameSite=Lax",
+            "c=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0",
+            false
+          ],
+          "body": "",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [
+          {
+            "0": {
+              "name": "a",
+              "value": "v",
+              "expire": 1000,
+              "path": "/p",
+              "domain": "example.com",
+              "secure": true,
+              "httponly": true,
+              "samesite": "Lax"
+            },
+            "2": {
+              "name": "c",
+              "value": "",
+              "expire": null,
+              "path": null,
+              "domain": null,
+              "secure": null,
+              "httponly": null,
+              "samesite": null
+            },
+            "3": {
+              "name": "bad name",
+              "value": "v",
+              "expire": null,
+              "path": null,
+              "domain": null,
+              "secure": null,
+              "httponly": null,
+              "samesite": null
+            }
+          }
+        ],
+        "error": null
       }
     },
     {
@@ -625,6 +1231,32 @@
             "get": "cookies"
           }
         ]
+      },
+      "expect": {
+        "wire": {
+          "status": null,
+          "headers": [],
+          "order": [],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": false
+        },
+        "out": [
+          {
+            "1": {
+              "name": "b",
+              "value": "2",
+              "expire": null,
+              "path": null,
+              "domain": null,
+              "secure": null,
+              "httponly": null,
+              "samesite": null
+            }
+          }
+        ],
+        "error": null
       }
     },
     {
@@ -655,6 +1287,44 @@
           "/wire/headers/content-length"
         ],
         "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time; compressed bytes depend on the compressor implementation (zlib, libbrotli vs the Rust encoders); the decoded body is compared"
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "content-length": "<masked>",
+            "content-encoding": [
+              "gzip"
+            ],
+            "x-utopia-compression": [
+              "true"
+            ],
+            "vary": [
+              "Accept-Encoding"
+            ],
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/plain"
+            ]
+          },
+          "order": [
+            "content-length",
+            "content-encoding",
+            "x-utopia-compression",
+            "vary",
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "<masked>",
+          "writes": 0,
+          "ended": true,
+          "decoded": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "out": [
+          "<masked>"
+        ],
+        "error": null
       }
     },
     {
@@ -685,6 +1355,44 @@
           "/wire/headers/content-length"
         ],
         "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time; compressed bytes depend on the compressor implementation (zlib, libbrotli vs the Rust encoders); the decoded body is compared"
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "content-length": "<masked>",
+            "content-encoding": [
+              "br"
+            ],
+            "x-utopia-compression": [
+              "true"
+            ],
+            "vary": [
+              "Accept-Encoding"
+            ],
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "application/json; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "content-length",
+            "content-encoding",
+            "x-utopia-compression",
+            "vary",
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "<masked>",
+          "writes": 0,
+          "ended": true,
+          "decoded": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "out": [
+          "<masked>"
+        ],
+        "error": null
       }
     },
     {
@@ -713,6 +1421,29 @@
           "/out/0"
         ],
         "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time"
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "image/png"
+            ]
+          },
+          "order": [
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [
+          "<masked>"
+        ],
+        "error": null
       }
     },
     {
@@ -741,6 +1472,29 @@
           "/out/0"
         ],
         "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time"
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/plain"
+            ]
+          },
+          "order": [
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [
+          "<masked>"
+        ],
+        "error": null
       }
     },
     {
@@ -769,6 +1523,29 @@
           "/out/0"
         ],
         "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time"
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/plain"
+            ]
+          },
+          "order": [
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [
+          "<masked>"
+        ],
+        "error": null
       }
     },
     {
@@ -803,6 +1580,33 @@
           "/out/0"
         ],
         "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time"
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "content-encoding": [
+              "custom"
+            ],
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/plain"
+            ]
+          },
+          "order": [
+            "content-encoding",
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [
+          "<masked>"
+        ],
+        "error": null
       }
     },
     {
@@ -836,6 +1640,29 @@
           "/out/0"
         ],
         "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time"
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/plain"
+            ]
+          },
+          "order": [
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [
+          "<masked>"
+        ],
+        "error": null
       }
     },
     {
@@ -869,6 +1696,44 @@
           "/wire/headers/content-length"
         ],
         "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time; compressed bytes depend on the compressor implementation (zlib, libbrotli vs the Rust encoders); the decoded body is compared"
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "content-length": "<masked>",
+            "content-encoding": [
+              "deflate"
+            ],
+            "x-utopia-compression": [
+              "true"
+            ],
+            "vary": [
+              "Accept-Encoding"
+            ],
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/css"
+            ]
+          },
+          "order": [
+            "content-length",
+            "content-encoding",
+            "x-utopia-compression",
+            "vary",
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "<masked>",
+          "writes": 0,
+          "ended": true,
+          "decoded": "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
+        },
+        "out": [
+          "<masked>"
+        ],
+        "error": null
       }
     }
   ]

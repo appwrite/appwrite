@@ -152,7 +152,52 @@
             "is_loaded": "/index.html"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        7,
+        true,
+        true,
+        false,
+        false,
+        "text/html",
+        "text/css",
+        "text/javascript",
+        "image/svg+xml",
+        "text/plain",
+        "application/json",
+        "application/x-empty",
+        "body{}",
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "File not found or not loaded: /missing",
+            "code": 0,
+            "previous": null
+          }
+        },
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "File not found or not loaded: /missing",
+            "code": 0,
+            "previous": null
+          }
+        },
+        null,
+        7,
+        null,
+        null,
+        null,
+        null,
+        {
+          "text/y": true
+        },
+        null,
+        0,
+        [],
+        false
+      ]
     },
     {
       "name": "load a missing directory",
@@ -168,7 +213,18 @@
             "count": null
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Failed to load directory: /tmp/compat-fs/${ns}/nope",
+            "code": 0,
+            "previous": null
+          }
+        },
+        0
+      ]
     },
     {
       "name": "load with a root",
@@ -197,7 +253,13 @@
             "is_loaded": "/a.css"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        1,
+        true,
+        false
+      ]
     },
     {
       "name": "static files are served by run()",
@@ -247,6 +309,111 @@
           {
             "method": "POST",
             "uri": "/style.css"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "cache-control": [
+                  "public, max-age=63072000"
+                ],
+                "expires": "<masked>",
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "text/css"
+                ]
+              },
+              "order": [
+                "cache-control",
+                "expires",
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "body{}",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "cache-control": [
+                  "public, max-age=63072000"
+                ],
+                "expires": "<masked>",
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "text/plain"
+                ]
+              },
+              "order": [
+                "cache-control",
+                "expires",
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "hello",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "route",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "cache-control": [
+                  "public, max-age=63072000"
+                ],
+                "expires": "<masked>",
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "text/css"
+                ]
+              },
+              "order": [
+                "cache-control",
+                "expires",
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "body{}",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
           }
         ]
       }

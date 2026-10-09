@@ -257,6 +257,201 @@
             "uri": "/aliased-3"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "Hello World!",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "123",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "Hello World!",
+              "writes": 2,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 301,
+              "headers": {
+                "location": [
+                  "/"
+                ],
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "location",
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 204,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "set-cookie": [
+                  "key1=value1",
+                  "key2=value2"
+                ],
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "set-cookie",
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "OK",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "Aliased!",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "Aliased!",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "Aliased!",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "Aliased!",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -480,6 +675,43 @@
               ]
             ],
             "body": "{\"data\":{}}"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "application/json; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "{\"data\":{}}",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
           }
         ]
       }
@@ -707,6 +939,43 @@
             "body": "{\"data\":{\"inner\":{}}}"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "application/json; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "{\"data\":{\"inner\":{}}}",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -930,6 +1199,43 @@
               ]
             ],
             "body": "{\"data\":{\"a\":{},\"b\":1}}"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "application/json; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "{\"data\":{\"a\":{},\"b\":1}}",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
           }
         ]
       }
@@ -1157,6 +1463,43 @@
             "body": "{\"data\":{\"l1\":{\"l2\":{}}}}"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "application/json; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "{\"data\":{\"l1\":{\"l2\":{}}}}",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -1382,6 +1725,43 @@
             "body": "{\"data\":{\"arr\":[{},{\"x\":1}]}}"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "application/json; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "{\"data\":{\"arr\":[{},{\"x\":1}]}}",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -1605,6 +1985,43 @@
               ]
             ],
             "body": "{\"data\":{\"a\":1}}"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "application/json; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "{\"data\":{\"a\":1}}",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
           }
         ]
       }
@@ -1851,6 +2268,73 @@
             ]
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "value1",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -2093,6 +2577,73 @@
                 "cookie1=value1; cookie2=value2"
               ]
             ]
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "value1",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "value2",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
           }
         ]
       }
@@ -2339,6 +2890,73 @@
             ]
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "value1",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "value2",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -2583,6 +3201,73 @@
             ]
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "value1=value2",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -2825,6 +3510,73 @@
                 "cookie1=v1; Cookie1=v2"
               ]
             ]
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "v1",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
           }
         ]
       }

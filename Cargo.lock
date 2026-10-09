@@ -2140,6 +2140,7 @@ dependencies = [
  "brotli",
  "bytes",
  "flate2",
+ "futures-util",
  "http",
  "http-body-util",
  "hyper",

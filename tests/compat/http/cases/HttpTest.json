@@ -4,13 +4,25 @@
     {
       "name": "modes: unset",
       "op": "http.mode",
-      "args": {}
+      "args": {},
+      "expect": {
+        "mode": "",
+        "production": false,
+        "development": false,
+        "stage": false
+      }
     },
     {
       "name": "modes: production",
       "op": "http.mode",
       "args": {
         "set": "production"
+      },
+      "expect": {
+        "mode": "production",
+        "production": true,
+        "development": false,
+        "stage": false
       }
     },
     {
@@ -18,6 +30,12 @@
       "op": "http.mode",
       "args": {
         "set": "development"
+      },
+      "expect": {
+        "mode": "development",
+        "production": false,
+        "development": true,
+        "stage": false
       }
     },
     {
@@ -25,6 +43,12 @@
       "op": "http.mode",
       "args": {
         "set": "stage"
+      },
+      "expect": {
+        "mode": "stage",
+        "production": false,
+        "development": false,
+        "stage": true
       }
     },
     {
@@ -33,7 +57,8 @@
       "args": {
         "key": "COMPAT_HTTP_UNDEFINED_VARIABLE",
         "default": "test"
-      }
+      },
+      "expect": "test"
     },
     {
       "name": "execute route: default params",
@@ -103,6 +128,28 @@
             "method": "GET",
             "uri": "/path",
             "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "x-def-y-def"
+            ],
+            "error": null
           }
         ]
       }
@@ -198,6 +245,29 @@
             "via": "execute"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              4242,
+              "param-x-param-y"
+            ],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -270,6 +340,33 @@
             "method": "GET",
             "uri": "/path?x=param-x&y=param-y",
             "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Utopia\\Http\\Exception",
+                "message": "Invalid `x` param: Value must be a valid string and no longer than 1 chars",
+                "code": 400,
+                "previous": null
+              }
+            ],
+            "error": null
           }
         ]
       }
@@ -486,6 +583,52 @@
             "via": "execute"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "init-777-",
+              "(init-api)-",
+              "param-x-param-y",
+              "-(shutdown-api)",
+              "-shutdown"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "init-777-",
+              "(init-homepage)-",
+              "param-x*param-y",
+              "-(shutdown-homepage)",
+              "-shutdown"
+            ],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -526,6 +669,43 @@
           {
             "method": "POST",
             "uri": "/v1/oauth/userinfo"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "userinfo:GET"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "userinfo:POST"
+            ],
+            "error": null
           }
         ]
       }
@@ -597,6 +777,30 @@
             "via": "execute"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "(init)-",
+              "x-def",
+              "-(shutdown)"
+            ],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -665,6 +869,28 @@
             "method": "GET",
             "uri": "/path",
             "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "x-def"
+            ],
+            "error": null
           }
         ]
       }
@@ -741,6 +967,28 @@
             "via": "execute"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "from-alias"
+            ],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -812,6 +1060,28 @@
             "method": "GET",
             "uri": "/path?x=canonical&xAlias=aliased",
             "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "canonical"
+            ],
+            "error": null
           }
         ]
       }
@@ -888,6 +1158,28 @@
             "via": "execute"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "first"
+            ],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -959,6 +1251,28 @@
             "method": "GET",
             "uri": "/path?unrelated=value",
             "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "x-def"
+            ],
+            "error": null
           }
         ]
       }
@@ -1034,6 +1348,34 @@
             "via": "execute"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "error-",
+              {
+                "class": "Utopia\\Http\\Exception",
+                "message": "Param \"x\" is not optional.",
+                "code": 400,
+                "previous": null
+              }
+            ],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -1106,6 +1448,34 @@
             "method": "GET",
             "uri": "/path?xAlias=too-long",
             "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "error-",
+              {
+                "class": "Utopia\\Http\\Exception",
+                "message": "Invalid `x` param: Value must be a valid string and no longer than 1 chars",
+                "code": 400,
+                "previous": null
+              }
+            ],
+            "error": null
           }
         ]
       }
@@ -1188,6 +1558,28 @@
             "via": "execute"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "posted-alias"
+            ],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -1233,6 +1625,29 @@
             "uri": "/users/abc-123",
             "via": "execute",
             "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "abc-123"
+            ],
+            "error": null,
+            "match": "/users/:userId"
           }
         ]
       }
@@ -1282,6 +1697,29 @@
             "match": true
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "from-path"
+            ],
+            "error": null,
+            "match": "/users-2/:userId"
+          }
+        ]
       }
     },
     {
@@ -1320,6 +1758,34 @@
           {
             "method": "GET",
             "uri": "/"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          {
+            "class": "Exception",
+            "message": "Route for (GET:) already registered.",
+            "code": 0,
+            "previous": null
+          }
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "Hello first"
+            ],
+            "error": null
           }
         ]
       }
@@ -1361,6 +1827,29 @@
           {
             "method": "GET",
             "uri": "/"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "Hello second"
+            ],
+            "error": null
           }
         ]
       }
@@ -1474,6 +1963,51 @@
             "via": "execute"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "error-",
+              {
+                "class": "Utopia\\Http\\Exception",
+                "message": "Param \"y\" is not optional.",
+                "code": 400,
+                "previous": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "(init)-y-def-",
+              "x-def",
+              "-(shutdown)"
+            ],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -1497,6 +2031,27 @@
             "uri": "/path1",
             "via": "execute",
             "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path1"
           }
         ]
       }
@@ -1524,6 +2079,27 @@
             "match": true
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path2"
+          }
+        ]
       }
     },
     {
@@ -1547,6 +2123,27 @@
             "uri": "/path3/",
             "via": "execute",
             "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path3"
           }
         ]
       }
@@ -1574,6 +2171,27 @@
             "match": true
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path3/"
+          }
+        ]
       }
     },
     {
@@ -1597,6 +2215,27 @@
             "uri": "/path3",
             "via": "execute",
             "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path3/"
           }
         ]
       }
@@ -1624,6 +2263,27 @@
             "match": true
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path1"
+          }
+        ]
       }
     },
     {
@@ -1647,6 +2307,27 @@
             "uri": "/path1",
             "via": "execute",
             "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path1"
           }
         ]
       }
@@ -1674,6 +2355,27 @@
             "match": true
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path1"
+          }
+        ]
       }
     },
     {
@@ -1697,6 +2399,27 @@
             "uri": "/path1",
             "via": "execute",
             "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path1"
           }
         ]
       }
@@ -1724,6 +2447,27 @@
             "match": true
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/a/"
+          }
+        ]
       }
     },
     {
@@ -1749,6 +2493,27 @@
             "match": true
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/a/b"
+          }
+        ]
       }
     },
     {
@@ -1772,6 +2537,27 @@
             "uri": "/a/b/c",
             "via": "execute",
             "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/a/b/c"
           }
         ]
       }
@@ -1816,6 +2602,57 @@
             "match": true
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": null
+          }
+        ]
       }
     },
     {
@@ -1848,6 +2685,42 @@
             "match": true
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path1"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path2"
+          }
+        ]
       }
     },
     {
@@ -1877,6 +2750,29 @@
             "match": true
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "root"
+            ],
+            "error": null,
+            "match": "/"
+          }
+        ]
       }
     },
     {
@@ -1902,6 +2798,30 @@
           {
             "method": "HEAD",
             "uri": "/path"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
           }
         ]
       }
@@ -1950,6 +2870,31 @@
             "via": "execute"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "/inner",
+              "",
+              "/outer"
+            ],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -1980,6 +2925,31 @@
             "via": "execute"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "id": "abc-123",
+                "postId": "42"
+              }
+            ],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -2008,6 +2978,28 @@
             "method": "GET",
             "uri": "/static",
             "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              []
+            ],
+            "error": null
           }
         ]
       }
@@ -2061,6 +3053,43 @@
             "uri": "/unknown_path"
           }
         ]
+      },
+      "expect": {
+        "setup": [],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "HELLO",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [
+              ""
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -2083,6 +3112,28 @@
           {
             "method": "GET",
             "uri": "https://example.com?x=1"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "HELLO",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
           }
         ]
       }
@@ -2192,6 +3243,60 @@
             "method": "GET",
             "uri": "/test-callable-closure",
             "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "callback-value: phpinfo"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "func-value: system"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "generated: generated-value"
+            ],
+            "error": null
           }
         ]
       }
@@ -2491,6 +3596,131 @@
             "via": "execute"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "",
+              -1
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "",
+              -1
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              null,
+              null,
+              null
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              null
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              null
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "abc"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Utopia\\Http\\Exception",
+                "message": "Invalid `image` param: Value must be one of (a, b)",
+                "code": 400,
+                "previous": null
+              }
+            ],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -2541,6 +3771,29 @@
             "via": "execute"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "es",
+              "en"
+            ],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -2568,6 +3821,14 @@
             }
           ]
         }
+      },
+      "expect": {
+        "setup": [],
+        "out": [
+          "first",
+          "second"
+        ],
+        "error": null
       }
     },
     {
@@ -2603,6 +3864,18 @@
             }
           ]
         }
+      },
+      "expect": {
+        "setup": [],
+        "out": [
+          {
+            "class": "DomainException",
+            "message": "config file is unreadable",
+            "code": 17,
+            "previous": null
+          }
+        ],
+        "error": null
       }
     },
     {
@@ -2635,6 +3908,21 @@
               ]
             }
           ]
+        }
+      },
+      "expect": {
+        "setup": [],
+        "out": [],
+        "error": {
+          "class": "Utopia\\Http\\Exception",
+          "message": "Error handler had an error: Utopia\\DI\\Exceptions\\NotFoundException: Dependency request not found",
+          "code": 500,
+          "previous": {
+            "class": "DomainException",
+            "message": "config file is unreadable",
+            "code": 17,
+            "previous": null
+          }
         }
       }
     },
@@ -2680,6 +3968,36 @@
             "method": "GET",
             "uri": "/path",
             "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": {
+              "class": "Utopia\\Http\\Exception",
+              "message": "Error handler had an error: LogicException: error hook failed",
+              "code": 500,
+              "previous": {
+                "class": "DomainException",
+                "message": "init hook failed",
+                "code": 17,
+                "previous": null
+              }
+            }
           }
         ]
       }
@@ -2758,6 +4076,43 @@
             "uri": "/nothing"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "options-*"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "options-*"
+            ],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -2796,6 +4151,31 @@
           {
             "method": "OPTIONS",
             "uri": "/x"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Exception",
+                "message": "nope",
+                "code": 3,
+                "previous": null
+              }
+            ],
+            "error": null
           }
         ]
       }
@@ -2872,6 +4252,41 @@
             "uri": "/x"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "api:",
+              {
+                "class": "RuntimeException",
+                "message": "boom",
+                "code": 5,
+                "previous": null
+              },
+              "global:",
+              {
+                "class": "RuntimeException",
+                "message": "boom",
+                "code": 5,
+                "previous": null
+              }
+            ],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -2896,6 +4311,29 @@
           {
             "method": "GET",
             "uri": "/missing"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": {
+              "class": "LogicException",
+              "message": "raw",
+              "code": 0,
+              "previous": null
+            }
           }
         ]
       }
@@ -2937,6 +4375,29 @@
           {
             "method": "GET",
             "uri": "/x"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "request-hook",
+              "route"
+            ],
+            "error": null
           }
         ]
       }
@@ -2992,6 +4453,34 @@
             "uri": "/x"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Exception",
+                "message": "request hook failed",
+                "code": 0,
+                "previous": null
+              },
+              "route"
+            ],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -3035,6 +4524,33 @@
           {
             "method": "GET",
             "uri": "/x"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Utopia\\DI\\Exceptions\\NotFoundException",
+                "message": "Dependency missing not found",
+                "code": 0,
+                "previous": null
+              }
+            ],
+            "error": null
           }
         ]
       }
@@ -3083,6 +4599,50 @@
             "uri": "/x"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Utopia\\DI\\Exceptions\\NotFoundException",
+                "message": "Dependency response not found",
+                "code": 0,
+                "previous": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "ok",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -3121,6 +4681,30 @@
           {
             "method": "GET",
             "uri": "/x"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "from init",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
           }
         ]
       }
@@ -3256,6 +4840,134 @@
             "uri": "/chunked"
           }
         ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 201,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "application/json; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "{\"a\":1,\"b\":[1,2],\"c\":{},\"u\":\"é\\/\"}",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 302,
+              "headers": {
+                "location": [
+                  "/to"
+                ],
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "location",
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "Hello World!",
+              "writes": 2,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "text/plain; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [
+                "session=a+b%3Bc; expires=Thu, 01-Jan-1970 00:16:40 GMT; Max-Age=0; path=/; domain=example.com; secure; HttpOnly; SameSite=Strict",
+                "empty=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0"
+              ],
+              "body": "ok",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 204,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -3350,6 +5062,99 @@
           "/responses/3/wire/headers/content-length"
         ],
         "reason": "compressed bytes depend on the compressor implementation (zlib, libbrotli vs the Rust encoders); the decoded body is compared"
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "text/plain; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "text/plain; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "small",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "image/png"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "text/plain; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "<masked>",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
       }
     },
     {
@@ -3404,6 +5209,35 @@
           "/responses/0/size"
         ],
         "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time"
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-a": [
+                  "b"
+                ],
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-a",
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "hello",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null,
+            "size": "<masked>"
+          }
+        ]
       }
     },
     {
@@ -3514,6 +5348,100 @@
           {
             "method": "GET",
             "uri": "/list?w=c"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "12"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Utopia\\Http\\Exception",
+                "message": "Invalid `n` param: Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647",
+                "code": 400,
+                "previous": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "true"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "b"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Utopia\\Http\\Exception",
+                "message": "Invalid `w` param: Value must be one of (a, b)",
+                "code": 400,
+                "previous": null
+              }
+            ],
+            "error": null
           }
         ]
       }

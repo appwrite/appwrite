@@ -6,6 +6,25 @@
       "op": "mode.settings",
       "args": {
         "mode": "HYPERLOOP_A"
+      },
+      "expect": {
+        "compression": false,
+        "tcp_nodelay": true,
+        "tcp_fastopen": true,
+        "tcp_defer_accept": 1,
+        "reuse_port": true,
+        "max_wait_time": 30,
+        "max_concurrency": 1000,
+        "reload_async": true,
+        "coroutine": false,
+        "dispatch_mode": 3,
+        "hook_all": null,
+        "send_yield": null,
+        "max_request": null,
+        "workers_at_least_reactors": true,
+        "workers_positive": true,
+        "reactors_positive": true,
+        "aio": null
       }
     },
     {
@@ -13,6 +32,25 @@
       "op": "mode.settings",
       "args": {
         "mode": "HYPERLOOP_B"
+      },
+      "expect": {
+        "compression": false,
+        "tcp_nodelay": true,
+        "tcp_fastopen": true,
+        "tcp_defer_accept": 1,
+        "reuse_port": true,
+        "max_wait_time": 30,
+        "max_concurrency": 1000,
+        "reload_async": true,
+        "coroutine": true,
+        "dispatch_mode": 2,
+        "hook_all": true,
+        "send_yield": true,
+        "max_request": 10000,
+        "workers_at_least_reactors": true,
+        "workers_positive": true,
+        "reactors_positive": true,
+        "aio": true
       }
     }
   ]

@@ -14,6 +14,15 @@
         "proto": [
           "X-CDN"
         ]
+      },
+      "expect": {
+        "ip": [
+          "x-forwarded-for",
+          "x-real-ip"
+        ],
+        "proto": [
+          "x-cdn"
+        ]
       }
     },
     {
@@ -21,6 +30,12 @@
       "op": "trusted.new",
       "args": {
         "ip": []
+      },
+      "expect": {
+        "ip": [],
+        "proto": [
+          "x-forwarded-proto"
+        ]
       }
     },
     {
@@ -29,7 +44,8 @@
       "args": {
         "accept": "gzip, deflate, br",
         "supported": []
-      }
+      },
+      "expect": "gzip"
     },
     {
       "name": "negotiate 'gzip;q=0.5, br' []",
@@ -37,7 +53,8 @@
       "args": {
         "accept": "gzip;q=0.5, br",
         "supported": []
-      }
+      },
+      "expect": "br"
     },
     {
       "name": "negotiate 'foo' []",
@@ -45,7 +62,8 @@
       "args": {
         "accept": "foo",
         "supported": []
-      }
+      },
+      "expect": null
     },
     {
       "name": "negotiate '' []",
@@ -53,7 +71,8 @@
       "args": {
         "accept": "",
         "supported": []
-      }
+      },
+      "expect": null
     },
     {
       "name": "negotiate '0' []",
@@ -61,7 +80,8 @@
       "args": {
         "accept": "0",
         "supported": []
-      }
+      },
+      "expect": null
     },
     {
       "name": "negotiate 'identity, gzip' []",
@@ -69,7 +89,8 @@
       "args": {
         "accept": "identity, gzip",
         "supported": []
-      }
+      },
+      "expect": null
     },
     {
       "name": "negotiate 'zstd;q=0, gzip;q=0.1' []",
@@ -77,7 +98,8 @@
       "args": {
         "accept": "zstd;q=0, gzip;q=0.1",
         "supported": []
-      }
+      },
+      "expect": "gzip"
     },
     {
       "name": "negotiate 'br' ['gzip', 'brotli']",
@@ -88,7 +110,8 @@
           "gzip",
           "brotli"
         ]
-      }
+      },
+      "expect": "br"
     },
     {
       "name": "negotiate 'BR;q=0.2, GZIP;q=0.2' []",
@@ -96,7 +119,8 @@
       "args": {
         "accept": "BR;q=0.2, GZIP;q=0.2",
         "supported": []
-      }
+      },
+      "expect": "br"
     },
     {
       "name": "negotiate 'gzip; q=0.9, deflate' ['deflate']",
@@ -106,7 +130,8 @@
         "supported": [
           "deflate"
         ]
-      }
+      },
+      "expect": "deflate"
     }
   ]
 }

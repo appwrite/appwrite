@@ -61,9 +61,9 @@ pub use params::{
     Params, array_to_params, decode_payload, params_value, parse_query, parse_query_bytes, zval_to_value,
 };
 pub use request::{Range, Request, SCHEMES};
-pub use response::{CHARSET_UTF8, CHUNK_SIZE, Cookie, Response, Wire, content_type, reason, same_site};
+pub use response::{Body, CHARSET_UTF8, CHUNK_SIZE, Cookie, Response, Wire, content_type, reason, same_site};
 pub use router::{METHODS, Match, PLACEHOLDER, PathParams, Router, WILDCARD};
-pub use server::{App, Handler, Mode, ServerOptions, Settings, serve};
+pub use server::{App, Handler, Mode, ServerOptions, Settings, serve, serve_listener};
 pub use trusted::TrustedHeaders;
 pub use view::{FILTER_ESCAPE, FILTER_NL2P, Filter, Template, View, minify_html};
 

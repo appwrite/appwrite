@@ -21,7 +21,12 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "data": {}
+        }
+      ]
     },
     {
       "name": "json body round trips: nested empty object",
@@ -43,7 +48,14 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "data": {
+            "inner": {}
+          }
+        }
+      ]
     },
     {
       "name": "json body round trips: empty object beside a value",
@@ -65,7 +77,15 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "data": {
+            "a": {},
+            "b": 1
+          }
+        }
+      ]
     },
     {
       "name": "json body round trips: empty object two levels down",
@@ -87,7 +107,16 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "data": {
+            "l1": {
+              "l2": {}
+            }
+          }
+        }
+      ]
     },
     {
       "name": "json body round trips: empty object inside a list",
@@ -109,7 +138,19 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "data": {
+            "arr": [
+              {},
+              {
+                "x": 1
+              }
+            ]
+          }
+        }
+      ]
     },
     {
       "name": "json body round trips: populated object",
@@ -131,7 +172,14 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "data": {
+            "a": 1
+          }
+        }
+      ]
     },
     {
       "name": "json body round trips: empty object as the only param",
@@ -153,7 +201,13 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "data": {},
+          "other": {}
+        }
+      ]
     },
     {
       "name": "json body round trips: braces inside a string literal",
@@ -175,7 +229,14 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "data": {
+            "note": "braces {} in text"
+          }
+        }
+      ]
     },
     {
       "name": "json body round trips: whitespace inside the empty object",
@@ -197,7 +258,14 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "data": {
+            "a": {}
+          }
+        }
+      ]
     },
     {
       "name": "json body round trips: newline inside the empty object",
@@ -219,7 +287,14 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "data": {
+            "a": {}
+          }
+        }
+      ]
     },
     {
       "name": "json body round trips: empty list stays a list",
@@ -241,7 +316,14 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "data": {
+            "a": []
+          }
+        }
+      ]
     },
     {
       "name": "populated objects stay associative arrays",
@@ -266,7 +348,15 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "a": {},
+          "b": {
+            "c": 1
+          }
+        }
+      ]
     },
     {
       "name": "body without params: \"{}\"",
@@ -288,7 +378,10 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        []
+      ]
     },
     {
       "name": "body without params: \"{ }\"",
@@ -310,7 +403,10 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        []
+      ]
     },
     {
       "name": "body without params: \"[]\"",
@@ -332,7 +428,10 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        []
+      ]
     },
     {
       "name": "body without params: \"\"",
@@ -354,7 +453,10 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        []
+      ]
     },
     {
       "name": "body without params: \"not json\"",
@@ -376,7 +478,10 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        []
+      ]
     },
     {
       "name": "body without params: \"\\\"a string\\\"\"",
@@ -398,7 +503,10 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        []
+      ]
     },
     {
       "name": "body without params: \"5\"",
@@ -420,7 +528,10 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        []
+      ]
     },
     {
       "name": "form body",
@@ -442,7 +553,12 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "data": "value"
+        }
+      ]
     },
     {
       "name": "trusts the forwarded protocol by default",
@@ -467,7 +583,10 @@
             "get": "protocol"
           }
         ]
-      }
+      },
+      "expect": [
+        "https"
+      ]
     },
     {
       "name": "client scheme from a chain of proxies",
@@ -492,7 +611,10 @@
             "get": "protocol"
           }
         ]
-      }
+      },
+      "expect": [
+        "https"
+      ]
     },
     {
       "name": "protocol header of any name",
@@ -522,7 +644,10 @@
             "get": "protocol"
           }
         ]
-      }
+      },
+      "expect": [
+        "https"
+      ]
     },
     {
       "name": "stops trusting the forwarded protocol when another is named",
@@ -552,7 +677,10 @@
             "get": "protocol"
           }
         ]
-      }
+      },
+      "expect": [
+        "http"
+      ]
     },
     {
       "name": "falls back to the request line",
@@ -573,7 +701,10 @@
             "get": "protocol"
           }
         ]
-      }
+      },
+      "expect": [
+        "http"
+      ]
     },
     {
       "name": "skips a header naming no known scheme",
@@ -608,7 +739,10 @@
             "get": "protocol"
           }
         ]
-      }
+      },
+      "expect": [
+        "https"
+      ]
     },
     {
       "name": "cookies: Swoole rules",
@@ -645,7 +779,23 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "a_b": "1",
+          "a": {
+            "x": "3"
+          },
+          "k": "v=w",
+          "s": "++",
+          "t": " sp ",
+          "u": "",
+          "dup": "1",
+          "c": "\"q\""
+        },
+        [],
+        "1"
+      ]
     },
     {
       "name": "cookie that is an array",
@@ -669,6 +819,12 @@
             ]
           }
         ]
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "Utopia\\Http\\Request::getCookie(): Return value must be of type string, array returned"
+        }
       }
     },
     {
@@ -684,7 +840,29 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "a_b": "1",
+          "c": {
+            "d": "2"
+          },
+          "f]": "3",
+          "g": {
+            " h": "4"
+          },
+          "i_j": {
+            "k.l": "5"
+          },
+          "m": {
+            "0": "6",
+            "1": "7",
+            "5": "8",
+            "6": "9"
+          },
+          "A": "B"
+        }
+      ]
     },
     {
       "name": "headers: duplicates and empty values",
@@ -730,7 +908,23 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "x-a": [
+            "one",
+            "two"
+          ],
+          "x-empty": [
+            ""
+          ],
+          "x-b": [
+            "b"
+          ]
+        },
+        "one, two",
+        ""
+      ]
     },
     {
       "name": "multipart fields and files",
@@ -788,7 +982,52 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "a": {
+            "x": "v1",
+            "y": [
+              "v2"
+            ]
+          },
+          "lower": "plain"
+        },
+        {
+          "type": "text/plain",
+          "tmp_name": "hello world",
+          "size": 11,
+          "name": "hello.txt",
+          "error": 0
+        },
+        {
+          "name": [
+            "b.json"
+          ],
+          "type": [
+            "application/json"
+          ],
+          "tmp_name": [
+            "{}"
+          ],
+          "error": [
+            0
+          ],
+          "size": [
+            2
+          ]
+        },
+        {
+          "type": "",
+          "tmp_name": "",
+          "size": 0,
+          "name": "",
+          "error": 4
+        },
+        [],
+        [],
+        []
+      ]
     },
     {
       "name": "content type set after parsing",
@@ -816,7 +1055,12 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "a": 1
+        }
+      ]
     },
     {
       "name": "GET reads the query, POST the body",
@@ -857,7 +1101,46 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "b": "2"
+        },
+        {
+          "q": "1"
+        },
+        "1",
+        "d"
+      ]
+    },
+    {
+      "name": "raw payload of exactly 0",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/",
+          "headers": [
+            [
+              "Content-Type",
+              "application/json"
+            ]
+          ],
+          "body": "0"
+        },
+        "steps": [
+          {
+            "get": "raw_payload"
+          },
+          {
+            "get": "params"
+          }
+        ]
+      },
+      "expect": [
+        "",
+        []
+      ]
     }
   ]
 }

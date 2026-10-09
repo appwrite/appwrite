@@ -18,7 +18,14 @@
             "get": "order"
           }
         ]
-      }
+      },
+      "expect": [
+        "GET",
+        [
+          "GET"
+        ],
+        true
+      ]
     },
     {
       "name": "path",
@@ -36,7 +43,11 @@
             "get": "path"
           }
         ]
-      }
+      },
+      "expect": [
+        "/",
+        "/path"
+      ]
     },
     {
       "name": "description",
@@ -53,7 +64,11 @@
             "get": "desc"
           }
         ]
-      }
+      },
+      "expect": [
+        "",
+        "new route"
+      ]
     },
     {
       "name": "groups",
@@ -73,7 +88,14 @@
             "get": "groups"
           }
         ]
-      }
+      },
+      "expect": [
+        [],
+        [
+          "api",
+          "homepage"
+        ]
+      ]
     },
     {
       "name": "params",
@@ -99,7 +121,14 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        [],
+        [
+          "x",
+          "y"
+        ]
+      ]
     },
     {
       "name": "injections",
@@ -119,7 +148,14 @@
             "get": "injections"
           }
         ]
-      }
+      },
+      "expect": [
+        [],
+        [
+          "user",
+          "time"
+        ]
+      ]
     },
     {
       "name": "labels",
@@ -147,7 +183,11 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        "default",
+        "value"
+      ]
     },
     {
       "name": "hooks",
@@ -170,7 +210,12 @@
             "get": "hook"
           }
         ]
-      }
+      },
+      "expect": [
+        true,
+        true,
+        false
+      ]
     },
     {
       "name": "methods deduplicated",
@@ -189,7 +234,14 @@
             "get": "method"
           }
         ]
-      }
+      },
+      "expect": [
+        [
+          "GET",
+          "POST"
+        ],
+        "GET"
+      ]
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "lib": "http",
   "description": "utopia-php/http: routing, hooks, params with validators and injection, request parsing (Swoole adapter semantics), responses, static files, views.",
-  "complete": false,
+  "complete": true,
   "php": {
     "src": [
       "packages/http/src"
@@ -1135,6 +1135,98 @@
   "tests_waived": {
     "packages/http/tests/SwooleServerTelemetryTest.php": "Asserts which Swoole worker, coroutine and reactor gauges Adapter\\Swoole\\Server::setTelemetry registers outside worker 0: Swoole runtime statistics with no Rust counterpart (the server adapter is waived as runtime plumbing). The HTTP server metrics Http::setTelemetry records are compared in cases/telemetry.json."
   },
-  "quirks": [],
-  "deviations": []
+  "quirks": [
+    {
+      "symbol": "Utopia\\Http\\Router::preparePath",
+      "description": "Route paths go through array_filter(), which drops '0' segments as well as empty ones: '/a/0/b' registers as 'a/b', so '/a/0/b' does not match it and '/a/b' does.",
+      "case": "RouterTest.json#zero segments are dropped from templates"
+    },
+    {
+      "symbol": "Utopia\\Http\\Route::resolveParams",
+      "description": "Path params are read from the URL split on '/' without dropping empty segments, while matching drops them: '/c//d' matches '/c/:id' with id ''.",
+      "case": "RouterTest.json#zero segments are dropped from templates"
+    },
+    {
+      "symbol": "Utopia\\Http\\Adapter\\Swoole\\Request::getRawPayload",
+      "description": "rawContent() ?: '' turns a body of exactly '0' into ''.",
+      "case": "SwooleRequestTest.json#raw payload of exactly 0"
+    },
+    {
+      "symbol": "Utopia\\Http\\Adapter\\Swoole\\Request::getFiles",
+      "description": "The field name is lowercased before the lookup, so uploads under a field with capitals are unreachable.",
+      "case": "SwooleRequestTest.json#multipart fields and files"
+    },
+    {
+      "symbol": "Utopia\\Http\\Request::getSize",
+      "description": "Under Swoole php://input is empty, so the size counts header lines only.",
+      "case": "RequestTest.json#size with array headers"
+    },
+    {
+      "symbol": "Utopia\\Http\\Adapter\\Swoole\\Request::getProtocol",
+      "description": "Without a trusted header, only an HTTP/1.1 request line reads as 'http'; HTTP/1.0 reads as 'https'.",
+      "case": "RequestTest.json#protocol from an HTTP/1.0 request line"
+    },
+    {
+      "symbol": "Utopia\\Http\\Response::removeCookie",
+      "description": "array_filter() keeps the keys of the remaining cookies (getCookies() has gaps), and names are compared as given while addCookie() lowercases them.",
+      "case": "FPMResponseTest.json#remove cookie leaves a gap"
+    },
+    {
+      "symbol": "Utopia\\Http\\Http::execute",
+      "description": "Error hooks of an unmatched request (and of OPTIONS) are not guarded: their failure propagates as is, not as 'Error handler had an error'.",
+      "case": "HttpTest.json#a failing 404 error hook propagates"
+    },
+    {
+      "symbol": "Utopia\\Http\\Request::getHeaders",
+      "description": "Swoole parses the Cookie header into cookies and leaves it out of the headers, so getHeader('cookie') is empty.",
+      "case": "RequestTest.json#cookie params"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Http\\Request::getParams",
+      "php": "Query, form, cookie and JSON values are PHP strings: bytes, possibly not UTF-8 (%FF decodes to the byte 0xFF).",
+      "reason": "utopia_http::Params is serde_json (the model validators and Appwrite consume): bytes that are not UTF-8 are replaced with U+FFFD. Fuzz generators keep percent-encodings below 0x80."
+    },
+    {
+      "symbol": "Utopia\\Http\\Request::getCookie",
+      "php": "A cookie sent as an array (a[]=1) makes getCookie() raise TypeError (its return type is string).",
+      "reason": "Request::cookie() returns Option<&str>: None for arrays (the compat adapter reports the TypeError PHP raises)."
+    },
+    {
+      "symbol": "Utopia\\Http\\Http::execute",
+      "php": "A param validator that is not a Utopia\\Validator\\Validator fails with 'Validator object is not an instance of the Validator class' (500); a request value that is a PHP callable array (['Class', 'method']) is called like a default factory.",
+      "reason": "Validators are utopia_validators::Validator values and request values are data: neither case can be expressed."
+    },
+    {
+      "symbol": "Utopia\\Http\\Http::execute",
+      "php": "In a sub-request dispatched with execute() from an action, the 'request' and 'response' injections resolve to the outer request's objects (the context is shared).",
+      "reason": "A Rust Scope always carries the request and response being executed."
+    },
+    {
+      "symbol": "Utopia\\Http\\View::render",
+      "php": "Templates are .phtml files executed with the view as $this.",
+      "reason": "A Rust view renders a Template function, or the file content as is (a template without PHP code); compared with such templates."
+    },
+    {
+      "symbol": "Utopia\\Http\\Files::load",
+      "php": "MIME types not in Files::EXTENSIONS come from libmagic (mime_content_type); a given root is used as is while the directory is resolved with realpath().",
+      "reason": "utopia_http::files::sniff recognises the formats static assets use (images, PDF, archives, HTML, JSON, text); the root is resolved too, so keys stay relative behind symlinks."
+    },
+    {
+      "symbol": "Utopia\\Http\\Response::send",
+      "php": "Bodies are compressed by zlib (gzencode, gzdeflate), libbrotli and libzstd.",
+      "reason": "flate2 and the brotli crate produce other (valid) byte streams: the compat cases compare the decoded body and mask the compressed bytes and their Content-Length."
+    },
+    {
+      "symbol": "Utopia\\Http\\Adapter\\Swoole\\Request::getFiles",
+      "php": "Uploads are written to /tmp/swoole.upfile.* and deleted with the request.",
+      "reason": "Rust writes them to the temporary directory as utopia.upfile.*; the compat cases compare the file content in place of tmp_name."
+    },
+    {
+      "symbol": "Utopia\\Http\\Adapter\\Swoole\\Request::__construct",
+      "php": "Swoole trims the whitespace before a header value only; hyper trims it on both sides and rejects request targets with spaces or non-ASCII bytes, which Swoole cuts short.",
+      "reason": "Requests reach Rust through hyper; compat requests use valid targets and header values without surrounding whitespace."
+    }
+  ]
 }

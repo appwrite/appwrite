@@ -7,6 +7,7 @@
 //! `Title-Case`, and a fresh request context per request whose parent is the
 //! application's static resources.
 
+use std::convert::Infallible;
 use std::future::Future;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -14,7 +15,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
 use bytes::Bytes;
-use http_body_util::{BodyExt, Full, Limited};
+use http_body_util::{BodyExt, Limited};
 use hyper::body::Incoming;
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
@@ -23,12 +24,20 @@ use tokio::net::TcpListener;
 use tokio::sync::watch;
 
 use crate::http::Http;
+use crate::response::{Body, Stream, head_response};
 use crate::trusted::TrustedHeaders;
 use crate::{Request, Response};
 
 /// Application entry point: turns a request into a response.
 pub trait Handler: Send + Sync + 'static {
     fn handle(&self, request: Request) -> impl Future<Output = Response> + Send;
+
+    /// The hyper response for `request`. By default the handler's response,
+    /// buffered; [`App`] streams.
+    fn respond(self: &Arc<Self>, request: Request) -> impl Future<Output = http::Response<Body>> + Send {
+        let this = self.clone();
+        async move { this.handle(request).await.into_http() }
+    }
 }
 
 /// Serves an [`Http`] application: each request runs [`Http::run`] in a
@@ -45,9 +54,54 @@ impl Handler for App {
                 tracing::error!(%error, class = error.php_class(), "request failed");
                 let mut failed = Response::new();
                 failed.set_status(http::StatusCode::INTERNAL_SERVER_ERROR);
+                failed.force_status();
                 return failed;
             }
             response
+        }
+    }
+
+    /// Runs the request in its own task and answers as soon as the head is
+    /// sent: chunks written with [`Response::chunk`] reach the client as
+    /// they are written.
+    fn respond(self: &Arc<Self>, request: Request) -> impl Future<Output = http::Response<Body>> + Send {
+        let http = self.0.clone();
+        async move {
+            let (head_tx, head_rx) = tokio::sync::oneshot::channel();
+            let (body_tx, mut body_rx) = tokio::sync::mpsc::unbounded_channel::<Bytes>();
+            tokio::spawn(async move {
+                let context = http.context();
+                let mut response = Response::new();
+                response.attach(Stream { head: Some(head_tx), body: Some(body_tx) });
+                if let Err(error) = http.run(&request, &mut response, &context).await {
+                    tracing::error!(%error, class = error.php_class(), "request failed");
+                    if !response.wire().ended && response.wire().status.is_none() {
+                        response.set_status(http::StatusCode::INTERNAL_SERVER_ERROR);
+                        response.force_status();
+                    }
+                }
+                response.finish();
+            });
+            match head_rx.await {
+                Ok(head) if head.body.is_some() => {
+                    let body = http_body_util::BodyExt::boxed(http_body_util::Full::new(head.body.unwrap_or_default()));
+                    head_response(head.status, &head.headers, &head.cookies, body)
+                }
+                Ok(head) => {
+                    let frames = futures_util::stream::unfold(body_rx, |mut rx| async move {
+                        rx.recv().await.map(|chunk| (Ok::<_, Infallible>(hyper::body::Frame::data(chunk)), rx))
+                    });
+                    let body = http_body_util::BodyExt::boxed(http_body_util::StreamBody::new(frames));
+                    head_response(head.status, &head.headers, &head.cookies, body)
+                }
+                Err(_) => {
+                    body_rx.close();
+                    let mut failed = Response::new();
+                    failed.set_status(http::StatusCode::INTERNAL_SERVER_ERROR);
+                    failed.force_status();
+                    failed.into_http()
+                }
+            }
         }
     }
 }
@@ -180,6 +234,20 @@ where
 {
     let listener = TcpListener::bind(addr).await?;
     tracing::info!(%addr, "http server listening");
+    serve_listener(listener, handler, options, shutdown).await
+}
+
+/// Serves `handler` on a bound listener until `shutdown` resolves.
+pub async fn serve_listener<H, S>(
+    listener: TcpListener,
+    handler: Arc<H>,
+    options: ServerOptions,
+    shutdown: S,
+) -> std::io::Result<()>
+where
+    H: Handler,
+    S: Future<Output = ()> + Send,
+{
     let (stop_tx, stop_rx) = watch::channel(false);
     let options = Arc::new(options);
     let in_flight = Arc::new(AtomicUsize::new(0));
@@ -209,9 +277,7 @@ where
                 let handler = handler.clone();
                 let options = options.clone();
                 let in_flight = in_flight.clone();
-                async move {
-                    Ok::<_, std::convert::Infallible>(dispatch(&*handler, req, remote, &options, &in_flight).await)
-                }
+                async move { Ok::<_, Infallible>(dispatch(&handler, req, remote, &options, &in_flight).await) }
             });
             let conn = http1::Builder::new()
                 .keep_alive(keep_alive)
@@ -253,18 +319,19 @@ impl Drop for InFlight<'_> {
 }
 
 async fn dispatch<H: Handler>(
-    handler: &H,
+    handler: &Arc<H>,
     req: hyper::Request<Incoming>,
     remote: SocketAddr,
     options: &ServerOptions,
     in_flight: &AtomicUsize,
-) -> http::Response<Full<Bytes>> {
+) -> http::Response<Body> {
     let current = in_flight.fetch_add(1, Ordering::SeqCst);
     let _guard = InFlight(in_flight);
     if current >= options.max_concurrency {
-        let mut r = http::Response::new(Full::new(Bytes::new()));
-        *r.status_mut() = http::StatusCode::SERVICE_UNAVAILABLE;
-        return r;
+        let mut r = Response::new();
+        r.set_status(http::StatusCode::SERVICE_UNAVAILABLE);
+        r.force_status();
+        return r.into_http();
     }
     let (parts, body) = req.into_parts();
     let body = match Limited::new(body, options.max_body).collect().await {
@@ -276,5 +343,5 @@ async fn dispatch<H: Handler>(
         }
     };
     let request = Request::from_http(&parts, body, Some(remote)).with_trusted(options.trusted.clone());
-    handler.handle(request).await.into_http()
+    handler.respond(request).await
 }

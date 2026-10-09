@@ -252,8 +252,28 @@ impl Wire {
     }
 }
 
+/// The head of a streamed response: what is sent before the first body byte.
+#[derive(Debug)]
+pub(crate) struct Head {
+    pub status: u16,
+    pub headers: Vec<(String, Vec<String>)>,
+    pub cookies: Vec<Cookie>,
+    /// The whole body, when the response ended before anything was written.
+    pub body: Option<Bytes>,
+}
+
+/// Where a streamed response goes as it is sent (the server's connection).
+#[derive(Debug)]
+pub(crate) struct Stream {
+    pub head: Option<tokio::sync::oneshot::Sender<Head>>,
+    pub body: Option<tokio::sync::mpsc::UnboundedSender<Bytes>>,
+}
+
+/// A response body: a buffer, or the frames a streamed response sends.
+pub type Body = http_body_util::combinators::BoxBody<Bytes, std::convert::Infallible>;
+
 /// An outgoing response.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Response {
     status: u16,
     content_type: String,
@@ -272,6 +292,31 @@ pub struct Response {
     /// A body staged by [`Response::with_body`], sent by the server when the
     /// application did not send one itself.
     staged: Option<Bytes>,
+    stream: Option<Stream>,
+}
+
+impl Clone for Response {
+    /// A copy of the response state; a copy does not stream.
+    fn clone(&self) -> Self {
+        Self {
+            status: self.status,
+            content_type: self.content_type.clone(),
+            disable_payload: self.disable_payload,
+            sent: self.sent,
+            headers_sent: self.headers_sent,
+            headers: self.headers.clone(),
+            cookies: self.cookies.clone(),
+            next_cookie: self.next_cookie,
+            start: self.start,
+            size: self.size,
+            accept_encoding: self.accept_encoding.clone(),
+            compression_min_size: self.compression_min_size,
+            compression_supported: self.compression_supported.clone(),
+            wire: self.wire.clone(),
+            staged: self.staged.clone(),
+            stream: None,
+        }
+    }
 }
 
 impl Default for Response {
@@ -304,6 +349,7 @@ impl Response {
             compression_supported: Vec::new(),
             wire: Wire::default(),
             staged: None,
+            stream: None,
         }
     }
 
@@ -532,6 +578,78 @@ impl Response {
 
     // -- output --------------------------------------------------------------
 
+    /// Sends what is written to `stream` as it is written (the server does this).
+    pub(crate) fn attach(&mut self, stream: Stream) {
+        self.stream = Some(stream);
+    }
+
+    /// Sends the head to the stream, once.
+    fn stream_head(&mut self, body: Option<Bytes>) {
+        let Some(stream) = self.stream.as_mut() else { return };
+        if let Some(tx) = stream.head.take() {
+            let head = Head {
+                status: self.wire.status.unwrap_or(200),
+                headers: self.wire.headers.clone(),
+                cookies: self.wire.cookies.clone(),
+                body,
+            };
+            let _ = tx.send(head);
+        }
+    }
+
+    /// `write($content)` of the adapter: `false` once the response ended.
+    fn out_write(&mut self, content: &[u8]) -> bool {
+        if self.stream.is_none() {
+            return self.wire.write(content);
+        }
+        if self.wire.ended {
+            return false;
+        }
+        self.wire.writes += 1;
+        self.stream_head(None);
+        match self.stream.as_ref().and_then(|s| s.body.as_ref()) {
+            Some(body) => body.send(Bytes::copy_from_slice(content)).is_ok(),
+            None => false,
+        }
+    }
+
+    /// `end($content)` of the adapter.
+    fn out_end(&mut self, content: Option<&[u8]>) {
+        if self.stream.is_none() {
+            self.wire.end(content);
+            return;
+        }
+        if self.wire.ended {
+            return;
+        }
+        self.wire.ended = true;
+        let whole = self.stream.as_ref().is_some_and(|s| s.head.is_some());
+        if whole {
+            // Nothing was written yet: the body is known in full (Content-Length).
+            self.stream_head(Some(Bytes::copy_from_slice(content.unwrap_or_default())));
+        }
+        if let Some(stream) = self.stream.as_mut()
+            && let Some(body) = stream.body.take()
+            && !whole
+            && let Some(c) = content.filter(|c| !c.is_empty())
+        {
+            let _ = body.send(Bytes::copy_from_slice(c));
+        }
+    }
+
+    /// Puts the status on the wire without sending anything (a server-made
+    /// answer: 500 after a failure, 503 past the concurrency cap).
+    pub(crate) fn force_status(&mut self) {
+        self.wire.status = Some(self.status);
+    }
+
+    /// Ends a streamed response the application left open (Swoole ends it
+    /// with what was set on the connection: a 200 without a body).
+    pub(crate) fn finish(&mut self) {
+        self.flush();
+        self.out_end(None);
+    }
+
     /// What has been sent to the adapter.
     pub fn wire(&self) -> &Wire {
         &self.wire
@@ -599,7 +717,7 @@ impl Response {
         self.append_headers();
 
         if self.disable_payload {
-            self.wire.end(None);
+            self.out_end(None);
             self.sent = true;
             return;
         }
@@ -615,12 +733,12 @@ impl Response {
         self.size += headers_size + body.len();
 
         if body.len() <= CHUNK_SIZE {
-            self.wire.end(Some(body));
+            self.out_end(Some(body));
         } else {
             for chunk in body.chunks(CHUNK_SIZE) {
-                self.wire.write(chunk);
+                self.out_write(chunk);
             }
-            self.wire.end(None);
+            self.out_end(None);
         }
         self.sent = true;
         self.disable_payload = true;
@@ -641,13 +759,13 @@ impl Response {
             self.headers_sent = true;
         }
         if !self.disable_payload {
-            self.wire.write(body);
+            self.out_write(body);
             if end {
                 self.disable_payload = true;
-                self.wire.end(None);
+                self.out_end(None);
             }
         } else {
-            self.wire.end(None);
+            self.out_end(None);
         }
     }
 
@@ -713,31 +831,47 @@ impl Response {
     }
 
     /// The hyper response for what was sent (sends the staged body first).
-    pub fn into_http(mut self) -> http::Response<http_body_util::Full<Bytes>> {
+    pub fn into_http(mut self) -> http::Response<Body> {
+        use http_body_util::BodyExt;
         self.flush();
         let wire = self.wire;
-        let status = wire.status.and_then(|s| StatusCode::from_u16(s).ok()).unwrap_or(StatusCode::OK);
+        let body = http_body_util::Full::new(Bytes::from(wire.body)).boxed();
+        head_response(wire.status.unwrap_or(200), &wire.headers, &wire.cookies, body)
+    }
+}
+
+/// A hyper response from a head and a body.
+pub(crate) fn head_response(
+    status: u16,
+    headers: &[(String, Vec<String>)],
+    cookies: &[Cookie],
+    body: Body,
+) -> http::Response<Body> {
+    {
+        let status = StatusCode::from_u16(status).unwrap_or(StatusCode::OK);
         let mut builder = http::Response::builder().status(status);
-        if let Some(headers) = builder.headers_mut() {
-            for (name, values) in &wire.headers {
+        if let Some(map) = builder.headers_mut() {
+            let headers_out = map;
+            for (name, values) in headers {
                 let Ok(name) = HeaderName::from_bytes(name.as_bytes()) else { continue };
                 for v in values {
                     if let Ok(v) = HeaderValue::from_str(v) {
-                        headers.append(name.clone(), v);
+                        headers_out.append(name.clone(), v);
                     }
                 }
             }
-            let now = Self::now();
-            for cookie in &wire.cookies {
+            let now = Response::now();
+            for cookie in cookies {
                 if let Some(line) = cookie.header(now)
                     && let Ok(v) = HeaderValue::from_str(&line)
                 {
-                    headers.append(http::header::SET_COOKIE, v);
+                    headers_out.append(http::header::SET_COOKIE, v);
                 }
             }
         }
-        builder.body(http_body_util::Full::new(Bytes::from(wire.body))).unwrap_or_else(|_| {
-            let mut r = http::Response::new(http_body_util::Full::new(Bytes::new()));
+        builder.body(body).unwrap_or_else(|_| {
+            use http_body_util::BodyExt;
+            let mut r = http::Response::new(http_body_util::Empty::new().boxed());
             *r.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
             r
         })

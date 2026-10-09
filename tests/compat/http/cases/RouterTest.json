@@ -30,6 +30,40 @@
             "/about/me"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0,
+          1,
+          2
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 1,
+            "params": []
+          },
+          {
+            "route": 2,
+            "params": []
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "",
+            "about",
+            "about/me"
+          ],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -82,6 +116,65 @@
             "/blog/test/comments/:comment"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 1,
+            "params": []
+          },
+          {
+            "route": 2,
+            "params": []
+          },
+          {
+            "route": 3,
+            "params": {
+              "post": "test"
+            }
+          },
+          {
+            "route": 4,
+            "params": {
+              "post": "test"
+            }
+          },
+          {
+            "route": 5,
+            "params": {
+              "post": "test",
+              "comment": ":comment"
+            }
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "blog",
+            "blog/authors",
+            "blog/authors/comments",
+            "blog/:::",
+            "blog/:::/comments",
+            "blog/:::/comments/:::"
+          ],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -108,6 +201,34 @@
             "/v1/databases/db/collections/col/attributes/enum/relationship"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0,
+          1
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": {
+              "databaseId": "db",
+              "collectionId": "col",
+              "key": "relationship"
+            }
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [
+            "v1/databases/:::/collections/:::/attributes/enum/:::",
+            "v1/databases/:::/collections/:::/attributes/:::/relationship"
+          ],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -134,6 +255,34 @@
             "/v1/databases/db/collections/col/attributes/enum/relationship"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0,
+          1
+        ],
+        "matches": [
+          {
+            "route": 1,
+            "params": {
+              "databaseId": "db",
+              "collectionId": "col",
+              "key": "relationship"
+            }
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [
+            "v1/databases/:::/collections/:::/attributes/:::/relationship",
+            "v1/databases/:::/collections/:::/attributes/enum/:::"
+          ],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -173,6 +322,48 @@
             "/about/me/myself/i"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0,
+          1,
+          2
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 1,
+            "params": []
+          },
+          {
+            "route": 2,
+            "params": []
+          },
+          {
+            "route": 2,
+            "params": []
+          },
+          {
+            "route": 2,
+            "params": []
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "",
+            "about",
+            "about/*"
+          ],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -200,6 +391,35 @@
             "/"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0,
+          1
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 1,
+            "params": []
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            ""
+          ],
+          "POST": [
+            ""
+          ],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -229,6 +449,38 @@
             "/alias2"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "target",
+            "alias",
+            "alias2"
+          ],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -263,6 +515,43 @@
             "/alias3"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "target",
+            "alias1",
+            "alias2",
+            "alias3"
+          ],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -316,6 +605,62 @@
             "/register/lorem/ipsum"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "",
+            "console/*",
+            "auth/*",
+            "invite",
+            "login",
+            "recover",
+            "register/*"
+          ],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -346,6 +691,35 @@
             "/userinfo"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          },
+          null
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "userinfo"
+          ],
+          "POST": [
+            "userinfo"
+          ],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -371,6 +745,29 @@
             "/userinfo"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": []
+          },
+          null
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "userinfo"
+          ],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -393,6 +790,32 @@
             "/users/abc-123"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": {
+              "id": "abc-123"
+            }
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "users/:::"
+          ],
+          "POST": [
+            "users/:::"
+          ],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -459,6 +882,61 @@
             "/b-old"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0,
+          1,
+          2,
+          {
+            "class": "Exception",
+            "message": "Route for (POST:b-old) already registered.",
+            "code": 0,
+            "previous": null
+          }
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          },
+          null,
+          {
+            "route": 1,
+            "params": []
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "a",
+            "a-old",
+            "c"
+          ],
+          "POST": [
+            "a",
+            "a-old",
+            "b",
+            "b-old",
+            "c"
+          ],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -498,6 +976,41 @@
             "/userinfo"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0,
+          {
+            "class": "Exception",
+            "message": "Route for (POST:userinfo) already registered.",
+            "code": 0,
+            "previous": null
+          },
+          1
+        ],
+        "matches": [
+          {
+            "route": 1,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "userinfo"
+          ],
+          "POST": [
+            "userinfo"
+          ],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -531,6 +1044,35 @@
             "/userinfo"
           ]
         ],
+        "allow_override": true
+      },
+      "expect": {
+        "setup": [
+          0,
+          1
+        ],
+        "matches": [
+          {
+            "route": 1,
+            "params": []
+          },
+          {
+            "route": 1,
+            "params": []
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "userinfo"
+          ],
+          "POST": [
+            "userinfo"
+          ],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
         "allow_override": true
       }
     },
@@ -566,6 +1108,40 @@
             "/userinfo"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          {
+            "class": "Exception",
+            "message": "Method (TRACE) not supported.",
+            "code": 0,
+            "previous": null
+          },
+          0
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 0,
+            "params": []
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "userinfo"
+          ],
+          "POST": [
+            "userinfo"
+          ],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -593,6 +1169,36 @@
             "/b"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0,
+          {
+            "class": "Exception",
+            "message": "Method (TRACE) not supported.",
+            "code": 0,
+            "previous": null
+          },
+          1,
+          {
+            "class": "Exception",
+            "message": "Method (TRACE) not supported.",
+            "code": 0,
+            "previous": null
+          }
+        ],
+        "matches": [
+          null
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -607,6 +1213,26 @@
           }
         ],
         "match": []
+      },
+      "expect": {
+        "setup": [
+          {
+            "class": "Exception",
+            "message": "At least one HTTP method is required.",
+            "code": 0,
+            "previous": null
+          }
+        ],
+        "matches": [],
+        "prepared": [],
+        "routes": {
+          "GET": [],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -624,6 +1250,28 @@
             "/robots.txt"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": []
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "robots.txt"
+          ],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -637,6 +1285,21 @@
             "/404"
           ]
         ]
+      },
+      "expect": {
+        "setup": [],
+        "matches": [
+          null
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -658,6 +1321,29 @@
             "/404"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": []
+          },
+          null
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "404"
+          ],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -688,6 +1374,40 @@
           ]
         ],
         "wildcard": true
+      },
+      "expect": {
+        "setup": [
+          0
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": []
+          },
+          {
+            "route": 1,
+            "params": []
+          },
+          {
+            "route": 1,
+            "params": []
+          },
+          {
+            "route": 1,
+            "params": []
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "x"
+          ],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -705,6 +1425,57 @@
           ":x",
           "/::y/z"
         ]
+      },
+      "expect": {
+        "setup": [],
+        "matches": [],
+        "prepared": [
+          [
+            "",
+            []
+          ],
+          [
+            "",
+            []
+          ],
+          [
+            "a/:::/c/:::",
+            {
+              "b": 1,
+              "d": 3
+            }
+          ],
+          [
+            "a/:::",
+            {
+              "b": 1
+            }
+          ],
+          [
+            "a/b",
+            []
+          ],
+          [
+            ":::",
+            {
+              "x": 0
+            }
+          ],
+          [
+            ":::/z",
+            {
+              "y": 0
+            }
+          ]
+        ],
+        "routes": {
+          "GET": [],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -737,6 +1508,43 @@
             "//c/d"
           ]
         ]
+      },
+      "expect": {
+        "setup": [
+          0,
+          1
+        ],
+        "matches": [
+          {
+            "route": 0,
+            "params": []
+          },
+          null,
+          {
+            "route": 1,
+            "params": {
+              "id": ""
+            }
+          },
+          {
+            "route": 1,
+            "params": {
+              "id": "d"
+            }
+          }
+        ],
+        "prepared": [],
+        "routes": {
+          "GET": [
+            "a/b",
+            "c/:::"
+          ],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
+        "allow_override": false
       }
     },
     {
@@ -745,6 +1553,19 @@
       "args": {
         "routes": [],
         "match": [],
+        "allow_override": true
+      },
+      "expect": {
+        "setup": [],
+        "matches": [],
+        "prepared": [],
+        "routes": {
+          "GET": [],
+          "POST": [],
+          "PUT": [],
+          "PATCH": [],
+          "DELETE": []
+        },
         "allow_override": true
       }
     }

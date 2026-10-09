@@ -67,7 +67,28 @@
             "get": "headers"
           }
         ]
-      }
+      },
+      "expect": [
+        [
+          "value1"
+        ],
+        [
+          "value2"
+        ],
+        "value1",
+        true,
+        false,
+        [],
+        "fallback",
+        {
+          "custom": [
+            "value1"
+          ],
+          "custom-new": [
+            "value2"
+          ]
+        }
+      ]
     },
     {
       "name": "add headers",
@@ -136,7 +157,31 @@
             "get": "headers"
           }
         ]
-      }
+      },
+      "expect": [
+        [
+          "value1"
+        ],
+        [
+          "value2"
+        ],
+        [
+          "value1",
+          "value3"
+        ],
+        "value1, value3",
+        [
+          "only"
+        ],
+        {
+          "custom": [
+            "only"
+          ],
+          "custom-new": [
+            "value2"
+          ]
+        }
+      ]
     },
     {
       "name": "remove headers",
@@ -181,7 +226,14 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        false,
+        [],
+        [
+          "value2"
+        ]
+      ]
     },
     {
       "name": "query parameter",
@@ -206,7 +258,11 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        "value",
+        "test"
+      ]
     },
     {
       "name": "set query string",
@@ -239,7 +295,14 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        "value",
+        "test",
+        {
+          "key": "value"
+        }
+      ]
     },
     {
       "name": "payload default",
@@ -258,7 +321,10 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        "test"
+      ]
     },
     {
       "name": "set payload",
@@ -291,7 +357,14 @@
             "get": "params"
           }
         ]
-      }
+      },
+      "expect": [
+        "value",
+        "test",
+        {
+          "key": "value"
+        }
+      ]
     },
     {
       "name": "raw payload",
@@ -306,7 +379,10 @@
             "get": "raw_payload"
           }
         ]
-      }
+      },
+      "expect": [
+        ""
+      ]
     },
     {
       "name": "server",
@@ -368,7 +444,16 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        "test",
+        "value",
+        "/x",
+        "GET",
+        "y=1",
+        "HTTP/1.0",
+        "/x"
+      ]
     },
     {
       "name": "cookie",
@@ -399,7 +484,11 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        "value",
+        "test"
+      ]
     },
     {
       "name": "cookie params",
@@ -426,7 +515,14 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "key": "value",
+          "other": "second"
+        },
+        []
+      ]
     },
     {
       "name": "set cookie params",
@@ -459,7 +555,14 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        {
+          "key": "value"
+        },
+        "value",
+        "test"
+      ]
     },
     {
       "name": "protocol from the request line",
@@ -474,7 +577,10 @@
             "get": "protocol"
           }
         ]
-      }
+      },
+      "expect": [
+        "http"
+      ]
     },
     {
       "name": "protocol from an HTTP/1.0 request line",
@@ -490,7 +596,10 @@
             "get": "protocol"
           }
         ]
-      }
+      },
+      "expect": [
+        "https"
+      ]
     },
     {
       "name": "forwarded protocol",
@@ -511,7 +620,10 @@
             "get": "protocol"
           }
         ]
-      }
+      },
+      "expect": [
+        "https"
+      ]
     },
     {
       "name": "stop trusting the forwarded protocol",
@@ -537,7 +649,10 @@
             "get": "protocol"
           }
         ]
-      }
+      },
+      "expect": [
+        "http"
+      ]
     },
     {
       "name": "trust a protocol header of any name",
@@ -563,7 +678,10 @@
             "get": "protocol"
           }
         ]
-      }
+      },
+      "expect": [
+        "https"
+      ]
     },
     {
       "name": "trusted protocol headers in order",
@@ -594,7 +712,10 @@
             "get": "protocol"
           }
         ]
-      }
+      },
+      "expect": [
+        "https"
+      ]
     },
     {
       "name": "skip a protocol header naming no known scheme",
@@ -625,7 +746,10 @@
             "get": "protocol"
           }
         ]
-      }
+      },
+      "expect": [
+        "https"
+      ]
     },
     {
       "name": "client scheme from a chain of proxies",
@@ -646,7 +770,10 @@
             "get": "protocol"
           }
         ]
-      }
+      },
+      "expect": [
+        "https"
+      ]
     },
     {
       "name": "socket address until a header is trusted",
@@ -668,7 +795,10 @@
             "get": "ip"
           }
         ]
-      }
+      },
+      "expect": [
+        "10.0.0.1"
+      ]
     },
     {
       "name": "client address from a trusted header",
@@ -695,7 +825,10 @@
             "get": "ip"
           }
         ]
-      }
+      },
+      "expect": [
+        "203.0.113.7"
+      ]
     },
     {
       "name": "invalid trusted address falls through",
@@ -727,7 +860,10 @@
             "get": "ip"
           }
         ]
-      }
+      },
+      "expect": [
+        "::1"
+      ]
     },
     {
       "name": "no socket address",
@@ -742,7 +878,10 @@
             "get": "ip"
           }
         ]
-      }
+      },
+      "expect": [
+        "0.0.0.0"
+      ]
     },
     {
       "name": "method",
@@ -763,7 +902,11 @@
             "get": "method"
           }
         ]
-      }
+      },
+      "expect": [
+        "GET",
+        "PATCH"
+      ]
     },
     {
       "name": "uri",
@@ -778,7 +921,10 @@
             "get": "uri"
           }
         ]
-      }
+      },
+      "expect": [
+        "/index.html"
+      ]
     },
     {
       "name": "set uri",
@@ -796,7 +942,10 @@
             "get": "uri"
           }
         ]
-      }
+      },
+      "expect": [
+        "/page.html"
+      ]
     },
     {
       "name": "port",
@@ -817,7 +966,10 @@
             "get": "port"
           }
         ]
-      }
+      },
+      "expect": [
+        "8080"
+      ]
     },
     {
       "name": "no port",
@@ -838,7 +990,10 @@
             "get": "port"
           }
         ]
-      }
+      },
+      "expect": [
+        ""
+      ]
     },
     {
       "name": "forwarded port and host",
@@ -870,7 +1025,11 @@
             "get": "hostname"
           }
         ]
-      }
+      },
+      "expect": [
+        "443",
+        "example.com"
+      ]
     },
     {
       "name": "hostname",
@@ -891,7 +1050,10 @@
             "get": "hostname"
           }
         ]
-      }
+      },
+      "expect": [
+        "localhost"
+      ]
     },
     {
       "name": "hostname with port",
@@ -912,7 +1074,10 @@
             "get": "hostname"
           }
         ]
-      }
+      },
+      "expect": [
+        "localhost"
+      ]
     },
     {
       "name": "referer",
@@ -936,7 +1101,10 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        "referer"
+      ]
     },
     {
       "name": "referer default",
@@ -954,7 +1122,10 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        "default"
+      ]
     },
     {
       "name": "origin",
@@ -978,7 +1149,10 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        "origin"
+      ]
     },
     {
       "name": "origin default",
@@ -996,7 +1170,10 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        "default"
+      ]
     },
     {
       "name": "user_agent",
@@ -1020,7 +1197,10 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        "user_agent"
+      ]
     },
     {
       "name": "user_agent default",
@@ -1038,7 +1218,10 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        "default"
+      ]
     },
     {
       "name": "accept",
@@ -1062,7 +1245,10 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        "accept"
+      ]
     },
     {
       "name": "accept default",
@@ -1080,7 +1266,10 @@
             ]
           }
         ]
-      }
+      },
+      "expect": [
+        "default"
+      ]
     },
     {
       "name": "content range bytes 0-499/2000",
@@ -1110,7 +1299,13 @@
             "get": "content_range_size"
           }
         ]
-      }
+      },
+      "expect": [
+        "bytes",
+        0,
+        499,
+        2000
+      ]
     },
     {
       "name": "content range  0-499/2000",
@@ -1140,7 +1335,13 @@
             "get": "content_range_size"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "content range bytes 0-499/",
@@ -1170,7 +1371,13 @@
             "get": "content_range_size"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "content range bytes 0--499/2000",
@@ -1200,7 +1407,13 @@
             "get": "content_range_size"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "content range bytes 0-499test/2000",
@@ -1230,7 +1443,13 @@
             "get": "content_range_size"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "content range bytes 0-49.9/200.0",
@@ -1260,7 +1479,13 @@
             "get": "content_range_size"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "content range bytes 0-49,9/200,0",
@@ -1290,7 +1515,13 @@
             "get": "content_range_size"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "content range bytes 5-4/10",
@@ -1320,7 +1551,13 @@
             "get": "content_range_size"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "content range bytes 0-20/10",
@@ -1350,7 +1587,13 @@
             "get": "content_range_size"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "range bytes=0-499",
@@ -1377,7 +1620,12 @@
             "get": "range_end"
           }
         ]
-      }
+      },
+      "expect": [
+        "bytes",
+        0,
+        499
+      ]
     },
     {
       "name": "range  0-499",
@@ -1404,7 +1652,12 @@
             "get": "range_end"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "range bytes=0-",
@@ -1431,7 +1684,12 @@
             "get": "range_end"
           }
         ]
-      }
+      },
+      "expect": [
+        "bytes",
+        0,
+        null
+      ]
     },
     {
       "name": "range bytes=0-0",
@@ -1458,7 +1716,12 @@
             "get": "range_end"
           }
         ]
-      }
+      },
+      "expect": [
+        "bytes",
+        0,
+        0
+      ]
     },
     {
       "name": "range bytes=499-499",
@@ -1485,7 +1748,12 @@
             "get": "range_end"
           }
         ]
-      }
+      },
+      "expect": [
+        "bytes",
+        499,
+        499
+      ]
     },
     {
       "name": "range bytes=5-4",
@@ -1512,7 +1780,12 @@
             "get": "range_end"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "range bytes=0--499",
@@ -1539,7 +1812,12 @@
             "get": "range_end"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "range bytes=0-499test",
@@ -1566,7 +1844,12 @@
             "get": "range_end"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "range bytes=0-49.9",
@@ -1593,7 +1876,12 @@
             "get": "range_end"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "range bytes=0-49,9",
@@ -1620,7 +1908,12 @@
             "get": "range_end"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "range =0-1",
@@ -1647,7 +1940,12 @@
             "get": "range_end"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "range bytes=-5",
@@ -1674,7 +1972,12 @@
             "get": "range_end"
           }
         ]
-      }
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
     },
     {
       "name": "size with array headers",
@@ -1725,7 +2028,10 @@
             "get": "size"
           }
         ]
-      }
+      },
+      "expect": [
+        99
+      ]
     }
   ]
 }
