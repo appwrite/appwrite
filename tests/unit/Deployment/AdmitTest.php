@@ -47,7 +47,7 @@ final class AdmitTest extends TestCase
             return 1;
         });
         $database->method('getDocument')->willReturnCallback(static fn (string $collection, string $id) => clone $documents[$id]);
-        $database->method('find')->willReturnCallback(static fn () => [clone $active]);
+        $database->method('find')->willReturnCallback(static fn (): array => [clone $active]);
 
         $requests = 0;
         $client = $this->createStub(ClientInterface::class);
@@ -68,7 +68,7 @@ final class AdmitTest extends TestCase
         }
 
         $this->assertSame('failed', $deployment->getAttribute('status'));
-        $this->assertStringContainsString('Deployment limit reached', $deployment->getAttribute('buildLogs'));
+        $this->assertStringContainsString('Deployment limit reached', (string) $deployment->getAttribute('buildLogs'));
         $this->assertNotEmpty($deployment->getAttribute('buildEndedAt'));
         $this->assertTrue($active->getAttribute('activate'), 'The live deployment must stay active');
         $this->assertSame(0, $requests, 'No build job may be submitted');

@@ -138,8 +138,8 @@ final class BuildsTest extends TestCase
         );
 
         $this->assertSame('failed', $deployment->getAttribute('status'));
-        $this->assertStringContainsString('Deployment limit reached', $deployment->getAttribute('buildLogs'));
-        $this->assertStringNotContainsString('internal error', $deployment->getAttribute('buildLogs'));
+        $this->assertStringContainsString('Deployment limit reached', (string) $deployment->getAttribute('buildLogs'));
+        $this->assertStringNotContainsString('internal error', (string) $deployment->getAttribute('buildLogs'));
         $this->assertSame(['failure'], $commitStates, 'The commit must be reported as failed');
         $this->assertSame(0, $requests, 'No build job may be submitted');
     }
