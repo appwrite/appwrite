@@ -7,12 +7,17 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useUpdatePasskeyPolicy } from '@/lib/react-query/hooks/auth'
+import { useConsoleVariables, usePlatforms } from '@/lib/react-query/hooks'
 import {
   MAX_PASSKEY_ORIGINS,
   MAX_PASSKEY_RP_ID_LENGTH,
+  hasLocalhostPlatform,
+  isPasskeyReady,
   normalizePasskeyOrigin,
   passkeyOriginError,
   passkeyRpIdError,
+  platformPasskeyOrigins,
+  suggestPasskeyRpIds,
   type PasskeyPolicy,
 } from '@/lib/passkey-policy'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
@@ -26,8 +31,7 @@ type OriginRow = { id: number; value: string }
 let nextRowId = 0
 
 function originRows(origins: string[]): OriginRow[] {
-  const values = origins.length > 0 ? origins : ['']
-  return values.map((value) => ({ id: nextRowId++, value }))
+  return origins.map((value) => ({ id: nextRowId++, value }))
 }
 
 function cleanOrigins(values: string[]): string[] {
@@ -56,6 +60,9 @@ export function PasskeyRelyingPartyCard({
   )
   const mutation = useUpdatePasskeyPolicy(projectId)
   const syncedPolicy = useRef(currentPolicy)
+  const { platforms } = usePlatforms(projectId)
+  const { sitesDomain, functionsDomain } = useConsoleVariables()
+  const localhost = hasLocalhostPlatform(platforms)
 
   useEffect(() => {
     // Adopt the stored policy only when it changes, so a refused save keeps the
@@ -87,9 +94,23 @@ export function PasskeyRelyingPartyCard({
     return passkeyOriginError(value, nextRpId)
   })
   const hasErrors = rpIdError !== null || originErrors.some(Boolean)
+  const customOrigins = origins.length > 0
+  const platformOrigins = platformPasskeyOrigins(nextRpId, platforms).filter(
+    (origin) => origin !== 'http://localhost',
+  )
+  const suggestions =
+    nextRpId === ''
+      ? suggestPasskeyRpIds(
+          platforms,
+          [sitesDomain, functionsDomain].filter((domain): domain is string =>
+            Boolean(domain),
+          ),
+        )
+      : []
   // Passkeys fail closed, so clearing the relying party stops sign-in for everyone.
   const breaksSignIn =
-    methodEnabled && (nextRpId === '' || nextOrigins.length === 0)
+    methodEnabled &&
+    !isPasskeyReady({ rpId: nextRpId, origins: nextOrigins }, platforms)
 
   const updateOrigin = (id: number, value: string) => {
     setOrigins((prev) =>
@@ -98,10 +119,7 @@ export function PasskeyRelyingPartyCard({
   }
 
   const removeOrigin = (id: number) => {
-    setOrigins((prev) => {
-      const rest = prev.filter((row) => row.id !== id)
-      return rest.length > 0 ? rest : originRows([])
-    })
+    setOrigins((prev) => prev.filter((row) => row.id !== id))
   }
 
   const addOrigin = () => {
@@ -156,7 +174,7 @@ export function PasskeyRelyingPartyCard({
         </div>
         <p className="text-[13px] text-muted-foreground mt-2">
           {t(
-            'Passkeys are bound to the domain of your app. Users can only sign in with a passkey once a relying party ID and at least one origin are set, and the Passkey auth method is enabled.',
+            'Passkeys are bound to the domain of your app, and work on your web platforms on that domain or its subdomains. A localhost web platform works without a domain for local development.',
           )}{' '}
           <DocsRouteLink className="link-neutral" href={PASSKEYS_DOCS_URL}>
             {t('Learn more')}
@@ -192,9 +210,68 @@ export function PasskeyRelyingPartyCard({
             {rpIdError
               ? t(rpIdError)
               : t(
-                  'The domain of the app where users sign in, not your Appwrite endpoint. Use localhost for local development.',
+                  'The domain of the app where users sign in, not your Appwrite endpoint. It cannot change once users have passkeys.',
                 )}
           </p>
+          {suggestions.length > 0 && (
+            <div
+              className="flex flex-wrap items-center gap-1.5"
+              data-testid="passkey-rp-id-suggestions"
+            >
+              <span className="text-[12px] text-muted-foreground">
+                {t('From your platforms:')}
+              </span>
+              {suggestions.map((domain) => (
+                <Button
+                  key={domain}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-6 px-2 text-[12px] font-mono"
+                  onClick={() => setRpId(domain)}
+                  disabled={mutation.isPending}
+                >
+                  {domain}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="space-y-2 max-w-[420px]">
+          <p className="text-[13px] font-medium">{t('Where passkeys work')}</p>
+          {customOrigins ? (
+            <p className="text-[12px] text-muted-foreground">
+              {t('The custom origins below replace your web platforms.')}
+            </p>
+          ) : platformOrigins.length > 0 || localhost ? (
+            <ul
+              className="space-y-1 text-[12px] font-mono text-muted-foreground"
+              data-testid="passkey-platform-origins"
+            >
+              {platformOrigins.map((origin) => (
+                <li key={origin}>{origin}</li>
+              ))}
+              {localhost && (
+                <li>
+                  http://localhost{' '}
+                  <span className="font-sans">{t('(any port)')}</span>
+                </li>
+              )}
+            </ul>
+          ) : (
+            <p className="text-[12px] text-muted-foreground">
+              {nextRpId
+                ? t('No web platform on this domain yet.')
+                : t('Set a relying party ID to see where passkeys work.')}
+            </p>
+          )}
+          <Link
+            to="/projects/$projectId/apps"
+            params={{ projectId }}
+            className="link-neutral text-[12px]"
+          >
+            {t('Manage platforms')}
+          </Link>
         </div>
         <div
           role="group"
@@ -203,11 +280,11 @@ export function PasskeyRelyingPartyCard({
           className="space-y-2 max-w-[420px]"
         >
           <Label id={originsLabelId} className="text-[13px]">
-            {t('Allowed origins')}
+            {t('Custom origins')}
           </Label>
           <p id={originsHelpId} className="text-[12px] text-muted-foreground">
             {t(
-              'The exact origins your app is served from, on the relying party ID or one of its subdomains.',
+              'Optional. List exact origins to use instead of your web platforms, on the relying party ID or one of its subdomains.',
             )}
           </p>
           <div className="space-y-2">
@@ -234,10 +311,7 @@ export function PasskeyRelyingPartyCard({
                       size="icon"
                       aria-label={`${t('Remove origin')} ${index + 1}`}
                       onClick={() => removeOrigin(row.id)}
-                      disabled={
-                        mutation.isPending ||
-                        (origins.length === 1 && row.value === '')
-                      }
+                      disabled={mutation.isPending}
                     >
                       <Trash2 />
                     </Button>
@@ -271,7 +345,7 @@ export function PasskeyRelyingPartyCard({
             className="max-w-[420px] rounded-lg border border-border bg-muted/30 px-3 py-2 text-[12px] text-muted-foreground"
           >
             {t(
-              'The Passkey auth method is enabled. Without a relying party ID and at least one origin, users cannot sign in with a passkey.',
+              'The Passkey auth method is enabled. Without a relying party ID that has a web platform or custom origin, users cannot sign in with a passkey.',
             )}
           </p>
         )}

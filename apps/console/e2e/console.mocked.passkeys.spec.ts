@@ -9,8 +9,8 @@ import { expect, test } from './fixtures'
  * Passkeys: the relying party policy and the auth method it gates.
  *
  * The Appwrite API is mocked at the network layer and the real console pages are
- * asserted: what the policy card reads back, what its Update button sends, and that
- * the Passkey auth method only becomes switchable once the policy is configured.
+ * asserted: what the policy card reads back, what its Update button sends, and how
+ * turning the Passkey auth method on asks for a domain when the policy needs one.
  *
  * On Cloud, passkeys are rolled out per user: only a console user whose prefs
  * carry `flags-passkeys` sees them. Self-hosted consoles always show them.
@@ -136,6 +136,19 @@ const CONFIGURED: PasskeyPolicy = {
 
 const UNCONFIGURED: PasskeyPolicy = { rpId: '', origins: [] }
 
+function webPlatform(hostname: string) {
+  return {
+    $id: `web-${hostname}`,
+    $createdAt: NOW,
+    $updatedAt: NOW,
+    name: hostname,
+    type: 'web',
+    hostname,
+  }
+}
+
+const APP_PLATFORMS = [webPlatform('app.example.com'), webPlatform('localhost')]
+
 /**
  * Like the server's V29 filter: `passkey` is listed in authMethods only for
  * the 2.4.0 response format and later, so a console that asks for an older
@@ -180,6 +193,8 @@ type MockOptions = {
   accountPrefs?: Models.Preferences
   /** When set, the policy PATCH is refused with this JSON body. */
   patchError?: { message: string; code: number; type: string }
+  /** The project's platforms; none by default. */
+  platforms?: ReturnType<typeof webPlatform>[]
 }
 
 type Calls = {
@@ -292,6 +307,10 @@ async function mockAppwriteApi(
         total: 1,
         policies: [{ $id: PASSKEY_ID, ...policy }],
       })
+    if (apiPath === '/project/platforms') {
+      const platforms = options.platforms ?? []
+      return json(200, { total: platforms.length, platforms })
+    }
     if (apiPath === '/project/mock-phones')
       return json(200, { total: 0, mockNumbers: [] })
 
@@ -509,42 +528,116 @@ test.describe('passkeys (mocked API)', () => {
     await expect(updateButton(page)).toBeEnabled()
   })
 
-  test('the passkey method stays off until the policy is configured', async ({
+  test('origins default to the web platforms on the relying party', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      policy: { rpId: 'example.com', origins: [] },
+      platforms: APP_PLATFORMS,
+    })
+    await openPasskeyPolicies(page)
+
+    const platformOrigins = page.getByTestId('passkey-platform-origins')
+    await expect(platformOrigins).toContainText('https://app.example.com')
+    await expect(platformOrigins).toContainText('http://localhost (any port)')
+    await expect(originInput(page, 1)).toHaveCount(0)
+    await expect(page.getByTestId('passkey-rp-id-suggestions')).toHaveCount(0)
+
+    await rpIdInput(page).fill('')
+    await expect(page.getByTestId('passkey-rp-id-suggestions')).toContainText(
+      'example.com',
+    )
+  })
+
+  test('turning passkeys on asks for the domain, suggested from web platforms', async ({
+    page,
+  }) => {
+    const calls = await mockAppwriteApi(page, {
+      policy: UNCONFIGURED,
+      platforms: [webPlatform('app.example.com')],
+    })
+    await openAuthSettings(page)
+
+    const toggle = page.locator(`#${PASSKEY_ID}`)
+    await expect(toggle).toBeEnabled()
+    await toggle.click()
+
+    const dialog = page.getByTestId('enable-passkeys-dialog')
+    await expect(dialog).toBeVisible()
+    await expect(
+      dialog.getByRole('radio', { name: 'example.com', exact: true }),
+    ).toBeChecked()
+    await expect(page.getByTestId('enable-passkeys-origins')).toContainText(
+      'https://app.example.com',
+    )
+
+    await dialog.getByRole('button', { name: 'Enable', exact: true }).click()
+
+    await expect(dialog).toBeHidden()
+    await expect(toggle).toBeChecked()
+    expect(calls.policyPatches).toHaveLength(1)
+    expect(calls.policyPatches[0].postDataJSON()).toEqual({
+      rpId: 'example.com',
+      origins: [],
+    })
+    await expect.poll(() => calls.methodPatches.length).toBe(1)
+    expect(calls.methodPatches[0].postDataJSON()).toEqual({ enabled: true })
+  })
+
+  test('a localhost platform turns passkeys on before a domain is chosen', async ({
+    page,
+  }) => {
+    const calls = await mockAppwriteApi(page, {
+      policy: UNCONFIGURED,
+      platforms: [webPlatform('localhost')],
+    })
+    await openAuthSettings(page)
+
+    const toggle = page.locator(`#${PASSKEY_ID}`)
+    await toggle.click()
+
+    await expect(toggle).toBeChecked()
+    await expect(page.getByTestId('enable-passkeys-dialog')).toHaveCount(0)
+    await expect.poll(() => calls.methodPatches.length).toBe(1)
+    expect(calls.policyPatches).toHaveLength(0)
+  })
+
+  test('without a matching web platform passkeys cannot be enabled', async ({
     page,
   }) => {
     const calls = await mockAppwriteApi(page, { policy: UNCONFIGURED })
     await openAuthSettings(page)
 
     const toggle = page.locator(`#${PASSKEY_ID}`)
-    await expect(toggle).toBeDisabled()
+    await toggle.click()
+    const dialog = page.getByTestId('enable-passkeys-dialog')
+    const enable = dialog.getByRole('button', { name: 'Enable', exact: true })
+    await expect(enable).toBeDisabled()
+
+    await dialog.getByRole('textbox', { name: 'Domain' }).fill('example.com')
+    await expect(page.getByTestId('enable-passkeys-origins')).toContainText(
+      'No web platform on this domain yet.',
+    )
+    await expect(enable).toBeDisabled()
+
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
     await expect(toggle).not.toBeChecked()
-    const hint = page.getByText(
-      'Set a relying party ID and origins in passkey policies to enable.',
-    )
-    await expect(hint).toBeVisible()
-    const hintId = await hint.getAttribute('id')
-    expect(hintId).toBeTruthy()
-    await expect(toggle).toHaveAttribute('aria-describedby', hintId!)
+    expect(calls.policyPatches).toHaveLength(0)
+    expect(calls.methodPatches).toHaveLength(0)
+  })
 
-    await hint.getByRole('link', { name: 'Configure', exact: true }).click()
-    await expect(page).toHaveURL(
-      new RegExp(`/projects/${PROJECT_ID}/auth/policies/passkeys$`),
-    )
-
-    await rpIdInput(page).fill('example.com')
-    await originInput(page, 1).fill('https://example.com')
-    await updateButton(page).click()
-    await expect(
-      page.getByText('Updated passkey settings', { exact: true }),
-    ).toBeVisible()
-
+  test('a configured policy turns passkeys on without asking', async ({
+    page,
+  }) => {
+    const calls = await mockAppwriteApi(page, { policy: CONFIGURED })
     await openAuthSettings(page)
-    await expect(toggle).toBeEnabled()
+
+    const toggle = page.locator(`#${PASSKEY_ID}`)
     await toggle.click()
 
     await expect(toggle).toBeChecked()
+    await expect(page.getByTestId('enable-passkeys-dialog')).toHaveCount(0)
     await expect.poll(() => calls.methodPatches.length).toBe(1)
-    expect(calls.methodPatches[0].postDataJSON()).toEqual({ enabled: true })
   })
 
   test('users without the passkeys flag see no passkey settings', async ({

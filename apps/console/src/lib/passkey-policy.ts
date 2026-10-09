@@ -1,4 +1,4 @@
-import type { Models } from '@appwrite.io/console'
+import { PlatformType, type Models } from '@appwrite.io/console'
 
 /** The server rejects more origins than this. */
 export const MAX_PASSKEY_ORIGINS = 10
@@ -25,9 +25,100 @@ export function parsePasskeyPolicy(
   }
 }
 
-/** Passkeys fail closed: sign-in needs a relying party and at least one origin. */
-export function isPasskeyPolicyConfigured(policy: PasskeyPolicy): boolean {
-  return policy.rpId !== '' && policy.origins.length > 0
+export type PasskeyPlatform = Models.PlatformList['platforms'][number]
+
+const LOCALHOST = 'localhost'
+
+/** Second-level labels that sit under a country code, like co.uk or com.au. */
+const SUFFIX_LABELS = new Set(['co', 'com', 'net', 'org', 'gov', 'edu', 'ac'])
+
+function webHostnames(platforms: PasskeyPlatform[]): string[] {
+  return platforms.flatMap((platform) =>
+    platform.type === PlatformType.Web &&
+    'hostname' in platform &&
+    platform.hostname
+      ? [platform.hostname.toLowerCase()]
+      : [],
+  )
+}
+
+export function hasLocalhostPlatform(platforms: PasskeyPlatform[]): boolean {
+  return webHostnames(platforms).includes(LOCALHOST)
+}
+
+/**
+ * Origins the server allows when the policy lists none, mirroring
+ * `Appwrite\Auth\Passkey\Ceremony::getOrigins()`.
+ */
+export function platformPasskeyOrigins(
+  rpId: string,
+  platforms: PasskeyPlatform[],
+): string[] {
+  if (rpId === '') return []
+  const origins = new Set<string>()
+  if (rpId === LOCALHOST) {
+    if (hasLocalhostPlatform(platforms)) origins.add('http://localhost')
+    return [...origins]
+  }
+  if (platforms.some((platform) => platform.type === PlatformType.Apple)) {
+    origins.add(`https://${rpId}`)
+  }
+  for (const hostname of webHostnames(platforms)) {
+    if (hostname.includes('*')) continue
+    if (hostname === rpId || hostname.endsWith(`.${rpId}`)) {
+      origins.add(`https://${hostname}`)
+    }
+  }
+  return [...origins]
+}
+
+/** Passkeys fail closed: sign-in needs a relying party with at least one origin, or a localhost platform. */
+export function isPasskeyReady(
+  policy: PasskeyPolicy,
+  platforms: PasskeyPlatform[],
+): boolean {
+  if (hasLocalhostPlatform(platforms)) return true
+  if (policy.rpId === '') return false
+  return (
+    policy.origins.length > 0 ||
+    platformPasskeyOrigins(policy.rpId, platforms).length > 0
+  )
+}
+
+/**
+ * Relying party IDs to offer, from the project's web platforms: each parent
+ * domain first, since it also covers its subdomains, then the hostname itself.
+ * Hostnames under a shared domain such as the Sites domain only offer themselves.
+ */
+export function suggestPasskeyRpIds(
+  platforms: PasskeyPlatform[],
+  sharedDomains: string[] = [],
+): string[] {
+  const parents: string[] = []
+  const hosts: string[] = []
+  for (const raw of webHostnames(platforms)) {
+    const hostname = raw.startsWith('*.') ? raw.slice(2) : raw
+    if (hostname.includes('*') || passkeyRpIdError(hostname) !== null) continue
+    if (hostname === LOCALHOST) continue
+    hosts.push(hostname)
+    const shared = sharedDomains.some(
+      (domain) => domain && hostname.endsWith(`.${domain}`),
+    )
+    const labels = hostname.split('.')
+    if (shared || labels.length < 3) continue
+    const parent = labels.slice(-2).join('.')
+    const suffix =
+      labels.length >= 3 && SUFFIX_LABELS.has(labels[labels.length - 2])
+    parents.push(suffix ? labels.slice(-3).join('.') : parent)
+  }
+  return [...new Set([...parents, ...hosts])].filter(
+    (domain) =>
+      !sharedDomains.includes(domain) &&
+      !(
+        domain.split('.').length === 2 &&
+        SUFFIX_LABELS.has(domain.split('.')[0])
+      ),
+  )
 }
 
 /** Matches the server's normalisation closely enough to compare for changes. */
