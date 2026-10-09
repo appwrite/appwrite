@@ -17,6 +17,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Locking\Lock;
+use Appwrite\Network\RateLimit\Params;
 use Appwrite\Onboarding\Stages;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
@@ -585,33 +586,11 @@ Http::init()
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
         $closestLimit = null;
 
-        $start = $request->getContentRangeStart();
-        $end = $request->getContentRangeEnd();
-        $params = [
-            '{projectId}' => (string) $project->getId(),
-            '{userId}' => (string) $user->getId(),
-            '{userAgent}' => (string) $request->getUserAgent(''),
-            '{ip}' => (string) $request->getIP(),
-            '{url}' => $request->getHostname() . $route->getPath(),
-            '{method}' => (string) $request->getMethod(),
-            '{chunkId}' => (string) (int) ($start / ($end + 1 - $start)),
-        ];
-
-        foreach ($request->getParams() as $key => $value) {
-            if ($value === null || $value === '' || $value === []) {
-                continue;
-            }
-            $encoded = \is_scalar($value) ? (string) $value : \json_encode($value);
-            if ($encoded === false || $encoded === '') {
-                continue;
-            }
-            $params['{param-' . $key . '}'] = $encoded;
-        }
-
         foreach ($abuseKeyLabel as $abuseKey) {
             $isRateLimited = false;
 
             try {
+                $params = Params::of($request, $route, $project, $user);
                 $isRateLimited = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params, $response, $shouldCheckAbuse, &$closestLimit): bool {
                     $timeLimit = $timeLimit->withParams($params);
                     $result = $shouldCheckAbuse ? $timeLimit->check() : $timeLimit->peek();
@@ -973,30 +952,9 @@ Http::shutdown()
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
-        $start = $request->getContentRangeStart();
-        $end = $request->getContentRangeEnd();
-        $params = [
-            '{projectId}' => (string) $project->getId(),
-            '{userId}' => (string) $user->getId(),
-            '{userAgent}' => (string) $request->getUserAgent(''),
-            '{ip}' => (string) $request->getIP(),
-            '{url}' => $request->getHostname() . $route->getPath(),
-            '{method}' => (string) $request->getMethod(),
-            '{chunkId}' => (string) (int) ($start / ($end + 1 - $start)),
-        ];
-
-        foreach ($request->getParams() as $key => $value) {
-            if ($value === null || $value === '' || $value === []) {
-                continue;
-            }
-            $encoded = \is_scalar($value) ? (string) $value : \json_encode($value);
-            if ($encoded === false || $encoded === '') {
-                continue;
-            }
-            $params['{param-' . $key . '}'] = $encoded;
-        }
-
         foreach ($abuseKeyLabel as $abuseKey) {
+            $params = Params::of($request, $route, $project, $user);
+
             $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params): void {
                 $timeLimit->withParams($params)->reset();
             });
