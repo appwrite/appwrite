@@ -1075,6 +1075,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Install toolchain
         run: |
@@ -1099,6 +1101,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Expose the runner registry to workflow expressions
         run: echo "GCRUNNER_REGISTRY=${GCRUNNER_REGISTRY}" >> "${GITHUB_ENV}"
@@ -1139,6 +1143,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Login to Docker Hub
         if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
@@ -1188,10 +1194,12 @@ jobs:
 
       - name: Run tests
         timeout-minutes: 15
+        env:
+          RESPONSE_FORMAT: ${{ github.event.inputs.response_format }}
         run: |
           docker compose exec -T \
             -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 \
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+            -e _APP_E2E_RESPONSE_FORMAT="${RESPONSE_FORMAT}" \
             appwrite vendor/bin/paratest --processes "$(nproc)" --functional /usr/src/code/tests/e2e/Services/Users \
             --exclude-group abuseEnabled --log-junit tests/e2e/Services/Users/junit-rust.xml
 
@@ -1217,6 +1225,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Pull the Appwrite image
         run: |
@@ -1229,6 +1239,11 @@ jobs:
 
       - name: Install toolchain
         run: |
+          if ! command -v rustup >/dev/null; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
+            echo "${HOME}/.cargo/bin" >> "${GITHUB_PATH}"
+            export PATH="${HOME}/.cargo/bin:${PATH}"
+          fi
           rustup toolchain install "${RUST_VERSION}" --profile minimal
           rustup default "${RUST_VERSION}"
 

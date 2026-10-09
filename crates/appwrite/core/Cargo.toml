@@ -19,6 +19,9 @@ http.workspace = true
 http-body-util.workspace = true
 hyper.workspace = true
 hyper-util = { workspace = true, features = ["client-legacy", "http1"] }
+hyper-rustls.workspace = true
+md-5.workspace = true
+rustls.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sha1.workspace = true

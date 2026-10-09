@@ -54,6 +54,7 @@ final class Adapter implements Base
             'distributed.token' => fn (array $a, Session $s) => self::distributed($a, $s)->token(),
             'distributed.has_token' => fn (array $a, Session $s) => self::distributed($a, $s)->token() !== null,
             'distributed.set_logger' => function (array $a, Session $s) {
+                /** @var \ArrayObject<int, string> $logs */
                 $logs = new \ArrayObject();
                 self::distributed($a, $s)->setLogger(function (string $message) use ($logs): void {
                     $logs[] = $message;

@@ -72,6 +72,8 @@ Package boundaries are enforced by Cargo: Utopia crates never depend on `appwrit
   - Rust applies the same relation purges PHP does (e.g. `users/<id>` after a session, target or authenticator change).
   
   Neither runtime ever reads the other's serialized values, so no igbinary decoding is needed.
+
+  This is the phase-1 design, and it is what runs today. The full conversion replaces it ([rfc/rust-database.md](rust-database.md), Decisions, "Cache interop"): both runtimes share the same entries, Rust reads and writes PHP's igbinary envelope and hash fields (through a `SignatureTable`), and the Rust-only `rust:project:v1` field is removed. Implement new cache code to that plan, not to this section.
 - **Side effects.** Events (`users.*`), functions, webhooks, realtime, deletes, usage and onboarding are published in the formats the PHP workers already consume, including the database-listener `users.[userId].create` event. Audits are skipped on `self-hosted`, as in PHP.
 - **Auth.** API keys (standard and ephemeral), session cookies and headers, fallback cookies, JWTs, console admin mode (team membership roles plus the project read check), impersonation and MFA factor checks all follow `app/controllers/shared/api.php`, in the same order. The order matters because it decides which error a client sees.
 
@@ -96,7 +98,6 @@ docker compose exec -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 appwrite \
 | Area | Status |
 |---|---|
 | Database adapters | PostgreSQL only. With MariaDB or MongoDB the Rust API refuses to start, and Traefik must not route to it. |
-| `_APP_PWNED_PASSWORDS_DSN` `hibp://`/`appwrite://` | Answer 503 (`general_pwned_passwords_unavailable`) until an outbound HTTPS client is added. `none://` and `mock://` are supported. |
 | Account and organization API keys | Treated like unknown keys (guest scopes). Project keys (standard and ephemeral) are fully supported. |
 | Request filter for formats older than 1.5.0 (old query syntax) | Not implemented; the response filters are. |
 | CORS from `rules` (custom domains) | Not consulted; platform hosts and project platforms are. |
@@ -177,7 +178,7 @@ let platform = Platform::new(state)          // State::new(config, Arc::new(Clou
 ## 8. Migration plan
 
 1. **Users** (this RFC): Rust behind the `rust` compose profile, and the `e2e_rust` CI job green in both modes.
-2. Close the gaps in §4: the outbound HTTPS client for pwned passwords, account and organization keys, and the MariaDB adapter in `utopia-database`.
+2. Close the gaps in §4: account and organization keys, and the MariaDB adapter in `utopia-database`.
 3. **Teams**, then **Account**. These reuse `appwrite-core` auth and documents; Account adds OAuth and mail queues.
 4. **Databases (TablesDB)**. Generic, metadata-driven documents in `utopia-database`, plus relationships.
 5. **Storage**, **Functions** control plane, **Messaging**, and so on.

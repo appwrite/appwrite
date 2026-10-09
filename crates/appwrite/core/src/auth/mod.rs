@@ -82,7 +82,10 @@ impl ApiKey {
                 };
                 let claim_str = |k: &str| claims.get(k).and_then(Value::as_str).unwrap_or("").to_owned();
                 let project_check_disabled = matches!(claims.get("projectCheckDisabled"), Some(Value::Bool(true)));
-                if !expired && !project_check_disabled && claim_str("projectId") != project.id {
+                // As in PHP, the check also runs for a token that failed to
+                // decode: its claims are empty, so it becomes a guest key.
+                let project_id = claim_str("projectId");
+                if !project_check_disabled && project_id != project.id {
                     return Self::guest(project, kind);
                 }
                 let mut scopes: Vec<String> = claims
@@ -106,7 +109,7 @@ impl ApiKey {
                     role: roles::KEYS.to_owned(),
                     scopes,
                     name,
-                    project_id: project.id.clone(),
+                    project_id,
                     user_id: String::new(),
                     team_id: String::new(),
                     expired,
