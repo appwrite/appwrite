@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-function-intervals",
+    "href": "/blog/post/announcing-function-intervals",
+    "title": "Announcing function intervals: run functions every N minutes",
+    "description": "Appwrite Functions can now run on an interval as an alternative to cron. Set how often a function runs, and Appwrite picks when within each interval it starts.",
+    "date": "2026-10-09",
+    "lastUpdated": "2026-10-09",
+    "timeToRead": 4,
+    "author": "chirag-aggarwal",
+    "category": "announcements, products",
+    "featured": false,
+    "cover": "/images/blog/announcing-function-intervals/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "android-sdk-r8-support",
     "href": "/blog/post/android-sdk-r8-support",
     "title": "R8 code shrinking now works with the Appwrite Android SDK",
