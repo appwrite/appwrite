@@ -101,7 +101,6 @@ class Update extends Action
         }
 
         $auths['passkeyRpId'] = $rpId;
-        unset($auths['passkeyOrigins']);
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'auths' => $auths,

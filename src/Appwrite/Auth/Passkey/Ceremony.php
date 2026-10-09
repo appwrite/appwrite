@@ -29,11 +29,8 @@ class Ceremony extends Base
         $id = $auths['passkeyRpId'] ?? '';
         $name = $project->getAttribute('name', '');
 
-        // The console project has no platforms, so its origins come from configuration
-        if ($project->getId() === 'console') {
-            $origins = $auths['passkeyOrigins'] ?? [];
-
-            return $id === '' || empty($origins) ? null : new self(new RelyingParty($id, $name, $origins));
+        if (!empty($auths['passkeyOrigins'])) {
+            return $id === '' ? null : new self(new RelyingParty($id, $name, $auths['passkeyOrigins']));
         }
 
         $platforms = $project->getAttribute('platforms', []);
@@ -49,14 +46,15 @@ class Ceremony extends Base
 
     /**
      * Every origin passkeys work on for the project: the relying party's, plus localhost for local development.
+     * Configured origins, such as the console's, are used as they are.
      *
      * @return array<string>
      */
     public static function getOrigins(Document $project): array
     {
         $auths = $project->getAttribute('auths', []);
-        if ($project->getId() === 'console') {
-            return $auths['passkeyOrigins'] ?? [];
+        if (!empty($auths['passkeyOrigins'])) {
+            return $auths['passkeyOrigins'];
         }
 
         $id = $auths['passkeyRpId'] ?? '';
