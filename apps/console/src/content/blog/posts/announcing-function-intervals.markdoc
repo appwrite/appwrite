@@ -11,9 +11,11 @@ featured: false
 callToAction: true
 faqs:
   - question: "What is the difference between an interval and a cron schedule?"
-    answer: "A cron expression runs your function at exact times, such as 09:00 every Monday. An interval runs it every N minutes, at a fixed time within each interval that Appwrite picks for that function. Use cron when the time of day matters and an interval when only the frequency does."
+    answer: "A cron expression runs your function at the times you write, such as 09:00 every Monday. An interval is cron where Appwrite picks the minute for you: an hourly interval behaves like `37 * * * *`, with the 37 chosen for your function. Use cron when the time of day matters and an interval when only the frequency does."
+  - question: "I set an interval and nothing has run yet. Why?"
+    answer: "Run times are fixed to the UTC clock, not counted from when you save the function. The first run happens at the function's next slot, which can be up to one full interval away: up to an hour for an hourly interval, or almost a day for a daily one."
   - question: "Can I choose the exact minute an interval runs?"
-    answer: "No. Appwrite picks the time within each interval and keeps it, so an hourly function runs at the same minute every hour. If you need a specific minute, use a cron expression instead."
+    answer: "No. Appwrite picks the time within each interval and keeps it, so an hourly function runs at the same minute every hour, and a daily interval runs at one fixed UTC time of day. If you need a specific minute or time of day, use a cron expression instead."
   - question: "What is the shortest interval I can set?"
     answer: "One minute on Appwrite Cloud paid plans and on self-hosted Appwrite. The Free and Education plans on Appwrite Cloud support intervals of 60 minutes or longer."
   - question: "Can a function use an interval and a cron expression at the same time?"
@@ -28,16 +30,22 @@ Appwrite Functions now support **intervals**. You set how often a function runs,
 
 # How intervals work
 
-An interval is a number of minutes. Set it to 60 and your function runs once every hour. Appwrite picks a fixed time within that hour for the function and keeps it, so the function might run at 14:37, 15:37, 16:37 and so on.
+An interval is a number of minutes. Think of it as cron where Appwrite picks the minute for you: an interval of 60 behaves like the cron expression `37 * * * *`, with the 37 chosen for your function.
+
+```text
+every 60 minutes  →  14:37, 15:37, 16:37, ...
+```
 
 Each function gets its own time within the interval, so functions with the same interval spread out across it instead of all starting at once. Your scheduled work starts on time without queueing behind every other function scheduled for the top of the hour.
+
+Run times are fixed to the UTC clock, not counted from when you save the function. The first run can be up to one full interval away, and an interval that doesn't divide evenly into an hour or a day, such as 90 minutes, runs at a different minute each time.
 
 A function uses either an interval or a cron expression:
 
 | | Interval | Cron |
 | --- | --- | --- |
 | You set | How often, in minutes | Exact times |
-| Runs at | A fixed time Appwrite picks within each interval | The times in the expression |
+| Runs at | A fixed time Appwrite picks within each interval | The times in the expression (up to 5 minutes later on the Free and Education plans) |
 | Best for | Syncs, cleanups, polling, cache refreshes | Reports, digests, anything tied to the clock |
 
 # Set an interval in the Console
@@ -60,12 +68,12 @@ const functions = new Functions(client);
 
 await functions.update({
     functionId: '<FUNCTION_ID>',
-    name: 'Sync orders',
+    name: 'Sync orders', // name is required by update
     interval: 30 // every 30 minutes
 });
 ```
 
-Set `interval` to `0` to stop it. An update that leaves `interval` out keeps the current one, so existing code that updates other settings won't clear it.
+Set `interval` to `0` to stop it. An update that leaves `interval` out keeps the current one, so existing code that updates other settings won't clear it. Setting the `schedule` parameter (a cron expression) switches the function back to cron.
 
 # Plans
 

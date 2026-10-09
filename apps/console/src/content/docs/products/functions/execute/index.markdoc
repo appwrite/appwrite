@@ -550,13 +550,26 @@ You can use one of the following events.
 
 # Schedule {% #schedule %}
 
-Appwrite supports recurring function executions. Set a schedule in your function's settings, or with the `interval` or `schedule` parameter of a [Server SDK](/docs/sdks#server). A function uses one or the other, not both.
+Appwrite supports recurring function executions. Set a schedule in your function's settings, or with a [Server SDK](/docs/sdks#server) using either the `interval` parameter (minutes) or the `schedule` parameter (a cron expression). A function uses one or the other, not both.
 
 ## Interval {% #interval %}
 
-An interval runs your function every N minutes. Appwrite picks a fixed time within each interval for your function and keeps it, so an hourly function might run at 37 minutes past every hour. Spreading functions across the interval avoids every function in a project starting at the same moment.
+An interval runs your function every N minutes. Think of it as cron where Appwrite picks the minute for you: an hourly interval behaves like the cron expression `37 * * * *`, with the 37 chosen for your function.
 
-The interval is a whole number of minutes, as low as **1**. On Appwrite Cloud, the Free and Education plans support intervals of **60 minutes or longer**. Changing the interval can move the time Appwrite picks, and the first run after you set an interval can be up to one interval away.
+```text
+every 60 minutes  →  14:37, 15:37, 16:37, ...
+```
+
+Each function gets its own time within the interval, so functions with the same interval don't all start at the same moment.
+
+The interval is a whole number of minutes, as low as **1**. On Appwrite Cloud, the Free and Education plans support intervals of **60 minutes or longer**.
+
+Run times are fixed to the UTC clock, not counted from when you save the function:
+
+- The first run can be up to one full interval away. A daily interval may first run almost 24 hours after you set it.
+- A daily interval (1440 minutes) runs at one fixed UTC time of day, which you can't choose. Use cron if the time of day matters.
+- An interval that doesn't divide evenly into an hour or a day, such as 45 or 90 minutes, runs at a different minute each hour or day.
+- Changing the interval can move the time Appwrite picks.
 
 {% multicode %}
 ```server-nodejs
@@ -572,7 +585,7 @@ const functions = new sdk.Functions(client);
 // Run the function every 6 hours
 await functions.update({
     functionId: '<FUNCTION_ID>',
-    name: '<NAME>',
+    name: '<NAME>', // name is required by update
     interval: 360
 });
 ```
@@ -589,18 +602,18 @@ functions = Functions(client)
 
 # Run the function every 6 hours
 functions.update(
-    function_id = '<FUNCTION_ID>',
-    name = '<NAME>',
-    interval = 360
+    function_id='<FUNCTION_ID>',
+    name='<NAME>',  # name is required by update
+    interval=360
 )
 ```
 {% /multicode %}
 
-Set `interval` to `0` to stop running on an interval. An update that leaves out `interval` keeps the current one.
+Set `interval` to `0` to stop running on an interval. An update that leaves out `interval` keeps the current one, but an update that leaves out `schedule` clears the cron expression, so send both when you update a function that uses cron.
 
 ## Cron {% #cron %}
 
-A [cron expression](https://en.wikipedia.org/wiki/Cron) runs your function at exact times, as frequently as **every minute**. Use cron when the time of day matters.
+A [cron expression](https://en.wikipedia.org/wiki/Cron), set with the `schedule` parameter, runs your function at the times it describes, as frequently as **every minute**. Use cron when the time of day matters. On the Appwrite Cloud Free and Education plans, cron runs can start up to 5 minutes after the scheduled time.
 
 Here are some cron expressions for common schedules:
 
