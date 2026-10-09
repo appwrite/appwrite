@@ -114,8 +114,10 @@ class Nats implements Synchronous, Consumer, Bounded
     // drains or is evicted.
     private const array PUBLISH_RETRY_DELAYS = [0.0, 0.25, 1.0, 2.0];
 
-    // Wall-clock bound on those republishes, so a publish that keeps timing out at
-    // the request timeout cannot hold its caller for every attempt in turn.
+    // No republish starts once this many seconds have passed since the first
+    // attempt, so a publish that keeps timing out cannot hold its caller for every
+    // attempt in turn. An attempt already started still runs to its own request
+    // timeout, so the caller waits at most this plus one request timeout.
     private const float PUBLISH_RETRY_BUDGET = 10.0;
 
     /**
@@ -585,6 +587,7 @@ class Nats implements Synchronous, Consumer, Bounded
                 }
             }
 
+            // Checked before every republish, the last one included.
             if (microtime(true) + $delay >= $deadline) {
                 throw $error;
             }

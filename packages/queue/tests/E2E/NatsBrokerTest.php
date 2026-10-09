@@ -1161,7 +1161,9 @@ final class NatsBrokerTest extends TestCase
         } catch (NoRespondersException) {
         }
 
-        $this->assertLessThan(10.0, microtime(true) - $started, 'the caller is released within the retry budget');
+        // The budget bounds when a republish may start; one in flight may still run
+        // to the request timeout (5s by default).
+        $this->assertLessThan(15.0, microtime(true) - $started, 'the caller is released within the retry budget');
     }
 
     public function testRetriedPublishUnderAStableIdStoresOneMessage(): void
