@@ -13,6 +13,7 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Refused;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 
@@ -43,6 +44,72 @@ final class VectorsCollectionCreateTest extends TestCase
     protected function tearDown(): void
     {
         Config::setParam('collections', $this->collections);
+    }
+
+    public function testARefusedBootstrapProceedsOnceTheMetadataExists(): void
+    {
+        $created = null;
+        $dbForDatabases = $this->createStub(Database::class);
+        $dbForDatabases->method('create')->willThrowException(new Refused('Failed to create database'));
+        $dbForDatabases->method('collectionExists')->willReturn(true);
+        $dbForDatabases->method('createCollection')->willReturnCallback(
+            static function (Collection $collection) use (&$created): Collection {
+                $created = $collection;
+
+                return $collection;
+            }
+        );
+
+        $this->create($dbForDatabases);
+
+        $this->assertInstanceOf(Collection::class, $created);
+        $this->assertSame('database_9_collection_2', $created->getId());
+    }
+
+    public function testARefusedBootstrapWithoutMetadataFailsTheCreate(): void
+    {
+        $dbForDatabases = $this->createMock(Database::class);
+        $dbForDatabases->expects($this->exactly(5))->method('create')->willThrowException(new Refused('Failed to create database'));
+        $dbForDatabases->method('collectionExists')->willReturn(false);
+        $dbForDatabases->expects($this->never())->method('createCollection');
+
+        $this->expectException(Refused::class);
+
+        $this->create($dbForDatabases);
+    }
+
+    private function create(Database $dbForDatabases): void
+    {
+        $dbForProject = $this->createStub(Database::class);
+        $dbForProject->method('getDocument')->willReturn(new Document([
+            '$id' => self::DATABASE_ID,
+            '$sequence' => '9',
+            'type' => DATABASE_TYPE_VECTORSDB,
+        ]));
+        $dbForProject->method('createDocument')->willReturnCallback(
+            static fn (string $collection, Document $document): Document => $document->setAttribute('$sequence', '2')
+        );
+        $dbForProject->method('createDocuments')->willReturnCallback(
+            static fn (string $collection, array $documents): int => \count($documents)
+        );
+
+        $authorization = $this->createStub(Authorization::class);
+        $authorization->method('skip')->willReturnCallback(static fn (callable $callback): mixed => $callback());
+
+        (new Create())->action(
+            self::DATABASE_ID,
+            'documents',
+            'Documents',
+            self::DIMENSION,
+            null,
+            false,
+            true,
+            $this->createStub(Response::class),
+            $dbForProject,
+            static fn (): Database => $dbForDatabases,
+            $this->createStub(Event::class),
+            $authorization,
+        );
     }
 
     public function testEmbeddingsTakeTheRequestedDimension(): void

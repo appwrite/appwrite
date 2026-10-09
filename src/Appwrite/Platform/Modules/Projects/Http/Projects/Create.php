@@ -195,39 +195,31 @@ class Create extends Action
         if ($projectTables) {
             $dbForProject = $databaseFactory->provisioning($project);
 
-            $create = true;
-
-            try {
-                $dbForProject->create();
-            } catch (Duplicate) {
-                $create = false;
-            }
+            $dbForProject->create();
 
             $adapter = new AdapterDatabase($dbForProject);
             $audit = new Audit($adapter);
             $audit->setup();
 
-            if ($create) {
-                /** @var array $collections */
-                $collections = Config::getParam('collections', [])['projects'] ?? [];
+            /** @var array $collections */
+            $collections = Config::getParam('collections', [])['projects'] ?? [];
 
-                foreach ($collections as $key => $collection) {
-                    if (($collection['$collection'] ?? '') !== Database::METADATA) {
-                        continue;
-                    }
+            foreach ($collections as $key => $collection) {
+                if (($collection['$collection'] ?? '') !== Database::METADATA) {
+                    continue;
+                }
 
-                    $attributes = $collection['attributes'];
-                    $indexes = $collection['indexes'];
+                $attributes = $collection['attributes'];
+                $indexes = $collection['indexes'];
 
-                    try {
-                        $dbForProject->createCollection(Collection::create(
-                            id: $key,
-                            attributes: $attributes,
-                            indexes: $indexes,
-                        ));
-                    } catch (Duplicate) {
-                        // Collection already exists
-                    }
+                try {
+                    $dbForProject->createCollection(Collection::create(
+                        id: $key,
+                        attributes: $attributes,
+                        indexes: $indexes,
+                    ));
+                } catch (Duplicate) {
+                    // Collection already exists
                 }
             }
         }

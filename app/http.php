@@ -19,7 +19,6 @@ use Utopia\Console\Console;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
@@ -141,12 +140,6 @@ function createDatabase(Container $resources, string $resourceKey, string $dbNam
             $database->create();
             break; // exit loop on success
         } catch (\Exception $e) {
-            if ($e instanceof DuplicateException) {
-                Span::add('database.exists', true);
-                Console::info("  └── Skip: metadata table already exists");
-                break;
-            }
-
             Console::warning("  └── Database create failed. Retrying ({$attempts})...");
             if ($attempts >= $max) {
                 throw new \Exception('  └── Failed to create database: ' . $e->getMessage());
@@ -303,10 +296,6 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     Console::success('[Setup] - Creating project database: ' . $hostname . '...');
                     $dbForProject->create();
                     break; // exit loop on success
-                } catch (DuplicateException) {
-                    Span::add('database.exists', true);
-                    Console::success('[Setup] - Skip: metadata table already exists');
-                    break;
                 } catch (\Throwable $e) {
                     Console::warning("  └── Project database create failed. Retrying ({$attempts})...");
                     if ($attempts >= $max) {

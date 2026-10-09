@@ -140,8 +140,6 @@ class Create extends CollectionAction
                 try {
                     $dbForDatabases->create();
                     break;
-                } catch (DuplicateException) {
-                    break;
                 } catch (\Throwable $e) {
                     if ($dbForDatabases->collectionExists(Database::METADATA, null)) {
                         break;
