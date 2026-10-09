@@ -247,7 +247,9 @@ final readonly class Claim
      */
     public function reclaim(string $projectId, string $migrationId): Retry
     {
-        $this->assertReady();
+        if (!$this->ready()) {
+            return $this->reclaimUnclaimed($migrationId);
+        }
 
         return $this->guard(
             $this->key($projectId, $migrationId),
@@ -317,6 +319,36 @@ final readonly class Claim
         }
 
         return $retry->migration;
+    }
+
+    /**
+     * Before V26 reaches the project a retry is handed over as main did: nothing
+     * is stored, and the delivery runs unclaimed.
+     */
+    private function reclaimUnclaimed(string $migrationId): Retry
+    {
+        $migration = $this->database->getDocument('migrations', $migrationId);
+
+        if ($migration->isEmpty()) {
+            throw new Exception(Exception::MIGRATION_NOT_FOUND);
+        }
+
+        if ($migration->getAttribute('status') !== self::STATUS_FAILED) {
+            throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration not failed yet');
+        }
+
+        $terminal = new Document([
+            '$id' => $migration->getId(),
+            'attemptId' => $migration->getAttribute('attemptId'),
+            'status' => $migration->getAttribute('status'),
+            'stage' => $migration->getAttribute('stage'),
+            '$updatedAt' => $migration->getUpdatedAt(),
+        ]);
+
+        return new Retry(
+            migration: $migration->setAttribute('status', self::STATUS_PENDING),
+            terminal: $terminal,
+        );
     }
 
     /**

@@ -508,17 +508,17 @@ final class ClaimTest extends TestCase
         }
     }
 
-    public function testReclaimRefusesIncompleteOwnershipSchemaBeforeMutatingTerminal(): void
+    public function testReclaimBeforeTheOwnershipSchemaHandsTheRetryOverUnclaimed(): void
     {
         $terminal = $this->createFailedMigration();
         $this->database->deleteAttribute('databases', 'migrationId');
+        $claims = new Claim($this->database, $this->locks());
 
-        try {
-            (new Claim($this->database, $this->locks()))->reclaim('project-1', $terminal->getId());
-            $this->fail('Expected incomplete ownership schema to be refused');
-        } catch (Exception $error) {
-            $this->assertSame(Exception::MIGRATION_SCHEMA_NOT_READY, $error->getType());
-        }
+        $retry = $claims->reclaim('project-1', $terminal->getId());
+
+        $this->assertSame('pending', $retry->migration->getAttribute('status'), 'Main handed a retry over as pending without storing it');
+        $this->assertSame('attempt-terminal', $retry->migration->getAttribute('attemptId'));
+        $this->assertInstanceOf(Delivery::class, $claims->consume('project-1', $retry->message(new Document(['$id' => 'project-1']))));
 
         $stored = $this->database->getDocument('migrations', $terminal->getId());
         $this->assertSame('attempt-terminal', $stored->getAttribute('attemptId'));
