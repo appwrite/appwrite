@@ -4473,6 +4473,8 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($existingUserId, $response['body']['$id']);
         $this->assertEquals($email, $response['body']['email']);
+        // The provider vouched for the address, so the adopted account needs no verification email
+        $this->assertTrue($response['body']['emailVerification']);
 
         // Clean up - delete the user
         $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $existingUserId, array_merge([
@@ -7089,6 +7091,18 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals($existing['id'], $response['body']['userId']);
+
+        // The provider vouched for the address, so the adopted account needs no verification email
+        $projectId = $this->getProject()['$id'];
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+        ]);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertTrue($account['body']['emailVerification']);
 
         /**
          * Test for FAILURE - unverified provider email cannot link to an existing account
