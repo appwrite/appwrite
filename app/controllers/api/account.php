@@ -4035,7 +4035,9 @@ Http::patch('/v1/account/prefs')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
-        $queueForEvents->setParam('userId', $user->getId());
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_ACCOUNT));
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
