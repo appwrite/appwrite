@@ -301,52 +301,43 @@ class Messaging extends Action
                     $recipients = \array_keys($userTopics);
                 }
 
-                // A user-/target-addressed native push is split into a woken group (user reached over
-                // MQTT) and a full group; everything else is a single full group of [recipients, wake].
-                $groups = [[$recipients, false]];
+                // For a user-/target-addressed send, an MQTT-reached user's native targets are not pushed
+                // here: all their registered devices are woken once after the loop (see below), which also
+                // covers devices absent from the streamed pages, e.g. a native target not named in a
+                // targetId send. Only non-MQTT recipients get the full notification; everything else (MQTT
+                // itself, SMS, email, campaign native subscribers) is a single full group.
+                $recipientGroup = $recipients;
                 $isNativePush = $resolvedProviderType === MESSAGE_TYPE_PUSH && $provider->getAttribute('provider') !== 'appwrite';
                 if ($perUser && $isNativePush && $mqttUsers !== []) {
-                    $wakeRecipients = [];
-                    $fullRecipients = [];
+                    $recipientGroup = [];
                     foreach ($identifiers as $identifier => $userId) {
-                        if (!empty($userId) && isset($mqttUsers[$userId])) {
-                            $wakeRecipients[] = $identifier;
-                        } else {
-                            $fullRecipients[] = $identifier;
+                        if (empty($userId) || !isset($mqttUsers[$userId])) {
+                            $recipientGroup[] = $identifier;
                         }
-                    }
-
-                    $groups = [];
-                    if ($wakeRecipients !== []) {
-                        $groups[] = [$wakeRecipients, true];
-                    }
-                    if ($fullRecipients !== []) {
-                        $groups[] = [$fullRecipients, false];
                     }
                 }
 
-                foreach ($groups as [$groupRecipients, $wake]) {
-                    foreach (\array_chunk($groupRecipients, $adapter->getMaxMessagesPerRequest()) as $batch) {
-                        $tasks[] = fn (): array => $semaphore->withLock(
-                            fn (): array => $this->sendBatch(
-                                $batch,
-                                $message,
-                                $provider,
-                                $resolvedProviderType,
-                                $adapter,
-                                $dbForProject,
-                                $project,
-                                $publisherForUsage,
-                                $attachments,
-                                $wake
-                            )
-                        );
-                    }
+                foreach (\array_chunk($recipientGroup, $adapter->getMaxMessagesPerRequest()) as $batch) {
+                    $tasks[] = fn (): array => $semaphore->withLock(
+                        fn (): array => $this->sendBatch(
+                            $batch,
+                            $message,
+                            $provider,
+                            $resolvedProviderType,
+                            $adapter,
+                            $dbForProject,
+                            $project,
+                            $publisherForUsage,
+                            $attachments,
+                            false
+                        )
+                    );
                 }
             }
 
             // Topic campaign: wake the page's MQTT-reached users' registered native devices. Additive to
             // any native subscribers, so a user reached only through a native target still gets a payload.
+            // User-/target-addressed sends are woken once after the loop instead (bounded recipient set).
             if (!$perUser && $pageMqttUsers !== []) {
                 foreach ($this->wakeTasks($pageMqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore) as $task) {
                     $tasks[] = $task;
@@ -396,6 +387,15 @@ class Messaging extends Action
 
             Span::add('message.skipped', 'no_valid_recipients');
             return;
+        }
+
+        // Wake the MQTT-reached users' registered native devices for user-/target-addressed sends. Run
+        // once over the complete (bounded) set so a device absent from the streamed pages — such as a
+        // native target not named in a targetId send — is still woken, without re-querying per page.
+        if ($mqttUsers !== []) {
+            foreach (batch($this->wakeTasks($mqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore)) as $result) {
+                $wakeSignals += $result['delivered'];
+            }
         }
 
         if (empty($deliveryErrors) && $deliveredTotal === 0) {

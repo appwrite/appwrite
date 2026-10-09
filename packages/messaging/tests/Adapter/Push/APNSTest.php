@@ -60,9 +60,11 @@ final class APNSTest extends TestCase
     }
 
     /**
-     * A data-only push still carries an `aps` dictionary, which APNs requires on every payload.
+     * A data-only push (no alert, no explicit content-available) is a background push: APNs rejects an
+     * alert-type push with no alert, so it is sent as background with priority 5 and content-available,
+     * and still carries the `aps` dictionary APNs requires on every payload.
      */
-    public function testDataOnlyKeepsApsDictionary(): void
+    public function testDataOnlyIsBackground(): void
     {
         $stub = new APNSStub($this->authKey(), 'keyId', 'teamId', 'com.example.app');
 
@@ -72,7 +74,10 @@ final class APNSTest extends TestCase
         ));
 
         $this->assertArrayHasKey('aps', $stub->capturedBodies[0]);
+        $this->assertSame(1, $stub->capturedBodies[0]['aps']['content-available']);
         $this->assertSame(['k' => 'v'], $stub->capturedBodies[0]['data']);
+        $this->assertContains('apns-push-type: background', $stub->capturedHeaders);
+        $this->assertContains('apns-priority: 5', $stub->capturedHeaders);
     }
 
     /**
