@@ -1073,8 +1073,8 @@ impl<'a> Parser<'a> {
         let mut after_zipper_count = 0usize;
 
         let octet_ok = |digits: &[u8; 4], count: usize| -> bool {
-            !(count > 1 && digits[0] == 0)
-                && !(count == 3 && 100 * u32::from(digits[0]) + 10 * u32::from(digits[1]) + u32::from(digits[2]) > 255)
+            !((count > 1 && digits[0] == 0)
+                || (count == 3 && 100 * u32::from(digits[0]) + 10 * u32::from(digits[1]) + u32::from(digits[2]) > 255))
         };
         let octet = |digits: &[u8; 4], count: usize| -> u8 {
             digits[..count].iter().fold(0u32, |acc, &d| acc * 10 + u32::from(d)) as u8
@@ -1220,7 +1220,7 @@ impl<'a> Parser<'a> {
                         break;
                     }
                     b']' => {
-                        if !zipper_ever && !(quads_done == 7 && digit_count > 0) {
+                        if !(zipper_ever || (quads_done == 7 && digit_count > 0)) {
                             return None;
                         }
                         if digit_count > 0 {

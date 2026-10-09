@@ -1714,7 +1714,7 @@ impl<'a> Matcher<'a> {
                         }
                         let mut p_idx: Option<usize> = None;
                         let group_frame =
-                            !matches!(kind, BraKind::Root) && !(matches!(kind, BraKind::Bra | BraKind::Cond) && !empty);
+                            !matches!(kind, BraKind::Root) && (!matches!(kind, BraKind::Bra | BraKind::Cond) || empty);
                         if group_frame {
                             let n_idx = self.frames[fi].last_group;
                             if n_idx == UNSET || n_idx == 0 {
@@ -2882,7 +2882,7 @@ impl<'a> Matcher<'a> {
     fn nl_or_eos(&mut self, e: usize) -> bool {
         if e < self.end {
             let nl = self.is_newline(e);
-            !(!nl || e != self.end - self.nllen)
+            nl && e == self.end - self.nllen
         } else {
             true
         }

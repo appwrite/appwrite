@@ -124,7 +124,7 @@ pub(super) fn coerce(value: &Value) -> Result<Cow<'_, [u8]>, Error> {
 pub(super) fn is_php_array(value: &Value) -> bool {
     match value {
         Value::Array(_) => true,
-        Value::Object(o) => !o.is_empty() && !(o.len() == 1 && o.contains_key("$bytes")),
+        Value::Object(o) => !(o.is_empty() || (o.len() == 1 && o.contains_key("$bytes"))),
         _ => false,
     }
 }

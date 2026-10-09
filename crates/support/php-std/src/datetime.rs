@@ -266,7 +266,10 @@ fn offset_string(offset: i64) -> String {
 }
 
 /// A `DateTime` (or `DateTimeImmutable`): a timelib time with its zone.
-#[derive(Debug, Clone, PartialEq)]
+///
+/// `==` and `<` compare instants, as PHP's do (`timelib_time_compare`): the
+/// same moment in two zones is equal.
+#[derive(Debug, Clone)]
 pub struct DateTime {
     t: Time,
 }
@@ -396,6 +399,12 @@ impl DateTime {
     }
 }
 
+impl PartialEq for DateTime {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp_time(other) == Ordering::Equal
+    }
+}
+
 impl PartialOrd for DateTime {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp_time(other))
@@ -406,6 +415,23 @@ impl DateTime {
     /// `timelib_time_compare` (what `<`, `>` and `==` on DateTime use).
     pub fn cmp_time(&self, other: &DateTime) -> Ordering {
         (self.t.sse, self.t.us).cmp(&(other.t.sse, other.t.us))
+    }
+}
+
+#[cfg(test)]
+mod equality_tests {
+    use super::*;
+
+    #[test]
+    fn the_same_instant_in_two_zones_is_equal() {
+        let utc = TzInfo::get("UTC").unwrap();
+        let now = Timestamp { sec: 1_700_000_000, usec: 0 };
+        let a = DateTime::parse(b"2024-01-01 12:00:00 UTC", None, &utc, now).unwrap();
+        let b = DateTime::parse(b"2024-01-01 14:00:00 +02:00", None, &utc, now).unwrap();
+        let c = DateTime::parse(b"2024-01-01 12:00:01 UTC", None, &utc, now).unwrap();
+        assert!(a == b);
+        assert_eq!(a.partial_cmp(&b), Some(Ordering::Equal));
+        assert!(a != c && a < c);
     }
 }
 

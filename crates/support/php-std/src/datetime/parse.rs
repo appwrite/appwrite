@@ -869,8 +869,9 @@ pub(super) fn parse_zone(c: &mut Cursor, t: &mut Time) -> Zone {
             t.zone_type = ZONETYPE_ABBR;
             t.tz_abbr = Some(String::from_utf8_lossy(word).to_ascii_uppercase());
         }
-        if (found == 0 || word != b"UTC")
-            && (found == 0 || word == b"UTC")
+        // timelib: `if (!found || strcmp("UTC", tz_abbr) == 0)` looks the word
+        // up as an identifier; the `UTC` abbreviation case is the branch below.
+        if found == 0
             && let Some(tz) = std::str::from_utf8(word).ok().and_then(TzInfo::get)
         {
             t.tz_info = Some(tz);
