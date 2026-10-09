@@ -91,9 +91,9 @@ class Create extends Action
             ->param('resourceType', '', new WhiteList($resourceTypes, true), 'The resource type for the schedule. Possible values: '.implode(', ', $resourceTypes).'.', enum: new Enum(name: 'ScheduleResourceType'))
             ->param('resourceId', '', new UID(), 'The resource ID to associate with this schedule.')
             ->param('schedule', '', new Cron(), 'Schedule CRON expression. Cannot be combined with interval.', true)
-            ->param('interval', 0, new Range(0, Database::MAX_INT), 'Minutes between runs, for function schedules only. Use 0 to disable. Cannot be combined with schedule.', true, example: '60')
             ->param('active', false, new Boolean(), 'Whether the schedule is active.', true)
             ->param('data', null, new JSON(), 'Schedule data as a JSON string. Used to store resource-specific context needed for execution.', true)
+            ->param('interval', 0, new Range(0, Database::MAX_INT), 'Minutes between runs, for function schedules only. Use 0 to disable. Cannot be combined with schedule.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
@@ -107,9 +107,9 @@ class Create extends Action
         string $resourceType,
         string $resourceId,
         string $schedule,
-        int $interval,
         bool $active,
         ?string $data,
+        int $interval,
         Response $response,
         Database $dbForPlatform,
         callable $getProjectDB,
