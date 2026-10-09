@@ -1,53 +1,71 @@
-//! Session store encoding: `base64(json_encode({...}))`.
+use php_std::encoding::{base64_decode, base64_encode};
+use php_std::json::{self, Flags};
+use php_std::zval::{Array, Key, Zval};
 
-use base64::engine::DecodePaddingMode;
-use base64::engine::general_purpose::{GeneralPurpose, GeneralPurposeConfig};
-use base64::{Engine, alphabet};
-use serde_json::{Map, Value};
+use crate::Error;
 
-const LENIENT: GeneralPurpose = GeneralPurpose::new(
-    &alphabet::STANDARD,
-    GeneralPurposeConfig::new().with_decode_padding_mode(DecodePaddingMode::Indifferent),
-);
-
-/// Encodes `{"id": id, "secret": secret}` like `Store::encode()`.
-pub fn encode(id: &str, secret: &str) -> String {
-    let mut map = Map::new();
-    map.insert("id".into(), Value::String(id.to_owned()));
-    map.insert("secret".into(), Value::String(secret.to_owned()));
-    let json = php_json(&Value::Object(map));
-    base64::engine::general_purpose::STANDARD.encode(json)
+/// Session data carried in a cookie or header (`Utopia\Auth\Store`):
+/// properties encoded as base64 JSON, plus an optional key naming it.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Store {
+    data: Array,
+    key: Option<Vec<u8>>,
 }
 
-/// Decodes a store; returns `(id, secret)` with empty strings for missing parts.
-pub fn decode(data: &str) -> (String, String) {
-    let Ok(raw) = LENIENT.decode(data.trim()) else {
-        return (String::new(), String::new());
-    };
-    let Ok(Value::Object(map)) = serde_json::from_slice::<Value>(&raw) else {
-        return (String::new(), String::new());
-    };
-    let field = |k: &str| match map.get(k) {
-        Some(Value::String(s)) => s.clone(),
-        Some(Value::Number(n)) => n.to_string(),
-        _ => String::new(),
-    };
-    (field("id"), field("secret"))
-}
+impl Store {
+    pub fn new() -> Self {
+        Self::default()
+    }
 
-fn php_json(value: &Value) -> String {
-    serde_json::to_string(value).unwrap_or_default().replace('/', "\\/")
-}
+    /// `getProperty($key, $default)`: `$data[$key] ?? $default` (a stored `null` is absent).
+    pub fn property(&self, key: &[u8]) -> Option<&Zval> {
+        self.data.get(&Key::from_bytes(key)).filter(|v| !matches!(v, Zval::Null))
+    }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+    /// `setProperty($key, $value)`.
+    pub fn set_property(&mut self, key: &[u8], value: Zval) -> &mut Self {
+        self.data.insert(Key::from_bytes(key), value);
+        self
+    }
 
-    #[test]
-    fn round_trip() {
-        let e = encode("user1", "abc");
-        assert_eq!(e, "eyJpZCI6InVzZXIxIiwic2VjcmV0IjoiYWJjIn0=");
-        assert_eq!(decode(&e), ("user1".into(), "abc".into()));
-        assert_eq!(decode("!!!"), (String::new(), String::new()));
+    /// The properties, in insertion order.
+    pub fn properties(&self) -> &Array {
+        &self.data
+    }
+
+    /// `getKey()`.
+    pub fn key(&self) -> Option<&[u8]> {
+        self.key.as_deref()
+    }
+
+    /// `setKey()`.
+    pub fn set_key(&mut self, key: Option<&[u8]>) -> &mut Self {
+        self.key = key.map(<[u8]>::to_vec);
+        self
+    }
+
+    /// `encode()`: `base64_encode(json_encode($data))`. Properties that are a
+    /// list (`0`, `1`, ... in order) encode as a JSON array, like PHP.
+    pub fn encode(&self) -> Result<String, Error> {
+        let json = json::encode(&Zval::Array(self.data.clone()), Flags::THROW_ON_ERROR, json::DEFAULT_DEPTH)
+            .map_err(Error::json)?;
+        Ok(base64_encode(json.as_bytes()))
+    }
+
+    /// `decode($data)`: merges the properties of a store encoded by
+    /// [`Store::encode`]; anything that is not base64 JSON of an array or
+    /// object is ignored.
+    pub fn decode(&mut self, data: &[u8]) -> &mut Self {
+        let Some(decoded) = base64_decode(data, true) else {
+            return self;
+        };
+        if let Ok(Zval::Array(values)) =
+            json::decode(&decoded, Some(true), json::DEFAULT_DEPTH, Flags::THROW_ON_ERROR)
+        {
+            for (key, value) in values.iter() {
+                self.data.insert(key.clone(), value.clone());
+            }
+        }
+        self
     }
 }

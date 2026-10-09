@@ -1,6 +1,6 @@
 [package]
 name = "utopia-auth"
-description = "Password hashes, proofs and session stores compatible with utopia-php/auth."
+description = "Password hashes, proofs, session stores, JWT issuers and verifiers, OAuth2 server values and WebAuthn passkeys with utopia-php/auth semantics."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -10,14 +10,20 @@ publish.workspace = true
 [dependencies]
 aes.workspace = true
 argon2.workspace = true
-base64.workspace = true
 bcrypt.workspace = true
+ciborium.workspace = true
 ctr.workspace = true
 getrandom.workspace = true
 hex.workspace = true
+hmac.workspace = true
+indexmap.workspace = true
 md-5.workspace = true
+p256.workspace = true
+php-std.workspace = true
+rsa.workspace = true
 scrypt.workspace = true
 serde_json.workspace = true
 sha1.workspace = true
-sha2.workspace = true
+sha2 = { workspace = true, features = ["oid"] }
 sha3.workspace = true
+thiserror.workspace = true

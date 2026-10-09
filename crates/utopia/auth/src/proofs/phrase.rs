@@ -1,0 +1,73 @@
+use super::{Proof, proof_hash};
+use crate::hash::random_int;
+use crate::hashes::Argon2;
+use crate::{Error, Hash};
+
+const ADJECTIVES: [&str; 129] = [
+    "Abundant", "Adaptable", "Adventurous", "Affectionate", "Agile", "Amiable", "Amazing", "Ambitious", "Amicable",
+    "Amusing", "Astonishing", "Attentive", "Authentic", "Awesome", "Balanced", "Beautiful", "Bold", "Brave",
+    "Bright", "Bubbly", "Calm", "Capable", "Charismatic", "Charming", "Cheerful", "Clever", "Colorful",
+    "Compassionate", "Confident", "Cooperative", "Courageous", "Courteous", "Creative", "Curious", "Dazzling",
+    "Dedicated", "Delightful", "Determined", "Diligent", "Dynamic", "Easygoing", "Effervescent", "Efficient",
+    "Elegant", "Empathetic", "Energetic", "Enthusiastic", "Exuberant", "Faithful", "Fantastic", "Fearless",
+    "Flexible", "Friendly", "Fun-loving", "Generous", "Gentle", "Genuine", "Graceful", "Gracious", "Happy",
+    "Hardworking", "Harmonious", "Helpful", "Honest", "Hopeful", "Humble", "Imaginative", "Impressive",
+    "Incredible", "Inspiring", "Intelligent", "Joyful", "Kind", "Knowledgeable", "Lively", "Lovable", "Lovely",
+    "Loyal", "Majestic", "Magnificent", "Mindful", "Modest", "Passionate", "Patient", "Peaceful", "Perseverant",
+    "Playful", "Polite", "Positive", "Powerful", "Practical", "Precious", "Proactive", "Productive", "Punctual",
+    "Quick-witted", "Radiant", "Reliable", "Resilient", "Resourceful", "Respectful", "Responsible", "Sensitive",
+    "Serene", "Sincere", "Skillful", "Soothing", "Spirited", "Splendid", "Steadfast", "Strong", "Supportive",
+    "Sweet", "Talented", "Thankful", "Thoughtful", "Thriving", "Tranquil", "Trustworthy", "Upbeat", "Versatile",
+    "Vibrant", "Vigilant", "Warmhearted", "Welcoming", "Wholesome", "Witty", "Wonderful", "Zealous",
+];
+
+const NOUNS: [&str; 104] = [
+    "apple", "banana", "cat", "dog", "elephant", "fish", "guitar", "hat", "ice cream", "jacket", "kangaroo",
+    "lemon", "moon", "notebook", "orange", "piano", "quilt", "rabbit", "sun", "tree", "umbrella", "violin",
+    "watermelon", "xylophone", "yogurt", "zebra", "airplane", "ball", "cloud", "diamond", "eagle", "fire",
+    "giraffe", "hammer", "island", "jellyfish", "kiwi", "lamp", "mango", "needle", "ocean", "pear", "quasar",
+    "rose", "star", "turtle", "unicorn", "volcano", "whale", "xylograph", "yarn", "zephyr", "ant", "book",
+    "candle", "door", "envelope", "feather", "globe", "harp", "insect", "jar", "kite", "lighthouse", "magnet",
+    "necklace", "owl", "puzzle", "queen", "rainbow", "sailboat", "telescope", "umbrella", "vase", "wallet",
+    "xylograph", "yacht", "zeppelin", "accordion", "brush", "chocolate", "dolphin", "easel", "fountain", "globe",
+    "hairbrush", "iceberg", "jigsaw", "kettle", "leopard", "marble", "nutmeg", "obstacle", "penguin", "quiver",
+    "raccoon", "sphinx", "trampoline", "utensil", "velvet", "wagon", "xerox", "yodel", "zipper",
+];
+
+/// A two-word passphrase, "Adjective noun" (`Utopia\Auth\Proofs\Phrase`).
+#[derive(Debug, Clone)]
+pub struct Phrase {
+    hash: Box<dyn Hash>,
+}
+
+impl Default for Phrase {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Phrase {
+    pub fn new() -> Self {
+        Self { hash: Box::new(Argon2::new()) }
+    }
+
+    /// `generate()`.
+    pub fn phrase(&self) -> String {
+        let adjective = ADJECTIVES[random_int(ADJECTIVES.len() as u64 - 1) as usize];
+        let noun = NOUNS[random_int(NOUNS.len() as u64 - 1) as usize];
+        format!("{adjective} {noun}")
+    }
+
+    /// Every phrase `generate()` can return is one of these adjectives, a space and one of these nouns.
+    pub fn words() -> (&'static [&'static str], &'static [&'static str]) {
+        (&ADJECTIVES, &NOUNS)
+    }
+}
+
+impl Proof for Phrase {
+    proof_hash!();
+
+    fn generate(&self) -> Result<Vec<u8>, Error> {
+        Ok(self.phrase().into_bytes())
+    }
+}

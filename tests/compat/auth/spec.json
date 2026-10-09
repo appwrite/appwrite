@@ -1,0 +1,534 @@
+{
+  "lib": "auth",
+  "description": "utopia-php/auth: password hashes, proofs, session store, JWT issuers and verifiers, OAuth2 server values, WebAuthn passkeys.",
+  "complete": false,
+  "php": {
+    "src": [
+      "packages/auth/src"
+    ],
+    "tests": [
+      "packages/auth/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/auth"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "hash.new": {
+      "doc": "new <Hash>() for algo argon2|bcrypt|md5|phpass|plaintext|scrypt|scryptMod|sha",
+      "covers": [
+        "Utopia\\Auth\\Hashes\\Argon2::__construct",
+        "Utopia\\Auth\\Hashes\\Bcrypt::__construct",
+        "Utopia\\Auth\\Hashes\\MD5::__construct",
+        "Utopia\\Auth\\Hashes\\PHPass::__construct",
+        "Utopia\\Auth\\Hashes\\Plaintext::__construct",
+        "Utopia\\Auth\\Hashes\\Scrypt::__construct",
+        "Utopia\\Auth\\Hashes\\ScryptModified::__construct",
+        "Utopia\\Auth\\Hashes\\Sha::__construct"
+      ]
+    },
+    "hash.name": {
+      "doc": "$hash->getName()",
+      "covers": [
+        "Utopia\\Auth\\Hashes\\Argon2::getName",
+        "Utopia\\Auth\\Hashes\\Bcrypt::getName",
+        "Utopia\\Auth\\Hashes\\MD5::getName",
+        "Utopia\\Auth\\Hashes\\PHPass::getName",
+        "Utopia\\Auth\\Hashes\\Plaintext::getName",
+        "Utopia\\Auth\\Hashes\\Scrypt::getName",
+        "Utopia\\Auth\\Hashes\\ScryptModified::getName",
+        "Utopia\\Auth\\Hashes\\Sha::getName"
+      ]
+    },
+    "hash.options": {
+      "doc": "$hash->getOptions()",
+      "covers": [
+        "Utopia\\Auth\\Hash::getOptions"
+      ]
+    },
+    "hash.get_option": {
+      "doc": "$hash->getOption(key, default?)",
+      "covers": [
+        "Utopia\\Auth\\Hash::getOption"
+      ]
+    },
+    "hash.set_option": {
+      "doc": "$hash->setOption(key, value)",
+      "covers": [
+        "Utopia\\Auth\\Hash::setOption"
+      ]
+    },
+    "hash.set_options": {
+      "doc": "$hash->setOptions(options)",
+      "covers": [
+        "Utopia\\Auth\\Hash::setOptions"
+      ]
+    },
+    "hash.setter": {
+      "doc": "$hash->{method}(value) for the algorithm setters",
+      "covers": [
+        "Utopia\\Auth\\Hashes\\Argon2::setMemoryCost",
+        "Utopia\\Auth\\Hashes\\Argon2::setTimeCost",
+        "Utopia\\Auth\\Hashes\\Argon2::setThreads",
+        "Utopia\\Auth\\Hashes\\Bcrypt::setCost",
+        "Utopia\\Auth\\Hashes\\PHPass::setIterationCount",
+        "Utopia\\Auth\\Hashes\\PHPass::setPortableHashes",
+        "Utopia\\Auth\\Hashes\\Scrypt::setCpuCost",
+        "Utopia\\Auth\\Hashes\\Scrypt::setMemoryCost",
+        "Utopia\\Auth\\Hashes\\Scrypt::setParallelCost",
+        "Utopia\\Auth\\Hashes\\Scrypt::setLength",
+        "Utopia\\Auth\\Hashes\\Scrypt::setSalt",
+        "Utopia\\Auth\\Hashes\\ScryptModified::setSalt",
+        "Utopia\\Auth\\Hashes\\ScryptModified::setSaltSeparator",
+        "Utopia\\Auth\\Hashes\\ScryptModified::setSignerKey",
+        "Utopia\\Auth\\Hashes\\Sha::setVersion"
+      ]
+    },
+    "hash.hash": {
+      "doc": "$hash->hash(value); salted algorithms are masked per step and cross-verified",
+      "covers": [
+        "Utopia\\Auth\\Hashes\\Argon2::hash",
+        "Utopia\\Auth\\Hashes\\Bcrypt::hash",
+        "Utopia\\Auth\\Hashes\\MD5::hash",
+        "Utopia\\Auth\\Hashes\\PHPass::hash",
+        "Utopia\\Auth\\Hashes\\Plaintext::hash",
+        "Utopia\\Auth\\Hashes\\Scrypt::hash",
+        "Utopia\\Auth\\Hashes\\ScryptModified::hash",
+        "Utopia\\Auth\\Hashes\\Sha::hash"
+      ]
+    },
+    "hash.verify": {
+      "doc": "$hash->verify(value, hash_value)",
+      "covers": [
+        "Utopia\\Auth\\Hashes\\Argon2::verify",
+        "Utopia\\Auth\\Hashes\\Bcrypt::verify",
+        "Utopia\\Auth\\Hashes\\MD5::verify",
+        "Utopia\\Auth\\Hashes\\PHPass::verify",
+        "Utopia\\Auth\\Hashes\\Plaintext::verify",
+        "Utopia\\Auth\\Hashes\\Scrypt::verify",
+        "Utopia\\Auth\\Hashes\\ScryptModified::verify",
+        "Utopia\\Auth\\Hashes\\Sha::verify"
+      ]
+    },
+    "proof.new": {
+      "doc": "new Code(length?) | Token(length?) | Phrase() | Password(hashes: {name: hash handle})",
+      "covers": [
+        "Utopia\\Auth\\Proof::__construct",
+        "Utopia\\Auth\\Proofs\\Code::__construct",
+        "Utopia\\Auth\\Proofs\\Token::__construct",
+        "Utopia\\Auth\\Proofs\\Password::__construct"
+      ]
+    },
+    "proof.generate": {
+      "doc": "$proof->generate() (random: masked, checked with fixtures)",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Code::generate",
+        "Utopia\\Auth\\Proofs\\Token::generate",
+        "Utopia\\Auth\\Proofs\\Phrase::generate",
+        "Utopia\\Auth\\Proofs\\Password::generate"
+      ],
+      "mask": {
+        "paths": [
+          ""
+        ],
+        "reason": "generated secrets are random; cases check them with fixture.matches / fixture.strlen"
+      }
+    },
+    "proof.hash": {
+      "doc": "$proof->hash(value)",
+      "covers": [
+        "Utopia\\Auth\\Proof::hash"
+      ]
+    },
+    "proof.verify": {
+      "doc": "$proof->verify(value, hash_value)",
+      "covers": [
+        "Utopia\\Auth\\Proof::verify"
+      ]
+    },
+    "proof.hash_name": {
+      "doc": "$proof->getHash()->getName()",
+      "covers": [
+        "Utopia\\Auth\\Proof::getHash"
+      ]
+    },
+    "proof.hash_options": {
+      "doc": "$proof->getHash()->getOptions()"
+    },
+    "proof.hash_setter": {
+      "doc": "$proof->getHash()->{method}(value)"
+    },
+    "proof.hash_set_option": {
+      "doc": "$proof->getHash()->setOption(key, value)"
+    },
+    "proof.set_hash": {
+      "doc": "$proof->setHash(hash handle)",
+      "covers": [
+        "Utopia\\Auth\\Proof::setHash"
+      ]
+    },
+    "proof.length": {
+      "doc": "$proof->getLength() (Code, Token)",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Code::getLength",
+        "Utopia\\Auth\\Proofs\\Token::getLength"
+      ]
+    },
+    "proof.set_length": {
+      "doc": "$proof->setLength(length) (Code, Token, Password)",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Code::setLength",
+        "Utopia\\Auth\\Proofs\\Token::setLength",
+        "Utopia\\Auth\\Proofs\\Password::setLength"
+      ]
+    },
+    "password.set_charset": {
+      "doc": "$password->setCharset(charset)",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Password::setCharset"
+      ]
+    },
+    "password.add_hash": {
+      "doc": "$password->addHash(name, hash handle)",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Password::addHash"
+      ]
+    },
+    "password.remove_hash": {
+      "doc": "$password->removeHash(name)",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Password::removeHash"
+      ]
+    },
+    "password.hash_by_name": {
+      "doc": "$password->getHashByName(name)->getName()",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Password::getHashByName"
+      ]
+    },
+    "password.use_hash": {
+      "doc": "$password->setHash($password->getHashByName(name))"
+    },
+    "password.create_hash": {
+      "doc": "Password::createHash(type, options) as a hash handle",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Password::createHash"
+      ]
+    },
+    "store.new": {
+      "doc": "new Store()"
+    },
+    "store.set_property": {
+      "doc": "$store->setProperty(key, value)",
+      "covers": [
+        "Utopia\\Auth\\Store::setProperty"
+      ]
+    },
+    "store.get_property": {
+      "doc": "$store->getProperty(key, default?)",
+      "covers": [
+        "Utopia\\Auth\\Store::getProperty"
+      ]
+    },
+    "store.set_key": {
+      "doc": "$store->setKey(key|null)",
+      "covers": [
+        "Utopia\\Auth\\Store::setKey"
+      ]
+    },
+    "store.get_key": {
+      "doc": "$store->getKey()",
+      "covers": [
+        "Utopia\\Auth\\Store::getKey"
+      ]
+    },
+    "store.encode": {
+      "doc": "$store->encode()",
+      "covers": [
+        "Utopia\\Auth\\Store::encode"
+      ]
+    },
+    "store.decode": {
+      "doc": "$store->decode(data)",
+      "covers": [
+        "Utopia\\Auth\\Store::decode"
+      ]
+    },
+    "issuer.new": {
+      "doc": "new Jwt|RefreshToken(secret, issuer, key_id?) or AccessToken|IdToken(private_key, public_key, issuer, key_id?)",
+      "covers": [
+        "Utopia\\Auth\\Issuer::__construct",
+        "Utopia\\Auth\\Issuers\\Symmetric::__construct",
+        "Utopia\\Auth\\Issuers\\Asymmetric::__construct"
+      ]
+    },
+    "issuer.issue": {
+      "doc": "$issuer->issue(...) at the fixed clock `now`",
+      "covers": [
+        "Utopia\\Auth\\Issuers\\Symmetric\\Jwt::issue",
+        "Utopia\\Auth\\Issuers\\Symmetric\\RefreshToken::issue",
+        "Utopia\\Auth\\Issuers\\Asymmetric\\AccessToken::issue",
+        "Utopia\\Auth\\Issuers\\Asymmetric\\IdToken::issue"
+      ]
+    },
+    "issuer.key_id": {
+      "doc": "$issuer->getKeyId()",
+      "covers": [
+        "Utopia\\Auth\\Issuers\\Symmetric::getKeyId",
+        "Utopia\\Auth\\Issuers\\Asymmetric::getKeyId"
+      ]
+    },
+    "issuer.public_jwk": {
+      "doc": "$issuer->getPublicJwk()",
+      "covers": [
+        "Utopia\\Auth\\Issuers\\Asymmetric::getPublicJwk"
+      ]
+    },
+    "issuer.generate_secret": {
+      "doc": "Symmetric::generateSecret(bytes?)",
+      "covers": [
+        "Utopia\\Auth\\Issuers\\Symmetric::generateSecret"
+      ],
+      "mask": {
+        "paths": [
+          ""
+        ],
+        "reason": "random; cases check its shape with fixtures"
+      }
+    },
+    "issuer.generate_key_pair": {
+      "doc": "Asymmetric::generateKeyPair(bits?) as {private, public}",
+      "covers": [
+        "Utopia\\Auth\\Issuers\\Asymmetric::generateKeyPair"
+      ],
+      "mask": {
+        "paths": [
+          "/private",
+          "/public"
+        ],
+        "reason": "fresh RSA keys; cases sign and verify with them across runtimes"
+      }
+    },
+    "verifier.new": {
+      "doc": "new Verifiers\\Symmetric(secret, ...) | Verifiers\\Asymmetric(public_key, ...) with issuer, audience, type, allow_expired, leeway",
+      "covers": [
+        "Utopia\\Auth\\Verifier::__construct",
+        "Utopia\\Auth\\Verifiers\\Symmetric::__construct",
+        "Utopia\\Auth\\Verifiers\\Asymmetric::__construct"
+      ]
+    },
+    "verifier.verify": {
+      "doc": "$verifier->verify(token) at the fixed clock `now`",
+      "covers": [
+        "Utopia\\Auth\\Verifier::verify"
+      ]
+    },
+    "verifier.key_id": {
+      "doc": "$verifier->getKeyId() (asymmetric)",
+      "covers": [
+        "Utopia\\Auth\\Verifiers\\Asymmetric::getKeyId"
+      ]
+    },
+    "par.from_id": {
+      "doc": "PAR::fromId(prefix, id) as {id, requestUri}",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\PAR::fromId",
+        "Utopia\\Auth\\OAuth2\\PAR::id",
+        "Utopia\\Auth\\OAuth2\\PAR::requestUri"
+      ]
+    },
+    "par.from_request_uri": {
+      "doc": "PAR::fromRequestUri(prefix, request_uri) as {id, requestUri}",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\PAR::fromRequestUri"
+      ]
+    },
+    "prompts.from_string": {
+      "doc": "Prompts::fromString(prompt) as {array, string, contains: {prompt: bool}}",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\Prompts::fromString",
+        "Utopia\\Auth\\OAuth2\\Prompts::toArray",
+        "Utopia\\Auth\\OAuth2\\Prompts::toString",
+        "Utopia\\Auth\\OAuth2\\Prompts::contains"
+      ]
+    },
+    "redirect_uris.from": {
+      "doc": "RedirectUris::from(uris)->toArray()",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\RedirectUris::from",
+        "Utopia\\Auth\\OAuth2\\RedirectUris::toArray"
+      ]
+    },
+    "redirect_uris.matches": {
+      "doc": "RedirectUris::from(uris)->matches(presented, allow_loopback)",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\RedirectUris::matches"
+      ]
+    },
+    "resources.from": {
+      "doc": "ResourceIndicators::from(value, audience?)->toArray()",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ResourceIndicators::from",
+        "Utopia\\Auth\\OAuth2\\ResourceIndicators::toArray"
+      ]
+    },
+    "resources.audience": {
+      "doc": "ResourceIndicators::from(value, audience?)->audience(default)",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ResourceIndicators::audience"
+      ]
+    },
+    "resources.is_subset_of": {
+      "doc": "from(value)->isSubsetOf(from(granted))",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ResourceIndicators::isSubsetOf"
+      ]
+    },
+    "resources.equals": {
+      "doc": "from(value)->equals(from(other))",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ResourceIndicators::equals"
+      ]
+    },
+    "authorization_details.new": {
+      "doc": "(new AuthorizationDetails(value))->toArray()",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\AuthorizationDetails::__construct",
+        "Utopia\\Auth\\OAuth2\\AuthorizationDetails::toArray"
+      ]
+    },
+    "authorization_details.grants": {
+      "doc": "(new AuthorizationDetails(details))->grants(type, value, field, wildcard?)",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\AuthorizationDetails::grants"
+      ]
+    },
+    "authorization_details.restrict": {
+      "doc": "restrict(field, fn(type, values) => allow[type] ?? null, wildcard?) as {details, calls}",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\AuthorizationDetails::restrict"
+      ]
+    },
+    "client_id_url.is_candidate": {
+      "doc": "ClientIdentifierUrl::isCandidate(value)",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ClientIdentifierUrl::isCandidate"
+      ]
+    },
+    "client_id_url.from_string": {
+      "doc": "ClientIdentifierUrl::fromString(value, allow_http) as {string, host}",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ClientIdentifierUrl::fromString",
+        "Utopia\\Auth\\OAuth2\\ClientIdentifierUrl::toString",
+        "Utopia\\Auth\\OAuth2\\ClientIdentifierUrl::host"
+      ]
+    },
+    "client_metadata.from_json": {
+      "doc": "ClientIdMetadataDocument::fromJson(fromString(client_id), json) as its accessors (+ get(get, default))",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::fromJson",
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::clientId",
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::tokenEndpointAuthMethod",
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::grantTypes",
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::responseTypes",
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::redirectUris",
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::toArray",
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::get"
+      ]
+    },
+    "client_metadata.from_array": {
+      "doc": "ClientIdMetadataDocument::fromArray(fromString(client_id), metadata) as its accessors",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::fromArray"
+      ]
+    },
+    "passkeys.ceremony": {
+      "doc": "new Ceremony(new RelyingParty(id, name, origins))",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Ceremony::__construct",
+        "Utopia\\Auth\\Passkeys\\RelyingParty::__construct"
+      ]
+    },
+    "passkeys.fingerprint": {
+      "doc": "(new RelyingParty(id, name, origins))->getFingerprint()",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\RelyingParty::getFingerprint"
+      ]
+    },
+    "passkeys.origin_normalize": {
+      "doc": "(new Origin(rp_id))->normalize(origin)",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Origin::__construct",
+        "Utopia\\Auth\\Passkeys\\Origin::normalize"
+      ]
+    },
+    "passkeys.origin_description": {
+      "doc": "(new Origin(rp_id))->getDescription()",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Origin::getDescription"
+      ]
+    },
+    "passkeys.register": {
+      "doc": "$ceremony->register(name, display_name, records) as {options, state}",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Ceremony::register",
+        "Utopia\\Auth\\Passkeys\\Challenge::__construct"
+      ]
+    },
+    "passkeys.authenticate": {
+      "doc": "$ceremony->authenticate() as {options, state}",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Ceremony::authenticate"
+      ],
+      "mask": {
+        "paths": [
+          "/options/challenge",
+          "/state"
+        ],
+        "reason": "the challenge is 32 random bytes; cases answer it and verify across runtimes"
+      }
+    },
+    "passkeys.identify": {
+      "doc": "$ceremony->identify(credential)",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Ceremony::identify"
+      ]
+    },
+    "passkeys.verify_registration": {
+      "doc": "$ceremony->verifyRegistration(state, credential) as {identifier, record}",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Ceremony::verifyRegistration",
+        "Utopia\\Auth\\Passkeys\\Credential::__construct"
+      ]
+    },
+    "passkeys.verify_authentication": {
+      "doc": "$ceremony->verifyAuthentication(state, credential, record) as {identifier, record}",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Ceremony::verifyAuthentication",
+        "Utopia\\Auth\\Passkeys\\Counter::check"
+      ]
+    },
+    "passkeys.authenticator": {
+      "doc": "fixture: a software ES256 authenticator (port of tests/Passkeys/Authenticator.php) answering options for one key and credential id"
+    },
+    "fixture.matches": {
+      "doc": "fixture: preg_match(pattern, value)"
+    },
+    "fixture.strlen": {
+      "doc": "fixture: strlen(value)"
+    },
+    "fixture.substr": {
+      "doc": "fixture: substr(value, start, length?)"
+    },
+    "fixture.jwt": {
+      "doc": "fixture: a token's header and claims, decoded without verification"
+    }
+  },
+  "generators": {},
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [],
+  "deviations": []
+}

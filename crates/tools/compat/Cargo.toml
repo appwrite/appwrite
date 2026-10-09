@@ -18,9 +18,12 @@ path = "src/bin/compat-driver.rs"
 [dependencies]
 base64.workspace = true
 futures-util.workspace = true
+indexmap.workspace = true
+p256 = { workspace = true, features = ["pem"] }
 redis.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
 tokio = { workspace = true, features = ["io-std", "io-util", "rt", "macros"] }
 
 # Libraries under test (one adapter each in src/libs).

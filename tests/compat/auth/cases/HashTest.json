@@ -1,0 +1,368 @@
+{
+  "source": "packages/auth/tests/HashTest.php",
+  "cases": [
+    {
+      "name": "set and get option",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "plaintext"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "key1",
+            "value": "value1"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.get_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "key1"
+          },
+          "expect": "value1"
+        },
+        {
+          "op": "hash.get_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "nonexistent"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.get_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "nonexistent",
+            "default": "default"
+          },
+          "expect": "default"
+        }
+      ]
+    },
+    {
+      "name": "set options keeps nested values and order",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "plaintext"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.set_options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "options": {
+              "key1": "value1",
+              "key2": "value2",
+              "key3": {
+                "nested": "value"
+              }
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": {
+            "type": "plaintext",
+            "key1": "value1",
+            "key2": "value2",
+            "key3": {
+              "nested": "value"
+            }
+          }
+        },
+        {
+          "op": "hash.get_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "key3"
+          },
+          "expect": {
+            "nested": "value"
+          }
+        }
+      ]
+    },
+    {
+      "name": "set options then get options",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "md5"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.set_options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "options": {
+              "key1": "value1",
+              "key2": "value2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": {
+            "type": "md5",
+            "key1": "value1",
+            "key2": "value2"
+          }
+        }
+      ]
+    },
+    {
+      "name": "method chaining",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "md5"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "key1",
+            "value": "value1"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.set_options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "options": {
+              "key2": "value2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.get_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "key1"
+          },
+          "expect": "value1"
+        },
+        {
+          "op": "hash.get_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "key2"
+          },
+          "expect": "value2"
+        }
+      ]
+    },
+    {
+      "name": "a stored null falls back to the default",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "md5"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "k",
+            "value": null
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.get_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "k",
+            "default": 5
+          },
+          "expect": 5
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": {
+            "type": "md5",
+            "k": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "numeric option keys become integer keys",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "plaintext"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "7",
+            "value": true
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "type",
+            "value": "changed"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": {
+            "type": "changed",
+            "7": true
+          }
+        },
+        {
+          "op": "hash.get_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "7"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "setting an existing option keeps its position",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "argon2"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "memory_cost",
+            "value": 1024
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": {
+            "type": "argon2",
+            "memory_cost": 1024,
+            "time_cost": 4,
+            "threads": 3
+          }
+        }
+      ]
+    }
+  ]
+}
