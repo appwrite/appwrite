@@ -1,16 +1,13 @@
 import type { Page, Request, Route } from '@playwright/test'
 import type { Models } from '@appwrite.io/console'
-// Type-only: a value import would pull `@/lib/appwrite/sdk` and its `import.meta.env`
-// reads into Playwright's loader, which has no Vite transform and crashes on them.
-import type { PasskeyPolicy } from '@/lib/passkey-policy'
 import { expect, test } from './fixtures'
 
 /**
  * Passkeys: the relying party policy and the auth method it gates.
  *
  * The Appwrite API is mocked at the network layer and the real console pages are
- * asserted: what the policy card reads back, what its Update button sends, and that
- * the Passkey auth method only becomes switchable once the policy is configured.
+ * asserted: what the policy card reads back, what its Update button sends, and how
+ * turning the Passkey auth method on asks for a domain when the policy needs one.
  *
  * On Cloud, passkeys are rolled out per user: only a console user whose prefs
  * carry `flags-passkeys` sees them. Self-hosted consoles always show them.
@@ -129,12 +126,41 @@ const ORGANIZATION = {
 
 const PROJECT_ID = 'proj0000000000000000001'
 
-const CONFIGURED: PasskeyPolicy = {
-  rpId: 'example.com',
-  origins: ['https://example.com', 'https://app.example.com'],
+function webPlatform(hostname: string) {
+  return {
+    $id: `web-${hostname}`,
+    $createdAt: NOW,
+    $updatedAt: NOW,
+    name: hostname,
+    type: 'web',
+    hostname,
+  }
 }
 
-const UNCONFIGURED: PasskeyPolicy = { rpId: '', origins: [] }
+type Platform = ReturnType<typeof webPlatform>
+
+/** Mirrors the server: web platforms on the relying party ID, plus localhost. */
+function passkeyOrigins(rpId: string, platforms: Platform[]): string[] {
+  const hostnames = platforms.map((platform) => platform.hostname)
+  const origins = hostnames
+    .filter(
+      (hostname) =>
+        rpId !== '' &&
+        rpId !== 'localhost' &&
+        (hostname === rpId || hostname.endsWith(`.${rpId}`)),
+    )
+    .map((hostname) => `https://${hostname}`)
+  return hostnames.includes('localhost')
+    ? [...origins, 'http://localhost', 'https://localhost']
+    : origins
+}
+
+const CONFIGURED_PLATFORMS = [
+  webPlatform('example.com'),
+  webPlatform('app.example.com'),
+]
+
+const APP_PLATFORMS = [webPlatform('app.example.com'), webPlatform('localhost')]
 
 /**
  * Like the server's V29 filter: `passkey` is listed in authMethods only for
@@ -173,13 +199,18 @@ function project(passkeyEnabled: boolean, request: Request) {
 }
 
 type MockOptions = {
-  policy?: PasskeyPolicy
+  /** The stored relying party ID; `example.com` by default. */
+  rpId?: string
   /** Whether the Passkey auth method starts on. */
   passkeyEnabled?: boolean
   /** The console user's prefs; carries the passkeys flag by default. */
   accountPrefs?: Models.Preferences
   /** When set, the policy PATCH is refused with this JSON body. */
   patchError?: { message: string; code: number; type: string }
+  /** The Sites domain from the console variables; unset by default. */
+  sitesDomain?: string
+  /** The project's platforms; `example.com` and `app.example.com` by default. */
+  platforms?: Platform[]
 }
 
 type Calls = {
@@ -206,7 +237,8 @@ async function mockAppwriteApi(
   page: Page,
   options: MockOptions = {},
 ): Promise<Calls> {
-  let policy = options.policy ?? CONFIGURED
+  let rpId = options.rpId ?? 'example.com'
+  const platforms = options.platforms ?? CONFIGURED_PLATFORMS
   let passkeyEnabled = options.passkeyEnabled ?? false
   const account = { ...ACCOUNT, prefs: options.accountPrefs ?? ACCOUNT.prefs }
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
@@ -232,7 +264,7 @@ async function mockAppwriteApi(
     if (apiPath === PASSKEY_POLICY_PATH && request.method() === 'PATCH') {
       calls.policyPatches.push(request)
       if (options.patchError) return json(400, options.patchError)
-      policy = { ...policy, ...request.postDataJSON() }
+      rpId = request.postDataJSON().rpId
       return json(200, project(passkeyEnabled, request))
     }
 
@@ -259,7 +291,11 @@ async function mockAppwriteApi(
       })
     if (apiPath === '/locale/codes')
       return json(200, { total: 0, localeCodes: [] })
-    if (apiPath === '/console/variables') return json(200, {})
+    if (apiPath === '/console/variables')
+      return json(
+        200,
+        options.sitesDomain ? { _APP_DOMAIN_SITES: options.sitesDomain } : {},
+      )
     if (
       apiPath === '/console/scopes/project' ||
       apiPath === `/organizations/${ORGANIZATION.$id}/roles`
@@ -290,8 +326,12 @@ async function mockAppwriteApi(
     if (apiPath === '/project/policies')
       return json(200, {
         total: 1,
-        policies: [{ $id: PASSKEY_ID, ...policy }],
+        policies: [
+          { $id: PASSKEY_ID, rpId, origins: passkeyOrigins(rpId, platforms) },
+        ],
       })
+    if (apiPath === '/project/platforms')
+      return json(200, { total: platforms.length, platforms })
     if (apiPath === '/project/mock-phones')
       return json(200, { total: 0, mockNumbers: [] })
 
@@ -331,10 +371,6 @@ function rpIdInput(page: Page) {
   return page.locator('#passkey-rp-id')
 }
 
-function originInput(page: Page, index: number) {
-  return card(page).getByRole('textbox', { name: `Origin URL ${index}` })
-}
-
 function updateButton(page: Page) {
   return card(page).getByRole('button', { name: 'Update', exact: true })
 }
@@ -358,10 +394,10 @@ async function openAuthSettings(page: Page) {
 }
 
 test.describe('passkeys (mocked API)', () => {
-  test('the policy card reads back the relying party and origins', async ({
+  test('the policy card reads back the relying party and where passkeys work', async ({
     page,
   }) => {
-    await mockAppwriteApi(page, { policy: CONFIGURED })
+    await mockAppwriteApi(page)
     await openPasskeyPolicies(page)
 
     await expect(
@@ -371,26 +407,36 @@ test.describe('passkeys (mocked API)', () => {
       }),
     ).toBeVisible()
     await expect(rpIdInput(page)).toHaveValue('example.com')
-    await expect(originInput(page, 1)).toHaveValue('https://example.com')
-    await expect(originInput(page, 2)).toHaveValue('https://app.example.com')
+    const origins = page.getByTestId('passkey-platform-origins')
+    await expect(origins).toContainText('https://example.com')
+    await expect(origins).toContainText('https://app.example.com')
+    await expect(card(page).getByRole('textbox')).toHaveCount(1)
     await expect(updateButton(page)).toBeDisabled()
     await expect(
       card(page).getByRole('link', { name: 'Learn more', exact: true }),
     ).toHaveAttribute('href', /\/docs\/products\/auth\/passkeys$/)
   })
 
-  test('updating sends only the edited fields', async ({ page }) => {
-    const calls = await mockAppwriteApi(page, { policy: CONFIGURED })
+  test('localhost shows once, for any port', async ({ page }) => {
+    await mockAppwriteApi(page, { platforms: APP_PLATFORMS })
     await openPasskeyPolicies(page)
 
-    await card(page)
-      .getByRole('button', { name: 'Remove origin 2', exact: true })
-      .click()
-    await card(page)
-      .getByRole('button', { name: 'Add origin', exact: true })
-      .click()
-    await originInput(page, 2).fill('https://admin.example.com/')
+    const origins = page.getByTestId('passkey-platform-origins')
+    await expect(origins).toContainText('https://app.example.com')
+    await expect(origins).toContainText('http://localhost (any port)')
+    await expect(origins.getByRole('listitem')).toHaveCount(2)
+  })
 
+  test('updating sends only the relying party ID', async ({ page }) => {
+    const calls = await mockAppwriteApi(page)
+    await openPasskeyPolicies(page)
+
+    await rpIdInput(page).fill('app.example.com')
+    // The unsaved domain is previewed from the platforms
+    const origins = page.getByTestId('passkey-platform-origins')
+    await expect(origins.getByRole('listitem')).toHaveText([
+      'https://app.example.com',
+    ])
     await updateButton(page).click()
 
     await expect(
@@ -401,69 +447,35 @@ test.describe('passkeys (mocked API)', () => {
       `/v1${PASSKEY_POLICY_PATH}`,
     )
     expect(calls.policyPatches[0].postDataJSON()).toEqual({
-      origins: ['https://example.com', 'https://admin.example.com'],
+      rpId: 'app.example.com',
     })
     await expect(updateButton(page)).toBeDisabled()
   })
 
-  test('invalid values are flagged and cannot be sent', async ({ page }) => {
-    const calls = await mockAppwriteApi(page, { policy: CONFIGURED })
+  test('an invalid relying party ID is flagged and cannot be sent', async ({
+    page,
+  }) => {
+    const calls = await mockAppwriteApi(page)
     await openPasskeyPolicies(page)
 
-    await originInput(page, 1).fill('http://example.com')
-    await expect(card(page)).toContainText(
-      'Origins must use https://, or http:// on localhost.',
-    )
-    await expect(updateButton(page)).toBeDisabled()
-
-    await originInput(page, 1).fill('https://other.com')
-    await expect(card(page)).toContainText(
-      'Origins must be on the relying party ID or one of its subdomains.',
-    )
-    await expect(updateButton(page)).toBeDisabled()
-
-    await originInput(page, 1).fill('https://app.example.com/')
-    await expect(card(page)).toContainText(
-      'This origin is already in the list.',
-    )
-    await expect(originInput(page, 2)).toHaveAttribute('aria-describedby', /.+/)
-    await expect(updateButton(page)).toBeDisabled()
-
-    await originInput(page, 1).fill('https://example.com')
     await rpIdInput(page).fill('192.168.1.10')
     await expect(card(page)).toContainText(
       'The relying party ID must be a domain, not an IP address.',
     )
     await expect(updateButton(page)).toBeDisabled()
+
+    await rpIdInput(page).fill('https://example.com')
+    await expect(card(page)).toContainText(
+      'Enter a domain without a scheme or path, like example.com.',
+    )
+    await expect(updateButton(page)).toBeDisabled()
     expect(calls.policyPatches).toHaveLength(0)
   })
 
-  test('removing a row keeps the other rows and their errors in place', async ({
+  test('clearing the relying party while the method is on warns first', async ({
     page,
   }) => {
-    await mockAppwriteApi(page, { policy: CONFIGURED })
-    await openPasskeyPolicies(page)
-
-    await originInput(page, 1).fill('http://example.com')
-    await card(page)
-      .getByRole('button', { name: 'Add origin', exact: true })
-      .click()
-    await originInput(page, 3).fill('https://docs.example.com')
-
-    await card(page)
-      .getByRole('button', { name: 'Remove origin 2', exact: true })
-      .click()
-
-    await expect(originInput(page, 1)).toHaveValue('http://example.com')
-    await expect(originInput(page, 2)).toHaveValue('https://docs.example.com')
-    await expect(originInput(page, 1)).toHaveAttribute('aria-invalid', 'true')
-    await expect(originInput(page, 2)).toHaveAttribute('aria-invalid', 'false')
-  })
-
-  test('clearing the policy while the method is on warns first', async ({
-    page,
-  }) => {
-    await mockAppwriteApi(page, { policy: CONFIGURED, passkeyEnabled: true })
+    await mockAppwriteApi(page, { passkeyEnabled: true })
     await openPasskeyPolicies(page)
 
     const status = page.getByTestId('passkey-method-status')
@@ -472,6 +484,9 @@ test.describe('passkeys (mocked API)', () => {
 
     await rpIdInput(page).fill('')
     await expect(page.getByTestId('passkey-policy-warning')).toBeVisible()
+    await expect(page.getByTestId('passkey-rp-id-suggestions')).toContainText(
+      'example.com',
+    )
 
     await status.click()
     await expect(page).toHaveURL(
@@ -481,7 +496,6 @@ test.describe('passkeys (mocked API)', () => {
 
   test('a refusal from the backend is shown as written', async ({ page }) => {
     const calls = await mockAppwriteApi(page, {
-      policy: CONFIGURED,
       patchError: {
         message: RP_ID_LOCKED_ERROR,
         code: 400,
@@ -491,60 +505,129 @@ test.describe('passkeys (mocked API)', () => {
     await openPasskeyPolicies(page)
 
     await rpIdInput(page).fill('app.example.com')
-    await originInput(page, 1).fill('https://app.example.com')
-    await card(page)
-      .getByRole('button', { name: 'Remove origin 2', exact: true })
-      .click()
     await updateButton(page).click()
 
     await expect(page.getByText(RP_ID_LOCKED_ERROR)).toBeVisible()
     expect(calls.policyPatches).toHaveLength(1)
     expect(calls.policyPatches[0].postDataJSON()).toEqual({
       rpId: 'app.example.com',
-      origins: ['https://app.example.com'],
     })
-    // A refusal leaves the edits on screen to fix rather than resetting them.
+    // A refusal leaves the edit on screen to fix rather than resetting it.
     await expect(rpIdInput(page)).toHaveValue('app.example.com')
-    await expect(originInput(page, 1)).toHaveValue('https://app.example.com')
     await expect(updateButton(page)).toBeEnabled()
   })
 
-  test('the passkey method stays off until the policy is configured', async ({
+  test('turning passkeys on asks for the domain, suggested from web platforms', async ({
     page,
   }) => {
-    const calls = await mockAppwriteApi(page, { policy: UNCONFIGURED })
+    const calls = await mockAppwriteApi(page, {
+      rpId: '',
+      platforms: [webPlatform('app.example.com')],
+    })
     await openAuthSettings(page)
 
     const toggle = page.locator(`#${PASSKEY_ID}`)
-    await expect(toggle).toBeDisabled()
-    await expect(toggle).not.toBeChecked()
-    const hint = page.getByText(
-      'Set a relying party ID and origins in passkey policies to enable.',
-    )
-    await expect(hint).toBeVisible()
-    const hintId = await hint.getAttribute('id')
-    expect(hintId).toBeTruthy()
-    await expect(toggle).toHaveAttribute('aria-describedby', hintId!)
-
-    await hint.getByRole('link', { name: 'Configure', exact: true }).click()
-    await expect(page).toHaveURL(
-      new RegExp(`/projects/${PROJECT_ID}/auth/policies/passkeys$`),
-    )
-
-    await rpIdInput(page).fill('example.com')
-    await originInput(page, 1).fill('https://example.com')
-    await updateButton(page).click()
-    await expect(
-      page.getByText('Updated passkey settings', { exact: true }),
-    ).toBeVisible()
-
-    await openAuthSettings(page)
     await expect(toggle).toBeEnabled()
     await toggle.click()
 
+    const dialog = page.getByTestId('enable-passkeys-dialog')
+    await expect(dialog).toBeVisible()
+    await expect(
+      dialog.getByRole('radio', { name: 'example.com', exact: true }),
+    ).toBeChecked()
+    await expect(page.getByTestId('enable-passkeys-origins')).toContainText(
+      'https://app.example.com',
+    )
+
+    await dialog.getByRole('button', { name: 'Enable', exact: true }).click()
+
+    await expect(dialog).toBeHidden()
     await expect(toggle).toBeChecked()
+    expect(calls.policyPatches).toHaveLength(1)
+    expect(calls.policyPatches[0].postDataJSON()).toEqual({
+      rpId: 'example.com',
+    })
     await expect.poll(() => calls.methodPatches.length).toBe(1)
     expect(calls.methodPatches[0].postDataJSON()).toEqual({ enabled: true })
+  })
+
+  test('a site on the shared Sites domain is suggested only as itself', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      rpId: '',
+      sitesDomain: 'appwrite.network',
+      platforms: [webPlatform('myapp.appwrite.network')],
+    })
+    await openAuthSettings(page)
+    await page.locator(`#${PASSKEY_ID}`).click()
+
+    const dialog = page.getByTestId('enable-passkeys-dialog')
+    await expect(
+      dialog.getByRole('radio', {
+        name: 'myapp.appwrite.network',
+        exact: true,
+      }),
+    ).toBeChecked()
+    await expect(
+      dialog.getByRole('radio', { name: 'appwrite.network', exact: true }),
+    ).toHaveCount(0)
+  })
+
+  test('a localhost platform turns passkeys on before a domain is chosen', async ({
+    page,
+  }) => {
+    const calls = await mockAppwriteApi(page, {
+      rpId: '',
+      platforms: [webPlatform('localhost')],
+    })
+    await openAuthSettings(page)
+
+    const toggle = page.locator(`#${PASSKEY_ID}`)
+    await toggle.click()
+
+    await expect(toggle).toBeChecked()
+    await expect(page.getByTestId('enable-passkeys-dialog')).toHaveCount(0)
+    await expect.poll(() => calls.methodPatches.length).toBe(1)
+    expect(calls.policyPatches).toHaveLength(0)
+  })
+
+  test('without a matching web platform passkeys cannot be enabled', async ({
+    page,
+  }) => {
+    const calls = await mockAppwriteApi(page, { rpId: '', platforms: [] })
+    await openAuthSettings(page)
+
+    const toggle = page.locator(`#${PASSKEY_ID}`)
+    await toggle.click()
+    const dialog = page.getByTestId('enable-passkeys-dialog')
+    const enable = dialog.getByRole('button', { name: 'Enable', exact: true })
+    await expect(enable).toBeDisabled()
+
+    await dialog.getByRole('textbox', { name: 'Domain' }).fill('example.com')
+    await expect(page.getByTestId('enable-passkeys-origins')).toContainText(
+      'No web platform on this domain yet.',
+    )
+    await expect(enable).toBeDisabled()
+
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
+    await expect(toggle).not.toBeChecked()
+    expect(calls.policyPatches).toHaveLength(0)
+    expect(calls.methodPatches).toHaveLength(0)
+  })
+
+  test('a configured policy turns passkeys on without asking', async ({
+    page,
+  }) => {
+    const calls = await mockAppwriteApi(page)
+    await openAuthSettings(page)
+
+    const toggle = page.locator(`#${PASSKEY_ID}`)
+    await toggle.click()
+
+    await expect(toggle).toBeChecked()
+    await expect(page.getByTestId('enable-passkeys-dialog')).toHaveCount(0)
+    await expect.poll(() => calls.methodPatches.length).toBe(1)
   })
 
   test('users without the passkeys flag see no passkey settings', async ({
@@ -581,7 +664,7 @@ test.describe('passkeys (mocked API)', () => {
     page,
   }) => {
     await useProfile(page, 'self-hosted')
-    await mockAppwriteApi(page, { policy: CONFIGURED, accountPrefs: {} })
+    await mockAppwriteApi(page, { accountPrefs: {} })
 
     await openPasskeyPolicies(page)
     await expect(rpIdInput(page)).toHaveValue('example.com')

@@ -5,10 +5,11 @@ import { toast } from 'sonner'
 import { ProjectAuthMethodId } from '@appwrite.io/console'
 import {
   projectQueryOptions,
+  useConsoleVariables,
+  usePlatforms,
   useUpdateAuthMethod,
 } from '@/lib/react-query/hooks'
 import { authMethodsRecordFromProject } from '@/lib/project-settings'
-import { isPasskeyPolicyConfigured } from '@/lib/passkey-policy'
 import { usePasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -33,6 +34,7 @@ import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { RESOURCE_CARD_GRID_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { MockPhoneNumbersCard, useAuthSecuritySnapshot } from './Security'
+import { EnablePasskeys } from './EnablePasskeys'
 
 interface AuthSettingsProps {
   projectId: string
@@ -121,7 +123,12 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   const { data: projectData } = useQuery(projectQueryOptions(projectId))
   const security = useAuthSecuritySnapshot(projectId)
   const mockNumbers = security.authMockNumbers ?? []
-  const passkeyConfigured = isPasskeyPolicyConfigured(security.authPasskey)
+  const { platforms } = usePlatforms(projectId)
+  const { sitesDomain, functionsDomain } = useConsoleVariables(
+    projectData?.region,
+  )
+  const passkeyReady = security.authPasskey.origins.length > 0
+  const [passkeySetupOpen, setPasskeySetupOpen] = useState(false)
   const passkeysAllowed = usePasskeysAllowed()
   const visibleAuthMethods = useMemo(
     () =>
@@ -229,13 +236,10 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
               const Icon = method.icon
               const isUpdating = updatingAuthMethods.has(method.key)
               const enabled = authMethods[method.key] ?? false
-              // Passkeys fail closed without a relying party, so enabling waits on
-              // the policy; turning an enabled method off always stays possible.
+              // Passkeys fail closed without a relying party, so turning them on
+              // asks for the domain first.
               const needsPasskeySetup =
-                method.key === ProjectAuthMethodId.Passkey &&
-                !passkeyConfigured &&
-                !enabled
-              const setupHintId = `${method.key}-setup-hint`
+                method.key === ProjectAuthMethodId.Passkey && !passkeyReady
 
               return (
                 <div
@@ -285,32 +289,14 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                         id={method.key}
                         checked={enabled}
                         onCheckedChange={(checked) =>
-                          handleAuthMethodToggle(method.key, checked)
+                          checked && needsPasskeySetup
+                            ? setPasskeySetupOpen(true)
+                            : handleAuthMethodToggle(method.key, checked)
                         }
-                        disabled={isUpdating || needsPasskeySetup}
-                        aria-describedby={
-                          needsPasskeySetup ? setupHintId : undefined
-                        }
+                        disabled={isUpdating}
                       />
                     </div>
                   </div>
-                  {needsPasskeySetup && method.policy && (
-                    <p
-                      id={setupHintId}
-                      className="mt-2 text-[12px] text-muted-foreground"
-                    >
-                      {t(
-                        'Set a relying party ID and origins in passkey policies to enable.',
-                      )}{' '}
-                      <Link
-                        to={method.policy.to}
-                        params={{ projectId }}
-                        className="link-neutral"
-                      >
-                        {t('Configure')}
-                      </Link>
-                    </p>
-                  )}
                 </div>
               )
             })}
@@ -322,6 +308,22 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
         projectId={projectId}
         currentNumbers={mockNumbers}
       />
+
+      {passkeysAllowed && (
+        <EnablePasskeys
+          projectId={projectId}
+          open={passkeySetupOpen}
+          onOpenChange={setPasskeySetupOpen}
+          policy={security.authPasskey}
+          platforms={platforms}
+          sharedDomains={[sitesDomain, functionsDomain].filter(
+            (domain): domain is string => Boolean(domain),
+          )}
+          onEnable={() =>
+            handleAuthMethodToggle(ProjectAuthMethodId.Passkey, true)
+          }
+        />
+      )}
     </div>
   )
 }
