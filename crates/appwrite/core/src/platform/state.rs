@@ -88,7 +88,11 @@ impl State {
         let console = console.ok_or("no database configured")?;
         pools.insert("console".to_owned(), console.clone());
 
-        utopia_emails::Domains::load(&config.asset("packages/emails/data")).install();
+        let lists = utopia_emails::Lists::load(&config.asset("packages/emails/data")).unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "email domain lists unavailable");
+            utopia_emails::Lists::default()
+        });
+        lists.install();
         let translations = Translations::load(&config.asset("app/config/locale/translations"));
         let dictionary = crate::validators::load_dictionary(&config.asset("app/assets/security/10k-common-passwords"));
         let geo = Geo::new(config.geo_endpoint.clone(), config.geo_secret.clone());

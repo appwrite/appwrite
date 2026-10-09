@@ -1,0 +1,485 @@
+{
+  "source": "packages/emails/tests/Canonicals/Providers/YahooTest.php",
+  "cases": [
+    {
+      "name": "supports",
+      "steps": [
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yahoo",
+            "domain": "yahoo.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yahoo",
+            "domain": "yahoo.co.uk"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yahoo",
+            "domain": "yahoo.ca"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yahoo",
+            "domain": "ymail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yahoo",
+            "domain": "rocketmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yahoo",
+            "domain": "gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yahoo",
+            "domain": "outlook.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yahoo",
+            "domain": "example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "get canonical",
+      "steps": [
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user-name",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user-name",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user-name-tag",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user-name-tag",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user-name-spam",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user-name-spam",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user-name-newsletter",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user-name-newsletter",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user-name-work",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user-name-work",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user-name-personal",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user-name-personal",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user-name-test123",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user-name-test123",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user-name-anything",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user-name-anything",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user-name-verylongtag",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user-name-verylongtag",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user-name-tag.with.dots",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user-name-tag.with.dots",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user-name-tag-with-hyphens",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user-name-tag-with-hyphens",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user-name-tag_with_underscores",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user-name-tag_with_underscores",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user-name-tag123",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user-name-tag123",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "u-s-e-r-n-a-m-e",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "u-s-e-r-n-a-m-e",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "u-s-e-r-n-a-m-e-tag",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "u-s-e-r-n-a-m-e-tag",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user.name",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user.name-tag",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user.name-tag",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "u.s.e.r.n.a.m.e-tag",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e-tag",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user.",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user.",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": ".user",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": ".user",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user-",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user-",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user--tag",
+            "domain": "yahoo.com"
+          },
+          "expect": {
+            "local": "user--tag",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user.name-tag",
+            "domain": "yahoo.co.uk"
+          },
+          "expect": {
+            "local": "user.name-tag",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user.name-tag",
+            "domain": "yahoo.ca"
+          },
+          "expect": {
+            "local": "user.name-tag",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user.name-tag",
+            "domain": "ymail.com"
+          },
+          "expect": {
+            "local": "user.name-tag",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user.name-tag",
+            "domain": "rocketmail.com"
+          },
+          "expect": {
+            "local": "user.name-tag",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user.name-tag",
+            "domain": "yahoo.de"
+          },
+          "expect": {
+            "local": "user.name-tag",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user.name-tag",
+            "domain": "yahoo.fr"
+          },
+          "expect": {
+            "local": "user.name-tag",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user.name-tag",
+            "domain": "yahoo.in"
+          },
+          "expect": {
+            "local": "user.name-tag",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "user.name-tag",
+            "domain": "yahoo.it"
+          },
+          "expect": {
+            "local": "user.name-tag",
+            "domain": "yahoo.com"
+          }
+        }
+      ]
+    },
+    {
+      "name": "get canonical domain",
+      "steps": [
+        {
+          "op": "provider.canonical_domain",
+          "args": {
+            "provider": "yahoo"
+          },
+          "expect": "yahoo.com"
+        }
+      ]
+    },
+    {
+      "name": "get supported domains",
+      "steps": [
+        {
+          "op": "provider.supported_domains",
+          "args": {
+            "provider": "yahoo"
+          },
+          "expect": [
+            "yahoo.com",
+            "yahoo.co.uk",
+            "yahoo.ca",
+            "yahoo.de",
+            "yahoo.fr",
+            "yahoo.in",
+            "yahoo.it",
+            "ymail.com",
+            "rocketmail.com"
+          ]
+        }
+      ]
+    }
+  ]
+}

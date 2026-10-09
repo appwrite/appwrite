@@ -1,0 +1,2244 @@
+{
+  "source": "edge cases beyond packages/emails/tests",
+  "cases": [
+    {
+      "name": "zero address is empty",
+      "op": "email.get",
+      "args": {
+        "email": "0"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Email address cannot be empty"
+        }
+      }
+    },
+    {
+      "name": "zero address after trimming",
+      "op": "email.get",
+      "args": {
+        "email": " 0\n"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Email address cannot be empty"
+        }
+      }
+    },
+    {
+      "name": "zero local part",
+      "op": "email.get",
+      "args": {
+        "email": "0@example.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'0@example.com' must be a valid email address"
+        }
+      }
+    },
+    {
+      "name": "zero domain",
+      "op": "email.get",
+      "args": {
+        "email": "user@0"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'user@0' must be a valid email address"
+        }
+      }
+    },
+    {
+      "name": "whitespace only",
+      "op": "email.get",
+      "args": {
+        "email": " \t\n\r\u0000\u000b"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Email address cannot be empty"
+        }
+      }
+    },
+    {
+      "name": "trim keeps form feed",
+      "op": "email.get",
+      "args": {
+        "email": "\fuser@example.com"
+      },
+      "expect": "\fuser@example.com"
+    },
+    {
+      "name": "trim strips NUL and vertical tab",
+      "op": "email.inspect",
+      "args": {
+        "email": "\u0000\u000b user@example.com\t\u0000"
+      },
+      "expect": {
+        "get": "user@example.com",
+        "local": "user",
+        "domain": "example.com",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": true,
+        "isFree": false,
+        "isCorporate": false,
+        "provider": "example.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@example.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "quoted at sign is still two",
+      "op": "email.get",
+      "args": {
+        "email": "\"a@b\"@example.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'\"a@b\"@example.com' must be a valid email address"
+        }
+      }
+    },
+    {
+      "name": "message quotes the raw input",
+      "op": "email.get",
+      "args": {
+        "email": "  NoAt.Example.COM  "
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'  NoAt.Example.COM  ' must be a valid email address"
+        }
+      }
+    },
+    {
+      "name": "message quotes invalid UTF-8",
+      "op": "email.get",
+      "args": {
+        "email": {
+          "$bytes": "//51c2Vy"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": {
+            "$bytes": "J//+dXNlcicgbXVzdCBiZSBhIHZhbGlkIGVtYWlsIGFkZHJlc3M="
+          }
+        }
+      }
+    },
+    {
+      "name": "invalid UTF-8 becomes question marks",
+      "op": "email.inspect",
+      "args": {
+        "email": {
+          "$bytes": "dXP/ZXJAZXjDYW1wbGUuY29t"
+        }
+      },
+      "expect": {
+        "get": "us?er@ex?ample.com",
+        "local": "us?er",
+        "domain": "ex?ample.com",
+        "isValid": false,
+        "hasValidLocal": false,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "ex?ample.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "us?er@ex?ample.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "URL domain",
+      "op": "email.get",
+      "args": {
+        "email": "user@http://example.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'http://example.com' must be a valid domain or hostname"
+        }
+      }
+    },
+    {
+      "name": "upper-case URL domain is lower-cased first",
+      "op": "email.get",
+      "args": {
+        "email": "user@HTTPS://EXAMPLE.COM"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'https://example.com' must be a valid domain or hostname"
+        }
+      }
+    },
+    {
+      "name": "URL-like domain without a web scheme",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@ftp://example.com"
+      },
+      "expect": {
+        "get": "user@ftp://example.com",
+        "local": "user",
+        "domain": "ftp://example.com",
+        "isValid": false,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "ftp://example.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@ftp://example.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "unicode lower-casing",
+      "op": "email.inspect",
+      "args": {
+        "email": "ÜSER.ΣΑΣ@BÜCHER.DE"
+      },
+      "expect": {
+        "get": "üser.σας@bücher.de",
+        "local": "üser.σας",
+        "domain": "bücher.de",
+        "isValid": false,
+        "hasValidLocal": false,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "bücher.de",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "üser.σας@bücher.de",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "final sigma",
+      "op": "email.inspect",
+      "args": {
+        "email": "ΟΔΟΣ@EXAMPLE.COM"
+      },
+      "expect": {
+        "get": "οδος@example.com",
+        "local": "οδος",
+        "domain": "example.com",
+        "isValid": false,
+        "hasValidLocal": false,
+        "hasValidDomain": true,
+        "isDisposable": true,
+        "isFree": false,
+        "isCorporate": false,
+        "provider": "example.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "οδος@example.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "dotted capital I",
+      "op": "email.inspect",
+      "args": {
+        "email": "İSTANBUL@EXAMPLE.COM"
+      },
+      "expect": {
+        "get": "i̇stanbul@example.com",
+        "local": "i̇stanbul",
+        "domain": "example.com",
+        "isValid": false,
+        "hasValidLocal": false,
+        "hasValidDomain": true,
+        "isDisposable": true,
+        "isFree": false,
+        "isCorporate": false,
+        "provider": "example.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "i̇stanbul@example.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "punycode domain",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@xn--bcher-kva.de"
+      },
+      "expect": {
+        "get": "user@xn--bcher-kva.de",
+        "local": "user",
+        "domain": "xn--bcher-kva.de",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "xn--bcher-kva.de",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@xn--bcher-kva.de",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "unicode domain on a unicode suffix",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@公司.cn"
+      },
+      "expect": {
+        "get": "user@公司.cn",
+        "local": "user",
+        "domain": "公司.cn",
+        "isValid": false,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": ".公司.cn",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@公司.cn",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "unicode TLD",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@example.ישראל"
+      },
+      "expect": {
+        "get": "user@example.ישראל",
+        "local": "user",
+        "domain": "example.ישראל",
+        "isValid": false,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "example.ישראל",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@example.ישראל",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "emoji local part",
+      "op": "email.inspect",
+      "args": {
+        "email": "😀@example.com"
+      },
+      "expect": {
+        "get": "😀@example.com",
+        "local": "😀",
+        "domain": "example.com",
+        "isValid": false,
+        "hasValidLocal": false,
+        "hasValidDomain": true,
+        "isDisposable": true,
+        "isFree": false,
+        "isCorporate": false,
+        "provider": "example.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "😀@example.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "quoted local part",
+      "op": "email.inspect",
+      "args": {
+        "email": "\"john doe\"@example.com"
+      },
+      "expect": {
+        "get": "\"john doe\"@example.com",
+        "local": "\"john doe\"",
+        "domain": "example.com",
+        "isValid": false,
+        "hasValidLocal": false,
+        "hasValidDomain": true,
+        "isDisposable": true,
+        "isFree": false,
+        "isCorporate": false,
+        "provider": "example.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "\"john doe\"@example.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "IPv4 literal",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@[127.0.0.1]"
+      },
+      "expect": {
+        "get": "user@[127.0.0.1]",
+        "local": "user",
+        "domain": "[127.0.0.1]",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "[127.0.0.1]",
+        "subdomain": "[127.0.0",
+        "hasSubdomain": true,
+        "canonical": "user@[127.0.0.1]",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "IPv6 literal",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@[ipv6:2001:db8::1]"
+      },
+      "expect": {
+        "get": "user@[ipv6:2001:db8::1]",
+        "local": "user",
+        "domain": "[ipv6:2001:db8::1]",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "[ipv6:2001:db8::1]",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@[ipv6:2001:db8::1]",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "local part of 64 characters",
+      "op": "email.inspect",
+      "args": {
+        "email": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com"
+      },
+      "expect": {
+        "get": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com",
+        "local": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "domain": "example.com",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": true,
+        "isFree": false,
+        "isCorporate": false,
+        "provider": "example.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "local part of 65 characters",
+      "op": "email.inspect",
+      "args": {
+        "email": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com"
+      },
+      "expect": {
+        "get": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com",
+        "local": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "domain": "example.com",
+        "isValid": false,
+        "hasValidLocal": false,
+        "hasValidDomain": true,
+        "isDisposable": true,
+        "isFree": false,
+        "isCorporate": false,
+        "provider": "example.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "multi-byte local part of 64 characters",
+      "op": "email.inspect",
+      "args": {
+        "email": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé@example.com"
+      },
+      "expect": {
+        "get": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé@example.com",
+        "local": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "domain": "example.com",
+        "isValid": false,
+        "hasValidLocal": false,
+        "hasValidDomain": true,
+        "isDisposable": true,
+        "isFree": false,
+        "isCorporate": false,
+        "provider": "example.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé@example.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "domain of 253 characters",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com"
+      },
+      "expect": {
+        "get": "user@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+        "local": "user",
+        "domain": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+        "isValid": false,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+        "subdomain": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "hasSubdomain": true,
+        "canonical": "user@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "label of 64 characters",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com"
+      },
+      "expect": {
+        "get": "user@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+        "local": "user",
+        "domain": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+        "isValid": false,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "local part ending in a newline",
+      "op": "email.inspect",
+      "args": {
+        "email": "abc\n@example.com"
+      },
+      "expect": {
+        "get": "abc\n@example.com",
+        "local": "abc\n",
+        "domain": "example.com",
+        "isValid": false,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": true,
+        "isFree": false,
+        "isCorporate": false,
+        "provider": "example.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "abc\n@example.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "local part ending in two newlines",
+      "op": "email.inspect",
+      "args": {
+        "email": "abc\n\n@example.com"
+      },
+      "expect": {
+        "get": "abc\n\n@example.com",
+        "local": "abc\n\n",
+        "domain": "example.com",
+        "isValid": false,
+        "hasValidLocal": false,
+        "hasValidDomain": true,
+        "isDisposable": true,
+        "isFree": false,
+        "isCorporate": false,
+        "provider": "example.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "abc\n\n@example.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "trailing dot domain",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@example.com."
+      },
+      "expect": {
+        "get": "user@example.com.",
+        "local": "user",
+        "domain": "example.com.",
+        "isValid": false,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "example.com.",
+        "subdomain": "example",
+        "hasSubdomain": true,
+        "canonical": "user@example.com.",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "leading dot domain",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@.example.com"
+      },
+      "expect": {
+        "get": "user@.example.com",
+        "local": "user",
+        "domain": ".example.com",
+        "isValid": false,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "example.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@.example.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "empty label",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@example..com"
+      },
+      "expect": {
+        "get": "user@example..com",
+        "local": "user",
+        "domain": "example..com",
+        "isValid": false,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": ".com",
+        "subdomain": "example.",
+        "hasSubdomain": true,
+        "canonical": "user@example..com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "bare TLD",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@com"
+      },
+      "expect": {
+        "get": "user@com",
+        "local": "user",
+        "domain": "com",
+        "isValid": false,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": ".com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "bare public suffix",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@co.uk"
+      },
+      "expect": {
+        "get": "user@co.uk",
+        "local": "user",
+        "domain": "co.uk",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": ".co.uk",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@co.uk",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "wildcard rule",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@a.b.kawasaki.jp"
+      },
+      "expect": {
+        "get": "user@a.b.kawasaki.jp",
+        "local": "user",
+        "domain": "a.b.kawasaki.jp",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "a.b.kawasaki.jp",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@a.b.kawasaki.jp",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "exception rule",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@city.kawasaki.jp"
+      },
+      "expect": {
+        "get": "user@city.kawasaki.jp",
+        "local": "user",
+        "domain": "city.kawasaki.jp",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "city.kawasaki.jp",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@city.kawasaki.jp",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "exception rule subdomain",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@mail.city.kawasaki.jp"
+      },
+      "expect": {
+        "get": "user@mail.city.kawasaki.jp",
+        "local": "user",
+        "domain": "mail.city.kawasaki.jp",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "city.kawasaki.jp",
+        "subdomain": "mail",
+        "hasSubdomain": true,
+        "canonical": "user@mail.city.kawasaki.jp",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "private section suffix",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@me.github.io"
+      },
+      "expect": {
+        "get": "user@me.github.io",
+        "local": "user",
+        "domain": "me.github.io",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "me.github.io",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@me.github.io",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "deep subdomain",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@a.b.c.d.example.co.uk"
+      },
+      "expect": {
+        "get": "user@a.b.c.d.example.co.uk",
+        "local": "user",
+        "domain": "a.b.c.d.example.co.uk",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "example.co.uk",
+        "subdomain": "a.b.c.d",
+        "hasSubdomain": true,
+        "canonical": "user@a.b.c.d.example.co.uk",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "test TLD",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@mail.example.test"
+      },
+      "expect": {
+        "get": "user@mail.example.test",
+        "local": "user",
+        "domain": "mail.example.test",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "mail.example.test",
+        "subdomain": "mail",
+        "hasSubdomain": true,
+        "canonical": "user@mail.example.test",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "localhost TLD",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@app.localhost"
+      },
+      "expect": {
+        "get": "user@app.localhost",
+        "local": "user",
+        "domain": "app.localhost",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "app.localhost",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@app.localhost",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "localhost alone",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@localhost"
+      },
+      "expect": {
+        "get": "user@localhost",
+        "local": "user",
+        "domain": "localhost",
+        "isValid": false,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "localhost",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@localhost",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "unknown TLD",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@example.invalidtld"
+      },
+      "expect": {
+        "get": "user@example.invalidtld",
+        "local": "user",
+        "domain": "example.invalidtld",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "example.invalidtld",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@example.invalidtld",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "zero subdomain",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@0.example.com"
+      },
+      "expect": {
+        "get": "user@0.example.com",
+        "local": "user",
+        "domain": "0.example.com",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "example.com",
+        "subdomain": "0",
+        "hasSubdomain": false,
+        "canonical": "user@0.example.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "zero name",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@x.0.com"
+      },
+      "expect": {
+        "get": "user@x.0.com",
+        "local": "user",
+        "domain": "x.0.com",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "0.com",
+        "subdomain": "x.0",
+        "hasSubdomain": true,
+        "canonical": "user@x.0.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "numeric domain",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@123"
+      },
+      "expect": {
+        "get": "user@123",
+        "local": "user",
+        "domain": "123",
+        "isValid": false,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "123",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@123",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "numeric labels",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@1.2.3.4"
+      },
+      "expect": {
+        "get": "user@1.2.3.4",
+        "local": "user",
+        "domain": "1.2.3.4",
+        "isValid": false,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "1.2.3.4",
+        "subdomain": "1.2",
+        "hasSubdomain": true,
+        "canonical": "user@1.2.3.4",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "free and disposable domain",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@10minutemail.com"
+      },
+      "expect": {
+        "get": "user@10minutemail.com",
+        "local": "user",
+        "domain": "10minutemail.com",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": true,
+        "isFree": false,
+        "isCorporate": false,
+        "provider": "10minutemail.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@10minutemail.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "free domain upper case",
+      "op": "email.inspect",
+      "args": {
+        "email": "USER@GMAIL.COM"
+      },
+      "expect": {
+        "get": "user@gmail.com",
+        "local": "user",
+        "domain": "gmail.com",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": true,
+        "isCorporate": false,
+        "provider": "gmail.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@gmail.com",
+        "isCanonicalSupported": true,
+        "canonicalDomain": "gmail.com"
+      }
+    },
+    {
+      "name": "subdomain of a free domain",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@mail.gmail.com"
+      },
+      "expect": {
+        "get": "user@mail.gmail.com",
+        "local": "user",
+        "domain": "mail.gmail.com",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "gmail.com",
+        "subdomain": "mail",
+        "hasSubdomain": true,
+        "canonical": "user@mail.gmail.com",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "numeric-looking domain",
+      "op": "email.inspect",
+      "args": {
+        "email": "user@1e3"
+      },
+      "expect": {
+        "get": "user@1e3",
+        "local": "user",
+        "domain": "1e3",
+        "isValid": false,
+        "hasValidLocal": true,
+        "hasValidDomain": false,
+        "isDisposable": false,
+        "isFree": false,
+        "isCorporate": true,
+        "provider": "1e3",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user@1e3",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "gmail zero local part",
+      "op": "email.inspect",
+      "args": {
+        "email": "0+tag@gmail.com"
+      },
+      "expect": {
+        "get": "0+tag@gmail.com",
+        "local": "0+tag",
+        "domain": "gmail.com",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": true,
+        "isCorporate": false,
+        "provider": "gmail.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Email local part cannot be empty after normalization"
+          }
+        },
+        "isCanonicalSupported": true,
+        "canonicalDomain": "gmail.com"
+      }
+    },
+    {
+      "name": "gmail dots only",
+      "op": "email.inspect",
+      "args": {
+        "email": "...@gmail.com"
+      },
+      "expect": {
+        "get": "...@gmail.com",
+        "local": "...",
+        "domain": "gmail.com",
+        "isValid": false,
+        "hasValidLocal": false,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": true,
+        "isCorporate": false,
+        "provider": "gmail.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Email local part cannot be empty after normalization"
+          }
+        },
+        "isCanonicalSupported": true,
+        "canonicalDomain": "gmail.com"
+      }
+    },
+    {
+      "name": "gmail plus first",
+      "op": "email.inspect",
+      "args": {
+        "email": "+tag@gmail.com"
+      },
+      "expect": {
+        "get": "+tag@gmail.com",
+        "local": "+tag",
+        "domain": "gmail.com",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": true,
+        "isCorporate": false,
+        "provider": "gmail.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "+tag@gmail.com",
+        "isCanonicalSupported": true,
+        "canonicalDomain": "gmail.com"
+      }
+    },
+    {
+      "name": "gmail plus only",
+      "op": "email.inspect",
+      "args": {
+        "email": "+@googlemail.com"
+      },
+      "expect": {
+        "get": "+@googlemail.com",
+        "local": "+",
+        "domain": "googlemail.com",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": true,
+        "isCorporate": false,
+        "provider": "googlemail.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "+@gmail.com",
+        "isCanonicalSupported": true,
+        "canonicalDomain": "gmail.com"
+      }
+    },
+    {
+      "name": "outlook zero local part",
+      "op": "email.inspect",
+      "args": {
+        "email": "0+x@hotmail.com"
+      },
+      "expect": {
+        "get": "0+x@hotmail.com",
+        "local": "0+x",
+        "domain": "hotmail.com",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": true,
+        "isCorporate": false,
+        "provider": "hotmail.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Email local part cannot be empty after normalization"
+          }
+        },
+        "isCanonicalSupported": true,
+        "canonicalDomain": "outlook.com"
+      }
+    },
+    {
+      "name": "icloud plus only",
+      "op": "email.inspect",
+      "args": {
+        "email": "+@me.com"
+      },
+      "expect": {
+        "get": "+@me.com",
+        "local": "+",
+        "domain": "me.com",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": true,
+        "isCorporate": false,
+        "provider": "me.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "+@icloud.com",
+        "isCanonicalSupported": true,
+        "canonicalDomain": "icloud.com"
+      }
+    },
+    {
+      "name": "protonmail keeps the domain",
+      "op": "email.inspect",
+      "args": {
+        "email": "A.B+c@PM.ME"
+      },
+      "expect": {
+        "get": "a.b+c@pm.me",
+        "local": "a.b+c",
+        "domain": "pm.me",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": true,
+        "isCorporate": false,
+        "provider": "pm.me",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "a.b@pm.me",
+        "isCanonicalSupported": true,
+        "canonicalDomain": "protonmail.com"
+      }
+    },
+    {
+      "name": "protonmail zero after plus",
+      "op": "email.inspect",
+      "args": {
+        "email": "0+x@proton.me"
+      },
+      "expect": {
+        "get": "0+x@proton.me",
+        "local": "0+x",
+        "domain": "proton.me",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": true,
+        "isCorporate": false,
+        "provider": "proton.me",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "0@proton.me",
+        "isCanonicalSupported": true,
+        "canonicalDomain": "protonmail.com"
+      }
+    },
+    {
+      "name": "yandex is not consulted by Email",
+      "op": "email.inspect",
+      "args": {
+        "email": "user.name+tag@yandex.ru"
+      },
+      "expect": {
+        "get": "user.name+tag@yandex.ru",
+        "local": "user.name+tag",
+        "domain": "yandex.ru",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": true,
+        "isCorporate": false,
+        "provider": "yandex.ru",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user.name+tag@yandex.ru",
+        "isCanonicalSupported": false,
+        "canonicalDomain": null
+      }
+    },
+    {
+      "name": "walla",
+      "op": "email.inspect",
+      "args": {
+        "email": "User.Name+tag@walla.com"
+      },
+      "expect": {
+        "get": "user.name+tag@walla.com",
+        "local": "user.name+tag",
+        "domain": "walla.com",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": true,
+        "isCorporate": false,
+        "provider": "walla.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user.name+tag@walla.co.il",
+        "isCanonicalSupported": true,
+        "canonicalDomain": "walla.co.il"
+      }
+    },
+    {
+      "name": "fastmail",
+      "op": "email.inspect",
+      "args": {
+        "email": "User.Name+tag@fastmail.fm"
+      },
+      "expect": {
+        "get": "user.name+tag@fastmail.fm",
+        "local": "user.name+tag",
+        "domain": "fastmail.fm",
+        "isValid": true,
+        "hasValidLocal": true,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": true,
+        "isCorporate": false,
+        "provider": "fastmail.fm",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "user.name+tag@fastmail.com",
+        "isCanonicalSupported": true,
+        "canonicalDomain": "fastmail.com"
+      }
+    },
+    {
+      "name": "quoted gmail local part",
+      "op": "email.inspect",
+      "args": {
+        "email": "\"a.b+c\"@gmail.com"
+      },
+      "expect": {
+        "get": "\"a.b+c\"@gmail.com",
+        "local": "\"a.b+c\"",
+        "domain": "gmail.com",
+        "isValid": true,
+        "hasValidLocal": false,
+        "hasValidDomain": true,
+        "isDisposable": false,
+        "isFree": true,
+        "isCorporate": false,
+        "provider": "gmail.com",
+        "subdomain": "",
+        "hasSubdomain": false,
+        "canonical": "\"ab@gmail.com",
+        "isCanonicalSupported": true,
+        "canonicalDomain": "gmail.com"
+      }
+    },
+    {
+      "name": "format default",
+      "op": "email.formatted",
+      "args": {
+        "email": "user@mail.example.co.uk"
+      },
+      "expect": "user@mail.example.co.uk"
+    },
+    {
+      "name": "format unknown",
+      "op": "email.formatted",
+      "args": {
+        "email": "user@mail.example.co.uk",
+        "format": "FULL"
+      },
+      "expect": "user@mail.example.co.uk"
+    },
+    {
+      "name": "format empty",
+      "op": "email.formatted",
+      "args": {
+        "email": "user@mail.example.co.uk",
+        "format": ""
+      },
+      "expect": "user@mail.example.co.uk"
+    },
+    {
+      "name": "format provider unknown suffix",
+      "op": "email.formatted",
+      "args": {
+        "email": "user@mail.example.invalidtld",
+        "format": "provider"
+      },
+      "expect": "mail.example.invalidtld"
+    },
+    {
+      "name": "format subdomain zero",
+      "op": "email.formatted",
+      "args": {
+        "email": "user@0.example.com",
+        "format": "subdomain"
+      },
+      "expect": "0"
+    },
+    {
+      "name": "allow empty accepts only the empty string",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "allow_empty": true,
+            "value": ""
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "allow_empty": true,
+            "value": " "
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "allow_empty": false,
+            "value": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "allow_empty": true,
+            "value": ""
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "validators on invalid UTF-8",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "value": {
+              "$bytes": "dXP/ZXJAZXhhbXBsZS5jb20="
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": {
+              "$bytes": "dXP/ZXJAZXhhbXBsZS5jb20="
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": {
+              "$bytes": "dXP/ZXJAZXhhbXBsZS5jb20="
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": {
+              "$bytes": "dXP/ZXJAZXhhbXBsZS5jb20="
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": {
+              "$bytes": "dXP/ZXJAZXhhbXBsZS5jb20="
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "validators on numbers and arrays",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "value": 1.5
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "value": [
+              "user@example.com"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "value": {
+              "email": "user@example.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": 1.5
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": [
+              "user@example.com"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": {
+              "email": "user@example.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": 1.5
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": [
+              "user@example.com"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": {
+              "email": "user@example.com"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "validators on a local part ending in a newline",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "value": "abc\n@example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "domain",
+            "value": "abc\n@example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": "abc\n@example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "corporate",
+            "value": "abc\n@example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "not_disposable",
+            "value": "abc\n@example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "describe with allow empty",
+      "op": "validator.describe",
+      "args": {
+        "validator": "email",
+        "allow_empty": true
+      },
+      "expect": {
+        "description": "Value must be a valid email address",
+        "type": "string",
+        "array": false
+      }
+    },
+    {
+      "name": "providers lower-case ASCII only",
+      "steps": [
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "ÄB.C+D",
+            "domain": "Example.COM"
+          },
+          "expect": {
+            "local": "Äbc",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "ÄB.C+D",
+            "domain": "Example.COM"
+          },
+          "expect": {
+            "local": "Äb.c",
+            "domain": "outlook.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "ÄB.C+D",
+            "domain": "Example.COM"
+          },
+          "expect": {
+            "local": "Äb.c+d",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "ÄB.C+D",
+            "domain": "Example.COM"
+          },
+          "expect": {
+            "local": "Äb.c",
+            "domain": "icloud.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "ÄB.C+D",
+            "domain": "Example.COM"
+          },
+          "expect": {
+            "local": "Äb.c",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "ÄB.C+D",
+            "domain": "Example.COM"
+          },
+          "expect": {
+            "local": "Äb.c+d",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "ÄB.C+D",
+            "domain": "Example.COM"
+          },
+          "expect": {
+            "local": "Äb.c+d",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "ÄB.C+D",
+            "domain": "Example.COM"
+          },
+          "expect": {
+            "local": "Äb.c+d",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "ÄB.C+D",
+            "domain": "Example.COM"
+          },
+          "expect": {
+            "local": "Äb.c+d",
+            "domain": "Example.COM"
+          }
+        }
+      ]
+    },
+    {
+      "name": "providers on a zero local part",
+      "steps": [
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "0",
+            "domain": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Email local part cannot be empty after normalization"
+            }
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "0",
+            "domain": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Email local part cannot be empty after normalization"
+            }
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "0",
+            "domain": "x"
+          },
+          "expect": {
+            "local": "0",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "0",
+            "domain": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Email local part cannot be empty after normalization"
+            }
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "0",
+            "domain": "x"
+          },
+          "expect": {
+            "local": "0",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "0",
+            "domain": "x"
+          },
+          "expect": {
+            "local": "0",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "0",
+            "domain": "x"
+          },
+          "expect": {
+            "local": "0",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "0",
+            "domain": "x"
+          },
+          "expect": {
+            "local": "0",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "0",
+            "domain": "x"
+          },
+          "expect": {
+            "local": "0",
+            "domain": "x"
+          }
+        }
+      ]
+    },
+    {
+      "name": "providers on an empty local part",
+      "steps": [
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "",
+            "domain": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Email local part cannot be empty after normalization"
+            }
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "outlook",
+            "local": "",
+            "domain": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Email local part cannot be empty after normalization"
+            }
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yahoo",
+            "local": "",
+            "domain": ""
+          },
+          "expect": {
+            "local": "",
+            "domain": "yahoo.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "icloud",
+            "local": "",
+            "domain": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Email local part cannot be empty after normalization"
+            }
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "",
+            "domain": ""
+          },
+          "expect": {
+            "local": "",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "",
+            "domain": ""
+          },
+          "expect": {
+            "local": "",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "",
+            "domain": ""
+          },
+          "expect": {
+            "local": "",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "",
+            "domain": ""
+          },
+          "expect": {
+            "local": "",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "generic",
+            "local": "",
+            "domain": ""
+          },
+          "expect": {
+            "local": "",
+            "domain": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "supports is case-sensitive",
+      "steps": [
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "gmail",
+            "domain": "GMAIL.COM"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "gmail",
+            "domain": "Outlook.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "gmail",
+            "domain": "PM.ME"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "gmail",
+            "domain": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "GMAIL.COM"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "Outlook.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": "PM.ME"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "outlook",
+            "domain": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "protonmail",
+            "domain": "GMAIL.COM"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "protonmail",
+            "domain": "Outlook.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "protonmail",
+            "domain": "PM.ME"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "protonmail",
+            "domain": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "generic",
+            "domain": "GMAIL.COM"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "generic",
+            "domain": "Outlook.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "generic",
+            "domain": "PM.ME"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "generic",
+            "domain": ""
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "protonmail replaces an unsupported domain",
+      "op": "provider.canonical",
+      "args": {
+        "provider": "protonmail",
+        "local": "a+b",
+        "domain": "gmail.com"
+      },
+      "expect": {
+        "local": "a",
+        "domain": "protonmail.com"
+      }
+    }
+  ]
+}
