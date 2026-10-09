@@ -995,6 +995,36 @@ trait UsersBase
         $this->assertSame('general_query_invalid', $response['body']['type']);
     }
 
+    public function testListUsersDefaultOrderIsCreationOrder(): void
+    {
+        $created = [];
+        foreach (['First', 'Second', 'Third'] as $name) {
+            $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'userId' => Id::unique(),
+                'email' => Id::unique() . '@localhost.test',
+                'password' => 'password',
+                'name' => $name,
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
+            $created[] = $user['body']['$id'];
+        }
+
+        $listed = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$id', \array_reverse($created))->toString(),
+            ],
+        ]);
+        $this->assertSame(200, $listed['headers']['status-code']);
+
+        $this->assertSame($created, \array_column($listed['body']['users'], '$id'), 'Main lists users in the order they were created when no order is given');
+    }
+
     public function testListUsers(): void
     {
         // Cursor assertions require users created in order, without earlier test data.

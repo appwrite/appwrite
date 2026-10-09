@@ -9481,6 +9481,11 @@ trait DatabasesBase
             $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Document 1',
+                'collection2' => [
+                    [
+                        'name' => 'Document 2',
+                    ],
+                ],
             ],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
@@ -9495,6 +9500,15 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $update['headers']['status-code']);
+        $this->assertSame('Document 1 Updated', $update['body']['name']);
+
+        $updated = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collection1, $document['body']['$id']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'queries' => [Query::select(['*', 'collection2.*'])->toString()],
+        ]);
+        $this->assertCount(1, $updated['body']['collection2'], 'Updating the document must keep its existing related document');
     }
 
     public function testMalformedRelationshipValuesAreRejected(): void
