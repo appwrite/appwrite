@@ -82,7 +82,11 @@ import {
   functionHasInProgressDeployment,
 } from './_components/FunctionsListTable'
 import { formatCronExpression } from './CronScheduleEditor'
-import { DeploymentResourceStatusBadges, resourceHasVisibleStatus } from '../shared/DeploymentResourceStatusBadges'
+import { formatInterval } from '@/lib/function-interval'
+import {
+  DeploymentResourceStatusBadges,
+  resourceHasVisibleStatus,
+} from '../shared/DeploymentResourceStatusBadges'
 import { ServiceListViewToggle } from '../shared/ServiceListViewToggle'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useT } from '@/lib/i18n/translate'
@@ -514,7 +518,9 @@ export function View() {
               aria-label={t('Local editor')}
             >
               <FileCode className="h-4 w-4 shrink-0" />
-              <span className="hidden @[640px]:inline">{t('Local editor')}</span>
+              <span className="hidden @[640px]:inline">
+                {t('Local editor')}
+              </span>
             </Link>
           </Button>
         </TooltipTrigger>
@@ -820,204 +826,213 @@ export function View() {
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         <>
-            {showLoading ? (
-              <div className="rounded-lg border border-border bg-card py-12 text-center">
-                <p className="text-[13px] text-muted-foreground">
-                  {t('Loading functions...')}
-                </p>
-              </div>
-            ) : noSearchResults ? (
+          {showLoading ? (
+            <div className="rounded-lg border border-border bg-card py-12 text-center">
+              <p className="text-[13px] text-muted-foreground">
+                {t('Loading functions...')}
+              </p>
+            </div>
+          ) : noSearchResults ? (
+            <EmptyState
+              icon={Play}
+              isEmpty={false}
+              hasFilters={hasFilters}
+              variant="card"
+            />
+          ) : !hasFunctions ? (
+            hasFilters ? (
               <EmptyState
                 icon={Play}
                 isEmpty={false}
                 hasFilters={hasFilters}
                 variant="card"
               />
-            ) : !hasFunctions ? (
-              hasFilters ? (
-                <EmptyState
-                  icon={Play}
-                  isEmpty={false}
-                  hasFilters={hasFilters}
-                  variant="card"
+            ) : (
+              <FunctionsEmptyState
+                projectId={projectId!}
+                onCreate={handleCreateFunction}
+                createDisabled={isCreateDisabled}
+                createDisabledTooltip={
+                  noCreatePermission
+                    ? t("You don't have permission to create functions.")
+                    : undefined
+                }
+              />
+            )
+          ) : (
+            <>
+              {viewMode === 'list' ? (
+                <FunctionsListTable
+                  projectId={projectId!}
+                  functions={functions as Models.Function[]}
+                  selectedFunctionIds={selectedFunctions}
+                  onToggleFunction={toggleFunction}
+                  onToggleAll={toggleAllFunctions}
                 />
               ) : (
-                <FunctionsEmptyState
-                  projectId={projectId!}
-                  onCreate={handleCreateFunction}
-                  createDisabled={isCreateDisabled}
-                  createDisabledTooltip={
-                    noCreatePermission
-                      ? t("You don't have permission to create functions.")
-                      : undefined
-                  }
-                />
-              )
-            ) : (
-              <>
-                {viewMode === 'list' ? (
-                  <FunctionsListTable
-                    projectId={projectId!}
-                    functions={functions as Models.Function[]}
-                    selectedFunctionIds={selectedFunctions}
-                    onToggleFunction={toggleFunction}
-                    onToggleAll={toggleAllFunctions}
-                  />
-                ) : (
-                  <div className={RESOURCE_CARD_GRID_CLASSNAME}>
-                    {functions.map((func) => {
-                      const activeDeploymentCreatedAt =
-                        getActiveDeploymentCreatedAt(func as Models.Function)
-                      const showStatus = resourceHasVisibleStatus(
-                        func as Models.Function,
-                      )
+                <div className={RESOURCE_CARD_GRID_CLASSNAME}>
+                  {functions.map((func) => {
+                    const activeDeploymentCreatedAt =
+                      getActiveDeploymentCreatedAt(func as Models.Function)
+                    const showStatus = resourceHasVisibleStatus(
+                      func as Models.Function,
+                    )
 
-                      return (
-                        <FunctionContextMenu
-                          key={func.$id}
-                          projectId={projectId!}
-                          func={{ $id: func.$id, name: func.name }}
+                    return (
+                      <FunctionContextMenu
+                        key={func.$id}
+                        projectId={projectId!}
+                        func={{ $id: func.$id, name: func.name }}
+                      >
+                        <Link
+                          to="/projects/$projectId/functions/$functionId"
+                          params={{
+                            projectId: projectId!,
+                            functionId: func.$id,
+                          }}
+                          className="block min-w-0"
                         >
-                          <Link
-                            to="/projects/$projectId/functions/$functionId"
-                            params={{
-                              projectId: projectId!,
-                              functionId: func.$id,
-                            }}
-                            className="block min-w-0"
+                          <div
+                            className={cn(
+                              RESOURCE_CARD_PADDED_CLASSNAME,
+                              RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+                              'pb-0',
+                            )}
                           >
-                            <div
-                              className={cn(
-                                RESOURCE_CARD_PADDED_CLASSNAME,
-                                RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-                                'pb-0',
-                              )}
-                            >
-                              <div className="flex items-start gap-3">
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                                  <RuntimeIcon
-                                    runtime={func.runtime || ''}
-                                    size="md"
-                                    className="h-5 w-5"
-                                  />
-                                </div>
-                                <div className="min-w-0 flex-1 overflow-hidden">
-                                  <h3 className="truncate text-[14px] font-medium text-foreground">
-                                    {func.name || t('Unnamed Function')}
-                                  </h3>
-                                  <p className="mt-0.5 truncate text-[12px] text-muted-foreground whitespace-nowrap">
-                                    {t(formatRuntimeLabel(func.runtime || ''))}
-                                  </p>
-                                  <div className="mt-1.5">
-                                    <CopyableId
-                                      id={func.$id}
-                                      size="xs"
-                                      maxWidth={120}
-                                    />
-                                  </div>
-                                </div>
+                            <div className="flex items-start gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                                <RuntimeIcon
+                                  runtime={func.runtime || ''}
+                                  size="md"
+                                  className="h-5 w-5"
+                                />
                               </div>
-
-                              <FunctionExecutionsChartPreview
-                                projectId={projectId!}
-                                functionId={func.$id}
-                                enabled={features.usageStats}
-                              />
-
-                              <div
-                                className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}
-                              >
-                                <div className="flex min-w-0 flex-nowrap items-center gap-x-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                                  {showStatus ? (
-                                    <>
-                                      <DeploymentResourceStatusBadges
-                                        resource={func as Models.Function}
-                                      />
-                                      <span
-                                        className="shrink-0 text-[10px] text-muted-foreground/40"
-                                        aria-hidden
-                                      >
-                                        ·
-                                      </span>
-                                    </>
-                                  ) : null}
-                                  <div className="flex shrink-0 items-center gap-0.5">
-                                    <span className="text-[12px] text-muted-foreground/70">
-                                      {t('Deployed')}
-                                    </span>
-                                    <span className="text-[12px] font-medium text-muted-foreground">
-                                      {activeDeploymentCreatedAt ? (
-                                        <DateTooltip
-                                          date={activeDeploymentCreatedAt}
-                                          live
-                                          className="text-[12px] font-medium text-muted-foreground"
-                                        />
-                                      ) : (
-                                        t('Never')
-                                      )}
-                                    </span>
-                                  </div>
-                                  {func.schedule?.trim() ? (
-                                    <div className="ms-auto flex min-w-0 shrink items-center gap-1">
-                                      <Clock className="h-3 w-3 shrink-0 text-muted-foreground" />
-                                      <span
-                                        className="truncate text-[12px] font-medium text-muted-foreground"
-                                        title={func.schedule}
-                                      >
-                                        {t(formatCronExpression(func.schedule))}
-                                      </span>
-                                    </div>
-                                  ) : null}
+                              <div className="min-w-0 flex-1 overflow-hidden">
+                                <h3 className="truncate text-[14px] font-medium text-foreground">
+                                  {func.name || t('Unnamed Function')}
+                                </h3>
+                                <p className="mt-0.5 truncate text-[12px] text-muted-foreground whitespace-nowrap">
+                                  {t(formatRuntimeLabel(func.runtime || ''))}
+                                </p>
+                                <div className="mt-1.5">
+                                  <CopyableId
+                                    id={func.$id}
+                                    size="xs"
+                                    maxWidth={120}
+                                  />
                                 </div>
                               </div>
                             </div>
-                          </Link>
-                        </FunctionContextMenu>
-                      )
-                    })}
-                  </div>
-                )}
 
-                <Pagination
-                  currentPage={displayedPage}
-                  totalItems={displayedTotal ?? total}
-                  pageSize={urlLimit}
-                  pageSizeOptions={[12, 18, 36, 72]}
-                  onPageChange={(page) => {
-                    setRequestedPage(page)
-                    setSelectedFunctions(new Set())
-                    navigateToFunctionsList({
-                      search: urlSearch ?? undefined,
-                      query: filterQueryString || undefined,
-                      page,
-                      limit: urlLimit,
-                      sort:
-                        urlSortBy !== FUNCTIONS_DEFAULT_SORT_BY ||
-                        urlSortOrder !== FUNCTIONS_DEFAULT_SORT_ORDER
-                          ? encodeSort(urlSortBy, urlSortOrder)
-                          : undefined,
-                    })
-                  }}
-                  onPageSizeChange={(size) => {
-                    setRequestedPage(1)
-                    setDisplayedPage(1)
-                    setSelectedFunctions(new Set())
-                    navigateToFunctionsList({
-                      search: urlSearch ?? undefined,
-                      query: filterQueryString || undefined,
-                      page: 1,
-                      limit: size,
-                      sort:
-                        urlSortBy !== FUNCTIONS_DEFAULT_SORT_BY ||
-                        urlSortOrder !== FUNCTIONS_DEFAULT_SORT_ORDER
-                          ? encodeSort(urlSortBy, urlSortOrder)
-                          : undefined,
-                    })
-                  }}
-                  itemLabel={t('functions')}
-                />
-              </>
-            )}
+                            <FunctionExecutionsChartPreview
+                              projectId={projectId!}
+                              functionId={func.$id}
+                              enabled={features.usageStats}
+                            />
+
+                            <div
+                              className={
+                                RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME
+                              }
+                            >
+                              <div className="flex min-w-0 flex-nowrap items-center gap-x-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                {showStatus ? (
+                                  <>
+                                    <DeploymentResourceStatusBadges
+                                      resource={func as Models.Function}
+                                    />
+                                    <span
+                                      className="shrink-0 text-[10px] text-muted-foreground/40"
+                                      aria-hidden
+                                    >
+                                      ·
+                                    </span>
+                                  </>
+                                ) : null}
+                                <div className="flex shrink-0 items-center gap-0.5">
+                                  <span className="text-[12px] text-muted-foreground/70">
+                                    {t('Deployed')}
+                                  </span>
+                                  <span className="text-[12px] font-medium text-muted-foreground">
+                                    {activeDeploymentCreatedAt ? (
+                                      <DateTooltip
+                                        date={activeDeploymentCreatedAt}
+                                        live
+                                        className="text-[12px] font-medium text-muted-foreground"
+                                      />
+                                    ) : (
+                                      t('Never')
+                                    )}
+                                  </span>
+                                </div>
+                                {(func.interval ?? 0) > 0 ? (
+                                  <div className="ms-auto flex min-w-0 shrink items-center gap-1">
+                                    <Clock className="h-3 w-3 shrink-0 text-muted-foreground" />
+                                    <span className="truncate text-[12px] font-medium text-muted-foreground">
+                                      {formatInterval(func.interval ?? 0, t)}
+                                    </span>
+                                  </div>
+                                ) : func.schedule?.trim() ? (
+                                  <div className="ms-auto flex min-w-0 shrink items-center gap-1">
+                                    <Clock className="h-3 w-3 shrink-0 text-muted-foreground" />
+                                    <span
+                                      className="truncate text-[12px] font-medium text-muted-foreground"
+                                      title={func.schedule}
+                                    >
+                                      {t(formatCronExpression(func.schedule))}
+                                    </span>
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      </FunctionContextMenu>
+                    )
+                  })}
+                </div>
+              )}
+
+              <Pagination
+                currentPage={displayedPage}
+                totalItems={displayedTotal ?? total}
+                pageSize={urlLimit}
+                pageSizeOptions={[12, 18, 36, 72]}
+                onPageChange={(page) => {
+                  setRequestedPage(page)
+                  setSelectedFunctions(new Set())
+                  navigateToFunctionsList({
+                    search: urlSearch ?? undefined,
+                    query: filterQueryString || undefined,
+                    page,
+                    limit: urlLimit,
+                    sort:
+                      urlSortBy !== FUNCTIONS_DEFAULT_SORT_BY ||
+                      urlSortOrder !== FUNCTIONS_DEFAULT_SORT_ORDER
+                        ? encodeSort(urlSortBy, urlSortOrder)
+                        : undefined,
+                  })
+                }}
+                onPageSizeChange={(size) => {
+                  setRequestedPage(1)
+                  setDisplayedPage(1)
+                  setSelectedFunctions(new Set())
+                  navigateToFunctionsList({
+                    search: urlSearch ?? undefined,
+                    query: filterQueryString || undefined,
+                    page: 1,
+                    limit: size,
+                    sort:
+                      urlSortBy !== FUNCTIONS_DEFAULT_SORT_BY ||
+                      urlSortOrder !== FUNCTIONS_DEFAULT_SORT_ORDER
+                        ? encodeSort(urlSortBy, urlSortOrder)
+                        : undefined,
+                  })
+                }}
+                itemLabel={t('functions')}
+              />
+            </>
+          )}
         </>
 
         {selectedFunctions.size > 0 && (

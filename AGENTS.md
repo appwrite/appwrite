@@ -312,6 +312,8 @@ Never hardcode a collection schema only inside a patch script. If the collection
 
 **Unit** (`tests/unit/`) covers **local src libraries** (`src/Appwrite/Auth`, `Network`, `URL`, validators, mappers, parsers, filters), plus **contract locks** for configuration clients persist (`tests/unit/General/ScopesTest.php` against `app/config/scopes/lock.json`). A contract lock pins what must never disappear from a published catalog; do not use it to mirror config shape or values. Path mirrors source; class `{ClassUnderTest}Test`. Use `PHPUnit\Framework\TestCase`, data providers for matrices, and named fakes over anonymous mocks. Do **not** unit-test HTTP route actions (`Platform/Modules/**/Http`), CLI tasks, or workers — e2e covers those surfaces; unit-test the libraries they call. If an e2e test finds a library bug and no unit test fails, add a unit regression on that library. Never use reflection to reach private members. Do not run Swoole coroutine work in the shared unit process. Never call production third-party services from automated tests.
 
+CI runs only the e2e lanes a change can affect, using [`.github/ci/e2e.json`](.github/ci/e2e.json). Add a new e2e service there, and list the module and controller paths it covers. Any file the map doesn't claim runs every lane.
+
 Structure tests as Arrange, Act, Assert. Assert observable behavior (status, body fields, error type, permission outcome, persisted value), not private call order. Avoid full-document assertions when a sparse check is enough. Avoid sleeps; prefer existing polling helpers. Run the narrowest command that validates the change (`composer lint <file>`, a single `--filter`, one service suite) before broadening.
 
 ## SDK specs

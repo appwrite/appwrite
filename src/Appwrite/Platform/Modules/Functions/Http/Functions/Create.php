@@ -455,13 +455,12 @@ class Create extends Base
                 );
                 $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
-                $ruleModel = new Rule();
                 $ruleCreate =
                     $queueForEvents
                         ->setProject($project)
                         ->setEvent('rules.[ruleId].create')
                         ->setParam('ruleId', $rule->getId())
-                        ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())));
+                        ->setPayload((new Rule())->payload($rule));
 
                 /** Trigger Webhook */
                 $queueForWebhooks
