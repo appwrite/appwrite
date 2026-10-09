@@ -28,7 +28,7 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\Domains\Domain;
@@ -347,7 +347,7 @@ class Certificates extends Action
             }
 
             // Prepare unique cert name. Using this helps prevent mismatch in configuration when renewing certificates.
-            $certName = ID::unique();
+            $certName = Id::unique();
             $renewDate = $certificates->issueCertificate($certName, $domain->get(), $domainType);
 
             $date = \date('H:i:s');
@@ -486,7 +486,7 @@ class Certificates extends Action
             ->setProject($project)
             ->setEvent('rules.[ruleId].update')
             ->setParam('ruleId', $rule->getId())
-            ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())));
+            ->setPayload($rule->only(array_keys($ruleModel->getRules())));
 
         /** Trigger Webhook */
         $queueForWebhooks

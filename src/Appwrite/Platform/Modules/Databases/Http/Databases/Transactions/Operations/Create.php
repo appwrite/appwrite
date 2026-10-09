@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Operations;
 
+use Appwrite\Databases\Counter;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Action;
@@ -15,13 +16,15 @@ use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 
 class Create extends Action
@@ -70,7 +73,7 @@ class Create extends Action
                     replaceWith: 'tablesDB.createOperations',
                 )
             ))
-            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Transaction ID.', false, ['dbForProject'])
             ->param('operations', [], new ArrayList(new Operation(type: 'legacy')), 'Array of staged operations.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -143,7 +146,7 @@ class Create extends Action
             if (\in_array($operation['action'], ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
                 $hasRelationships = \array_filter(
                     $collection->getAttribute('attributes', []),
-                    fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                    fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
                 );
                 if ($hasRelationships) {
                     throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk operations are not supported for ' . $this->getGroupId() . ' with relationship attributes');
@@ -170,10 +173,10 @@ class Create extends Action
             // Bulk operations skip permission validation entirely (API key/admin only, already checked above)
             if (!\in_array($operation['action'], ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
                 $permissionType = match ($operation['action']) {
-                    'create' => Database::PERMISSION_CREATE,
-                    'update', 'increment', 'decrement' => Database::PERMISSION_UPDATE,
-                    'delete' => Database::PERMISSION_DELETE,
-                    'upsert' => ($document && !$document->isEmpty()) ? Database::PERMISSION_UPDATE : Database::PERMISSION_CREATE,
+                    'create' => PermissionType::Create,
+                    'update', 'increment', 'decrement' => PermissionType::Update,
+                    'delete' => PermissionType::Delete,
+                    'upsert' => ($document && !$document->isEmpty()) ? PermissionType::Update : PermissionType::Create,
                     default => throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid action: ' . $operation['action'])
                 };
 
@@ -186,18 +189,18 @@ class Create extends Action
                     );
                     $documentValid = false;
                     if ($document !== null && !$document->isEmpty() && $documentSecurity) {
-                        if ($permissionType === Database::PERMISSION_UPDATE) {
+                        if ($permissionType === PermissionType::Update) {
                             $documentValid = $authorization->isValid(
-                                new Input(Database::PERMISSION_UPDATE, $document->getUpdate())
+                                new Input(PermissionType::Update, $document->getPermissionsByType(PermissionType::Update))
                             );
-                        } elseif ($permissionType === Database::PERMISSION_DELETE) {
+                        } elseif ($permissionType === PermissionType::Delete) {
                             $documentValid = $authorization->isValid(
-                                new Input(Database::PERMISSION_DELETE, $document->getDelete())
+                                new Input(PermissionType::Delete, $document->getPermissionsByType(PermissionType::Delete))
                             );
                         }
                     }
 
-                    if ($permissionType === Database::PERMISSION_CREATE || !$documentSecurity) {
+                    if ($permissionType === PermissionType::Create || !$documentSecurity) {
                         if (!$collectionValid) {
                             throw new Exception(Exception::USER_UNAUTHORIZED);
                         }
@@ -211,10 +214,10 @@ class Create extends Action
                     if (isset($operation['data']['$permissions'])) {
                         $permissions = $operation['data']['$permissions'];
                         $roles = $authorization->getRoles();
-                        foreach (Database::PERMISSIONS as $type) {
+                        foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                             foreach ($permissions as $permission) {
                                 $permission = Permission::parse($permission);
-                                if ($permission->getPermission() != $type) {
+                                if ($permission->getPermission() != $type->value) {
                                     continue;
                                 }
                                 $role = (new Role(
@@ -235,8 +238,16 @@ class Create extends Action
                 }
             }
 
+            if (\in_array($operation['action'], ['increment', 'decrement'], true)) {
+                $data = $operation['data'];
+                $attribute = $data[$this->getAttributeKey()] ?? '';
+                if (\is_string($attribute)) {
+                    Counter::from($collection, $attribute)->assertChange($data['value'] ?? 1, $operation['action'], $this->getAttributeKey(), $attribute);
+                }
+            }
+
             $staged[] = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
@@ -282,7 +293,7 @@ class Create extends Action
     {
         $relationships = \array_filter(
             $collection->getAttribute('attributes', []),
-            fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
         );
 
         foreach ($relationships as $relationship) {

@@ -4,10 +4,12 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
 use Utopia\Console\Console;
+use Utopia\Database\CollectionUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
+use Utopia\Query\Schema\ColumnType;
 
 class V18 extends Migration
 {
@@ -56,7 +58,7 @@ class V18 extends Migration
                 $collectionTable = "{$databaseTable}_collection_{$collection->getSequence()}";
 
                 foreach ($collection['attributes'] ?? [] as $attribute) {
-                    if ($attribute['type'] !== Database::VAR_FLOAT) {
+                    if ($attribute['type'] !== ColumnType::Double->value) {
                         continue;
                     }
                     $this->changeAttributeInternalType($collectionTable, $attribute['key'], 'DOUBLE');
@@ -66,7 +68,7 @@ class V18 extends Migration
                     $documentSecurity = $collection->getAttribute('documentSecurity', false);
                     $permissions = $collection->getPermissions();
 
-                    $this->dbForProject->updateCollection($collectionTable, $permissions, $documentSecurity);
+                    $this->dbForProject->updateCollection($collectionTable, new CollectionUpdate(permissions: $permissions, documentSecurity: $documentSecurity));
                 } catch (\Throwable $th) {
                     Console::warning($th->getMessage());
                 }
@@ -87,14 +89,14 @@ class V18 extends Migration
             Console::log("Migrating Collection \"{$id}\"");
 
             foreach ($collection['attributes'] ?? [] as $attribute) {
-                if ($attribute['type'] !== Database::VAR_FLOAT) {
+                if ($attribute['type'] !== ColumnType::Double->value) {
                     continue;
                 }
                 $this->changeAttributeInternalType($id, $attribute['$id'], 'DOUBLE');
             }
 
             try {
-                $this->dbForProject->updateCollection($id, [Permission::create(Role::any())], true);
+                $this->dbForProject->updateCollection($id, new CollectionUpdate(permissions: [Permission::create(Role::any())], documentSecurity: true));
             } catch (\Throwable $th) {
                 Console::warning($th->getMessage());
             }
@@ -200,7 +202,7 @@ class V18 extends Migration
                     $internalBucketId = "bucket_{$this->project->getSequence()}";
                     $permissions = $document->getPermissions();
                     $fileSecurity = $document->getAttribute('fileSecurity', false);
-                    $this->dbForProject->updateCollection($internalBucketId, $permissions, $fileSecurity);
+                    $this->dbForProject->updateCollection($internalBucketId, new CollectionUpdate(permissions: $permissions, documentSecurity: $fileSecurity));
                 } catch (\Throwable $th) {
                     Console::warning($th->getMessage());
                 }

@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class PoliciesSessionDurationIntegrationTest extends Scope
 {
@@ -49,7 +49,7 @@ final class PoliciesSessionDurationIntegrationTest extends Scope
         $password = 'password1234';
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => 'Duration User',

@@ -57,7 +57,7 @@ class Update extends Action
             ))
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'url:{url},userId:{userId}')
-            ->param('passkeyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Passkey ID.', false, ['dbForProject'])
+            ->param('passkeyId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Passkey ID.', false, ['dbForProject'])
             ->param('credential', [], new Assoc(), 'Registration credential returned by the authenticator, in the JSON form produced by `PublicKeyCredential.toJSON()`.')
             ->inject('response')
             ->inject('user')

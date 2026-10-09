@@ -3,10 +3,11 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\CSV\Imports;
 
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Platform\Modules\Migrations\Claim;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -16,7 +17,7 @@ use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Migration\Destinations\OnDuplicate;
@@ -24,9 +25,7 @@ use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Transfer;
-use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\System\System;
@@ -35,8 +34,6 @@ use Utopia\Validator\WhiteList;
 
 class Create extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'createCSVImport';
@@ -66,8 +63,8 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('bucketId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).', false, ['dbForProject'])
-            ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'File ID.', false, ['dbForProject'])
+            ->param('bucketId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).', false, ['dbForProject'])
+            ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'File ID.', false, ['dbForProject'])
             ->param('databaseId', '', new UID(), 'Database ID containing the target collection.')
             ->param('collectionId', '', new UID(), 'Collection ID to import documents into.')
             ->param('internalFile', false, new Boolean(), 'Is the file stored in an internal bucket?', true)
@@ -82,6 +79,7 @@ class Create extends Action
             ->inject('deviceForMigrations')
             ->inject('queueForEvents')
             ->inject('publisherForMigrations')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -101,8 +99,12 @@ class Create extends Action
         Device $deviceForFiles,
         Device $deviceForMigrations,
         Event $queueForEvents,
-        MigrationPublisher $publisherForMigrations
+        MigrationPublisher $publisherForMigrations,
+        callable $locks,
     ): void {
+        $claim = new Claim($dbForProject, $locks);
+        $claim->assertReady();
+
         $bucket = $authorization->skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
             if ($internalFile) {
                 return $dbForPlatform->getDocument('buckets', 'default');
@@ -129,7 +131,7 @@ class Create extends Action
         $compression = $file->getAttribute('algorithm', Compression::NONE);
         $hasCompression = $compression !== Compression::NONE;
 
-        $migrationId = ID::unique();
+        $migrationId = Id::unique();
         $newPath = $deviceForMigrations->getPath($migrationId . '_' . $fileId . '.csv');
 
         if ($hasEncryption || $hasCompression) {
@@ -184,61 +186,39 @@ class Create extends Action
         $resources = Transfer::extractServices([self::transferGroupForDatabaseType($databaseType)]);
         $parentResourceType = self::resourceTypeForDatabaseType($databaseType);
 
-        $migration = $dbForProject->createDocument('migrations', new Document([
-            '$id' => $migrationId,
-            'status' => 'pending',
-            'stage' => 'init',
-            'source' => CSV::getName(),
-            'destination' => AppwriteSource::getName(),
-            'resources' => $resources,
-            'resourceId' => $collection->getId(),
-            'resourceInternalId' => $collection->getSequence(),
-            'resourceType' => Resource::TYPE_COLLECTION,
-            'parentResourceId' => $database->getId(),
-            'parentResourceInternalId' => $database->getSequence(),
-            'parentResourceType' => $parentResourceType,
-            'destinationResourceId' => $database->getId(),
-            'destinationResourceInternalId' => $database->getSequence(),
-            'destinationResourceType' => $parentResourceType,
-            'statusCounters' => '{}',
-            'resourceData' => '{}',
-            'errors' => [],
-            'options' => [
-                'path' => $newPath,
-                'size' => $fileSize,
-                'onDuplicate' => $onDuplicate,
-            ],
-        ]));
+        $migration = $claim->start(
+            project: $project,
+            migration: new Document([
+                '$id' => $migrationId,
+                'source' => CSV::getName(),
+                'destination' => AppwriteSource::getName(),
+                'resources' => $resources,
+                'resourceId' => $collection->getId(),
+                'resourceInternalId' => $collection->getSequence(),
+                'resourceType' => Resource::TYPE_COLLECTION,
+                'parentResourceId' => $database->getId(),
+                'parentResourceInternalId' => $database->getSequence(),
+                'parentResourceType' => $parentResourceType,
+                'destinationResourceId' => $database->getId(),
+                'destinationResourceInternalId' => $database->getSequence(),
+                'destinationResourceType' => $parentResourceType,
+                'statusCounters' => '{}',
+                'resourceData' => '{}',
+                'errors' => [],
+                'options' => [
+                    'path' => $newPath,
+                    'size' => $fileSize,
+                    'onDuplicate' => $onDuplicate,
+                ],
+            ]),
+            platform: $platform,
+            publisher: $publisherForMigrations,
+        );
 
         $queueForEvents->setParam('migrationId', $migration->getId());
-
-        $publisherForMigrations->enqueue(new MigrationMessage(
-            project: $project,
-            migration: $migration,
-        ));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($migration, Response::MODEL_MIGRATION);
-    }
-
-    private static function transferGroupForDatabaseType(string $databaseType): string
-    {
-        return match ($databaseType) {
-            DATABASE_TYPE_LEGACY,
-            DATABASE_TYPE_TABLESDB => Transfer::GROUP_DATABASES_TABLES_DB,
-            DATABASE_TYPE_VECTORSDB => Transfer::GROUP_DATABASES_VECTOR_DB,
-            DATABASE_TYPE_DOCUMENTSDB => Transfer::GROUP_DATABASES_DOCUMENTS_DB,
-            default => throw new \LogicException('Unknown database type: ' . $databaseType),
-        };
-    }
-
-    private static function resourceTypeForDatabaseType(string $databaseType): string
-    {
-        return match ($databaseType) {
-            DATABASE_TYPE_VECTORSDB => Resource::TYPE_DATABASE_VECTORSDB,
-            DATABASE_TYPE_DOCUMENTSDB => Resource::TYPE_DATABASE_DOCUMENTSDB,
-            default => Resource::TYPE_DATABASE,
-        };
     }
 }

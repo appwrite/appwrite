@@ -11,8 +11,9 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Range;
@@ -64,18 +65,18 @@ class Create extends Action
         $permissions = [];
         if (!empty($user->getId())) {
             $allowedPermissions = [
-                Database::PERMISSION_READ,
-                Database::PERMISSION_UPDATE,
-                Database::PERMISSION_DELETE,
+                PermissionType::Read,
+                PermissionType::Update,
+                PermissionType::Delete,
             ];
 
             foreach ($allowedPermissions as $permission) {
-                $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                $permissions[] = (new Permission($permission->value, 'user', $user->getId()))->toString();
             }
         }
 
         $transaction = $authorization->skip(fn () => $dbForProject->createDocument('transactions', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             '$permissions' => $permissions,
             'status' => 'pending',
             'operations' => 0,

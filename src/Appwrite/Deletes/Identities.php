@@ -15,7 +15,7 @@ class Identities
                 $query,
                 Query::orderAsc()
             ],
-            Database::DELETE_BATCH_SIZE
+            Database::BATCH_SIZE
         );
     }
 

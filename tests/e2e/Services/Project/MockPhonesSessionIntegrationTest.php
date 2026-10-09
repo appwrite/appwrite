@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class MockPhonesSessionIntegrationTest extends Scope
 {
@@ -56,7 +56,7 @@ final class MockPhonesSessionIntegrationTest extends Scope
 
         // Step 2 (Phone A): sign-in flow that also creates the user (userId = unique()).
         $tokenA = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', $clientHeaders, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'phone' => $phoneA,
         ]);
         $this->assertSame(201, $tokenA['headers']['status-code']);
@@ -97,7 +97,7 @@ final class MockPhonesSessionIntegrationTest extends Scope
 
         // Step 3 (Phone B): pre-create the user server-side, then sign in with the mock OTP.
         $precreated = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'phone' => $phoneB,
         ]);
         $this->assertSame(201, $precreated['headers']['status-code']);
@@ -187,7 +187,7 @@ final class MockPhonesSessionIntegrationTest extends Scope
          * Test for SUCCESS
          */
         $token = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', $sessionsHeaders, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'phone' => $phone,
         ]);
         $this->assertSame(201, $token['headers']['status-code']);

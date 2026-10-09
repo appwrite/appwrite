@@ -11,10 +11,12 @@ use Tests\Unit\Event\MockPublisher;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Queue\Queue;
 
@@ -219,13 +221,13 @@ final class WebhooksTest extends TestCase
         ];
 
         $database->create();
-        $database->createCollection('memberships', [], [], $permissions, false);
-        $database->createAttribute('memberships', 'teamInternalId', Database::VAR_STRING, 255, true);
-        $database->createAttribute('memberships', 'userId', Database::VAR_STRING, 255, true);
-        $database->createAttribute('memberships', 'roles', Database::VAR_STRING, 1024, true);
-        $database->createCollection('users', [], [], $permissions, false);
-        $database->createAttribute('users', 'email', Database::VAR_STRING, 320, false);
-        $database->createAttribute('users', 'name', Database::VAR_STRING, 256, false);
+        $database->createCollection(Collection::create(id: 'memberships', permissions: $permissions, documentSecurity: false));
+        $database->createAttribute('memberships', Attribute::string(key: 'teamInternalId', required: true));
+        $database->createAttribute('memberships', Attribute::string(key: 'userId', required: true));
+        $database->createAttribute('memberships', Attribute::string(key: 'roles', size: 1024, required: true));
+        $database->createCollection(Collection::create(id: 'users', permissions: $permissions, documentSecurity: false));
+        $database->createAttribute('users', Attribute::string(key: 'email', size: 320));
+        $database->createAttribute('users', Attribute::string(key: 'name', size: 256));
 
         return $database;
     }

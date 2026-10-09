@@ -52,7 +52,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])
+            ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Platform ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128, requireNonBlank: true), 'Platform name. Max length: 128 chars.')
             ->param('applicationId', '', new Text(256, requireNonBlank: true), 'Android application ID. Max length: 256 chars.')
             ->inject('response')

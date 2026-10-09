@@ -351,7 +351,7 @@ final class MigrationsWorkerExportTest extends TestCase
                 Realtime $queueForRealtime,
                 array $platform,
                 Authorization $authorization,
-            ): void {
+            ): Document {
                 throw new \RuntimeException('Artifact unavailable');
             }
 

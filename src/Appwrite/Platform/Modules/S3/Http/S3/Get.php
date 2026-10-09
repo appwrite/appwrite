@@ -78,11 +78,9 @@ class Get extends Base
                 return;
             }
 
-            // iterate() treats the limit as its page size and follows cursors until every file is loaded.
-            $files = $dbForProject->getAuthorization()->skip(fn () => \iterator_to_array($dbForProject->iterate('bucket_' . $bucket->getSequence(), [
+            $files = $dbForProject->getAuthorization()->skip(fn () => \iterator_to_array($dbForProject->cursor('bucket_' . $bucket->getSequence(), [
                 Query::orderAsc('$sequence'),
-                Query::limit(1000),
-            ]), false));
+            ], batchSize: 1000), false));
             $this->assertUniqueObjectKeys($files);
             if ($this->query($request, 'list-type') === '2') {
                 $this->sendXml($response, S3Xml::listObjectsV2(

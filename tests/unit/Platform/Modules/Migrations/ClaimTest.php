@@ -1,0 +1,2309 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Unit\Platform\Modules\Migrations;
+
+use Appwrite\Event\Message\Migration as MigrationMessage;
+use Appwrite\Event\Publisher\Migration as MigrationPublisher;
+use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Migrations\Claim;
+use Appwrite\Platform\Modules\Migrations\Delivery;
+use Appwrite\Platform\Modules\Migrations\Retry;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
+use Tests\Unit\Event\MockPublisher;
+use Utopia\Cache\Adapter\None as NoCache;
+use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Filter;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Lock\Exception\Contention;
+use Utopia\Migration\Destinations\Appwrite\ProvisioningOwner;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
+use Utopia\Queue\Queue;
+
+require_once __DIR__ . '/../../../../../app/init.php';
+
+final class StandaloneClaimMemory extends Memory
+{
+    #[\Override]
+    public function withTransaction(callable $callback): mixed
+    {
+        return $callback();
+    }
+}
+
+final class InterleavingClaimDatabase extends Database
+{
+    public ?\Closure $afterMigrationCreate = null;
+
+    public ?\Closure $afterMigrationRead = null;
+
+    public ?\Closure $beforeMigrationUpdate = null;
+
+    public int $transactions = 0;
+
+    public int $lockedReads = 0;
+
+    #[\Override]
+    public function withTransaction(callable $callback): mixed
+    {
+        $this->transactions++;
+
+        return parent::withTransaction($callback);
+    }
+
+    #[\Override]
+    public function updateDocument(string $collection, string $id, Document $document): Document
+    {
+        if ($collection === 'migrations' && $this->beforeMigrationUpdate !== null) {
+            $callback = $this->beforeMigrationUpdate;
+            $this->beforeMigrationUpdate = null;
+            $callback();
+        }
+
+        return parent::updateDocument($collection, $id, $document);
+    }
+
+    #[\Override]
+    public function createDocument(string $collection, Document $document): Document
+    {
+        $created = parent::createDocument($collection, $document);
+        if ($collection === 'migrations' && $this->afterMigrationCreate !== null) {
+            $callback = $this->afterMigrationCreate;
+            $this->afterMigrationCreate = null;
+            $callback();
+        }
+
+        return $created;
+    }
+
+    #[\Override]
+    public function getDocument(string $collection, string $id, array $queries = [], bool $forUpdate = false): Document
+    {
+        if ($forUpdate) {
+            $this->lockedReads++;
+        }
+
+        $document = parent::getDocument($collection, $id, $queries, $forUpdate);
+        if ($forUpdate && $collection === 'migrations' && $this->afterMigrationRead !== null) {
+            $callback = $this->afterMigrationRead;
+            $this->afterMigrationRead = null;
+            $callback();
+        }
+
+        return $document;
+    }
+}
+
+final class ExclusiveClaimLock
+{
+    /**
+     * @var array<string, true>
+     */
+    private array $held = [];
+
+    public function __invoke(string $key, int $ttl, callable $callback, float $timeout): mixed
+    {
+        if (isset($this->held[$key])) {
+            throw new Contention('Failed to acquire lock: ' . $key);
+        }
+
+        $this->held[$key] = true;
+
+        try {
+            return $callback();
+        } finally {
+            unset($this->held[$key]);
+        }
+    }
+}
+
+final class ClaimTest extends TestCase
+{
+    private Database $database;
+
+    protected function setUp(): void
+    {
+        $this->database = $this->claimsDatabase();
+    }
+
+    private function claimsDatabase(): InterleavingClaimDatabase
+    {
+        $database = new InterleavingClaimDatabase(new StandaloneClaimMemory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization(new Authorization())
+            ->setDatabase('migrationClaims')
+            ->setNamespace('migration_claims_' . \uniqid());
+        $database->create();
+        $database->createCollection(Collection::create(
+            id: 'databases',
+            attributes: [
+                Attribute::string('migrationId', size: Database::LENGTH_KEY),
+                Attribute::string('migrationAttemptId', size: Database::LENGTH_KEY),
+            ],
+        ));
+        $database->createCollection(Collection::create(
+            id: 'migrations',
+            attributes: [
+                Attribute::string('status', size: 255, required: true),
+                Attribute::string('stage', size: 255, required: true),
+                Attribute::string('attemptId', size: Database::LENGTH_KEY),
+                Attribute::string('resourceData', size: 131_070, required: true, filters: [Filter::Json]),
+            ],
+            permissions: [
+                Permission::create(Role::any()),
+                Permission::delete(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+            documentSecurity: false,
+        ));
+
+        return $database;
+    }
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function missingOwnershipAttributes(): \Iterator
+    {
+        yield 'database migration ID' => ['migrationId'];
+        yield 'database migration attempt ID' => ['migrationAttemptId'];
+        yield 'migration attempt ID' => ['attemptId'];
+    }
+
+    #[DataProvider('missingOwnershipAttributes')]
+    public function testReadinessFailsClosedWhenOwnershipAttributeIsMissing(string $missing): void
+    {
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization(new Authorization())
+            ->setDatabase('migrationClaimReadiness')
+            ->setNamespace('migration_claim_readiness_' . $missing . '_' . \uniqid());
+        $database->create();
+        $database->createCollection(Collection::create(
+            id: 'databases',
+            attributes: \array_values(\array_filter([
+                $missing === 'migrationId' ? null : Attribute::string('migrationId', size: Database::LENGTH_KEY),
+                $missing === 'migrationAttemptId' ? null : Attribute::string('migrationAttemptId', size: Database::LENGTH_KEY),
+            ])),
+        ));
+        $database->createCollection(Collection::create(
+            id: 'migrations',
+            attributes: $missing === 'attemptId' ? [] : [
+                Attribute::string('attemptId', size: Database::LENGTH_KEY),
+            ],
+        ));
+
+        try {
+            (new Claim($database, $this->locks()))->assertReady();
+            $this->fail('Expected incomplete ownership schema to be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_SCHEMA_NOT_READY, $error->getType());
+            $this->assertSame(503, $error->getCode());
+            $this->assertStringContainsString($missing, $error->getMessage());
+        }
+    }
+
+    public function testReadinessAcceptsCompleteOwnershipSchema(): void
+    {
+        (new Claim($this->database, $this->locks()))->assertReady();
+
+        $this->addToAssertionCount(1);
+    }
+
+    public function testProducersAndLegacyDeliveriesNeedNothingButTheOwnershipSchema(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $claims->assertReady();
+
+        $terminal = $this->createFailedMigration();
+        $publisher = new MockPublisher();
+        $claimed = $claims->retry(
+            project: new Document(['$id' => 'project-1']),
+            migrationId: $terminal->getId(),
+            platform: [],
+            publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+        );
+
+        $stored = $this->database->getDocument('migrations', $terminal->getId());
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+        $this->assertSame($claimed->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
+        $this->assertNotSame('attempt-terminal', $stored->getAttribute('attemptId'));
+        $this->assertCount(1, $publisher->getEvents('migrations'));
+
+        $queued = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-legacy',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+        $delivery = $claims->consume('project-1', new MigrationMessage(
+            project: new Document(['$id' => 'project-1']),
+            migration: $queued,
+            platform: [],
+        ));
+
+        $this->assertInstanceOf(Delivery::class, $delivery);
+        $this->assertIsString($delivery->migration->getAttribute('attemptId'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('status'));
+    }
+
+    public function testRetryRefusesIncompleteOwnershipSchemaBeforeMutatingTerminal(): void
+    {
+        $terminal = $this->createFailedMigration();
+        $this->database->deleteAttribute('databases', 'migrationAttemptId');
+        $publisher = new MockPublisher();
+
+        try {
+            (new Claim($this->database, $this->locks()))->retry(
+                project: new Document(['$id' => 'project-1']),
+                migrationId: $terminal->getId(),
+                platform: [],
+                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+            );
+            $this->fail('Expected incomplete ownership schema to be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_SCHEMA_NOT_READY, $error->getType());
+            $this->assertSame(503, $error->getCode());
+        }
+
+        $stored = $this->database->getDocument('migrations', $terminal->getId());
+        $this->assertSame('attempt-terminal', $stored->getAttribute('attemptId'));
+        $this->assertSame('failed', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+        $this->assertEmpty($publisher->getEvents('migrations'));
+    }
+
+    public function testRetryPersistsClaimAndDeliveryConsumesItOnce(): void
+    {
+        $terminal = $this->createFailedMigration();
+        $publisher = new MockPublisher();
+        $claims = new Claim($this->database, $this->locks());
+
+        $claimed = $claims->retry(
+            project: new Document(['$id' => 'project-1']),
+            migrationId: $terminal->getId(),
+            platform: ['name' => 'test-platform'],
+            publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+        );
+
+        $stored = $this->database->getDocument('migrations', $terminal->getId());
+        $this->assertSame('pending', $claimed->getAttribute('status'));
+        $this->assertSame('finished', $claimed->getAttribute('stage'));
+        $this->assertIsString($claimed->getAttribute('attemptId'));
+        $this->assertNotSame($terminal->getAttribute('attemptId'), $claimed->getAttribute('attemptId'));
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+        $this->assertSame($claimed->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
+
+        $events = $publisher->getEvents('migrations');
+        $this->assertCount(1, $events);
+        $message = MigrationMessage::fromArray($events[0]);
+        $this->assertInstanceOf(Document::class, $message->terminal);
+        $this->assertSame(
+            [],
+            \array_diff(\array_keys($message->terminal->getArrayCopy()), ['$id', 'attemptId', 'status', 'stage']),
+            'Terminal snapshot must not carry the migration payload onto the queue, credentials included'
+        );
+        $this->assertSame('failed', $message->terminal->getAttribute('status'));
+        $this->assertSame('attempt-terminal', $message->terminal->getAttribute('attemptId'));
+        $database = new Document([
+            'migrationId' => $terminal->getId(),
+            'migrationAttemptId' => 'attempt-terminal',
+        ]);
+        $owner = $claims->recoverable($database, $message->terminal);
+        $this->assertInstanceOf(ProvisioningOwner::class, $owner);
+        $this->assertSame($terminal->getId(), $owner->migrationId);
+        $this->assertSame('attempt-terminal', $owner->attemptId);
+
+        try {
+            $claims->retry(
+                project: new Document(['$id' => 'project-1']),
+                migrationId: $terminal->getId(),
+                platform: [],
+                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+            );
+            $this->fail('Expected the active retry claim to be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_IN_PROGRESS, $error->getType());
+        }
+
+        $delivery = $claims->consume('project-1', $message);
+        $this->assertInstanceOf(Delivery::class, $delivery);
+        $this->assertSame($message->terminal, $delivery->terminal);
+        $processing = $delivery->migration;
+        $this->assertSame('processing', $processing->getAttribute('status'));
+        $this->assertSame('processing', $processing->getAttribute('stage'));
+        $owner = $claims->recoverable($database, $message->terminal);
+        $this->assertInstanceOf(ProvisioningOwner::class, $owner);
+        $this->assertSame($terminal->getId(), $owner->migrationId);
+        $this->assertSame('attempt-terminal', $owner->attemptId);
+
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume('project-1', $message));
+        $stored = $this->database->getDocument('migrations', $terminal->getId());
+        $this->assertSame('processing', $stored->getAttribute('status'));
+        $this->assertSame('processing', $stored->getAttribute('stage'));
+    }
+
+    public function testReclaimClaimsAGenerationConsumeAcceptsWithoutPublishing(): void
+    {
+        $terminal = $this->createFailedMigration();
+        $claims = new Claim($this->database, $this->locks());
+        $project = new Document(['$id' => 'project-1']);
+
+        $retry = $claims->reclaim($project->getId(), $terminal->getId());
+
+        $stored = $this->database->getDocument('migrations', $terminal->getId());
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+        $this->assertNotSame('attempt-terminal', $stored->getAttribute('attemptId'));
+        $this->assertSame($stored->getAttribute('attemptId'), $retry->migration->getAttribute('attemptId'));
+        $this->assertSame($stored->getUpdatedAt(), $retry->migration->getUpdatedAt());
+        $this->assertSame(
+            [],
+            \array_diff(\array_keys($retry->terminal->getArrayCopy()), ['$id', 'attemptId', 'status', 'stage']),
+            'Terminal snapshot must not carry the migration payload onto the queue, credentials included'
+        );
+        $this->assertSame($terminal->getId(), $retry->terminal->getId());
+        $this->assertSame('attempt-terminal', $retry->terminal->getAttribute('attemptId'));
+        $this->assertSame('failed', $retry->terminal->getAttribute('status'));
+        $this->assertSame('finished', $retry->terminal->getAttribute('stage'));
+
+        $message = $retry->message($project, ['name' => 'test-platform']);
+        $this->assertSame($project, $message->project);
+        $this->assertSame($retry->migration, $message->migration);
+        $this->assertSame($retry->terminal, $message->terminal);
+        $this->assertSame(['name' => 'test-platform'], $message->platform);
+
+        $delivery = $claims->consume($project->getId(), MigrationMessage::fromArray($message->toArray()));
+
+        $this->assertInstanceOf(Delivery::class, $delivery);
+        $this->assertSame($retry->migration->getAttribute('attemptId'), $delivery->migration->getAttribute('attemptId'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('status'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('stage'));
+        $this->assertInstanceOf(Document::class, $delivery->terminal);
+        $this->assertSame('attempt-terminal', $delivery->terminal->getAttribute('attemptId'));
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume($project->getId(), new MigrationMessage(
+            project: $project,
+            migration: $terminal,
+        )));
+
+        try {
+            $claims->reclaim($project->getId(), $terminal->getId());
+            $this->fail('Expected the running attempt to be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_IN_PROGRESS, $error->getType());
+        }
+    }
+
+    /** @return \Iterator<string, array{string, string}> */
+    public static function unfinishedLifecycles(): \Iterator
+    {
+        yield 'queued' => ['pending', 'init'];
+        yield 'queued retry' => ['pending', 'finished'];
+        yield 'processing' => ['processing', 'processing'];
+        yield 'migrating' => ['processing', 'migrating'];
+        yield 'finalizing' => ['processing', 'finalizing'];
+        yield 'completed' => ['completed', 'finished'];
+    }
+
+    #[DataProvider('unfinishedLifecycles')]
+    public function testReclaimRefusesAMigrationThatHasNotFailed(string $status, string $stage): void
+    {
+        $migration = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-current',
+            'status' => $status,
+            'stage' => $stage,
+            'resourceData' => [],
+        ]));
+
+        try {
+            (new Claim($this->database, $this->locks()))->reclaim('project-1', $migration->getId());
+            $this->fail('Expected a migration that has not failed to be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_IN_PROGRESS, $error->getType());
+        }
+
+        $stored = $this->database->getDocument('migrations', $migration->getId());
+        $this->assertSame('attempt-current', $stored->getAttribute('attemptId'));
+        $this->assertSame($status, $stored->getAttribute('status'));
+        $this->assertSame($stage, $stored->getAttribute('stage'));
+        $this->assertSame($migration->getUpdatedAt(), $stored->getUpdatedAt());
+    }
+
+    public function testReclaimRefusesAnUnknownMigration(): void
+    {
+        try {
+            (new Claim($this->database, $this->locks()))->reclaim('project-1', 'migration-unknown');
+            $this->fail('Expected an unknown migration to be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_NOT_FOUND, $error->getType());
+        }
+    }
+
+    public function testReclaimRefusesIncompleteOwnershipSchemaBeforeMutatingTerminal(): void
+    {
+        $terminal = $this->createFailedMigration();
+        $this->database->deleteAttribute('databases', 'migrationId');
+
+        try {
+            (new Claim($this->database, $this->locks()))->reclaim('project-1', $terminal->getId());
+            $this->fail('Expected incomplete ownership schema to be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_SCHEMA_NOT_READY, $error->getType());
+        }
+
+        $stored = $this->database->getDocument('migrations', $terminal->getId());
+        $this->assertSame('attempt-terminal', $stored->getAttribute('attemptId'));
+        $this->assertSame('failed', $stored->getAttribute('status'));
+        $this->assertSame($terminal->getUpdatedAt(), $stored->getUpdatedAt());
+    }
+
+    public function testRetryRestoresTerminalStateWhenEnqueueFails(): void
+    {
+        $terminal = $this->createFailedMigration();
+        $publisher = new class () implements Publisher {
+            public function publish(Queue $queue, array $payload): bool
+            {
+                throw new \RuntimeException('Queue unavailable');
+            }
+
+            public function publishMany(Queue $queue, array $payloads): bool
+            {
+                throw new \RuntimeException('Queue unavailable');
+            }
+
+            public function retry(Queue $queue, ?int $limit = null): void
+            {
+            }
+
+            public function getQueueSize(Queue $queue, bool $failedJobs = false): int
+            {
+                return 0;
+            }
+
+            public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
+        };
+        $claims = new Claim($this->database, $this->locks());
+
+        try {
+            $claims->retry(
+                project: new Document(['$id' => 'project-1']),
+                migrationId: $terminal->getId(),
+                platform: [],
+                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+            );
+            $this->fail('Expected enqueue failure');
+        } catch (\RuntimeException $error) {
+            $this->assertSame('Queue unavailable', $error->getMessage());
+        }
+
+        $stored = $this->database->getDocument('migrations', $terminal->getId());
+        $this->assertSame('failed', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+        $this->assertSame('attempt-terminal', $stored->getAttribute('attemptId'));
+    }
+
+    public function testRetryRollbackDoesNotOverwriteNewerGeneration(): void
+    {
+        $terminal = $this->createFailedMigration();
+        $database = $this->database;
+        $publisher = new class ($database, $terminal->getId()) implements Publisher {
+            public function __construct(
+                private readonly Database $database,
+                private readonly string $migrationId,
+            ) {
+            }
+
+            #[\Override]
+            public function publish(Queue $queue, array $payload): bool
+            {
+                $this->database->updateDocument('migrations', $this->migrationId, new Document([
+                    'attemptId' => 'attempt-newer',
+                    'status' => 'pending',
+                    'stage' => 'finished',
+                ]));
+
+                throw new \RuntimeException('Ambiguous enqueue failure');
+            }
+
+            #[\Override]
+            public function publishMany(Queue $queue, array $payloads): bool
+            {
+                throw new \LogicException('Not used');
+            }
+
+            #[\Override]
+            public function retry(Queue $queue, ?int $limit = null): void
+            {
+            }
+
+            #[\Override]
+            public function getQueueSize(Queue $queue, bool $failedJobs = false): int
+            {
+                return 0;
+            }
+
+            #[\Override]
+            public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
+        };
+        $claims = new Claim($this->database, $this->locks());
+
+        try {
+            $claims->retry(
+                project: new Document(['$id' => 'project-1']),
+                migrationId: $terminal->getId(),
+                platform: [],
+                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+            );
+            $this->fail('Expected enqueue failure');
+        } catch (\RuntimeException $error) {
+            $this->assertSame('Ambiguous enqueue failure', $error->getMessage());
+        }
+
+        $stored = $this->database->getDocument('migrations', $terminal->getId());
+        $this->assertSame('attempt-newer', $stored->getAttribute('attemptId'));
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+    }
+
+    /**
+     * @return \Iterator<string, array{\Closure(Claim, Document, MigrationPublisher): Document}>
+     */
+    public static function starts(): \Iterator
+    {
+        yield 'start()' => [
+            static fn (Claim $claims, Document $migration, MigrationPublisher $publisher): Document => $claims->start(
+                project: new Document(['$id' => 'project-1']),
+                migration: $migration,
+                platform: [],
+                publisher: $publisher,
+            ),
+        ];
+        yield 'create() then publish()' => [
+            static fn (Claim $claims, Document $migration, MigrationPublisher $publisher): Document => $claims->publish(
+                project: new Document(['$id' => 'project-1']),
+                migration: $claims->create($migration),
+                platform: [],
+                publisher: $publisher,
+            ),
+        ];
+    }
+
+    /**
+     * @return \Iterator<string, array{\Closure(Claim, Document, MigrationPublisher): Document, Collection|null}>
+     */
+    public static function incompleteOwnershipSchemas(): \Iterator
+    {
+        foreach (self::starts() as $path => [$start]) {
+            yield "{$path}: no databases collection" => [$start, null];
+            yield "{$path}: no database migration attempt ID" => [$start, Collection::create(
+                id: 'databases',
+                attributes: [
+                    Attribute::string('migrationId', size: Database::LENGTH_KEY),
+                ],
+            )];
+        }
+    }
+
+    #[DataProvider('incompleteOwnershipSchemas')]
+    public function testStartRefusesAnIncompleteOwnershipSchemaBeforeStoringTheMigration(\Closure $start, ?Collection $databases): void
+    {
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization(new Authorization())
+            ->setDatabase('migrationClaimStart')
+            ->setNamespace('migration_claim_start_' . \uniqid());
+        $database->create();
+        if ($databases !== null) {
+            $database->createCollection($databases);
+        }
+        $database->createCollection(Collection::create(
+            id: 'migrations',
+            attributes: [
+                Attribute::string('status', size: 255, required: true),
+                Attribute::string('stage', size: 255, required: true),
+                Attribute::string('attemptId', size: Database::LENGTH_KEY),
+                Attribute::string('resourceData', size: 131_070, required: true, filters: [Filter::Json]),
+            ],
+            permissions: [
+                Permission::create(Role::any()),
+                Permission::delete(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+            documentSecurity: false,
+        ));
+        $publisher = new MockPublisher();
+
+        try {
+            $start(
+                new Claim($database, $this->locks()),
+                new Document(['$id' => 'migration-1', 'resourceData' => []]),
+                new MigrationPublisher($publisher, new Queue('migrations')),
+            );
+            $this->fail('Expected incomplete ownership schema to be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_SCHEMA_NOT_READY, $error->getType());
+            $this->assertSame(503, $error->getCode());
+        }
+
+        $this->assertSame([], $database->find('migrations'));
+        $this->assertEmpty($publisher->getEvents('migrations'));
+    }
+
+    #[DataProvider('starts')]
+    public function testStartStoresThePendingFirstAttemptBeforePublishingIt(\Closure $start): void
+    {
+        $publisher = new MockPublisher();
+        $claims = new Claim($this->database, $this->locks());
+
+        $started = $start(
+            $claims,
+            new Document(['$id' => 'migration-1', 'resourceData' => []]),
+            new MigrationPublisher($publisher, new Queue('migrations')),
+        );
+
+        $migrations = $this->database->find('migrations');
+        $this->assertCount(1, $migrations);
+        $stored = $migrations[0];
+        $this->assertSame('migration-1', $stored->getId());
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('init', $stored->getAttribute('stage'));
+        $this->assertIsString($stored->getAttribute('attemptId'));
+        $this->assertNotSame('', $stored->getAttribute('attemptId'));
+        $this->assertSame($stored->getId(), $started->getId());
+        $this->assertSame($stored->getAttribute('attemptId'), $started->getAttribute('attemptId'));
+
+        $events = $publisher->getEvents('migrations');
+        $this->assertCount(1, $events);
+        $message = MigrationMessage::fromArray($events[0]);
+        $this->assertSame($stored->getId(), $message->migration->getId());
+        $this->assertSame($stored->getAttribute('attemptId'), $message->migration->getAttribute('attemptId'));
+        $this->assertInstanceOf(Delivery::class, $claims->consume('project-1', $message));
+    }
+
+    #[DataProvider('starts')]
+    public function testStartLeavesNothingStoredWhenPublishingFails(\Closure $start): void
+    {
+        $error = null;
+
+        try {
+            $start(
+                new Claim($this->database, $this->locks()),
+                new Document(['$id' => 'migration-1', 'resourceData' => []]),
+                new MigrationPublisher($this->unavailablePublisher(), new Queue('migrations')),
+            );
+        } catch (\RuntimeException $caught) {
+            $error = $caught;
+        }
+
+        $this->assertInstanceOf(\RuntimeException::class, $error, 'Expected enqueue failure');
+        $this->assertSame('Queue unavailable', $error->getMessage());
+        $this->assertSame([], $this->database->find('migrations'));
+    }
+
+    #[DataProvider('starts')]
+    public function testStartPublishesTheMigrationItStoredWithoutCheckingTheSchemaAgain(\Closure $start): void
+    {
+        $database = $this->database;
+        $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
+        $database->afterMigrationCreate = static function () use ($database): void {
+            $database->deleteAttribute('databases', 'migrationAttemptId');
+        };
+        $publisher = new MockPublisher();
+
+        $started = $start(
+            new Claim($database, $this->locks()),
+            new Document(['$id' => 'migration-1', 'resourceData' => []]),
+            new MigrationPublisher($publisher, new Queue('migrations')),
+        );
+
+        $events = $publisher->getEvents('migrations') ?? [];
+        $this->assertCount(1, $events, 'a stored migration is published: the claim of its delivery checks the schema again, so a second check here would only strand it');
+        $this->assertSame($started->getAttribute('attemptId'), MigrationMessage::fromArray($events[0])->migration->getAttribute('attemptId'));
+        $this->assertSame($started->getAttribute('attemptId'), $database->getDocument('migrations', 'migration-1')->getAttribute('attemptId'));
+    }
+
+    #[DataProvider('starts')]
+    public function testStartRollbackDoesNotDeleteNewerGeneration(\Closure $start): void
+    {
+        $publisher = new class ($this->database, 'migration-1') implements Publisher {
+            public function __construct(
+                private readonly Database $database,
+                private readonly string $migrationId,
+            ) {
+            }
+
+            #[\Override]
+            public function publish(Queue $queue, array $payload): bool
+            {
+                $this->database->updateDocument('migrations', $this->migrationId, new Document([
+                    'attemptId' => 'attempt-newer',
+                    'status' => 'pending',
+                    'stage' => 'init',
+                ]));
+
+                throw new \RuntimeException('Ambiguous enqueue failure');
+            }
+
+            #[\Override]
+            public function publishMany(Queue $queue, array $payloads): bool
+            {
+                throw new \LogicException('Not used');
+            }
+
+            #[\Override]
+            public function retry(Queue $queue, ?int $limit = null): void
+            {
+            }
+
+            #[\Override]
+            public function getQueueSize(Queue $queue, bool $failedJobs = false): int
+            {
+                return 0;
+            }
+
+            #[\Override]
+            public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
+        };
+        $error = null;
+
+        try {
+            $start(
+                new Claim($this->database, $this->locks()),
+                new Document(['$id' => 'migration-1', 'resourceData' => []]),
+                new MigrationPublisher($publisher, new Queue('migrations')),
+            );
+        } catch (\RuntimeException $caught) {
+            $error = $caught;
+        }
+
+        $this->assertInstanceOf(\RuntimeException::class, $error, 'Expected enqueue failure');
+        $this->assertSame('Ambiguous enqueue failure', $error->getMessage());
+        $stored = $this->database->getDocument('migrations', 'migration-1');
+        $this->assertSame('attempt-newer', $stored->getAttribute('attemptId'));
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('init', $stored->getAttribute('stage'));
+    }
+
+    #[DataProvider('starts')]
+    public function testStartDoesNotPublishAGenerationAnotherWriterMovedOn(\Closure $start): void
+    {
+        $database = $this->database;
+        $publisher = new MockPublisher();
+        $claims = new Claim($database, static function (string $key, int $ttl, callable $callback, float $timeout) use ($database): mixed {
+            $database->updateDocument('migrations', 'migration-1', new Document([
+                'attemptId' => 'attempt-newer',
+            ]));
+
+            return $callback();
+        });
+        $error = null;
+
+        try {
+            $start(
+                $claims,
+                new Document(['$id' => 'migration-1', 'resourceData' => []]),
+                new MigrationPublisher($publisher, new Queue('migrations')),
+            );
+        } catch (\LogicException $caught) {
+            $error = $caught;
+        }
+
+        $this->assertInstanceOf(\LogicException::class, $error, 'Expected the superseded generation to be refused');
+        $this->assertSame('Initial migration generation is no longer publishable', $error->getMessage());
+        $this->assertSame(0, $publisher->getQueueSize(new Queue('migrations')), 'nothing is published');
+        $this->assertSame('attempt-newer', $database->getDocument('migrations', 'migration-1')->getAttribute('attemptId'));
+    }
+
+    public function testPublishQueuesTheAttemptCreateStoredUnderTheSameIdentity(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $publisher = new MockPublisher();
+        $queue = new Queue('migrations');
+
+        $created = $claims->create(new Document(['$id' => 'migration-1', 'resourceData' => []]));
+
+        $this->assertSame(0, $publisher->getQueueSize($queue), 'create() publishes nothing, so a producer can first write the rows its worker reads');
+        $stored = $this->database->getDocument('migrations', 'migration-1');
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('init', $stored->getAttribute('stage'));
+        $this->assertSame($created->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
+
+        $published = $claims->publish(
+            project: new Document(['$id' => 'project-1']),
+            migration: $created,
+            platform: ['name' => 'test-platform'],
+            publisher: new MigrationPublisher($publisher, $queue),
+        );
+
+        $events = $publisher->getEvents('migrations') ?? [];
+        $this->assertCount(1, $events);
+        $message = MigrationMessage::fromArray($events[0]);
+        $this->assertSame('project-1', $message->project->getId());
+        $this->assertSame(['name' => 'test-platform'], $message->platform);
+        $this->assertSame($published->getAttribute('attemptId'), $message->migration->getAttribute('attemptId'));
+        $this->assertSame($published->getAttribute('attemptId'), $this->database->getDocument('migrations', 'migration-1')->getAttribute('attemptId'));
+
+        $delivery = $claims->consume('project-1', $message);
+
+        $this->assertInstanceOf(Delivery::class, $delivery);
+        $this->assertSame($created->getId(), $delivery->migration->getId());
+        $this->assertSame($created->getSequence(), $delivery->migration->getSequence(), 'rows written against the created migration name the one the worker runs');
+        $this->assertSame('processing', $delivery->migration->getAttribute('status'));
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume('project-1', $message), 'the published attempt is consumed once');
+    }
+
+    public function testPublishRemovesTheStoredAttemptWhenTheQueueDoesNotAcceptIt(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $created = $claims->create(new Document(['$id' => 'migration-1', 'resourceData' => []]));
+        $error = null;
+
+        try {
+            $claims->publish(
+                project: new Document(['$id' => 'project-1']),
+                migration: $created,
+                platform: [],
+                publisher: new MigrationPublisher($this->refusingPublisher(), new Queue('migrations')),
+            );
+        } catch (\RuntimeException $caught) {
+            $error = $caught;
+        }
+
+        $this->assertInstanceOf(\RuntimeException::class, $error, 'a queue that does not accept the message fails the publish');
+        $this->assertSame('Failed to enqueue migration', $error->getMessage());
+        $this->assertSame([], $this->database->find('migrations'));
+    }
+
+    public function testPublishRefusesAMigrationStoredWithoutAnAttempt(): void
+    {
+        $stored = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+        $publisher = new MockPublisher();
+        $error = null;
+
+        try {
+            (new Claim($this->database, $this->locks()))->publish(
+                project: new Document(['$id' => 'project-1']),
+                migration: $stored,
+                platform: [],
+                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+            );
+        } catch (\LogicException $caught) {
+            $error = $caught;
+        }
+
+        $this->assertInstanceOf(\LogicException::class, $error, 'only an attempt create() stored is published');
+        $this->assertSame('Initial migration generation is no longer publishable', $error->getMessage());
+        $this->assertSame(0, $publisher->getQueueSize(new Queue('migrations')), 'nothing is published');
+        $this->assertSame($stored->getUpdatedAt(), $this->database->getDocument('migrations', 'migration-1')->getUpdatedAt());
+    }
+
+    public function testPublishQueuesAStoredAttemptOnlyOnce(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $publisher = new MockPublisher();
+        $migrationPublisher = new MigrationPublisher($publisher, new Queue('migrations'));
+        $created = $claims->create(new Document(['$id' => 'migration-1', 'resourceData' => []]));
+        $published = $claims->publish(
+            project: new Document(['$id' => 'project-1']),
+            migration: $created,
+            platform: [],
+            publisher: $migrationPublisher,
+        );
+        $error = null;
+
+        try {
+            $claims->publish(
+                project: new Document(['$id' => 'project-1']),
+                migration: $created,
+                platform: [],
+                publisher: $migrationPublisher,
+            );
+        } catch (\LogicException $caught) {
+            $error = $caught;
+        }
+
+        $this->assertInstanceOf(\LogicException::class, $error, 'a second publish of the same stored attempt is refused');
+        $this->assertCount(1, $publisher->getEvents('migrations') ?? []);
+        $this->assertSame(
+            $published->getAttribute('attemptId'),
+            $this->database->getDocument('migrations', 'migration-1')->getAttribute('attemptId'),
+            'the refusal keeps the attempt already queued',
+        );
+    }
+
+    public function testRedeliveryOfACreatedAndPublishedMigrationTakesOverItsAbandonedAttempt(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $publisher = new MockPublisher();
+        $claims->publish(
+            project: new Document(['$id' => 'project-1']),
+            migration: $claims->create(new Document(['$id' => 'migration-1', 'resourceData' => []])),
+            platform: [],
+            publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+        );
+        $events = $publisher->getEvents('migrations') ?? [];
+        $this->assertCount(1, $events);
+        $message = MigrationMessage::fromArray($events[0]);
+        $running = $claims->consume('project-1', $message);
+        $this->assertInstanceOf(Delivery::class, $running);
+        $abandoned = $this->age('migration-1', 'processing', 'migrating', Claim::LIVENESS_LEASE + 60);
+
+        $takeover = $claims->consume('project-1', $message);
+
+        $this->assertInstanceOf(Delivery::class, $takeover, 'the redelivered message runs the migration again once its attempt has lapsed');
+        $this->assertNotSame($running->migration->getAttribute('attemptId'), $takeover->migration->getAttribute('attemptId'));
+        $this->assertSame('processing', $takeover->migration->getAttribute('status'));
+        $this->assertSame('processing', $takeover->migration->getAttribute('stage'));
+
+        $late = new Document($abandoned->getArrayCopy());
+        $late->setAttribute('status', 'completed');
+        $late->setAttribute('stage', 'finished');
+        $this->assertNotInstanceOf(Document::class, $claims->persist($late), 'the abandoned worker is fenced out');
+    }
+
+    public function testWorkerPersistenceRefusesSupersededGeneration(): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'migrating',
+            'resourceData' => [],
+        ]));
+        $this->database->updateDocument('migrations', $active->getId(), new Document([
+            'attemptId' => 'attempt-b',
+            'status' => 'pending',
+            'stage' => 'finished',
+        ]));
+        $active->setAttribute('status', 'completed');
+        $active->setAttribute('stage', 'finished');
+
+        $this->assertNotInstanceOf(Document::class, (new Claim($this->database))->persist($active));
+
+        $stored = $this->database->getDocument('migrations', $active->getId());
+        $this->assertSame('attempt-b', $stored->getAttribute('attemptId'));
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+    }
+
+    /** @return \Iterator<string, array{string, int|string|null}> */
+    public static function staleIdentities(): \Iterator
+    {
+        yield 'different attempt with identical timestamp' => ['attemptId', 'attempt-b'];
+        yield 'different immutable sequence' => ['$sequence', 'replacement'];
+    }
+
+    #[DataProvider('staleIdentities')]
+    public function testWorkerPersistenceReportsMatchingTimestampWithWrongIdentityAsSuperseded(string $attribute, int|string|null $value): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-identity',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'migrating',
+            'resourceData' => [],
+        ]));
+        $stale = new Document($active->getArrayCopy());
+        $stale->setAttribute($attribute, $value);
+        $stale->setAttribute('status', 'completed');
+        $stale->setAttribute('stage', 'finished');
+
+        $this->assertNotInstanceOf(Document::class, (new Claim($this->database))->persist($stale));
+
+        $stored = $this->database->getDocument('migrations', $active->getId());
+        $this->assertSame('attempt-a', $stored->getAttribute('attemptId'));
+        $this->assertSame($active->getSequence(), $stored->getSequence());
+    }
+
+    public function testWorkerPersistenceRefusesAGenerationItCannotCompare(): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-undated',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'migrating',
+            'resourceData' => [],
+        ]));
+        $undated = new Document($active->getArrayCopy());
+        $undated->removeAttribute('$updatedAt');
+        $undated->setAttribute('status', 'completed');
+        $undated->setAttribute('stage', 'finished');
+
+        try {
+            (new Claim($this->database))->persist($undated);
+            $this->fail('A generation that cannot be compared must be refused, not treated as superseded');
+        } catch (\LogicException) {
+        }
+
+        $stored = $this->database->getDocument('migrations', $active->getId());
+        $this->assertSame('processing', $stored->getAttribute('status'));
+        $this->assertSame('migrating', $stored->getAttribute('stage'));
+        $this->assertSame($active->getUpdatedAt(), $stored->getUpdatedAt());
+    }
+
+    public function testWorkerPersistenceLosesStorageRaceBeforeItsWrite(): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'migrating',
+            'resourceData' => [],
+        ]));
+        $database = $this->database;
+        $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
+        $database->beforeMigrationUpdate = static function () use ($active, $database): void {
+            $database->updateDocument('migrations', $active->getId(), new Document([
+                'attemptId' => 'attempt-b',
+                'status' => 'pending',
+                'stage' => 'finished',
+            ]));
+        };
+        $active->setAttribute('status', 'completed');
+        $active->setAttribute('stage', 'finished');
+
+        $this->assertNotInstanceOf(Document::class, (new Claim($database))->persist($active));
+
+        $stored = $database->getDocument('migrations', $active->getId());
+        $this->assertSame('attempt-b', $stored->getAttribute('attemptId'));
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+    }
+
+    public function testWorkerPersistenceWritesProgressOfTheOwningAttempt(): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-progress',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'processing',
+            'resourceData' => [],
+        ]));
+        $claims = new Claim($this->database);
+
+        $active->setAttribute('stage', 'migrating');
+        $migrating = $claims->persist($active) ?? throw new \LogicException('Expected the owning attempt to persist');
+        $migrating->setAttribute('resourceData', ['users' => ['success' => 1]]);
+        $progressed = $claims->persist($migrating) ?? throw new \LogicException('Expected the owning attempt to keep persisting');
+
+        $stored = $this->database->getDocument('migrations', $active->getId());
+        $this->assertSame('attempt-a', $stored->getAttribute('attemptId'));
+        $this->assertSame('processing', $stored->getAttribute('status'));
+        $this->assertSame('migrating', $stored->getAttribute('stage'));
+        $this->assertSame(['users' => ['success' => 1]], $stored->getAttribute('resourceData'));
+        $this->assertSame($stored->getUpdatedAt(), $progressed->getUpdatedAt(), 'the returned generation fences the next write');
+        $this->assertGreaterThan(
+            new \DateTime($active->getUpdatedAt() ?? ''),
+            new \DateTime($progressed->getUpdatedAt() ?? ''),
+        );
+    }
+
+    public function testWorkerPersistenceOpensNoTransactionAndTakesNoRowLock(): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-unlocked',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'migrating',
+            'resourceData' => [],
+        ]));
+        $database = $this->database;
+        $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
+        $claims = new Claim($database);
+        $database->transactions = 0;
+        $database->lockedReads = 0;
+
+        $active->setAttribute('resourceData', ['users' => ['success' => 1]]);
+        $progressed = $claims->persist($active) ?? throw new \LogicException('Expected the owning attempt to persist');
+        $progressed->setAttribute('resourceData', ['users' => ['success' => 2]]);
+        $claims->persist($progressed) ?? throw new \LogicException('Expected the owning attempt to keep persisting');
+
+        $this->assertSame(0, $database->transactions, 'progress writes must not open a claim transaction');
+        $this->assertSame(0, $database->lockedReads, 'progress writes must not read the migration for update');
+    }
+
+    public function testWorkerPersistenceRefusesAGenerationAnotherWriterAdvanced(): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-advanced',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'migrating',
+            'resourceData' => [],
+        ]));
+        $advanced = $this->database->updateDocument('migrations', $active->getId(), new Document([
+            'stage' => 'finalizing',
+        ]));
+        $active->setAttribute('resourceData', ['users' => ['success' => 1]]);
+
+        $this->assertNotInstanceOf(Document::class, (new Claim($this->database))->persist($active));
+
+        $stored = $this->database->getDocument('migrations', $active->getId());
+        $this->assertSame('finalizing', $stored->getAttribute('stage'));
+        $this->assertSame([], $stored->getAttribute('resourceData'));
+        $this->assertSame($advanced->getUpdatedAt(), $stored->getUpdatedAt());
+    }
+
+    /** @return \Iterator<string, array{string, string|null}> */
+    public static function incompleteIdentities(): \Iterator
+    {
+        yield 'missing attempt' => ['attemptId', null];
+        yield 'empty attempt' => ['attemptId', ''];
+        yield 'missing sequence' => ['$sequence', ''];
+    }
+
+    #[DataProvider('incompleteIdentities')]
+    public function testWorkerPersistenceRefusesAnIncompleteIdentityWithoutWriting(string $attribute, ?string $value): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-incomplete',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'migrating',
+            'resourceData' => [],
+        ]));
+        $incomplete = new Document($active->getArrayCopy());
+        $incomplete->setAttribute($attribute, $value);
+        $incomplete->setAttribute('status', 'completed');
+
+        $this->assertNotInstanceOf(Document::class, (new Claim($this->database))->persist($incomplete));
+
+        $stored = $this->database->getDocument('migrations', $active->getId());
+        $this->assertSame('processing', $stored->getAttribute('status'));
+        $this->assertSame($active->getUpdatedAt(), $stored->getUpdatedAt());
+    }
+
+    #[DataProvider('starts')]
+    public function testStartRefusesDocumentDeletedAfterGenerationRead(\Closure $start): void
+    {
+        $publisher = new MockPublisher();
+        $this->deleteAfterRead('migration-1');
+        $error = null;
+
+        try {
+            $start(
+                new Claim($this->database),
+                new Document(['$id' => 'migration-1', 'resourceData' => []]),
+                new MigrationPublisher($publisher, new Queue('migrations')),
+            );
+        } catch (Conflict $caught) {
+            $error = $caught;
+        }
+
+        $this->assertInstanceOf(Conflict::class, $error, 'Expected deleted initial claim to lose ownership');
+        $this->assertSame(0, $publisher->getQueueSize(new Queue('migrations')), 'nothing is published');
+    }
+
+    public function testRetryClaimRefusesDocumentDeletedAfterGenerationRead(): void
+    {
+        $migration = $this->createFailedMigration();
+        $publisher = new MockPublisher();
+        $this->deleteAfterRead($migration->getId());
+
+        try {
+            (new Claim($this->database))->retry(
+                project: new Document(['$id' => 'project-1']),
+                migrationId: $migration->getId(),
+                platform: [],
+                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+            );
+            $this->fail('Expected deleted retry claim to lose ownership');
+        } catch (Conflict) {
+            $this->assertEmpty($publisher->getEvents('migrations'));
+        }
+    }
+
+    public function testConsumeRefusesDocumentDeletedAfterGenerationRead(): void
+    {
+        $migration = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-a',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+        $this->deleteAfterRead($migration->getId());
+
+        $delivery = (new Claim($this->database))->consume('project-1', new MigrationMessage(
+            project: new Document(['$id' => 'project-1']),
+            migration: $migration,
+            platform: [],
+        ));
+
+        $this->assertNotInstanceOf(Delivery::class, $delivery);
+    }
+
+    public function testWorkerPersistenceRefusesDocumentDeletedBeforeItsWrite(): void
+    {
+        $migration = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'migrating',
+            'resourceData' => [],
+        ]));
+        $database = $this->database;
+        $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
+        $database->beforeMigrationUpdate = static function () use ($database, $migration): void {
+            $database->deleteDocument('migrations', $migration->getId());
+        };
+        $migration->setAttribute('stage', 'finalizing');
+
+        $this->assertNotInstanceOf(Document::class, (new Claim($this->database))->persist($migration));
+    }
+
+    public function testExpirationRefusesDocumentDeletedAfterGenerationRead(): void
+    {
+        $migration = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'migrating',
+            'resourceData' => [],
+        ]));
+        $this->deleteAfterRead($migration->getId());
+
+        $this->assertNotInstanceOf(Document::class, (new Claim($this->database))->expire($migration));
+    }
+
+    public function testFinalizingGenerationExpiresOnlyAfterItsLease(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $finalizing = $this->createStaleMigration('migration-finalizing', 'attempt-a', 'processing', 'finalizing', Claim::FINALIZING_LEASE - 3_600);
+        $abandoned = $this->createStaleMigration('migration-abandoned', 'attempt-b', 'processing', 'finalizing', Claim::FINALIZING_LEASE + 60);
+
+        $this->assertNotInstanceOf(Document::class, $claims->expire($finalizing));
+
+        $stored = $this->database->getDocument('migrations', $finalizing->getId());
+        $this->assertSame('processing', $stored->getAttribute('status'));
+        $this->assertSame('finalizing', $stored->getAttribute('stage'));
+        $this->assertSame('attempt-a', $stored->getAttribute('attemptId'));
+        $this->assertSame($finalizing->getUpdatedAt(), $stored->getUpdatedAt());
+
+        $expired = $claims->expire($abandoned);
+
+        $this->assertInstanceOf(Document::class, $expired);
+        $this->assertSame('failed', $expired->getAttribute('status'));
+        $this->assertSame('finished', $expired->getAttribute('stage'));
+        $this->assertSame('attempt-b', $expired->getAttribute('attemptId'));
+
+        $retried = $claims->retry(
+            project: new Document(['$id' => 'project-1']),
+            migrationId: $abandoned->getId(),
+            platform: [],
+            publisher: new MigrationPublisher(new MockPublisher(), new Queue('migrations')),
+        );
+        $this->assertSame('pending', $retried->getAttribute('status'));
+        $this->assertNotSame('attempt-b', $retried->getAttribute('attemptId'));
+    }
+
+    /** @return \Iterator<string, array{string}> */
+    public static function runningStages(): \Iterator
+    {
+        yield 'processing' => ['processing'];
+        yield 'migrating' => ['migrating'];
+    }
+
+    #[DataProvider('runningStages')]
+    public function testExpirationRefusesAnAttemptWithinItsLivenessLease(string $stage): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $running = $this->createStaleMigration('migration-running', 'attempt-a', 'processing', $stage, 60);
+        $silent = $this->createStaleMigration('migration-silent', 'attempt-b', 'processing', $stage, Claim::LIVENESS_LEASE + 60);
+
+        $this->assertNotInstanceOf(Document::class, $claims->expire($running));
+        $stored = $this->database->getDocument('migrations', $running->getId());
+        $this->assertSame('processing', $stored->getAttribute('status'));
+        $this->assertSame($stage, $stored->getAttribute('stage'));
+        $this->assertSame($running->getUpdatedAt(), $stored->getUpdatedAt());
+
+        $expired = $claims->expire($silent);
+        $this->assertInstanceOf(Document::class, $expired);
+        $this->assertSame('failed', $expired->getAttribute('status'));
+        $this->assertSame('finished', $expired->getAttribute('stage'));
+    }
+
+    /** @return \Iterator<string, array{string}> */
+    public static function failedStages(): \Iterator
+    {
+        yield 'failed before processing' => ['init'];
+        yield 'failed while processing' => ['processing'];
+        yield 'failed while migrating' => ['migrating'];
+        yield 'failed while finalizing' => ['finalizing'];
+        yield 'failed and finished' => ['finished'];
+    }
+
+    #[DataProvider('failedStages')]
+    public function testRetryAcceptsAFailedMigrationInAnyStage(string $stage): void
+    {
+        $failed = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-terminal',
+            'status' => 'failed',
+            'stage' => $stage,
+            'resourceData' => [],
+        ]));
+        $publisher = new MockPublisher();
+        $claims = new Claim($this->database, $this->locks());
+
+        $claimed = $claims->retry(
+            project: new Document(['$id' => 'project-1']),
+            migrationId: $failed->getId(),
+            platform: [],
+            publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+        );
+
+        $this->assertSame('pending', $claimed->getAttribute('status'));
+        $this->assertSame('finished', $claimed->getAttribute('stage'));
+        $this->assertNotSame('attempt-terminal', $claimed->getAttribute('attemptId'));
+        $events = $publisher->getEvents('migrations');
+        $this->assertCount(1, $events);
+        $message = MigrationMessage::fromArray($events[0]);
+        $this->assertInstanceOf(Document::class, $message->terminal);
+        $this->assertSame('attempt-terminal', $message->terminal->getAttribute('attemptId'));
+        $this->assertSame('failed', $message->terminal->getAttribute('status'));
+        $this->assertSame($stage, $message->terminal->getAttribute('stage'));
+
+        $delivery = $claims->consume('project-1', $message);
+
+        $this->assertInstanceOf(Delivery::class, $delivery);
+        $this->assertSame($claimed->getAttribute('attemptId'), $delivery->migration->getAttribute('attemptId'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('status'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('stage'));
+    }
+
+    public function testRetryRollbackRestoresTheFailedStageItClaimedFrom(): void
+    {
+        $failed = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-terminal',
+            'status' => 'failed',
+            'stage' => 'migrating',
+            'resourceData' => [],
+        ]));
+
+        try {
+            (new Claim($this->database, $this->locks()))->retry(
+                project: new Document(['$id' => 'project-1']),
+                migrationId: $failed->getId(),
+                platform: [],
+                publisher: new MigrationPublisher($this->unavailablePublisher(), new Queue('migrations')),
+            );
+            $this->fail('Expected enqueue failure');
+        } catch (\RuntimeException $error) {
+            $this->assertSame('Queue unavailable', $error->getMessage());
+        }
+
+        $stored = $this->database->getDocument('migrations', $failed->getId());
+        $this->assertSame('attempt-terminal', $stored->getAttribute('attemptId'));
+        $this->assertSame('failed', $stored->getAttribute('status'));
+        $this->assertSame('migrating', $stored->getAttribute('stage'));
+    }
+
+    public function testConcurrentRetryClaimHasSingleWinnerAfterLeaseExpires(): void
+    {
+        $terminal = $this->createFailedMigration();
+        $claims = new Claim($this->database, $this->locks());
+        $publisher = new class () implements Publisher {
+            public ?\Closure $duringEnqueue = null;
+            public int $published = 0;
+
+            #[\Override]
+            public function publish(Queue $queue, array $payload): bool
+            {
+                $this->published++;
+                ($this->duringEnqueue ?? throw new \LogicException('Missing concurrent retry'))();
+
+                return true;
+            }
+
+            #[\Override]
+            public function publishMany(Queue $queue, array $payloads): bool
+            {
+                throw new \LogicException('Not used');
+            }
+
+            #[\Override]
+            public function retry(Queue $queue, ?int $limit = null): void
+            {
+            }
+
+            #[\Override]
+            public function getQueueSize(Queue $queue, bool $failedJobs = false): int
+            {
+                return 0;
+            }
+
+            #[\Override]
+            public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
+        };
+        $migrationPublisher = new MigrationPublisher($publisher, new Queue('migrations'));
+        $refusals = 0;
+        $publisher->duringEnqueue = static function () use ($claims, $migrationPublisher, $terminal, &$refusals): void {
+            try {
+                $claims->retry(
+                    project: new Document(['$id' => 'project-1']),
+                    migrationId: $terminal->getId(),
+                    platform: [],
+                    publisher: $migrationPublisher,
+                );
+            } catch (Exception $error) {
+                self::assertSame(Exception::MIGRATION_IN_PROGRESS, $error->getType());
+                $refusals++;
+            }
+        };
+
+        $claimed = $claims->retry(
+            project: new Document(['$id' => 'project-1']),
+            migrationId: $terminal->getId(),
+            platform: [],
+            publisher: $migrationPublisher,
+        );
+
+        $this->assertSame(1, $publisher->published);
+        $this->assertSame(1, $refusals);
+        $this->assertSame($claimed->getAttribute('attemptId'), $this->database
+            ->getDocument('migrations', $terminal->getId())
+            ->getAttribute('attemptId'));
+    }
+
+    public function testCompetingClaimForTheSameMigrationIsRefusedWhileTheLockIsHeld(): void
+    {
+        $terminal = $this->createFailedMigration();
+        $locks = $this->locks();
+        $claims = new Claim($this->database, $locks);
+        $publisher = new MockPublisher();
+        $migrationPublisher = new MigrationPublisher($publisher, new Queue('migrations'));
+        $refusals = 0;
+        $database = $this->database;
+        $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
+        $database->afterMigrationRead = static function () use ($claims, $migrationPublisher, $terminal, &$refusals): void {
+            try {
+                $claims->retry(
+                    project: new Document(['$id' => 'project-1']),
+                    migrationId: $terminal->getId(),
+                    platform: [],
+                    publisher: $migrationPublisher,
+                );
+            } catch (Contention) {
+                $refusals++;
+            }
+        };
+
+        $claimed = $claims->retry(
+            project: new Document(['$id' => 'project-1']),
+            migrationId: $terminal->getId(),
+            platform: [],
+            publisher: $migrationPublisher,
+        );
+
+        $this->assertSame(1, $refusals);
+        $this->assertCount(1, $publisher->getEvents('migrations'));
+
+        $stored = $this->database->getDocument('migrations', $terminal->getId());
+        $this->assertSame($claimed->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
+        $this->assertNotSame('attempt-terminal', $stored->getAttribute('attemptId'));
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+    }
+
+    public function testClaimsForDistinctMigrationsAreNotSerialized(): void
+    {
+        $first = $this->createFailedMigration();
+        $second = $this->createFailedMigration('migration-2');
+        $locks = $this->locks();
+        $claims = new Claim($this->database, $locks);
+        $publisher = new MockPublisher();
+        $migrationPublisher = new MigrationPublisher($publisher, new Queue('migrations'));
+        $concurrent = null;
+        $database = $this->database;
+        $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
+        $database->afterMigrationRead = static function () use ($claims, $migrationPublisher, $second, &$concurrent): void {
+            $concurrent = $claims->retry(
+                project: new Document(['$id' => 'project-1']),
+                migrationId: $second->getId(),
+                platform: [],
+                publisher: $migrationPublisher,
+            );
+        };
+
+        $claimed = $claims->retry(
+            project: new Document(['$id' => 'project-1']),
+            migrationId: $first->getId(),
+            platform: [],
+            publisher: $migrationPublisher,
+        );
+
+        $this->assertInstanceOf(Document::class, $concurrent);
+        $this->assertCount(2, $publisher->getEvents('migrations'));
+
+        foreach ([$first->getId() => $claimed, $second->getId() => $concurrent] as $id => $expected) {
+            $stored = $this->database->getDocument('migrations', $id);
+            $this->assertSame('pending', $stored->getAttribute('status'));
+            $this->assertSame('finished', $stored->getAttribute('stage'));
+            $this->assertSame($expected->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
+        }
+    }
+
+    public function testLockIsReleasedWhenTheGuardedClaimIsRefused(): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-active',
+            'status' => 'processing',
+            'stage' => 'processing',
+            'resourceData' => [],
+        ]));
+        $claims = new Claim($this->database, $this->locks());
+        $publisher = new MockPublisher();
+        $migrationPublisher = new MigrationPublisher($publisher, new Queue('migrations'));
+
+        try {
+            $claims->retry(
+                project: new Document(['$id' => 'project-1']),
+                migrationId: $active->getId(),
+                platform: [],
+                publisher: $migrationPublisher,
+            );
+            $this->fail('Expected the active migration to be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_IN_PROGRESS, $error->getType());
+        }
+
+        $this->database->updateDocument('migrations', $active->getId(), new Document([
+            'status' => 'failed',
+            'stage' => 'finished',
+        ]));
+
+        $claimed = $claims->retry(
+            project: new Document(['$id' => 'project-1']),
+            migrationId: $active->getId(),
+            platform: [],
+            publisher: $migrationPublisher,
+        );
+
+        $this->assertSame('pending', $claimed->getAttribute('status'));
+        $this->assertCount(1, $publisher->getEvents('migrations'));
+    }
+
+    public function testConsumeOfAMigrationBeingReclaimedDoesNotProceed(): void
+    {
+        $terminal = $this->createFailedMigration();
+        $claims = new Claim($this->database, $this->locks());
+        $project = new Document(['$id' => 'project-1']);
+        $queued = new Document($terminal->getArrayCopy());
+        $queued
+            ->setAttribute('status', 'pending')
+            ->setAttribute('stage', 'finished');
+        $stale = new MigrationMessage(project: $project, migration: $queued, platform: []);
+        $concurrent = null;
+        $database = $this->database;
+        $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
+        $database->afterMigrationRead = static function () use ($claims, $stale, &$concurrent): void {
+            try {
+                $concurrent = $claims->consume('project-1', $stale);
+            } catch (Contention $refused) {
+                $concurrent = $refused;
+            }
+        };
+
+        $retry = $claims->reclaim('project-1', $terminal->getId());
+
+        $this->assertInstanceOf(Contention::class, $concurrent, 'a delivery of the migration being reclaimed must wait for the reclaim');
+        $stored = $this->database->getDocument('migrations', $terminal->getId());
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('finished', $stored->getAttribute('stage'));
+        $this->assertSame($retry->migration->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
+
+        $this->assertNull($claims->consume('project-1', $stale), 'the delivery sees the reclaim and stands down');
+        $delivery = $claims->consume('project-1', MigrationMessage::fromArray($retry->message($project, [])->toArray()));
+        $this->assertInstanceOf(Delivery::class, $delivery);
+        $this->assertSame($retry->migration->getAttribute('attemptId'), $delivery->migration->getAttribute('attemptId'));
+    }
+
+    public function testClaimsForTheSameMigrationInAnotherProjectAreNotSerialized(): void
+    {
+        $first = $this->createFailedMigration();
+        $otherDatabase = $this->claimsDatabase();
+        $other = $this->createFailedMigration(database: $otherDatabase);
+        $locks = $this->locks();
+        $claims = new Claim($this->database, $locks);
+        $otherClaims = new Claim($otherDatabase, $locks);
+        $concurrent = null;
+        $database = $this->database;
+        $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
+        $database->afterMigrationRead = static function () use ($otherClaims, $other, &$concurrent): void {
+            $concurrent = $otherClaims->reclaim('project-2', $other->getId());
+        };
+
+        $retry = $claims->reclaim('project-1', $first->getId());
+
+        $this->assertInstanceOf(Retry::class, $concurrent, 'another project reclaims its own migration while this one is held');
+        $this->assertSame($retry->migration->getAttribute('attemptId'), $this->database
+            ->getDocument('migrations', $first->getId())
+            ->getAttribute('attemptId'));
+        $this->assertSame($concurrent->migration->getAttribute('attemptId'), $otherDatabase
+            ->getDocument('migrations', $other->getId())
+            ->getAttribute('attemptId'));
+        $this->assertNotSame($retry->migration->getAttribute('attemptId'), $concurrent->migration->getAttribute('attemptId'));
+    }
+
+    public function testConsumeDerivesTerminalSnapshotForLegacyRetryDelivery(): void
+    {
+        $terminal = $this->createFailedMigration();
+        $queued = new Document($terminal->getArrayCopy());
+        $queued
+            ->setAttribute('status', 'pending')
+            ->setAttribute('stage', 'finished');
+        $claims = new Claim($this->database, $this->locks());
+
+        $claimed = $claims->consume('project-1', new MigrationMessage(
+            project: new Document(['$id' => 'project-1']),
+            migration: $queued,
+            platform: [],
+        ));
+
+        $this->assertInstanceOf(Delivery::class, $claimed);
+        $this->assertSame('processing', $claimed->migration->getAttribute('status'));
+        $this->assertIsString($claimed->migration->getAttribute('attemptId'));
+        $this->assertNotSame('attempt-terminal', $claimed->migration->getAttribute('attemptId'));
+        $this->assertInstanceOf(Document::class, $claimed->terminal);
+        $this->assertSame(
+            [],
+            \array_diff(\array_keys($claimed->terminal->getArrayCopy()), ['$id', 'attemptId', 'status', 'stage']),
+            'Terminal snapshot must not carry the migration payload onto the queue, credentials included'
+        );
+        $this->assertSame($terminal->getId(), $claimed->terminal->getId());
+        $this->assertSame('attempt-terminal', $claimed->terminal->getAttribute('attemptId'));
+        $this->assertSame('failed', $claimed->terminal->getAttribute('status'));
+        $this->assertSame('finished', $claimed->terminal->getAttribute('stage'));
+        $owner = $claims->recoverable(new Document([
+            'migrationId' => $terminal->getId(),
+            'migrationAttemptId' => 'attempt-terminal',
+        ]), $claimed->terminal);
+        $this->assertInstanceOf(ProvisioningOwner::class, $owner);
+        $this->assertSame($terminal->getId(), $owner->migrationId);
+        $this->assertSame('attempt-terminal', $owner->attemptId);
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume('project-1', new MigrationMessage(
+            project: new Document(['$id' => 'project-1']),
+            migration: $queued,
+            platform: [],
+        )));
+    }
+
+    public function testConsumeRejectsPendingRetryWithoutTerminalSnapshot(): void
+    {
+        $terminal = $this->createFailedMigration();
+        $pending = $this->database->updateDocument('migrations', $terminal->getId(), new Document([
+            'status' => 'pending',
+            'stage' => 'finished',
+        ]));
+        $claims = new Claim($this->database, $this->locks());
+
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume('project-1', new MigrationMessage(
+            project: new Document(['$id' => 'project-1']),
+            migration: $pending,
+            platform: [],
+        )));
+    }
+
+    public function testConsumeCreatesAttemptForLegacyInitialDelivery(): void
+    {
+        $queued = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+        $claims = new Claim($this->database, $this->locks());
+
+        $delivery = $claims->consume('project-1', new MigrationMessage(
+            project: new Document(['$id' => 'project-1']),
+            migration: $queued,
+            platform: [],
+        ));
+
+        $this->assertInstanceOf(Delivery::class, $delivery);
+        $this->assertNotInstanceOf(Document::class, $delivery->terminal);
+        $this->assertSame('processing', $delivery->migration->getAttribute('status'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('stage'));
+        $this->assertIsString($delivery->migration->getAttribute('attemptId'));
+        $this->assertNotSame('', $delivery->migration->getAttribute('attemptId'));
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume('project-1', new MigrationMessage(
+            project: new Document(['$id' => 'project-1']),
+            migration: $queued,
+            platform: [],
+        )));
+    }
+
+    public function testConsumePreservesCurrentAttemptAndRejectsDuplicateInitialDelivery(): void
+    {
+        $queued = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-current',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+        $claims = new Claim($this->database, $this->locks());
+        $message = new MigrationMessage(
+            project: new Document(['$id' => 'project-1']),
+            migration: $queued,
+            platform: [],
+        );
+
+        $delivery = $claims->consume('project-1', $message);
+
+        $this->assertInstanceOf(Delivery::class, $delivery);
+        $this->assertSame('attempt-current', $delivery->migration->getAttribute('attemptId'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('status'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('stage'));
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume('project-1', $message));
+    }
+
+    /** @return \Iterator<string, array{string, int}> */
+    public static function abandonedStages(): \Iterator
+    {
+        yield 'processing' => ['processing', Claim::LIVENESS_LEASE + 60];
+        yield 'migrating' => ['migrating', Claim::LIVENESS_LEASE + 60];
+        yield 'finalizing' => ['finalizing', Claim::FINALIZING_LEASE + 60];
+    }
+
+    #[DataProvider('abandonedStages')]
+    public function testRedeliveryOfAnAbandonedAttemptTakesTheMigrationOver(string $stage, int $silence): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $queued = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-a',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+        $abandoned = $this->age($queued->getId(), 'processing', $stage, $silence);
+        $message = new MigrationMessage(project: new Document(['$id' => 'project-1']), migration: $queued);
+
+        $delivery = $claims->consume('project-1', $message);
+
+        $this->assertInstanceOf(Delivery::class, $delivery);
+        $this->assertIsString($delivery->migration->getAttribute('attemptId'));
+        $this->assertNotSame('attempt-a', $delivery->migration->getAttribute('attemptId'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('status'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('stage'));
+        $this->assertNotInstanceOf(Document::class, $delivery->terminal);
+
+        $late = new Document($abandoned->getArrayCopy());
+        $late->setAttribute('status', 'completed');
+        $late->setAttribute('stage', 'finished');
+        $this->assertNotInstanceOf(Document::class, $claims->persist($late), 'The abandoned worker must be fenced out');
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume('project-1', $message), 'Only one redelivery may take over');
+
+        $stored = $this->database->getDocument('migrations', $queued->getId());
+        $this->assertSame($delivery->migration->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
+        $this->assertSame('processing', $stored->getAttribute('status'));
+        $this->assertSame($delivery->migration->getUpdatedAt(), $stored->getUpdatedAt());
+    }
+
+    /** @return \Iterator<string, array{string, int}> */
+    public static function runningAttempts(): \Iterator
+    {
+        yield 'processing' => ['processing', 60];
+        yield 'migrating' => ['migrating', 60];
+        yield 'finalizing past the liveness lease' => ['finalizing', Claim::LIVENESS_LEASE + 60];
+    }
+
+    #[DataProvider('runningAttempts')]
+    public function testRedeliveryOfARunningAttemptIsDropped(string $stage, int $silence): void
+    {
+        $queued = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-a',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+        $running = $this->age($queued->getId(), 'processing', $stage, $silence);
+
+        $this->assertNotInstanceOf(Delivery::class, (new Claim($this->database, $this->locks()))->consume(
+            'project-1',
+            new MigrationMessage(project: new Document(['$id' => 'project-1']), migration: $queued),
+        ));
+
+        $stored = $this->database->getDocument('migrations', $queued->getId());
+        $this->assertSame('attempt-a', $stored->getAttribute('attemptId'));
+        $this->assertSame($stage, $stored->getAttribute('stage'));
+        $this->assertSame($running->getUpdatedAt(), $stored->getUpdatedAt());
+    }
+
+    /** @return \Iterator<string, array{?string}> */
+    public static function otherAttempts(): \Iterator
+    {
+        yield 'a superseded attempt' => ['attempt-a'];
+        yield 'a legacy delivery without an attempt' => [null];
+    }
+
+    #[DataProvider('otherAttempts')]
+    public function testRedeliveryOfAnotherAttemptIsDropped(?string $attemptId): void
+    {
+        $queued = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => $attemptId,
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+        $this->database->updateDocument('migrations', $queued->getId(), new Document(['attemptId' => 'attempt-b']));
+        $abandoned = $this->age($queued->getId(), 'processing', 'migrating', Claim::LIVENESS_LEASE + 60);
+
+        $this->assertNotInstanceOf(Delivery::class, (new Claim($this->database, $this->locks()))->consume(
+            'project-1',
+            new MigrationMessage(project: new Document(['$id' => 'project-1']), migration: $queued),
+        ));
+
+        $stored = $this->database->getDocument('migrations', $queued->getId());
+        $this->assertSame('attempt-b', $stored->getAttribute('attemptId'));
+        $this->assertSame($abandoned->getUpdatedAt(), $stored->getUpdatedAt());
+    }
+
+    public function testConsumeLeavesMigrationPendingUntilTheOwnershipSchemaExists(): void
+    {
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization(new Authorization())
+            ->setDropUnknownAttributes(true)
+            ->setDatabase('migrationClaimLegacy')
+            ->setNamespace('migration_claim_legacy_' . \uniqid());
+        $database->create();
+        $database->createCollection(Collection::create(
+            id: 'databases',
+            attributes: [Attribute::string('name', size: 256)],
+        ));
+        $database->createCollection(Collection::create(
+            id: 'migrations',
+            attributes: [
+                Attribute::string('status', size: 255, required: true),
+                Attribute::string('stage', size: 255, required: true),
+                Attribute::string('resourceData', size: 131_070, required: true, filters: [Filter::Json]),
+            ],
+            permissions: [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+            documentSecurity: false,
+        ));
+        $queued = $database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+        $claims = new Claim($database, $this->locks());
+        $message = new MigrationMessage(project: new Document(['$id' => 'project-1']), migration: $queued);
+
+        try {
+            $claims->consume('project-1', $message);
+            $this->fail('Expected the delivery to wait for the ownership schema');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_SCHEMA_NOT_READY, $error->getType());
+        }
+
+        $stored = $database->getDocument('migrations', $queued->getId());
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('init', $stored->getAttribute('stage'));
+        $this->assertSame($queued->getUpdatedAt(), $stored->getUpdatedAt());
+
+        $database->createAttribute('databases', Attribute::string('migrationId', size: Database::LENGTH_KEY));
+        $database->createAttribute('databases', Attribute::string('migrationAttemptId', size: Database::LENGTH_KEY));
+        $database->createAttribute('migrations', Attribute::string('attemptId', size: Database::LENGTH_KEY));
+
+        $delivery = $claims->consume('project-1', $message);
+
+        $this->assertInstanceOf(Delivery::class, $delivery);
+        $this->assertIsString($delivery->migration->getAttribute('attemptId'));
+        $this->assertSame('processing', $delivery->migration->getAttribute('status'));
+        $this->assertSame(
+            $delivery->migration->getAttribute('attemptId'),
+            $database->getDocument('migrations', $queued->getId())->getAttribute('attemptId'),
+        );
+    }
+
+    /** @return \Iterator<string, array{string, string, string, string}> */
+    public static function ownersThatCanNoLongerRun(): \Iterator
+    {
+        yield 'last attempt of a failed migration' => ['failed', 'finished', 'attempt-a', 'attempt-a'];
+        yield 'last attempt of a migration failed while migrating' => ['failed', 'migrating', 'attempt-a', 'attempt-a'];
+        yield 'last attempt of a completed migration' => ['completed', 'finished', 'attempt-a', 'attempt-a'];
+        yield 'earlier attempt of a failed migration' => ['failed', 'finished', 'attempt-b', 'attempt-a'];
+        yield 'earlier attempt of a queued retry' => ['pending', 'finished', 'attempt-b', 'attempt-a'];
+        yield 'earlier attempt of a running migration' => ['processing', 'migrating', 'attempt-b', 'attempt-a'];
+    }
+
+    #[DataProvider('ownersThatCanNoLongerRun')]
+    public function testRecoveryTakesOverAnOwnerThatCanNoLongerRun(string $status, string $stage, string $current, string $owner): void
+    {
+        $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-owner',
+            'attemptId' => $current,
+            'status' => $status,
+            'stage' => $stage,
+            'resourceData' => [],
+        ]));
+
+        $recovered = (new Claim($this->database, $this->locks()))->recoverable(new Document([
+            'migrationId' => 'migration-owner',
+            'migrationAttemptId' => $owner,
+        ]));
+
+        $this->assertInstanceOf(ProvisioningOwner::class, $recovered);
+        $this->assertSame('migration-owner', $recovered->migrationId);
+        $this->assertSame($owner, $recovered->attemptId);
+    }
+
+    /** @return \Iterator<string, array{string, string}> */
+    public static function unfinishedOwners(): \Iterator
+    {
+        yield 'queued' => ['pending', 'init'];
+        yield 'queued retry' => ['pending', 'finished'];
+        yield 'processing' => ['processing', 'processing'];
+        yield 'migrating' => ['processing', 'migrating'];
+        yield 'finalizing' => ['processing', 'finalizing'];
+    }
+
+    #[DataProvider('unfinishedOwners')]
+    public function testRecoveryRefusesTheOwningMigrationsCurrentUnfinishedAttempt(string $status, string $stage): void
+    {
+        $failed = $this->createFailedMigration();
+        $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-owner',
+            'attemptId' => 'attempt-a',
+            'status' => $status,
+            'stage' => $stage,
+            'resourceData' => [],
+        ]));
+        $database = new Document([
+            'migrationId' => 'migration-owner',
+            'migrationAttemptId' => 'attempt-a',
+        ]);
+        $claims = new Claim($this->database, $this->locks());
+
+        $this->assertNotInstanceOf(ProvisioningOwner::class, $claims->recoverable($database));
+        $this->assertNotInstanceOf(ProvisioningOwner::class, $claims->recoverable($database, new Document([
+            '$id' => $failed->getId(),
+            'attemptId' => 'attempt-terminal',
+            'status' => 'failed',
+            'stage' => 'finished',
+        ])), 'Another migration\'s terminal snapshot cannot vouch for a running owner');
+    }
+
+    public function testRecoveryTakesOverDatabasesOfADeletedMigration(): void
+    {
+        $recovered = (new Claim($this->database, $this->locks()))->recoverable(new Document([
+            'migrationId' => 'migration-deleted',
+            'migrationAttemptId' => 'attempt-a',
+        ]));
+
+        $this->assertInstanceOf(ProvisioningOwner::class, $recovered);
+        $this->assertSame('migration-deleted', $recovered->migrationId);
+        $this->assertSame('attempt-a', $recovered->attemptId);
+    }
+
+    /** @return \Iterator<string, array{array<string, mixed>}> */
+    public static function incompleteOwners(): \Iterator
+    {
+        yield 'no owner' => [[]];
+        yield 'no attempt' => [['migrationId' => 'migration-1']];
+        yield 'empty attempt' => [['migrationId' => 'migration-1', 'migrationAttemptId' => '']];
+        yield 'empty migration' => [['migrationId' => '', 'migrationAttemptId' => 'attempt-a']];
+        yield 'malformed migration' => [['migrationId' => ['malformed'], 'migrationAttemptId' => 'attempt-a']];
+    }
+
+    /** @param array<string, mixed> $owner */
+    #[DataProvider('incompleteOwners')]
+    public function testRecoveryRefusesADatabaseWithoutACompleteOwner(array $owner): void
+    {
+        $this->createFailedMigration();
+
+        $this->assertNotInstanceOf(
+            ProvisioningOwner::class,
+            (new Claim($this->database, $this->locks()))->recoverable(new Document($owner)),
+        );
+    }
+
+    public function testANewMigrationRecoversADatabaseAFailedMigrationLeftBehind(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $first = $this->startAttempt($claims, 'migration-first');
+        $database = $this->provisionedBy($first);
+        $this->failAttempt($claims, $first);
+        $second = $this->startAttempt($claims, 'migration-second');
+
+        $recovered = $claims->recoverable($database, $second->terminal);
+
+        $this->assertInstanceOf(ProvisioningOwner::class, $recovered);
+        $this->assertSame('migration-first', $recovered->migrationId);
+        $this->assertSame($first->migration->getAttribute('attemptId'), $recovered->attemptId);
+    }
+
+    public function testDeletingTheFailedMigrationKeepsItsDatabaseRecoverable(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $first = $this->startAttempt($claims, 'migration-first');
+        $database = $this->provisionedBy($first);
+        $this->failAttempt($claims, $first);
+        $this->database->deleteDocument('migrations', 'migration-first');
+        $second = $this->startAttempt($claims, 'migration-second');
+
+        $recovered = $claims->recoverable($database, $second->terminal);
+
+        $this->assertInstanceOf(ProvisioningOwner::class, $recovered);
+        $this->assertSame('migration-first', $recovered->migrationId);
+        $this->assertSame($first->migration->getAttribute('attemptId'), $recovered->attemptId);
+    }
+
+    public function testARetryRecoversADatabaseAnEarlierAttemptLeftBehind(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $first = $this->startAttempt($claims, 'migration-1');
+        $database = $this->provisionedBy($first);
+        $this->failAttempt($claims, $first);
+        $second = $this->retryAttempt($claims, 'migration-1');
+        $this->failAttempt($claims, $second);
+        $third = $this->retryAttempt($claims, 'migration-1');
+
+        $this->assertInstanceOf(Document::class, $third->terminal);
+        $this->assertSame($second->migration->getAttribute('attemptId'), $third->terminal->getAttribute('attemptId'));
+
+        $recovered = $claims->recoverable($database, $third->terminal);
+
+        $this->assertInstanceOf(ProvisioningOwner::class, $recovered);
+        $this->assertSame('migration-1', $recovered->migrationId);
+        $this->assertSame($first->migration->getAttribute('attemptId'), $recovered->attemptId);
+        $this->assertNotInstanceOf(
+            ProvisioningOwner::class,
+            $claims->recoverable($this->provisionedBy($third), $third->terminal),
+            'The attempt that is running keeps the databases it provisions',
+        );
+    }
+
+    private function createFailedMigration(string $id = 'migration-1', ?Database $database = null): Document
+    {
+        return ($database ?? $this->database)->createDocument('migrations', new Document([
+            '$id' => $id,
+            'attemptId' => 'attempt-terminal',
+            'status' => 'failed',
+            'stage' => 'finished',
+            'resourceData' => [
+                [
+                    'resource' => 'database',
+                    'id' => 'database-1',
+                    'status' => 'success',
+                    'message' => '',
+                ],
+            ],
+        ]));
+    }
+
+    private function startAttempt(Claim $claims, string $migrationId): Delivery
+    {
+        $queued = $this->database->createDocument('migrations', new Document([
+            '$id' => $migrationId,
+            'attemptId' => 'attempt-' . $migrationId,
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+
+        return $claims->consume('project-1', new MigrationMessage(
+            project: new Document(['$id' => 'project-1']),
+            migration: $queued,
+        )) ?? throw new \LogicException('Expected the initial delivery to be claimed');
+    }
+
+    private function retryAttempt(Claim $claims, string $migrationId): Delivery
+    {
+        $publisher = new MockPublisher();
+        $claims->retry(
+            project: new Document(['$id' => 'project-1']),
+            migrationId: $migrationId,
+            platform: [],
+            publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+        );
+
+        return $claims->consume('project-1', MigrationMessage::fromArray($publisher->getEvents('migrations')[0]))
+            ?? throw new \LogicException('Expected the retry delivery to be claimed');
+    }
+
+    private function failAttempt(Claim $claims, Delivery $delivery): void
+    {
+        $failed = new Document($delivery->migration->getArrayCopy());
+        $failed->setAttribute('status', 'failed');
+        $failed->setAttribute('stage', 'finished');
+
+        $claims->persist($failed) ?? throw new \LogicException('Expected the attempt to still own its migration');
+    }
+
+    private function provisionedBy(Delivery $delivery): Document
+    {
+        return new Document([
+            '$id' => 'database-x',
+            'status' => 'provisioning',
+            'migrationId' => $delivery->migration->getId(),
+            'migrationAttemptId' => $delivery->migration->getAttribute('attemptId'),
+        ]);
+    }
+
+    private function createStaleMigration(string $id, string $attemptId, string $status, string $stage, int $age): Document
+    {
+        $updatedAt = DateTime::addSeconds(new \DateTime(), -$age);
+        $this->database->setPreserveDates(true);
+
+        try {
+            return $this->database->createDocument('migrations', new Document([
+                '$id' => $id,
+                '$createdAt' => $updatedAt,
+                '$updatedAt' => $updatedAt,
+                'attemptId' => $attemptId,
+                'status' => $status,
+                'stage' => $stage,
+                'resourceData' => [],
+            ]));
+        } finally {
+            $this->database->setPreserveDates(false);
+        }
+    }
+
+    /**
+     * Move a migration to the given lifecycle as a worker that last wrote
+     * `$silence` seconds ago would have left it.
+     */
+    private function age(string $id, string $status, string $stage, int $silence): Document
+    {
+        $this->database->setPreserveDates(true);
+
+        try {
+            return $this->database->updateDocument('migrations', $id, new Document([
+                '$updatedAt' => DateTime::addSeconds(new \DateTime(), -$silence),
+                'status' => $status,
+                'stage' => $stage,
+            ]));
+        } finally {
+            $this->database->setPreserveDates(false);
+        }
+    }
+
+    private function unavailablePublisher(): Publisher
+    {
+        return new class () implements Publisher {
+            #[\Override]
+            public function publish(Queue $queue, array $payload): bool
+            {
+                throw new \RuntimeException('Queue unavailable');
+            }
+
+            #[\Override]
+            public function publishMany(Queue $queue, array $payloads): bool
+            {
+                throw new \LogicException('Not used');
+            }
+
+            #[\Override]
+            public function retry(Queue $queue, ?int $limit = null): void
+            {
+            }
+
+            #[\Override]
+            public function getQueueSize(Queue $queue, bool $failedJobs = false): int
+            {
+                return 0;
+            }
+
+            #[\Override]
+            public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
+        };
+    }
+
+    private function refusingPublisher(): Publisher
+    {
+        return new class () implements Publisher {
+            #[\Override]
+            public function publish(Queue $queue, array $payload): bool
+            {
+                return false;
+            }
+
+            #[\Override]
+            public function publishMany(Queue $queue, array $payloads): bool
+            {
+                throw new \LogicException('Not used');
+            }
+
+            #[\Override]
+            public function retry(Queue $queue, ?int $limit = null): void
+            {
+            }
+
+            #[\Override]
+            public function getQueueSize(Queue $queue, bool $failedJobs = false): int
+            {
+                return 0;
+            }
+
+            #[\Override]
+            public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
+        };
+    }
+
+    private function deleteAfterRead(string $id): void
+    {
+        $database = $this->database;
+        $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
+        $database->afterMigrationRead = static function () use ($database, $id): void {
+            $database->deleteDocument('migrations', $id);
+        };
+    }
+
+    private function locks(): ExclusiveClaimLock
+    {
+        return new ExclusiveClaimLock();
+    }
+}

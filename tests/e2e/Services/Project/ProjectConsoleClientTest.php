@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\System\System;
 
 final class ProjectConsoleClientTest extends Scope
@@ -142,7 +142,7 @@ final class ProjectConsoleClientTest extends Scope
     protected function createTeam(string $name): array
     {
         $response = $this->createTeamFixture($this->getConsoleSessionHeaders(), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => $name,
         ]);
 
@@ -156,7 +156,7 @@ final class ProjectConsoleClientTest extends Scope
     protected function createProject(string $teamId, string $name): array
     {
         $response = $this->client->call(Client::METHOD_POST, '/projects', $this->getConsoleSessionHeaders(), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'region' => System::getEnv('_APP_REGION', 'default'),
             'name' => $name,
             'teamId' => $teamId,
@@ -172,7 +172,7 @@ final class ProjectConsoleClientTest extends Scope
     protected function createProjectKey(string $projectId, array $scopes): string
     {
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/keys', $this->getConsoleSessionHeaders(), [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Delete Project Key',
             'scopes' => $scopes,
         ]);

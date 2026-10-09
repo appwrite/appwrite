@@ -10,10 +10,11 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
+use Utopia\Query\Schema\IndexType;
 
 final class DatabasesCustomServerTest extends Scope
 {
@@ -28,7 +29,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::custom('first'),
+            'databaseId' => Id::custom('first'),
             'name' => 'Test 1',
         ]);
         $this->assertEquals(201, $db1['headers']['status-code']);
@@ -45,7 +46,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::custom('second'),
+            'databaseId' => Id::custom('second'),
             'name' => 'Test 2',
         ]);
         $this->assertEquals(201, $db2['headers']['status-code']);
@@ -129,7 +130,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Collections DB',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -142,7 +143,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'name' => 'Test 1',
-            'collectionId' => ID::custom('first'),
+            'collectionId' => Id::custom('first'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -167,7 +168,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'name' => 'Test 2',
-            'collectionId' => ID::custom('second'),
+            'collectionId' => Id::custom('second'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -319,7 +320,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Update DB',
         ]);
         $this->assertEquals(201, $create['headers']['status-code']);
@@ -381,7 +382,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'key' => 'embedding_euclidean_v2',
-            'type' => Database::INDEX_HNSW_EUCLIDEAN,
+            'type' => IndexType::HnswEuclidean->value,
             'attributes' => ['embeddings']
         ]);
         $this->assertEquals(202, $create['headers']['status-code']);
@@ -417,7 +418,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'key' => 'embedding_euclidean',
-            'type' => Database::INDEX_HNSW_EUCLIDEAN,
+            'type' => IndexType::HnswEuclidean->value,
             'attributes' => ['embeddings']
         ]);
         $this->assertEquals(202, $eu['headers']['status-code']);
@@ -428,7 +429,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'key' => 'embedding_dot',
-            'type' => Database::INDEX_HNSW_DOT,
+            'type' => IndexType::HnswDot->value,
             'attributes' => ['embeddings']
         ]);
         $this->assertEquals(202, $dot['headers']['status-code']);
@@ -439,7 +440,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'key' => 'embedding_cosine',
-            'type' => Database::INDEX_HNSW_COSINE,
+            'type' => IndexType::HnswCosine->value,
             'attributes' => ['embeddings']
         ]);
         $this->assertEquals(202, $cos['headers']['status-code']);
@@ -465,7 +466,7 @@ final class DatabasesCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $get['headers']['status-code']);
         $this->assertEquals('embedding_euclidean', $get['body']['key']);
-        $this->assertEquals(Database::INDEX_HNSW_EUCLIDEAN, $get['body']['type']);
+        $this->assertEquals(IndexType::HnswEuclidean->value, $get['body']['type']);
 
         // Delete index
         $del = $this->client->call(Client::METHOD_DELETE, "/vectorsdb/{$databaseId}/collections/{$collectionId}/indexes/embedding_dot", [
@@ -492,7 +493,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'BulkDBCreate'
         ]);
         $this->assertEquals(201, $db['headers']['status-code']);
@@ -503,7 +504,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'BulkColCreate',
             'documentSecurity' => true,
             'dimension' => 3,
@@ -568,7 +569,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'EmbedDB',
         ]);
         $this->assertEquals(201, $db['headers']['status-code']);
@@ -579,7 +580,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'EmbedCol',
             'documentSecurity' => true,
             'dimension' => 3,
@@ -674,7 +675,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'NomicDB',
         ]);
         $this->assertEquals(201, $db['headers']['status-code']);
@@ -685,7 +686,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'NomicCol',
             'documentSecurity' => true,
             'dimension' => 768, // nomic-embed-text output size
@@ -727,7 +728,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => $stored,
                 'metadata' => ['model' => 'nomic-embed-text', 'dimension' => 768],
@@ -764,7 +765,7 @@ final class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'databaseId' => ID::unique(), 'name' => 'BulkDBUpsert' ]);
+        ], [ 'databaseId' => Id::unique(), 'name' => 'BulkDBUpsert' ]);
         $this->assertEquals(201, $db['headers']['status-code']);
         $databaseId = $db['body']['$id'];
 
@@ -773,7 +774,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'BulkColUpsert',
             'documentSecurity' => true,
             'dimension' => 3,
@@ -857,7 +858,7 @@ final class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'databaseId' => ID::unique(), 'name' => 'BulkDBUpdate' ]);
+        ], [ 'databaseId' => Id::unique(), 'name' => 'BulkDBUpdate' ]);
         $this->assertEquals(201, $db['headers']['status-code']);
         $databaseId = $db['body']['$id'];
 
@@ -866,7 +867,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'BulkColUpdate',
             'documentSecurity' => true,
             'dimension' => 3,
@@ -925,7 +926,7 @@ final class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'databaseId' => ID::unique(), 'name' => 'BulkDBDelete' ]);
+        ], [ 'databaseId' => Id::unique(), 'name' => 'BulkDBDelete' ]);
         $this->assertEquals(201, $db['headers']['status-code']);
         $databaseId = $db['body']['$id'];
 
@@ -934,7 +935,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'BulkColDelete',
             'documentSecurity' => true,
             'dimension' => 3,
@@ -988,7 +989,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'TimestampTestDB'
         ]);
         $this->assertEquals(201, $db['headers']['status-code']);
@@ -999,7 +1000,7 @@ final class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TimestampTestCollection',
             'documentSecurity' => true,
             'dimension' => 1536,
@@ -1013,7 +1014,7 @@ final class DatabasesCustomServerTest extends Scope
         $customUpdatedAt = '1970-01-01T00:00:00.000+00:00';
         $vector = array_fill(0, 1536, 0.0);
         $vector[0] = 1.0;
-        $documentId = ID::unique();
+        $documentId = Id::unique();
 
         $doc = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
             'content-type' => 'application/json',

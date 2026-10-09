@@ -8,6 +8,8 @@ use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
 use OpenRuntimes\Orchestrator\Enum\ArchiveCompression;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
+use OpenRuntimes\Orchestrator\Exception\ApiException as OrchestratorApiException;
+use OpenRuntimes\Orchestrator\Exception\ClientException as OrchestratorClientException;
 use OpenRuntimes\Orchestrator\Jobs;
 use OpenRuntimes\Orchestrator\Model\Artifact\ArchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\CloneArtifact;
@@ -18,14 +20,15 @@ use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UploadArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
+use Psr\Http\Client\ClientExceptionInterface;
 use Utopia\Config\Config;
 use Utopia\Console\Command;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\DSN\DSN;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
@@ -232,7 +235,27 @@ readonly class Deployments
         }
 
         try {
-            $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $timeout, $source));
+            $payload = static::payload($this->project, $resource, $deployment, $this->platform, $timeout, $source);
+
+            try {
+                $this->jobs->create(...$payload);
+            } catch (OrchestratorClientException $error) {
+                if (!$error->getPrevious() instanceof ClientExceptionInterface) {
+                    throw $error;
+                }
+
+                try {
+                    $this->jobs->get($payload['id']);
+                } catch (OrchestratorApiException $lookup) {
+                    if ($lookup->statusCode === 404) {
+                        throw $error;
+                    }
+
+                    throw $lookup;
+                } catch (OrchestratorClientException) {
+                    throw $error;
+                }
+            }
         } catch (\Throwable $error) {
             // A refused variable key is the owner's to fix, so the build log
             // carries the actual reason; anything else stays a generic

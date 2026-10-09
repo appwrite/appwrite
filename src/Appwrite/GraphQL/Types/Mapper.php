@@ -314,7 +314,7 @@ class Mapper
             case \Appwrite\Utopia\Database\Validator\Queries\Variables::class:
             case \Utopia\Database\Validator\Authorization::class:
             case \Utopia\Database\Validator\Permissions::class:
-            case \Utopia\Database\Validator\Queries::class:
+            case \Utopia\Database\Validator\Queries\Base::class:
             case \Utopia\Database\Validator\Queries\Documents::class:
             case \Utopia\Database\Validator\Roles::class:
                 // utopia-php/waf is not a dependency here, so the class is named rather than referenced.

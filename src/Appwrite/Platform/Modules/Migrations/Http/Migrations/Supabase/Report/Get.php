@@ -87,7 +87,7 @@ class Get extends Action
         }
 
         try {
-            $supabase = new Supabase($endpoint, $apiKey, $databaseAddress, 'postgres', $username, $password, $port);
+            $supabase = new Supabase($endpoint, $apiKey, $databaseAddress, 'postgres', $username, $password, (string) $port);
             $report = $supabase->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(

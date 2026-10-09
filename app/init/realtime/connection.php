@@ -10,6 +10,7 @@ use Appwrite\Utopia\Request;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -207,25 +208,34 @@ return function (Container $container): void {
     $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization, Store $store, Token $proofForToken) use ($getMode, $getDbForPlatform, $getDbForProject) {
         $mode = $getMode($request, $project);
 
-        $authorization->setDefaultStatus(true);
+        $authorization->setStatus(true);
 
         $dbForPlatform = $getDbForPlatform($authorization);
         $dbForProject = $getDbForProject($project, $authorization);
 
+        $loadUser = static function (Database $database, string $userId) use ($authorization): User {
+            if ($userId === '') {
+                return new User([]);
+            }
+
+            $database->purgeCachedDocument('users', $userId);
+
+            $document = $authorization->skip(fn () => $database->getDocument('users', $userId));
+
+            return $document instanceof User ? $document : new User($document->getArrayCopy());
+        };
+
         $user = null;
         if ($mode === APP_MODE_ADMIN) {
-            /** @var User $user */
-            $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
+            $user = $loadUser($dbForPlatform, $store->getProperty('id', ''));
         } else {
             if ($project->isEmpty()) {
                 $user = new User([]);
             } elseif (!empty($store->getProperty('id', ''))) {
                 if ($project->getId() === 'console') {
-                    /** @var User $user */
-                    $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
+                    $user = $loadUser($dbForPlatform, $store->getProperty('id', ''));
                 } else {
-                    /** @var User $user */
-                    $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
+                    $user = $loadUser($dbForProject, $store->getProperty('id', ''));
                 }
             }
         }
@@ -266,11 +276,9 @@ return function (Container $container): void {
             $jwtUserId = $payload['userId'] ?? '';
             if ($bound && !empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
-                    /** @var User $user */
-                    $user = $dbForPlatform->getDocument('users', $jwtUserId);
+                    $user = $loadUser($dbForPlatform, $jwtUserId);
                 } else {
-                    /** @var User $user */
-                    $user = $dbForProject->getDocument('users', $jwtUserId);
+                    $user = $loadUser($dbForProject, $jwtUserId);
                 }
             }
 
@@ -290,11 +298,7 @@ return function (Container $container): void {
 
             $accountKeyUser = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
             if (!$accountKeyUser->isEmpty()) {
-                $key = $accountKeyUser->find(
-                    key: 'secret',
-                    find: $accountKey,
-                    subject: 'keys'
-                );
+                $key = \array_find($accountKeyUser->getAttribute('keys', []), static fn (Document $candidate): bool => $candidate->getAttribute('secret') === $accountKey);
 
                 if (!empty($key)) {
                     $expire = $key->getAttribute('expire');

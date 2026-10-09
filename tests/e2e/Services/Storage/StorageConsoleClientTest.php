@@ -9,9 +9,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class StorageConsoleClientTest extends Scope
 {
@@ -26,7 +26,7 @@ final class StorageConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Console Bucket Transformations Disabled',
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
@@ -36,7 +36,7 @@ final class StorageConsoleClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'transformations.png'),
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
@@ -79,7 +79,7 @@ final class StorageConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket Permissions',
             'fileSecurity' => true,
         ]);
@@ -91,7 +91,7 @@ final class StorageConsoleClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'test.png'),
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
@@ -116,7 +116,7 @@ final class StorageConsoleClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders());
 
-        $targetId = ID::unique();
+        $targetId = Id::unique();
         $target = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
             'userId' => $targetId,
             'email' => 'impersonation-storage-target-' . $targetId . '@example.com',
@@ -125,7 +125,7 @@ final class StorageConsoleClientTest extends Scope
         ]);
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $actorId = ID::unique();
+        $actorId = Id::unique();
         $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
             'userId' => $actorId,
             'email' => 'impersonation-storage-actor-' . $actorId . '@example.com',
@@ -137,7 +137,7 @@ final class StorageConsoleClientTest extends Scope
         ]);
 
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $adminHeaders, [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Impersonation Test Bucket',
             'fileSecurity' => true,
             'permissions' => [
@@ -152,7 +152,7 @@ final class StorageConsoleClientTest extends Scope
             $adminHeaders,
             ['content-type' => 'multipart/form-data']
         ), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::user($targetId)),

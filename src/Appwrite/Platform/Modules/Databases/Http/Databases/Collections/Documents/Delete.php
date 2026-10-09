@@ -13,16 +13,18 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Hooks\RelatedUpdates;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Nullable;
 
 class Delete extends Action
@@ -75,10 +77,10 @@ class Delete extends Action
                     replaceWith: 'tablesDB.deleteRow',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
-            ->param('documentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID.', false, ['dbForProject'])
-            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
+            ->param('documentId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Document ID.', false, ['dbForProject'])
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
@@ -125,7 +127,7 @@ class Delete extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         // Read permission should not be required for delete
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
@@ -170,7 +172,7 @@ class Delete extends Action
 
             // Stage the operation in transaction logs
             $staged = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
@@ -196,11 +198,8 @@ class Delete extends Action
             return;
         }
 
-        // The database fires an update for each related document the delete changed
-        $related = [];
-        $dbForDatabases->on(Database::EVENT_DOCUMENT_UPDATE, 'relationship-delete', function (string $event, Document $document) use (&$related) {
-            $related[] = $document;
-        });
+        $recorder = new RelatedUpdates();
+        $dbForDatabases->addHook($recorder);
 
         try {
             $dbForDatabases->withRequestTimestamp($requestTimestamp, function () use ($dbForDatabases, $database, $collection, $documentId) {
@@ -214,19 +213,8 @@ class Delete extends Action
         } catch (RestrictedException) {
             throw new Exception($this->getRestrictedException());
         } finally {
-            $dbForDatabases->on(Database::EVENT_DOCUMENT_UPDATE, 'relationship-delete', null);
+            $related = $recorder->stop();
         }
-
-        $collectionsCache = [];
-
-        $this->processDocument(
-            database: $database,
-            collection: $collection,
-            document: $document,
-            dbForProject: $dbForProject,
-            collectionsCache: $collectionsCache,
-            authorization: $authorization
-        );
 
         $usage
             ->setResource('database')
@@ -240,7 +228,7 @@ class Delete extends Action
             fn ($document) => $document->getAttribute('key'),
             \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
             )
         );
 
@@ -296,7 +284,7 @@ class Delete extends Action
         $relatedCollections = [];
         foreach ($collection->getAttribute('attributes', []) as $attribute) {
             if (
-                $attribute->getAttribute('type') !== Database::VAR_RELATIONSHIP
+                $attribute->getAttribute('type') !== ColumnType::Relationship->value
                 || !$attribute->getAttribute('twoWay')
             ) {
                 continue;
@@ -313,8 +301,6 @@ class Delete extends Action
             $relatedCollections['database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence()] = $relatedCollection;
         }
 
-        $collectionsCache = [];
-
         foreach ($related as $peer) {
             $relatedCollection = $relatedCollections[$peer->getCollection()] ?? null;
             if ($relatedCollection === null) {
@@ -325,18 +311,12 @@ class Delete extends Action
                 fn (Document $attr) => $attr->getAttribute('key'),
                 \array_filter(
                     $relatedCollection->getAttribute('attributes', []),
-                    fn (Document $attr) => $attr->getAttribute('type') === Database::VAR_RELATIONSHIP
+                    fn (Document $attr) => $attr->getAttribute('type') === ColumnType::Relationship->value
                 )
             );
 
-            $this->processDocument(
-                database: $database,
-                collection: $relatedCollection,
-                document: $peer,
-                dbForProject: $dbForProject,
-                collectionsCache: $collectionsCache,
-                authorization: $authorization
-            );
+            $peer->setAttribute('$databaseId', $database->getId());
+            $peer->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $relatedCollection->getId());
 
             // Clone so the delete event stays intact for the shutdown hook.
             $event = clone $queueForEvents;

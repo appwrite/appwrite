@@ -10,7 +10,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Queries\Base;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Platform\Action;
@@ -49,7 +49,7 @@ class XList extends Action
                     )
                 ]
             ))
-            ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+            ->param('queries', [], new Base([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('project')
@@ -101,8 +101,8 @@ class XList extends Action
         $total = $includeTotal ? \count($emailTemplates) : 0;
 
         $grouped = Query::groupByType($queries);
-        $offset = $grouped['offset'] ?? 0;
-        $limit = $grouped['limit'] ?? null;
+        $offset = $grouped->offset ?? 0;
+        $limit = $grouped->limit ?? null;
 
         $emailTemplates = \array_slice($emailTemplates, $offset, $limit);
 

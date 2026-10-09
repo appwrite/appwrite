@@ -10,6 +10,7 @@ use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Query\Method;
 
 final class ActivateRulesTest extends TestCase
 {
@@ -59,9 +60,9 @@ final class ActivateRulesTest extends TestCase
         $dispatched = 0;
 
         $dbForPlatform = $this->createStub(Database::class);
-        $dbForPlatform->method('forEach')->willReturnCallback(
-            function (string $collection, callable $callback): void {
-                $callback(new Document(['$id' => 'rule-branch', 'deploymentId' => '']));
+        $dbForPlatform->method('cursor')->willReturnCallback(
+            function (string $collection): \Generator {
+                yield new Document(['$id' => 'rule-branch', 'deploymentId' => '']);
             }
         );
         $dbForPlatform->method('updateDocument')->willReturnCallback(
@@ -172,8 +173,8 @@ final class ActivateRulesTest extends TestCase
                 return new Document(['$id' => $id, ...$document->getArrayCopy()]);
             }
         );
-        $dbForPlatform->method('forEach')->willReturnCallback(
-            static function (string $collection, callable $callback, array $queries = []) use ($rules): void {
+        $dbForPlatform->method('cursor')->willReturnCallback(
+            static function (string $collection, array $queries = []) use ($rules): \Generator {
                 foreach ($rules as $rule) {
                     foreach ($queries as $query) {
                         if (!\in_array($rule->getAttribute($query->getAttribute()), $query->getValues(), true)) {
@@ -181,7 +182,7 @@ final class ActivateRulesTest extends TestCase
                         }
                     }
 
-                    $callback($rule);
+                    yield $rule;
                 }
             }
         );
@@ -195,9 +196,11 @@ final class ActivateRulesTest extends TestCase
     private function platformDatabaseCapturing(array &$captured): Database
     {
         $dbForPlatform = $this->createStub(Database::class);
-        $dbForPlatform->method('forEach')->willReturnCallback(
-            function (string $collection, callable $callback, array $queries = []) use (&$captured): void {
+        $dbForPlatform->method('cursor')->willReturnCallback(
+            function (string $collection, array $queries = []) use (&$captured): \Generator {
                 $captured = $queries;
+
+                yield from [];
             }
         );
 
@@ -210,7 +213,7 @@ final class ActivateRulesTest extends TestCase
     private function queryFor(array $queries, string $attribute): ?Query
     {
         foreach ($queries as $query) {
-            if ($query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === $attribute) {
+            if ($query->getMethod() === Method::Equal && $query->getAttribute() === $attribute) {
                 return $query;
             }
         }

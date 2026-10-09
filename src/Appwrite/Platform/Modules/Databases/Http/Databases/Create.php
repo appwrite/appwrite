@@ -13,13 +13,14 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Config\Config;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Structure as StructureException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -78,7 +79,7 @@ class Create extends Action
                     )
                 )
             ])
-            ->param('databaseId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Database name. Max length: 128 chars.')
             ->param('enabled', true, new Boolean(), 'Is the database enabled? When set to \'disabled\', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.', true)
             ->inject('project')
@@ -91,7 +92,7 @@ class Create extends Action
 
     public function action(string $databaseId, string $name, bool $enabled, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents): void
     {
-        $databaseId = $databaseId == 'unique()' ? ID::unique() : $databaseId;
+        $databaseId = $databaseId == 'unique()' ? Id::unique() : $databaseId;
 
         try {
             $dbForProject->createDocument('databases', new Document([
@@ -136,18 +137,15 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The "collections" collection is not configured.');
         }
 
-        $attributes = [];
-        foreach ($collections['attributes'] as $attribute) {
-            $attributes[] = new Document($attribute);
-        }
-
-        $indexes = [];
-        foreach ($collections['indexes'] as $index) {
-            $indexes[] = new Document($index);
-        }
+        $attributes = $collections['attributes'];
+        $indexes = $collections['indexes'];
 
         try {
-            $dbForProject->createCollection('database_' . $database->getSequence(), $attributes, $indexes);
+            $dbForProject->createCollection(Collection::create(
+                id: 'database_' . $database->getSequence(),
+                attributes: $attributes,
+                indexes: $indexes,
+            ));
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS, params: [$database->getId()]);
         } catch (IndexException $e) {

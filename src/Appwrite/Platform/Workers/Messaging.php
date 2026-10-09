@@ -18,7 +18,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Lock\Semaphore;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
@@ -131,7 +131,7 @@ class Messaging extends Action
 
                 // Unique per job so a redelivery cannot reclaim a directory a live job is still
                 // reading; the underscore prefix is unreachable, as a bucket ID may not start with one.
-                $attachmentsPath = $this->getLocalDevice($project)->getPath('_attachments/' . ID::unique());
+                $attachmentsPath = $this->getLocalDevice($project)->getPath('_attachments/' . Id::unique());
 
                 try {
                     if ($message->isEmpty()) {

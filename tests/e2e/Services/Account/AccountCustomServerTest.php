@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 final class AccountCustomServerTest extends Scope
@@ -44,7 +44,7 @@ final class AccountCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -118,7 +118,7 @@ final class AccountCustomServerTest extends Scope
             ],
             $this->getHeaders()
         ), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
         ]);
 
@@ -312,7 +312,7 @@ final class AccountCustomServerTest extends Scope
             ],
             $this->getHeaders()
         ), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             // 'url' => 'http://localhost/magiclogin',
         ]);
@@ -352,7 +352,7 @@ final class AccountCustomServerTest extends Scope
          * Test for SUCCESS
          */
         $otp = $this->client->call(Client::METHOD_POST, '/account/tokens/email', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
         ]);
 
@@ -362,7 +362,7 @@ final class AccountCustomServerTest extends Scope
         $this->assertNotEmpty($this->getLastEmailByAddress($email));
 
         $magicUrl = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
         ]);
 
@@ -389,7 +389,7 @@ final class AccountCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
         ]);
 

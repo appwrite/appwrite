@@ -12,7 +12,7 @@ use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -145,7 +145,7 @@ class Get extends Action
                 $teamId = $project->getAttribute('teamId', '');
 
                 $installation = new Document([
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     '$permissions' => $this->getPermissions($teamId, $projectId),
                     'providerInstallationId' => $providerInstallationId,
                     'projectId' => $projectId,

@@ -8,7 +8,7 @@ use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
@@ -355,6 +355,46 @@ trait FunctionsBase
         return $execution;
     }
 
+    /**
+     * The decoded response body of an execution that completed.
+     *
+     * Decoding the response directly reports a failed execution as
+     * `json_decode(): Argument #1 ($json) must be of type string, null given`,
+     * which names neither the execution nor what went wrong with it. The
+     * runtime reports both in the execution itself, so surface them.
+     *
+     * @return array<mixed>
+     */
+    protected function executionOutput(mixed $execution): array
+    {
+        $body = $execution['body'] ?? [];
+
+        $this->assertContains(
+            $execution['headers']['status-code'] ?? 0,
+            [200, 201],
+            'the execution request failed: ' . \json_encode($body)
+        );
+
+        $this->assertSame(
+            'completed',
+            $body['status'] ?? '',
+            'execution ' . ($body['$id'] ?? '?') . ' did not complete'
+                . "\n  responseStatusCode: " . ($body['responseStatusCode'] ?? '?')
+                . "\n  errors: " . \trim((string) ($body['errors'] ?? ''))
+                . "\n  logs: " . \trim((string) ($body['logs'] ?? ''))
+        );
+
+        $output = \json_decode((string) ($body['responseBody'] ?? ''), true);
+
+        $this->assertIsArray(
+            $output,
+            'the execution completed but its body is not JSON: '
+                . \var_export($body['responseBody'] ?? null, true)
+        );
+
+        return $output;
+    }
+
     protected function deleteFunction(string $functionId): mixed
     {
         $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, array_merge([
@@ -368,7 +408,7 @@ trait FunctionsBase
     protected function setupFunctionDomain(string $functionId, string $subdomain = ''): string
     {
         $functionsDomain = \explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))[0];
-        $subdomain = $subdomain ? $subdomain : ID::unique();
+        $subdomain = $subdomain ? $subdomain : Id::unique();
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/function', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

@@ -19,10 +19,10 @@ use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\System\System;
@@ -97,7 +97,7 @@ class Base extends Action
 
     public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Deployments $deployments, int $buildTimeout, array $platform = [], string $referenceType = 'branch', string $reference = ''): Document
     {
-        $deploymentId = ID::unique();
+        $deploymentId = Id::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
         if (empty($providerInstallationId)) {
@@ -212,7 +212,7 @@ class Base extends Action
 
     public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Authorization $authorization, Deployments $deployments, int $buildTimeout, Bus $bus, array $platform, string $referenceType = 'branch', string $reference = ''): Document
     {
-        $deploymentId = ID::unique();
+        $deploymentId = Id::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
         if (empty($providerInstallationId)) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -301,11 +301,11 @@ class Base extends Action
         ]));
 
         $sitesDomain = $platform['sitesDomain'];
-        $domain = ID::unique() . "." . $sitesDomain;
+        $domain = Id::unique() . "." . $sitesDomain;
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-        $ruleId = $isMd5 ? md5($domain) : ID::unique();
+        $ruleId = $isMd5 ? md5($domain) : Id::unique();
 
         $rule = $authorization->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
@@ -498,20 +498,20 @@ class Base extends Action
             }
         }
 
-        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-            ]));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
-        }, [
+        foreach ($dbForPlatform->cursor('rules', [
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceInternalId', [$site->getSequence()]),
             Query::equal('deploymentResourceType', ['site']),
             Query::equal('deploymentVcsProviderBranch', [$branchName]),
             Query::equal('trigger', ['manual']),
-        ]);
+        ], batchSize: 25) as $rule) {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+        }
     }
 
     /**
@@ -539,12 +539,12 @@ class Base extends Action
             // by whichever deployment happens to be the resource's first.
             Query::equal('deploymentVcsProviderBranch', ['']),
         ];
-        $dbForPlatform->forEach('rules', function (Document $rule) use ($deployment, $dbForPlatform, $authorization, $bus) {
+        foreach ($dbForPlatform->cursor('rules', $queries, batchSize: 25) as $rule) {
             $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'deploymentId' => $deployment->getId(),
                 'deploymentInternalId' => $deployment->getSequence(),
             ])));
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
-        }, $queries);
+        }
     }
 }

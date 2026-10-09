@@ -10,6 +10,8 @@ use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -145,22 +147,22 @@ final class V25Test extends TestCase
                 continue;
             }
             $attributes = $id === 'topics'
-                ? \array_filter($collection['attributes'], fn (array $attribute) => !\in_array($attribute['$id'], $added, true))
+                ? \array_filter($collection['attributes'], static fn (Attribute $attribute): bool => !\in_array($attribute->key, $added, true))
                 : $collection['attributes'];
-            $database->createCollection(
-                $id,
-                \array_map(fn (array $attribute) => new Document($attribute), \array_values($attributes)),
-                \array_map(fn (array $index) => new Document($index), $collection['indexes']),
-            );
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($collection['indexes']),
+            ));
         }
-        $database->createCollection('audit');
+        $database->createCollection(Collection::create(id: 'audit'));
 
         $migration = new V25();
         $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
         $migration->execute();
         $migration->execute();
 
-        $this->assertFalse($database->getCollection('pushLedger')->isEmpty());
+        $this->assertInstanceOf(Collection::class, $database->findCollection('pushLedger'));
         $topics = \array_map(
             fn (Document $attribute) => $attribute->getId(),
             $database->getCollection('topics')->getAttribute('attributes', [])
@@ -193,5 +195,48 @@ final class V25Test extends TestCase
             '$createdAt' => '2026-01-03T00:00:00.000+00:00',
         ]), $document));
         $this->assertFalse($migration->isCandidate(new Document(), $document));
+        $this->assertFalse($migration->isCandidate($document, new Document()));
+    }
+
+    public function testDropsDevKeysFromConsoleProjects(): void
+    {
+        $authorization = new Authorization();
+        $authorization->disable();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+        $database->createCollection(Collection::create(
+            id: 'projects',
+            attributes: [
+                Attribute::string(key: 'name', size: 128),
+                Attribute::string(key: 'devKeys', size: 16384),
+            ],
+        ));
+
+        $migration = new class ($database) extends V25 {
+            public function __construct(Database $database)
+            {
+                $this->dbForProject = $database;
+                $this->project = new Document(['$id' => 'console', '$sequence' => 'console']);
+                $this->collections = ['console' => [
+                    'projects' => ['$collection' => Database::METADATA, '$id' => 'projects', 'attributes' => [], 'indexes' => []],
+                ]];
+            }
+        };
+
+        \ob_start();
+        try {
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $this->assertSame(['name'], \array_map(
+            fn (Attribute $attribute): string => $attribute->key,
+            $database->getCollection('projects')->attributes()
+        ));
     }
 }

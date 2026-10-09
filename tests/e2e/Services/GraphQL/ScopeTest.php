@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class ScopeTest extends Scope
 {
@@ -24,7 +24,7 @@ final class ScopeTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Actors',
             ]
         ];
@@ -37,7 +37,11 @@ final class ScopeTest extends Scope
 
         $message = "app.{$projectId}@service.appwrite (role: applications) missing scopes ([\"databases.write\"])";
         $this->assertArrayHasKey('errors', $database['body']);
-        $this->assertEquals($message, $database['body']['errors'][0]['message']);
+        $this->assertSame($message, $database['body']['errors'][0]['message']);
+        $extensions = $database['body']['errors'][0]['extensions'];
+        $this->assertStringNotContainsString('/GraphQL/Resolvers.php', (string) $extensions['file']);
+        $this->assertGreaterThan(0, $extensions['line']);
+        $this->assertNotEmpty($extensions['trace']);
     }
 
     public function testValidScope()
@@ -48,7 +52,7 @@ final class ScopeTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Actors',
             ]
         ];
@@ -62,6 +66,6 @@ final class ScopeTest extends Scope
         $this->assertIsArray($database['body']['data']);
         $this->assertArrayNotHasKey('errors', $database['body']);
         $database = $database['body']['data']['databasesCreate'];
-        $this->assertEquals('Actors', $database['name']);
+        $this->assertSame('Actors', $database['name']);
     }
 }

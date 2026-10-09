@@ -72,7 +72,7 @@ class Get extends Action
         Response $response
     ): void {
         try {
-            $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port);
+            $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, (string) $port);
             $report = $nhost->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(

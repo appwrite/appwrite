@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Organization\Http\Projects;
 
+use Appwrite\Database\Provisioner;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\SDK\AuthType;
@@ -14,12 +15,12 @@ use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\Pool as DatabasePool;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\DSN\DSN;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -69,13 +70,14 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('cache')
+            ->inject('databaseFactory')
             ->inject('pools')
             ->inject('hooks')
             ->inject('team')
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $name, string $region, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks, Document $team)
+    public function action(string $projectId, string $name, string $region, Response $response, Database $dbForPlatform, Cache $cache, Provisioner $databaseFactory, Group $pools, Hooks $hooks, Document $team)
     {
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_PROJECT_REGIONS', '')));
 
@@ -120,7 +122,7 @@ class Create extends Action
             $auths[$method['key'] ?? ''] = $method['enabled'] ?? true;
         }
 
-        $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
+        $projectId = ($projectId == 'unique()') ? Id::unique() : $projectId;
 
         if ($projectId === 'console') {
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
@@ -194,43 +196,30 @@ class Create extends Action
         $projectTables = !\in_array($dsn->getHost(), $sharedTables);
 
         if ($projectTables) {
-            $adapter = new DatabasePool($pools->get($dsn->getHost()));
-            $dbForProject = new Database($adapter, $cache);
-            $dbForProject
-                ->setDatabase(APP_DATABASE)
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getSequence());
+            $dbForProject = $databaseFactory->provisioning($project);
 
-            $create = true;
-
-            try {
-                $dbForProject->create();
-            } catch (Duplicate) {
-                $create = false;
-            }
+            $dbForProject->create();
 
             $adapter = new AdapterDatabase($dbForProject);
             $audit = new Audit($adapter);
             $audit->setup();
 
-            if ($create) {
-                /** @var array $collections */
-                $collections = Config::getParam('collections', [])['projects'] ?? [];
+            /** @var array $collections */
+            $collections = Config::getParam('collections', [])['projects'] ?? [];
 
-                foreach ($collections as $key => $collection) {
-                    if (($collection['$collection'] ?? '') !== Database::METADATA) {
-                        continue;
-                    }
+            foreach ($collections as $key => $collection) {
+                if (($collection['$collection'] ?? '') !== Database::METADATA) {
+                    continue;
+                }
 
-                    $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-                    $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
-
-                    try {
-                        $dbForProject->createCollection($key, $attributes, $indexes);
-                    } catch (Duplicate) {
-                        // Collection already exists
-                    }
+                try {
+                    $dbForProject->createCollection(Collection::create(
+                        id: $key,
+                        attributes: $collection['attributes'],
+                        indexes: $collection['indexes'],
+                    ));
+                } catch (Duplicate) {
+                    // Collection already exists
                 }
             }
         }

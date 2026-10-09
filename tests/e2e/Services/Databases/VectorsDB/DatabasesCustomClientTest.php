@@ -9,9 +9,9 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class DatabasesCustomClientTest extends Scope
 {
@@ -30,7 +30,7 @@ final class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Test Database'
         ]);
 
@@ -42,7 +42,7 @@ final class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Movies',
             'dimension' => 3,
             'documentSecurity' => true,
@@ -64,7 +64,7 @@ final class DatabasesCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => [1.0, 0.0, 0.0],
                 'metadata' => ['k' => 'v'],
@@ -87,7 +87,7 @@ final class DatabasesCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => [0.0, 1.0, 0.0],
                 'metadata' => ['k' => 'v'],
@@ -116,7 +116,7 @@ final class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::custom('permissionCheckDatabase'),
+            'databaseId' => Id::custom('permissionCheckDatabase'),
             'name' => 'Test Database',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -129,7 +129,7 @@ final class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::custom('permissionCheck'),
+            'collectionId' => Id::custom('permissionCheck'),
             'name' => 'permissionCheck',
             'dimension' => 3,
             'permissions' => [],
@@ -143,13 +143,13 @@ final class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => ID::custom('permissionCheckDocument'),
+            'documentId' => Id::custom('permissionCheckDocument'),
             'data' => [
                 'embeddings' => [1.0, 0.0, 0.0],
                 'metadata' => ['name' => 'AppwriteBeginner'],
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom('user2'))),
+                Permission::read(Role::user(Id::custom('user2'))),
                 Permission::read(Role::user($userId)),
                 Permission::update(Role::user($userId)),
                 Permission::delete(Role::user($userId)),

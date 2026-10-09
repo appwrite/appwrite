@@ -11,9 +11,9 @@ use Tests\E2E\Scopes\SideConsole;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
 use Utopia\Database\DateTime;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\TimeoutException;
 
@@ -45,13 +45,13 @@ final class PresenceConsoleClientTest extends Scope
     public function testConsolePresenceUpsertAndUpdateBroadcastRealtime(): void
     {
         $user = $this->getUser();
-        $presenceId = ID::unique();
+        $presenceId = Id::unique();
 
         $client = $this->openConsolePresenceSocket($user, $presenceId);
         $needsCleanup = false;
 
         try {
-            $upsertMetadata = ['testRunId' => ID::unique(), 'case' => 'console-upsert'];
+            $upsertMetadata = ['testRunId' => Id::unique(), 'case' => 'console-upsert'];
             $upsert = $this->client->call(
                 Client::METHOD_PUT,
                 '/presences/' . $presenceId,
@@ -119,7 +119,7 @@ final class PresenceConsoleClientTest extends Scope
 
     public function testExpiredConsolePresenceDeletedByMaintenance(): void
     {
-        $presenceId = ID::unique();
+        $presenceId = Id::unique();
 
         $upsert = $this->client->call(
             Client::METHOD_PUT,

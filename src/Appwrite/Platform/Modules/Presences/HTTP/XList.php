@@ -92,7 +92,7 @@ class XList extends PlatformAction
         }
 
         $groupedQueries = Query::groupByType($queries);
-        $filterQueries = $groupedQueries['filters'];
+        $filterQueries = $groupedQueries->filters;
 
         // should be excluded from the user provided query as user query would be used for caching only
         // otherwise cache will always miss due to the datetime now

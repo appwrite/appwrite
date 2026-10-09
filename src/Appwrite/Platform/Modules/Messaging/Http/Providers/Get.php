@@ -43,7 +43,7 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
+            ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Provider ID.', false, ['dbForProject'])
             ->inject('dbForProject')
             ->inject('response')
             ->callback($this->action(...));

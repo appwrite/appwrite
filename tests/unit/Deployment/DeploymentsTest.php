@@ -6,13 +6,29 @@ namespace Tests\Unit\Deployment;
 
 use Appwrite\Deployment\Deployments;
 use Appwrite\Extend\Exception;
+use OpenRuntimes\Orchestrator\Exception\ApiException as OrchestratorApiException;
+use OpenRuntimes\Orchestrator\Exception\ClientException as OrchestratorClientException;
+use OpenRuntimes\Orchestrator\Jobs;
 use OpenRuntimes\Orchestrator\Model\Volume;
 use PHPUnit\Framework\TestCase;
+use Utopia\Cache\Adapter\None;
+use Utopia\Cache\Cache;
+use Utopia\Client\Exception\NetworkException;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
+use Utopia\Database\Validator\Authorization;
 
 final class DeploymentsTest extends TestCase
 {
+    private const string COLLECTION = 'deployments';
+    private const string DEPLOYMENT = 'deployment1';
+
     public function testSiteCommandIncludesFrameworkAndDeploymentCommands(): void
     {
         Config::setParam('frameworks', [
@@ -174,6 +190,136 @@ final class DeploymentsTest extends TestCase
 
         $this->assertSame('v1', $payload['environment']['MY-VAR']);
         $this->assertSame('v2', $payload['environment']['MY_VAR']);
+    }
+
+    public function testSubmissionRecoversWhenTransportClosesAfterJobCreation(): void
+    {
+        $database = $this->database();
+        $service = new JobsService(Submission::LostAfterAccepting);
+
+        $submitted = $this->deployments($service, $database)->createFromUpload($this->resource(), $this->stored($database), 900);
+
+        $this->assertSame('waiting', $submitted->getAttribute('status'));
+        $this->assertSame('waiting', $this->stored($database)->getAttribute('status'));
+        $this->assertCount(1, $service->jobs, 'The deployment must be left waiting on the job the service accepted.');
+    }
+
+    public function testSubmissionPreservesCanceledStateWhenRecoveryFindsNoJob(): void
+    {
+        $database = $this->database();
+        $service = new JobsService(
+            Submission::LostBeforeAccepting,
+            fn () => $database->updateDocument(self::COLLECTION, self::DEPLOYMENT, new Document(['status' => 'canceled'])),
+        );
+
+        try {
+            $this->deployments($service, $database)->createFromUpload($this->resource(), $this->stored($database), 900);
+            $this->fail('Expected the lost submission response to remain an error when no job exists.');
+        } catch (OrchestratorClientException $error) {
+            $this->assertInstanceOf(NetworkException::class, $error->getPrevious());
+        }
+
+        $this->assertSame('canceled', $this->stored($database)->getAttribute('status'));
+        $this->assertSame([], $service->jobs);
+    }
+
+    public function testSubmissionLeavesDeploymentCanceledBeforeQueueing(): void
+    {
+        $database = $this->database();
+        $stale = $this->stored($database);
+        $database->updateDocument(self::COLLECTION, self::DEPLOYMENT, new Document(['status' => 'canceled']));
+        $service = new JobsService(Submission::LostAfterAccepting);
+
+        $submitted = $this->deployments($service, $database)->createFromUpload($this->resource(), $stale, 900);
+
+        $this->assertSame('canceled', $submitted->getAttribute('status'));
+        $this->assertSame('canceled', $this->stored($database)->getAttribute('status'));
+        $this->assertSame([], $service->jobs);
+    }
+
+    public function testSubmissionDoesNotRecoverExplicitApiErrors(): void
+    {
+        $database = $this->database();
+        $service = new JobsService(Submission::FailedAfterAccepting);
+
+        try {
+            $this->deployments($service, $database)->createFromUpload($this->resource(), $this->stored($database), 900);
+            $this->fail('Expected an explicit jobs API error, even though the service holds the job.');
+        } catch (OrchestratorApiException $error) {
+            $this->assertSame(500, $error->statusCode);
+        }
+
+        $this->assertSame('failed', $this->stored($database)->getAttribute('status'));
+    }
+
+    private function deployments(JobsService $service, Database $database): Deployments
+    {
+        \putenv('_APP_OPENSSL_KEY_V1=unit-test-key');
+
+        return new Deployments(
+            new Jobs($service),
+            $database,
+            new Document(['$id' => 'project1', 'region' => 'default']),
+            ['apiHostname' => 'localhost'],
+        );
+    }
+
+    private function resource(): Document
+    {
+        return new Document([
+            '$id' => 'function1',
+            '$collection' => 'functions',
+            'runtime' => \array_key_first(Config::getParam('runtimes-v2')),
+        ]);
+    }
+
+    private function stored(Database $database): Document
+    {
+        return $database->getDocument(self::COLLECTION, self::DEPLOYMENT);
+    }
+
+    private function database(): Database
+    {
+        $authorization = new Authorization();
+        $authorization->addRole(Role::any()->toString());
+
+        $database = (new Database(new Memory(), new Cache(new None())))
+            ->setDatabase('appwrite')
+            ->setNamespace('deployments')
+            ->setAuthorization($authorization);
+
+        $authorization->skip(function () use ($database): void {
+            $database->create();
+            $database->createCollection(Collection::create(
+                id: self::COLLECTION,
+                attributes: [
+                    Attribute::string(key: 'resourceId'),
+                    Attribute::string(key: 'resourceInternalId'),
+                    Attribute::string(key: 'resourceType'),
+                    Attribute::string(key: 'buildCommands', size: 1024),
+                    Attribute::string(key: 'status'),
+                    Attribute::string(key: 'buildPath', size: 1024),
+                    Attribute::string(key: 'buildLogs', size: 1024),
+                    Attribute::datetime(key: 'buildEndedAt'),
+                    Attribute::boolean(key: 'activate', default: false),
+                ],
+                permissions: [
+                    Permission::create(Role::any()),
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                ],
+                documentSecurity: false,
+            ));
+            $database->createDocument(self::COLLECTION, new Document([
+                '$id' => self::DEPLOYMENT,
+                'resourceId' => 'function1',
+                'resourceType' => 'functions',
+                'buildCommands' => 'npm install',
+                'status' => 'uploading',
+            ]));
+        });
+
+        return $database;
     }
 
     public function testLocalBuildMountsOnlyTheProjectDirectory(): void

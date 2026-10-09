@@ -5,9 +5,9 @@ namespace Tests\E2E\Services\Databases\Transactions;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 trait TransactionPermissionsBase
 {
@@ -38,7 +38,7 @@ trait TransactionPermissionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'PermissionsTestDB'
         ]);
 
@@ -222,7 +222,7 @@ trait TransactionPermissionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Commit Authorization Failure',
             'permissions' => [
                 Permission::read(Role::users()),
@@ -252,7 +252,7 @@ trait TransactionPermissionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => ['title' => 'Original Title'],
             'permissions' => [
                 Permission::read(Role::user($userId)),
@@ -654,7 +654,7 @@ trait TransactionPermissionsBase
         ];
 
         $parent = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Related Permissions Parent',
             'permissions' => $containerPermissions,
             $this->getSecurityParam() => true,
@@ -663,7 +663,7 @@ trait TransactionPermissionsBase
         $parentId = $parent['body']['$id'];
 
         $child = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Related Permissions Child',
             'permissions' => $containerPermissions,
             $this->getSecurityParam() => true,
@@ -701,10 +701,10 @@ trait TransactionPermissionsBase
                 'action' => 'create',
                 'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $parentId,
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'child' => [
-                        '$id' => ID::unique(),
+                        '$id' => Id::unique(),
                         '$permissions' => $permissions,
                         'title' => 'Child',
                     ],
@@ -747,7 +747,7 @@ trait TransactionPermissionsBase
         ], $this->getHeaders());
 
         $parent = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Recreated Related Parent',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -759,7 +759,7 @@ trait TransactionPermissionsBase
         $parentId = $parent['body']['$id'];
 
         $child = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Recreated Related Child',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -788,7 +788,7 @@ trait TransactionPermissionsBase
         $this->waitForAttribute($this->getPermissionsDatabase(), $parentId, 'child');
 
         $foreign = [Permission::update(Role::team('adminTeam'))];
-        $recordId = ID::unique();
+        $recordId = Id::unique();
         $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $childId), $keyHeaders, [
             $this->getRecordIdParam() => $recordId,
             'data' => ['title' => 'Original'],
@@ -806,7 +806,7 @@ trait TransactionPermissionsBase
             'action' => 'create',
             'databaseId' => $this->getPermissionsDatabase(),
             $this->getContainerIdParam() => $parentId,
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'child' => [
                     '$id' => $recordId,
@@ -903,7 +903,7 @@ trait TransactionPermissionsBase
         ];
 
         $parent = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Related Update Parent',
             'permissions' => $containerPermissions,
             $this->getSecurityParam() => true,
@@ -912,7 +912,7 @@ trait TransactionPermissionsBase
         $parentId = $parent['body']['$id'];
 
         $child = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Related Update Child',
             'permissions' => $containerPermissions,
             $this->getSecurityParam() => true,
@@ -936,12 +936,12 @@ trait TransactionPermissionsBase
         $this->assertEquals(202, $relationship['headers']['status-code']);
         $this->waitForAttribute($this->getPermissionsDatabase(), $parentId, 'child');
 
-        $recordId = ID::unique();
+        $recordId = Id::unique();
         $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId), $keyHeaders, [
             $this->getRecordIdParam() => $recordId,
             'data' => [
                 'child' => [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'title' => 'Original',
                 ],
             ],
@@ -956,7 +956,7 @@ trait TransactionPermissionsBase
         $foreign = [Permission::update(Role::team('adminTeam'))];
         $data = fn (array $permissions) => [
             'child' => [
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 '$permissions' => $permissions,
                 'title' => 'Child',
             ],
@@ -993,7 +993,7 @@ trait TransactionPermissionsBase
 
         $routes = [
             'create' => [Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId), [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => $data($foreign),
             ]],
             'update' => [Client::METHOD_PATCH, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId, $recordId), [
@@ -1663,7 +1663,7 @@ trait TransactionPermissionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Staged Read Test',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1706,7 +1706,7 @@ trait TransactionPermissionsBase
         $this->assertEquals(201, $transaction['headers']['status-code']);
         $transactionId = $transaction['body']['$id'];
 
-        $documentId = ID::unique();
+        $documentId = Id::unique();
         $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1777,7 +1777,7 @@ trait TransactionPermissionsBase
         ];
 
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Foreign Staging Test',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1802,7 +1802,7 @@ trait TransactionPermissionsBase
             $this->waitForAllAttributes($this->getPermissionsDatabase(), $collectionId);
         }
 
-        $documentId = ID::unique();
+        $documentId = Id::unique();
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId), $keyHeaders, [
             $this->getRecordIdParam() => $documentId,
             'data' => ['title' => 'Original'],
@@ -1835,13 +1835,13 @@ trait TransactionPermissionsBase
          */
         $requests = [
             'create' => [Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId), [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => ['title' => 'Injected'],
             ]],
             'update' => [Client::METHOD_PATCH, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $documentId), [
                 'data' => ['title' => 'Injected'],
             ]],
-            'upsert' => [Client::METHOD_PUT, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, ID::unique()), [
+            'upsert' => [Client::METHOD_PUT, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, Id::unique()), [
                 'data' => ['title' => 'Injected'],
             ]],
             'delete' => [Client::METHOD_DELETE, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $documentId), []],
@@ -1890,7 +1890,7 @@ trait TransactionPermissionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Bulk Staging Test',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1918,14 +1918,14 @@ trait TransactionPermissionsBase
          */
         $operations = [
             'bulkCreate' => [
-                ['$id' => ID::unique(), 'title' => 'Bulk'],
+                ['$id' => Id::unique(), 'title' => 'Bulk'],
             ],
             'bulkUpdate' => [
                 'queries' => [],
                 'data' => ['title' => 'Bulk'],
             ],
             'bulkUpsert' => [
-                ['$id' => ID::unique(), 'title' => 'Bulk'],
+                ['$id' => Id::unique(), 'title' => 'Bulk'],
             ],
             'bulkDelete' => [
                 'queries' => [],

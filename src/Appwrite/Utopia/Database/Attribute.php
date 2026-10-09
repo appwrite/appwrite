@@ -2,7 +2,10 @@
 
 namespace Appwrite\Utopia\Database;
 
+use Utopia\Database\Attribute as DatabaseAttribute;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Query\Schema\ColumnType;
 
 /**
  * Shared definition of the attribute types the API exposes.
@@ -18,14 +21,15 @@ class Attribute
      *
      * @var array<string, int>
      */
-    public const SIZES = [
-        Database::VAR_TEXT => 65535,
-        Database::VAR_MEDIUMTEXT => 16777215,
-        Database::VAR_LONGTEXT => 2147483647,
+    public const array SIZES = [
+        ColumnType::Text->value => 65535,
+        ColumnType::MediumText->value => 16777215,
+        ColumnType::LongText->value => 2147483647,
         // Bytes, the widths createBigIntColumn and createFloatColumn hardcode.
         // Every adapter maps these two types without consulting the size.
-        Database::VAR_BIGINT => 8,
-        Database::VAR_FLOAT => 0,
+        ColumnType::BigInteger->value => 8,
+        'bigint' => 8,
+        ColumnType::Double->value => 0,
     ];
 
     /**
@@ -50,19 +54,20 @@ class Attribute
     public static function types(): array
     {
         return [
-            Database::VAR_STRING,
-            Database::VAR_VARCHAR,
-            Database::VAR_TEXT,
-            Database::VAR_MEDIUMTEXT,
-            Database::VAR_LONGTEXT,
-            Database::VAR_INTEGER,
-            Database::VAR_BIGINT,
-            Database::VAR_FLOAT,
-            Database::VAR_BOOLEAN,
-            Database::VAR_DATETIME,
-            Database::VAR_POINT,
-            Database::VAR_LINESTRING,
-            Database::VAR_POLYGON,
+            ColumnType::String->value,
+            ColumnType::Varchar->value,
+            ColumnType::Text->value,
+            ColumnType::MediumText->value,
+            ColumnType::LongText->value,
+            ColumnType::Integer->value,
+            ColumnType::BigInteger->value,
+            DatabaseAttribute::storedType(ColumnType::BigInteger),
+            ColumnType::Double->value,
+            ColumnType::Boolean->value,
+            ColumnType::Datetime->value,
+            ColumnType::Point->value,
+            ColumnType::Linestring->value,
+            ColumnType::Polygon->value,
             ...\array_keys(self::FORMAT_SIZES),
         ];
     }
@@ -80,9 +85,13 @@ class Attribute
         $type = $attribute['type'] ?? '';
         $format = $attribute['format'] ?? '';
 
+        if (\is_string($type)) {
+            $type = self::storedType($type);
+        }
+
         if (isset(self::FORMAT_SIZES[$type])) {
             $format = $type;
-            $type = Database::VAR_STRING;
+            $type = ColumnType::String->value;
         }
 
         $size = $attribute['size'] ?? 0;
@@ -95,7 +104,7 @@ class Attribute
             $size = self::FORMAT_SIZES[$format] ?? $size;
         }
 
-        if ($type === Database::VAR_INTEGER) {
+        if ($type === ColumnType::Integer->value) {
             // Same width createIntegerColumn picks. That endpoint takes no size at
             // all, so a size sent inline is ignored rather than left to promise a
             // range the column cannot hold: the 4 byte column only holds a range
@@ -112,5 +121,61 @@ class Attribute
             'format' => $format,
             'size' => $size,
         ];
+    }
+
+    /**
+     * The column type of a type in either spelling, or null for an unrecognised one.
+     */
+    public static function columnType(ColumnType|string $type): ?ColumnType
+    {
+        if ($type instanceof ColumnType) {
+            return $type;
+        }
+
+        if ($type === DatabaseAttribute::storedType(ColumnType::BigInteger)) {
+            return ColumnType::BigInteger;
+        }
+
+        return ColumnType::tryFrom($type);
+    }
+
+    public static function storedType(ColumnType|string $type): string
+    {
+        $columnType = self::columnType($type);
+
+        if ($columnType === ColumnType::BigInteger) {
+            return DatabaseAttribute::storedType($columnType);
+        }
+
+        return $type instanceof ColumnType ? $type->value : $type;
+    }
+
+    /**
+     * An unrecognised stored type matches no type.
+     */
+    public static function sameType(ColumnType|string $stored, ColumnType|string $type): bool
+    {
+        $columnType = self::columnType($stored);
+
+        return $columnType !== null && $columnType === self::columnType($type);
+    }
+
+    /**
+     * @return array<string, Document>
+     */
+    public static function relationships(Document $collection): array
+    {
+        $relationships = [];
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            if (!$attribute instanceof Document) {
+                continue;
+            }
+            if ($attribute->getAttribute('type') !== ColumnType::Relationship->value) {
+                continue;
+            }
+            $relationships[$attribute->getAttribute('key')] = $attribute;
+        }
+
+        return $relationships;
     }
 }

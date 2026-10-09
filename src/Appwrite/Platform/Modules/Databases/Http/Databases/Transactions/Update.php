@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
+use Appwrite\Databases\Counter;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -33,6 +34,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 
 class Update extends Action
@@ -78,7 +80,7 @@ class Update extends Action
                     replaceWith: 'tablesDB.updateTransaction',
                 )
             ))
-            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Transaction ID.', false, ['dbForProject'])
             ->param('commit', false, new Boolean(), 'Commit transaction?', true)
             ->param('rollback', false, new Boolean(), 'Rollback transaction?', true)
             ->inject('project')
@@ -603,7 +605,7 @@ class Update extends Action
     private function validateRelationships(Database $dbForDatabases, Document $collection, array $data, Authorization $authorization): void
     {
         foreach ($collection->getAttribute('attributes', []) as $attribute) {
-            if ($attribute['type'] !== Database::VAR_RELATIONSHIP) {
+            if ($attribute['type'] !== ColumnType::Relationship->value) {
                 continue;
             }
 
@@ -666,7 +668,7 @@ class Update extends Action
         $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state) {
             $doc = $dbForDatabases->createDocument(
                 $collectionId,
-                new Document($data),
+                $this->stripResponseMetadata(new Document($data)),
             );
             $state[$collectionId][$doc->getId()] = $doc;
         });
@@ -699,7 +701,7 @@ class Update extends Action
             $state[$collectionId][$documentId] = $dbForDatabases->updateDocument(
                 $collectionId,
                 $documentId,
-                new Document($data),
+                $this->stripResponseMetadata(new Document($data)),
             );
             return;
         }
@@ -708,7 +710,7 @@ class Update extends Action
             $document = $dbForDatabases->updateDocument(
                 $collectionId,
                 $documentId,
-                new Document($data),
+                $this->stripResponseMetadata(new Document($data)),
             );
             if ($document->isEmpty()) {
                 throw new NotFoundException('');
@@ -740,7 +742,6 @@ class Update extends Action
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
-            // Merge partial upsert data with full document from transaction state
             $existingDoc = $state[$collectionId][$documentId];
             foreach ($data as $key => $value) {
                 if ($key !== '$id') {
@@ -750,7 +751,7 @@ class Update extends Action
 
             $state[$collectionId][$documentId] = $dbForDatabases->upsertDocument(
                 $collectionId,
-                $existingDoc,
+                $this->stripResponseMetadata($existingDoc),
             );
             return;
         }
@@ -758,10 +759,19 @@ class Update extends Action
         $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state) {
             $doc = $dbForDatabases->upsertDocument(
                 $collectionId,
-                new Document($data),
+                $this->stripResponseMetadata(new Document($data)),
             );
             $state[$collectionId][$doc->getId()] = $doc;
         });
+    }
+
+    private function stripResponseMetadata(Document $document): Document
+    {
+        foreach (['$databaseId', '$collectionId', '$tableId', '$sequence'] as $attribute) {
+            unset($document[$attribute]);
+        }
+
+        return $document;
     }
 
     /**
@@ -847,25 +857,26 @@ class Update extends Action
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
         $attribute = $this->getAttributeNameFromData($data);
+        $counter = Counter::of($dbForDatabases, $collectionId, $attribute);
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
-                value: $data['value'] ?? 1,
-                max: $data['max'] ?? null
+                value: $counter->change($data['value'] ?? 1),
+                max: $counter->maximum($data['max'] ?? null)
             );
             return;
         }
 
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
+        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute, $counter) {
             $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
-                value: $data['value'] ?? 1,
-                max: $data['max'] ?? null
+                value: $counter->change($data['value'] ?? 1),
+                max: $counter->maximum($data['max'] ?? null)
             );
         });
     }
@@ -893,25 +904,26 @@ class Update extends Action
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
         $attribute = $this->getAttributeNameFromData($data);
+        $counter = Counter::of($dbForDatabases, $collectionId, $attribute);
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
-                value: $data['value'] ?? 1,
-                min: $data['min'] ?? null
+                value: $counter->change($data['value'] ?? 1),
+                min: $counter->minimum($data['min'] ?? null)
             );
             return;
         }
 
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
+        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute, $counter) {
             $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
-                value: $data['value'] ?? 1,
-                min: $data['min'] ?? null
+                value: $counter->change($data['value'] ?? 1),
+                min: $counter->minimum($data['min'] ?? null)
             );
         });
     }
@@ -1006,7 +1018,7 @@ class Update extends Action
             $documentsToRewrite = [];
             foreach ($dependentDocs as $docId) {
                 if (isset($state[$collectionId][$docId])) {
-                    $documentsToRewrite[] = $state[$collectionId][$docId];
+                    $documentsToRewrite[] = $this->stripResponseMetadata($state[$collectionId][$docId]);
                 }
             }
 
@@ -1046,10 +1058,15 @@ class Update extends Action
         array &$state
     ): int {
         $documents = \array_map(function ($doc) {
-            return $doc instanceof Document ? $doc : new Document($doc);
+            $document = $doc instanceof Document ? $doc : new Document($doc);
+
+            return $this->stripResponseMetadata($document);
         }, $data);
 
-        $mergedDocuments = $transactionState->applyBulkUpsertToState($collectionId, $documents, $state);
+        $mergedDocuments = \array_map(
+            $this->stripResponseMetadata(...),
+            $transactionState->applyBulkUpsertToState($collectionId, $documents, $state),
+        );
 
         $count = $dbForDatabases->upsertDocuments(
             $collectionId,

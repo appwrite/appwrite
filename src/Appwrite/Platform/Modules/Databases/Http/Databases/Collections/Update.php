@@ -10,8 +10,9 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\CollectionUpdate;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Permission;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -63,8 +64,8 @@ class Update extends Action
                     replaceWith: 'tablesDB.updateTable',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.', true)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
@@ -111,8 +112,8 @@ class Update extends Action
                 ->setAttribute('search', \implode(' ', [$collectionId, $searchName]))
         );
 
-        $dbForDatabases = $getDatabasesDB($database);
-        $dbForDatabases->updateCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $permissions, $documentSecurity);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
+        $dbForDatabases->updateCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), new CollectionUpdate(permissions: $permissions, documentSecurity: $documentSecurity));
 
         $queueForEvents
             ->setContext('database', $database)
@@ -120,7 +121,7 @@ class Update extends Action
             ->setParam($this->getEventsParamKey(), $collection->getId());
 
         if ($purge) {
-            $this->purgeListCache($dbForProject, $collectionId);
+            $this->purgeListCache($dbForProject, $database, $collectionId);
         }
 
         $this->addRowBytesInfo($collection, $dbForProject);

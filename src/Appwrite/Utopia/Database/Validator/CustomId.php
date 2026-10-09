@@ -6,6 +6,8 @@ use Utopia\Database\Validator\Key;
 
 class CustomId extends Key
 {
+    public const string UNIQUE = 'unique()';
+
     /**
      * Is valid.
      *
@@ -18,6 +20,6 @@ class CustomId extends Key
     public function isValid($value): bool
     {
 
-        return $value == 'unique()' || parent::isValid($value);
+        return $value == self::UNIQUE || parent::isValid($value);
     }
 }

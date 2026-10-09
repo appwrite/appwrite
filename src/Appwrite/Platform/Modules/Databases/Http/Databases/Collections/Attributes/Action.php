@@ -2,14 +2,19 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes;
 
+use Appwrite\Databases\RelationshipUpdate;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Database as DatabaseMessage;
 use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
+use Appwrite\Utopia\Database\Attribute as AttributeDefinition;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Throwable;
+use Utopia\Database\Attribute;
+use Utopia\Database\AttributeUpdate;
+use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -18,10 +23,15 @@ use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Format;
+use Utopia\Database\Id;
+use Utopia\Database\RelationshipSide;
+use Utopia\Database\RelationshipUpdate as DatabaseRelationshipUpdate;
+use Utopia\Database\Unchanged;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Structure;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Range;
 
 abstract class Action extends DatabasesAction
@@ -235,60 +245,61 @@ abstract class Action extends DatabasesAction
     {
         $isCollections = $this->isCollectionsAPI();
 
-        return match ($type) {
-            Database::VAR_BOOLEAN => $isCollections
+        return match (AttributeDefinition::columnType($type)) {
+            ColumnType::Boolean => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_BOOLEAN
                 : UtopiaResponse::MODEL_COLUMN_BOOLEAN,
 
-            Database::VAR_INTEGER => $isCollections
+            ColumnType::Integer => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_INTEGER
                 : UtopiaResponse::MODEL_COLUMN_INTEGER,
 
-            Database::VAR_BIGINT => $isCollections
+            ColumnType::BigInteger => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_BIGINT
                 : UtopiaResponse::MODEL_COLUMN_BIGINT,
 
-            Database::VAR_FLOAT => $isCollections
+            ColumnType::Float,
+            ColumnType::Double => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_FLOAT
                 : UtopiaResponse::MODEL_COLUMN_FLOAT,
 
-            Database::VAR_DATETIME => $isCollections
+            ColumnType::Datetime => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_DATETIME
                 : UtopiaResponse::MODEL_COLUMN_DATETIME,
 
-            Database::VAR_RELATIONSHIP => $isCollections
+            ColumnType::Relationship => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP
                 : UtopiaResponse::MODEL_COLUMN_RELATIONSHIP,
 
-            Database::VAR_POINT => $isCollections
+            ColumnType::Point => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_POINT
                 : UtopiaResponse::MODEL_COLUMN_POINT,
 
-            Database::VAR_LINESTRING => $isCollections
+            ColumnType::Linestring => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_LINE
                 : UtopiaResponse::MODEL_COLUMN_LINE,
 
-            Database::VAR_POLYGON => $isCollections
+            ColumnType::Polygon => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_POLYGON
                 : UtopiaResponse::MODEL_COLUMN_POLYGON,
 
-            Database::VAR_VARCHAR => $isCollections
+            ColumnType::Varchar => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_VARCHAR
                 : UtopiaResponse::MODEL_COLUMN_VARCHAR,
 
-            Database::VAR_TEXT => $isCollections
+            ColumnType::Text => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_TEXT
                 : UtopiaResponse::MODEL_COLUMN_TEXT,
 
-            Database::VAR_MEDIUMTEXT => $isCollections
+            ColumnType::MediumText => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_MEDIUMTEXT
                 : UtopiaResponse::MODEL_COLUMN_MEDIUMTEXT,
 
-            Database::VAR_LONGTEXT => $isCollections
+            ColumnType::LongText => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_LONGTEXT
                 : UtopiaResponse::MODEL_COLUMN_LONGTEXT,
 
-            Database::VAR_STRING => match ($format) {
+            ColumnType::String => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => $isCollections
                     ? UtopiaResponse::MODEL_ATTRIBUTE_EMAIL
                     : UtopiaResponse::MODEL_COLUMN_EMAIL,
@@ -337,7 +348,7 @@ abstract class Action extends DatabasesAction
 
         $dbForDatabases = $getDatabasesDB($db);
 
-        if (in_array($type, Database::SPATIAL_TYPES) && !$dbForDatabases->getAdapter()->getSupportForSpatialAttributes()) {
+        if (in_array($type, [ColumnType::Point->value, ColumnType::Linestring->value, ColumnType::Polygon->value]) && !$this->supportsSpatial($dbForDatabases->getAdapter())) {
             throw new Exception($this->getSpatialTypeNotSupportedException(), params: [$type]);
         }
 
@@ -348,7 +359,9 @@ abstract class Action extends DatabasesAction
         }
 
         if (!empty($format)) {
-            if (!Structure::hasFormat($format, $type)) {
+            $columnType = AttributeDefinition::columnType($type);
+
+            if ($columnType === null || !Structure::hasFormat($format, $columnType)) {
                 throw new Exception($this->getFormatUnsupportedException(), "Format $format not available for $type columns.");
             }
         }
@@ -362,8 +375,8 @@ abstract class Action extends DatabasesAction
             throw new Exception($this->getDefaultUnsupportedException(), 'Cannot set default value for array ' . $this->getContext() . 's');
         }
 
-        if ($type === Database::VAR_RELATIONSHIP) {
-            $options['side'] = Database::RELATION_SIDE_PARENT;
+        if ($type === ColumnType::Relationship->value) {
+            $options['side'] = RelationshipSide::Parent->value;
             $relatedCollection = $dbForProject->getDocument('database_' . $db->getSequence(), $options['relatedCollection'] ?? '');
             if ($relatedCollection->isEmpty()) {
                 $parent = $this->isCollectionsAPI() ? 'collection' : 'table';
@@ -373,7 +386,7 @@ abstract class Action extends DatabasesAction
 
         try {
             $attribute = new Document([
-                '$id' => ID::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $key),
+                '$id' => Id::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $key),
                 'key' => $key,
                 'databaseInternalId' => $db->getSequence(),
                 'databaseId' => $db->getId(),
@@ -393,8 +406,8 @@ abstract class Action extends DatabasesAction
             ]);
 
             if (
-                !$dbForDatabases->getAdapter()->getSupportForSpatialIndexNull() &&
-                \in_array($attribute->getAttribute('type'), Database::SPATIAL_TYPES) &&
+                !$dbForDatabases->getAdapter()->supports(Capability::IndexSpatialNull) &&
+                \in_array($attribute->getAttribute('type'), [ColumnType::Point->value, ColumnType::Linestring->value, ColumnType::Polygon->value]) &&
                 $attribute->getAttribute('required')
             ) {
                 $hasData = $authorization->skip(fn () => $dbForDatabases
@@ -404,7 +417,19 @@ abstract class Action extends DatabasesAction
                     throw new StructureException('Failed to add required spatial column: existing rows present. Make the column optional.');
                 }
             }
-            $dbForDatabases->checkAttribute($collection, $attribute);
+            $dbForDatabases->checkAttribute('database_' . $db->getSequence() . '_collection_' . $collection->getSequence(), Attribute::fromArray([
+                'key' => $key,
+                'type' => $type,
+                'size' => $size,
+                'required' => $required,
+                'signed' => $signed,
+                'default' => $default,
+                'array' => $array,
+                'format' => $format !== '' ? $format : null,
+                'formatOptions' => $formatOptions,
+                'filters' => $filters,
+                'options' => $options !== [] ? $options : null,
+            ]));
             $attribute = $dbForProject->createDocument('attributes', $attribute);
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException(), params: [$key]);
@@ -421,15 +446,15 @@ abstract class Action extends DatabasesAction
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
         $dbForDatabases->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
 
-        if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
+        if ($type === ColumnType::Relationship->value && $options['twoWay']) {
             $twoWayKey = $options['twoWayKey'];
             $options['relatedCollection'] = $collection->getId();
             $options['twoWayKey'] = $key;
-            $options['side'] = Database::RELATION_SIDE_CHILD;
+            $options['side'] = RelationshipSide::Child->value;
 
             try {
                 $twoWayAttribute = new Document([
-                    '$id' => ID::custom($db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $twoWayKey),
+                    '$id' => Id::custom($db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $twoWayKey),
                     'key' => $twoWayKey,
                     'databaseInternalId' => $db->getSequence(),
                     'databaseId' => $db->getId(),
@@ -448,7 +473,19 @@ abstract class Action extends DatabasesAction
                     'options' => $options,
                 ]);
 
-                $dbForDatabases->checkAttribute($relatedCollection, $twoWayAttribute);
+                $dbForDatabases->checkAttribute('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence(), Attribute::fromArray([
+                    'key' => $twoWayKey,
+                    'type' => $type,
+                    'size' => $size,
+                    'required' => $required,
+                    'signed' => $signed,
+                    'default' => $default,
+                    'array' => $array,
+                    'format' => $format !== '' ? $format : null,
+                    'formatOptions' => $formatOptions,
+                    'filters' => $filters,
+                    'options' => $options !== [] ? $options : null,
+                ]));
                 $dbForProject->createDocument('attributes', $twoWayAttribute);
             } catch (DuplicateException) {
                 throw new Exception($this->getDuplicateException(), params: [$twoWayKey]);
@@ -519,14 +556,14 @@ abstract class Action extends DatabasesAction
             throw new Exception($this->getNotAvailableException());
         }
 
-        if ($attribute->getAttribute('type') !== $type) {
+        if (!AttributeDefinition::sameType($attribute->getAttribute('type', ''), $type)) {
             throw new Exception($this->getTypeInvalidException());
         }
 
         // The discriminator for a formatted string is persisted as 'format', and is
         // the empty string for a plain one, while the plain string endpoint passes
         // no filter at all.
-        if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute('format', '') !== ($filter ?? '')) {
+        if ($attribute->getAttribute('type') === ColumnType::String->value && $attribute->getAttribute('format', '') !== ($filter ?? '')) {
             throw new Exception($this->getTypeInvalidException());
         }
 
@@ -556,6 +593,8 @@ abstract class Action extends DatabasesAction
             $attribute->setAttribute('size', $size);
         }
 
+        $format = Unchanged::Value;
+
         switch ($attribute->getAttribute('format')) {
             case APP_DATABASE_ATTRIBUTE_INT_RANGE:
             case APP_DATABASE_ATTRIBUTE_BIGINT_RANGE:
@@ -568,14 +607,13 @@ abstract class Action extends DatabasesAction
                 }
 
                 if ($attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_FLOAT_RANGE) {
-                    $validator = new Range($min, $max, Database::VAR_FLOAT);
+                    $validator = new Range($min, $max, ColumnType::Double->value);
 
                     if (!is_null($default)) {
                         $default = \floatval($default);
                     }
                 } else {
-                    // intRange and bigintRange share the same integer range semantics
-                    $validator = new Range($min, $max, Range::TYPE_INTEGER);
+                    $validator = new Range($min, $max, ColumnType::Integer->value);
                 }
 
                 if (!is_null($default) && !$validator->isValid($default)) {
@@ -587,6 +625,7 @@ abstract class Action extends DatabasesAction
                     'max' => $max
                 ];
                 $attribute->setAttribute('formatOptions', $options);
+                $format = new Format($attribute->getAttribute('format'), $options);
 
                 break;
             case APP_DATABASE_ATTRIBUTE_ENUM:
@@ -609,19 +648,23 @@ abstract class Action extends DatabasesAction
                 ];
 
                 $attribute->setAttribute('formatOptions', $options);
+                $format = new Format($attribute->getAttribute('format'), $options);
 
                 break;
         }
 
-        if ($type === Database::VAR_RELATIONSHIP) {
-            $primaryDocumentOptions = \array_merge($attribute->getAttribute('options', []), $options);
+        if ($type === ColumnType::Relationship->value) {
+            $update = new RelationshipUpdate($options, $key, $newKey);
+            $primaryDocumentOptions = $update->options($attribute->getAttribute('options', []));
             $attribute->setAttribute('options', $primaryDocumentOptions);
             try {
                 $dbForDatabases->updateRelationship(
                     collection: $collectionId,
-                    id: $key,
-                    newKey: $newKey,
-                    onDelete: $primaryDocumentOptions['onDelete'],
+                    key: $key,
+                    update: new DatabaseRelationshipUpdate(
+                        key: $newKey ?: null,
+                        onDelete: $update->onDelete(),
+                    ),
                 );
             } catch (IndexException) {
                 throw new Exception(Exception::INDEX_INVALID);
@@ -638,37 +681,24 @@ abstract class Action extends DatabasesAction
 
                 $relatedAttribute = $dbForProject->getDocument('attributes', $db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $primaryDocumentOptions['twoWayKey']);
 
-                if (!empty($newKey) && $newKey !== $key) {
-                    $options['twoWayKey'] = $newKey;
-                }
-
-                $relatedOptions = \array_merge($relatedAttribute->getAttribute('options'), $options);
-                $relatedAttribute->setAttribute('options', $relatedOptions);
+                $relatedAttribute->setAttribute('options', $update->related($relatedAttribute->getAttribute('options')));
                 $dbForProject->updateDocument('attributes', $db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $primaryDocumentOptions['twoWayKey'], $relatedAttribute);
 
                 $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $relatedCollection->getId());
             }
         } else {
             try {
-                $definition = $dbForDatabases->updateAttribute(
+                $dbForDatabases->updateAttribute(
                     collection: $collectionId,
-                    id: $key,
-                    size: $size,
-                    required: $required,
-                    default: $default,
-                    formatOptions: $options,
-                    newKey: $newKey ?? null
+                    key: $key,
+                    update: new AttributeUpdate(
+                        size: $size,
+                        required: $required,
+                        default: $default,
+                        format: $format,
+                        key: $newKey ?: null,
+                    ),
                 );
-
-                // updateAttribute() keeps the stored default when given null,
-                // but the API uses null to clear it.
-                if ($default === null && $definition->getAttribute('default') !== null) {
-                    $dbForDatabases->updateAttributeDefault(
-                        collection: $collectionId,
-                        id: $definition->getId(),
-                        default: null
-                    );
-                }
             } catch (DuplicateException) {
                 throw new Exception($this->getDuplicateException(), params: [$key]);
             } catch (IndexException $e) {
@@ -684,7 +714,7 @@ abstract class Action extends DatabasesAction
             $originalUid = $attribute->getId();
 
             $attribute
-                ->setAttribute('$id', ID::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $newKey))
+                ->setAttribute('$id', Id::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $newKey))
                 ->setAttribute('key', $newKey);
 
             try {

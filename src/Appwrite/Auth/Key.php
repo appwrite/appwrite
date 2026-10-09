@@ -192,11 +192,7 @@ class Key
                     $runtimeEphemeral
                 );
             case API_KEY_STANDARD:
-                $key = $project->find(
-                    key: 'secret',
-                    find: $key,
-                    subject: 'keys'
-                );
+                $key = \array_find($project->getAttribute('keys', []), static fn (Document $candidate): bool => $candidate->getAttribute('secret') === $key);
 
                 if (!$key) {
                     return $guestKey;
@@ -221,11 +217,7 @@ class Key
                     $expired
                 );
             case API_KEY_ACCOUNT:
-                $key = $user->find(
-                    key: 'secret',
-                    find: $key,
-                    subject: 'keys'
-                );
+                $key = \array_find($user->getAttribute('keys', []), static fn (Document $candidate): bool => $candidate->getAttribute('secret') === $key);
 
                 // Invalid key
                 if (!$key) {
@@ -257,11 +249,7 @@ class Key
 
                 return $key;
             case API_KEY_ORGANIZATION:
-                $key = $team->find(
-                    key: 'secret',
-                    find: $key,
-                    subject: 'keys'
-                );
+                $key = \array_find($team->getAttribute('keys', []), static fn (Document $candidate): bool => $candidate->getAttribute('secret') === $key);
 
                 // Invalid key
                 if (!$key) {

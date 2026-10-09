@@ -4,7 +4,7 @@ namespace Tests\E2E\Services\Project;
 
 use PHPUnit\Framework\Attributes\Before;
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 trait SMTPBase
 {
@@ -1186,7 +1186,7 @@ trait SMTPBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $recipientEmail,
         ]);
 

@@ -9,7 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class AvatarsCustomClientTest extends Scope
 {
@@ -226,7 +226,7 @@ final class AvatarsCustomClientTest extends Scope
          * by ID: the target's name renders as initials, not the caller's own
          * photo.
          */
-        $userId = ID::unique();
+        $userId = Id::unique();
 
         $user = $this->client->call(Client::METHOD_POST, '/users', [
             'content-type' => 'application/json',
@@ -259,7 +259,7 @@ final class AvatarsCustomClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);

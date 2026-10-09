@@ -10,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Auth\Tests\Passkeys\Authenticator;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 
 final class PasskeysCustomClientTest extends Scope
@@ -1116,7 +1116,7 @@ final class PasskeysCustomClientTest extends Scope
         $email = \uniqid('passkey.', true) . \bin2hex(\random_bytes(4)) . '@localhost.test';
 
         $user = $this->client->call(Client::METHOD_POST, '/account', $this->getGuestHeaders($project), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'Passkey User',

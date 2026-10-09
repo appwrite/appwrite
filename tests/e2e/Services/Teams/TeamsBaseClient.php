@@ -4,7 +4,7 @@ namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
@@ -601,7 +601,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
-            'userId' => ID::custom('sdasd'),
+            'userId' => Id::custom('sdasd'),
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
@@ -612,7 +612,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
-            'userId' => ID::custom('$notallowed'),
+            'userId' => Id::custom('$notallowed'),
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -623,7 +623,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
-            'userId' => ID::custom('asdf'),
+            'userId' => Id::custom('asdf'),
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);

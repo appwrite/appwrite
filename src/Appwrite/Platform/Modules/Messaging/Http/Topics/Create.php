@@ -13,7 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Roles;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -55,7 +55,7 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('topicId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID. Choose a custom Topic ID or a new Topic ID.', false, ['dbForProject'])
+            ->param('topicId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Topic ID. Choose a custom Topic ID or a new Topic ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Topic Name.')
             ->param('subscribe', [Role::users()], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
             ->param('qos', null, new Nullable(new Range(0, 1)), 'MQTT delivery quality of service for this topic. 0 is fire-and-forget (delivered only to clients connected at publish time). 1 persists each message and replays it when a client reconnects without having acknowledged it. Null lets the subscriber choose.', true)
@@ -68,7 +68,7 @@ class Create extends Action
 
     public function action(string $topicId, string $name, array $subscribe, ?int $qos, ?int $expiry, Event $queueForEvents, Database $dbForProject, Response $response)
     {
-        $topicId = $topicId == 'unique()' ? ID::unique() : $topicId;
+        $topicId = $topicId == 'unique()' ? Id::unique() : $topicId;
 
         $topic = new Document([
             '$id' => $topicId,

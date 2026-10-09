@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -35,19 +36,17 @@ use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Timeout as TimeoutException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
-use Utopia\DSN\DSN;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Queue;
@@ -137,15 +136,10 @@ if (!function_exists('getConsoleDB')) {
         /** @var Group $pools */
         $pools = $register->get('pools');
 
-        $adapter = new DatabasePool($pools->get('console'));
-        $database = new Database($adapter, getCache());
-        $database
-            ->setDatabase(APP_DATABASE)
-            ->setNamespace('_console')
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', '_console');
-        $database->setDocumentType('users', User::class);
-        return $ctx['dbForPlatform'] = $database;
+        return $ctx['dbForPlatform'] = (new DatabaseFactory($pools, getCache(), new Authorization()))->platform(metadata: [
+            'host' => \gethostname(),
+            'project' => '_console',
+        ]);
     }
 }
 
@@ -172,44 +166,10 @@ if (!function_exists('getProjectDB')) {
             return getConsoleDB();
         }
 
-        try {
-            $dsn = new DSN($project->getAttribute('database'));
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-        }
-
-        $adapter = new DatabasePool($pools->get($dsn->getHost()));
-        $database = new Database($adapter, getCache());
-
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-        if (\in_array($dsn->getHost(), $sharedTables)) {
-            $collections = Config::getParam('collections', []);
-            $projectCollections = $collections['projects'] ?? [];
-            $projectsGlobalCollections = array_keys($projectCollections);
-            $projectsGlobalCollections[] = 'audit';
-
-            $database
-                ->setSharedTables(true)
-                ->setGlobalCollections($projectsGlobalCollections)
-                ->setTenant($project->getSequence())
-                ->setNamespace($dsn->getParam('namespace'));
-        } else {
-            $database
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getSequence());
-        }
-
-        $database
-            ->setDatabase(APP_DATABASE)
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', $project->getId());
-
-        $database->setDocumentType('users', User::class);
-
-        return $ctx['dbForProject'][$project->getSequence()] = $database;
+        return $ctx['dbForProject'][$project->getSequence()] = (new DatabaseFactory($pools, getCache(), new Authorization()))->project($project, metadata: [
+            'host' => \gethostname(),
+            'project' => $project->getId(),
+        ]);
     }
 }
 
@@ -399,8 +359,8 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
             try {
                 $attempts++;
                 $document = new Document([
-                    '$id' => ID::unique(),
-                    '$collection' => ID::custom('realtime'),
+                    '$id' => Id::unique(),
+                    '$collection' => Id::custom('realtime'),
                     '$permissions' => [],
                     'container' => $containerId,
                     'timestamp' => DateTime::now(),
@@ -663,8 +623,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
                         $database = getProjectDB($project);
 
-                        /** @var User $user */
-                        $user = $database->getDocument('users', $userId);
+                        $database->purgeCachedDocument('users', $userId);
+                        $fetched = $database->getAuthorization()->skip(
+                            fn () => $database->getDocument('users', $userId)
+                        );
+                        $user = $fetched instanceof User ? $fetched : new User($fetched->getArrayCopy());
                         $roles = $user->getRoles($database->getAuthorization());
 
                         // The HTTP API re-checks these on every request; a connection only
@@ -702,58 +665,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             }
 
                             $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
-                            $authorization = $realtime->connections[$connection]['authorization'] ?? null;
-                            $impersonatedUserId = $realtime->connections[$connection]['impersonatedUserId'] ?? null;
-                            $impersonator = $realtime->connections[$connection]['impersonator'] ?? null;
-                            $presences = $realtime->connections[$connection]['presences'] ?? [];
-                            $jwtExpire = $realtime->connections[$connection]['jwtExpire'] ?? null;
-                            // Re-read, as extending the session moves it. An impersonated
-                            // connection has no sessionId; its impersonator's events refresh it.
-                            $expire = $sessionId !== null
-                                ? $user->getSessionExpiry($sessionId)
-                                : ($realtime->connections[$connection]['expire'] ?? null);
-                            $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
 
-                            $meta = $realtime->getSubscriptionMetadata($connection);
+                            $realtime->rebuildConnection($connection, $projectId, $roles, $userId);
 
-                            $realtime->unsubscribe($connection);
-
-                            foreach ($meta as $subscriptionId => $subscription) {
-                                $queries = Query::parseQueries($subscription['queries'] ?? []);
-                                $channels = Realtime::rebindAccountChannels(
-                                    $subscription['channels'] ?? [],
-                                    $previousUserId,
-                                    $userId
-                                );
-                                $realtime->subscribe(
-                                    $projectId,
-                                    $connection,
-                                    $subscriptionId,
-                                    $roles,
-                                    $channels,
-                                    $queries,
-                                    $userId
-                                );
-                            }
-
-
-                            // Restore authorization after subscribe
-                            // meta can be empty as well as the channels are not required query param to connect
-                            // channels and queries can be sent via message later on
-                            // so if meta is empty we are not subscribing above to the projectId
-                            if (!isset($realtime->connections[$connection])) {
-                                $realtime->subscribe($projectId, $connection, '', $roles, [], [], $userId);
-                            }
-                            if ($authorization !== null && isset($realtime->connections[$connection])) {
-                                $realtime->connections[$connection]['authorization'] = $authorization;
-                                $realtime->connections[$connection]['impersonatedUserId'] = $impersonatedUserId;
-                                $realtime->connections[$connection]['impersonator'] = $impersonator;
-                                $realtime->connections[$connection]['sessionId'] = $sessionId;
-                                $realtime->connections[$connection]['expire'] = $expire;
-                                $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
-                                // Owned presences must survive too, or closing the socket later
-                                // would leave their rows behind until they expire.
-                                $realtime->connections[$connection]['presences'] = $presences;
+                            if ($sessionId !== null && isset($realtime->connections[$connection])) {
+                                $realtime->connections[$connection]['expire'] = $user->getSessionExpiry($sessionId);
                             }
 
                             $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
@@ -762,10 +678,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 $register->get('telemetry.workerSubscriptionCounter')->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
                             }
 
-                            // Tail entries live outside the subscription tree, so the rebuild
-                            // above doesn't touch them. Drop any whose authorizing team role
-                            // the connection no longer holds (membership revoked / project moved).
-                            $eventTailRegistry->revalidateConnection($connection, $roles);
+                            $appliedRoles = $realtime->connections[$connection]['roles'] ?? $roles;
+                            $eventTailRegistry->revalidateConnection($connection, $appliedRoles);
                         }
                     }
                 }
@@ -1130,7 +1044,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $mapping = [];
         $prepared = [];
         foreach ($subscriptions as $index => $subscription) {
-            $subscriptionId = ID::unique();
+            $subscriptionId = Id::unique();
             $mapping[$index] = $subscriptionId;
             $prepared[] = [$subscriptionId, $subscription];
         }

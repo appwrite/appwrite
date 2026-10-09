@@ -8,9 +8,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class ACIDTest extends Scope
 {
@@ -35,7 +35,7 @@ final class ACIDTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'AtomicityTestDB'
         ]);
 
@@ -48,7 +48,7 @@ final class ACIDTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'AtomicityTest',
             'dimension' => 3,
             'documentSecurity' => false,
@@ -147,7 +147,7 @@ final class ACIDTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'ConsistencyTestDB'
         ]);
 
@@ -160,7 +160,7 @@ final class ACIDTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'ConsistencyTest',
             'dimension' => 3,
             'documentSecurity' => false,
@@ -193,7 +193,7 @@ final class ACIDTest extends Scope
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => [
                         'embeddings' => $this->generateEmbeddings(3, 0.2),
                         'metadata' => ['name' => 'Valid User'],
@@ -203,7 +203,7 @@ final class ACIDTest extends Scope
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => [
                         'embeddings' => $this->generateEmbeddings(2, 0.5), // Invalid dimensions
                         'metadata' => ['name' => 'Invalid User'],
@@ -213,7 +213,7 @@ final class ACIDTest extends Scope
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
                     'action' => 'create',
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => [
                         'embeddings' => $this->generateEmbeddings(3, 0.6),
                         'metadata' => ['name' => 'Should Not Persist'],
@@ -255,7 +255,7 @@ final class ACIDTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'IsolationTestDB'
         ]);
 
@@ -268,7 +268,7 @@ final class ACIDTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'IsolationTest',
             'dimension' => 3,
             'documentSecurity' => false,
@@ -403,7 +403,7 @@ final class ACIDTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'DurabilityTestDB'
         ]);
 
@@ -416,7 +416,7 @@ final class ACIDTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'DurabilityTest',
             'dimension' => 3,
             'documentSecurity' => false,

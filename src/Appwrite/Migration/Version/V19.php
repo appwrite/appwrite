@@ -5,6 +5,7 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Migration\Migration;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
+use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -55,7 +56,7 @@ class V19 extends Migration
 
     protected function migrateDomains(): void
     {
-        if ($this->dbForPlatform->exists($this->dbForPlatform->getDatabase(), 'domains')) {
+        if ($this->dbForPlatform->collectionExists('domains', $this->dbForPlatform->getDatabase())) {
             foreach ($this->documentsIterator('domains') as $domain) {
                 $status = 'created';
                 if ($domain->getAttribute('verification', false)) {
@@ -148,13 +149,13 @@ class V19 extends Migration
                 case 'attributes':
                 case 'indexes':
                     try {
-                        $this->dbForProject->updateAttribute($id, 'databaseInternalId', required: true);
+                        $this->dbForProject->updateAttribute($id, 'databaseInternalId', new AttributeUpdate(required: true));
                     } catch (\Throwable $th) {
                         Console::warning("'databaseInternalId' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->dbForProject->updateAttribute($id, 'collectionInternalId', required: true);
+                        $this->dbForProject->updateAttribute($id, 'collectionInternalId', new AttributeUpdate(required: true));
                     } catch (\Throwable $th) {
                         Console::warning("'collectionInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -227,7 +228,7 @@ class V19 extends Migration
                     }
 
                     try {
-                        $this->dbForProject->updateAttribute($id, 'logs', size: 1000000);
+                        $this->dbForProject->updateAttribute($id, 'logs', new AttributeUpdate(size: 1000000));
                     } catch (\Throwable $th) {
                         Console::warning("'logs' from {$id}: {$th->getMessage()}");
                     }
@@ -460,7 +461,7 @@ class V19 extends Migration
                     break;
                 case 'memberships':
                     try {
-                        $this->dbForProject->updateAttribute($id, 'teamInternalId', required: true);
+                        $this->dbForProject->updateAttribute($id, 'teamInternalId', new AttributeUpdate(required: true));
                     } catch (\Throwable $th) {
                         Console::warning("'teamInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -471,7 +472,7 @@ class V19 extends Migration
                 case 'sessions':
                 case 'tokens':
                     try {
-                        $this->dbForProject->updateAttribute($id, 'userInternalId', required: true);
+                        $this->dbForProject->updateAttribute($id, 'userInternalId', new AttributeUpdate(required: true));
                     } catch (\Throwable $th) {
                         Console::warning("'userInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -484,7 +485,7 @@ class V19 extends Migration
                 case 'platforms':
                 case 'webhooks':
                     try {
-                        $this->dbForProject->updateAttribute($id, 'projectInternalId', required: true);
+                        $this->dbForProject->updateAttribute($id, 'projectInternalId', new AttributeUpdate(required: true));
                     } catch (\Throwable $th) {
                         Console::warning("'projectInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -512,7 +513,7 @@ class V19 extends Migration
                     break;
                 case 'stats':
                     try {
-                        $this->dbForProject->updateAttribute($id, 'value', signed: true);
+                        $this->dbForProject->updateAttribute($id, 'value', new AttributeUpdate(signed: true));
                     } catch (\Throwable $th) {
                         Console::warning("'value' from {$id}: {$th->getMessage()}");
                     }
@@ -556,7 +557,7 @@ class V19 extends Migration
                     }
 
                     try {
-                        $this->dbForProject->updateAttribute($id, 'search', filters: ['userSearch']);
+                        $this->dbForProject->updateAttribute($id, 'search', new AttributeUpdate(filters: ['userSearch']));
                     } catch (\Throwable $th) {
                         Console::warning("'search' from {$id}: {$th->getMessage()}");
                     }
@@ -657,7 +658,7 @@ class V19 extends Migration
             $this->dbForProject->updateDocument('attributes', $attribute->getId(), $attribute);
             $databaseInternalId = $attribute->getAttribute('databaseInternalId');
             $collectionInternalId = $attribute->getAttribute('collectionInternalId');
-            $this->dbForProject->updateAttribute('database_' . $databaseInternalId . '_collection_' . $collectionInternalId, $attribute->getAttribute('key'), size: 255);
+            $this->dbForProject->updateAttribute('database_' . $databaseInternalId . '_collection_' . $collectionInternalId, $attribute->getAttribute('key'), new AttributeUpdate(size: 255));
         }
     }
 

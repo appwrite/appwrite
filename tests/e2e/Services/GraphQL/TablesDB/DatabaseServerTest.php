@@ -10,17 +10,23 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\GraphQL\Base;
+use Tests\E2E\Services\GraphQL\QueryJoinCombos;
+use Tests\E2E\Services\GraphQL\QueryJoinPermissions;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\RelationshipDeleteAction;
+use Utopia\Database\RelationshipType;
+use Utopia\Database\Role;
 
 final class DatabaseServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
     use Base;
+    use QueryJoinPermissions;
+    use QueryJoinCombos;
 
     private static array $cachedDatabase = [];
     private static array $cachedTableData = [];
@@ -55,7 +61,7 @@ final class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Actors',
             ]
         ];
@@ -88,7 +94,7 @@ final class DatabaseServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $database['_id'],
-                'tableId' => ID::unique(),
+                'tableId' => Id::unique(),
                 'name' => 'Actors',
                 'rowSecurity' => false,
                 'permissions' => [
@@ -110,7 +116,7 @@ final class DatabaseServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $database['_id'],
-                'tableId' => ID::unique(),
+                'tableId' => Id::unique(),
                 'name' => 'Movies',
                 'rowSecurity' => false,
                 'permissions' => [
@@ -655,7 +661,7 @@ final class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'tableId' => $data['table2']['_id'],          // Movies
                 'relatedTableId' => $data['table']['_id'],    // Actors
-                'type' => Database::RELATION_ONE_TO_MANY,
+                'type' => RelationshipType::OneToMany->value,
                 'twoWay' => true,
                 'key' => 'actors',
                 'twoWayKey' => 'movie'
@@ -826,7 +832,7 @@ final class DatabaseServerTest extends Scope
             'variables' => [
                 'databaseId' => $databaseId,
                 'tableId' => $tableId,
-                'rowId' => ID::unique(),
+                'rowId' => Id::unique(),
                 'data' => [
                     'name' => 'John Doe',
                     'tags' => ['first', 'second'],
@@ -881,7 +887,7 @@ final class DatabaseServerTest extends Scope
         $payload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Bulk',
             ],
         ];
@@ -895,7 +901,7 @@ final class DatabaseServerTest extends Scope
         $payload['query'] = $query;
         $payload['variables'] = [
             'databaseId' => $databaseId,
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Operations',
             'rowSecurity' => false,
             'permissions' => [
@@ -935,7 +941,7 @@ final class DatabaseServerTest extends Scope
         $query = $this->getQuery(self::CREATE_ROWS);
         $rows = [];
         for ($i = 1; $i <= 10; $i++) {
-            $rows[] = ['$id' => ID::unique(), 'name' => 'Row #' . $i];
+            $rows[] = ['$id' => Id::unique(), 'name' => 'Row #' . $i];
         }
 
         $payload['query'] = $query;
@@ -1541,7 +1547,7 @@ final class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'tableId' => $data['table2']['_id'],          // Movies
                 'relatedTableId' => $data['table']['_id'],    // Actors
-                'type' => Database::RELATION_ONE_TO_MANY,
+                'type' => RelationshipType::OneToMany->value,
                 'twoWay' => true,
                 'key' => 'actors',
                 'twoWayKey' => 'movie'
@@ -1586,7 +1592,7 @@ final class DatabaseServerTest extends Scope
                 'databaseId' => $databaseId,
                 'tableId' => $tableId,
                 'key' => 'actors',
-                'onDelete' => Database::RELATION_MUTATE_CASCADE,
+                'onDelete' => RelationshipDeleteAction::Cascade->value,
             ]
         ];
 
@@ -1834,7 +1840,7 @@ final class DatabaseServerTest extends Scope
             'variables' => [
                 'databaseId' => $databaseId,
                 'tableId' => $tableId,
-                'rowId' => ID::unique(),
+                'rowId' => Id::unique(),
                 'data' => [
                     'name' => 'John Doe',
                     'tags' => ['first', 'second'],
@@ -2571,7 +2577,7 @@ final class DatabaseServerTest extends Scope
                 'tableId' => $data['tableId'],
                 'rows' => [
                     [
-                        '$id' => ID::unique(),
+                        '$id' => Id::unique(),
                         'name' => 'Row #1000',
                     ],
                     [
@@ -2613,7 +2619,7 @@ final class DatabaseServerTest extends Scope
         $this->assertGreaterThanOrEqual(12, $fetched['total']);
 
         // Step 3: Upsert row with new permissions using `tablesUpsertRow`
-        $upsertRowId = ID::unique();
+        $upsertRowId = Id::unique();
         $query = $this->getQuery(self::UPSERT_ROW);
         $payload = [
             'query' => $query,

@@ -34,7 +34,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Request;
@@ -86,7 +86,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Function ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
             ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', enum: new Enum(name: 'Runtime'))
             ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
@@ -226,7 +226,7 @@ class Create extends Base
 
         $abuseCheck();
 
-        $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
+        $functionId = ($functionId == 'unique()') ? Id::unique() : $functionId;
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
@@ -310,7 +310,7 @@ class Create extends Base
             $teamId = $project->getAttribute('teamId', '');
 
             $repository = $dbForPlatform->createDocument('repositories', new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
@@ -392,7 +392,7 @@ class Create extends Base
                 $deployment = $deployments->createFromRef(
                     $function,
                     new Document([
-                        '$id' => ID::unique(),
+                        '$id' => Id::unique(),
                         'entrypoint' => $function->getAttribute('entrypoint', ''),
                         'buildCommands' => $function->getAttribute('commands', ''),
                         'startCommand' => $function->getAttribute('startCommand', ''),
@@ -418,11 +418,11 @@ class Create extends Base
 
             $functionsDomain = $platform['functionsDomain'];
             if (!empty($functionsDomain) && isset($deployment) && !$deployment->isEmpty()) {
-                $routeSubdomain = ID::unique();
+                $routeSubdomain = Id::unique();
                 $domain = "{$routeSubdomain}.{$functionsDomain}";
                 // TODO: (@Meldiron) Remove after 1.7.x migration
                 $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-                $ruleId = $isMd5 ? md5($domain) : ID::unique();
+                $ruleId = $isMd5 ? md5($domain) : Id::unique();
 
                 $rule = $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
@@ -453,7 +453,7 @@ class Create extends Base
                         ->setProject($project)
                         ->setEvent('rules.[ruleId].create')
                         ->setParam('ruleId', $rule->getId())
-                        ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())));
+                        ->setPayload($rule->only(\array_keys($ruleModel->getRules())));
 
                 /** Trigger Webhook */
                 $queueForWebhooks

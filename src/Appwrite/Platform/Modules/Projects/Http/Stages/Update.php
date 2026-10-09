@@ -4,6 +4,8 @@ namespace Appwrite\Platform\Modules\Projects\Http\Stages;
 
 use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
+use Appwrite\Locking\Lock;
+use Appwrite\Onboarding\Stages;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -11,8 +13,8 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -59,10 +61,12 @@ class Update extends Action
             ->inject('apiKey')
             ->inject('user')
             ->inject('mode')
+            ->inject('authorization')
+            ->inject('lock')
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $stageId, bool $skip, Response $response, Database $dbForPlatform, ?Key $apiKey, User $user, string $mode): void
+    public function action(string $projectId, string $stageId, bool $skip, Response $response, Database $dbForPlatform, ?Key $apiKey, User $user, string $mode, Authorization $authorization, Lock $lock): void
     {
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -72,35 +76,22 @@ class Update extends Action
 
         $this->assertOnboardingMethod($stageId);
 
-        $byMethod = $project->getAttribute('onboarding', []);
-        if (! \is_array($byMethod)) {
-            $byMethod = [];
-        }
-
-        $row = \is_array($byMethod[$stageId] ?? null) ? $byMethod[$stageId] : null;
-
-        if ($skip) {
-            $prev = \is_array($row) ? ($row['status'] ?? '') : '';
-            if ($prev !== ONBOARDING_STATUS_COMPLETED) {
-                $byMethod[$stageId] = [
-                    'status' => ONBOARDING_STATUS_SKIPPED,
-                    'at' => DateTime::now(),
-                    'actorType' => $this->resolveActorType($apiKey, $user, $mode),
-                ];
-
-                $project = $dbForPlatform->skipFilters(
-                    fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                        'onboarding' => $byMethod,
-                    ])),
-                    APP_PROJECTS_SUBQUERIES
-                );
-
-                $byMethod = $project->getAttribute('onboarding', []);
-                $row = \is_array($byMethod[$stageId] ?? null) ? $byMethod[$stageId] : null;
-            }
-        }
+        $row = $skip
+            ? (new Stages($dbForPlatform, $authorization, $lock))->skip($project, $stageId, $this->resolveActorType($apiKey, $user, $mode))
+            : $this->storedRow($project, $stageId);
 
         $response->dynamic(new Document($this->formatStageRow($stageId, $row)), Response::MODEL_STAGE);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function storedRow(Document $project, string $stageId): ?array
+    {
+        $stages = $project->getAttribute('onboarding', []);
+        $row = \is_array($stages) ? ($stages[$stageId] ?? null) : null;
+
+        return \is_array($row) ? $row : null;
     }
 
     private function assertOnboardingMethod(string $method): void

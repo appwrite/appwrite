@@ -7,6 +7,7 @@ use Exception;
 use Throwable;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
+use Utopia\Database\AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
@@ -127,7 +128,7 @@ class V23 extends Migration
                     break;
                 case 'schedules':
                     try {
-                        $this->dbForProject->updateAttribute($id, 'resourceInternalId', required: false);
+                        $this->dbForProject->updateAttribute($id, 'resourceInternalId', new AttributeUpdate(required: false));
                     } catch (Throwable $th) {
                         Console::warning("'resourceInternalId' from {$id}: {$th->getMessage()}");
                     }
@@ -177,19 +178,19 @@ class V23 extends Migration
      */
     private function migrateDatabases(): void
     {
-        $this->dbForProject->foreach('databases', function (Document $database) {
+        foreach ($this->dbForProject->cursor('databases', batchSize: 25) as $database) {
             Console::log("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
 
             $databaseTable = "database_{$database->getSequence()}";
             $this->dbForProject->purgeCachedCollection($databaseTable);
 
-            $this->dbForProject->foreach($databaseTable, function (Document $collection) use ($databaseTable) {
+            foreach ($this->dbForProject->cursor($databaseTable, batchSize: 25) as $collection) {
                 Console::log("Migrating Collection of {$collection->getId()} ({$collection->getAttribute('name')})");
 
                 $collectionTable = "{$databaseTable}_collection_{$collection->getSequence()}";
                 $this->dbForProject->purgeCachedCollection($collectionTable);
-            });
-        });
+            }
+        }
     }
 
     /**
@@ -201,12 +202,12 @@ class V23 extends Migration
      */
     protected function migrateBuckets(): void
     {
-        $this->dbForProject->foreach('buckets', function (Document $bucket) {
+        foreach ($this->dbForProject->cursor('buckets', batchSize: 25) as $bucket) {
             Console::log("Migrating Bucket {$bucket->getId()} ({$bucket->getAttribute('name')})");
 
             $bucketTable = "bucket_{$bucket->getSequence()}";
             $this->dbForProject->purgeCachedCollection($bucketTable);
-        });
+        }
     }
 
     /**
@@ -245,33 +246,42 @@ class V23 extends Migration
         }
 
         // Read-modify-write from the live schema to avoid overwriting unrelated changes.
-        $migration = $this->dbForProject->getCollection('migrations');
-        $attributes = $migration->getAttribute('attributes', []);
-        $attrsArray = \array_map(fn (Document $doc) => $doc->getArrayCopy(), $attributes);
-        $errorsIdx = \array_search('errors', \array_column($attrsArray, '$id'));
+        $migration = $this->dbForProject->findCollection('migrations');
+        if ($migration === null) {
+            Console::warning("Skipping: migrations collection not found for project {$this->project->getId()}");
+            return;
+        }
 
-        if ($errorsIdx === false) {
+        $attributes = $migration->getAttribute('attributes', []);
+        $storedAttributes = \array_map(fn (Document $attribute) => $attribute->getArrayCopy(), $attributes);
+        $errorsPosition = \array_search('errors', \array_column($storedAttributes, '$id'));
+
+        if ($errorsPosition === false) {
             Console::warning("Skipping: 'errors' attribute not found in migrations collection for project {$this->project->getId()}");
             return;
         }
 
-        $desiredSize = 1_000_000;
-        $migrationAttributes = Config::getParam('collections', [])['projects']['migrations']['attributes'] ?? [];
-        $migrationIndex = \array_search('errors', \array_column($migrationAttributes, '$id'));
-
-        if ($migrationIndex !== false && isset($migrationAttributes[$migrationIndex]['size'])) {
-            $desiredSize = (int) $migrationAttributes[$migrationIndex]['size'];
-        }
-
-        $currentSize = (int) ($attributes[$errorsIdx]['size'] ?? 0);
+        $desiredSize = self::configuredErrorsSize();
+        $currentSize = (int) ($attributes[$errorsPosition]['size'] ?? 0);
 
         if ($currentSize === $desiredSize) {
             Console::warning("Skipping: 'errors' attribute already of desired size {$desiredSize} in migrations collection for project {$this->project->getId()}");
             return;
         }
-        $attributes[$errorsIdx]['size'] = $desiredSize;
+        $attributes[$errorsPosition]['size'] = $desiredSize;
         $migration->setAttribute('attributes', $attributes);
         $this->dbForProject->updateDocument($migration->getCollection(), $migration->getId(), $migration);
         $this->dbForProject->purgeCachedCollection('migrations');
+    }
+
+    protected static function configuredErrorsSize(): int
+    {
+        foreach (Config::getParam('collections', [])['projects']['migrations']['attributes'] ?? [] as $attribute) {
+            if ($attribute->key === 'errors' && $attribute->size !== null) {
+                return $attribute->size;
+            }
+        }
+
+        return 1_000_000;
     }
 }

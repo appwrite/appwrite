@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
+use Appwrite\Databases\RelationshipValues;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -11,6 +12,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -21,13 +23,15 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Unique as UniqueException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
 
@@ -91,12 +95,12 @@ class Upsert extends Action
                     ),
                 ),
             ])
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
-            ->param('documentId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('documentId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Document ID.', false, ['dbForProject'])
             ->param('data', [], new JSONObject(), 'Document data as JSON object. Include all required attributes of the document to be created or updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
-            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
+            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('user')
@@ -135,16 +139,14 @@ class Upsert extends Action
             $data = $this->parseOperators($data, $collection);
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         $allowedPermissions = [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
+            PermissionType::Read,
+            PermissionType::Update,
+            PermissionType::Delete,
         ];
 
         $permissions = Permission::aggregate($permissions, $allowedPermissions);
-
-        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
@@ -160,7 +162,7 @@ class Upsert extends Action
                 if (!empty($user->getId())) {
                     $defaultPermissions = [];
                     foreach ($allowedPermissions as $permission) {
-                        $defaultPermissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                        $defaultPermissions[] = (new Permission($permission->value, 'user', $user->getId()))->toString();
                     }
                     $permissions = $defaultPermissions;
                 }
@@ -172,10 +174,10 @@ class Upsert extends Action
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = $authorization->getRoles();
         if (!$isAPIKey && !$isPrivilegedUser && !\is_null($permissions)) {
-            foreach (Database::PERMISSIONS as $type) {
+            foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
-                    if ($permission->getPermission() != $type) {
+                    if ($permission->getPermission() != $type->value) {
                         continue;
                     }
                     $role = (new Role(
@@ -192,93 +194,10 @@ class Upsert extends Action
 
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions ?? [];
+        $data = (new RelationshipValues($dbForProject, $database, $authorization, $isAPIKey || $isPrivilegedUser ? null : $dbForDatabases))->prepare($data, $collection);
         $data = $this->removeReadonlyAttributes($data, $isAPIKey || $isPrivilegedUser);
+        $this->validateTimestamps($data);
         $newDocument = new Document($data);
-        $operations = 0;
-
-        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $dbForDatabases, $database, &$operations, $authorization) {
-            $operations++;
-
-            $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            );
-
-            foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                if (empty($related)) {
-                    continue;
-                }
-
-                $isList = \is_array($related) && \array_values($related) === $related;
-
-                if ($isList) {
-                    $relations = $related;
-                } else {
-                    $relations = [$related];
-                }
-
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = $authorization->skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
-                );
-
-                foreach ($relations as &$relation) {
-                    // If the relation is an array it can be either update or create a child document.
-                    if (
-                        \is_array($relation)
-                        && \array_values($relation) !== $relation
-                        && !isset($relation['$id'])
-                    ) {
-                        $relation['$id'] = ID::unique();
-                        $relation = new Document($relation);
-                    }
-
-                    $this->validateRelationship($relation);
-
-                    if ($relation instanceof Document) {
-                        $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
-
-                        $oldDocument = $authorization->skip(fn () => $dbForDatabases->getDocument(
-                            'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
-                            $relation->getId()
-                        ));
-
-                        if (!$isAPIKey && !$isPrivilegedUser) {
-                            $this->validateRelatedPermissions($relation->getAttribute('$permissions'), $oldDocument, $authorization);
-                        }
-
-                        // Attribute $collection is required for Utopia.
-                        $relation->setAttribute(
-                            '$collection',
-                            'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence()
-                        );
-
-                        if ($oldDocument->isEmpty()) {
-                            if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
-                                $relation['$id'] = ID::unique();
-                            }
-                        }
-                        $setCollection($relatedCollection, $relation);
-                    }
-                }
-
-                if ($isList) {
-                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
-                } else {
-                    $document->setAttribute($relationship->getAttribute('key'), \reset($relations));
-                }
-            }
-        });
-
-        $setCollection($collection, $newDocument);
-
-        $usage
-            ->setResource('database')
-            ->setResourceId($database->getId())
-            ->setResourceInternalId((string) $database->getSequence())
-            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $operations));
 
         // Handle transaction staging
         if ($transactionId !== null) {
@@ -310,7 +229,7 @@ class Upsert extends Action
 
             // Stage the operation in transaction logs
             $staged = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
@@ -347,13 +266,22 @@ class Upsert extends Action
 
         $upserted = [];
         try {
-            $dbForDatabases->withPreserveDates(function () use (&$upserted, $dbForDatabases, $collectionTableId, $newDocument) {
-                return $dbForDatabases->upsertDocuments(
-                    $collectionTableId,
+            $dbForDatabases->withPreserveDates(true, function () use (&$upserted, $dbForDatabases, $collection, $collectionTableId, $newDocument) {
+                return $this->withRelationshipTransaction(
+                    $dbForDatabases,
+                    $collection,
                     [$newDocument],
-                    onNext: function (Document $document) use (&$upserted) {
-                        $upserted[] = $document;
-                    },
+                    function (array $documents) use (&$upserted, $dbForDatabases, $collectionTableId) {
+                        $upserted = [];
+
+                        return $dbForDatabases->upsertDocuments(
+                            $collectionTableId,
+                            $documents,
+                            onNext: function (Document $document) use (&$upserted) {
+                                $upserted[] = $document;
+                            },
+                        );
+                    }
                 );
             });
         } catch (ConflictException) {
@@ -368,28 +296,26 @@ class Upsert extends Action
             throw new Exception($this->getStructureException(), $e->getMessage());
         }
 
-        $collectionsCache = [];
-
         if (empty($upserted[0])) {
             $upserted[0] = $dbForDatabases->getDocument($collectionTableId, $documentId);
         }
 
         $document = $upserted[0];
 
-        $this->processDocument(
-            database: $database,
-            collection: $collection,
-            document: $document,
-            dbForProject: $dbForProject,
-            collectionsCache: $collectionsCache,
-            authorization: $authorization
-        );
+        $writes = Operations::writes($collection, [$data], fn (string $id): Document => $authorization->skip(
+            fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $id)
+        ));
+        $usage
+            ->setResource('database')
+            ->setResourceId($database->getId())
+            ->setResourceInternalId((string) $database->getSequence())
+            ->addMetric($this->getDatabasesOperationWriteMetric(), $writes);
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
             \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
             )
         );
 
