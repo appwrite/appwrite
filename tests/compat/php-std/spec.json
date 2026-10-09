@@ -1,7 +1,7 @@
 {
   "lib": "php-std",
   "description": "PHP engine functions reimplemented in crates/support/php-std, checked against the real functions. There is no PHP library to cover: every operation calls a built-in.",
-  "complete": false,
+  "complete": true,
   "php": {
     "src": [],
     "tests": []

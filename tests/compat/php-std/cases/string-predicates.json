@@ -1,0 +1,545 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "ctype_alnum empty",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum letters and digits",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": "abc123"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_alnum space",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": "a b"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum newline",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": "\n"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum upper",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": "ABC"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_alnum lower",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": "abc"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_alnum tab and text",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": "\tA"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum non-ascii",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": "é"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum del",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl empty",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl letters and digits",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": "abc123"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl space",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": "a b"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl newline",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": "\n"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_cntrl upper",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": "ABC"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl lower",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": "abc"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl tab and text",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": "\tA"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl non-ascii",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": "é"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl del",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": ""
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_graph empty",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph letters and digits",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": "abc123"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_graph space",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": "a b"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph newline",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": "\n"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph upper",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": "ABC"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_graph lower",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": "abc"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_graph tab and text",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": "\tA"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph non-ascii",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": "é"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph del",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower empty",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower letters and digits",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": "abc123"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower space",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": "a b"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower newline",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": "\n"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower upper",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": "ABC"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower lower",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": "abc"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_lower tab and text",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": "\tA"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower non-ascii",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": "é"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower del",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print empty",
+      "op": "string.ctype_print",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print letters and digits",
+      "op": "string.ctype_print",
+      "args": {
+        "text": "abc123"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_print space",
+      "op": "string.ctype_print",
+      "args": {
+        "text": "a b"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_print newline",
+      "op": "string.ctype_print",
+      "args": {
+        "text": "\n"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print upper",
+      "op": "string.ctype_print",
+      "args": {
+        "text": "ABC"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_print lower",
+      "op": "string.ctype_print",
+      "args": {
+        "text": "abc"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_print tab and text",
+      "op": "string.ctype_print",
+      "args": {
+        "text": "\tA"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print non-ascii",
+      "op": "string.ctype_print",
+      "args": {
+        "text": "é"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print del",
+      "op": "string.ctype_print",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper empty",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper letters and digits",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": "abc123"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper space",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": "a b"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper newline",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": "\n"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper upper",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": "ABC"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_upper lower",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": "abc"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper tab and text",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": "\tA"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper non-ascii",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": "é"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper del",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "str_starts_with match",
+      "op": "string.str_starts_with",
+      "args": {
+        "haystack": "prefix-body-suffix",
+        "needle": "prefix"
+      },
+      "expect": true
+    },
+    {
+      "name": "str_starts_with empty needle",
+      "op": "string.str_starts_with",
+      "args": {
+        "haystack": "abc",
+        "needle": ""
+      },
+      "expect": true
+    },
+    {
+      "name": "str_starts_with empty haystack",
+      "op": "string.str_starts_with",
+      "args": {
+        "haystack": "",
+        "needle": "a"
+      },
+      "expect": false
+    },
+    {
+      "name": "str_starts_with longer needle",
+      "op": "string.str_starts_with",
+      "args": {
+        "haystack": "ab",
+        "needle": "abc"
+      },
+      "expect": false
+    },
+    {
+      "name": "str_starts_with case differs",
+      "op": "string.str_starts_with",
+      "args": {
+        "haystack": "Hello",
+        "needle": "he"
+      },
+      "expect": false
+    },
+    {
+      "name": "str_starts_with multibyte",
+      "op": "string.str_starts_with",
+      "args": {
+        "haystack": "éa",
+        "needle": "é"
+      },
+      "expect": true
+    },
+    {
+      "name": "str_ends_with match",
+      "op": "string.str_ends_with",
+      "args": {
+        "haystack": "prefix-body-suffix",
+        "needle": "suffix"
+      },
+      "expect": true
+    },
+    {
+      "name": "str_ends_with empty needle",
+      "op": "string.str_ends_with",
+      "args": {
+        "haystack": "abc",
+        "needle": ""
+      },
+      "expect": true
+    },
+    {
+      "name": "str_ends_with empty haystack",
+      "op": "string.str_ends_with",
+      "args": {
+        "haystack": "",
+        "needle": "a"
+      },
+      "expect": false
+    },
+    {
+      "name": "str_ends_with longer needle",
+      "op": "string.str_ends_with",
+      "args": {
+        "haystack": "ab",
+        "needle": "abc"
+      },
+      "expect": false
+    },
+    {
+      "name": "str_ends_with case differs",
+      "op": "string.str_ends_with",
+      "args": {
+        "haystack": "Hello",
+        "needle": "LO"
+      },
+      "expect": false
+    },
+    {
+      "name": "str_ends_with multibyte",
+      "op": "string.str_ends_with",
+      "args": {
+        "haystack": "éa",
+        "needle": "a"
+      },
+      "expect": true
+    }
+  ]
+}
