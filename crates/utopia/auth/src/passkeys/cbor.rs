@@ -8,6 +8,8 @@ use std::collections::{HashMap, HashSet};
 
 use php_std::zval::{Array, Key, Zval};
 
+use super::tags;
+
 /// A decoded item. Lengths and integer arguments are kept as read.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Item {
@@ -25,6 +27,7 @@ pub(crate) enum Item {
     Simple(i64),
     Bool(bool),
     Null,
+    Undefined,
     Float(f64),
     Break,
 }
@@ -80,6 +83,10 @@ fn identity_major(identity: &[u8]) -> &[u8] {
 }
 
 impl Map {
+    pub(crate) fn len(&self) -> usize {
+        self.entries.len()
+    }
+
     /// `registerKey($key, false)` and the insertion `add()` makes.
     fn add(&mut self, key: Item, raw: &[u8], value: Item) -> Result<(), Vec<u8>> {
         let major = major(&key);
@@ -159,61 +166,19 @@ impl Map {
             }
             if self.opaque.contains(offset) {
                 let kind = match key {
-                    Item::List(_) | Item::Map(_) | Item::MapIndefinite(_) => "array",
-                    Item::Tag(0 | 1, _) => "DateTimeImmutable",
-                    k if k.is_normalizable() => match k.normalize()? {
-                        Zval::Null => "null",
-                        Zval::Bool(_) => "bool",
-                        Zval::Float(_) => "float",
-                        Zval::Int(_) => "int",
-                        Zval::String(_) => "string",
-                        _ => "array",
-                    },
-                    _ => "object",
+                    Item::List(_) | Item::Map(_) | Item::MapIndefinite(_) => "array".to_owned(),
+                    k if k.is_normalizable() => debug_type(&k.normalize()?),
+                    k => debug_type(&k.as_object()),
                 };
                 return Err(format!(
                     "Invalid key. A map key shall normalize to an integer or a string, got \"{kind}\"."
                 )
                 .into_bytes());
             }
-            out.insert(offset.clone(), if value.is_normalizable() { value.normalize()? } else { Zval::Null });
+            out.insert(offset.clone(), if value.is_normalizable() { value.normalize()? } else { value.as_object() });
         }
         Ok(Zval::Array(out))
     }
-}
-
-/// A big-endian unsigned integer in decimal (`Utils::hexToString()`).
-fn decimal(bytes: &[u8]) -> Vec<u8> {
-    let mut limbs: Vec<u32> = bytes.iter().map(|b| u32::from(*b)).collect();
-    let mut digits = Vec::new();
-    while limbs.iter().any(|l| *l != 0) {
-        let mut rem = 0u32;
-        for l in limbs.iter_mut() {
-            let cur = (rem << 8) | *l;
-            *l = cur / 10;
-            rem = cur % 10;
-        }
-        digits.push(b'0' + rem as u8);
-    }
-    if digits.is_empty() {
-        digits.push(b'0');
-    }
-    digits.reverse();
-    digits
-}
-
-/// A big-endian unsigned integer plus one.
-fn increment(bytes: &[u8]) -> Vec<u8> {
-    let mut out = bytes.to_vec();
-    for b in out.iter_mut().rev() {
-        let (v, carry) = b.overflowing_add(1);
-        *b = v;
-        if !carry {
-            return out;
-        }
-    }
-    out.insert(0, 1);
-    out
 }
 
 /// An item as cbor-php writes it back (`__toString()`): the bytes as read,
@@ -400,31 +365,46 @@ fn process(stream: &mut Stream<'_>, breakable: bool, depth: usize) -> Result<Ite
         6 => {
             let tag = argument(ai, val);
             let content = process(stream, false, depth + 1)?;
-            tag_check(tag, &content)?;
+            // TagManager: the tag number as a PHP integer, then the class's checks.
+            if let Some(v) = val {
+                bin_to_int(v)?;
+            }
+            tags::check(tag, &content)?;
             Item::Tag(tag, Box::new(content))
         }
         _ => other(ai, val)?,
     })
 }
 
-/// The content checks of cbor-php's registered tags (its `TagManager`).
-fn tag_check(tag: u128, content: &Item) -> Result<(), Vec<u8>> {
-    let text = matches!(content, Item::Text(_));
-    let bytes = matches!(content, Item::Bytes(_));
-    match tag {
-        // DatetimeTag says "Byte String" although it wants a text string.
-        0 if !text => Err("This tag only accepts a Byte String object.".into()),
-        1 if !matches!(content, Item::Int(_) | Item::Float(_)) => {
-            Err("This tag only accepts integer-based or float-based objects.".into())
-        }
-        2 | 3 | 24 if !bytes => Err("This tag only accepts a Byte String object.".into()),
-        32..=36 if !text => Err("This tag only accepts a Text String object.".into()),
-        _ => Ok(()),
+/// PHP's `get_debug_type()` of a normalized value.
+fn debug_type(value: &Zval) -> String {
+    match value {
+        Zval::Null => "null".into(),
+        Zval::Bool(_) => "bool".into(),
+        Zval::Float(_) => "float".into(),
+        Zval::Int(_) => "int".into(),
+        Zval::String(_) => "string".into(),
+        Zval::Array(_) => "array".into(),
+        Zval::Object(_) => tags::class_of(value).unwrap_or_default(),
     }
 }
 
+/// `HalfPrecisionFloatObject::normalize()`.
+pub(crate) fn half_float(bits: u16) -> f64 {
+    let exponent = (bits >> 10) & 0x1f;
+    let mantissa = f64::from(bits & 0x3ff);
+    let sign = if bits >> 15 == 1 { -1.0 } else { 1.0 };
+    let v = match exponent {
+        0 => mantissa * 2f64.powi(-24),
+        0x1f if mantissa == 0.0 => f64::INFINITY,
+        0x1f => f64::NAN,
+        e => (mantissa + 1024.0) * 2f64.powi(i32::from(e) - 25),
+    };
+    sign * v
+}
+
 /// RFC 3339 as `DateTimeImmutable::createFromFormat(DATE_RFC3339 | 'Y-m-d\TH:i:s.uP')` accepts it.
-fn is_rfc3339(s: &[u8]) -> bool {
+pub(crate) fn is_rfc3339(s: &[u8]) -> bool {
     let digits = |r: std::ops::Range<usize>| s.get(r).is_some_and(|d| d.iter().all(u8::is_ascii_digit));
     if s.len() < 20 || !digits(0..4) || s[4] != b'-' || !digits(5..7) || s[7] != b'-' || !digits(8..10) {
         return false;
@@ -451,20 +431,9 @@ fn other(ai: u8, val: Option<&[u8]>) -> Result<Item, Vec<u8>> {
         }
         20 => Item::Bool(false),
         21 => Item::Bool(true),
-        22 | 23 => Item::Null,
-        25 => {
-            let bits = u16::from_be_bytes([val.unwrap_or(&[0, 0])[0], val.unwrap_or(&[0, 0])[1]]);
-            let exponent = (bits >> 10) & 0x1f;
-            let mantissa = f64::from(bits & 0x3ff);
-            let sign = if bits >> 15 == 1 { -1.0 } else { 1.0 };
-            let v = match exponent {
-                0 => mantissa * 2f64.powi(-24),
-                0x1f if mantissa == 0.0 => f64::INFINITY,
-                0x1f => f64::NAN,
-                e => (mantissa + 1024.0) * 2f64.powi(i32::from(e) - 25),
-            };
-            Item::Float(sign * v)
-        }
+        22 => Item::Null,
+        23 => Item::Undefined,
+        25 => Item::Float(half_float(u16::from_be_bytes([val.unwrap_or(&[0, 0])[0], val.unwrap_or(&[0, 0])[1]]))),
         26 => Item::Float(f64::from(f32::from_be_bytes(val.unwrap_or(&[0; 4]).try_into().unwrap_or([0; 4])))),
         27 => Item::Float(f64::from_be_bytes(val.unwrap_or(&[0; 8]).try_into().unwrap_or([0; 8]))),
         _ => Item::Simple(argument(ai, val) as i64),
@@ -476,10 +445,12 @@ fn process_infinite(stream: &mut Stream<'_>, mt: u8, breakable: bool, depth: usi
         2 | 3 => {
             let mut out = Vec::new();
             loop {
+                // A chunk must be a definite string (not another indefinite one).
+                let definite = stream.data.get(stream.at).is_some_and(|b| b & 0x1f != 31);
                 match process(stream, true, depth + 1)? {
                     Item::Break => break,
-                    Item::Bytes(b) if mt == 2 => out.extend_from_slice(&b),
-                    Item::Text(t) if mt == 3 => out.extend_from_slice(&t),
+                    Item::Bytes(b) if mt == 2 && definite => out.extend_from_slice(&b),
+                    Item::Text(t) if mt == 3 && definite => out.extend_from_slice(&t),
                     _ if mt == 2 => {
                         return Err(
                             "Unable to parse the data. Infinite Byte String object can only get Byte String objects."
@@ -529,7 +500,11 @@ fn process_infinite(stream: &mut Stream<'_>, mt: u8, breakable: bool, depth: usi
 impl Item {
     /// Whether cbor-php's object implements `Normalizable`.
     pub(crate) fn is_normalizable(&self) -> bool {
-        !matches!(self, Item::Break)
+        match self {
+            Item::Break => false,
+            Item::Tag(t, _) => tags::normalizable(*t),
+            _ => true,
+        }
     }
 
     /// `normalize()`: the PHP value webauthn-lib reads.
@@ -540,39 +515,16 @@ impl Item {
             Item::List(items) => {
                 let mut out = Array::with_capacity(items.len());
                 for item in items {
-                    out.push(if item.is_normalizable() { item.normalize()? } else { Zval::Null });
+                    out.push(if item.is_normalizable() { item.normalize()? } else { item.as_object() });
                 }
                 Zval::Array(out)
             }
             Item::Map(map) | Item::MapIndefinite(map) => map.normalize()?,
             Item::Simple(i) => Zval::Int(*i),
             Item::Bool(b) => Zval::Bool(*b),
-            // A datetime normalizes to a DateTimeImmutable, which no caller here reads.
-            Item::Tag(0, content) => match content.as_ref() {
-                Item::Text(t) if !t.contains(&0) && is_rfc3339(t) => Zval::Null,
-                _ => return Err(b"Invalid data. Cannot be converted into a datetime object".to_vec()),
-            },
-            // TimestampTag: a DateTimeImmutable too.
-            Item::Tag(1, content) => match content.as_ref() {
-                Item::Float(f) if !f.is_finite() || f.abs() > 1.0e18 => {
-                    return Err(b"Invalid data. Cannot be converted into a datetime object".to_vec());
-                }
-                _ => Zval::Null,
-            },
-            // UnsignedBigIntegerTag / NegativeBigIntegerTag: the decimal value.
-            Item::Tag(tag @ (2 | 3), content) => {
-                let Item::Bytes(b) = content.as_ref() else { return content.normalize() };
-                if b.len() > 256 {
-                    return Err(format!(
-                        "The big number is out of range. Its byte string shall not exceed 256 bytes, got {}.",
-                        b.len()
-                    )
-                    .into_bytes());
-                }
-                Zval::String(if *tag == 2 { decimal(b) } else { [b"-".as_slice(), &decimal(&increment(b))].concat() })
-            }
-            Item::Tag(_, content) => content.normalize()?,
-            Item::Null | Item::Break => Zval::Null,
+            Item::Tag(tag, _) if !tags::normalizable(*tag) => self.as_object(),
+            Item::Tag(tag, content) => tags::normalize(*tag, content)?,
+            Item::Null | Item::Undefined | Item::Break => Zval::Null,
             Item::Float(f) => Zval::Float(*f),
         })
     }
@@ -620,8 +572,8 @@ mod tests {
 
     #[test]
     fn big_numbers_normalize_to_decimal() {
-        assert_eq!(decimal(&[0x01, 0, 0, 0, 0, 0, 0, 0, 0]), b"18446744073709551616");
-        assert_eq!(decimal(&[]), b"0");
-        assert_eq!(increment(&[0xff, 0xff]), vec![1, 0, 0]);
+        assert_eq!(tags::decimal(&[0x01, 0, 0, 0, 0, 0, 0, 0, 0]), b"18446744073709551616");
+        assert_eq!(tags::decimal(&[]), b"0");
+        assert_eq!(tags::increment(&[0xff, 0xff]), vec![1, 0, 0]);
     }
 }

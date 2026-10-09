@@ -25829,6 +25829,1008 @@
           }
         }
       ]
+    },
+    {
+      "name": "ceremony in one call (the fuzzing op)",
+      "steps": [
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register"
+          },
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "sign-in"
+          },
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 1,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a263666d746464696e6f6e6568617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Out of range. Expected: 14, read: 11."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "cose": "a201020326"
+          },
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "ogECAyY",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "sign-in",
+            "signature": "3006020101020101"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: Invalid signature."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "sign-in",
+            "extensions": "a1616101"
+          },
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 1,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a2a"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Out of range. Expected: 1, read: 0."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a17ab8def6f4d17a8dde"
+          },
+          "expect": "skipped: a declared length of 64 MiB or more"
+        }
+      ]
+    },
+    {
+      "name": "tags as cbor-php normalizes them",
+      "steps": [
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d82550000102030405060708090a0b0c0d0e0f6761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"00010203-0405-0607-0809-0a0b0c0d0e0f\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d8254f0000000000000000000000000000006761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: This tag only accepts a 16 byte Byte String object."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d83650000000000000000000000000000000016761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"::1\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d83650000000000000000000000000000000006761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"::\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d8365000000000000000000000ffff010203046761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"::ffff:1.2.3.4\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d83650000000000000000000000000010203046761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"::102:304\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d83650000100000000000200000000000000036761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"1:0:0:2::3\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d83650fe8000010000000000000000000000006761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"fe80:1::\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d83650000100000002000300040005000600076761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"1:0:2:3:4:5:6:7\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d83650000100000000000200030000000000046761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"1::2:3:0:0:4\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d8368250fe80000000000000000000000000000164657468306761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"fe80::1%eth0\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d8368218404420010db86761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"2001:db8::/64\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d83444c0a800016761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"192.168.0.1\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d834821818420a016761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"10.1.0.0/24\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d834821821410a6761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid prefix length. Expected at most 32."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d834824401020304076761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"1.2.3.4%7\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d834430000006761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: This tag only accepts a 4 byte Byte String object as an address."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d9010446001b638445e66761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"00:1b:63:84:45:e6\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d90104447f0000016761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"127.0.0.1\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d901045020010db80000000000000000000000016761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"2001:db8::1\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c25101000000000000000000000000000000006761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"340282366920938463463374607431768211456\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c351ffffffffffffffffffffffffffffffffff6761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"-87112285931760246646623899502532662132736\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d81e8206046761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"3/2\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d81e8225036761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"-2\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d81e82c241100c6761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"4/3\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d81e8201c2406761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid denominator. The value shall not be zero."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d81e8201006761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid denominator. The value shall not be zero."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c1006761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d864056761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6a323032302d30322d32396761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, DateTimeImmutable given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d903ec6a323032312d30322d32396761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid data. Cannot be converted into a datetime object"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c074323032302d30312d30315430303a30303a30305a6761747453746d74a068617574684461746140"
+          },
+          "expect": "skipped: a declared length of 64 MiB or more"
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d541006761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, CBOR\\Tag\\Base64UrlEncodingTag given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d81cd6406761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, CBOR\\Tag\\Base64EncodingTag given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d8404201026761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, array given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d8268262656e61786761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, array given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d8207368747470733a2f2f6578616d706c652e636f6d6761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"https://example.com\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d82362612b6761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"a+\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d8246a746578742f706c61696e6761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"text/plain\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d82441786761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: This tag only accepts a Byte String object."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d90101446d696d656761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"mime\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d819036761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"3\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d9270f646e6f6e656761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Out of range. Expected: 32, read: 0."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d9d9f7646e6f6e656761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Out of range. Expected: 32, read: 0."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d827646e6f6e656761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Out of range. Expected: 32, read: 0."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d82a4200016761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The attestation statement format \"\u0000\u0001\" is not supported."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d28440a0f6406761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, array given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d28440a0f7406761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Not a valid CoseSign1 object. The item 3 shall be a Byte String object or null."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d9010281016761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, array given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74c48221196ab36761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: The extension \"bcmath\" is required to use this tag"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d8288281028201026761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, array given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d8288280806761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid dimensions. Expected at least one dimension."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d84141016761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: This tag only accepts a Byte String object whose length is a multiple of 2."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d83d61786761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: This tag only accepts a Map object, a List object or a COSE tag."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d90105a2010203046761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: This tag only accepts a Map object that contains 1 item."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "c100"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Cannot use object of type DateTimeImmutable as array"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "d81cd540"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Cannot use object of type CBOR\\Tag\\Base64UrlEncodingTag as array"
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a2d825500000000000000000000000000000000001782430303030303030302d303030302d303030302d303030302d30303030303030303030303002"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid key. A key of major type 6 and a key of major type 3 both resolve to the offset \"00000000-0000-0000-0000-000000000000\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a2d840410101d840410102"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid key. The key \"d8404101\" is defined more than once in the map."
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "attestation": "a363666d74d850443c007c006761747453746d74a068617574684461746140"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, array given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AttestationStatementDenormalizer.php on line 25"
+            }
+          }
+        }
+      ]
     }
   ]
 }

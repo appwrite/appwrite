@@ -6,6 +6,7 @@ mod cbor;
 mod ceremony;
 mod cose;
 mod origin;
+mod tags;
 
 pub use ceremony::{Ceremony, Challenge, Counter, Credential, StrictCounter, TIMEOUT};
 pub use cose::{Algorithm, PublicKey};

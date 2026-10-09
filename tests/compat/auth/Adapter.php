@@ -285,6 +285,7 @@ final class Adapter implements Base
                 self::map($a['record'] ?? []),
             )),
             'passkeys.authenticator' => fn (array $a, Session $s) => Authenticator::respond($a),
+            'passkeys.ceremony_once' => fn (array $a, Session $s) => self::ceremonyOnce($a),
 
             // Fixtures: the assertions the PHP tests make on random outputs.
             'fixture.matches' => fn (array $a, Session $s) => preg_match((string) $a['pattern'], (string) $a['value']),
@@ -541,6 +542,78 @@ final class Adapter implements Base
             (string) ($a['name'] ?? ''),
             array_map(fn (mixed $o) => (string) $o, self::list($a['origins'] ?? [])),
         );
+    }
+
+    /**
+     * A registration (and, for `phase` sign-in, a sign-in) on localhost in one
+     * call, with the authenticator's output overridden by hex-encoded bytes:
+     * fuzzed CBOR, COSE keys, extensions and signatures. CBOR declaring a
+     * byte or text string of 64 MiB or more is not run: webauthn-lib's stream
+     * fread()s the declared length, which exhausts PHP's memory (a fatal error).
+     *
+     * @param  array<string, mixed>  $a
+     * @return array{identifier: string, record: array<mixed>}|string
+     */
+    private static function ceremonyOnce(array $a): array|string
+    {
+        $origin = 'http://localhost:3000';
+        $ceremony = new Ceremony(new RelyingParty('localhost', 'Test', [$origin]));
+        $challenge = $ceremony->register('user@example.com', 'User', []);
+        $signIn = ($a['phase'] ?? 'register') === 'sign-in';
+        $authenticator = ['key' => (string) $a['key'], 'credential_id' => '0kzTk-rTMQXiw5KPbsDZlQ', 'origin' => $origin];
+        $overrides = static function (array $fields) use ($a): array {
+            $out = [];
+            foreach ($fields as $field) {
+                if (isset($a[$field])) {
+                    $hex = (string) $a[$field];
+                    $out[$field] = (string) hex2bin(substr($hex, 0, \strlen($hex) - \strlen($hex) % 2));
+                }
+            }
+
+            return $out;
+        };
+        foreach ($overrides(['attestation', 'cose', 'extensions']) as $cbor) {
+            if (self::oversized($cbor)) {
+                return 'skipped: a declared length of 64 MiB or more';
+            }
+        }
+        $response = Authenticator::respond(['kind' => 'register', 'options' => $challenge->options] + $authenticator
+            + ($signIn ? [] : $overrides(['attestation', 'cose', 'extensions'])));
+        $registered = $ceremony->verifyRegistration($challenge->state, $response);
+        if (! $signIn) {
+            return self::credential($registered);
+        }
+        $request = $ceremony->authenticate();
+        $user = self::map($challenge->options['user'] ?? [])['id'] ?? '';
+        $response = Authenticator::respond(['kind' => 'authenticate', 'options' => $request->options, 'counter' => 1, 'user_handle' => $user]
+            + $authenticator + $overrides(['extensions', 'signature']));
+
+        return self::credential($ceremony->verifyAuthentication($request->state, $response, $registered->record));
+    }
+
+    /**
+     * Whether some byte could head a byte or text string of 64 MiB or more.
+     */
+    private static function oversized(string $cbor): bool
+    {
+        $n = \strlen($cbor);
+        for ($i = 0; $i < $n; ++$i) {
+            $head = \ord($cbor[$i]);
+            $width = match ($head) {
+                0x5A, 0x7A => 4,
+                0x5B, 0x7B => 8,
+                default => 0,
+            };
+            if ($width === 0 || $i + $width >= $n) {
+                continue;
+            }
+            $length = (int) unpack($width === 4 ? 'N' : 'J', substr($cbor, $i + 1, $width))[1];
+            if ($length >= 0x4000000) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static function ceremony(array $a, Session $s): Ceremony

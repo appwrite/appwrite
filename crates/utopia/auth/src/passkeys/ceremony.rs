@@ -180,16 +180,16 @@ fn decode_no_padding(s: &[u8]) -> Result<Vec<u8>, Vec<u8>> {
 }
 
 /// PHP's name for a value's type in a `TypeError` (`true`/`false` for booleans).
-fn given(value: Option<&Zval>) -> &'static str {
+fn given(value: Option<&Zval>) -> String {
     match value {
-        None | Some(Zval::Null) => "null",
-        Some(Zval::Bool(true)) => "true",
-        Some(Zval::Bool(false)) => "false",
-        Some(Zval::Int(_)) => "int",
-        Some(Zval::Float(_)) => "float",
-        Some(Zval::String(_)) => "string",
-        Some(Zval::Array(_)) => "array",
-        Some(Zval::Object(_)) => "stdClass",
+        None | Some(Zval::Null) => "null".into(),
+        Some(Zval::Bool(true)) => "true".into(),
+        Some(Zval::Bool(false)) => "false".into(),
+        Some(Zval::Int(_)) => "int".into(),
+        Some(Zval::Float(_)) => "float".into(),
+        Some(Zval::String(_)) => "string".into(),
+        Some(Zval::Array(_)) => "array".into(),
+        Some(object) => super::tags::class_of(object).unwrap_or_default(),
     }
 }
 
@@ -701,6 +701,10 @@ fn attestation_object(data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), Vec<u8>> {
         return Err("Invalid attestation object. Presence of extra bytes.".into());
     }
     let Zval::Array(object) = normalized else {
+        // `$attestationObject['authData'] ?? ...` on an object that is not ArrayAccess.
+        if let Some(class) = super::tags::class_of(&normalized) {
+            return Err(format!("Cannot use object of type {class} as array").into());
+        }
         return Err("Invalid attestation object. Missing \"authData\" field.".into());
     };
     let Some(auth) = object.get(&k("authData")).filter(|v| **v != Zval::Null) else {

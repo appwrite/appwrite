@@ -93,6 +93,7 @@ pub const OPS: &[&str] = &[
     "passkeys.verify_registration",
     "passkeys.verify_authentication",
     "passkeys.authenticator",
+    "passkeys.ceremony_once",
     "fixture.matches",
     "fixture.strlen",
     "fixture.substr",
@@ -366,6 +367,42 @@ fn challenge(c: Challenge) -> Outcome {
 
 fn credential(c: Credential) -> Outcome {
     Outcome::Ok(json!({ "identifier": c.identifier, "record": from_array(&c.record) }))
+}
+
+/// `hex2bin()` of the even-length prefix of each present field, as
+/// `$bytes` for the authenticator (fuzzed CBOR and signatures arrive as hex).
+fn hex_overrides(a: &Args, args: &mut Value, fields: &[&str]) -> Result<(), Fault> {
+    for field in fields {
+        let Some(hex) = a.opt_str(field)? else { continue };
+        let even = &hex.as_bytes()[..hex.len() - hex.len() % 2];
+        let decoded: Option<Vec<u8>> = even
+            .chunks(2)
+            .map(|p| match p {
+                [h, l] if h.is_ascii_hexdigit() && l.is_ascii_hexdigit() => {
+                    u8::from_str_radix(std::str::from_utf8(p).ok()?, 16).ok()
+                }
+                _ => None,
+            })
+            .collect();
+        args[*field] = json!({ "$bytes": BASE64.encode(decoded.unwrap_or_default()) });
+    }
+    Ok(())
+}
+
+/// Whether some byte could head a byte or text string of 64 MiB or more.
+fn oversized(cbor: &[u8]) -> bool {
+    (0..cbor.len()).any(|i| {
+        let width = match cbor[i] {
+            0x5a | 0x7a => 4,
+            0x5b | 0x7b => 8,
+            _ => return false,
+        };
+        if i + width >= cbor.len() {
+            return false;
+        }
+        let length = cbor[i + 1..=i + width].iter().fold(0u64, |acc, b| (acc << 8) | u64::from(*b)) as i64;
+        length >= 0x400_0000
+    })
 }
 
 fn relying_party(a: &Args) -> Result<RelyingParty, Fault> {
@@ -956,6 +993,49 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             &array(a.opt("record"))
         ))),
         "passkeys.authenticator" => Outcome::Ok(authenticator::respond(&a)?),
+        "passkeys.ceremony_once" => {
+            let origin = "http://localhost:3000";
+            let ceremony = Ceremony::new(RelyingParty::new("localhost", "Test", vec![origin.to_owned()]));
+            let challenge = tri!(ceremony.register(b"user@example.com", b"User", &[]));
+            let sign_in = a.opt_str("phase")? == Some("sign-in");
+            let options = from_array(&challenge.options);
+            let mut args = json!({
+                "kind": "register", "key": a.str("key")?, "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+                "origin": origin, "options": options,
+            });
+            let mut fuzzed = json!({});
+            hex_overrides(&a, &mut fuzzed, &["attestation", "cose", "extensions"])?;
+            // As the PHP adapter: lengths that would exhaust PHP's memory are not run.
+            let oversized = ["attestation", "cose", "extensions"]
+                .iter()
+                .filter_map(|f| crate::adapter::bytes(&fuzzed[*f]))
+                .any(|cbor| oversized(&cbor));
+            if oversized {
+                return Ok(Outcome::ok("skipped: a declared length of 64 MiB or more"));
+            }
+            if !sign_in {
+                hex_overrides(&a, &mut args, &["attestation", "cose", "extensions"])?;
+            }
+            let response = array(Some(&authenticator::respond(&Args(&args))?));
+            let registered = tri!(ceremony.verify_registration(challenge.state.as_bytes(), &response));
+            if !sign_in {
+                credential(registered)
+            } else {
+                let request = tri!(ceremony.authenticate());
+                let mut args = json!({
+                    "kind": "authenticate", "key": a.str("key")?, "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+                    "origin": origin, "options": from_array(&request.options), "counter": 1,
+                    "user_handle": options["user"]["id"],
+                });
+                hex_overrides(&a, &mut args, &["extensions", "signature"])?;
+                let response = array(Some(&authenticator::respond(&Args(&args))?));
+                credential(tri!(ceremony.verify_authentication(
+                    request.state.as_bytes(),
+                    &response,
+                    &registered.record
+                )))
+            }
+        }
 
         // Fixtures
         "fixture.matches" => {
