@@ -68,10 +68,11 @@ Nightjar reads the execution list instead of events. The `sweep` function asks A
 
 ```javascript
 /**
- * Failed executions, oldest first: by end time (after `since`, not after
- * `until`), or by start time (after `createdAfter`, not after `createdBefore`).
+ * Failed executions in order of `by`, oldest first: by end time (after
+ * `since`, not after `until`), or by start time (after `createdAfter`, not
+ * after `createdBefore`).
  */
-export async function listFailedExecutions({ functions }, functionId, { since, until, createdAfter, createdBefore, offset = 0, limit = 50 }) {
+export async function listFailedExecutions({ functions }, functionId, { since, until, createdAfter, createdBefore, by = '$updatedAt', offset = 0, limit = 50 }) {
   const { executions } = await functions.listExecutions({
     functionId,
     queries: [
@@ -80,7 +81,7 @@ export async function listFailedExecutions({ functions }, functionId, { since, u
       ...(until ? [Query.lessThanEqual('$updatedAt', until.toISOString())] : []),
       ...(createdAfter ? [Query.greaterThan('$createdAt', createdAfter.toISOString())] : []),
       ...(createdBefore ? [Query.lessThanEqual('$createdAt', createdBefore.toISOString())] : []),
-      Query.orderAsc('$updatedAt'),
+      Query.orderAsc(by),
       Query.limit(limit),
       Query.offset(offset),
     ],
@@ -234,35 +235,39 @@ The sweep keeps a cursor on each monitor row: the end time of the newest failure
 // New failures after the cursor come first, so every sweep makes progress.
 // A new monitor starts 10 minutes before its row was created.
 const since = monitor.cursor ? new Date(monitor.cursor) : new Date(Date.parse(monitor.$createdAt) - LOOKBACK_MS);
-await scan(appwrite, functionId, { since }, sweep, { moveCursor: true });
+await scan(appwrite, functionId, { since }, sweep, { track: 'cursor', firstPage: true });
 
 // With the time that is left, failures that Appwrite listed late: the 10
 // minutes before the old cursor. These do not move the cursor.
 if (monitor.cursor && !sweep.outOfTime) {
   const until = new Date(monitor.cursor);
-  await scan(appwrite, functionId, { since: new Date(until.getTime() - LOOKBACK_MS), until }, sweep, { moveCursor: false });
+  await scan(appwrite, functionId, { since: new Date(until.getTime() - LOOKBACK_MS), until }, sweep);
 }
 
 // Appwrite reports an execution that stays waiting or processing past the
-// function timeout as failed, but its end time stays where it was. These
-// failures crossed the timeout in the last 10 minutes; they do not move the cursor.
+// function timeout as failed, but its end time stays where it was. The third
+// pass reads failures by start time up to the timeout line, from where the
+// last third pass stopped, so a sweep that did not run leaves no gap.
 if (!sweep.outOfTime) {
   const timedOutBy = new Date(Date.now() - (settings.timeout ?? 15) * 1000);
-  await scan(appwrite, functionId, { createdAfter: new Date(timedOutBy.getTime() - LOOKBACK_MS), createdBefore: timedOutBy }, sweep, { moveCursor: false });
+  const from = new Date(Date.parse(sweep.timeoutCursor ?? timedOutBy.toISOString()) - LOOKBACK_MS);
+  await scan(appwrite, functionId, { createdAfter: from, createdBefore: timedOutBy, by: '$createdAt' }, sweep, { track: 'timeoutCursor' });
+  if (!sweep.outOfTime) sweep.timeoutCursor = timedOutBy.toISOString();
 }
 ```
 
 Appwrite can add a finished execution to the list a few seconds after the execution ends. The cursor can then move past the end time of a failure before the list shows it. The second pass catches these failures. It runs after the first pass, so a large set of recorded failures in the 10-minute window never delays the new ones.
 
-The third pass covers an execution that never finishes, for example when the runtime stops responding. Appwrite keeps it as `waiting` or `processing`, and a query for `failed` executions reports it as `failed` once it runs longer than the function timeout. Its `$updatedAt` does not change, so the first two passes can miss it. The third pass lists the failures whose start time crossed the timeout in the last 10 minutes.
+The third pass covers an execution that never finishes, for example when the runtime stops responding. Appwrite keeps it as `waiting` or `processing`, and a query for `failed` executions reports it as `failed` once it runs longer than the function timeout. Its `$updatedAt` does not change, so the first two passes can miss it. The third pass lists failures by start time, up to the timeout line. It keeps its own cursor on the monitor row, `timeoutCursor`, and starts 10 minutes before it, so a sweep that did not run for an hour leaves no gap.
 
-`scan` pages through one time range, oldest first, and records each execution that has no occurrence row yet:
+`scan` pages through one time range, oldest first, and records each execution that has no occurrence row yet. `track` names the cursor that follows the scan:
 
 ```javascript
-async function scan(appwrite, functionId, range, sweep, { moveCursor }) {
+async function scan(appwrite, functionId, range, sweep, { track = null, firstPage = false } = {}) {
+  const field = range.by ?? '$updatedAt';
   for (let page = 0; ; page++) {
     // The first page of new failures always runs, so the cursor always moves.
-    if ((page > 0 || !moveCursor) && Date.now() >= sweep.deadline) return stop(sweep, moveCursor);
+    if ((page > 0 || !firstPage) && Date.now() >= sweep.deadline) return stop(sweep, track);
     const executions = await listFailedExecutions(appwrite, functionId, { ...range, offset: page * PAGE_SIZE, limit: PAGE_SIZE });
     const recorded = await findRecordedExecutions(appwrite, executions.map((execution) => execution.$id));
 
@@ -270,13 +275,13 @@ async function scan(appwrite, functionId, range, sweep, { moveCursor }) {
       if (recorded.has(execution.$id)) {
         sweep.counts.duplicate++;
       } else if (Date.now() >= sweep.deadline) {
-        return stop(sweep, moveCursor);
+        return stop(sweep, track);
       } else {
         const result = await sweep.record(execution);
         sweep.counts[result.outcome]++;
         // ...
       }
-      if (moveCursor) sweep.cursor = later(sweep.cursor, execution.$updatedAt);
+      if (track) sweep[track] = later(sweep[track], execution[field]);
       sweep.lastFailureAt = later(sweep.lastFailureAt, execution.$updatedAt);
     }
     if (executions.length < PAGE_SIZE) return;
