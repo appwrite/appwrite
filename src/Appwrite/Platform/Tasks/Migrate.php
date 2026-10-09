@@ -103,7 +103,7 @@ class Migrate extends Action
             $total = 0;
         }
 
-        $callback = function (Document $project) use ($dbForPlatform, $getProjectDB, $register, $migration, &$count, $total, $authorization) {
+        foreach ($dbForPlatform->cursor('projects', batchSize: 25) as $project) {
             /** @var Database $dbForProject */
             $dbForProject = $getProjectDB($project);
             $dbForProject->setValidation(false);
@@ -124,9 +124,6 @@ class Migrate extends Action
             }
 
             Console::log('Migrated ' . ++$count . '/' . $total . ' projects...');
-        };
-        foreach ($dbForPlatform->cursor('projects', batchSize: 25) as $document) {
-            $callback($document);
         }
 
         try {

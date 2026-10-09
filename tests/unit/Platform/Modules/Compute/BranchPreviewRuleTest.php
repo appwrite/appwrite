@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Modules\Compute;
 
+use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Platform\Modules\Compute\Base;
 use PHPUnit\Framework\TestCase;
 use Utopia\Bus\Bus;
@@ -38,7 +39,29 @@ final class BranchPreviewRuleTest extends TestCase
         $this->activate($dbForPlatform, 'appwrite.network/path');
     }
 
-    private function activate(Database $dbForPlatform, string $sitesDomain): void
+    public function testManualBranchRulesFollowTheNewDeployment(): void
+    {
+        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform->method('cursor')->willReturnCallback(function (): \Generator {
+            yield new Document(['$id' => 'manualRule']);
+        });
+        $dbForPlatform->expects($this->once())
+            ->method('updateDocument')
+            ->with('rules', 'manualRule', $this->callback(
+                fn (Document $update) => $update->getAttribute('deploymentId') === 'deployment1'
+                    && $update->getAttribute('deploymentInternalId') === '3'
+            ))
+            ->willReturnCallback(fn (string $collection, string $id, Document $update) => new Document(['$id' => $id, ...$update->getArrayCopy()]));
+
+        $bus = $this->createMock(Bus::class);
+        $bus->expects($this->once())
+            ->method('dispatch')
+            ->with($this->callback(fn (RuleUpdated $event) => $event->rule['$id'] === 'manualRule'));
+
+        $this->activate($dbForPlatform, 'appwrite.network/path', $bus);
+    }
+
+    private function activate(Database $dbForPlatform, string $sitesDomain, ?Bus $bus = null): void
     {
         Base::activateBranchPreviewRule(
             new Document(['$id' => 'proj456', '$sequence' => '1', 'region' => 'fra']),
@@ -50,7 +73,7 @@ final class BranchPreviewRuleTest extends TestCase
                 'installationId' => 'installation1',
             ]),
             $dbForPlatform,
-            $this->createStub(Bus::class),
+            $bus ?? $this->createStub(Bus::class),
             $sitesDomain,
         );
     }

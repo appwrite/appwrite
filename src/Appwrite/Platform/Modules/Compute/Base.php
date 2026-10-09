@@ -498,13 +498,6 @@ class Base extends Action
             }
         }
 
-        $callback = function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-            ]));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
-        };
         foreach ($dbForPlatform->cursor('rules', [
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('type', ['deployment']),
@@ -512,8 +505,12 @@ class Base extends Action
             Query::equal('deploymentResourceType', ['site']),
             Query::equal('deploymentVcsProviderBranch', [$branchName]),
             Query::equal('trigger', ['manual']),
-        ], batchSize: 25) as $document) {
-            $callback($document);
+        ], batchSize: 25) as $rule) {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
         }
     }
 
