@@ -266,6 +266,7 @@ final readonly class Claim
                         'attemptId' => $migration->getAttribute('attemptId'),
                         'status' => $migration->getAttribute('status'),
                         'stage' => $migration->getAttribute('stage'),
+                        '$updatedAt' => $migration->getUpdatedAt(),
                     ]);
 
                     return new Retry(
@@ -454,6 +455,7 @@ final readonly class Claim
                                 'attemptId' => $liveAttemptId,
                                 'status' => $live->getAttribute('status'),
                                 'stage' => $live->getAttribute('stage'),
+                                '$updatedAt' => $live->getUpdatedAt(),
                             ]);
                         }
 

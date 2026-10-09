@@ -998,6 +998,72 @@ final class MigrationsTest extends TestCase
         $this->assertSame(Claim::STAGE_FINALIZING, $database->getDocument('migrations', 'migration-1')->getAttribute('stage'));
     }
 
+    public function testRealtimeUpdatesCarryTheUpdateTimestampMainEnqueued(): void
+    {
+        $database = $this->createClaimDatabase();
+        $project = new Document(['$id' => 'project-1', '$sequence' => 1, 'teamId' => 'team-1']);
+        $created = $database->createDocument('migrations', new Document([
+            '$id' => 'migration-new',
+            'attemptId' => 'attempt-1',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+            'errors' => [],
+        ]));
+        $failed = $database->createDocument('migrations', new Document([
+            '$id' => 'migration-failed',
+            'attemptId' => 'attempt-terminal',
+            'status' => 'failed',
+            'stage' => 'finished',
+            'resourceData' => [],
+            'errors' => [],
+        ]));
+        \usleep(5_000);
+        $retry = (new Claim($database, $this->claimLocks()))->reclaim($project->getId(), $failed->getId());
+        \usleep(5_000);
+
+        $realtime = new class () extends Realtime {
+            /** @var array<string, string> */
+            public array $updatedAt = [];
+
+            #[\Override]
+            public function trigger(): string|bool
+            {
+                $payload = $this->getPayload();
+                $this->updatedAt[$payload['$id']] = $payload['$updatedAt'];
+
+                return true;
+            }
+        };
+        $worker = new class () extends Migrations {
+            #[\Override]
+            protected function processMigration(
+                Document $migration,
+                Realtime $queueForRealtime,
+                MailPublisher $publisherForMails,
+                Context $usage,
+                UsagePublisher $publisherForUsage,
+                array $platform,
+                Authorization $authorization,
+            ): void {
+                $migration->setAttribute('stage', 'migrating');
+                $this->updateMigrationDocument($migration, $this->project ?? throw new \LogicException('Project missing'), $queueForRealtime);
+            }
+        };
+
+        $this->deliverClaim($worker, $database, $project, $this->migrationDelivery($project, $created), $realtime);
+        $this->deliverClaim($worker, $database, $project, new Message([
+            'pid' => 'pid-retry',
+            'queue' => 'v1-migrations',
+            'timestamp' => \time(),
+            'payload' => $retry->message($project)->toArray(),
+        ]), $realtime);
+
+        $this->assertSame($created->getCreatedAt(), $realtime->updatedAt['migration-new'], 'Main published a new migration as it created it');
+        $this->assertSame($failed->getUpdatedAt(), $realtime->updatedAt['migration-failed'], 'Main published a retried migration as it failed');
+        $this->assertNotSame($failed->getUpdatedAt(), $database->getDocument('migrations', 'migration-failed')->getUpdatedAt());
+    }
+
     private function createClaimDatabase(bool $ownership = true): Database
     {
         $database = new Database(new Memory(), new Cache(new NoCache()));
@@ -1054,7 +1120,7 @@ final class MigrationsTest extends TestCase
         return static fn (string $key, int $ttl, callable $callback, float $timeout): mixed => $callback();
     }
 
-    private function deliverClaim(Migrations $worker, Database $database, Document $project, Message $message): void
+    private function deliverClaim(Migrations $worker, Database $database, Document $project, Message $message, ?Realtime $realtime = null): void
     {
         $publisher = $this->createStub(Publisher::class);
         $queue = new Queue('test');
@@ -1067,7 +1133,7 @@ final class MigrationsTest extends TestCase
             dbForPlatform: $database,
             getDatabasesDB: static fn (Document $document): Database => $database,
             getProjectDB: static fn (Document $document): Database => $database,
-            queueForRealtime: new Realtime(),
+            queueForRealtime: $realtime ?? new Realtime(),
             deviceForMigrations: $device,
             deviceForFiles: $device,
             publisherForMails: new MailPublisher($publisher, $queue),

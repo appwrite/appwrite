@@ -68,6 +68,11 @@ class Migrations extends Action
     protected ?Document $project;
     protected ?Claim $claims = null;
     protected ?Document $terminal = null;
+
+    /**
+     * The update timestamp of the document main enqueued, which every realtime update of the delivery carried.
+     */
+    protected ?string $announcedUpdatedAt = null;
     protected ?PublicHostname $publicHostname = null;
 
     protected ?Document $sourceProject = null;
@@ -162,6 +167,7 @@ class Migrations extends Action
         $migration = $delivery->migration;
         $this->claims = $claims;
         $this->terminal = $delivery->terminal;
+        $this->announcedUpdatedAt = self::announcedUpdatedAt($migrationMessage->migration, $delivery->terminal);
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
@@ -200,6 +206,7 @@ class Migrations extends Action
         $this->project = null;
         $this->claims = null;
         $this->terminal = null;
+        $this->announcedUpdatedAt = null;
         $this->sourceProject = null;
         $this->publicHostname = null;
         $this->getDatabasesDB = null;
@@ -500,6 +507,9 @@ class Migrations extends Action
 
         $payload = $migration->getArrayCopy();
         unset($payload['attemptId']);
+        if ($this->announcedUpdatedAt !== null) {
+            $payload['$updatedAt'] = $this->announcedUpdatedAt;
+        }
 
         try {
             $queueForRealtime
@@ -516,6 +526,21 @@ class Migrations extends Action
         return $stored;
     }
 
+
+    /**
+     * Main published the document it enqueued: as created for a new migration, as it failed for a retry.
+     */
+    private static function announcedUpdatedAt(Document $queued, ?Document $terminal): ?string
+    {
+        $failedAt = $terminal?->getUpdatedAt();
+        if ($failedAt !== null) {
+            return $failedAt;
+        }
+
+        return $queued->getAttribute('attemptId') === null
+            ? $queued->getUpdatedAt()
+            : $queued->getCreatedAt();
+    }
 
     /**
      * @return array<string>
