@@ -59,10 +59,7 @@ function PromptText({
 }) {
   return (
     <p
-      className={cn(
-        'min-w-0 break-words font-mono text-foreground',
-        className,
-      )}
+      className={cn('min-w-0 break-words font-mono text-foreground', className)}
       title={prompt}
     >
       {intro}{' '}
@@ -100,12 +97,7 @@ export function DocsAgentPromptBar({
   const setAgentId = onAgentChange ?? stored.setAgentId
 
   const projectPicker = isAuthenticated ? (
-    <DocsProjectPicker
-      variant="field"
-      noneLabel="Let the agent choose"
-      align="end"
-      className="h-7"
-    />
+    <DocsProjectPicker align="end" className="h-7" />
   ) : null
 
   if (size === 'compact') {

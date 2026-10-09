@@ -136,7 +136,6 @@ export const ANALYTICS_ACTIONS = {
   'docs-agent-prompt-open': 'Docs Agent Prompt Opened In Agent',
   'docs-agent-select': 'Docs Agent Selected',
   'docs-agent-project-picker': 'Docs Agent Project Picker Clicked',
-  'docs-code-project-picker': 'Docs Code Project Picker Clicked',
   'docs-first-prompt-copy': 'Docs First Prompt Copied',
 
   // Upgrade / change-plan wizard

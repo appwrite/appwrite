@@ -9,8 +9,13 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import type { Models } from '@appwrite.io/console'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { getProjectListItemEndpoint } from '@/lib/react-query/hooks/projects'
+import {
+  getProjectListItemEndpoint,
+  projectQueryOptions,
+} from '@/lib/react-query/hooks/projects'
 
 const STORAGE_KEY = 'docs:project'
 
@@ -21,16 +26,18 @@ export type DocsProjectSelection = {
   orgId: string
 }
 
+/** Saved with the account that picked it, so another sign-in never inherits it. */
+type StoredDocsProject = DocsProjectSelection & { accountId: string }
+
 export type DocsActiveProject = DocsProjectSelection & { endpoint: string }
 
 type DocsProjectContextValue = {
-  /** False outside the docs shell, where the picker and code filling are off. */
+  /** False outside the docs shell, where the picker is off. */
   available: boolean
-  /** The chosen project, only while signed in and after hydration. */
+  /** The chosen project, only for the account that chose it and after hydration. */
   project: DocsActiveProject | null
   setProject: (project: DocsProjectSelection | null) => void
   isAuthenticated: boolean
-  authLoading: boolean
 }
 
 const FALLBACK_CONTEXT: DocsProjectContextValue = {
@@ -38,21 +45,21 @@ const FALLBACK_CONTEXT: DocsProjectContextValue = {
   project: null,
   setProject: () => {},
   isAuthenticated: false,
-  authLoading: false,
 }
 
 const DocsProjectContext =
   createContext<DocsProjectContextValue>(FALLBACK_CONTEXT)
 
-function readStoredProject(): DocsProjectSelection | null {
+function readStoredProject(): StoredDocsProject | null {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
-    const parsed = JSON.parse(raw) as Partial<DocsProjectSelection>
+    const parsed = JSON.parse(raw) as Partial<StoredDocsProject>
     if (
       typeof parsed.id !== 'string' ||
       typeof parsed.name !== 'string' ||
-      typeof parsed.orgId !== 'string'
+      typeof parsed.orgId !== 'string' ||
+      typeof parsed.accountId !== 'string'
     ) {
       return null
     }
@@ -60,6 +67,7 @@ function readStoredProject(): DocsProjectSelection | null {
       id: parsed.id,
       name: parsed.name,
       orgId: parsed.orgId,
+      accountId: parsed.accountId,
       region: typeof parsed.region === 'string' ? parsed.region : 'unknown',
     }
   } catch {
@@ -67,7 +75,7 @@ function readStoredProject(): DocsProjectSelection | null {
   }
 }
 
-function writeStoredProject(project: DocsProjectSelection | null) {
+function writeStoredProject(project: StoredDocsProject | null) {
   try {
     if (project) {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(project))
@@ -79,9 +87,17 @@ function writeStoredProject(project: DocsProjectSelection | null) {
   }
 }
 
+function isProjectUnavailableError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const code = (error as { code?: unknown }).code
+  return code === 401 || code === 403 || code === 404
+}
+
 export function DocsProjectProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth()
-  const [stored, setStored] = useState<DocsProjectSelection | null>(null)
+  const { account: accountUnknown, isAuthenticated } = useAuth()
+  const account = accountUnknown as Models.User | undefined
+  const accountId = isAuthenticated ? (account?.$id ?? null) : null
+  const [stored, setStored] = useState<StoredDocsProject | null>(null)
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
@@ -95,25 +111,49 @@ export function DocsProjectProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('storage', onStorage)
   }, [])
 
-  const setProject = useCallback((project: DocsProjectSelection | null) => {
-    setStored(project)
-    writeStoredProject(project)
-  }, [])
+  const setProject = useCallback(
+    (project: DocsProjectSelection | null) => {
+      const next = project && accountId ? { ...project, accountId } : null
+      setStored(next)
+      writeStoredProject(next)
+    },
+    [accountId],
+  )
+
+  // Only the account that picked the project gets it back.
+  const candidate =
+    hydrated && stored && accountId && stored.accountId === accountId
+      ? stored
+      : null
+
+  // Drop a project the account can no longer open (deleted, or access removed).
+  // Other failures, such as a network error, keep the choice.
+  const { error: projectError } = useQuery(projectQueryOptions(candidate?.id))
+  const projectUnavailable = isProjectUnavailableError(projectError)
+  useEffect(() => {
+    if (projectUnavailable) setProject(null)
+  }, [projectUnavailable, setProject])
 
   const project = useMemo<DocsActiveProject | null>(() => {
-    if (!hydrated || !isAuthenticated || !stored) return null
-    return { ...stored, endpoint: getProjectListItemEndpoint(stored) }
-  }, [hydrated, isAuthenticated, stored])
+    if (!candidate || projectUnavailable) return null
+    const { id, name, region, orgId } = candidate
+    return {
+      id,
+      name,
+      region,
+      orgId,
+      endpoint: getProjectListItemEndpoint({ region }),
+    }
+  }, [candidate, projectUnavailable])
 
   const value = useMemo<DocsProjectContextValue>(
     () => ({
       available: true,
       project,
       setProject,
-      isAuthenticated: hydrated && isAuthenticated,
-      authLoading: !hydrated || isLoading,
+      isAuthenticated: hydrated && !!accountId,
     }),
-    [project, setProject, hydrated, isAuthenticated, isLoading],
+    [project, setProject, hydrated, accountId],
   )
 
   return (

@@ -180,8 +180,7 @@ export function View() {
             </SectionHeading>
             <p className={BODY_CLASS}>
               Each guide creates a project in the Console and walks through the
-              SDK setup for one framework. Sign in and choose a project on any
-              code sample to fill in your project ID and endpoint.
+              SDK setup for one framework.
             </p>
           </div>
           {QUICK_STARTS_HUB_CATEGORIES.map((category) => (

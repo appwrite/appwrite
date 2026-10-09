@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Check, ChevronDown, FolderOpen, Loader2, X } from 'lucide-react'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
@@ -40,8 +39,6 @@ import { useDocsProject } from './DocsProjectContext'
 const PICKER_PAGE_SIZE = 50
 
 type DocsProjectPickerProps = {
-  /** `chip` sits in a code block header; `field` sits in the agent prompt card. */
-  variant?: 'chip' | 'field'
   /** Label for the "no project" option. */
   noneLabel?: string
   className?: string
@@ -70,49 +67,13 @@ function useOrganizationOptions(enabled: boolean): {
   return { organizations, isLoading: enabled && isLoading }
 }
 
-function SignedOutPanel() {
-  const location = useLocation()
-  const redirect = `${location.pathname}${location.hash}`
-  return (
-    <div>
-      <div className="px-4 py-3">
-        <p className="text-[13px] font-medium text-foreground">
-          Use your project in code
-        </p>
-        <p className="mt-1.5 text-[12px] leading-5 text-muted-foreground">
-          Sign in and pick a project. Code samples on every docs page then use
-          its project ID and endpoint.
-        </p>
-      </div>
-      <div className="flex gap-2 border-t border-border bg-muted/30 px-4 py-3">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 flex-1 text-[12px]"
-          asChild
-        >
-          <Link to="/sign-in" search={{ redirect }}>
-            Sign in
-          </Link>
-        </Button>
-        <Button size="sm" className="h-8 flex-1 text-[12px]" asChild>
-          <Link to="/sign-up" search={{ redirect }}>
-            Sign up
-          </Link>
-        </Button>
-      </div>
-    </div>
-  )
-}
-
+/** Picks the project the setup prompt names. Shown only while signed in. */
 export function DocsProjectPicker({
-  variant = 'chip',
-  noneLabel = 'No project',
+  noneLabel = 'Let the agent choose',
   className,
   align = 'end',
 }: DocsProjectPickerProps) {
-  const { available, project, setProject, isAuthenticated, authLoading } =
-    useDocsProject()
+  const { available, project, setProject, isAuthenticated } = useDocsProject()
   const [open, setOpen] = useState(false)
   const [orgId, setOrgId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
@@ -154,17 +115,14 @@ export function DocsProjectPicker({
     scopeData ?? null,
   )
 
-  if (!available) return null
+  if (!available || !isAuthenticated) return null
 
-  const isField = variant === 'field'
   const showSkeleton = (orgsLoading || isFetching) && projects.length === 0
   const hasMore = total > projects.length
 
   const triggerLabel = project
-    ? formatProjectNameForDisplay(project.name, isField ? 28 : 20)
-    : isField
-      ? noneLabel
-      : 'Use my project'
+    ? formatProjectNameForDisplay(project.name, 28)
+    : noneLabel
 
   const selectProject = (next: (typeof projects)[number]) => {
     if (!orgId) return
@@ -177,22 +135,17 @@ export function DocsProjectPicker({
       <PopoverTrigger asChild>
         <Button
           type="button"
-          variant={isField ? 'outline' : 'ghost'}
+          variant="outline"
           size="sm"
-          disabled={authLoading && !isField}
           aria-label={project ? `Project: ${project.name}` : 'Choose a project'}
           className={cn(
-            isField
-              ? 'h-8 max-w-[240px] gap-1.5 px-2.5 text-[12px] font-normal'
-              : 'h-7 max-w-[200px] gap-1.5 px-2 text-[11px] font-medium',
+            'h-8 max-w-[240px] gap-1.5 px-2.5 text-[12px] font-normal',
             project
               ? 'text-foreground'
               : 'text-muted-foreground hover:text-foreground',
             className,
           )}
-          {...analyticsAttrs(
-            isField ? 'docs-agent-project-picker' : 'docs-code-project-picker',
-          )}
+          {...analyticsAttrs('docs-agent-project-picker')}
         >
           {project ? (
             <InitialsAvatar
@@ -212,142 +165,135 @@ export function DocsProjectPicker({
         className="w-[300px] p-0"
         onWheelCapture={(event) => event.stopPropagation()}
       >
-        {!isAuthenticated ? (
-          <SignedOutPanel />
-        ) : (
-          <div>
-            <div className="px-3 pb-2 pt-3">
-              <p className="text-[13px] font-medium text-foreground">
-                {isField
-                  ? 'Project for your agent'
-                  : 'Use your project in code'}
-              </p>
-              <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
-                {isField
-                  ? 'Optional. Without one, the agent links or creates a project for you.'
-                  : 'Code samples on every docs page use its project ID and endpoint.'}
-              </p>
-            </div>
-            {organizations.length > 1 ? (
-              <div className="px-3 pb-2">
-                <Select value={orgId ?? undefined} onValueChange={setOrgId}>
-                  <SelectTrigger size="sm" className="h-8 w-full text-[12px]">
-                    <SelectValue placeholder="Organization" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {organizations.map((org) => (
-                      <SelectItem
-                        key={org.$id}
-                        value={org.$id}
-                        className="text-[12px]"
-                      >
-                        {org.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : null}
-            <Command shouldFilter={false} className="border-t border-border">
-              <div className="relative">
-                <CommandInput
-                  placeholder="Search projects..."
-                  value={search}
-                  onValueChange={setSearch}
-                  className="h-9 pe-8 text-[12px]"
-                />
-                <Loader2
-                  className={cn(
-                    'pointer-events-none absolute end-3 top-1/2 size-3.5 -translate-y-1/2 animate-spin text-muted-foreground transition-opacity',
-                    isFetching ? 'opacity-100' : 'opacity-0',
-                  )}
-                  aria-hidden
-                />
-              </div>
-              <CommandList className="max-h-[240px] min-h-[120px] overflow-y-auto overscroll-contain">
-                {showSkeleton ? (
-                  <div className="space-y-0.5 p-1" aria-hidden>
-                    {Array.from({ length: 4 }, (_, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-2 px-2 py-1.5"
-                      >
-                        <Skeleton className="size-4 shrink-0 rounded-full" />
-                        <Skeleton
-                          className="h-3.5 rounded-sm"
-                          style={{ width: `${50 + (index % 3) * 14}%` }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <>
-                    <CommandEmpty className="py-6 text-center text-[12px] text-muted-foreground">
-                      No projects found
-                    </CommandEmpty>
-                    <CommandGroup>
-                      {projects.map((item) => {
-                        const selected = project?.id === item.$id
-                        return (
-                          <CommandItem
-                            key={item.$id}
-                            value={item.$id}
-                            onSelect={() => selectProject(item)}
-                            className={cn(
-                              'gap-2 px-2 py-1.5 text-[12px]',
-                              selected && 'bg-accent/50',
-                            )}
-                          >
-                            <InitialsAvatar
-                              name={item.name}
-                              size="xs"
-                              className="size-4 shrink-0 text-[8px]"
-                            />
-                            <span className="min-w-0 flex-1 truncate">
-                              {formatProjectNameForDisplay(item.name, 26)}
-                            </span>
-                            {item.region && item.region !== 'unknown' ? (
-                              <span className="shrink-0 font-mono text-[10px] uppercase text-muted-foreground">
-                                {item.region}
-                              </span>
-                            ) : null}
-                            <Check
-                              className={cn(
-                                'size-3.5 shrink-0',
-                                selected ? 'opacity-100' : 'opacity-0',
-                              )}
-                              aria-hidden
-                            />
-                          </CommandItem>
-                        )
-                      })}
-                    </CommandGroup>
-                    {hasMore ? (
-                      <p className="px-3 pb-2 pt-1 text-[11px] text-muted-foreground">
-                        Search to find more projects.
-                      </p>
-                    ) : null}
-                  </>
-                )}
-              </CommandList>
-            </Command>
-            {project ? (
-              <div className="border-t border-border p-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setProject(null)
-                    setOpen(false)
-                  }}
-                  className="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-start text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                >
-                  <X className="size-3.5 shrink-0" aria-hidden />
-                  {isField ? noneLabel : 'Show placeholders instead'}
-                </button>
-              </div>
-            ) : null}
+        <div>
+          <div className="px-3 pb-2 pt-3">
+            <p className="text-[13px] font-medium text-foreground">
+              Project for your agent
+            </p>
+            <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+              Optional. Without one, the agent links or creates a project for
+              you.
+            </p>
           </div>
-        )}
+          {organizations.length > 1 ? (
+            <div className="px-3 pb-2">
+              <Select value={orgId ?? undefined} onValueChange={setOrgId}>
+                <SelectTrigger size="sm" className="h-8 w-full text-[12px]">
+                  <SelectValue placeholder="Organization" />
+                </SelectTrigger>
+                <SelectContent>
+                  {organizations.map((org) => (
+                    <SelectItem
+                      key={org.$id}
+                      value={org.$id}
+                      className="text-[12px]"
+                    >
+                      {org.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
+          <Command shouldFilter={false} className="border-t border-border">
+            <div className="relative">
+              <CommandInput
+                placeholder="Search projects..."
+                value={search}
+                onValueChange={setSearch}
+                className="h-9 pe-8 text-[12px]"
+              />
+              <Loader2
+                className={cn(
+                  'pointer-events-none absolute end-3 top-1/2 size-3.5 -translate-y-1/2 animate-spin text-muted-foreground transition-opacity',
+                  isFetching ? 'opacity-100' : 'opacity-0',
+                )}
+                aria-hidden
+              />
+            </div>
+            <CommandList className="max-h-[240px] min-h-[120px] overflow-y-auto overscroll-contain">
+              {showSkeleton ? (
+                <div className="space-y-0.5 p-1" aria-hidden>
+                  {Array.from({ length: 4 }, (_, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 px-2 py-1.5"
+                    >
+                      <Skeleton className="size-4 shrink-0 rounded-full" />
+                      <Skeleton
+                        className="h-3.5 rounded-sm"
+                        style={{ width: `${50 + (index % 3) * 14}%` }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <CommandEmpty className="py-6 text-center text-[12px] text-muted-foreground">
+                    No projects found
+                  </CommandEmpty>
+                  <CommandGroup>
+                    {projects.map((item) => {
+                      const selected = project?.id === item.$id
+                      return (
+                        <CommandItem
+                          key={item.$id}
+                          value={item.$id}
+                          onSelect={() => selectProject(item)}
+                          className={cn(
+                            'gap-2 px-2 py-1.5 text-[12px]',
+                            selected && 'bg-accent/50',
+                          )}
+                        >
+                          <InitialsAvatar
+                            name={item.name}
+                            size="xs"
+                            className="size-4 shrink-0 text-[8px]"
+                          />
+                          <span className="min-w-0 flex-1 truncate">
+                            {formatProjectNameForDisplay(item.name, 26)}
+                          </span>
+                          {item.region && item.region !== 'unknown' ? (
+                            <span className="shrink-0 font-mono text-[10px] uppercase text-muted-foreground">
+                              {item.region}
+                            </span>
+                          ) : null}
+                          <Check
+                            className={cn(
+                              'size-3.5 shrink-0',
+                              selected ? 'opacity-100' : 'opacity-0',
+                            )}
+                            aria-hidden
+                          />
+                        </CommandItem>
+                      )
+                    })}
+                  </CommandGroup>
+                  {hasMore ? (
+                    <p className="px-3 pb-2 pt-1 text-[11px] text-muted-foreground">
+                      Search to find more projects.
+                    </p>
+                  ) : null}
+                </>
+              )}
+            </CommandList>
+          </Command>
+          {project ? (
+            <div className="border-t border-border p-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setProject(null)
+                  setOpen(false)
+                }}
+                className="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-start text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <X className="size-3.5 shrink-0" aria-hidden />
+                {noneLabel}
+              </button>
+            </div>
+          ) : null}
+        </div>
       </PopoverContent>
     </Popover>
   )
