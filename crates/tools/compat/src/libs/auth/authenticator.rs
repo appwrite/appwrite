@@ -88,6 +88,13 @@ pub fn respond(a: &Args) -> Result<Value, Fault> {
     if register {
         flags |= FLAG_ATTESTED;
     }
+    let extensions = match a.opt("extensions") {
+        Some(v) => {
+            flags |= 0x80;
+            crate::adapter::bytes(v).ok_or_else(|| Fault::new("`extensions` must be bytes"))?
+        }
+        None => Vec::new(),
+    };
     let counter = a.opt_i64("counter")?.unwrap_or(0) as u32;
     let mut auth = Sha256::digest(rp_id.as_bytes()).to_vec();
     auth.push(flags);
@@ -96,13 +103,18 @@ pub fn respond(a: &Args) -> Result<Value, Fault> {
     if register {
         let point = key.verifying_key().to_encoded_point(false);
         let (x, y) = (point.x().ok_or_else(|| Fault::new("no x"))?, point.y().ok_or_else(|| Fault::new("no y"))?);
-        let public_key =
-            [head(5, 5), int(1), int(2), int(3), int(-7), int(-1), int(1), int(-2), bytes(x), int(-3), bytes(y)]
-                .concat();
+        let public_key = match a.opt("cose") {
+            Some(v) => crate::adapter::bytes(v).ok_or_else(|| Fault::new("`cose` must be bytes"))?,
+            None => {
+                [head(5, 5), int(1), int(2), int(3), int(-7), int(-1), int(1), int(-2), bytes(x), int(-3), bytes(y)]
+                    .concat()
+            }
+        };
         auth.extend_from_slice(&[0u8; 16]);
         auth.extend_from_slice(&(credential_id.len() as u16).to_be_bytes());
         auth.extend_from_slice(&credential_id);
         auth.extend_from_slice(&public_key);
+        auth.extend_from_slice(&extensions);
         let attestation =
             [head(5, 3), text("fmt"), text("none"), text("attStmt"), head(5, 0), text("authData"), bytes(&auth)]
                 .concat();
@@ -112,16 +124,26 @@ pub fn respond(a: &Args) -> Result<Value, Fault> {
             "type": "public-key",
             "response": {
                 "clientDataJSON": encode(client_data.as_bytes()),
-                "attestationObject": encode(&attestation),
+                "attestationObject": match a.opt("attestation") {
+                    Some(v) => encode(&crate::adapter::bytes(v).ok_or_else(|| Fault::new("`attestation` must be bytes"))?),
+                    None => encode(&attestation),
+                },
                 "transports": ["internal"],
             },
             "clientExtensionResults": {},
         }));
     }
 
+    auth.extend_from_slice(&extensions);
     let mut signed = auth.clone();
     signed.extend_from_slice(&Sha256::digest(client_data.as_bytes()));
-    let signature: Signature = key.sign(&signed);
+    let signature = match a.opt("signature") {
+        Some(v) => crate::adapter::bytes(v).ok_or_else(|| Fault::new("`signature` must be bytes"))?,
+        None => {
+            let signature: Signature = key.sign(&signed);
+            signature.to_der().as_bytes().to_vec()
+        }
+    };
     Ok(json!({
         "id": encode(&credential_id),
         "rawId": encode(&credential_id),
@@ -129,7 +151,7 @@ pub fn respond(a: &Args) -> Result<Value, Fault> {
         "response": {
             "clientDataJSON": encode(client_data.as_bytes()),
             "authenticatorData": encode(&auth),
-            "signature": encode(signature.to_der().as_bytes()),
+            "signature": encode(&signature),
             "userHandle": a.opt_str("user_handle")?.unwrap_or_default(),
         },
         "clientExtensionResults": {},

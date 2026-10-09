@@ -53,8 +53,6 @@ base64 = "0.22"
 bcrypt = "0.17"
 brotli = { version = "8", default-features = false, features = ["std"] }
 bytes = "1"
-# CBOR for WebAuthn attestation objects and COSE keys (utopia-auth passkeys); pure Rust.
-ciborium = "0.2"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
 crc32fast = "1"
 ctr = "0.9"

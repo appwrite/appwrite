@@ -9,7 +9,6 @@ publish.workspace = true
 
 [dependencies]
 aes.workspace = true
-ciborium.workspace = true
 ctr.workspace = true
 getrandom.workspace = true
 hex.workspace = true

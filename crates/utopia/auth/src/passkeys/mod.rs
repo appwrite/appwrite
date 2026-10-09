@@ -2,6 +2,7 @@
 //! registration and sign-in ceremonies with discoverable credentials,
 //! required user verification and no attestation.
 
+mod cbor;
 mod ceremony;
 mod cose;
 mod origin;

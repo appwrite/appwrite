@@ -3,13 +3,13 @@
 //! the ceremony state is its JSON options, a stored record its
 //! `CredentialRecord` JSON.
 
-use ciborium::Value as Cbor;
 use php_std::json::{self, Flags};
 use php_std::url::parse_url;
 use php_std::zval::{Array, Key, Zval};
 use sha2::{Digest, Sha256};
 
 use super::RelyingParty;
+use super::cbor::{self, Item};
 use super::cose::{Algorithm, PublicKey};
 use crate::Error;
 use crate::hash::{hash_equals, random_bytes};
@@ -617,11 +617,12 @@ fn read<'a>(data: &'a [u8], at: &mut usize, n: usize) -> Result<&'a [u8], String
     Ok(out)
 }
 
-fn cbor_item(data: &[u8], at: &mut usize) -> Result<Cbor, String> {
-    let mut cursor = std::io::Cursor::new(&data[*at..]);
-    let value: Cbor = ciborium::de::from_reader(&mut cursor).map_err(|_| "Invalid CBOR data.".to_owned())?;
-    *at += cursor.position() as usize;
-    Ok(value)
+/// One CBOR item of `data` from `at` (cbor-php's decoder on webauthn-lib's stream).
+fn cbor_item(data: &[u8], at: &mut usize) -> Result<Item, String> {
+    let mut stream = cbor::Stream::new(&data[*at..]);
+    let item = cbor::decode(&mut stream)?;
+    *at += stream.position();
+    Ok(item)
 }
 
 impl AuthData {
@@ -639,13 +640,18 @@ impl AuthData {
             let id = read(&raw, &mut at, len)?.to_vec();
             let start = at;
             let key = cbor_item(&raw, &mut at)?;
-            if !matches!(key, Cbor::Map(_)) {
+            if !matches!(key, Item::Map(_)) {
                 return Err("The data does not contain a valid credential public key.".into());
             }
             attested = Some((id, aaguid, raw[start..at].to_vec()));
         }
         if flags & FLAG_ED != 0 {
-            cbor_item(&raw, &mut at)?;
+            // AuthenticationExtensionLoader::load(): a definite map that normalizes.
+            let extensions = cbor_item(&raw, &mut at)?;
+            if !matches!(extensions, Item::Map(_)) {
+                return Err("Invalid extension object".into());
+            }
+            extensions.normalize()?;
         }
         if at != raw.len() {
             return Err("Invalid authentication data. Presence of extra bytes.".into());
@@ -679,45 +685,53 @@ impl Response {
     }
 }
 
+/// `AttestationObjectDenormalizer` and the `none` attestation statement:
+/// the format and the authenticator data.
 fn attestation_object(data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), String> {
-    let mut at = 0;
-    let parsed = cbor_item(data, &mut at)?;
-    if at != data.len() {
+    let mut stream = cbor::Stream::new(data);
+    let parsed = cbor::decode(&mut stream)?;
+    if !parsed.is_normalizable() {
+        return Err("Invalid attestation object. Unexpected object.".into());
+    }
+    let normalized = parsed.normalize()?;
+    if !stream.is_eof() {
         return Err("Invalid attestation object. Presence of extra bytes.".into());
     }
-    let map = match parsed {
-        Cbor::Map(map) => map,
-        _ => vec![],
-    };
-    let field = |name: &str| map.iter().find(|(k, _)| matches!(k, Cbor::Text(t) if t == name)).map(|(_, v)| v);
-    let Some(auth) = field("authData") else {
+    let Zval::Array(object) = normalized else {
         return Err("Invalid attestation object. Missing \"authData\" field.".into());
     };
-    let fmt = match field("fmt") {
-        Some(Cbor::Text(f)) => f.clone(),
-        None => {
+    let Some(auth) = object.get(&k("authData")).filter(|v| **v != Zval::Null) else {
+        return Err("Invalid attestation object. Missing \"authData\" field.".into());
+    };
+    let fmt = match get(&object, "fmt") {
+        Some(Zval::String(f)) => f.clone(),
+        other => {
             return Err(format!(
-                "Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, null given, called in {DENORMALIZERS}/AttestationStatementDenormalizer.php on line 25"
+                "Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, {} given, called in {DENORMALIZERS}/AttestationStatementDenormalizer.php on line 25",
+                given(other)
             ));
         }
-        _ => return Err("Invalid attestation object".into()),
     };
-    if fmt != "none" {
-        return Err(format!("The attestation statement format \"{fmt}\" is not supported."));
+    if fmt != b"none" {
+        return Err(format!(
+            "The attestation statement format \"{}\" is not supported.",
+            String::from_utf8_lossy(&fmt)
+        ));
     }
-    let empty = match field("attStmt") {
-        None => true,
-        Some(Cbor::Map(m)) => m.is_empty(),
-        Some(Cbor::Array(a)) => a.is_empty(),
-        _ => false,
-    };
-    if !empty {
+    if !matches!(get_set(&object, "attStmt"), None | Some(Zval::Array(_))) {
         return Err("Invalid attestation object".into());
     }
-    let Cbor::Bytes(auth) = auth else {
-        return Err("Invalid attestation object. Unexpected object.".into());
+    if matches!(get_set(&object, "attStmt"), Some(Zval::Array(a)) if !a.is_empty()) {
+        return Err("Invalid attestation object".into());
+    }
+    let auth = match auth {
+        Zval::String(b) => b.clone(),
+        Zval::Int(i) => i.to_string().into_bytes(),
+        Zval::Float(f) => php_std::number::to_string(*f).into_bytes(),
+        Zval::Bool(true) => b"1".to_vec(),
+        _ => Vec::new(),
     };
-    Ok((fmt.into_bytes(), auth.clone()))
+    Ok((fmt, auth))
 }
 
 /// `decodeCredential()`: the credential's raw ID and response.
@@ -942,9 +956,10 @@ impl Ceremony {
         check_presence_and_verification(options, auth)?;
         let key = PublicKey::from_cbor(public_key)?;
         let algorithms = if options.algorithms.is_empty() { vec![-7, -257] } else { options.algorithms.clone() };
-        if !algorithms.contains(&key.alg()) {
+        let alg = key.alg()?;
+        if !algorithms.contains(&alg) {
             let list: Vec<String> = algorithms.iter().map(i64::to_string).collect();
-            return Err(format!("Invalid algorithm. Expected one of {} but got {}", list.join(", "), key.alg()));
+            return Err(format!("Invalid algorithm. Expected one of {} but got {alg}", list.join(", ")));
         }
         if id.len() > 1023 {
             return Err("Credential ID too long.".into());

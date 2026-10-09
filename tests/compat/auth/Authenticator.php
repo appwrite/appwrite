@@ -54,6 +54,9 @@ final class Authenticator
         if ($register) {
             $flags |= self::FLAG_ATTESTED;
         }
+        if (isset($a['extensions'])) {
+            $flags |= 0x80;
+        }
         $authenticatorData = hash('sha256', $rpId, true) . pack('C', $flags) . pack('N', (int) ($a['counter'] ?? 0));
 
         if ($register) {
@@ -63,9 +66,10 @@ final class Authenticator
             }
             $x = str_pad((string) $details['ec']['x'], 32, "\0", STR_PAD_LEFT);
             $y = str_pad((string) $details['ec']['y'], 32, "\0", STR_PAD_LEFT);
-            $publicKey = self::head(5, 5) . self::int(1) . self::int(2) . self::int(3) . self::int(-7) . self::int(-1) . self::int(1)
-                . self::int(-2) . self::bytes($x) . self::int(-3) . self::bytes($y);
+            $publicKey = isset($a['cose']) ? (string) $a['cose'] : self::head(5, 5) . self::int(1) . self::int(2) . self::int(3) . self::int(-7)
+                . self::int(-1) . self::int(1) . self::int(-2) . self::bytes($x) . self::int(-3) . self::bytes($y);
             $authenticatorData .= str_repeat("\0", 16) . pack('n', \strlen($credentialId)) . $credentialId . $publicKey;
+            $authenticatorData .= isset($a['extensions']) ? (string) $a['extensions'] : '';
             $attestation = self::head(5, 3) . self::text('fmt') . self::text('none') . self::text('attStmt') . self::head(5, 0)
                 . self::text('authData') . self::bytes($authenticatorData);
 
@@ -75,15 +79,16 @@ final class Authenticator
                 'type' => 'public-key',
                 'response' => [
                     'clientDataJSON' => self::encode($clientData),
-                    'attestationObject' => self::encode($attestation),
+                    'attestationObject' => self::encode(isset($a['attestation']) ? (string) $a['attestation'] : $attestation),
                     'transports' => ['internal'],
                 ],
                 'clientExtensionResults' => new \stdClass(),
             ];
         }
 
-        $signature = '';
-        if (!openssl_sign($authenticatorData . hash('sha256', $clientData, true), $signature, $key, OPENSSL_ALGO_SHA256)) {
+        $authenticatorData .= isset($a['extensions']) ? (string) $a['extensions'] : '';
+        $signature = isset($a['signature']) ? (string) $a['signature'] : '';
+        if (!isset($a['signature']) && !openssl_sign($authenticatorData . hash('sha256', $clientData, true), $signature, $key, OPENSSL_ALGO_SHA256)) {
             throw new Fault('unable to sign');
         }
 
