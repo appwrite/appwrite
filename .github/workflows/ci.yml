@@ -1203,6 +1203,46 @@ jobs:
           echo "=== Traefik Logs ==="
           docker compose logs --timestamps traefik | tail -n 500
 
+  # PHP <-> Rust compatibility of the Utopia libraries (tests/compat): every
+  # case on both runtimes, fuzzing with a new seed each run, and the full
+  # conversion gate for libraries marked complete. See crates/CONVERSION.md.
+  compat:
+    name: Tests / Compat / PHP and Rust Utopia libraries
+    needs: [build]
+    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
+    timeout-minutes: 30
+    env:
+      RUST_VERSION: '1.88'
+      COMPOSE_PROFILES: postgresql
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Pull the Appwrite image
+        run: |
+          docker pull "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
+          docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}"
+
+      - name: Start Redis and PostgreSQL
+        timeout-minutes: 5
+        run: docker compose up -d --quiet-pull --no-build --wait redis postgresql
+
+      - name: Install toolchain
+        run: |
+          rustup toolchain install "${RUST_VERSION}" --profile minimal
+          rustup default "${RUST_VERSION}"
+
+      - name: Run compat
+        env:
+          COMPAT_SEED: ${{ github.run_number }}
+          COMPAT_IMAGE: ${{ env.IMAGE }}
+        run: bin/compat ci
+
+      - name: Replay recorded results with services
+        env:
+          COMPAT_SERVICES: '1'
+        run: cargo test -p compat --test replay --locked
+
   benchmark:
     name: Benchmark
     if: github.event_name == 'pull_request' || github.event_name == 'push'
