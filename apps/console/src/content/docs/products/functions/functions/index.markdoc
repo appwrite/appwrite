@@ -145,20 +145,16 @@ You can configure events triggers by navigating to your function > **Settings** 
 
 ## Schedule {% #schedule %}
 
-Appwrite supports scheduled function executions. 
-You can schedule executions using [cron expressions](https://en.wikipedia.org/wiki/Cron) in the settings of your function. 
-Cron supports recurring executions as frequently as **every minute**.
+Appwrite can run your function on a recurring schedule. Configure it by navigating to your function > **Settings** > **Schedule**, and choose one of two options:
 
-You can configure events triggers by navigating to your function > **Settings** > **Schedule**.
+- **Interval**: run every N minutes. Appwrite picks a fixed time within each interval for your function, which spreads scheduled work evenly. Use it when the function needs to run regularly but not at an exact time, such as syncing data or cleaning up records.
+- **Cron**: run at exact times, written as a [cron expression](https://en.wikipedia.org/wiki/Cron). Use it when the time of day matters, such as a report at 09:00 every Monday.
 
-Here are some cron expressions for common intervals:
+A function uses an interval or a cron expression, not both. Both run as often as **every minute**. On Appwrite Cloud, the Free and Education plans support intervals of 60 minutes or longer.
 
-| Cron Expression  | Schedule              |
-| ---------------- | --------------------- |
-| `*/15 * * * *`   | Every 15 minutes      |
-| `0 * * * *`      | Every Hour            |
-| `0 0 * * *`      | Every day at 00:00    |
-| `0 0 * * 1`      | Every Monday at 00:00 |
+{% arrow_link href="/docs/products/functions/execute#schedule" %}
+Learn more about scheduled executions
+{% /arrow_link %}
 
 ## Timeout {% #timeout %}
 You can limit the execution time of your function by navigating to your function > **Settings** > **Timeout**.

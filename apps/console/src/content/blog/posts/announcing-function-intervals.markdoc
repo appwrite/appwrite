@@ -1,0 +1,80 @@
+---
+layout: post
+title: "Announcing function intervals: run functions every N minutes"
+description: Appwrite Functions can now run on an interval as an alternative to cron. Set how often a function runs, and Appwrite picks when within each interval it starts.
+date: 2026-10-09
+cover: /images/blog/announcing-function-intervals/cover.avif
+timeToRead: 4
+author: chirag-aggarwal
+category: announcements, products
+featured: false
+callToAction: true
+faqs:
+  - question: "What is the difference between an interval and a cron schedule?"
+    answer: "A cron expression runs your function at exact times, such as 09:00 every Monday. An interval runs it every N minutes, at a fixed time within each interval that Appwrite picks for that function. Use cron when the time of day matters and an interval when only the frequency does."
+  - question: "Can I choose the exact minute an interval runs?"
+    answer: "No. Appwrite picks the time within each interval and keeps it, so an hourly function runs at the same minute every hour. If you need a specific minute, use a cron expression instead."
+  - question: "What is the shortest interval I can set?"
+    answer: "One minute on Appwrite Cloud paid plans and on self-hosted Appwrite. The Free and Education plans on Appwrite Cloud support intervals of 60 minutes or longer."
+  - question: "Can a function use an interval and a cron expression at the same time?"
+    answer: "No. A function has one schedule. Setting an interval replaces its cron expression, and setting a cron expression clears its interval."
+  - question: "Do I need to change existing cron schedules?"
+    answer: "No. Cron schedules keep working on every plan. Switch a function to an interval when it doesn't need to run at an exact time."
+---
+
+Most scheduled functions don't need to run at an exact minute. A job that syncs data, refreshes a cache or cleans up old records needs to run often enough, not at `:00` on the hour. Cron makes you pick an exact time anyway, so most of these jobs end up on `0 * * * *` or `*/15 * * * *`, starting at the same moment as every other function with the same schedule.
+
+Appwrite Functions now support **intervals**. You set how often a function runs, and Appwrite decides when within each interval it starts.
+
+# How intervals work
+
+An interval is a number of minutes. Set it to 60 and your function runs once every hour. Appwrite picks a fixed time within that hour for the function and keeps it, so the function might run at 14:37, 15:37, 16:37 and so on.
+
+Each function gets its own time within the interval, so functions with the same interval spread out across it instead of all starting at once. Your scheduled work starts on time without queueing behind every other function scheduled for the top of the hour.
+
+A function uses either an interval or a cron expression:
+
+| | Interval | Cron |
+| --- | --- | --- |
+| You set | How often, in minutes | Exact times |
+| Runs at | A fixed time Appwrite picks within each interval | The times in the expression |
+| Best for | Syncs, cleanups, polling, cache refreshes | Reports, digests, anything tied to the clock |
+
+# Set an interval in the Console
+
+Open your function, go to **Settings** > **Schedule**, and choose **Interval**. Pick a preset such as every 15 minutes, every hour or every day, or enter your own number of minutes.
+
+# Set an interval with a Server SDK
+
+Pass `interval` when you create or update a function:
+
+```js
+import { Client, Functions } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const functions = new Functions(client);
+
+await functions.update({
+    functionId: '<FUNCTION_ID>',
+    name: 'Sync orders',
+    interval: 30 // every 30 minutes
+});
+```
+
+Set `interval` to `0` to stop it. An update that leaves `interval` out keeps the current one, so existing code that updates other settings won't clear it.
+
+# Plans
+
+On Appwrite Cloud, paid plans support intervals from 1 minute. The Free and Education plans support intervals of 60 minutes or longer. Cron expressions work the same as before on every plan.
+
+Intervals are available on Appwrite Cloud today and come to self-hosted Appwrite in the next release.
+
+# Resources
+
+- [Function schedules documentation](/docs/products/functions/execute#schedule)
+- [Functions overview](/docs/products/functions)
+- [Server SDKs](/docs/sdks#server)

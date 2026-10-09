@@ -1,0 +1,22 @@
+---
+layout: changelog
+title: "Run functions on an interval"
+date: 2026-10-09
+description: "Functions can now run every N minutes on an interval, as an alternative to cron expressions. Appwrite picks when within each interval the function runs."
+tags: functions, console, sdk
+---
+
+Functions can now run on an **interval** as well as a cron expression. Set an interval in minutes, and Appwrite runs your function once in each interval, at a fixed time it picks for that function. Functions with the same interval no longer all start at the same moment.
+
+- **Interval**: every N minutes, for work that needs to run regularly but not at an exact time.
+- **Cron**: exact times, for work tied to the clock, such as a report at 09:00 on Mondays.
+
+Choose **Interval** in your function's **Settings** > **Schedule**, or pass `interval` to `functions.create` and `functions.update` in the latest Server SDKs. On Appwrite Cloud, intervals start at 1 minute on paid plans and 60 minutes on the Free and Education plans. Cron expressions are unchanged on every plan.
+
+{% arrow_link href="/blog/post/announcing-function-intervals" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/functions/execute#interval" %}
+Learn about function intervals
+{% /arrow_link %}

@@ -35,7 +35,7 @@ Asynchronous executions are added to a queue and processed by the function worke
 Asynchronous executions are created via:
 - The [Create execution](/docs/references/cloud/client-web/functions#createExecution) endpoint where the `async` parameter is `true`
 - Event triggers (when functions are triggered by [platform events](/docs/apis/events))
-- Scheduled executions (cron jobs or delayed executions)
+- Scheduled executions (intervals, cron jobs, or delayed executions)
 
 Asynchronous executions:
 - Have no timeout limitations beyond your function's configured timeout
@@ -550,9 +550,59 @@ You can use one of the following events.
 
 # Schedule {% #schedule %}
 
-Appwrite supports scheduled function executions. You can schedule executions using [cron expressions](https://en.wikipedia.org/wiki/Cron) in the settings of your function. Cron supports recurring executions as frequently as **every minute**.
+Appwrite supports recurring function executions. Set a schedule in your function's settings, or with the `interval` or `schedule` parameter of a [Server SDK](/docs/sdks#server). A function uses one or the other, not both.
 
-Here are some cron expressions for common intervals:
+## Interval {% #interval %}
+
+An interval runs your function every N minutes. Appwrite picks a fixed time within each interval for your function and keeps it, so an hourly function might run at 37 minutes past every hour. Spreading functions across the interval avoids every function in a project starting at the same moment.
+
+The interval is a whole number of minutes, as low as **1**. On Appwrite Cloud, the Free and Education plans support intervals of **60 minutes or longer**. Changing the interval can move the time Appwrite picks, and the first run after you set an interval can be up to one interval away.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+    .setKey('<API_KEY>'); // Your secret API key
+
+const functions = new sdk.Functions(client);
+
+// Run the function every 6 hours
+await functions.update({
+    functionId: '<FUNCTION_ID>',
+    name: '<NAME>',
+    interval: 360
+});
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.functions import Functions
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<PROJECT_ID>') # Your project ID
+client.set_key('<API_KEY>') # Your secret API key
+
+functions = Functions(client)
+
+# Run the function every 6 hours
+functions.update(
+    function_id = '<FUNCTION_ID>',
+    name = '<NAME>',
+    interval = 360
+)
+```
+{% /multicode %}
+
+Set `interval` to `0` to stop running on an interval. An update that leaves out `interval` keeps the current one.
+
+## Cron {% #cron %}
+
+A [cron expression](https://en.wikipedia.org/wiki/Cron) runs your function at exact times, as frequently as **every minute**. Use cron when the time of day matters.
+
+Here are some cron expressions for common schedules:
 
 | Cron Expression  | Schedule              |
 | ---------------- | --------------------- |
@@ -560,6 +610,10 @@ Here are some cron expressions for common intervals:
 | `0 * * * *`      | Every Hour            |
 | `0 0 * * *`      | Every day at 00:00    |
 | `0 0 * * 1`      | Every Monday at 00:00 |
+
+Setting a cron expression with the `schedule` parameter clears the function's interval.
+
+Scheduled executions, from an interval or a cron expression, show `schedule` as their trigger in the execution logs.
 
 # Delayed executions {% #delayed-executions %}
 
