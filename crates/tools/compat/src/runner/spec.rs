@@ -121,10 +121,56 @@ pub fn lib_dir(root: &Path, lib: &str) -> PathBuf {
     root.join("tests/compat").join(lib)
 }
 
+/// Parts of a spec kept in `spec.d/*.json` (one per area or owner), merged
+/// into `spec.json`. A name defined twice is an error.
+#[derive(Debug, Default, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Fragment {
+    #[serde(default)]
+    ops: BTreeMap<String, OpSpec>,
+    #[serde(default)]
+    generators: BTreeMap<String, Value>,
+    #[serde(default)]
+    waivers: BTreeMap<String, String>,
+    #[serde(default)]
+    tests_waived: BTreeMap<String, String>,
+    #[serde(default)]
+    quirks: Vec<Quirk>,
+    #[serde(default)]
+    deviations: Vec<Deviation>,
+}
+
+fn merge<V>(into: &mut BTreeMap<String, V>, from: BTreeMap<String, V>, what: &str, file: &Path) -> Result<(), String> {
+    for (k, v) in from {
+        if into.insert(k.clone(), v).is_some() {
+            return Err(format!("{}: {what} `{k}` is defined twice", file.display()));
+        }
+    }
+    Ok(())
+}
+
 pub fn load(root: &Path, lib: &str) -> Result<Spec, String> {
     let path = lib_dir(root, lib).join("spec.json");
     let raw = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-    let spec: Spec = serde_json::from_str(&raw).map_err(|e| format!("{}: {e}", path.display()))?;
+    let mut spec: Spec = serde_json::from_str(&raw).map_err(|e| format!("{}: {e}", path.display()))?;
+    let mut fragments: Vec<PathBuf> = std::fs::read_dir(lib_dir(root, lib).join("spec.d"))
+        .into_iter()
+        .flatten()
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.extension().is_some_and(|e| e == "json"))
+        .collect();
+    fragments.sort();
+    for file in fragments {
+        let text = std::fs::read_to_string(&file).map_err(|e| format!("{}: {e}", file.display()))?;
+        let f: Fragment = serde_json::from_str(&text).map_err(|e| format!("{}: {e}", file.display()))?;
+        merge(&mut spec.ops, f.ops, "operation", &file)?;
+        merge(&mut spec.generators, f.generators, "generator", &file)?;
+        merge(&mut spec.waivers, f.waivers, "waiver", &file)?;
+        merge(&mut spec.tests_waived, f.tests_waived, "waived test", &file)?;
+        spec.quirks.extend(f.quirks);
+        spec.deviations.extend(f.deviations);
+    }
     if spec.lib != lib {
         return Err(format!("{}: `lib` is `{}`, expected `{lib}`", path.display(), spec.lib));
     }

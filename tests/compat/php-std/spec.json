@@ -2,38 +2,15 @@
   "lib": "php-std",
   "description": "PHP engine functions reimplemented in crates/support/php-std, checked against the real functions. There is no PHP library to cover: every operation calls a built-in.",
   "complete": false,
-  "php": { "src": [], "tests": [] },
-  "rust": { "crate": "crates/support/php-std" },
-  "ops": {
-    "value.is_numeric": { "doc": "is_numeric($v)", "fuzz": [{ "args": { "gen": "object", "fields": { "v": { "gen": "ref", "name": "scalar" } } }, "iterations": 3000 }] },
-    "value.to_number": { "doc": "is_numeric($v) ? $v + 0 : null", "fuzz": [{ "args": { "gen": "object", "fields": { "v": { "gen": "ref", "name": "scalar" } } }, "iterations": 3000 }] },
-    "value.to_string": { "doc": "(string) $v for scalars, null for arrays", "fuzz": [{ "args": { "gen": "object", "fields": { "v": { "gen": "ref", "name": "scalar" } } }, "iterations": 3000 }] },
-    "value.truthy": { "doc": "(bool) $v", "fuzz": [{ "args": { "gen": "object", "fields": { "v": { "gen": "any", "depth": 2 } } }, "iterations": 2000 }] },
-    "value.empty": { "doc": "empty($v)", "fuzz": [{ "args": { "gen": "object", "fields": { "v": { "gen": "any", "depth": 2 } } }, "iterations": 2000 }] },
-    "value.is_array": { "doc": "is_array($v)", "fuzz": [{ "args": { "gen": "object", "fields": { "v": { "gen": "any", "depth": 2 } } }, "iterations": 1000 }] },
-    "value.loose_eq": {
-      "doc": "$a == $b",
-      "fuzz": [
-        { "name": "scalars", "args": { "gen": "object", "fields": { "a": { "gen": "ref", "name": "scalar" }, "b": { "gen": "ref", "name": "scalar" } } }, "iterations": 5000 },
-        { "name": "any", "args": { "gen": "object", "fields": { "a": { "gen": "any", "depth": 2 }, "b": { "gen": "any", "depth": 2 } } }, "iterations": 3000 }
-      ]
-    }
+  "php": {
+    "src": [],
+    "tests": []
   },
-  "generators": {
-    "scalar": {
-      "gen": "one_of",
-      "of": [
-        { "gen": "string", "alphabet": "unicode", "max": 12, "tricky": 0.6 },
-        { "gen": "string", "alphabet": " +-.0123456789eE", "max": 8 },
-        { "gen": "int" },
-        { "gen": "float" },
-        { "gen": "float", "min": -1e300, "max": 1e300 },
-        { "gen": "pick", "from": [0.1, 0.30000000000000004, 1e25, 1e-7, 123456789012345678.0, -0.0, 9223372036854775807, -9223372036854775808, 9223372036854775808, 18446744073709551616] },
-        { "gen": "bool" },
-        { "gen": "null" }
-      ]
-    }
+  "rust": {
+    "crate": "crates/support/php-std"
   },
+  "ops": {},
+  "generators": {},
   "waivers": {},
   "tests_waived": {},
   "quirks": []
