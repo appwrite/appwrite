@@ -4406,7 +4406,7 @@ trait TransactionsBase
         $this->assertEquals(100, $jane['body']['balance'], 'Jane should have 50 + 50 = 100');
     }
 
-    public function testStagedIncrementRefusesAFractionalValueAndBoundsAFractionalMaxAtItsWholePart(): void
+    public function testStagedFractionalChangeIsRoundedAtCommitAndAFractionalMaxBoundsAtItsWholePart(): void
     {
         $keyHeaders = [
             'content-type' => 'application/json',
@@ -4451,19 +4451,19 @@ trait TransactionsBase
         $this->assertSame(201, $document['headers']['status-code']);
         $url = $this->getRecordUrl($databaseId, $collectionId, 'meter');
 
-        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
-        $this->assertSame(201, $transaction['headers']['status-code']);
-        $transactionId = $transaction['body']['$id'];
-
         if ($this->getSupportForAttributes()) {
+            $fractionalTransaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+            $this->assertSame(201, $fractionalTransaction['headers']['status-code']);
+            $fractionalTransactionId = $fractionalTransaction['body']['$id'];
+
             $fractional = $this->client->call(Client::METHOD_PATCH, $url . '/counter/increment', $headers, [
-                'transactionId' => $transactionId,
+                'transactionId' => $fractionalTransactionId,
                 'value' => 1.5,
             ]);
-            $this->assertSame(400, $fractional['headers']['status-code'], 'a fractional change value on an integer is refused when it is staged');
-            $this->assertSame('general_argument_invalid', $fractional['body']['type']);
+            $this->assertSame(200, $fractional['headers']['status-code'], 'a fractional change value on an integer is staged as on main');
+            $this->assertSame(1.5, $fractional['body']['counter']);
 
-            $fractionalOperation = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+            $fractionalOperation = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($fractionalTransactionId) . '/operations', $headers, [
                 'operations' => [[
                     'databaseId' => $databaseId,
                     $this->getContainerIdParam() => $collectionId,
@@ -4475,9 +4475,20 @@ trait TransactionsBase
                     ],
                 ]],
             ]);
-            $this->assertSame(400, $fractionalOperation['headers']['status-code'], 'a fractional change value on an integer is refused when it is staged as an operation');
-            $this->assertSame('general_argument_invalid', $fractionalOperation['body']['type']);
+            $this->assertSame(201, $fractionalOperation['headers']['status-code'], 'a fractional change value on an integer is staged as an operation as on main');
+
+            $fractionalCommit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($fractionalTransactionId), $headers, [
+                'commit' => true,
+            ]);
+            $this->assertSame(200, $fractionalCommit['headers']['status-code']);
+
+            $rounded = $this->client->call(Client::METHOD_GET, $url, $headers);
+            $this->assertSame(8, $rounded['body']['counter'], 'main stores 8 + 1.5 as 10 and 10 - 1.5 as 8, rounding half to even');
         }
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertSame(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
 
         $staged = $this->client->call(Client::METHOD_PATCH, $url . '/counter/increment', $headers, [
             'transactionId' => $transactionId,

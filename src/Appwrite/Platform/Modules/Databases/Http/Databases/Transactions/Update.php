@@ -860,24 +860,12 @@ class Update extends Action
         $counter = Counter::of($dbForDatabases, $collectionId, $attribute);
 
         if ($dependent) {
-            $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute(
-                collection: $collectionId,
-                id: $documentId,
-                attribute: $attribute,
-                value: $counter->change($data['value'] ?? 1),
-                max: $counter->maximum($data['max'] ?? null)
-            );
+            $state[$collectionId][$documentId] = $counter->increase($dbForDatabases, $collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['max'] ?? null);
             return;
         }
 
         $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute, $counter) {
-            $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute(
-                collection: $collectionId,
-                id: $documentId,
-                attribute: $attribute,
-                value: $counter->change($data['value'] ?? 1),
-                max: $counter->maximum($data['max'] ?? null)
-            );
+            $state[$collectionId][$documentId] = $counter->increase($dbForDatabases, $collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['max'] ?? null);
         });
     }
 
@@ -907,24 +895,12 @@ class Update extends Action
         $counter = Counter::of($dbForDatabases, $collectionId, $attribute);
 
         if ($dependent) {
-            $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute(
-                collection: $collectionId,
-                id: $documentId,
-                attribute: $attribute,
-                value: $counter->change($data['value'] ?? 1),
-                min: $counter->minimum($data['min'] ?? null)
-            );
+            $state[$collectionId][$documentId] = $counter->decrease($dbForDatabases, $collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['min'] ?? null);
             return;
         }
 
         $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute, $counter) {
-            $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute(
-                collection: $collectionId,
-                id: $documentId,
-                attribute: $attribute,
-                value: $counter->change($data['value'] ?? 1),
-                min: $counter->minimum($data['min'] ?? null)
-            );
+            $state[$collectionId][$documentId] = $counter->decrease($dbForDatabases, $collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['min'] ?? null);
         });
     }
 

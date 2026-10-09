@@ -10380,6 +10380,89 @@ trait DatabasesBase
         $this->assertSame(3, $stored['body']['count']);
     }
 
+    public function testFractionalIncrementAndDecrementOnAnIntegerRoundAsOnMain(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Rounding applies to declared integer attributes only.');
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'FractionalChangeDatabase',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'FractionalChangeCollection',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', $headers, [
+            'key' => 'count',
+            'required' => true,
+        ]);
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', $headers, [
+            'key' => 'label',
+            'size' => 16,
+            'required' => false,
+        ]);
+        $this->waitForAllAttributes($databaseId, $collectionId);
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['count' => 5, 'label' => 'meter'],
+        ]);
+        $this->assertSame(201, $document['headers']['status-code']);
+        $url = $this->getRecordUrl($databaseId, $collectionId, $document['body']['$id']);
+
+        $increased = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
+            'value' => 1.5,
+        ]);
+        $this->assertSame(200, $increased['headers']['status-code'], 'main accepts a fractional change on an integer');
+        $this->assertSame(6.5, $increased['body']['count'], 'main returns the exact result');
+        $this->assertSame(6, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count'], 'main stores 6.5 rounded half to even');
+
+        $decreased = $this->client->call(Client::METHOD_PATCH, $url . '/count/decrement', $headers, [
+            'value' => 1.5,
+        ]);
+        $this->assertSame(200, $decreased['headers']['status-code']);
+        $this->assertSame(4.5, $decreased['body']['count']);
+        $this->assertSame(4, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count'], 'main stores 4.5 rounded half to even');
+
+        $pastMax = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
+            'value' => 1.5,
+            'max' => 5,
+        ]);
+        $this->assertSame(400, $pastMax['headers']['status-code'], 'main compares the exact result with the max');
+        $this->assertSame(4, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count']);
+
+        $zero = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
+            'value' => 0,
+        ]);
+        $this->assertSame(400, $zero['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $zero['body']['type']);
+        $this->assertSame('Value must be numeric and greater than 0', $zero['body']['message']);
+
+        $text = $this->client->call(Client::METHOD_PATCH, $url . '/label/increment', $headers, [
+            'value' => 1,
+        ]);
+        $this->assertSame(400, $text['headers']['status-code']);
+        $this->assertSame('attribute_type_invalid', $text['body']['type']);
+        $this->assertStringEndsWith('"label" is not a number', $text['body']['message']);
+    }
+
     public function testDecrementAttribute(): void
     {
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [

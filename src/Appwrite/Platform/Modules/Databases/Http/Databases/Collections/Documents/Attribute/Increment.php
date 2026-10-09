@@ -109,9 +109,6 @@ class Increment extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
-        $counter = Counter::from($collection, $attribute);
-        $counter->assertChange($value, 'increment', $this->getAttributeKey(), $attribute);
-
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = ($isAPIKey || $isPrivilegedUser)
@@ -182,13 +179,7 @@ class Increment extends Action
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
         try {
-            $document = $dbForDatabases->increaseDocumentAttribute(
-                collection: $collectionTableId,
-                id: $documentId,
-                attribute: $attribute,
-                value: $counter->change($value),
-                max: $counter->maximum($max)
-            );
+            $document = Counter::from($collection, $attribute)->increase($dbForDatabases, $collectionTableId, $documentId, $attribute, $value, $max);
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
         } catch (ConflictException) {
@@ -197,8 +188,8 @@ class Increment extends Action
             throw new Exception($this->getStructureNotFoundException());
         } catch (LimitException) {
             throw new Exception($this->getLimitException(), $this->getSDKNamespace() . ' "' . $attribute . '" has reached the maximum value of ' . $max);
-        } catch (TypeException $e) {
-            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, \ucfirst($this->getAttributeKey()) . ' "' . $attribute . '" cannot be incremented: ' . $e->getMessage());
+        } catch (TypeException) {
+            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $attribute . '" is not a number');
         } catch (InvalidArgumentException $e) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
         }

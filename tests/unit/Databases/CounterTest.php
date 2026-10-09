@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Databases;
 
 use Appwrite\Databases\Counter;
-use Appwrite\Extend\Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
@@ -16,6 +15,7 @@ use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Limit as LimitException;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Type as TypeException;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
@@ -232,25 +232,107 @@ final class CounterTest extends TestCase
         $this->assertTrue($counter->acceptsChange(1.5));
     }
 
-    public function testAFractionalChangeValueOnAnIntegerIsRefusedAsAnInvalidArgument(): void
+    /**
+     * Main's results on MariaDB and MySQL with database 7.4.1: the response carries the exact result and the column
+     * stores it rounded half to even.
+     *
+     * @return iterable<string, array{bool, string, int, float, int|float|null, float, int}>
+     */
+    public static function fractionalChanges(): iterable
     {
+        yield 'increase rounds a half down to even' => [true, 'count', 5, 1.5, null, 6.5, 6];
+        yield 'increase rounds a half up to even' => [true, 'count', 6, 1.5, null, 7.5, 8];
+        yield 'increase rounds below a half down' => [true, 'count', 5, 1.4, null, 6.4, 6];
+        yield 'increase rounds above a half up' => [true, 'count', 5, 1.6, null, 6.6, 7];
+        yield 'increase rounds a negative half to even' => [true, 'count', -10, 2.5, null, -7.5, -8];
+        yield 'increase by a half that rounds back to the value' => [true, 'count', 4, 0.5, null, 4.5, 4];
+        yield 'increase by a half that rounds up' => [true, 'count', 5, 0.5, null, 5.5, 6];
+        yield 'increase within a fractional maximum' => [true, 'count', 5, 1.5, 6.5, 6.5, 6];
+        yield 'increase within a whole maximum' => [true, 'count', 5, 1.5, 7, 6.5, 6];
+        yield 'increase a big integer' => [true, 'big', 5, 2.5, null, 7.5, 8];
+        yield 'decrease rounds a half up to even' => [false, 'count', 5, 1.5, null, 3.5, 4];
+        yield 'decrease rounds a half down to even' => [false, 'count', 6, 1.5, null, 4.5, 4];
+        yield 'decrease by less than a half keeps the value' => [false, 'count', 5, 0.4, null, 4.6, 5];
+        yield 'decrease within a fractional minimum' => [false, 'count', 5, 1.5, 3.5, 3.5, 4];
+        yield 'a whole float change returns a float' => [true, 'count', 8, 2.0, null, 10.0, 10];
+    }
+
+    #[DataProvider('fractionalChanges')]
+    public function testAFractionalChangeOnAnIntegerMatchesMain(bool $increase, string $attribute, int $start, float $value, int|float|null $bound, float $returned, int $stored): void
+    {
+        $this->database->createDocument(self::COLLECTION, new Document(['$id' => 'meter', $attribute => $start]));
+        $counter = Counter::of($this->database, self::COLLECTION, $attribute);
+
+        $document = $increase
+            ? $counter->increase($this->database, self::COLLECTION, 'meter', $attribute, $value, $bound)
+            : $counter->decrease($this->database, self::COLLECTION, 'meter', $attribute, $value, $bound);
+
+        $this->assertSame($returned, $document->getAttribute($attribute), 'Main returned the exact result of a fractional change on an integer.');
+        $this->assertSame($stored, $this->database->getDocument(self::COLLECTION, 'meter')->getAttribute($attribute), 'Main stored a fractional change on an integer rounded half to even.');
+    }
+
+    /**
+     * @return iterable<string, array{bool, int|float}>
+     */
+    public static function fractionalChangesPastTheirBound(): iterable
+    {
+        yield 'increase past the maximum' => [true, 6];
+        yield 'decrease past the minimum' => [false, 4];
+    }
+
+    #[DataProvider('fractionalChangesPastTheirBound')]
+    public function testAFractionalChangePastItsBoundIsRefusedAndRolledBack(bool $increase, int|float $bound): void
+    {
+        $this->database->createDocument(self::COLLECTION, new Document(['$id' => 'meter', 'count' => 5]));
         $counter = Counter::of($this->database, self::COLLECTION, 'count');
 
         try {
-            $counter->assertChange(1.5, 'increment', 'column', 'count');
-            $this->fail('a fractional change value on an integer must be refused');
-        } catch (Exception $exception) {
-            $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $exception->getType());
-            $this->assertSame('Value must be a whole number to increment the integer column "count".', $exception->getMessage());
+            $increase
+                ? $counter->increase($this->database, self::COLLECTION, 'meter', 'count', 1.5, $bound)
+                : $counter->decrease($this->database, self::COLLECTION, 'meter', 'count', 1.5, $bound);
+            $this->fail('A fractional change past its bound must be refused as on main.');
+        } catch (LimitException) {
         }
+
+        $this->assertSame(5, $this->database->getDocument(self::COLLECTION, 'meter')->getAttribute('count'));
     }
 
-    public function testAcceptedChangeValuesPassTheAssertion(): void
+    public function testAFractionalChangeOnAMissingDocumentIsNotFound(): void
     {
-        Counter::of($this->database, self::COLLECTION, 'count')->assertChange(2, 'decrement', 'attribute', 'count');
-        Counter::of($this->database, self::COLLECTION, 'ratio')->assertChange(1.5, 'increment', 'attribute', 'ratio');
+        $this->expectException(NotFoundException::class);
 
-        $this->addToAssertionCount(2);
+        Counter::of($this->database, self::COLLECTION, 'count')->increase($this->database, self::COLLECTION, 'missing', 'count', 1.5, null);
+    }
+
+    /**
+     * @return iterable<string, array{int|float}>
+     */
+    public static function nonPositiveChanges(): iterable
+    {
+        yield 'zero' => [0];
+        yield 'negative' => [-1];
+        yield 'negative fraction' => [-1.5];
+    }
+
+    #[DataProvider('nonPositiveChanges')]
+    public function testANonPositiveChangeIsAnInvalidArgumentAsOnMain(int|float $value): void
+    {
+        $this->database->createDocument(self::COLLECTION, new Document(['$id' => 'meter', 'count' => 5]));
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Value must be numeric and greater than 0');
+
+        Counter::of($this->database, self::COLLECTION, 'count')->decrease($this->database, self::COLLECTION, 'meter', 'count', $value, null);
+    }
+
+    public function testAFractionalChangeOnADoubleIsPassedThrough(): void
+    {
+        $this->database->createDocument(self::COLLECTION, new Document(['$id' => 'meter', 'ratio' => 5.25]));
+
+        $document = Counter::of($this->database, self::COLLECTION, 'ratio')->increase($this->database, self::COLLECTION, 'meter', 'ratio', 1.5, null);
+
+        $this->assertSame(6.75, $document->getAttribute('ratio'));
+        $this->assertSame(6.75, $this->database->getDocument(self::COLLECTION, 'meter')->getAttribute('ratio'));
     }
 
     public function testAFractionalMaximumOnAnIntegerBoundsTheIncrementAtItsWholePart(): void
