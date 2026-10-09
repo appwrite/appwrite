@@ -134,4 +134,6 @@ A library that writes to another service adds a kind there (PostgreSQL tables, M
 
 ## php-std
 
-`tests/compat/php-std` checks the PHP engine functions reimplemented in `crates/support/php-std` (type juggling, string and number formatting, JSON, `filter_var`, `parse_url`) against the real built-ins. Its operations live in `ops/<area>.php` and `src/libs/php_std/<area>.rs`, one file per area.
+`tests/compat/php-std` checks the PHP engine functions reimplemented in `crates/support/php-std` (the value model, type juggling, string and number formatting, JSON, `serialize`, igbinary, sorting, `filter_var`, `parse_url`) against the real built-ins. Its operations live in `ops/<area>.php` and `src/libs/php_std/<area>.rs`, one file per area.
+
+Operations on structured values (areas `types`, `igbinary`, `sort`, and `json.decode_typed`, `serialize.unserialize_typed`) exchange them exactly, through `Typed.php` and `src/libs/php_std/typed.rs`: on input, `{"$array": [[k, v], ...]}` is an array with those keys (assigned like `$a[$k] = $v`) and `{"$object": [[k, v], ...]}` a `stdClass`, besides everything the Codec decodes; a pair may also be `{"k": k, "v": v}`, which the `object` generator can build. Results dump lists as lists, other arrays as `{"$array": ...}`, `stdClass` as `{"$object": ...}` and `-0.0` as `{"$float": "-0"}`, so key types, key order and objects are compared, not just their JSON look-alikes. Every empty array decodes to the engine's shared empty array, as `json_decode` and `unserialize` produce it.

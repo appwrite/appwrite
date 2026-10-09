@@ -398,6 +398,7 @@ name = "compat"
 version = "0.1.0"
 dependencies = [
  "base64",
+ "bytes",
  "futures-util",
  "php-std",
  "redis",
@@ -1323,6 +1324,7 @@ dependencies = [
 name = "php-std"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "getrandom 0.3.4",
  "icu_normalizer",
  "icu_properties",

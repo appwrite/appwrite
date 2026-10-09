@@ -1,0 +1,2463 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "value: key types, order and normalisation",
+      "op": "types.value",
+      "args": {
+        "v": {
+          "$array": [
+            [
+              1,
+              "a"
+            ],
+            [
+              "x",
+              [
+                [],
+                [],
+                {}
+              ]
+            ],
+            [
+              "1",
+              "overwrites 1 in place"
+            ],
+            [
+              "01",
+              1
+            ],
+            [
+              "-0",
+              2
+            ],
+            [
+              -5,
+              3
+            ],
+            [
+              "9223372036854775808",
+              4
+            ],
+            [
+              "9223372036854775807",
+              5
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "$array": [
+          [
+            1,
+            "overwrites 1 in place"
+          ],
+          [
+            "x",
+            [
+              [],
+              [],
+              {
+                "$object": []
+              }
+            ]
+          ],
+          [
+            "01",
+            1
+          ],
+          [
+            "-0",
+            2
+          ],
+          [
+            -5,
+            3
+          ],
+          [
+            "9223372036854775808",
+            4
+          ],
+          [
+            9223372036854775807,
+            5
+          ]
+        ]
+      }
+    },
+    {
+      "name": "value: stdClass keeps numeric property names",
+      "op": "types.value",
+      "args": {
+        "v": {
+          "$object": [
+            [
+              "1",
+              2
+            ],
+            [
+              3,
+              4
+            ],
+            [
+              "",
+              -0.0
+            ],
+            [
+              "a",
+              {
+                "$object": []
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "$object": [
+          [
+            "1",
+            2
+          ],
+          [
+            "3",
+            4
+          ],
+          [
+            "",
+            {
+              "$float": "-0"
+            }
+          ],
+          [
+            "a",
+            {
+              "$object": []
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "name": "value: binary strings and keys",
+      "op": "types.value",
+      "args": {
+        "v": {
+          "$array": [
+            [
+              {
+                "$bytes": "/w=="
+              },
+              {
+                "$bytes": "AP8="
+              }
+            ],
+            [
+              "k",
+              {
+                "$bytes": "gA=="
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "$array": [
+          [
+            {
+              "$bytes": "/w=="
+            },
+            {
+              "$bytes": "AP8="
+            }
+          ],
+          [
+            "k",
+            {
+              "$bytes": "gA=="
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "name": "value: floats",
+      "op": "types.value",
+      "args": {
+        "v": [
+          1.0,
+          -0.0,
+          0.1,
+          1e+25,
+          {
+            "$float": "INF"
+          },
+          {
+            "$float": "-INF"
+          },
+          {
+            "$float": "NAN"
+          },
+          5e-324
+        ]
+      },
+      "expect": [
+        1.0,
+        {
+          "$float": "-0"
+        },
+        0.1,
+        1e+25,
+        {
+          "$float": "INF"
+        },
+        {
+          "$float": "-INF"
+        },
+        {
+          "$float": "NAN"
+        },
+        5e-324
+      ]
+    },
+    {
+      "name": "from_json: request decoding",
+      "op": "types.from_json",
+      "args": {
+        "v": {
+          "0": "a",
+          "1": {
+            "x": [],
+            "y": {}
+          },
+          "k": {},
+          "-1": 1.0,
+          "01": 9223372036854775807
+        }
+      },
+      "expect": {
+        "$array": [
+          [
+            0,
+            "a"
+          ],
+          [
+            1,
+            {
+              "$array": [
+                [
+                  "x",
+                  []
+                ],
+                [
+                  "y",
+                  {
+                    "$object": []
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "k",
+            {
+              "$object": []
+            }
+          ],
+          [
+            -1,
+            1.0
+          ],
+          [
+            "01",
+            9223372036854775807
+          ]
+        ]
+      }
+    },
+    {
+      "name": "from_json: a list-shaped object is a list",
+      "op": "types.from_json",
+      "args": {
+        "v": {
+          "0": 1,
+          "1": 2
+        }
+      },
+      "expect": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "from_json: integers beyond i64 are floats",
+      "op": "types.from_json",
+      "args": {
+        "v": [
+          18446744073709551615,
+          -9223372036854775808,
+          1.5
+        ]
+      },
+      "expect": [
+        1.8446744073709552e+19,
+        -9223372036854775808,
+        1.5
+      ]
+    },
+    {
+      "name": "json.decode_typed: stdClass keeps property names",
+      "op": "json.decode_typed",
+      "args": {
+        "s": "{\"1\":{\"0\":[]},\"\":{},\"a\":[1.0,-0.0]}",
+        "assoc": false
+      },
+      "expect": {
+        "value": {
+          "$object": [
+            [
+              "1",
+              {
+                "$object": [
+                  [
+                    "0",
+                    []
+                  ]
+                ]
+              }
+            ],
+            [
+              "",
+              {
+                "$object": []
+              }
+            ],
+            [
+              "a",
+              [
+                1.0,
+                {
+                  "$float": "-0"
+                }
+              ]
+            ]
+          ]
+        },
+        "error": 0
+      }
+    },
+    {
+      "name": "json.decode_typed: assoc normalises keys",
+      "op": "json.decode_typed",
+      "args": {
+        "s": "{\"1\":{\"0\":[]},\"\":{},\"a\":[1.0,-0.0],\"1\":2}",
+        "assoc": true
+      },
+      "expect": {
+        "value": {
+          "$array": [
+            [
+              1,
+              2
+            ],
+            [
+              "",
+              []
+            ],
+            [
+              "a",
+              [
+                1.0,
+                {
+                  "$float": "-0"
+                }
+              ]
+            ]
+          ]
+        },
+        "error": 0
+      }
+    },
+    {
+      "name": "json.decode_typed: duplicate keys keep their position",
+      "op": "json.decode_typed",
+      "args": {
+        "s": "{\"a\":1,\"b\":2,\"a\":3}"
+      },
+      "expect": {
+        "value": {
+          "$object": [
+            [
+              "a",
+              3
+            ],
+            [
+              "b",
+              2
+            ]
+          ]
+        },
+        "error": 0
+      }
+    },
+    {
+      "name": "json.decode_typed: invalid",
+      "op": "json.decode_typed",
+      "args": {
+        "s": "{\"a\":"
+      },
+      "expect": {
+        "value": null,
+        "error": 4
+      }
+    },
+    {
+      "name": "to_json: lists, maps, objects",
+      "op": "types.to_json",
+      "args": {
+        "v": {
+          "$array": [
+            [
+              0,
+              [
+                1,
+                2.0
+              ]
+            ],
+            [
+              "a",
+              {
+                "$object": [
+                  [
+                    "1",
+                    null
+                  ]
+                ]
+              }
+            ],
+            [
+              5,
+              {}
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "0": [
+          1,
+          2.0
+        ],
+        "a": {
+          "1": null
+        },
+        "5": {}
+      }
+    },
+    {
+      "name": "juggle: null",
+      "op": "types.juggle",
+      "args": {
+        "v": null
+      },
+      "expect": {
+        "type": "NULL",
+        "truthy": false,
+        "string": "",
+        "double": 0.0
+      }
+    },
+    {
+      "name": "juggle: true",
+      "op": "types.juggle",
+      "args": {
+        "v": true
+      },
+      "expect": {
+        "type": "boolean",
+        "truthy": true,
+        "string": "1",
+        "double": 1.0
+      }
+    },
+    {
+      "name": "juggle: false",
+      "op": "types.juggle",
+      "args": {
+        "v": false
+      },
+      "expect": {
+        "type": "boolean",
+        "truthy": false,
+        "string": "",
+        "double": 0.0
+      }
+    },
+    {
+      "name": "juggle: 0",
+      "op": "types.juggle",
+      "args": {
+        "v": 0
+      },
+      "expect": {
+        "type": "integer",
+        "truthy": false,
+        "string": "0",
+        "double": 0.0
+      }
+    },
+    {
+      "name": "juggle: -1",
+      "op": "types.juggle",
+      "args": {
+        "v": -1
+      },
+      "expect": {
+        "type": "integer",
+        "truthy": true,
+        "string": "-1",
+        "double": -1.0
+      }
+    },
+    {
+      "name": "juggle: 1.0",
+      "op": "types.juggle",
+      "args": {
+        "v": 1.0
+      },
+      "expect": {
+        "type": "double",
+        "truthy": true,
+        "string": "1",
+        "double": 1.0
+      }
+    },
+    {
+      "name": "juggle: 0.0",
+      "op": "types.juggle",
+      "args": {
+        "v": 0.0
+      },
+      "expect": {
+        "type": "double",
+        "truthy": false,
+        "string": "0",
+        "double": 0.0
+      }
+    },
+    {
+      "name": "juggle: -0.0",
+      "op": "types.juggle",
+      "args": {
+        "v": -0.0
+      },
+      "expect": {
+        "type": "double",
+        "truthy": false,
+        "string": "-0",
+        "double": {
+          "$float": "-0"
+        }
+      }
+    },
+    {
+      "name": "juggle: 0.30000000000000004",
+      "op": "types.juggle",
+      "args": {
+        "v": 0.30000000000000004
+      },
+      "expect": {
+        "type": "double",
+        "truthy": true,
+        "string": "0.3",
+        "double": 0.30000000000000004
+      }
+    },
+    {
+      "name": "juggle: 1e+25",
+      "op": "types.juggle",
+      "args": {
+        "v": 1e+25
+      },
+      "expect": {
+        "type": "double",
+        "truthy": true,
+        "string": "1.0E+25",
+        "double": 1e+25
+      }
+    },
+    {
+      "name": "juggle: -1.5e-07",
+      "op": "types.juggle",
+      "args": {
+        "v": -1.5e-7
+      },
+      "expect": {
+        "type": "double",
+        "truthy": true,
+        "string": "-1.5E-7",
+        "double": -1.5e-7
+      }
+    },
+    {
+      "name": "juggle: {\"$float\": \"INF\"}",
+      "op": "types.juggle",
+      "args": {
+        "v": {
+          "$float": "INF"
+        }
+      },
+      "expect": {
+        "type": "double",
+        "truthy": true,
+        "string": "INF",
+        "double": {
+          "$float": "INF"
+        }
+      }
+    },
+    {
+      "name": "juggle: {\"$float\": \"NAN\"}",
+      "op": "types.juggle",
+      "args": {
+        "v": {
+          "$float": "NAN"
+        }
+      },
+      "expect": {
+        "type": "double",
+        "truthy": true,
+        "string": "NAN",
+        "double": {
+          "$float": "NAN"
+        }
+      }
+    },
+    {
+      "name": "juggle: \"\"",
+      "op": "types.juggle",
+      "args": {
+        "v": ""
+      },
+      "expect": {
+        "type": "string",
+        "truthy": false,
+        "string": "",
+        "double": 0.0
+      }
+    },
+    {
+      "name": "juggle: \"0\"",
+      "op": "types.juggle",
+      "args": {
+        "v": "0"
+      },
+      "expect": {
+        "type": "string",
+        "truthy": false,
+        "string": "0",
+        "double": 0.0
+      }
+    },
+    {
+      "name": "juggle: \"0.0\"",
+      "op": "types.juggle",
+      "args": {
+        "v": "0.0"
+      },
+      "expect": {
+        "type": "string",
+        "truthy": true,
+        "string": "0.0",
+        "double": 0.0
+      }
+    },
+    {
+      "name": "juggle: \" \"",
+      "op": "types.juggle",
+      "args": {
+        "v": " "
+      },
+      "expect": {
+        "type": "string",
+        "truthy": true,
+        "string": " ",
+        "double": 0.0
+      }
+    },
+    {
+      "name": "juggle: \"abc\"",
+      "op": "types.juggle",
+      "args": {
+        "v": "abc"
+      },
+      "expect": {
+        "type": "string",
+        "truthy": true,
+        "string": "abc",
+        "double": 0.0
+      }
+    },
+    {
+      "name": "juggle: \" 1\"",
+      "op": "types.juggle",
+      "args": {
+        "v": " 1"
+      },
+      "expect": {
+        "type": "string",
+        "truthy": true,
+        "string": " 1",
+        "double": 1.0
+      }
+    },
+    {
+      "name": "juggle: []",
+      "op": "types.juggle",
+      "args": {
+        "v": []
+      },
+      "expect": {
+        "type": "array",
+        "truthy": false,
+        "string": "Array",
+        "double": 0.0
+      }
+    },
+    {
+      "name": "juggle: [0]",
+      "op": "types.juggle",
+      "args": {
+        "v": [
+          0
+        ]
+      },
+      "expect": {
+        "type": "array",
+        "truthy": true,
+        "string": "Array",
+        "double": 1.0
+      }
+    },
+    {
+      "name": "juggle: {}",
+      "op": "types.juggle",
+      "args": {
+        "v": {}
+      },
+      "expect": {
+        "type": "object",
+        "truthy": true,
+        "string": {
+          "$error": {
+            "class": "Error",
+            "message": "Object of class stdClass could not be converted to string"
+          }
+        },
+        "double": 1.0
+      }
+    },
+    {
+      "name": "juggle: {\"$object\": [[\"a\", 1]]}",
+      "op": "types.juggle",
+      "args": {
+        "v": {
+          "$object": [
+            [
+              "a",
+              1
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "type": "object",
+        "truthy": true,
+        "string": {
+          "$error": {
+            "class": "Error",
+            "message": "Object of class stdClass could not be converted to string"
+          }
+        },
+        "double": 1.0
+      }
+    },
+    {
+      "name": "juggle: {\"$bytes\": \"/w==\"}",
+      "op": "types.juggle",
+      "args": {
+        "v": {
+          "$bytes": "/w=="
+        }
+      },
+      "expect": {
+        "type": "string",
+        "truthy": true,
+        "string": {
+          "$bytes": "/w=="
+        },
+        "double": 0.0
+      }
+    },
+    {
+      "name": "compare: null vs 0",
+      "op": "types.compare",
+      "args": {
+        "a": null,
+        "b": 0
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: null vs \"\"",
+      "op": "types.compare",
+      "args": {
+        "a": null,
+        "b": ""
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: 0 vs \"\"",
+      "op": "types.compare",
+      "args": {
+        "a": 0,
+        "b": ""
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": -1,
+        "lt": false,
+        "gt": true
+      }
+    },
+    {
+      "name": "compare: \"\" vs null",
+      "op": "types.compare",
+      "args": {
+        "a": "",
+        "b": null
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: null vs \"0\"",
+      "op": "types.compare",
+      "args": {
+        "a": null,
+        "b": "0"
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": -1,
+        "rcmp": 1,
+        "lt": true,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: null vs false",
+      "op": "types.compare",
+      "args": {
+        "a": null,
+        "b": false
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: null vs []",
+      "op": "types.compare",
+      "args": {
+        "a": null,
+        "b": []
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: null vs {}",
+      "op": "types.compare",
+      "args": {
+        "a": null,
+        "b": {}
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": -1,
+        "rcmp": 1,
+        "lt": true,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: \"abc\" vs 0",
+      "op": "types.compare",
+      "args": {
+        "a": "abc",
+        "b": 0
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": -1,
+        "lt": false,
+        "gt": true
+      }
+    },
+    {
+      "name": "compare: \"1\" vs \"01\"",
+      "op": "types.compare",
+      "args": {
+        "a": "1",
+        "b": "01"
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: \"10\" vs \"1e1\"",
+      "op": "types.compare",
+      "args": {
+        "a": "10",
+        "b": "1e1"
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: 100 vs \"1e2\"",
+      "op": "types.compare",
+      "args": {
+        "a": 100,
+        "b": "1e2"
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: \"1e3\" vs \"1000\"",
+      "op": "types.compare",
+      "args": {
+        "a": "1e3",
+        "b": "1000"
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: \"abc\" vs \"abd\"",
+      "op": "types.compare",
+      "args": {
+        "a": "abc",
+        "b": "abd"
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": -1,
+        "rcmp": 1,
+        "lt": true,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: \" 1\" vs \"1\"",
+      "op": "types.compare",
+      "args": {
+        "a": " 1",
+        "b": "1"
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: \"1 \" vs \"1\"",
+      "op": "types.compare",
+      "args": {
+        "a": "1 ",
+        "b": "1"
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: \"9223372036854775807\" vs \"9223372036854775808\"",
+      "op": "types.compare",
+      "args": {
+        "a": "9223372036854775807",
+        "b": "9223372036854775808"
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": -1,
+        "rcmp": 1,
+        "lt": true,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: \"9223372036854775808\" vs \"9223372036854775809\"",
+      "op": "types.compare",
+      "args": {
+        "a": "9223372036854775808",
+        "b": "9223372036854775809"
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": -1,
+        "rcmp": 1,
+        "lt": true,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: \"1e1000\" vs \"2e1000\"",
+      "op": "types.compare",
+      "args": {
+        "a": "1e1000",
+        "b": "2e1000"
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": -1,
+        "rcmp": 1,
+        "lt": true,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: \"-1e1000\" vs \"1e1000\"",
+      "op": "types.compare",
+      "args": {
+        "a": "-1e1000",
+        "b": "1e1000"
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": -1,
+        "rcmp": 1,
+        "lt": true,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: 1.5 vs \"1.5abc\"",
+      "op": "types.compare",
+      "args": {
+        "a": 1.5,
+        "b": "1.5abc"
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": -1,
+        "rcmp": 1,
+        "lt": true,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: 0.30000000000000004 vs \"0.3\"",
+      "op": "types.compare",
+      "args": {
+        "a": 0.30000000000000004,
+        "b": "0.3"
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": -1,
+        "lt": false,
+        "gt": true
+      }
+    },
+    {
+      "name": "compare: {\"$float\": \"NAN\"} vs {\"$float\": \"NAN\"}",
+      "op": "types.compare",
+      "args": {
+        "a": {
+          "$float": "NAN"
+        },
+        "b": {
+          "$float": "NAN"
+        }
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": 1,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: {\"$float\": \"NAN\"} vs 0",
+      "op": "types.compare",
+      "args": {
+        "a": {
+          "$float": "NAN"
+        },
+        "b": 0
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": 1,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: 0 vs {\"$float\": \"NAN\"}",
+      "op": "types.compare",
+      "args": {
+        "a": 0,
+        "b": {
+          "$float": "NAN"
+        }
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": 1,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: {\"$float\": \"NAN\"} vs \"a\"",
+      "op": "types.compare",
+      "args": {
+        "a": {
+          "$float": "NAN"
+        },
+        "b": "a"
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": 1,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: \"a\" vs {\"$float\": \"NAN\"}",
+      "op": "types.compare",
+      "args": {
+        "a": "a",
+        "b": {
+          "$float": "NAN"
+        }
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": 1,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: {\"$float\": \"INF\"} vs \"INF\"",
+      "op": "types.compare",
+      "args": {
+        "a": {
+          "$float": "INF"
+        },
+        "b": "INF"
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: 1e+100 vs \"1.0E+100\"",
+      "op": "types.compare",
+      "args": {
+        "a": 1e+100,
+        "b": "1.0E+100"
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: [] vs false",
+      "op": "types.compare",
+      "args": {
+        "a": [],
+        "b": false
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: [] vs 0",
+      "op": "types.compare",
+      "args": {
+        "a": [],
+        "b": 0
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": -1,
+        "lt": false,
+        "gt": true
+      }
+    },
+    {
+      "name": "compare: [1] vs 1",
+      "op": "types.compare",
+      "args": {
+        "a": [
+          1
+        ],
+        "b": 1
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": -1,
+        "lt": false,
+        "gt": true
+      }
+    },
+    {
+      "name": "compare: [1] vs \"1\"",
+      "op": "types.compare",
+      "args": {
+        "a": [
+          1
+        ],
+        "b": "1"
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": -1,
+        "lt": false,
+        "gt": true
+      }
+    },
+    {
+      "name": "compare: [1, 2] vs [1, 2]",
+      "op": "types.compare",
+      "args": {
+        "a": [
+          1,
+          2
+        ],
+        "b": [
+          1,
+          2
+        ]
+      },
+      "expect": {
+        "loose": true,
+        "strict": true,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: [1, 2] vs [2, 1]",
+      "op": "types.compare",
+      "args": {
+        "a": [
+          1,
+          2
+        ],
+        "b": [
+          2,
+          1
+        ]
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": -1,
+        "rcmp": 1,
+        "lt": true,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: [1, 2] vs [1]",
+      "op": "types.compare",
+      "args": {
+        "a": [
+          1,
+          2
+        ],
+        "b": [
+          1
+        ]
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": -1,
+        "lt": false,
+        "gt": true
+      }
+    },
+    {
+      "name": "compare: {\"$array\": [[\"a\", 1]]} vs {\"$array\": [[\"b\", 1]]}",
+      "op": "types.compare",
+      "args": {
+        "a": {
+          "$array": [
+            [
+              "a",
+              1
+            ]
+          ]
+        },
+        "b": {
+          "$array": [
+            [
+              "b",
+              1
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": 1,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: {\"$array\": [[\"b\", 1]]} vs {\"$array\": [[\"a\", 1]]}",
+      "op": "types.compare",
+      "args": {
+        "a": {
+          "$array": [
+            [
+              "b",
+              1
+            ]
+          ]
+        },
+        "b": {
+          "$array": [
+            [
+              "a",
+              1
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": 1,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: {\"$array\": [[\"a\", 1], [\"b\", 2]]} vs {\"$array\": [[\"b\", 2], [\"a\", 1]]}",
+      "op": "types.compare",
+      "args": {
+        "a": {
+          "$array": [
+            [
+              "a",
+              1
+            ],
+            [
+              "b",
+              2
+            ]
+          ]
+        },
+        "b": {
+          "$array": [
+            [
+              "b",
+              2
+            ],
+            [
+              "a",
+              1
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: [0] vs {\"$array\": [[0, \"0\"]]}",
+      "op": "types.compare",
+      "args": {
+        "a": [
+          0
+        ],
+        "b": {
+          "$array": [
+            [
+              0,
+              "0"
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: [null] vs [false]",
+      "op": "types.compare",
+      "args": {
+        "a": [
+          null
+        ],
+        "b": [
+          false
+        ]
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: {} vs {}",
+      "op": "types.compare",
+      "args": {
+        "a": {},
+        "b": {}
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: {} vs []",
+      "op": "types.compare",
+      "args": {
+        "a": {},
+        "b": []
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": -1,
+        "lt": false,
+        "gt": true
+      }
+    },
+    {
+      "name": "compare: {} vs 1",
+      "op": "types.compare",
+      "args": {
+        "a": {},
+        "b": 1
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: {} vs 2",
+      "op": "types.compare",
+      "args": {
+        "a": {},
+        "b": 2
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": -1,
+        "rcmp": 1,
+        "lt": true,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: {} vs 1.0",
+      "op": "types.compare",
+      "args": {
+        "a": {},
+        "b": 1.0
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: {} vs \"abc\"",
+      "op": "types.compare",
+      "args": {
+        "a": {},
+        "b": "abc"
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": -1,
+        "lt": false,
+        "gt": true
+      }
+    },
+    {
+      "name": "compare: {} vs true",
+      "op": "types.compare",
+      "args": {
+        "a": {},
+        "b": true
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: {} vs false",
+      "op": "types.compare",
+      "args": {
+        "a": {},
+        "b": false
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": -1,
+        "lt": false,
+        "gt": true
+      }
+    },
+    {
+      "name": "compare: {\"$object\": [[\"a\", 1]]} vs {\"$object\": [[\"a\", 1]]}",
+      "op": "types.compare",
+      "args": {
+        "a": {
+          "$object": [
+            [
+              "a",
+              1
+            ]
+          ]
+        },
+        "b": {
+          "$object": [
+            [
+              "a",
+              1
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: {\"$object\": [[\"a\", 1]]} vs {\"$object\": [[\"a\", 2]]}",
+      "op": "types.compare",
+      "args": {
+        "a": {
+          "$object": [
+            [
+              "a",
+              1
+            ]
+          ]
+        },
+        "b": {
+          "$object": [
+            [
+              "a",
+              2
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": -1,
+        "rcmp": 1,
+        "lt": true,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: {\"$object\": [[\"a\", 1]]} vs {\"$object\": [[\"b\", 1]]}",
+      "op": "types.compare",
+      "args": {
+        "a": {
+          "$object": [
+            [
+              "a",
+              1
+            ]
+          ]
+        },
+        "b": {
+          "$object": [
+            [
+              "b",
+              1
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": 1,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: {\"$object\": [[\"a\", 1]]} vs {\"$array\": [[\"a\", 1]]}",
+      "op": "types.compare",
+      "args": {
+        "a": {
+          "$object": [
+            [
+              "a",
+              1
+            ]
+          ]
+        },
+        "b": {
+          "$array": [
+            [
+              "a",
+              1
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": -1,
+        "lt": false,
+        "gt": true
+      }
+    },
+    {
+      "name": "compare: [{\"$object\": []}] vs [{\"$object\": []}]",
+      "op": "types.compare",
+      "args": {
+        "a": [
+          {
+            "$object": []
+          }
+        ],
+        "b": [
+          {
+            "$object": []
+          }
+        ]
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: true vs \"a\"",
+      "op": "types.compare",
+      "args": {
+        "a": true,
+        "b": "a"
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: false vs \"0\"",
+      "op": "types.compare",
+      "args": {
+        "a": false,
+        "b": "0"
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: true vs []",
+      "op": "types.compare",
+      "args": {
+        "a": true,
+        "b": []
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": -1,
+        "lt": false,
+        "gt": true
+      }
+    },
+    {
+      "name": "compare: -0.0 vs 0",
+      "op": "types.compare",
+      "args": {
+        "a": -0.0,
+        "b": 0
+      },
+      "expect": {
+        "loose": true,
+        "strict": false,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: -0.0 vs 0.0",
+      "op": "types.compare",
+      "args": {
+        "a": -0.0,
+        "b": 0.0
+      },
+      "expect": {
+        "loose": true,
+        "strict": true,
+        "cmp": 0,
+        "rcmp": 0,
+        "lt": false,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: \"\" vs \"0\"",
+      "op": "types.compare",
+      "args": {
+        "a": "",
+        "b": "0"
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": -1,
+        "rcmp": 1,
+        "lt": true,
+        "gt": false
+      }
+    },
+    {
+      "name": "compare: \"abc\" vs \"ABC\"",
+      "op": "types.compare",
+      "args": {
+        "a": "abc",
+        "b": "ABC"
+      },
+      "expect": {
+        "loose": false,
+        "strict": false,
+        "cmp": 1,
+        "rcmp": -1,
+        "lt": false,
+        "gt": true
+      }
+    },
+    {
+      "name": "array_ops: unset then set appends",
+      "op": "types.array_ops",
+      "args": {
+        "a": [
+          0,
+          1,
+          2
+        ],
+        "ops": [
+          {
+            "op": "unset",
+            "k": 0
+          },
+          {
+            "op": "set",
+            "k": 0,
+            "v": "x"
+          },
+          {
+            "op": "push",
+            "v": "y"
+          }
+        ]
+      },
+      "expect": {
+        "array": {
+          "$array": [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              0,
+              "x"
+            ],
+            [
+              3,
+              "y"
+            ]
+          ]
+        },
+        "results": [
+          null,
+          null,
+          3
+        ],
+        "list": false
+      }
+    },
+    {
+      "name": "array_ops: packed append lowers the next free index",
+      "op": "types.array_ops",
+      "args": {
+        "a": [
+          0,
+          1,
+          2
+        ],
+        "ops": [
+          {
+            "op": "unset",
+            "k": 2
+          },
+          {
+            "op": "unset",
+            "k": 1
+          },
+          {
+            "op": "set",
+            "k": 1,
+            "v": "x"
+          },
+          {
+            "op": "push",
+            "v": "y"
+          }
+        ]
+      },
+      "expect": {
+        "array": [
+          0,
+          "x",
+          "y"
+        ],
+        "results": [
+          null,
+          null,
+          null,
+          2
+        ],
+        "list": true
+      }
+    },
+    {
+      "name": "array_ops: an emptied packed array",
+      "op": "types.array_ops",
+      "args": {
+        "a": [],
+        "ops": [
+          {
+            "op": "set",
+            "k": "2",
+            "v": ""
+          },
+          {
+            "op": "unset",
+            "k": "2"
+          },
+          {
+            "op": "set",
+            "k": "0"
+          },
+          {
+            "op": "push",
+            "v": 0.0
+          }
+        ]
+      },
+      "expect": {
+        "array": [
+          null,
+          0.0
+        ],
+        "results": [
+          null,
+          null,
+          null,
+          1
+        ],
+        "list": true
+      }
+    },
+    {
+      "name": "array_ops: an emptied packed array, then push",
+      "op": "types.array_ops",
+      "args": {
+        "a": [],
+        "ops": [
+          {
+            "op": "set",
+            "k": 2,
+            "v": ""
+          },
+          {
+            "op": "unset",
+            "k": 2
+          },
+          {
+            "op": "push",
+            "v": 1
+          }
+        ]
+      },
+      "expect": {
+        "array": {
+          "$array": [
+            [
+              3,
+              1
+            ]
+          ]
+        },
+        "results": [
+          null,
+          null,
+          3
+        ],
+        "list": false
+      }
+    },
+    {
+      "name": "array_ops: a hash keeps the largest key",
+      "op": "types.array_ops",
+      "args": {
+        "a": {
+          "$array": [
+            [
+              "x",
+              1
+            ],
+            [
+              6,
+              2
+            ]
+          ]
+        },
+        "ops": [
+          {
+            "op": "unset",
+            "k": 6
+          },
+          {
+            "op": "push",
+            "v": 1
+          }
+        ]
+      },
+      "expect": {
+        "array": {
+          "$array": [
+            [
+              "x",
+              1
+            ],
+            [
+              7,
+              1
+            ]
+          ]
+        },
+        "results": [
+          null,
+          7
+        ],
+        "list": false
+      }
+    },
+    {
+      "name": "array_ops: a sparse key beyond the table converts to a hash",
+      "op": "types.array_ops",
+      "args": {
+        "a": [
+          0,
+          1,
+          2
+        ],
+        "ops": [
+          {
+            "op": "set",
+            "k": 7,
+            "v": 7
+          },
+          {
+            "op": "set",
+            "k": 8,
+            "v": 8
+          },
+          {
+            "op": "unset",
+            "k": 8
+          },
+          {
+            "op": "unset",
+            "k": 7
+          },
+          {
+            "op": "set",
+            "k": 3,
+            "v": 3
+          },
+          {
+            "op": "push",
+            "v": "next"
+          }
+        ]
+      },
+      "expect": {
+        "array": {
+          "$array": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              3
+            ],
+            [
+              9,
+              "next"
+            ]
+          ]
+        },
+        "results": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          9
+        ],
+        "list": false
+      }
+    },
+    {
+      "name": "array_ops: filling a hole moves the key to the end",
+      "op": "types.array_ops",
+      "args": {
+        "a": [],
+        "ops": [
+          {
+            "op": "set",
+            "k": 5,
+            "v": 5
+          },
+          {
+            "op": "set",
+            "k": 2,
+            "v": 2
+          },
+          {
+            "op": "push",
+            "v": 6
+          }
+        ]
+      },
+      "expect": {
+        "array": {
+          "$array": [
+            [
+              5,
+              5
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              6,
+              6
+            ]
+          ]
+        },
+        "results": [
+          null,
+          null,
+          6
+        ],
+        "list": false
+      }
+    },
+    {
+      "name": "array_ops: negative keys (PHP 8.3+)",
+      "op": "types.array_ops",
+      "args": {
+        "a": [],
+        "ops": [
+          {
+            "op": "set",
+            "k": -5,
+            "v": 1
+          },
+          {
+            "op": "push",
+            "v": 2
+          },
+          {
+            "op": "set",
+            "k": "-10",
+            "v": 3
+          },
+          {
+            "op": "push",
+            "v": 4
+          }
+        ]
+      },
+      "expect": {
+        "array": {
+          "$array": [
+            [
+              -5,
+              1
+            ],
+            [
+              -4,
+              2
+            ],
+            [
+              -10,
+              3
+            ],
+            [
+              -3,
+              4
+            ]
+          ]
+        },
+        "results": [
+          null,
+          -4,
+          null,
+          -3
+        ],
+        "list": false
+      }
+    },
+    {
+      "name": "array_ops: PHP_INT_MAX is the last key",
+      "op": "types.array_ops",
+      "args": {
+        "a": [],
+        "ops": [
+          {
+            "op": "set",
+            "k": 9223372036854775807,
+            "v": 1
+          },
+          {
+            "op": "push",
+            "v": 2
+          },
+          {
+            "op": "unset",
+            "k": 9223372036854775807
+          },
+          {
+            "op": "push",
+            "v": 3
+          },
+          {
+            "op": "push",
+            "v": 4
+          }
+        ]
+      },
+      "expect": {
+        "array": {
+          "$array": [
+            [
+              9223372036854775807,
+              3
+            ]
+          ]
+        },
+        "results": [
+          null,
+          {
+            "$error": "Cannot add element to the array as the next element is already occupied"
+          },
+          null,
+          9223372036854775807,
+          {
+            "$error": "Cannot add element to the array as the next element is already occupied"
+          }
+        ],
+        "list": false
+      }
+    },
+    {
+      "name": "array_ops: numeric string keys",
+      "op": "types.array_ops",
+      "args": {
+        "a": [],
+        "ops": [
+          {
+            "op": "set",
+            "k": "7",
+            "v": 1
+          },
+          {
+            "op": "set",
+            "k": "07",
+            "v": 2
+          },
+          {
+            "op": "set",
+            "k": "-0",
+            "v": 3
+          },
+          {
+            "op": "get",
+            "k": 7
+          },
+          {
+            "op": "exists",
+            "k": "7"
+          },
+          {
+            "op": "exists",
+            "k": "007"
+          },
+          {
+            "op": "push",
+            "v": 4
+          }
+        ]
+      },
+      "expect": {
+        "array": {
+          "$array": [
+            [
+              7,
+              1
+            ],
+            [
+              "07",
+              2
+            ],
+            [
+              "-0",
+              3
+            ],
+            [
+              8,
+              4
+            ]
+          ]
+        },
+        "results": [
+          null,
+          null,
+          null,
+          1,
+          true,
+          false,
+          8
+        ],
+        "list": false
+      }
+    }
+  ]
+}

@@ -151,6 +151,44 @@
           "iterations": 4000
         }
       ]
+    },
+    "serialize.unserialize_typed": {
+      "doc": "['value' => unserialize($s, $options) as an exact typed dump, 'warnings' => the warnings it emitted]",
+      "fuzz": [
+        {
+          "name": "documents",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "s": {
+                "gen": "ref",
+                "name": "ser_doc"
+              },
+              "options": {
+                "gen": "object",
+                "fields": {
+                  "max_depth": {
+                    "gen": "pick",
+                    "from": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4096,
+                      -1
+                    ]
+                  }
+                },
+                "optional": []
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          },
+          "iterations": 5000
+        }
+      ]
     }
   },
   "generators": {

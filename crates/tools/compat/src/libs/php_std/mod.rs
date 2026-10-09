@@ -12,12 +12,16 @@ mod datetime;
 mod encoding;
 mod filter;
 mod format;
+mod igbinary;
 mod json;
 mod mb;
 mod net;
 mod pcre;
 mod serialize;
+mod sort;
 mod string;
+mod typed;
+mod types;
 mod url;
 mod value;
 
@@ -26,12 +30,15 @@ const AREAS: &[&[&str]] = &[
     encoding::OPS,
     filter::OPS,
     format::OPS,
+    igbinary::OPS,
     json::OPS,
     mb::OPS,
     net::OPS,
     pcre::OPS,
     serialize::OPS,
+    sort::OPS,
     string::OPS,
+    types::OPS,
     url::OPS,
     value::OPS,
 ];
@@ -71,12 +78,15 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         Some("encoding") => encoding::call(op, args, session).await,
         Some("filter") => filter::call(op, args, session).await,
         Some("format") => format::call(op, args, session).await,
+        Some("igbinary") => igbinary::call(op, args, session).await,
         Some("json") => json::call(op, args, session).await,
         Some("mb") => mb::call(op, args, session).await,
         Some("net") => net::call(op, args, session).await,
         Some("pcre") => pcre::call(op, args, session).await,
         Some("serialize") => serialize::call(op, args, session).await,
+        Some("sort") => sort::call(op, args, session).await,
         Some("string") => string::call(op, args, session).await,
+        Some("types") => types::call(op, args, session).await,
         Some("url") => url::call(op, args, session).await,
         Some("value") => value::call(op, args, session).await,
         _ => Err(Fault::new(format!("php-std: unknown operation `{op}`"))),

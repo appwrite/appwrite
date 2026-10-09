@@ -410,6 +410,33 @@
           "iterations": 3000
         }
       ]
+    },
+    "json.decode_typed": {
+      "doc": "['value' => json_decode($s, $assoc, $depth, $flags) as an exact typed dump, 'error' => json_last_error()]",
+      "fuzz": [
+        {
+          "name": "objects",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "s": {
+                "gen": "ref",
+                "name": "jt3"
+              },
+              "assoc": {
+                "gen": "pick",
+                "from": [
+                  false,
+                  null,
+                  true
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        }
+      ]
     }
   },
   "generators": {
@@ -4690,12 +4717,12 @@
     {
       "symbol": "json_decode",
       "php": "json_decode('1e999', true) returns INF (numbers beyond the float range decode to infinite floats).",
-      "reason": "php_std::json::decode_value builds serde_json::Value, which cannot hold a non-finite float; it fails with Error::Unrepresentable. php_std::json::decode (Zval) returns INF like PHP and is fuzzed with such numbers; the json.decode_value profile leaves them out."
+      "reason": "php_std::json::decode_value builds serde_json::Value, which cannot hold a non-finite float; it fails with Error::Unrepresentable. php_std::json::decode (Value) returns INF like PHP and is fuzzed with such numbers; the json.decode_value profile leaves them out."
     },
     {
       "symbol": "json_encode",
       "php": "Objects other than stdClass (JsonSerializable, enums, public properties), resources and recursive arrays.",
-      "reason": "Not representable in Zval or serde_json::Value; the libraries only encode arrays, scalars and stdClass."
+      "reason": "Not representable in php_std::Value or serde_json::Value; the libraries only encode arrays, scalars and stdClass."
     }
   ]
 }

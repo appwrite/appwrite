@@ -6,8 +6,8 @@
 //!
 //! | PHP | Rust |
 //! |---|---|
-//! | `json_encode($v, $flags, $depth)` | [`encode`] (any [`PhpValue`]: [`Zval`] or `serde_json::Value`) |
-//! | `json_decode($s, $assoc, $depth, $flags)` | [`decode`] ([`Zval`]), [`decode_value`] (`serde_json::Value`, `$assoc = true`) |
+//! | `json_encode($v, $flags, $depth)` | [`encode`] ([`Value`]) |
+//! | `json_decode($s, $assoc, $depth, $flags)` | [`decode`] ([`Value`]), [`decode_value`] (`serde_json::Value`, `$assoc = true`) |
 //! | `json_validate($s, $depth, $flags)` | [`validate`] |
 //! | `json_last_error()`, `json_last_error_msg()` | [`ErrorCode::code`], [`ErrorCode::message`] of the returned error |
 //! | `JSON_*` constants | [`Flags`] |
@@ -26,19 +26,21 @@
 //! same error as PHP's bison parser when nesting exhausts its 10000-entry
 //! stack, and never recurses.
 //!
-//! Not modelled: objects other than `stdClass` (`JsonSerializable`, enums,
-//! public properties of classes), recursion (a [`Zval`] cannot contain
-//! itself) and the engine's stack-size limit when encoding values nested
-//! thousands of levels deep.
+//! Objects other than `stdClass` are [`Value::Ext`]: they encode as an
+//! object of their [`Extension::to_array`] (what `json_encode` does for an
+//! `ArrayObject`, such as `Utopia\Database\Document`). Not modelled:
+//! `JsonSerializable`, enums, recursion (a [`Value`] cannot contain itself)
+//! and the engine's stack-size limit when encoding values nested thousands
+//! of levels deep.
 
 use std::fmt;
 use std::ops::{BitAnd, BitOr, BitOrAssign};
 
-use serde_json::{Map, Number, Value};
+use serde_json::{Map, Number, Value as Json};
 
 use crate::number;
+use crate::types::{Array, ArrayKey, Extension, KeyRef, Str, Value, numeric_key};
 use crate::value;
-use crate::zval::{Array, Key, KeyRef, Object, PhpValue, View, Zval, numeric_key};
 
 /// `JSON_*` option bits for `json_encode`, `json_decode` and `json_validate`.
 ///
@@ -243,7 +245,7 @@ pub const DEFAULT_DEPTH: i64 = 512;
 /// `Err(Error::Partial)` carrying the output PHP returns when
 /// `JSON_PARTIAL_OUTPUT_ON_ERROR` is set. `depth` is cast to a C `int` like
 /// PHP does; it is not validated (a depth below 1 fails on any array).
-pub fn encode<V: PhpValue>(value: &V, flags: Flags, depth: i64) -> Result<String, Error> {
+pub fn encode<X: Extension>(value: &Value<X>, flags: Flags, depth: i64) -> Result<String, Error> {
     let mut encoder = Encoder { out: Vec::new(), depth: 0, max_depth: depth as i32, error: ErrorCode::None };
     // The engine ignores the encoder's return value here: the error code decides.
     let _ = encoder.value(value, flags);
@@ -292,26 +294,27 @@ impl Encoder {
     }
 
     /// `php_json_encode_zval`.
-    fn value<V: PhpValue>(&mut self, value: &V, flags: Flags) -> Result<(), Failed> {
-        match value.view() {
-            View::Null => self.out.extend_from_slice(b"null"),
-            View::Bool(true) => self.out.extend_from_slice(b"true"),
-            View::Bool(false) => self.out.extend_from_slice(b"false"),
-            View::Int(i) => self.out.extend_from_slice(i.to_string().as_bytes()),
-            View::Float(f) => {
+    fn value<X: Extension>(&mut self, value: &Value<X>, flags: Flags) -> Result<(), Failed> {
+        match value {
+            Value::Null => self.out.extend_from_slice(b"null"),
+            Value::Bool(true) => self.out.extend_from_slice(b"true"),
+            Value::Bool(false) => self.out.extend_from_slice(b"false"),
+            Value::Int(i) => self.out.extend_from_slice(i.to_string().as_bytes()),
+            Value::Float(f) => {
                 if f.is_finite() {
-                    self.double(f, flags);
+                    self.double(*f, flags);
                 } else {
                     self.error = ErrorCode::InfOrNan;
                     self.out.push(b'0');
                 }
             }
-            View::Str(s) => return self.string(s, flags),
-            View::Array(entries) => {
-                let as_object = flags.contains(Flags::FORCE_OBJECT) || !value.is_list();
-                return self.container::<V>(entries, as_object, false, flags);
+            Value::Str(s) => return self.string(s, flags),
+            Value::Array(a) => {
+                let as_object = flags.contains(Flags::FORCE_OBJECT) || !a.is_list();
+                return self.container(a, as_object, false, flags);
             }
-            View::Object(entries) => return self.container::<V>(entries, true, true, flags),
+            Value::Object(a) => return self.container(a, true, true, flags),
+            Value::Ext(x) => return self.container(&x.to_array(), true, true, flags),
         }
         Ok(())
     }
@@ -326,9 +329,9 @@ impl Encoder {
     }
 
     /// `php_json_encode_array` for arrays and `stdClass` objects.
-    fn container<'a, V: PhpValue + 'a>(
+    fn container<X: Extension>(
         &mut self,
-        entries: V::Entries<'a>,
+        entries: &Array<X>,
         as_object: bool,
         is_object: bool,
         flags: Flags,
@@ -336,7 +339,7 @@ impl Encoder {
         let mut need_comma = false;
         self.out.push(if as_object { b'{' } else { b'[' });
         self.depth += 1;
-        for (key, data) in entries {
+        for (key, data) in entries.iter() {
             if !as_object {
                 if need_comma {
                     self.out.push(b',');
@@ -578,11 +581,11 @@ pub fn next_utf8_char(s: &[u8]) -> Result<(u32, usize), usize> {
 /// `json_decode($json, $assoc, $depth, $flags)`.
 ///
 /// `assoc` overrides `JSON_OBJECT_AS_ARRAY` in `flags` when it is not
-/// `None`, as in PHP. Objects decode to [`Zval::Object`] (`stdClass`) or, in
-/// array mode, to [`Zval::Array`] with PHP's key rules (`"7"` is key `7`).
+/// `None`, as in PHP. Objects decode to [`Value::Object`] (`stdClass`) or, in
+/// array mode, to [`Value::Array`] with PHP's key rules (`"7"` is key `7`).
 /// Errors: [`Error::Json`] with PHP's code (empty input is a syntax error),
 /// [`Error::Value`] when `depth` is not in `1..=i32::MAX`.
-pub fn decode(json: &[u8], assoc: Option<bool>, depth: i64, flags: Flags) -> Result<Zval, Error> {
+pub fn decode(json: &[u8], assoc: Option<bool>, depth: i64, flags: Flags) -> Result<Value, Error> {
     let mut flags = flags;
     match assoc {
         Some(true) => flags |= Flags::OBJECT_AS_ARRAY,
@@ -590,7 +593,7 @@ pub fn decode(json: &[u8], assoc: Option<bool>, depth: i64, flags: Flags) -> Res
         None => {}
     }
     let depth = decode_depth(json, depth, "json_decode(): Argument #3 ($depth)")?;
-    let builder = ZvalBuilder { assoc: flags.contains(Flags::OBJECT_AS_ARRAY) };
+    let builder = PhpBuilder { assoc: flags.contains(Flags::OBJECT_AS_ARRAY) };
     parse(json, flags, depth, &builder).map_err(ParseError::into_error)
 }
 
@@ -601,7 +604,7 @@ pub fn decode(json: &[u8], assoc: Option<bool>, depth: i64, flags: Flags) -> Res
 ///
 /// Fails with [`Error::Unrepresentable`] where PHP decodes a number to an
 /// infinite float (`1e999`), which `serde_json::Value` cannot hold.
-pub fn decode_value(json: &[u8], depth: i64, flags: Flags) -> Result<Value, Error> {
+pub fn decode_value(json: &[u8], depth: i64, flags: Flags) -> Result<Json, Error> {
     let depth = decode_depth(json, depth, "json_decode(): Argument #3 ($depth)")?;
     parse(json, flags | Flags::OBJECT_AS_ARRAY, depth, &ValueBuilder).map_err(ParseError::into_error)
 }
@@ -883,7 +886,7 @@ impl Scanner<'_> {
     }
 }
 
-/// How the parser builds values: `stdClass`/arrays as [`Zval`], the request
+/// How the parser builds values: `stdClass`/arrays as [`Value`], the request
 /// model as `serde_json::Value`, or nothing (`json_validate`).
 trait Build {
     type Value;
@@ -920,29 +923,25 @@ impl ParseError {
     }
 }
 
-struct ZvalBuilder {
+struct PhpBuilder {
     assoc: bool,
 }
 
-enum ZvalObject {
-    Array(Array),
-    Object(Object),
-}
-
-impl Build for ZvalBuilder {
-    type Value = Zval;
+impl Build for PhpBuilder {
+    type Value = Value;
     type Array = Array;
-    type Object = ZvalObject;
+    /// An array (assoc mode) or a `stdClass` property table.
+    type Object = Array;
 
-    fn scalar(&self, token: Token) -> Result<Zval, ParseError> {
+    fn scalar(&self, token: Token) -> Result<Value, ParseError> {
         Ok(match token {
-            Token::Null => Zval::Null,
-            Token::True => Zval::Bool(true),
-            Token::False => Zval::Bool(false),
-            Token::Int(i) => Zval::Int(i),
-            Token::Double(d) => Zval::Float(d),
-            Token::Str(s) => Zval::String(s.into_bytes()),
-            _ => Zval::Null,
+            Token::Null => Value::Null,
+            Token::True => Value::Bool(true),
+            Token::False => Value::Bool(false),
+            Token::Int(i) => Value::Int(i),
+            Token::Double(d) => Value::Float(d),
+            Token::Str(s) => Value::Str(Str::from(s)),
+            _ => Value::Null,
         })
     }
 
@@ -950,83 +949,81 @@ impl Build for ZvalBuilder {
         Array::new()
     }
 
-    fn push(&self, array: &mut Array, value: Zval) {
-        array.push(value);
+    fn push(&self, array: &mut Array, value: Value) {
+        // A decoded list never runs out of keys.
+        let _ = array.push(value);
     }
 
-    fn end_array(&self, array: Array) -> Zval {
-        Zval::Array(array)
+    fn end_array(&self, array: Array) -> Value {
+        Value::Array(array)
     }
 
-    fn object(&self) -> ZvalObject {
-        if self.assoc { ZvalObject::Array(Array::new()) } else { ZvalObject::Object(Object::new()) }
+    fn object(&self) -> Array {
+        Array::new()
     }
 
-    fn set(&self, object: &mut ZvalObject, key: String, value: Zval) -> Result<(), ParseError> {
-        match object {
-            ZvalObject::Array(a) => a.insert(Key::from_bytes(key.as_bytes()), value),
-            ZvalObject::Object(o) => {
-                if key.as_bytes().first() == Some(&0) {
-                    return Err(ParseError::Code(ErrorCode::InvalidPropertyName));
-                }
-                o.set(key.into_bytes(), value);
+    fn set(&self, object: &mut Array, key: String, value: Value) -> Result<(), ParseError> {
+        if self.assoc {
+            // `zend_symtable_update`.
+            object.set(ArrayKey::normalize(Str::from(key)), value);
+        } else {
+            if key.as_bytes().first() == Some(&0) {
+                return Err(ParseError::Code(ErrorCode::InvalidPropertyName));
             }
+            object.set(ArrayKey::Str(Str::from(key)), value);
         }
         Ok(())
     }
 
-    fn end_object(&self, object: ZvalObject) -> Zval {
-        match object {
-            ZvalObject::Array(a) => Zval::Array(a),
-            ZvalObject::Object(o) => Zval::Object(o),
-        }
+    fn end_object(&self, object: Array) -> Value {
+        if self.assoc { Value::Array(object) } else { Value::Object(object) }
     }
 }
 
 struct ValueBuilder;
 
 impl Build for ValueBuilder {
-    type Value = Value;
-    type Array = Vec<Value>;
-    type Object = Map<String, Value>;
+    type Value = Json;
+    type Array = Vec<Json>;
+    type Object = Map<String, Json>;
 
-    fn scalar(&self, token: Token) -> Result<Value, ParseError> {
+    fn scalar(&self, token: Token) -> Result<Json, ParseError> {
         Ok(match token {
-            Token::Null => Value::Null,
-            Token::True => Value::Bool(true),
-            Token::False => Value::Bool(false),
-            Token::Int(i) => Value::from(i),
-            Token::Double(d) => Value::Number(Number::from_f64(d).ok_or(ParseError::Unrepresentable)?),
-            Token::Str(s) => Value::String(s),
-            _ => Value::Null,
+            Token::Null => Json::Null,
+            Token::True => Json::Bool(true),
+            Token::False => Json::Bool(false),
+            Token::Int(i) => Json::from(i),
+            Token::Double(d) => Json::Number(Number::from_f64(d).ok_or(ParseError::Unrepresentable)?),
+            Token::Str(s) => Json::String(s),
+            _ => Json::Null,
         })
     }
 
-    fn array(&self) -> Vec<Value> {
+    fn array(&self) -> Vec<Json> {
         Vec::new()
     }
 
-    fn push(&self, array: &mut Vec<Value>, value: Value) {
+    fn push(&self, array: &mut Vec<Json>, value: Json) {
         array.push(value);
     }
 
-    fn end_array(&self, array: Vec<Value>) -> Value {
-        Value::Array(array)
+    fn end_array(&self, array: Vec<Json>) -> Json {
+        Json::Array(array)
     }
 
-    fn object(&self) -> Map<String, Value> {
+    fn object(&self) -> Map<String, Json> {
         Map::new()
     }
 
-    fn set(&self, object: &mut Map<String, Value>, key: String, value: Value) -> Result<(), ParseError> {
+    fn set(&self, object: &mut Map<String, Json>, key: String, value: Json) -> Result<(), ParseError> {
         // `zend_symtable_update`: the same key replaces the value in place.
         object.insert(key, value);
         Ok(())
     }
 
-    fn end_object(&self, object: Map<String, Value>) -> Value {
+    fn end_object(&self, object: Map<String, Json>) -> Json {
         let is_list = object.keys().enumerate().all(|(i, k)| numeric_key(k.as_bytes()) == Some(i as i64));
-        if is_list { Value::Array(object.into_iter().map(|(_, v)| v).collect()) } else { Value::Object(object) }
+        if is_list { Json::Array(object.into_iter().map(|(_, v)| v).collect()) } else { Json::Object(object) }
     }
 }
 
@@ -1261,8 +1258,12 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    fn enc(v: &Value, flags: Flags) -> String {
-        encode(v, flags, DEFAULT_DEPTH).unwrap()
+    fn v(j: Json) -> Value {
+        Value::from_json(&j)
+    }
+
+    fn enc(j: &Json, flags: Flags) -> String {
+        encode(&v(j.clone()), flags, DEFAULT_DEPTH).unwrap()
     }
 
     #[test]
@@ -1279,14 +1280,15 @@ mod tests {
 
     #[test]
     fn encode_errors_like_php() {
-        let bad = Zval::Array([Zval::Float(f64::INFINITY), Zval::String(vec![0xff])].into_iter().collect());
+        let bad: Value =
+            Value::Array([Value::Float(f64::INFINITY), Value::Str(Str::from(vec![0xff]))].into_iter().collect());
         assert_eq!(encode(&bad, Flags::NONE, 512), Err(Error::Json(ErrorCode::Utf8)));
         assert_eq!(
             encode(&bad, Flags::PARTIAL_OUTPUT_ON_ERROR, 512),
             Err(Error::Partial { json: "[0,null]".into(), code: ErrorCode::Utf8 })
         );
-        assert_eq!(encode(&json!([[1]]), Flags::NONE, 1), Err(Error::Json(ErrorCode::Depth)));
-        assert_eq!(encode(&json!([[1]]), Flags::NONE, 4294967298), Ok("[[1]]".into()));
+        assert_eq!(encode(&v(json!([[1]])), Flags::NONE, 1), Err(Error::Json(ErrorCode::Depth)));
+        assert_eq!(encode(&v(json!([[1]])), Flags::NONE, 4294967298), Ok("[[1]]".into()));
     }
 
     #[test]
@@ -1294,11 +1296,15 @@ mod tests {
         assert_eq!(decode_value(br#"{"0":1,"1":2}"#, 512, Flags::NONE).unwrap(), json!([1, 2]));
         assert_eq!(decode_value(br#"{"1":1,"0":2}"#, 512, Flags::NONE).unwrap(), json!({"1": 1, "0": 2}));
         assert_eq!(decode_value(b"{}", 512, Flags::NONE).unwrap(), json!([]));
-        assert_eq!(decode(b"-0", None, 512, Flags::NONE).unwrap(), Zval::Int(0));
-        assert_eq!(decode(b"9223372036854775808", None, 512, Flags::NONE).unwrap(), Zval::Float(9223372036854775808.0));
-        assert_eq!(decode(b"-9223372036854775808", None, 512, Flags::NONE).unwrap(), Zval::Int(i64::MIN));
+        assert_eq!(decode(b"-0", None, 512, Flags::NONE).unwrap(), Value::Int(0));
+        assert_eq!(
+            decode(b"9223372036854775808", None, 512, Flags::NONE).unwrap(),
+            Value::Float(9223372036854775808.0)
+        );
+        assert_eq!(decode(b"-9223372036854775808", None, 512, Flags::NONE).unwrap(), Value::Int(i64::MIN));
         let object = decode(br#"{"a":1,"a":2,"b":3}"#, None, 512, Flags::NONE).unwrap();
-        assert_eq!(object.to_json().unwrap(), json!({"a": 2, "b": 3}));
+        assert_eq!(object.to_json(), json!({"a": 2, "b": 3}));
+        assert!(matches!(object, Value::Object(_)));
     }
 
     #[test]
