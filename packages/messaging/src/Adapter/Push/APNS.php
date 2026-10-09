@@ -75,11 +75,24 @@ class APNS extends PushAdapter
         if (!\is_null($message->getContentAvailable())) {
             $payload['aps']['content-available'] = (int) $message->getContentAvailable();
         }
+
+        $priority = null;
         if (!\is_null($message->getPriority())) {
-            $payload['headers']['apns-priority'] = match ($message->getPriority()) {
+            $priority = match ($message->getPriority()) {
                 Priority::HIGH => '10',
                 Priority::NORMAL => '5',
             };
+        }
+
+        // A content-available push with no alert is a background notification. Apple requires it to be
+        // sent with the `background` push type and priority 5 — it rejects priority 10 for background —
+        // so a silent wake reaches a suspended app rather than being dropped.
+        $background = \is_null($message->getTitle())
+            && \is_null($message->getBody())
+            && (int) $message->getContentAvailable() === 1;
+        $pushType = $background ? 'background' : 'alert';
+        if ($background) {
+            $priority = '5';
         }
 
         $claims = [
@@ -106,15 +119,20 @@ class APNS extends PushAdapter
             $urls[] = $endpoint . '/3/device/' . $token;
         }
 
+        $headers = [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $jwt,
+            'apns-topic: ' . $this->bundleId,
+            'apns-push-type: ' . $pushType,
+        ];
+        if (!\is_null($priority)) {
+            $headers[] = 'apns-priority: ' . $priority;
+        }
+
         $results = $this->requestMulti(
             method: 'POST',
             urls: $urls,
-            headers: [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $jwt,
-                'apns-topic: ' . $this->bundleId,
-                'apns-push-type: alert',
-            ],
+            headers: $headers,
             bodies: [$payload],
         );
 

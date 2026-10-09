@@ -31,8 +31,13 @@ final class FCMTest extends TestCase
         $this->assertArrayNotHasKey('notification', $message);
         $this->assertSame(['type' => 'wake', 'messageId' => 'msg1'], $message['data']);
         $this->assertSame(1, $message['apns']['payload']['aps']['content-available']);
-        $this->assertSame('high', $message['android']['priority']);
         $this->assertSame('token', $message['token']);
+
+        // Android keeps high priority; the APNs side must be a background push (type background,
+        // priority 5) or iOS drops the silent wake.
+        $this->assertSame('high', $message['android']['priority']);
+        $this->assertSame('background', $message['apns']['headers']['apns-push-type']);
+        $this->assertSame('5', $message['apns']['headers']['apns-priority']);
     }
 
     public function testChannelIdIsSentOnTheAndroidNotification(): void

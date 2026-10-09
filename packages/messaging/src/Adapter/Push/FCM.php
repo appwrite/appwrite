@@ -145,6 +145,17 @@ class FCM extends PushAdapter
             };
         }
 
+        // A content-available message with no notification is a silent background push. Apple requires
+        // the `background` push type and priority 5 on the APNs side (it rejects 10), while Android keeps
+        // its requested priority so a data-only wake still arrives promptly there.
+        $background = \is_null($message->getTitle())
+            && \is_null($message->getBody())
+            && (int) $message->getContentAvailable() === 1;
+        if ($background) {
+            $shared['message']['apns']['headers']['apns-push-type'] = 'background';
+            $shared['message']['apns']['headers']['apns-priority'] = '5';
+        }
+
         $bodies = [];
 
         foreach ($message->getTo() as $to) {

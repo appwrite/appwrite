@@ -31,6 +31,29 @@ final class APNSTest extends TestCase
         $this->assertArrayNotHasKey('alert', $aps);
         $this->assertSame(['type' => 'wake', 'messageId' => 'msg1'], $aps['data']);
         $this->assertSame(1, $aps['content-available']);
+
+        // A silent wake must be a background push (type background, priority 5) or iOS drops it.
+        $this->assertContains('apns-push-type: background', $stub->capturedHeaders);
+        $this->assertContains('apns-priority: 5', $stub->capturedHeaders);
+    }
+
+    /**
+     * A regular notification keeps the alert push type and sends its priority as an HTTP header.
+     */
+    public function testAlertUsesAlertPushType(): void
+    {
+        $stub = new APNSStub($this->authKey(), 'keyId', 'teamId', 'com.example.app');
+
+        $stub->send(new Push(
+            to: ['token'],
+            title: 'Title',
+            body: 'Body',
+            priority: Priority::HIGH,
+        ));
+
+        $this->assertSame('Title', $stub->capturedBodies[0]['aps']['alert']['title']);
+        $this->assertContains('apns-push-type: alert', $stub->capturedHeaders);
+        $this->assertContains('apns-priority: 10', $stub->capturedHeaders);
     }
 
     /**
@@ -54,6 +77,11 @@ class APNSStub extends APNS
     public array $capturedBodies = [];
 
     /**
+     * @var array<string>
+     */
+    public array $capturedHeaders = [];
+
+    /**
      * @param  array<string>  $urls
      * @param  array<string>  $headers
      * @param  array<array<string, mixed>>  $bodies
@@ -69,6 +97,7 @@ class APNSStub extends APNS
         int $connectTimeout = 10,
     ): array {
         $this->capturedBodies = $bodies;
+        $this->capturedHeaders = $headers;
 
         $results = [];
         foreach ($urls as $index => $url) {
