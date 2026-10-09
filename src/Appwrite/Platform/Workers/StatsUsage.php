@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Message\ProjectContext;
 use Appwrite\Usage\Connection;
+use Swoole\Timer;
 use Utopia\Console\Console;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -19,6 +20,17 @@ class StatsUsage extends Action
         METRIC_SITES_OUTBOUND => METRIC_NETWORK_OUTBOUND,
         METRIC_SITES_REQUESTS => METRIC_NETWORK_REQUESTS,
     ];
+
+    /**
+     * Messages fold into one batch, written this long after the batch opens.
+     * Each ClickHouse insert is a new part sorted into every projection and
+     * merged again later, so an insert per message kept small servers busy.
+     * A stopping worker waits for the batch, so this stays under Docker's
+     * 10 second stop timeout.
+     */
+    private const int FLUSH_DELAY_MS = 5_000;
+
+    private ?Accumulator $accumulator = null;
 
     public static function getName(): string
     {
@@ -56,7 +68,14 @@ class StatsUsage extends Action
         }
 
         try {
-            $accumulator = new Accumulator($usageConnection->getUsage());
+            $accumulator = $this->accumulator;
+            if ($accumulator === null) {
+                $accumulator = $this->accumulator = new Accumulator($usageConnection->getUsage());
+                // One-shot rather than a tick: a pending timer keeps the worker's
+                // event loop alive only until it fires, so shutdown still writes it.
+                Timer::after(self::FLUSH_DELAY_MS, $this->flush(...));
+            }
+
             $projectId = (string) ($payload['project']['$id'] ?? '');
             $timestamp = $this->timestamp($payload, $message);
 
@@ -118,8 +137,23 @@ class StatsUsage extends Action
                     allowNegative: $key === METRIC_REALTIME_CONNECTIONS,
                 );
             }
+        } catch (\Throwable $th) {
+            Console::error('Failed to collect usage events: ' . $th->getMessage());
+        }
+    }
 
-            if ($accumulator->count() > 0 && !$accumulator->flush()) {
+    private function flush(): void
+    {
+        // Detach first, so messages handled while the insert is in flight open the next batch.
+        $accumulator = $this->accumulator;
+        $this->accumulator = null;
+
+        if ($accumulator === null || $accumulator->count() === 0) {
+            return;
+        }
+
+        try {
+            if (!$accumulator->flush()) {
                 Console::error('Usage event flush returned false');
             }
         } catch (\Throwable $th) {
