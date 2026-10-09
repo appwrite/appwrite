@@ -578,24 +578,7 @@ class Response extends SwooleResponse
 
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
-                                $condition = false;
-                                foreach ($this->getModel($type)->conditions as $attribute => $val) {
-                                    $actual = $item->getAttribute($attribute);
-                                    if ($actual instanceof \BackedEnum) {
-                                        $actual = $actual->value;
-                                    }
-
-                                    if (\is_array($val)) {
-                                        $condition = \in_array($actual, $val);
-                                    } else {
-                                        $condition = $actual === $val;
-                                    }
-
-                                    if (!$condition) {
-                                        break;
-                                    }
-                                }
-                                if ($condition) {
+                                if ($this->getModel($type)->matches($item)) {
                                     $ruleType = $type;
                                     break;
                                 }

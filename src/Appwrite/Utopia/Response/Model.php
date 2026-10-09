@@ -56,6 +56,31 @@ abstract class Model
     }
 
     /**
+     * Whether a document of a union rule is rendered with this model.
+     * A model without conditions never matches.
+     */
+    public function matches(Document $document): bool
+    {
+        if ($this->conditions === []) {
+            return false;
+        }
+
+        foreach ($this->conditions as $attribute => $expected) {
+            $actual = $document->getAttribute($attribute);
+            if ($actual instanceof \BackedEnum) {
+                $actual = $actual->value;
+            }
+
+            $matched = \is_array($expected) ? \in_array($actual, $expected) : $actual === $expected;
+            if (!$matched) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Get Name
      *
      * @return string

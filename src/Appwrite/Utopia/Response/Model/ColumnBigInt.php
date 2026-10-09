@@ -54,18 +54,28 @@ class ColumnBigInt extends Column
     }
 
     public array $conditions = [
-        'type' => ['bigint', 'biginteger'],
+        'type' => 'bigint'
     ];
+
+    public function matches(Document $document): bool
+    {
+        return $this->isBigInteger($document->getAttribute('type'));
+    }
 
     public function filter(Document $document): Document
     {
         $type = $document->getAttribute('type');
 
-        if (($type instanceof ColumnType || \is_string($type)) && AttributeDefinition::sameType($type, ColumnType::BigInteger)) {
+        if ($this->isBigInteger($type)) {
             $document->setAttribute('type', AttributeDefinition::storedType($type));
         }
 
         return $document;
+    }
+
+    private function isBigInteger(mixed $type): bool
+    {
+        return ($type instanceof ColumnType || \is_string($type)) && AttributeDefinition::sameType($type, ColumnType::BigInteger);
     }
 
     public function getName(): string

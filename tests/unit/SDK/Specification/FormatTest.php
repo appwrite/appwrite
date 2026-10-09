@@ -24,6 +24,7 @@ use Appwrite\Utopia\Response\Model\AlgoScryptModified;
 use Appwrite\Utopia\Response\Model\AlgoSha;
 use Appwrite\Utopia\Response\Model as ResponseModel;
 use Appwrite\Utopia\Response\Model\AttributeLine;
+use Appwrite\Utopia\Response\Model\ColumnBigInt;
 use Appwrite\Utopia\Response\Model\ColumnEmail;
 use Appwrite\Utopia\Response\Model\ColumnString;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
@@ -167,6 +168,39 @@ final class FormatTest extends TestCase
                 ['propertyName' => 'format', 'value' => 'email'],
             ]],
         ], $union->conditionalReferences());
+    }
+
+    public function testBigIntColumnKeepsItsTypeDiscriminator(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+        $route = (new Route('GET', '/v1/tests/column'))
+            ->desc('Get column')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getColumn',
+                description: 'Get column.',
+                auth: [AuthType::ADMIN],
+                responses: [new SDKResponse(code: 200, model: [Response::MODEL_COLUMN_BIGINT, Response::MODEL_COLUMN_STRING, Response::MODEL_COLUMN_EMAIL])],
+            ));
+        $spec = (new OpenAPI3(new Container(), [], [$route], [new ColumnBigInt(), new ColumnString(), new ColumnEmail()], [], ['console' => 0], 'console'))->parse();
+        $document = Parser::parse(json_encode($spec, JSON_THROW_ON_ERROR));
+        $union = $document->paths['/tests/column']->operations['get']->responses['200']->content['application/json']->schema;
+
+        $this->assertInstanceOf(CompositeSchema::class, $union);
+        $this->assertSame([
+            ['reference' => '#/components/schemas/columnBigint', 'conditions' => [
+                ['propertyName' => 'type', 'value' => 'bigint'],
+            ]],
+            ['reference' => '#/components/schemas/columnString', 'conditions' => [
+                ['propertyName' => 'type', 'value' => 'string'],
+            ]],
+            ['reference' => '#/components/schemas/columnEmail', 'conditions' => [
+                ['propertyName' => 'type', 'value' => 'string'],
+                ['propertyName' => 'format', 'value' => 'email'],
+            ]],
+        ], $union->conditionalReferences(), 'Typed SDKs decode attribute and column unions by these type discriminators, so a bigint branch must keep its own.');
     }
 
     public function testProjectRequestParameterOverrides(): void
