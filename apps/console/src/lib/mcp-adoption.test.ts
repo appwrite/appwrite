@@ -116,4 +116,28 @@ describe('generateAgentSetupMarkdown', () => {
     )
     expect(markdown).not.toContain('MCP is connected. Skip step 3.')
   })
+
+  test('starts a local app from an idea instead of asking for folder and project details', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain('Never ask the user to send them again')
+    expect(markdown).toContain(
+      'If there is no local project (empty folder, no manifest, or you cannot see a workspace), skip the SDK install for now',
+    )
+    expect(markdown).toContain(
+      'do not ask for a local folder, the Appwrite project name or ID, or the API endpoint',
+    )
+    expect(markdown).toContain(
+      'ask them to describe the idea and you will scaffold the Appwrite pieces it needs',
+    )
+    expect(markdown).toContain(
+      'offer two or three small starters they can pick',
+    )
+    expect(markdown).toContain(
+      'Auth (email, OAuth, MFA, teams), Databases, Storage, Functions, Sites, Messaging, and realtime',
+    )
+    expect(markdown).not.toContain('Local project folder')
+    expect(markdown).not.toContain(
+      'ask the user which stack they want before installing anything',
+    )
+  })
 })
