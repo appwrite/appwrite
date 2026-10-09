@@ -1369,11 +1369,43 @@ class ClickHouse extends SQL
     private function ensureGaugeDimColumns(): void
     {
         $this->ensureDimColumns($this->getGaugesTableName(), Metric::GAUGE_COLUMNS, 'gauge');
+        $this->ensureIndexes($this->getGaugesTableName(), $this->getGaugeIndexes());
     }
 
     private function ensureEventDimColumns(): void
     {
         $this->ensureDimColumns($this->getEventsTableName(), Metric::EVENT_COLUMNS, 'event');
+        $this->ensureIndexes($this->getEventsTableName(), $this->getEventIndexes());
+    }
+
+    /**
+     * Adds the skip indexes a table created before them lacks, such as the
+     * events ordinal index. Parts written before stay unindexed until merged.
+     *
+     * @param array<array<string, mixed>> $indexes
+     */
+    private function ensureIndexes(string $tableName, array $indexes): void
+    {
+        $escapedTable = $this->escapeIdentifier($this->database)
+            . '.' . $this->escapeIdentifier($tableName);
+
+        $adds = [];
+        foreach ($indexes as $index) {
+            /** @var string $indexName */
+            $indexName = $index['$id'];
+            /** @var array<string> $attributes */
+            $attributes = $index['attributes'];
+            $indexType = is_string($index['indexType'] ?? null) ? $index['indexType'] : 'bloom_filter';
+            $adds[] = 'ADD INDEX IF NOT EXISTS ' . $this->escapeIdentifier($indexName)
+                . ' (' . implode(', ', array_map($this->escapeIdentifier(...), $attributes)) . ')'
+                . " TYPE {$indexType} GRANULARITY 1";
+        }
+
+        if ($adds === []) {
+            return;
+        }
+
+        $this->query("ALTER TABLE {$escapedTable} " . implode(', ', $adds));
     }
 
     /**

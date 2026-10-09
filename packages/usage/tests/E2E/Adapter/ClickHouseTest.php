@@ -90,6 +90,52 @@ class ClickHouseTest extends TestCase
     }
 
     /**
+     * An install from before the events table had an ordinal column gets it from setup(), and keeps its rows.
+     */
+    public function testSetupAddsTheOrdinalColumnToAnExistingEventsTable(): void
+    {
+        $adapter = new ClickHouseAdapter(
+            getenv('CLICKHOUSE_HOST') ?: 'clickhouse',
+            getenv('CLICKHOUSE_USER') ?: 'default',
+            getenv('CLICKHOUSE_PASSWORD') ?: 'clickhouse',
+            (int) (getenv('CLICKHOUSE_PORT') ?: 8123),
+            (bool) (getenv('CLICKHOUSE_SECURE') ?: false),
+            namespace: 'utopia_usage_upgrade',
+            database: getenv('CLICKHOUSE_DATABASE') ?: 'default',
+        );
+        $usage = new Usage($adapter);
+        $usage->setup();
+        $usage->purge('1');
+
+        $query = new \ReflectionMethod($adapter, 'query');
+        $table = (new \ReflectionMethod($adapter, 'escapeIdentifier'))->invoke($adapter, getenv('CLICKHOUSE_DATABASE') ?: 'default')
+            . '.' . (new \ReflectionMethod($adapter, 'escapeIdentifier'))->invoke($adapter, (new \ReflectionMethod($adapter, 'getEventsTableName'))->invoke($adapter));
+        $this->assertTrue($usage->addBatch([
+            ['tenant' => '1', 'metric' => 'before-ordinal', 'value' => 3, 'tags' => ['service' => 'storage']],
+        ], Usage::TYPE_EVENT));
+        $query->invoke($adapter, "ALTER TABLE {$table} DROP INDEX IF EXISTS `index-ordinal`");
+        $query->invoke($adapter, "ALTER TABLE {$table} DROP COLUMN IF EXISTS `ordinal`");
+
+        $usage->setup();
+
+        $this->assertTrue($usage->addBatch([
+            ['tenant' => '1', 'metric' => 'after-ordinal', 'value' => 4, 'tags' => ['service' => 'storage', 'ordinal' => '1']],
+        ], Usage::TYPE_EVENT));
+
+        $before = $usage->find('1', [Query::equal('metric', ['before-ordinal'])], Usage::TYPE_EVENT);
+        $this->assertCount(1, $before, 'A row written before the upgrade must survive it');
+        $this->assertSame(3, (int) $before[0]->getValue());
+
+        $after = $usage->find('1', [Query::equal('metric', ['after-ordinal']), Query::equal('ordinal', ['1'])], Usage::TYPE_EVENT);
+        $this->assertCount(1, $after, 'setup() must add the ordinal column to an existing events table');
+
+        $indexes = $query->invoke($adapter, "SELECT name FROM system.data_skipping_indices WHERE database = currentDatabase() AND table = '" . (new \ReflectionMethod($adapter, 'getEventsTableName'))->invoke($adapter) . "' AND name = 'index-ordinal' FORMAT TabSeparated");
+        $this->assertSame('index-ordinal', \trim($indexes), 'setup() must add the ordinal skip index to an existing events table');
+
+        $usage->purge('1');
+    }
+
+    /**
      * Test addBatch with explicit batch size parameter
      */
     public function testAddBatchWithBatchSize(): void
