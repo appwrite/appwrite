@@ -73,6 +73,7 @@ class Create extends Action
                 requestType: ContentType::MULTIPART,
                 type: MethodType::UPLOAD,
                 packaging: true,
+                chunked: true,
             ))
             ->param('functionId', '', fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Function ID.', false, ['dbForProject'])
             ->param('entrypoint', null, new Nullable(new Text(1028)), 'Entrypoint File.', true)
