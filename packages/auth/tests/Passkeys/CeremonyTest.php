@@ -204,6 +204,41 @@ final class CeremonyTest extends TestCase
         $this->ceremony->identify(['id' => 'abc']);
     }
 
+    public function testPortlessLocalhostOriginAllowsAnyPort(): void
+    {
+        $ceremony = new Ceremony(new RelyingParty('localhost', 'Test', ['http://localhost']));
+        $authenticator = new Authenticator();
+
+        $challenge = $ceremony->register('user@example.com', 'User');
+        $registered = $ceremony->verifyRegistration($challenge->state, $authenticator->register($challenge->options, 'http://localhost:5173'));
+
+        $challenge = $ceremony->authenticate();
+        $signedIn = $ceremony->verifyAuthentication($challenge->state, $authenticator->authenticate($challenge->options, 'http://localhost:3000'), $registered->record);
+        $this->assertSame($registered->identifier, $signedIn->identifier);
+
+        $challenge = $ceremony->authenticate();
+        $this->expectException(Exception::class);
+        $ceremony->verifyAuthentication($challenge->state, $authenticator->authenticate($challenge->options, 'https://localhost:3000'), $registered->record);
+    }
+
+    public function testPortlessLocalhostOriginRejectsAPath(): void
+    {
+        $ceremony = new Ceremony(new RelyingParty('localhost', 'Test', ['http://localhost']));
+        $challenge = $ceremony->register('user@example.com', 'User');
+
+        $this->expectException(Exception::class);
+        $ceremony->verifyRegistration($challenge->state, (new Authenticator())->register($challenge->options, 'http://localhost:5173/login'));
+    }
+
+    public function testPortlessOriginAllowsOnlyDefaultPortOutsideLocalhost(): void
+    {
+        $ceremony = new Ceremony(new RelyingParty('example.com', 'Test', ['https://example.com']));
+        $challenge = $ceremony->register('user@example.com', 'User');
+
+        $this->expectException(Exception::class);
+        $ceremony->verifyRegistration($challenge->state, (new Authenticator())->register($challenge->options, 'https://example.com:8443', 'example.com'));
+    }
+
     public function testFingerprintIgnoresOriginOrder(): void
     {
         $a = new RelyingParty('example.com', 'A', ['https://a.example.com', 'https://example.com']);

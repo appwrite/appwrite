@@ -51,7 +51,6 @@ class Ceremony
 
         $this->steps = new CeremonyStepManagerFactory();
         $this->steps->setAttestationStatementSupportManager($attestation);
-        $this->steps->setAllowedOrigins($relyingParty->origins);
         $this->steps->setCounterChecker(new Counter());
     }
 
@@ -102,6 +101,7 @@ class Ceremony
         }
 
         $this->assertSameOrigin($response);
+        $this->steps->setAllowedOrigins($this->getAllowedOrigins($response->clientDataJSON->origin));
 
         return $this->toCredential($this->guard(fn (): CredentialRecord => AuthenticatorAttestationResponseValidator::create($this->steps->creationCeremony())
             ->check($response, $options, $this->relyingParty->id)));
@@ -147,6 +147,7 @@ class Ceremony
         }
 
         $this->assertSameOrigin($response);
+        $this->steps->setAllowedOrigins($this->getAllowedOrigins($response->clientDataJSON->origin));
 
         $stored = $this->decodeRecord($record);
         $backupEligible = $stored->backupEligible;
@@ -269,6 +270,32 @@ class Ceremony
         if ($response->clientDataJSON->crossOrigin || $response->clientDataJSON->topOrigin !== null) {
             throw new Exception('Cross-origin ceremonies are not allowed.');
         }
+    }
+
+    /**
+     * Development servers pick their own port, so a portless localhost origin allows any port on localhost.
+     *
+     * @return array<string>
+     */
+    private function getAllowedOrigins(string $origin): array
+    {
+        $origins = $this->relyingParty->origins;
+        $parts = \parse_url($origin);
+
+        if (
+            $this->relyingParty->id === Origin::LOCALHOST
+            && ($parts['host'] ?? null) === Origin::LOCALHOST
+            && isset($parts['scheme'], $parts['port'])
+            && !isset($parts['path'])
+            && !isset($parts['query'])
+            && !isset($parts['fragment'])
+            && !isset($parts['user'])
+            && \in_array($parts['scheme'] . '://' . Origin::LOCALHOST, $origins, true)
+        ) {
+            $origins[] = $origin;
+        }
+
+        return $origins;
     }
 
     private function getIdentifier(string $credentialId): string
