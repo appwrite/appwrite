@@ -2029,6 +2029,189 @@
           }
         }
       ]
+    },
+    {
+      "name": "compiled: groups of the first match",
+      "op": "pcre.compiled",
+      "args": {
+        "pattern": "/(\\d+)-(\\d+)/",
+        "subject": "tel 12-34 and 56-78"
+      },
+      "expect": {
+        "captures": [
+          "12-34",
+          "12",
+          "34"
+        ],
+        "matched": true
+      }
+    },
+    {
+      "name": "compiled: no match",
+      "op": "pcre.compiled",
+      "args": {
+        "pattern": "/(\\d+)-(\\d+)/",
+        "subject": "none"
+      },
+      "expect": {
+        "captures": null,
+        "matched": false
+      }
+    },
+    {
+      "name": "compiled: an unset group before a set one is empty",
+      "op": "pcre.compiled",
+      "args": {
+        "pattern": "/(a)?(b)/",
+        "subject": "b"
+      },
+      "expect": {
+        "captures": [
+          "b",
+          "",
+          "b"
+        ],
+        "matched": true
+      }
+    },
+    {
+      "name": "compiled: trailing unset groups are left out",
+      "op": "pcre.compiled",
+      "args": {
+        "pattern": "/(b)(c)?(d)?/",
+        "subject": "b"
+      },
+      "expect": {
+        "captures": [
+          "b",
+          "b"
+        ],
+        "matched": true
+      }
+    },
+    {
+      "name": "compiled: named groups are not repeated",
+      "op": "pcre.compiled",
+      "args": {
+        "pattern": "/(?<year>\\d{4})-(?<month>\\d\\d)/",
+        "subject": "2024-05"
+      },
+      "expect": {
+        "captures": [
+          "2024-05",
+          "2024",
+          "05"
+        ],
+        "matched": true
+      }
+    },
+    {
+      "name": "compiled: case-insensitive bytes",
+      "op": "pcre.compiled",
+      "args": {
+        "pattern": "/Chrome\\/([0-9.]+)/i",
+        "subject": "x CHROME/1.2 y"
+      },
+      "expect": {
+        "captures": [
+          "CHROME/1.2",
+          "1.2"
+        ],
+        "matched": true
+      }
+    },
+    {
+      "name": "compiled: word boundary without u is ASCII",
+      "op": "pcre.compiled",
+      "args": {
+        "pattern": "/\\bKF[A-Z0-9]{2,}\\b/i",
+        "subject": "é KFTT é"
+      },
+      "expect": {
+        "captures": [
+          "KFTT"
+        ],
+        "matched": true
+      }
+    },
+    {
+      "name": "compiled: empty match retried without matches",
+      "op": "pcre.compiled",
+      "args": {
+        "pattern": "/x*/",
+        "subject": "abc"
+      },
+      "expect": {
+        "captures": [
+          ""
+        ],
+        "matched": true
+      }
+    },
+    {
+      "name": "compiled: start after end fails the match with matches",
+      "op": "pcre.compiled",
+      "args": {
+        "pattern": "/(?=ab\\K)/",
+        "subject": "ab"
+      },
+      "expect": {
+        "captures": null,
+        "matched": false
+      }
+    },
+    {
+      "name": "compiled: invalid pattern",
+      "op": "pcre.compiled",
+      "args": {
+        "pattern": "/(abc/",
+        "subject": "abc"
+      },
+      "expect": {
+        "captures": null,
+        "matched": false
+      }
+    },
+    {
+      "name": "compiled: missing delimiter",
+      "op": "pcre.compiled",
+      "args": {
+        "pattern": "abc",
+        "subject": "abc"
+      },
+      "expect": {
+        "captures": null,
+        "matched": false
+      }
+    },
+    {
+      "name": "compiled: dollar before a final newline",
+      "op": "pcre.compiled",
+      "args": {
+        "pattern": "/a$/",
+        "subject": "a\n"
+      },
+      "expect": {
+        "captures": [
+          "a"
+        ],
+        "matched": true
+      }
+    },
+    {
+      "name": "compiled: lazy quantifier",
+      "op": "pcre.compiled",
+      "args": {
+        "pattern": "/(?:MSIE |Trident\\/.*?rv:)([0-9.]+)/i",
+        "subject": "Trident/7.0; rv:11.0) like"
+      },
+      "expect": {
+        "captures": [
+          "Trident/7.0; rv:11.0",
+          "11.0"
+        ],
+        "matched": true
+      }
     }
   ]
 }

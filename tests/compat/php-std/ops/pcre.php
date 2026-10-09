@@ -66,4 +66,19 @@ return [
 
         return ['result' => $result, 'error' => preg_last_error(), 'warning' => $warning()];
     },
+    // pcre.compiled: a pattern compiled once (Regex::compiled): the groups of
+    // preg_match($p, $s, $m) === 1 (integer keys) and preg_match($p, $s) === 1.
+    // Each call gets its own copy of the subject: a /u call marks the string
+    // it checked as valid UTF-8, which changes how the next call runs. The
+    // copy is built (not interned, as substr() would for one character), and
+    // the empty string stays PHP's interned one.
+    'pcre.compiled' => static function (array $a) {
+        $fresh = static fn (string $s): string => $s === '' ? $s : implode('', [$s, '']);
+        $matches = [];
+        $captures = @preg_match($a['pattern'], $fresh($a['subject']), $matches) === 1
+            ? array_values(array_filter($matches, is_int(...), ARRAY_FILTER_USE_KEY))
+            : null;
+
+        return ['captures' => $captures, 'matched' => @preg_match($a['pattern'], $fresh($a['subject'])) === 1];
+    },
 ];

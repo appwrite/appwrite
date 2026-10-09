@@ -12,6 +12,7 @@
 //! | `preg_split($p, $s, $limit, $flags)` | [`preg_split`] |
 //! | `preg_quote($s, $delimiter)` | [`preg_quote`] |
 //! | `preg_grep($p, $array, $flags)` | [`preg_grep`] |
+//! | `preg_match($p, $s, $m) === 1` on a pattern compiled once | [`Regex::compiled`], [`Regex::captures`], [`Regex::is_match`] |
 //! | `preg_last_error()` / `preg_last_error_msg()` | [`PregError`] in every result |
 //!
 //! The engine is a port, not a translation to another regex dialect: the
@@ -51,6 +52,7 @@ use std::fmt;
 use std::sync::{Arc, Mutex, OnceLock};
 
 mod compile;
+mod compiled;
 mod exec;
 mod forward;
 mod lookbehind;
@@ -65,6 +67,8 @@ use exec::{Exec, MatchData, Matcher, UNSET};
 use parse::{Bsr, Newline, opt};
 use program::{BraKind, Op, Program};
 use study::StartInfo;
+
+pub use compiled::Captures;
 
 /// The Unicode version of PCRE2's tables (PHP's "PCRE Unicode Version").
 pub const UNICODE_VERSION: &str = ucd::UNICODE_VERSION;

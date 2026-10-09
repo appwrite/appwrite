@@ -32,7 +32,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
 
     let secret = utopia_auth::proofs::token(256);
     let user_agent = ctx.user_agent("UNKNOWN");
-    let detected = utopia_user_agent::detect(&user_agent);
+    let detected = appwrite_core::detector::detect(&user_agent);
     let duration = ctx.project.auth_int("duration", 31_536_000);
     let expire = datetime::add_seconds(datetime::now(), duration);
     let country = ctx.state.geo.country_code(&ctx.ip).await.to_lowercase();

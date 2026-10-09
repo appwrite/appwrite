@@ -10,6 +10,7 @@
 //! | [`auth`]      | `Appwrite\Auth`, `app/config/roles.php`, JWT, keys        |
 //! | [`crypto`]    | the `encrypt` database filter                             |
 //! | [`database`]  | `Appwrite\Database`, collection documents and schemas     |
+//! | [`detector`]  | `Appwrite\Detector` (session OS, client, device)           |
 //! | [`event`]     | `Appwrite\Event` publishers                               |
 //! | [`network`]   | `Appwrite\Network` (CORS, origin, IP)                     |
 //! | [`response`]  | `Appwrite\Utopia\Response` and models                     |
@@ -23,6 +24,7 @@ pub mod auth;
 pub mod config;
 pub mod crypto;
 pub mod database;
+pub mod detector;
 pub mod error;
 pub mod event;
 pub mod geo;

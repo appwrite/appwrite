@@ -18,5 +18,4 @@ utopia-auth.workspace = true
 utopia-database.workspace = true
 utopia-emails.workspace = true
 utopia-http.workspace = true
-utopia-user-agent.workspace = true
 utopia-validators.workspace = true
