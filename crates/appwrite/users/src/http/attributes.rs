@@ -98,7 +98,7 @@ pub async fn phone_verification(ctx: &mut Context) -> Result<Response> {
 pub async fn password(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let state = ctx.state.clone();
-    let validator = AllOf(vec![
+    let validator = AllOf::new(vec![
         Box::new(PasswordStrength::from_policy(ctx.project.auth("passwordStrength"), true)) as Box<dyn Validator + '_>,
         Box::new(PasswordDictionary {
             dictionary: &state.dictionary,

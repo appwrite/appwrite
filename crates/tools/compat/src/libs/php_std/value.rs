@@ -3,7 +3,7 @@
 use php_std::value::{self, Number};
 use serde_json::Value;
 
-use crate::adapter::{Args, Fault, OpResult, Outcome, Session, float_value};
+use crate::adapter::{Args, Fault, OpResult, Outcome, Session, float, float_value};
 
 pub const OPS: &[&str] = &[
     "value.is_numeric",
@@ -13,6 +13,8 @@ pub const OPS: &[&str] = &[
     "value.empty",
     "value.is_array",
     "value.loose_eq",
+    "value.loose_str_eq",
+    "value.le_numbers",
 ];
 
 pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
@@ -30,6 +32,17 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
         "value.empty" => Value::Bool(value::empty(v()?)),
         "value.is_array" => Value::Bool(value::is_array(v()?)),
         "value.loose_eq" => Value::Bool(value::loose_eq(a.value("a")?, a.value("b")?)),
+        "value.loose_str_eq" => Value::Bool(value::loose_str_eq(&a.bytes("a")?, &a.bytes("b")?)),
+        "value.le_numbers" => {
+            let number = |key: &str| -> Result<Number, Fault> {
+                let v = a.value(key)?;
+                Ok(match v.as_i64() {
+                    Some(i) => Number::Int(i),
+                    None => Number::Float(float(v).ok_or_else(|| Fault::new(format!("`{key}` must be a number")))?),
+                })
+            };
+            Value::Bool(value::le_numbers(number("a")?, number("b")?))
+        }
         _ => return Err(Fault::new(format!("php-std: unknown operation `{op}`"))),
     }))
 }

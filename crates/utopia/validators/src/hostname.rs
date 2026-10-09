@@ -1,6 +1,7 @@
-use serde_json::Value;
+use php_std::mb;
+use php_std::url::parse_url;
 
-use crate::Validator;
+use crate::{Error, Input, Type, Url, Validator, Verdict, is_valid_via_validate};
 
 /// `Utopia\Validator\Hostname`: hostname matched against an allow list.
 ///
@@ -17,27 +18,30 @@ impl Hostname {
     }
 
     pub fn matches(&self, value: &str) -> bool {
-        if value.is_empty() || value == "0" {
-            return false;
-        }
-        if value.chars().count() > 253 || value.contains('/') || value.contains(':') {
-            return false;
-        }
-        if self.allow_list.is_empty() {
-            return true;
-        }
-        for allowed in &self.allow_list {
-            if value == allowed || allowed == "*" {
-                return true;
-            }
-            if let Some(suffix) = allowed.strip_prefix('*')
-                && value.ends_with(suffix)
-            {
-                return true;
-            }
-        }
-        false
+        self.matches_bytes(value.as_bytes())
     }
+
+    fn matches_bytes(&self, value: &[u8]) -> bool {
+        allowed(&self.allow_list, value)
+    }
+}
+
+/// `Hostname::isValid()` of a string against `allow_list`.
+fn allowed(allow_list: &[String], value: &[u8]) -> bool {
+    if value.is_empty() || value == b"0" {
+        return false;
+    }
+    // At most 253 characters, no path (`/`), no port or scheme (`:`).
+    if mb::mb_strlen(value) > 253 || value.contains(&b'/') || value.contains(&b':') {
+        return false;
+    }
+    if allow_list.is_empty() {
+        return true;
+    }
+    allow_list.iter().any(|allowed| {
+        let allowed = allowed.as_bytes();
+        value == allowed || allowed == b"*" || allowed.strip_prefix(b"*").is_some_and(|suffix| value.ends_with(suffix))
+    })
 }
 
 impl Validator for Hostname {
@@ -45,24 +49,47 @@ impl Validator for Hostname {
         "Value must be a valid hostname without path, port and protocol.".to_owned()
     }
 
-    fn is_valid(&self, value: &Value) -> bool {
-        match value {
-            Value::String(s) => self.matches(s),
-            _ => false,
-        }
+    is_valid_via_validate!();
+
+    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
+        Ok(Verdict::of(value.as_str().is_some_and(|s| self.matches_bytes(s))))
+    }
+
+    fn kind(&self) -> Type {
+        Type::String
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+/// `Utopia\Validator\Host`: a URL whose host is allowed by a [`Hostname`]
+/// allow list.
+#[derive(Debug, Clone, Default)]
+pub struct Host {
+    pub whitelist: Vec<String>,
+}
 
-    #[test]
-    fn wildcard() {
-        let h = Hostname::new(vec!["*.appwrite.io".into(), "localhost".into()]);
-        assert!(h.matches("cloud.appwrite.io"));
-        assert!(!h.matches("appwrite.io"));
-        assert!(h.matches("localhost"));
-        assert!(!h.matches("localhost:3000"));
+impl Host {
+    pub fn new(whitelist: Vec<String>) -> Self {
+        Self { whitelist }
+    }
+}
+
+impl Validator for Host {
+    fn description(&self) -> String {
+        format!("URL host must be one of: {}", self.whitelist.join(", "))
+    }
+
+    is_valid_via_validate!();
+
+    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
+        if !Url::default().validate(value)?.valid {
+            return Ok(Verdict::INVALID);
+        }
+        let url = value.to_bytes()?;
+        let host = parse_url(&url).and_then(|u| u.host());
+        Ok(Verdict::of(host.is_some_and(|h| allowed(&self.whitelist, &h))))
+    }
+
+    fn kind(&self) -> Type {
+        Type::String
     }
 }

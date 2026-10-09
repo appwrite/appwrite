@@ -1,0 +1,401 @@
+{
+  "source": "packages/validators/tests/PhoneTest.php",
+  "cases": [
+    {
+      "name": "testCanValidatePhone",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Phone",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "+15550102680"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "+447911123456"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "+919876543210"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "+1234567"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "+123456789012345"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "15550102680"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": " 15550102680"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "%2B15550102680"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "+0123456789"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "+123456"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "+1234567890123456"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "+1 555 010 2680"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "+1-555-010-2680"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": null
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": [
+              "+15550102680"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "string"
+        }
+      ]
+    },
+    {
+      "name": "testCanAllowEmptyValue",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Phone",
+            "args": {
+              "allowEmpty": true
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": ""
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "+15550102680"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": null
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCanNormalizePathEncoding",
+      "steps": [
+        {
+          "op": "phone.normalize",
+          "args": {
+            "value": "%2B15550102680"
+          },
+          "expect": "+15550102680"
+        },
+        {
+          "op": "phone.normalize",
+          "args": {
+            "value": " 15550102680"
+          },
+          "expect": "+15550102680"
+        },
+        {
+          "op": "phone.normalize",
+          "args": {
+            "value": "  15550102680"
+          },
+          "expect": "  15550102680"
+        },
+        {
+          "op": "phone.normalize",
+          "args": {
+            "value": "15550102680"
+          },
+          "expect": "+15550102680"
+        },
+        {
+          "op": "phone.normalize",
+          "args": {
+            "value": "+15550102680"
+          },
+          "expect": "+15550102680"
+        },
+        {
+          "op": "phone.normalize",
+          "args": {
+            "value": "+0123456789"
+          },
+          "expect": "+0123456789"
+        },
+        {
+          "op": "phone.normalize",
+          "args": {
+            "value": "0123456789"
+          },
+          "expect": "0123456789"
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateNormalizedPhone",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Phone",
+            "args": {
+              "normalize": true
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "%2B15550102680"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": " 15550102680"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "15550102680"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "  15550102680"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "+15550102680"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "0123456789"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "%2B0123456789"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "+1 555 010 2680"
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

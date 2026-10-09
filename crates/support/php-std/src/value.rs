@@ -279,6 +279,27 @@ pub fn compare_numbers(x: Number, y: Number) -> Ordering {
     }
 }
 
+/// PHP `$a == $b` for two strings (`zendi_smart_str_equals`): two numeric
+/// strings compare as numbers, anything else byte for byte. Numeric strings
+/// are ASCII, so a string that is not UTF-8 only equals itself.
+pub fn loose_str_eq(a: &[u8], b: &[u8]) -> bool {
+    match (std::str::from_utf8(a), std::str::from_utf8(b)) {
+        (Ok(x), Ok(y)) => smart_str_eq(x, y),
+        _ => a == b,
+    }
+}
+
+/// PHP 8 `$a <= $b` for two numbers (`zend_is_smaller_or_equal`): integers
+/// compare exactly; otherwise both are floats, `ZEND_THREEWAY_COMPARE` is
+/// not below zero for `NAN`, so any comparison with `NAN` is false.
+pub fn le_numbers(a: Number, b: Number) -> bool {
+    match (a, b) {
+        (Number::Int(p), Number::Int(q)) => p <= q,
+        // `ZEND_THREEWAY_COMPARE(x, y) <= 0` is `x <= y`, false for NAN.
+        _ => a.as_f64() <= b.as_f64(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

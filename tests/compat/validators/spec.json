@@ -1,7 +1,7 @@
 {
   "lib": "validators",
-  "description": "",
-  "complete": false,
+  "description": "utopia-php/validators: request parameter validators, their descriptions and types.",
+  "complete": true,
   "php": {
     "src": [
       "packages/validators/src"
@@ -15,9 +15,2696 @@
   },
   "services": [],
   "state": [],
-  "ops": {},
-  "generators": {},
-  "waivers": {},
-  "tests_waived": {},
-  "quirks": []
+  "ops": {
+    "validator.new": {
+      "doc": "new Utopia\\Validator\\<class>(...$args): a handle (validators in args: handles or specs)",
+      "covers": [
+        "Utopia\\Validator\\AllOf::__construct",
+        "Utopia\\Validator\\AnyOf::__construct",
+        "Utopia\\Validator\\ArrayList::__construct",
+        "Utopia\\Validator\\Assoc::__construct",
+        "Utopia\\Validator\\Boolean::__construct",
+        "Utopia\\Validator\\Contains::__construct",
+        "Utopia\\Validator\\Domain::__construct",
+        "Utopia\\Validator\\FloatValidator::__construct",
+        "Utopia\\Validator\\Globstar::__construct",
+        "Utopia\\Validator\\Host::__construct",
+        "Utopia\\Validator\\Hostname::__construct",
+        "Utopia\\Validator\\IP::__construct",
+        "Utopia\\Validator\\Identifier::__construct",
+        "Utopia\\Validator\\Integer::__construct",
+        "Utopia\\Validator\\JSON\\ArrayValidator::__construct",
+        "Utopia\\Validator\\JSON\\ObjectValidator::__construct",
+        "Utopia\\Validator\\Multiple::__construct",
+        "Utopia\\Validator\\NoneOf::__construct",
+        "Utopia\\Validator\\Nullable::__construct",
+        "Utopia\\Validator\\Phone::__construct",
+        "Utopia\\Validator\\Range::__construct",
+        "Utopia\\Validator\\Text::__construct",
+        "Utopia\\Validator\\URL::__construct",
+        "Utopia\\Validator\\WhiteList::__construct"
+      ]
+    },
+    "validator.is_valid": {
+      "doc": "$validator->isValid($value); the handle remembers what getDescription() reports afterwards",
+      "covers": [
+        "Utopia\\Validator\\AllOf::isValid",
+        "Utopia\\Validator\\AnyOf::isValid",
+        "Utopia\\Validator\\ArrayList::isValid",
+        "Utopia\\Validator\\Assoc::isValid",
+        "Utopia\\Validator\\Boolean::isValid",
+        "Utopia\\Validator\\Contains::isValid",
+        "Utopia\\Validator\\Domain::isValid",
+        "Utopia\\Validator\\FloatValidator::isValid",
+        "Utopia\\Validator\\Globstar::isValid",
+        "Utopia\\Validator\\HexColor::isValid",
+        "Utopia\\Validator\\Host::isValid",
+        "Utopia\\Validator\\Hostname::isValid",
+        "Utopia\\Validator\\IP::isValid",
+        "Utopia\\Validator\\Identifier::isValid",
+        "Utopia\\Validator\\Integer::isValid",
+        "Utopia\\Validator\\JSON::isValid",
+        "Utopia\\Validator\\JSON\\ArrayValidator::isValid",
+        "Utopia\\Validator\\JSON\\FCM::isValid",
+        "Utopia\\Validator\\JSON\\ObjectValidator::isValid",
+        "Utopia\\Validator\\Multiple::isValid",
+        "Utopia\\Validator\\NoneOf::isValid",
+        "Utopia\\Validator\\Nullable::isValid",
+        "Utopia\\Validator\\Numeric::isValid",
+        "Utopia\\Validator\\Phone::isValid",
+        "Utopia\\Validator\\Range::isValid",
+        "Utopia\\Validator\\Text::isValid",
+        "Utopia\\Validator\\URL::isValid",
+        "Utopia\\Validator\\WhiteList::isValid",
+        "Utopia\\Validator\\Wildcard::isValid"
+      ]
+    },
+    "validator.description": {
+      "doc": "$validator->getDescription(), after the handle's earlier isValid() calls",
+      "covers": [
+        "Utopia\\Validator\\AllOf::getDescription",
+        "Utopia\\Validator\\AnyOf::getDescription",
+        "Utopia\\Validator\\ArrayList::getDescription",
+        "Utopia\\Validator\\Assoc::getDescription",
+        "Utopia\\Validator\\Boolean::getDescription",
+        "Utopia\\Validator\\Contains::getDescription",
+        "Utopia\\Validator\\Domain::getDescription",
+        "Utopia\\Validator\\FloatValidator::getDescription",
+        "Utopia\\Validator\\Globstar::getDescription",
+        "Utopia\\Validator\\HexColor::getDescription",
+        "Utopia\\Validator\\Host::getDescription",
+        "Utopia\\Validator\\Hostname::getDescription",
+        "Utopia\\Validator\\IP::getDescription",
+        "Utopia\\Validator\\Identifier::getDescription",
+        "Utopia\\Validator\\Integer::getDescription",
+        "Utopia\\Validator\\JSON::getDescription",
+        "Utopia\\Validator\\JSON\\ArrayValidator::getDescription",
+        "Utopia\\Validator\\JSON\\FCM::getDescription",
+        "Utopia\\Validator\\JSON\\ObjectValidator::getDescription",
+        "Utopia\\Validator\\Multiple::getDescription",
+        "Utopia\\Validator\\NoneOf::getDescription",
+        "Utopia\\Validator\\Nullable::getDescription",
+        "Utopia\\Validator\\Numeric::getDescription",
+        "Utopia\\Validator\\Phone::getDescription",
+        "Utopia\\Validator\\Range::getDescription",
+        "Utopia\\Validator\\Text::getDescription",
+        "Utopia\\Validator\\URL::getDescription",
+        "Utopia\\Validator\\WhiteList::getDescription",
+        "Utopia\\Validator\\Wildcard::getDescription"
+      ]
+    },
+    "validator.type": {
+      "doc": "$validator->getType()",
+      "covers": [
+        "Utopia\\Validator\\AllOf::getType",
+        "Utopia\\Validator\\AnyOf::getType",
+        "Utopia\\Validator\\ArrayList::getType",
+        "Utopia\\Validator\\Assoc::getType",
+        "Utopia\\Validator\\Boolean::getType",
+        "Utopia\\Validator\\Contains::getType",
+        "Utopia\\Validator\\Domain::getType",
+        "Utopia\\Validator\\FloatValidator::getType",
+        "Utopia\\Validator\\Globstar::getType",
+        "Utopia\\Validator\\HexColor::getType",
+        "Utopia\\Validator\\Host::getType",
+        "Utopia\\Validator\\Hostname::getType",
+        "Utopia\\Validator\\IP::getType",
+        "Utopia\\Validator\\Integer::getType",
+        "Utopia\\Validator\\JSON::getType",
+        "Utopia\\Validator\\JSON\\ArrayValidator::getType",
+        "Utopia\\Validator\\JSON\\FCM::getType",
+        "Utopia\\Validator\\JSON\\ObjectValidator::getType",
+        "Utopia\\Validator\\Multiple::getType",
+        "Utopia\\Validator\\NoneOf::getType",
+        "Utopia\\Validator\\Nullable::getType",
+        "Utopia\\Validator\\Numeric::getType",
+        "Utopia\\Validator\\Phone::getType",
+        "Utopia\\Validator\\Range::getType",
+        "Utopia\\Validator\\Text::getType",
+        "Utopia\\Validator\\URL::getType",
+        "Utopia\\Validator\\WhiteList::getType",
+        "Utopia\\Validator\\Wildcard::getType"
+      ]
+    },
+    "validator.is_array": {
+      "doc": "$validator->isArray()",
+      "covers": [
+        "Utopia\\Validator\\AllOf::isArray",
+        "Utopia\\Validator\\AnyOf::isArray",
+        "Utopia\\Validator\\ArrayList::isArray",
+        "Utopia\\Validator\\Assoc::isArray",
+        "Utopia\\Validator\\Boolean::isArray",
+        "Utopia\\Validator\\Contains::isArray",
+        "Utopia\\Validator\\Domain::isArray",
+        "Utopia\\Validator\\FloatValidator::isArray",
+        "Utopia\\Validator\\Globstar::isArray",
+        "Utopia\\Validator\\HexColor::isArray",
+        "Utopia\\Validator\\Host::isArray",
+        "Utopia\\Validator\\Hostname::isArray",
+        "Utopia\\Validator\\IP::isArray",
+        "Utopia\\Validator\\Integer::isArray",
+        "Utopia\\Validator\\JSON::isArray",
+        "Utopia\\Validator\\JSON\\ArrayValidator::isArray",
+        "Utopia\\Validator\\JSON\\FCM::isArray",
+        "Utopia\\Validator\\JSON\\ObjectValidator::isArray",
+        "Utopia\\Validator\\Multiple::isArray",
+        "Utopia\\Validator\\NoneOf::isArray",
+        "Utopia\\Validator\\Nullable::isArray",
+        "Utopia\\Validator\\Numeric::isArray",
+        "Utopia\\Validator\\Phone::isArray",
+        "Utopia\\Validator\\Range::isArray",
+        "Utopia\\Validator\\Text::isArray",
+        "Utopia\\Validator\\URL::isArray",
+        "Utopia\\Validator\\WhiteList::isArray",
+        "Utopia\\Validator\\Wildcard::isArray"
+      ]
+    },
+    "validator.get": {
+      "doc": "a getter by property: validators, validator (as {description, type}), bits, unsigned, format, min, max, list",
+      "covers": [
+        "Utopia\\Validator\\AnyOf::getValidators",
+        "Utopia\\Validator\\ArrayList::getValidator",
+        "Utopia\\Validator\\Nullable::getValidator",
+        "Utopia\\Validator\\Integer::getBits",
+        "Utopia\\Validator\\Integer::isUnsigned",
+        "Utopia\\Validator\\Integer::getFormat",
+        "Utopia\\Validator\\Range::getMin",
+        "Utopia\\Validator\\Range::getMax",
+        "Utopia\\Validator\\Range::getFormat",
+        "Utopia\\Validator\\WhiteList::getList"
+      ]
+    },
+    "validator.check": {
+      "doc": "a fresh validator from a spec: isValid($value), then getDescription(): {valid, description}",
+      "fuzz": [
+        {
+          "name": "Text",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Text"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "length": {
+                        "gen": "pick",
+                        "from": [
+                          0,
+                          1,
+                          2,
+                          3,
+                          5,
+                          10
+                        ]
+                      },
+                      "min": {
+                        "gen": "pick",
+                        "from": [
+                          0,
+                          1,
+                          2,
+                          3
+                        ]
+                      },
+                      "requireNonBlank": {
+                        "gen": "bool"
+                      },
+                      "allowList": {
+                        "gen": "pick",
+                        "from": [
+                          [],
+                          [
+                            "a",
+                            "b"
+                          ],
+                          [
+                            "0",
+                            "1",
+                            "2"
+                          ],
+                          [
+                            "1"
+                          ],
+                          [
+                            "01"
+                          ],
+                          [
+                            " 1"
+                          ],
+                          [
+                            "é"
+                          ],
+                          [
+                            "a",
+                            "B",
+                            "1e0"
+                          ]
+                        ]
+                      }
+                    },
+                    "optional": [
+                      "min",
+                      "requireNonBlank",
+                      "allowList"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "Identifier",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Identifier"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "length": {
+                        "gen": "pick",
+                        "from": [
+                          0,
+                          1,
+                          3,
+                          8
+                        ]
+                      }
+                    },
+                    "optional": [
+                      "length"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 400
+        },
+        {
+          "name": "Boolean",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Boolean"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "loose": {
+                        "gen": "bool"
+                      }
+                    }
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 400
+        },
+        {
+          "name": "Integer",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Integer"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "loose": {
+                        "gen": "bool"
+                      },
+                      "bits": {
+                        "gen": "pick",
+                        "from": [
+                          8,
+                          16,
+                          32,
+                          64,
+                          7,
+                          0
+                        ]
+                      },
+                      "unsigned": {
+                        "gen": "bool"
+                      }
+                    },
+                    "optional": [
+                      "loose",
+                      "bits",
+                      "unsigned"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "FloatValidator",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "FloatValidator"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "loose": {
+                        "gen": "bool"
+                      }
+                    }
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 400
+        },
+        {
+          "name": "Numeric",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Numeric"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {}
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 400
+        },
+        {
+          "name": "Range",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Range"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "min": {
+                        "gen": "pick",
+                        "from": [
+                          0,
+                          -10,
+                          1,
+                          1.5,
+                          -1e+20,
+                          {
+                            "$float": "-INF"
+                          },
+                          -9223372036854775808
+                        ]
+                      },
+                      "max": {
+                        "gen": "pick",
+                        "from": [
+                          10,
+                          0,
+                          100,
+                          2.5,
+                          1e+20,
+                          {
+                            "$float": "INF"
+                          },
+                          {
+                            "$float": "NAN"
+                          },
+                          9223372036854775807
+                        ]
+                      },
+                      "format": {
+                        "gen": "pick",
+                        "from": [
+                          "integer",
+                          "double",
+                          "string"
+                        ]
+                      }
+                    },
+                    "optional": [
+                      "format"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "WhiteList",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "WhiteList"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "list": {
+                        "gen": "array",
+                        "items": {
+                          "gen": "ref",
+                          "name": "whitelist_item"
+                        },
+                        "max": 4
+                      },
+                      "strict": {
+                        "gen": "bool"
+                      },
+                      "type": {
+                        "gen": "ref",
+                        "name": "type"
+                      }
+                    },
+                    "optional": [
+                      "strict",
+                      "type"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "whitelist_item"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "value"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "ArrayList",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "ArrayList"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "validator": {
+                        "gen": "ref",
+                        "name": "simple"
+                      },
+                      "length": {
+                        "gen": "pick",
+                        "from": [
+                          0,
+                          1,
+                          2,
+                          3
+                        ]
+                      }
+                    },
+                    "optional": [
+                      "length"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "Assoc",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Assoc"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "length": {
+                        "gen": "ref",
+                        "name": "length"
+                      }
+                    },
+                    "optional": [
+                      "length"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 400
+        },
+        {
+          "name": "Nullable",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Nullable"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "validator": {
+                        "gen": "ref",
+                        "name": "simple"
+                      }
+                    }
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 400
+        },
+        {
+          "name": "AllOf",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "AllOf"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "validators": {
+                        "gen": "ref",
+                        "name": "rules"
+                      },
+                      "type": {
+                        "gen": "ref",
+                        "name": "type"
+                      }
+                    },
+                    "optional": [
+                      "type"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "AnyOf",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "AnyOf"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "validators": {
+                        "gen": "ref",
+                        "name": "rules"
+                      },
+                      "type": {
+                        "gen": "ref",
+                        "name": "type"
+                      }
+                    },
+                    "optional": [
+                      "type"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "NoneOf",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "NoneOf"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "validators": {
+                        "gen": "ref",
+                        "name": "rules"
+                      },
+                      "type": {
+                        "gen": "ref",
+                        "name": "type"
+                      }
+                    },
+                    "optional": [
+                      "type"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "Multiple",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Multiple"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "rules": {
+                        "gen": "ref",
+                        "name": "rules"
+                      },
+                      "type": {
+                        "gen": "ref",
+                        "name": "type"
+                      }
+                    },
+                    "optional": [
+                      "type"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "Contains",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Contains"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "patterns": {
+                        "gen": "array",
+                        "items": {
+                          "gen": "pick",
+                          "from": [
+                            "",
+                            "a",
+                            "A",
+                            "[skip ci]",
+                            "É",
+                            "é",
+                            "ß",
+                            "SS",
+                            "İ",
+                            "i",
+                            "Σ",
+                            "ς"
+                          ]
+                        },
+                        "max": 3
+                      },
+                      "strict": {
+                        "gen": "bool"
+                      }
+                    },
+                    "optional": [
+                      "strict"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "Domain",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Domain"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "restrictions": {
+                        "gen": "pick",
+                        "from": [
+                          [],
+                          [
+                            {
+                              "hostname": "appwrite.network",
+                              "levels": 3,
+                              "prefixDenyList": [
+                                "preview-",
+                                "branch-"
+                              ]
+                            }
+                          ],
+                          [
+                            {
+                              "hostname": "fra.appwrite.run",
+                              "levels": 4,
+                              "prefixDenyList": []
+                            }
+                          ],
+                          [
+                            {
+                              "hostname": "",
+                              "levels": null,
+                              "prefixDenyList": [
+                                "a"
+                              ]
+                            }
+                          ],
+                          [
+                            {
+                              "hostname": "com",
+                              "levels": 0,
+                              "prefixDenyList": []
+                            }
+                          ],
+                          [
+                            {
+                              "hostname": "network",
+                              "levels": -1,
+                              "prefixDenyList": []
+                            }
+                          ],
+                          [
+                            {
+                              "hostname": "io",
+                              "levels": 2,
+                              "prefixDenyList": [
+                                ""
+                              ]
+                            }
+                          ]
+                        ]
+                      },
+                      "hostnames": {
+                        "gen": "bool"
+                      },
+                      "allowEmpty": {
+                        "gen": "bool"
+                      }
+                    },
+                    "optional": [
+                      "restrictions",
+                      "hostnames",
+                      "allowEmpty"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "domain"
+              }
+            }
+          },
+          "iterations": 800
+        },
+        {
+          "name": "IP",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "IP"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "type": {
+                        "gen": "pick",
+                        "from": [
+                          "all",
+                          "ipv4",
+                          "ipv6",
+                          "IPV4",
+                          ""
+                        ]
+                      }
+                    },
+                    "optional": [
+                      "type"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "ip"
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "URL",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "URL"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "allowedSchemes": {
+                        "gen": "pick",
+                        "from": [
+                          [],
+                          [
+                            "http",
+                            "https"
+                          ],
+                          [
+                            "https"
+                          ],
+                          [
+                            "com.example.app"
+                          ],
+                          [
+                            "0"
+                          ],
+                          [
+                            ""
+                          ],
+                          [
+                            "HTTP"
+                          ]
+                        ]
+                      },
+                      "allowEmpty": {
+                        "gen": "bool"
+                      },
+                      "allowFragments": {
+                        "gen": "bool"
+                      },
+                      "allowPrivateUseSchemes": {
+                        "gen": "bool"
+                      },
+                      "httpsOrLoopback": {
+                        "gen": "bool"
+                      }
+                    },
+                    "optional": [
+                      "allowedSchemes",
+                      "allowEmpty",
+                      "allowFragments",
+                      "allowPrivateUseSchemes",
+                      "httpsOrLoopback"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "url"
+              }
+            }
+          },
+          "iterations": 1000
+        },
+        {
+          "name": "Host",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Host"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "whitelist": {
+                        "gen": "pick",
+                        "from": [
+                          [],
+                          [
+                            "*"
+                          ],
+                          [
+                            "example.io",
+                            "localhost",
+                            "*.appwrite.io"
+                          ],
+                          [
+                            "127.0.0.1",
+                            "[::1]"
+                          ]
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "url"
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "Hostname",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Hostname"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "allowList": {
+                        "gen": "pick",
+                        "from": [
+                          [],
+                          [
+                            "*"
+                          ],
+                          [
+                            "myapp.com",
+                            "*.myapp.com"
+                          ],
+                          [
+                            "*.*.app.io"
+                          ],
+                          [
+                            "netlify.*"
+                          ],
+                          [
+                            "0"
+                          ],
+                          [
+                            "localhost"
+                          ]
+                        ]
+                      }
+                    },
+                    "optional": [
+                      "allowList"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "hostname"
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "Globstar",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Globstar"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "patterns": {
+                        "gen": "array",
+                        "items": {
+                          "gen": "ref",
+                          "name": "glob_pattern"
+                        },
+                        "max": 3
+                      }
+                    }
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "glob_subject"
+              }
+            }
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "HexColor",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "HexColor"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {}
+                  }
+                }
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "max": 8,
+                    "alphabet": "0aF9gG\n"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "value"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 400
+        },
+        {
+          "name": "Phone",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Phone"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "allowEmpty": {
+                        "gen": "bool"
+                      },
+                      "normalize": {
+                        "gen": "bool"
+                      }
+                    }
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "phone"
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "JSON",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "JSON"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {}
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "json_text"
+              }
+            }
+          },
+          "iterations": 400
+        },
+        {
+          "name": "JSONArray",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "JSON\\ArrayValidator"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "length": {
+                        "gen": "pick",
+                        "from": [
+                          0,
+                          1,
+                          2,
+                          5,
+                          10,
+                          100
+                        ]
+                      }
+                    },
+                    "optional": [
+                      "length"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "json_text"
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "JSONObject",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "JSON\\ObjectValidator"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {
+                      "length": {
+                        "gen": "pick",
+                        "from": [
+                          0,
+                          1,
+                          2,
+                          5,
+                          10,
+                          100
+                        ]
+                      }
+                    },
+                    "optional": [
+                      "length"
+                    ]
+                  }
+                }
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "json_text"
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "$object": {
+                        "gen": "ref",
+                        "name": "fcm_object"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "FCM",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "JSON\\FCM"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {}
+                  }
+                }
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "fcm_object"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "fcm_object"
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "$object": {
+                        "gen": "ref",
+                        "name": "fcm_object"
+                      }
+                    }
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "json_text"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "value"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 1000
+        },
+        {
+          "name": "Wildcard",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Wildcard"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {}
+                  }
+                }
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          },
+          "iterations": 200
+        }
+      ]
+    },
+    "validator.sequence": {
+      "doc": "one validator from a spec: isValid() then getDescription() for each of `values` in turn (state across calls)",
+      "fuzz": [
+        {
+          "name": "stateful",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "class": {
+                        "gen": "const",
+                        "value": "AllOf"
+                      },
+                      "args": {
+                        "gen": "object",
+                        "fields": {
+                          "validators": {
+                            "gen": "ref",
+                            "name": "flat_rules"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "class": {
+                        "gen": "const",
+                        "value": "AnyOf"
+                      },
+                      "args": {
+                        "gen": "object",
+                        "fields": {
+                          "validators": {
+                            "gen": "ref",
+                            "name": "flat_rules"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "class": {
+                        "gen": "const",
+                        "value": "NoneOf"
+                      },
+                      "args": {
+                        "gen": "object",
+                        "fields": {
+                          "validators": {
+                            "gen": "ref",
+                            "name": "flat_rules"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "class": {
+                        "gen": "const",
+                        "value": "JSON\\FCM"
+                      },
+                      "args": {
+                        "gen": "object",
+                        "fields": {}
+                      }
+                    }
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "class": {
+                        "gen": "const",
+                        "value": "Nullable"
+                      },
+                      "args": {
+                        "gen": "object",
+                        "fields": {
+                          "validator": {
+                            "gen": "object",
+                            "fields": {
+                              "class": {
+                                "gen": "const",
+                                "value": "JSON\\FCM"
+                              },
+                              "args": {
+                                "gen": "object",
+                                "fields": {}
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "class": {
+                        "gen": "const",
+                        "value": "ArrayList"
+                      },
+                      "args": {
+                        "gen": "object",
+                        "fields": {
+                          "validator": {
+                            "gen": "object",
+                            "fields": {
+                              "class": {
+                                "gen": "const",
+                                "value": "JSON\\FCM"
+                              },
+                              "args": {
+                                "gen": "object",
+                                "fields": {}
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "values": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "value"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "fcm_object"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "scalar"
+                    }
+                  ]
+                },
+                "min": 1,
+                "max": 5
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "multiple.add_rule": {
+      "doc": "$multiple->addRule($rule)",
+      "covers": [
+        "Utopia\\Validator\\Multiple::addRule"
+      ]
+    },
+    "domain.restriction": {
+      "doc": "Domain::createRestriction($hostname, $levels, $prefixDenyList)",
+      "covers": [
+        "Utopia\\Validator\\Domain::createRestriction"
+      ]
+    },
+    "phone.normalize": {
+      "doc": "Phone::normalize($value)",
+      "covers": [
+        "Utopia\\Validator\\Phone::normalize"
+      ],
+      "fuzz": [
+        {
+          "name": "normalize",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "phone_string"
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "special": {
+      "gen": "pick",
+      "from": [
+        {},
+        {
+          "$bytes": "/w=="
+        },
+        {
+          "$bytes": "YQBi/w=="
+        },
+        {
+          "$bytes": "w6k="
+        },
+        {
+          "$bytes": "4oKs/w=="
+        },
+        {
+          "$float": "INF"
+        },
+        {
+          "$float": "-INF"
+        },
+        {
+          "$float": "NAN"
+        },
+        {
+          "$object": {
+            "a": 1
+          }
+        },
+        {
+          "$object": {
+            "0": "x"
+          }
+        },
+        0,
+        1,
+        -1,
+        2,
+        "0",
+        "1",
+        "true",
+        "false",
+        1.0,
+        0.0,
+        -0.0,
+        1.5,
+        "1e3",
+        " 1",
+        "1 ",
+        "0x1A",
+        "",
+        " ",
+        null,
+        true,
+        false,
+        9223372036854775807,
+        -9223372036854775808,
+        2147483647,
+        2147483648,
+        -2147483648,
+        -2147483649,
+        1e+20,
+        -1e+20,
+        9.223372036854776e+18,
+        127,
+        128,
+        -128,
+        -129,
+        255,
+        256,
+        65535,
+        65536,
+        32767,
+        -32768,
+        4294967295,
+        4294967296,
+        [],
+        [
+          1,
+          2
+        ],
+        {
+          "a": "b"
+        },
+        {
+          "0": "a",
+          "1": "b"
+        },
+        {
+          "1": "a",
+          "0": "b"
+        }
+      ]
+    },
+    "string": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "tricky": 0.6,
+          "max": 16,
+          "alphabet": "unicode"
+        },
+        {
+          "gen": "string",
+          "max": 12,
+          "alphabet": "alnum"
+        }
+      ]
+    },
+    "scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "string"
+        },
+        {
+          "gen": "ref",
+          "name": "special"
+        },
+        {
+          "gen": "ref",
+          "name": "special"
+        },
+        {
+          "gen": "int",
+          "min": -9223372036854775808,
+          "max": 9223372036854775807
+        },
+        {
+          "gen": "int",
+          "min": -300,
+          "max": 300
+        },
+        {
+          "gen": "float",
+          "min": -1000000.0,
+          "max": 1000000.0
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        }
+      ]
+    },
+    "value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "scalar"
+          },
+          "max": 4
+        },
+        {
+          "gen": "any",
+          "depth": 2
+        }
+      ]
+    },
+    "simple": {
+      "gen": "pick",
+      "from": [
+        {
+          "class": "Text",
+          "args": {
+            "length": 5
+          }
+        },
+        {
+          "class": "Text",
+          "args": {
+            "length": 0,
+            "min": 0
+          }
+        },
+        {
+          "class": "Integer",
+          "args": {}
+        },
+        {
+          "class": "Boolean",
+          "args": {
+            "loose": true
+          }
+        },
+        {
+          "class": "Numeric",
+          "args": {}
+        },
+        {
+          "class": "HexColor",
+          "args": {}
+        },
+        {
+          "class": "JSON\\FCM",
+          "args": {}
+        },
+        {
+          "class": "Wildcard",
+          "args": {}
+        },
+        {
+          "class": "URL",
+          "args": {}
+        },
+        {
+          "class": "WhiteList",
+          "args": {
+            "list": [
+              "a",
+              "B",
+              1
+            ]
+          }
+        },
+        {
+          "class": "Range",
+          "args": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "class": "AnyOf",
+          "args": {
+            "validators": [
+              {
+                "class": "Integer",
+                "args": {}
+              },
+              {
+                "class": "JSON\\FCM",
+                "args": {}
+              }
+            ]
+          }
+        },
+        {
+          "class": "AllOf",
+          "args": {
+            "validators": [
+              {
+                "class": "Text",
+                "args": {
+                  "length": 3
+                }
+              },
+              {
+                "class": "HexColor",
+                "args": {}
+              }
+            ]
+          }
+        },
+        {
+          "class": "Nullable",
+          "args": {
+            "validator": {
+              "class": "Text",
+              "args": {
+                "length": 2
+              }
+            }
+          }
+        },
+        {
+          "class": "ArrayList",
+          "args": {
+            "validator": {
+              "class": "JSON\\FCM",
+              "args": {}
+            }
+          }
+        }
+      ]
+    },
+    "rules": {
+      "gen": "array",
+      "items": {
+        "gen": "ref",
+        "name": "simple"
+      },
+      "max": 3
+    },
+    "flat": {
+      "gen": "pick",
+      "from": [
+        {
+          "class": "Text",
+          "args": {
+            "length": 5
+          }
+        },
+        {
+          "class": "Integer",
+          "args": {}
+        },
+        {
+          "class": "HexColor",
+          "args": {}
+        },
+        {
+          "class": "Wildcard",
+          "args": {}
+        },
+        {
+          "class": "Boolean",
+          "args": {
+            "loose": true
+          }
+        },
+        {
+          "class": "Nullable",
+          "args": {
+            "validator": {
+              "class": "Numeric",
+              "args": {}
+            }
+          }
+        },
+        {
+          "class": "JSON\\ObjectValidator",
+          "args": {}
+        }
+      ]
+    },
+    "flat_rules": {
+      "gen": "array",
+      "items": {
+        "gen": "ref",
+        "name": "flat"
+      },
+      "max": 3
+    },
+    "type": {
+      "gen": "pick",
+      "from": [
+        "string",
+        "integer",
+        "double",
+        "boolean",
+        "array",
+        "object",
+        "mixed"
+      ]
+    },
+    "length": {
+      "gen": "pick",
+      "from": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        10,
+        20,
+        100,
+        65535
+      ]
+    },
+    "domain": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "max": 24,
+          "alphabet": "hostname",
+          "tricky": 0.2
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "preview-",
+                "branch-",
+                "a-",
+                "-",
+                "x_",
+                "sub.",
+                "a.b."
+              ]
+            },
+            {
+              "gen": "string",
+              "max": 8,
+              "alphabet": "hostname"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                ".",
+                "-",
+                "appwrite.network",
+                ".appwrite.network",
+                ".fra.appwrite.run",
+                ".com",
+                ".io.",
+                " ",
+                "_x"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "scalar"
+        }
+      ]
+    },
+    "url": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "max": 30,
+          "alphabet": "url",
+          "tricky": 0.2
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "http",
+                "https",
+                "HTTP",
+                "Https",
+                "ftp",
+                "mailto",
+                "com.example.app",
+                "x.y",
+                "1a",
+                "",
+                "ws",
+                "file"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "://",
+                ":/",
+                ":",
+                ":///",
+                "//",
+                "://user:pass@",
+                ":///path"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "localhost",
+                "LOCALHOST",
+                "127.0.0.1",
+                "[::1]",
+                "[::2]",
+                "example.com",
+                "me.appwrite.io",
+                "appwrite.io",
+                "a_b.com",
+                "",
+                "xn--e1afmkfd.xn--p1ai",
+                "exa mple.com",
+                "ex%41.com",
+                "例子.com"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                ":80",
+                ":8080",
+                ":0",
+                ":99999",
+                ":abc"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "/",
+                "/path",
+                "/a b",
+                "/p?q=1",
+                "?x",
+                "#frag",
+                "/p#",
+                "/%zz",
+                "/é"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "scalar"
+        }
+      ]
+    },
+    "hostname": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "max": 20,
+          "alphabet": "hostname*:/",
+          "tricky": 0.2
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "a.",
+                "*.",
+                "commit.",
+                "x.y."
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "myapp.com",
+                "myweb.vercel.app",
+                "localhost",
+                "app.io",
+                "*",
+                "0",
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "scalar"
+        }
+      ]
+    },
+    "ip": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "127.0.0.1",
+            "0.0.0.0",
+            "255.255.255.255",
+            "256.1.1.1",
+            "1.2.3",
+            "01.2.3.4",
+            "::1",
+            "::",
+            "2001:db8::1",
+            "fe80::1%eth0",
+            "::ffff:1.2.3.4",
+            "1:2:3:4:5:6:7:8",
+            "1:2:3:4:5:6:7:8:9",
+            "[::1]",
+            "1.2.3.4 ",
+            " 1.2.3.4",
+            "0",
+            "localhost",
+            "10.0.0.1/8"
+          ]
+        },
+        {
+          "gen": "string",
+          "max": 16,
+          "alphabet": "0123456789.:abcdef"
+        },
+        {
+          "gen": "ref",
+          "name": "scalar"
+        }
+      ]
+    },
+    "glob_pattern": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "",
+            "!"
+          ]
+        },
+        {
+          "gen": "string",
+          "max": 8,
+          "alphabet": "ab/*?[]!^\\.-"
+        }
+      ]
+    },
+    "glob_subject": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "max": 10,
+          "alphabet": "ab/.-\n"
+        },
+        {
+          "gen": "ref",
+          "name": "scalar"
+        }
+      ]
+    },
+    "phone": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "+",
+                " ",
+                "%2B",
+                "%2b",
+                "++",
+                "%20",
+                "0",
+                "%"
+              ]
+            },
+            {
+              "gen": "string",
+              "max": 17,
+              "alphabet": "digits"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                "\n",
+                " ",
+                "a",
+                "%00",
+                "%FF"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "scalar"
+        }
+      ]
+    },
+    "phone_string": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "+",
+            " ",
+            "%2B",
+            "%2b",
+            "++",
+            "%20",
+            "0",
+            "%",
+            "%E2%82",
+            "%FF"
+          ]
+        },
+        {
+          "gen": "string",
+          "max": 17,
+          "alphabet": "digits"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "",
+            "\n",
+            " ",
+            "a",
+            "%00"
+          ]
+        }
+      ]
+    },
+    "json_text": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "[]",
+            "{}",
+            "[1,2]",
+            "{\"a\":1}",
+            "null",
+            "true",
+            "1",
+            "\"s\"",
+            "",
+            " ",
+            "[",
+            "{\"a\":}",
+            "[1,]",
+            "{\"\\u0000a\":1}",
+            "{\"0\":1}",
+            "[[[[1]]]]",
+            "1e999",
+            "\"\\ud800\"",
+            "{\"a\":1,\"a\":2}",
+            " [] ",
+            "[\"é\"]",
+            "{\"a\":[1,{\"b\":null}]}"
+          ]
+        },
+        {
+          "gen": "string",
+          "max": 12,
+          "alphabet": "{}[]\",:0a1 .e-\\"
+        },
+        {
+          "gen": "ref",
+          "name": "value"
+        }
+      ]
+    },
+    "fcm_field": {
+      "gen": "pick",
+      "from": [
+        "service_account",
+        "user",
+        "",
+        " ",
+        "\t",
+        null,
+        1,
+        [],
+        {},
+        "x",
+        "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n",
+        "-----BEGIN PRIVATE KEY-----\nabc",
+        " -----BEGIN PRIVATE KEY-----\n-----END PRIVATE KEY-----",
+        "a@b.co",
+        "not-an-email",
+        "user@example.iam.gserviceaccount.com",
+        "https://oauth2.googleapis.com/token",
+        "http://oauth2.googleapis.com/token",
+        "HTTPS://x.y",
+        "https://",
+        "ftp://x.y",
+        "project-1"
+      ]
+    },
+    "fcm_object": {
+      "gen": "object",
+      "fields": {
+        "type": {
+          "gen": "pick",
+          "from": [
+            "service_account",
+            "service_account",
+            "user",
+            "",
+            null,
+            1
+          ]
+        },
+        "project_id": {
+          "gen": "ref",
+          "name": "fcm_field"
+        },
+        "private_key": {
+          "gen": "pick",
+          "from": [
+            "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n",
+            "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----",
+            "-----BEGIN PRIVATE KEY-----",
+            "key",
+            ""
+          ]
+        },
+        "client_email": {
+          "gen": "pick",
+          "from": [
+            "svc@project.iam.gserviceaccount.com",
+            "a@b.co",
+            "bad",
+            "",
+            "a@b"
+          ]
+        },
+        "token_uri": {
+          "gen": "pick",
+          "from": [
+            "https://oauth2.googleapis.com/token",
+            "http://x.y/token",
+            "HTTPS://X.Y",
+            "not a url",
+            ""
+          ]
+        },
+        "auth_uri": {
+          "gen": "ref",
+          "name": "fcm_field"
+        },
+        "client_id": {
+          "gen": "ref",
+          "name": "fcm_field"
+        },
+        "private_key_id": {
+          "gen": "ref",
+          "name": "fcm_field"
+        },
+        "universe_domain": {
+          "gen": "ref",
+          "name": "fcm_field"
+        },
+        "client_x509_cert_url": {
+          "gen": "ref",
+          "name": "fcm_field"
+        },
+        "extra": {
+          "gen": "ref",
+          "name": "fcm_field"
+        }
+      },
+      "optional": [
+        "type",
+        "project_id",
+        "private_key",
+        "client_email",
+        "token_uri",
+        "auth_uri",
+        "client_id",
+        "private_key_id",
+        "universe_domain",
+        "client_x509_cert_url",
+        "extra"
+      ]
+    },
+    "whitelist_item": {
+      "gen": "pick",
+      "from": [
+        "a",
+        "A",
+        "b",
+        "string1",
+        "STRING1",
+        1,
+        3,
+        0,
+        "0",
+        "1",
+        "01",
+        "1e0",
+        " 1",
+        1.0,
+        1.5,
+        "1.5",
+        true,
+        false,
+        null,
+        "",
+        "é",
+        "É",
+        "ß"
+      ]
+    }
+  },
+  "waivers": {
+    "Utopia\\Validator\\PHPStan\\DisallowAssertEqualsExtension::isRestrictedMethodUsage": "PHPStan extension for the package's own tests: no runtime behaviour"
+  },
+  "tests_waived": {
+    "packages/validators/tests/CompatTest.php": "class aliases for the names before the rename (Utopia\\Validator, Utopia\\PHPStan\\DisallowAssertEqualsExtension) and PHPStan's extension: PHP autoloading plumbing; Rust has one Validator trait, which third-party validators implement (crates/utopia/validators tests)"
+  },
+  "quirks": [
+    {
+      "symbol": "Utopia\\Validator\\Text::isValid",
+      "description": "the allow list is checked with a loose in_array(): numeric strings compare as numbers, so allowList ['01'] accepts '1'",
+      "case": "edge.json#Text allow list compares loosely (quirk)"
+    },
+    {
+      "symbol": "Utopia\\Validator\\WhiteList::isValid",
+      "description": "a loose list compares lower-cased strings with ==: numeric strings compare as numbers ('1e3' accepts '1000', '0.0' accepts 0 and false)",
+      "case": "edge.json#WhiteList compares loosely (quirk)"
+    },
+    {
+      "symbol": "Utopia\\Validator\\HexColor::isValid",
+      "description": "the pattern has no D modifier: $ also matches before a final newline, so 'fff\\n' is valid",
+      "case": "edge.json#Patterns without D accept a final newline (quirk)"
+    },
+    {
+      "symbol": "Utopia\\Validator\\Phone::isValid",
+      "description": "the pattern has no D modifier: '+1234567\\n' is valid",
+      "case": "edge.json#Phone without D accepts a final newline (quirk)"
+    },
+    {
+      "symbol": "Utopia\\Validator\\Domain::isValid",
+      "description": "empty($value) rejects the string '0' (even with allowEmpty)",
+      "case": "edge.json#Domain rejects '0' as empty (quirk)"
+    },
+    {
+      "symbol": "Utopia\\Validator\\ArrayList::getDescription",
+      "description": "the description reads 'Value must a valid array' (no 'be')",
+      "case": "edge.json#ArrayList description lacks 'be' (quirk)"
+    },
+    {
+      "symbol": "Utopia\\Validator\\Assoc::isValid",
+      "description": "a value json_encode() cannot encode (INF, invalid UTF-8) counts as 0 bytes (strlen(false)), so it passes the length limit",
+      "case": "edge.json#Assoc counts a failed json_encode as 0 bytes"
+    },
+    {
+      "symbol": "Utopia\\Validator\\Domain::isValid",
+      "description": "a restriction with levels PHP_INT_MAX overflows $levels + 1 to a float, which explode() rejects with TypeError",
+      "case": "edge.json#Domain levels overflow (TypeError)"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Validator\\Text::__construct",
+      "php": "$length and $min are int: a negative $length rejects every string and a negative $min is described as 'at least -1 chars'",
+      "reason": "Rust lengths are usize: a negative length or minimum is unrepresentable (the PHP behaviour is nonsense)"
+    },
+    {
+      "symbol": "Utopia\\Validator\\ArrayList::__construct",
+      "php": "a negative $length rejects every array",
+      "reason": "usize length, as Text"
+    },
+    {
+      "symbol": "Utopia\\Validator\\Assoc::__construct",
+      "php": "a negative $length rejects every array",
+      "reason": "usize length, as Text"
+    },
+    {
+      "symbol": "Utopia\\Validator\\JSON\\ArrayValidator::__construct",
+      "php": "a negative $length rejects every value",
+      "reason": "usize length, as Text"
+    },
+    {
+      "symbol": "Utopia\\Validator\\JSON\\ObjectValidator::__construct",
+      "php": "a negative $length rejects every value",
+      "reason": "usize length, as Text"
+    },
+    {
+      "symbol": "Utopia\\Validator\\Identifier::__construct",
+      "php": "a negative $length rejects every value",
+      "reason": "usize length, as Text"
+    },
+    {
+      "symbol": "Utopia\\Validator\\AllOf::__construct",
+      "php": "$type is any string, returned by getType(); likewise AnyOf, NoneOf, Multiple (where null makes getType() throw TypeError), WhiteList and Range's $format (any value other than integer or double rejects every value)",
+      "reason": "Rust takes a Type, one of the Validator::TYPE_* constants; other strings are not types"
+    },
+    {
+      "symbol": "Utopia\\Validator\\Contains::__construct",
+      "php": "$patterns is an untyped array: patterns are cast with (string) when used (an int pattern matches its digits, a stdClass throws Error, an array is 'Array' with a warning)",
+      "reason": "Rust patterns are strings; callers cast. Likewise the string lists of Globstar, Host, Hostname (string[]), URL's $allowedSchemes, Text's $allowList (string[]) and Domain restrictions, which are built by Domain::createRestriction (typed)"
+    },
+    {
+      "symbol": "Utopia\\Validator\\WhiteList::getList",
+      "php": "the list keeps the keys it was given; a loose list keeps them on its lower-cased values",
+      "reason": "Rust lists are sequences: keys are dropped (isValid() and getDescription() ignore them in PHP too)"
+    },
+    {
+      "symbol": "Utopia\\Validator\\AllOf::isValid",
+      "php": "AllOf, AnyOf, NoneOf and JSON\\FCM keep state between calls: getDescription() reads what decided the last isValid() that decided (the failed rule, kept by AllOf and NoneOf through later successful calls, or FCM's error), evaluated now: a deciding rule that is itself stateful (JSON\\FCM, a composite) and is validated again in a later call that the composite does not decide reports its new state",
+      "reason": "Rust validators are shared by concurrent requests and stateless: validate() returns the decision as data (Verdict::decided, Verdict::rule and the description PHP reports), and a caller replaying PHP's sequence keeps the latest decision (the adapter does, per handle). The description a kept decision reported is not recomputed from the deciding rule's later validations"
+    }
+  ]
 }

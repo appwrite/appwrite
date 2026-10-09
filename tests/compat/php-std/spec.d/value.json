@@ -140,6 +140,50 @@
           "iterations": 3000
         }
       ]
+    },
+    "value.loose_str_eq": {
+      "doc": "$a == $b for two strings (zendi_smart_str_equals), on bytes",
+      "fuzz": [
+        {
+          "name": "strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "numeric_string"
+              },
+              "b": {
+                "gen": "ref",
+                "name": "numeric_string"
+              }
+            }
+          },
+          "iterations": 5000
+        }
+      ]
+    },
+    "value.le_numbers": {
+      "doc": "$a <= $b for two numbers (NAN compares false)",
+      "fuzz": [
+        {
+          "name": "numbers",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "number"
+              },
+              "b": {
+                "gen": "ref",
+                "name": "number"
+              }
+            }
+          },
+          "iterations": 5000
+        }
+      ]
     }
   },
   "generators": {
@@ -188,6 +232,98 @@
         },
         {
           "gen": "null"
+        }
+      ]
+    },
+    "numeric_string": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "0",
+            "00",
+            "1",
+            "01",
+            "1.0",
+            "1e0",
+            "1E0",
+            " 1",
+            "1 ",
+            "\t1\n",
+            "-0",
+            "+0",
+            "0.0",
+            ".0",
+            "0x1",
+            "1e3",
+            "1000",
+            "9223372036854775807",
+            "9223372036854775808",
+            "9223372036854775807.0",
+            "-9223372036854775808",
+            "-9223372036854775809",
+            "1e309",
+            "INF",
+            "NAN",
+            "abc",
+            "",
+            "é",
+            {
+              "$bytes": "Mf8="
+            },
+            {
+              "$bytes": "/w=="
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "max": 6,
+          "alphabet": "0123456789.eE+- \t"
+        }
+      ]
+    },
+    "number": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -9223372036854775808,
+          "max": 9223372036854775807
+        },
+        {
+          "gen": "int",
+          "min": -3,
+          "max": 3
+        },
+        {
+          "gen": "float",
+          "min": -3.0,
+          "max": 3.0
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$float": "INF"
+            },
+            {
+              "$float": "-INF"
+            },
+            {
+              "$float": "NAN"
+            },
+            0.0,
+            -0.0,
+            1.0,
+            9.223372036854776e+18,
+            -9.223372036854776e+18,
+            9223372036854775807,
+            -9223372036854775808,
+            9007199254740993,
+            9007199254740992.0
+          ]
         }
       ]
     }

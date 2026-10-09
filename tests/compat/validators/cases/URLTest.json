@@ -1,0 +1,1013 @@
+{
+  "source": "packages/validators/tests/URLTest.php",
+  "cases": [
+    {
+      "name": "testIsValid",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "Value must be a valid URL"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "http://example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "https://example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "htts://example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "http:/example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "http://exa-mple.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "htt@s://example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "http://www.example.com/foo%2\\u00c2\\u00a9zbar"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "http://www.example.com/?q=%3Casdf%3E"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "https://example.com/callback#fragment"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testIsValidAllowedSchemes",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {
+              "allowedSchemes": [
+                "http",
+                "https"
+              ]
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            }
+          },
+          "expect": "Value must be a valid URL with following schemes (http, https)"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "http://example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "https://example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "gopher://www.example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testAllowEmpty",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {
+              "allowedSchemes": [],
+              "allowEmpty": true
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": ""
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": null
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "https://example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "not-a-url"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": null
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDisallowFragments",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {
+              "allowFragments": false
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            }
+          },
+          "expect": "Value must be a valid URL without a fragment component"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "https://example.com/callback"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "https://example.com/callback#fragment"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "https://example.com/callback#"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDisallowFragmentsAllowedSchemes",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {
+              "allowedSchemes": [
+                "http",
+                "https"
+              ],
+              "allowFragments": false
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            }
+          },
+          "expect": "Value must be a valid URL with following schemes (http, https) and without a fragment component"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "https://example.com/callback"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "https://example.com/callback#fragment"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "gopher://www.example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testAllowPrivateUseSchemes",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "com.raycast-x:/oauth"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "com.example.app:/oauth2redirect/example-provider"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {
+              "allowPrivateUseSchemes": true
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "com.raycast-x:/oauth"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "com.example.app:/oauth2redirect/example-provider"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "com.raycast-x:/oauth?state=abc"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "com.raycast-x:oauth"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "https://example.com/callback"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "http://127.0.0.1:8080/callback"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "http:/example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "1com.raycast:/oauth"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "com raycast:/oauth"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": ":/oauth"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "/oauth"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "comraycast:/oauth"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "not a url"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": ""
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testAllowPrivateUseSchemesWithConstraints",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {
+              "allowFragments": false,
+              "allowPrivateUseSchemes": true
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "com.raycast-x:/oauth"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "com.raycast-x:/oauth#frag"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {
+              "allowEmpty": true,
+              "allowPrivateUseSchemes": true
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": ""
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "com.raycast-x:/oauth"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {
+              "allowedSchemes": [
+                "com.raycast-x"
+              ],
+              "allowPrivateUseSchemes": true
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "com.raycast-x:/oauth"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": "com.evil-app:/oauth"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testHttpsOrLoopback",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {
+              "allowFragments": false,
+              "allowPrivateUseSchemes": true,
+              "httpsOrLoopback": true
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            }
+          },
+          "expect": "Value must be a valid URL without a fragment component restricted to https or http on a loopback host"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "https://app.example.com/callback"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "https://app.example.com/callback?foo=bar"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "http://localhost:6000/callback"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "http://127.0.0.1:6000/callback"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "http://[::1]:6000/callback"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "http://localhost/callback"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "com.example.app:/oauth"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "http://app.example.com/callback"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "http://localhost.evil.com/callback"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "ftp://app.example.com/callback"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "https://app.example.com/callback#frag"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "com.example.app:/oauth#frag"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "not a valid uri"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": ""
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testHttpsOrLoopbackDefaultsToFalse",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            }
+          },
+          "expect": "Value must be a valid URL"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "http://app.example.com/callback"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {
+              "allowedSchemes": [
+                "https"
+              ],
+              "httpsOrLoopback": true
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "https://app.example.com/callback"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "http://localhost/callback"
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}
