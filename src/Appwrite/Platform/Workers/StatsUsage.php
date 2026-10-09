@@ -30,7 +30,14 @@ class StatsUsage extends Action
      */
     private const int FLUSH_DELAY_MS = 5_000;
 
-    private ?Accumulator $accumulator = null;
+    /**
+     * The open batch, one accumulator per minute of event time. A folded event
+     * keeps the earliest time it absorbed, so events from different minutes
+     * must not share one, or usage slides into an earlier minute, hour or day.
+     *
+     * @var array<int, Accumulator>
+     */
+    private array $accumulators = [];
 
     public static function getName(): string
     {
@@ -68,9 +75,7 @@ class StatsUsage extends Action
         }
 
         try {
-            $accumulator = $this->accumulator;
-            if ($accumulator === null) {
-                $accumulator = $this->accumulator = new Accumulator($usageConnection->getUsage());
+            if ($this->accumulators === []) {
                 // One-shot rather than a tick: a pending timer keeps the worker's
                 // event loop alive only until it fires, so shutdown still writes it.
                 Timer::after(self::FLUSH_DELAY_MS, $this->flush(...));
@@ -78,6 +83,7 @@ class StatsUsage extends Action
 
             $projectId = (string) ($payload['project']['$id'] ?? '');
             $timestamp = $this->timestamp($payload, $message);
+            $accumulator = $this->accumulators[\intdiv($timestamp->getTimestamp(), 60)] ??= new Accumulator($usageConnection->getUsage());
 
             foreach ($payload['metrics'] ?? [] as $metric) {
                 $key = (string) ($metric['key'] ?? '');
@@ -145,21 +151,23 @@ class StatsUsage extends Action
     private function flush(): void
     {
         // Detach first, so messages handled while the insert is in flight open the next batch.
-        $accumulator = $this->accumulator;
-        $this->accumulator = null;
+        $accumulators = $this->accumulators;
+        $this->accumulators = [];
 
-        if ($accumulator === null || $accumulator->count() === 0) {
-            return;
-        }
-
-        try {
-            if (!$accumulator->flush()) {
-                Console::error('Usage event flush returned false');
+        foreach ($accumulators as $accumulator) {
+            if ($accumulator->count() === 0) {
+                continue;
             }
-        } catch (\Throwable $th) {
-            // Usage analytics deliberately remains best-effort and inserts are
-            // not retried because the adapter has no durable deduplication key.
-            Console::error('Failed to write usage events: ' . $th->getMessage());
+
+            try {
+                if (!$accumulator->flush()) {
+                    Console::error('Usage event flush returned false');
+                }
+            } catch (\Throwable $th) {
+                // Usage analytics deliberately remains best-effort and inserts are
+                // not retried because the adapter has no durable deduplication key.
+                Console::error('Failed to write usage events: ' . $th->getMessage());
+            }
         }
     }
 
