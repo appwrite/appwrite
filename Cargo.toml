@@ -36,6 +36,7 @@ utopia-cache = { path = "crates/utopia/cache" }
 utopia-queue = { path = "crates/utopia/queue" }
 utopia-lock = { path = "crates/utopia/lock" }
 utopia-auth = { path = "crates/utopia/auth" }
+utopia-domains = { path = "crates/utopia/domains" }
 utopia-emails = { path = "crates/utopia/emails" }
 utopia-locale = { path = "crates/utopia/locale" }
 utopia-user-agent = { path = "crates/utopia/user-agent" }

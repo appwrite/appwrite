@@ -1,0 +1,442 @@
+{
+  "lib": "emails",
+  "description": "utopia-php/emails: email parsing (Email), provider canonical forms (Canonicals\\Providers), free/disposable/corporate classification and the Validator\\Email* validators.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/emails/src"
+    ],
+    "tests": [
+      "packages/emails/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/emails"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "email.get": {
+      "doc": "(new Email(email))->get()",
+      "covers": [
+        "Utopia\\Emails\\Email::__construct",
+        "Utopia\\Emails\\Email::get"
+      ],
+      "fuzz": [
+        {
+          "name": "address",
+          "args": { "gen": "object", "fields": { "email": { "gen": "ref", "name": "address" } } },
+          "iterations": 2000
+        }
+      ]
+    },
+    "email.local": {
+      "doc": "(new Email(email))->getLocal()",
+      "covers": [
+        "Utopia\\Emails\\Email::getLocal"
+      ]
+    },
+    "email.domain": {
+      "doc": "(new Email(email))->getDomain()",
+      "covers": [
+        "Utopia\\Emails\\Email::getDomain"
+      ]
+    },
+    "email.is_valid": {
+      "doc": "(new Email(email))->isValid()",
+      "covers": [
+        "Utopia\\Emails\\Email::isValid"
+      ],
+      "fuzz": [
+        {
+          "name": "address",
+          "args": { "gen": "object", "fields": { "email": { "gen": "ref", "name": "address" } } },
+          "iterations": 2000
+        }
+      ]
+    },
+    "email.has_valid_local": {
+      "doc": "(new Email(email))->hasValidLocal()",
+      "covers": [
+        "Utopia\\Emails\\Email::hasValidLocal"
+      ]
+    },
+    "email.has_valid_domain": {
+      "doc": "(new Email(email))->hasValidDomain()",
+      "covers": [
+        "Utopia\\Emails\\Email::hasValidDomain"
+      ]
+    },
+    "email.is_disposable": {
+      "doc": "(new Email(email))->isDisposable()",
+      "covers": [
+        "Utopia\\Emails\\Email::isDisposable"
+      ]
+    },
+    "email.is_free": {
+      "doc": "(new Email(email))->isFree()",
+      "covers": [
+        "Utopia\\Emails\\Email::isFree"
+      ]
+    },
+    "email.is_corporate": {
+      "doc": "(new Email(email))->isCorporate()",
+      "covers": [
+        "Utopia\\Emails\\Email::isCorporate"
+      ]
+    },
+    "email.provider": {
+      "doc": "(new Email(email))->getProvider()",
+      "covers": [
+        "Utopia\\Emails\\Email::getProvider"
+      ]
+    },
+    "email.subdomain": {
+      "doc": "(new Email(email))->getSubdomain()",
+      "covers": [
+        "Utopia\\Emails\\Email::getSubdomain"
+      ]
+    },
+    "email.has_subdomain": {
+      "doc": "(new Email(email))->hasSubdomain()",
+      "covers": [
+        "Utopia\\Emails\\Email::hasSubdomain"
+      ]
+    },
+    "email.canonical": {
+      "doc": "(new Email(email))->getCanonical()",
+      "covers": [
+        "Utopia\\Emails\\Email::getCanonical"
+      ],
+      "fuzz": [
+        {
+          "name": "address",
+          "args": { "gen": "object", "fields": { "email": { "gen": "ref", "name": "address" } } },
+          "iterations": 2000
+        }
+      ]
+    },
+    "email.is_canonical_supported": {
+      "doc": "(new Email(email))->isCanonicalSupported()",
+      "covers": [
+        "Utopia\\Emails\\Email::isCanonicalSupported"
+      ]
+    },
+    "email.canonical_domain": {
+      "doc": "(new Email(email))->getCanonicalDomain()",
+      "covers": [
+        "Utopia\\Emails\\Email::getCanonicalDomain"
+      ]
+    },
+    "email.formatted": {
+      "doc": "(new Email(email))->getFormatted(format?)",
+      "covers": [
+        "Utopia\\Emails\\Email::getFormatted"
+      ],
+      "fuzz": [
+        {
+          "name": "format",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "email": { "gen": "ref", "name": "address" },
+              "format": { "gen": "one_of", "of": [
+                { "gen": "pick", "from": ["full", "local", "domain", "provider", "subdomain", "FULL", "Local", ""] },
+                { "gen": "string", "max": 10, "tricky": 0.3 }
+              ] }
+            },
+            "optional": ["format"]
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "email.inspect": {
+      "doc": "every Email accessor on new Email(email) in one object; an accessor that throws reports {$error}",
+      "fuzz": [
+        {
+          "name": "address",
+          "args": { "gen": "object", "fields": { "email": { "gen": "ref", "name": "address" } } },
+          "iterations": 5000
+        },
+        {
+          "name": "provider address",
+          "args": { "gen": "object", "fields": { "email": { "gen": "ref", "name": "provider_address" } } },
+          "iterations": 3000
+        }
+      ]
+    },
+    "validator.is_valid": {
+      "doc": "(new Validator\\<validator>(allow_empty?))->isValid(value); validator: email | domain | local | corporate | not_disposable",
+      "covers": [
+        "Utopia\\Emails\\Validator\\Email::__construct",
+        "Utopia\\Emails\\Validator\\Email::isValid",
+        "Utopia\\Emails\\Validator\\EmailDomain::isValid",
+        "Utopia\\Emails\\Validator\\EmailLocal::isValid",
+        "Utopia\\Emails\\Validator\\EmailCorporate::isValid",
+        "Utopia\\Emails\\Validator\\EmailNotDisposable::isValid"
+      ],
+      "fuzz": [
+        {
+          "name": "addresses",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": { "gen": "pick", "from": ["email", "domain", "local", "corporate", "not_disposable"] },
+              "allow_empty": { "gen": "bool" },
+              "value": { "gen": "one_of", "of": [
+                { "gen": "ref", "name": "address" },
+                { "gen": "ref", "name": "provider_address" },
+                { "gen": "any", "depth": 1 }
+              ] }
+            },
+            "optional": ["allow_empty"]
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "validator.describe": {
+      "doc": "{description: getDescription(), type: getType(), array: isArray()} of new Validator\\<validator>(allow_empty?)",
+      "covers": [
+        "Utopia\\Emails\\Validator\\Email::getDescription",
+        "Utopia\\Emails\\Validator\\Email::getType",
+        "Utopia\\Emails\\Validator\\Email::isArray",
+        "Utopia\\Emails\\Validator\\EmailDomain::getDescription",
+        "Utopia\\Emails\\Validator\\EmailDomain::getType",
+        "Utopia\\Emails\\Validator\\EmailDomain::isArray",
+        "Utopia\\Emails\\Validator\\EmailLocal::getDescription",
+        "Utopia\\Emails\\Validator\\EmailLocal::getType",
+        "Utopia\\Emails\\Validator\\EmailLocal::isArray",
+        "Utopia\\Emails\\Validator\\EmailCorporate::getDescription",
+        "Utopia\\Emails\\Validator\\EmailCorporate::getType",
+        "Utopia\\Emails\\Validator\\EmailCorporate::isArray",
+        "Utopia\\Emails\\Validator\\EmailNotDisposable::getDescription",
+        "Utopia\\Emails\\Validator\\EmailNotDisposable::getType",
+        "Utopia\\Emails\\Validator\\EmailNotDisposable::isArray"
+      ]
+    },
+    "provider.supports": {
+      "doc": "(new Providers\\<provider>())->supports(domain); provider: gmail | outlook | yahoo | icloud | protonmail | fastmail | yandex | walla | generic",
+      "covers": [
+        "Utopia\\Emails\\Canonicals\\Providers\\Gmail::supports",
+        "Utopia\\Emails\\Canonicals\\Providers\\Outlook::supports",
+        "Utopia\\Emails\\Canonicals\\Providers\\Yahoo::supports",
+        "Utopia\\Emails\\Canonicals\\Providers\\Icloud::supports",
+        "Utopia\\Emails\\Canonicals\\Providers\\Protonmail::supports",
+        "Utopia\\Emails\\Canonicals\\Providers\\Fastmail::supports",
+        "Utopia\\Emails\\Canonicals\\Providers\\Yandex::supports",
+        "Utopia\\Emails\\Canonicals\\Providers\\Walla::supports",
+        "Utopia\\Emails\\Canonicals\\Providers\\Generic::supports"
+      ],
+      "fuzz": [
+        {
+          "name": "domains",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "provider": { "gen": "ref", "name": "provider" },
+              "domain": { "gen": "ref", "name": "domain" }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "provider.canonical": {
+      "doc": "(new Providers\\<provider>())->getCanonical(local, domain): {local, domain}",
+      "covers": [
+        "Utopia\\Emails\\Canonicals\\Providers\\Gmail::getCanonical",
+        "Utopia\\Emails\\Canonicals\\Providers\\Outlook::getCanonical",
+        "Utopia\\Emails\\Canonicals\\Providers\\Yahoo::getCanonical",
+        "Utopia\\Emails\\Canonicals\\Providers\\Icloud::getCanonical",
+        "Utopia\\Emails\\Canonicals\\Providers\\Protonmail::getCanonical",
+        "Utopia\\Emails\\Canonicals\\Providers\\Fastmail::getCanonical",
+        "Utopia\\Emails\\Canonicals\\Providers\\Yandex::getCanonical",
+        "Utopia\\Emails\\Canonicals\\Providers\\Walla::getCanonical",
+        "Utopia\\Emails\\Canonicals\\Providers\\Generic::getCanonical"
+      ],
+      "fuzz": [
+        {
+          "name": "locals",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "provider": { "gen": "ref", "name": "provider" },
+              "local": { "gen": "one_of", "of": [
+                { "gen": "ref", "name": "local" },
+                { "gen": "string", "max": 12, "alphabet": "unicode", "tricky": 0.3 }
+              ] },
+              "domain": { "gen": "ref", "name": "domain" }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "provider.canonical_domain": {
+      "doc": "(new Providers\\<provider>())->getCanonicalDomain()",
+      "covers": [
+        "Utopia\\Emails\\Canonicals\\Providers\\Gmail::getCanonicalDomain",
+        "Utopia\\Emails\\Canonicals\\Providers\\Outlook::getCanonicalDomain",
+        "Utopia\\Emails\\Canonicals\\Providers\\Yahoo::getCanonicalDomain",
+        "Utopia\\Emails\\Canonicals\\Providers\\Icloud::getCanonicalDomain",
+        "Utopia\\Emails\\Canonicals\\Providers\\Protonmail::getCanonicalDomain",
+        "Utopia\\Emails\\Canonicals\\Providers\\Fastmail::getCanonicalDomain",
+        "Utopia\\Emails\\Canonicals\\Providers\\Yandex::getCanonicalDomain",
+        "Utopia\\Emails\\Canonicals\\Providers\\Walla::getCanonicalDomain",
+        "Utopia\\Emails\\Canonicals\\Providers\\Generic::getCanonicalDomain"
+      ]
+    },
+    "provider.supported_domains": {
+      "doc": "(new Providers\\<provider>())->getSupportedDomains()",
+      "covers": [
+        "Utopia\\Emails\\Canonicals\\Providers\\Gmail::getSupportedDomains",
+        "Utopia\\Emails\\Canonicals\\Providers\\Outlook::getSupportedDomains",
+        "Utopia\\Emails\\Canonicals\\Providers\\Yahoo::getSupportedDomains",
+        "Utopia\\Emails\\Canonicals\\Providers\\Icloud::getSupportedDomains",
+        "Utopia\\Emails\\Canonicals\\Providers\\Protonmail::getSupportedDomains",
+        "Utopia\\Emails\\Canonicals\\Providers\\Fastmail::getSupportedDomains",
+        "Utopia\\Emails\\Canonicals\\Providers\\Yandex::getSupportedDomains",
+        "Utopia\\Emails\\Canonicals\\Providers\\Walla::getSupportedDomains",
+        "Utopia\\Emails\\Canonicals\\Providers\\Generic::getSupportedDomains"
+      ]
+    }
+  },
+  "generators": {
+    "provider": {
+      "gen": "pick",
+      "from": ["gmail", "outlook", "yahoo", "icloud", "protonmail", "fastmail", "yandex", "walla", "generic"]
+    },
+    "label": { "gen": "string", "min": 0, "max": 10, "alphabet": "hostname" },
+    "host": { "gen": "repeat", "part": { "gen": "ref", "name": "label" }, "sep": ".", "min": 1, "max": 4 },
+    "known_domain": {
+      "gen": "pick",
+      "from": [
+        "gmail.com", "googlemail.com", "GMail.com", "outlook.com", "hotmail.co.uk", "live.com", "msn.com", "passport.com",
+        "yahoo.com", "ymail.com", "rocketmail.com", "yahoo.co.uk", "icloud.com", "me.com", "mac.com",
+        "protonmail.com", "proton.me", "pm.me", "protonmail.ch", "fastmail.com", "fastmail.fm",
+        "walla.co.il", "walla.com", "yandex.ru", "yandex.com", "ya.ru",
+        "10minutemail.com", "mailinator.com", "tempmail.org", "test.com", "aol.com", "gmx.com", "hey.com", "tutanota.com",
+        "company.org", "mail.company.org", "a.b.company.co.uk", "example.test", "localhost", "my.localhost",
+        "www.ck", "city.kawasaki.jp", "x.y.kawasaki.jp", "user.github.io", "s3.amazonaws.com", "foo.blogspot.com",
+        "xn--bcher-kva.de", "bücher.de", "例え.jp", "公司.cn", "ישראל", "0.com", "0", "com", "co.uk", "org",
+        "[127.0.0.1]", "[IPv6:::1]", "http://example.com", "https://example.com", "example.com.", ".example.com",
+        "example..com", "-example.com", "example-.com", "EXAMPLE.COM", " example.com", "example.com "
+      ]
+    },
+    "domain": {
+      "gen": "one_of",
+      "of": [
+        { "gen": "ref", "name": "known_domain" },
+        { "gen": "ref", "name": "host" },
+        { "gen": "concat", "parts": [
+          { "gen": "ref", "name": "host" },
+          { "gen": "pick", "from": [".com", ".co.uk", ".test", ".localhost", ".kawasaki.jp", ".ck", ".github.io", ".org", ".io", "", "."] }
+        ] },
+        { "gen": "concat", "parts": [
+          { "gen": "repeat", "part": { "gen": "concat", "parts": [
+            { "gen": "pick", "from": ["xn--", "XN--", ""] },
+            { "gen": "ref", "name": "label" }
+          ] }, "sep": ".", "min": 1, "max": 3 },
+          { "gen": "pick", "from": [".com", ".de", ".jp", ".xn--p1ai", ".рф", ".中国", ".co.uk"] }
+        ] },
+        { "gen": "concat", "parts": [
+          { "gen": "string", "min": 1, "max": 6, "alphabet": "abcüöéßΣİ日本語中文" },
+          { "gen": "pick", "from": [".de", ".jp", ".cn", ".com", ".рф"] }
+        ] },
+        { "gen": "string", "min": 1, "max": 12, "alphabet": "unicode" },
+        { "gen": "string", "max": 8, "tricky": 0.6 }
+      ]
+    },
+    "local": {
+      "gen": "one_of",
+      "of": [
+        { "gen": "string", "min": 0, "max": 16, "alphabet": "abcXYZ019.+-_" },
+        { "gen": "string", "min": 1, "max": 12, "alphabet": "email" },
+        { "gen": "repeat", "part": { "gen": "string", "min": 0, "max": 5, "alphabet": "alnum" }, "sep": ".", "min": 1, "max": 5 },
+        { "gen": "concat", "parts": [
+          { "gen": "string", "min": 1, "max": 8, "alphabet": "alnum" },
+          { "gen": "const", "value": "+" },
+          { "gen": "string", "min": 0, "max": 8, "alphabet": "abc.-_+" }
+        ] },
+        { "gen": "concat", "parts": [
+          { "gen": "const", "value": "\"" },
+          { "gen": "string", "min": 0, "max": 8, "alphabet": "ascii" },
+          { "gen": "const", "value": "\"" }
+        ] },
+        { "gen": "string", "min": 1, "max": 8, "alphabet": "unicode" },
+        { "gen": "string", "min": 60, "max": 70, "alphabet": "abc" },
+        { "gen": "string", "max": 6, "tricky": 0.7 }
+      ]
+    },
+    "space": { "gen": "pick", "from": ["", "", "", " ", "\t", "\n", "\u0000", " \r\n"] },
+    "address": {
+      "gen": "one_of",
+      "of": [
+        { "gen": "concat", "parts": [
+          { "gen": "ref", "name": "space" },
+          { "gen": "ref", "name": "local" },
+          { "gen": "const", "value": "@" },
+          { "gen": "ref", "name": "domain" },
+          { "gen": "ref", "name": "space" }
+        ] },
+        { "gen": "concat", "parts": [
+          { "gen": "ref", "name": "local" },
+          { "gen": "const", "value": "@" },
+          { "gen": "ref", "name": "known_domain" }
+        ] },
+        { "gen": "string", "max": 24, "alphabet": "email", "tricky": 0.4 },
+        { "gen": "string", "max": 16, "alphabet": "unicode" }
+      ]
+    },
+    "provider_address": {
+      "gen": "concat",
+      "parts": [
+        { "gen": "ref", "name": "local" },
+        { "gen": "const", "value": "@" },
+        { "gen": "pick", "from": [
+          "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "live.co.uk", "msn.com", "yahoo.com", "ymail.com",
+          "icloud.com", "me.com", "protonmail.com", "pm.me", "fastmail.fm", "walla.com", "walla.co.il", "yandex.ru",
+          "GMAIL.COM", "Outlook.Com", "company.org", "mail.company.org"
+        ] }
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Emails\\Email::hasValidLocal",
+      "description": "The local-part pattern /^[a-zA-Z0-9._+-]+$/ has no D modifier, so `$` also matches before a final newline: a local part ending in one newline passes (isValid() still rejects the address)",
+      "case": "edge.json#local part ending in a newline"
+    },
+    {
+      "symbol": "Utopia\\Emails\\Email::__construct",
+      "description": "empty() rejects an address, local part or domain of \"0\" as if it were empty",
+      "case": "edge.json#zero local part"
+    },
+    {
+      "symbol": "Utopia\\Emails\\Email::hasSubdomain",
+      "description": "empty() makes a subdomain of \"0\" count as no subdomain, while getSubdomain() returns \"0\"",
+      "case": "edge.json#zero subdomain"
+    },
+    {
+      "symbol": "Utopia\\Emails\\Canonicals\\Providers\\Gmail::getCanonical",
+      "description": "empty() makes a local part normalised to \"0\" throw InvalidArgumentException (Gmail, Outlook, Icloud), so getCanonical() fails for 0+tag@gmail.com",
+      "case": "edge.json#gmail zero local part"
+    },
+    {
+      "symbol": "Utopia\\Emails\\Email::getCanonical",
+      "description": "Email consults Gmail, Outlook, Yahoo, Icloud, Protonmail, Fastmail and Walla only: Yandex addresses get the generic canonical form, and isCanonicalSupported() is false for them",
+      "case": "edge.json#yandex is not consulted by Email"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Emails\\Canonicals\\Providers\\Gmail::getCanonical",
+      "php": "Every provider's supports() and getCanonical() take PHP strings of any bytes; strtolower() lower-cases the ASCII bytes and leaves the others.",
+      "reason": "utopia_emails::Provider takes &str. Email always passes UTF-8 (mb_strtolower output) and ASCII lower-casing keeps UTF-8 valid, so only a direct call with non-UTF-8 bytes is unrepresentable."
+    }
+  ]
+}

@@ -4,7 +4,7 @@ use serde_json::Value;
 use utopia_auth::Hash;
 use utopia_database::sql::Builder;
 use utopia_database::{Param, datetime};
-use utopia_emails::{EmailValidator, Metadata};
+use utopia_emails::EmailValidator;
 use utopia_http::Response;
 use utopia_validators::{AllOf, ArrayList, Boolean, Text, Validator, php};
 
@@ -258,7 +258,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
         }
     }
     let old_email = user.email.clone();
-    let meta = Metadata::of(Some(&email));
+    let meta = base::Metadata::of(Some(&email));
     base::check_email_policy(ctx, &meta)?;
 
     let mut merged = user.clone();

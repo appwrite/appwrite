@@ -4,7 +4,7 @@ use bytes::Bytes;
 use utopia_auth::Hash;
 use utopia_database::sql::Builder;
 use utopia_database::{Database, FromRow, Param, datetime, permission};
-use utopia_emails::Metadata;
+use utopia_emails::Email;
 
 use appwrite_core::crypto;
 use appwrite_core::database::documents::{self, Relations, Target, User};
@@ -66,6 +66,36 @@ pub async fn update_user(ctx: &mut Context, user: &User, mut columns: Vec<(&'sta
     let mut fresh = User::from_row(&row)?;
     fresh.targets = targets?;
     Ok(fresh)
+}
+
+/// Email metadata stored on users (`emailCanonical`, `emailIs*`).
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Metadata {
+    pub canonical: Option<String>,
+    pub is_canonical: Option<bool>,
+    pub is_corporate: Option<bool>,
+    pub is_disposable: Option<bool>,
+    pub is_free: Option<bool>,
+}
+
+impl Metadata {
+    /// Computes the metadata the way `Users\Base::createUser` does: all
+    /// `None` when the address cannot be parsed or has no canonical form.
+    pub fn of(email: Option<&str>) -> Self {
+        let Ok(parsed) = Email::new(email.unwrap_or("")) else {
+            return Self::default();
+        };
+        let Ok(canonical) = parsed.canonical() else {
+            return Self::default();
+        };
+        Self {
+            is_canonical: Some(parsed.get() == canonical),
+            canonical: Some(canonical),
+            is_corporate: Some(parsed.is_corporate()),
+            is_disposable: Some(parsed.is_disposable()),
+            is_free: Some(parsed.is_free()),
+        }
+    }
 }
 
 /// Email policy gates (`disposable`, `canonical`, `free`, `corporate`).
