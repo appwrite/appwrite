@@ -2,6 +2,7 @@ import { markdocToMarkdown } from '@/lib/seo/markdoc-to-markdown'
 import { DOCS_PAGE_MAP } from './generated/manifest'
 import { parseFrontmatterString, stripFrontmatter } from './frontmatter'
 import { preloadPartialsForContent, resolvePartials } from './partials'
+import { resolveDocsPagePrompt } from './route-prompts'
 import { extractDocsToc } from './toc'
 import type { DocsPageData, DocsPageMeta } from './types'
 
@@ -75,7 +76,8 @@ function preprocessMarkdocContent(content: string): string {
 
   result = result.replace(
     /^(#{1,6})\s+(.+?)\s*\{%\s*#([-\w]+)\s*%\}\s*$/gm,
-    (_, hashes: string, title: string, id: string) => `${hashes} ${title} {#${id}}`,
+    (_, hashes: string, title: string, id: string) =>
+      `${hashes} ${title} {#${id}}`,
   )
 
   result = result.replace(
@@ -132,8 +134,28 @@ export async function getAllDocsPages(): Promise<DocsPageData[]> {
   return pages.filter((page): page is DocsPageData => page !== null)
 }
 
-export async function getDocsMarkdownExport(slug: string): Promise<string | null> {
+export async function getDocsMarkdownExport(
+  slug: string,
+): Promise<string | null> {
   const page = await getDocsPage(slug)
   if (!page) return null
-  return markdocToMarkdown(page.rawContent)
+  const markdown = markdocToMarkdown(page.rawContent)
+
+  // The agent prompt renders as a UI banner, so the markdoc source never
+  // contains it. Append it so agents reading the export get it too.
+  const prompt = resolveDocsPagePrompt(slug, page.promptPath)?.trim()
+  if (!prompt) return markdown
+
+  return [
+    markdown.trimEnd(),
+    '',
+    '## Agent prompt',
+    '',
+    'Paste this prompt into a coding agent to set up this guide.',
+    '',
+    '````markdown',
+    prompt,
+    '````',
+    '',
+  ].join('\n')
 }

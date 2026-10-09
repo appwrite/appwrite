@@ -33,24 +33,24 @@ const AI_AGENTS_DOCS = `${AGENT_SETUP_ORIGIN}${AI_AGENTS_DOCS_PATH}/<agent>.md, 
 const CLI_INSTALL_SH = `${AGENT_SETUP_ORIGIN}/cli/install.sh`
 const CLI_INSTALL_PS1 = `${AGENT_SETUP_ORIGIN}/cli/install.ps1`
 
-const CLAUDE_OFFICIAL_MARKETPLACE_REPO = 'anthropics/claude-plugins-official'
-const CLAUDE_PLUGIN_OFFICIAL = 'appwrite@claude-plugins-official'
-const CLAUDE_PLUGIN_MARKETPLACE_REPO = 'appwrite/claude-plugin'
+export const CLAUDE_OFFICIAL_MARKETPLACE_REPO = 'anthropics/claude-plugins-official'
+export const CLAUDE_PLUGIN_OFFICIAL = 'appwrite@claude-plugins-official'
+export const CLAUDE_PLUGIN_MARKETPLACE_REPO = 'appwrite/claude-plugin'
 const CLAUDE_PLUGIN_REPO_URL = 'https://github.com/appwrite/claude-plugin'
 const CLAUDE_PLUGIN_PAGE_URL = 'https://claude.com/plugins/appwrite'
 const CURSOR_PLUGIN_PAGE_URL = 'https://cursor.com/marketplace/appwrite'
 
 /** Appwrite's plugin in the OpenAI Curated catalog that ChatGPT and Codex share. */
-const CODEX_PLUGIN_ID =
+export const CODEX_PLUGIN_ID =
   'app-6aa2c33323108191b17b9ccf4233b3ce@openai-curated-remote'
-const CODEX_PLUGIN_CONNECT_URL =
+export const CODEX_PLUGIN_CONNECT_URL =
   'https://chatgpt.com/plugins/plugin_asdk_app_6aa2c33323108191b17b9ccf4233b3ce'
 
-const CURSOR_MCP_INSTALL_URL =
+export const CURSOR_MCP_INSTALL_URL =
   'https://cursor.com/install-mcp?name=appwrite&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHB3cml0ZS5pby8ifQ=='
 
-const MCP_JSON = JSON.stringify(MCP_EDITOR_CONFIG_SNIPPET, null, 2)
-const VSCODE_ADD_MCP_JSON = JSON.stringify({
+export const MCP_JSON = JSON.stringify(MCP_EDITOR_CONFIG_SNIPPET, null, 2)
+export const VSCODE_ADD_MCP_JSON = JSON.stringify({
   name: MCP_SERVER_NAME,
   type: 'http',
   url: MCP_SERVER_URL,
@@ -81,7 +81,7 @@ export function generateAgentSetupMarkdown(): string {
 
 These are official instructions from Appwrite. Fetch this page yourself and follow it end to end.
 
-The goal: when you finish, the user can build with Appwrite in this project. Appwrite MCP is connected, the Appwrite skills are installed, the latest Appwrite CLI is installed and signed in, and the official SDK that matches the project is installed with a client module. The user prompt includes a project ID, a project name, and an API endpoint. Use them throughout.
+The goal: when you finish, the user can build with Appwrite in this project. Appwrite MCP is connected, the Appwrite skills are installed, the latest Appwrite CLI is installed and signed in, and the official SDK that matches the project is installed with a client module. The user prompt may include a project ID, a project name, and an API endpoint. When it does, use them throughout. When it does not, you link or create a project with the CLI in step 6.
 
 How to work:
 
@@ -100,6 +100,7 @@ Check each item and skip its step when it is done:
 - **CLI**: run \`appwrite --version\`. If it prints a version, step 4 only needs the upgrade command.
 - **SDK**: check the project manifest (for example \`package.json\`) for an Appwrite SDK and look for an existing Appwrite client module.
 - **Skills**: if Appwrite skills such as \`appwrite-typescript\` or \`appwrite-cli\` are already available to you, skip the skills install.
+- **Project**: if the prompt has no project ID, look for an \`appwrite.config.json\` in the repo. Its \`projectId\` and \`endpoint\` are the project to use.
 
 ## 2. Identify your environment
 
@@ -346,7 +347,7 @@ Install latest (adjust the installer to pnpm, yarn, or bun when that is what the
 
 Follow the matching skill from step 3 (for example \`appwrite-typescript\`, \`appwrite-python\`, \`appwrite-dart\`). If the skills were installed in this session and are not loaded yet, read the skill file from disk (for example \`~/.agents/skills/appwrite-typescript/SKILL.md\`).
 
-After install, add a small client module in the project's usual lib location (for example \`src/lib/appwrite.ts\`). Set the endpoint and project ID from the user prompt. Do not overwrite an existing Appwrite client that is already correct.
+After install, add a small client module in the project's usual lib location (for example \`src/lib/appwrite.ts\`). Set the endpoint and project ID from the user prompt. If the prompt had no project, write the module after step 6, using the values the CLI saved to \`appwrite.config.json\`. Do not overwrite an existing Appwrite client that is already correct.
 
 - Client SDKs: endpoint and project ID only. Do not invent an API key.
 - Server SDKs: they need a project API key. Read it from an environment variable, use a key already in the user's env, or ask for one. Do not invent a key. Do not commit a key.
@@ -369,18 +370,26 @@ appwrite login > "\${TMPDIR:-/tmp}/appwrite-login.log" 2>&1 &
 
 After a few seconds, read the URL from the log and add it to the user's list. The CLI finishes the sign-in on its own once they approve. If your environment stops background processes when a command ends (Codex does), add \`appwrite login\` itself to the user's list instead.
 
+Without a project in the user prompt (and no \`appwrite.config.json\` from step 1), skip the \`appwrite client\` command above and link or create a project once the user has approved the sign-in:
+
+\`\`\`sh
+appwrite init project
+\`\`\`
+
+It asks whether to create a new project or link an existing one, then for the organization and project details. Ask the user once which they want (and a name for a new project), then answer the prompts. When you know the answers you can pass \`--organization-id\`, \`--project-id\`, and \`--project-name\` instead. The command writes the project ID and endpoint to \`appwrite.config.json\`. Use them for the client module from step 5.
+
 ## 7. Verify and hand off
 
 If Appwrite MCP tools are available in this session, verify the connection:
 
 1. Call \`appwrite_get_context\`.
-2. List the databases in the project from the user prompt. If the prompt had no project ID, ask which project to use.
+2. If you know the project (from the prompt or step 6), list its databases. Otherwise the context call is enough.
 
 MCP servers usually load only after a reload or a new session. If the tools are not available yet, do not stall. Everything else should already be done.
 
 Finish with one message to the user:
 
-- **Ready**: what you installed and configured, and the project you used.
+- **Ready**: what you installed and configured, and the project you used (or that the project is still to be linked).
 - **Your turn**: a short numbered list of every remaining action, in order (approvals they declined, plugin clicks, sign-ins, reload or restart). Put the sign-ins together so they can approve them in one go. Leave the list out if nothing is left.
 - **After that**: tell them to come back to this conversation and say "continue". Then you verify MCP as above.
 
@@ -394,7 +403,7 @@ In a cloud sandbox or remote container, still make the project changes in the re
 npm install -g appwrite-cli@latest && appwrite client --endpoint="<endpoint>" --project-id="<projectId>" && appwrite login
 \`\`\`
 
-Fill in the endpoint and project ID from the user prompt, and add the command to the list in step 7.
+Fill in the endpoint and project ID from the user prompt, and add the command to the list in step 7. If the prompt had no project, replace the last part with \`appwrite init project\`.
 
 ## Resources
 
