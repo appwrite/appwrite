@@ -51,7 +51,6 @@ class Ceremony
 
         $this->steps = new CeremonyStepManagerFactory();
         $this->steps->setAttestationStatementSupportManager($attestation);
-        $this->steps->setAllowedOrigins($relyingParty->origins);
         $this->steps->setCounterChecker(new Counter());
     }
 
@@ -102,6 +101,7 @@ class Ceremony
         }
 
         $this->assertSameOrigin($response);
+        $this->steps->setAllowedOrigins($this->getAllowedOrigins($response->clientDataJSON->origin));
 
         return $this->toCredential($this->guard(fn (): CredentialRecord => AuthenticatorAttestationResponseValidator::create($this->steps->creationCeremony())
             ->check($response, $options, $this->relyingParty->id)));
@@ -147,6 +147,7 @@ class Ceremony
         }
 
         $this->assertSameOrigin($response);
+        $this->steps->setAllowedOrigins($this->getAllowedOrigins($response->clientDataJSON->origin));
 
         $stored = $this->decodeRecord($record);
         $backupEligible = $stored->backupEligible;
@@ -269,6 +270,52 @@ class Ceremony
         if ($response->clientDataJSON->crossOrigin || $response->clientDataJSON->topOrigin !== null) {
             throw new Exception('Cross-origin ceremonies are not allowed.');
         }
+    }
+
+    /**
+     * The exact origins to check a response against. A portless localhost origin allows any port, since
+     * development servers pick their own, and a wildcard origin such as `https://*.example.com` allows any
+     * subdomain on the default port.
+     *
+     * @return array<string>
+     * @throws Exception when no origin can match
+     */
+    private function getAllowedOrigins(string $origin): array
+    {
+        $parts = \parse_url($origin);
+        $plain = \is_array($parts)
+            && isset($parts['scheme'], $parts['host'])
+            && !isset($parts['path'])
+            && !isset($parts['query'])
+            && !isset($parts['fragment'])
+            && !isset($parts['user']);
+
+        $origins = [];
+        foreach ($this->relyingParty->origins as $allowed) {
+            $wildcard = ($parts['scheme'] ?? '') . '://*';
+            if (!\str_contains($allowed, '*')) {
+                $origins[] = $allowed;
+            } elseif ($plain && !isset($parts['port']) && \str_starts_with($allowed, $wildcard . '.') && \str_ends_with($parts['host'], \substr($allowed, \strlen($wildcard)))) {
+                $origins[] = $origin;
+            }
+        }
+
+        if (
+            $plain
+            && isset($parts['port'])
+            && $this->relyingParty->id === Origin::LOCALHOST
+            && $parts['host'] === Origin::LOCALHOST
+            && \in_array($parts['scheme'] . '://' . Origin::LOCALHOST, $origins, true)
+        ) {
+            $origins[] = $origin;
+        }
+
+        // An empty list would let the library fall back to matching the RP ID alone
+        if ($origins === []) {
+            throw new Exception('Origin "' . $origin . '" is not allowed.');
+        }
+
+        return \array_values(\array_unique($origins));
     }
 
     private function getIdentifier(string $credentialId): string
