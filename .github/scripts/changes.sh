@@ -12,6 +12,8 @@ fi
 
 if [ "$EVENT" = "pull_request" ]; then
   base=$(git merge-base "origin/$BASE_REF" HEAD)
+elif [ "$EVENT" = "merge_group" ]; then
+  base="$MERGE_BASE"
 elif git rev-parse -q --verify "$BEFORE^{commit}" > /dev/null; then
   base="$BEFORE"
 else

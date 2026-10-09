@@ -14,6 +14,7 @@ env:
 
 on:
   pull_request:
+  merge_group:
   push:
     branches:
       - main
@@ -51,6 +52,7 @@ jobs:
           REF: ${{ github.ref }}
           BASE_REF: ${{ github.base_ref }}
           BEFORE: ${{ github.event.before }}
+          MERGE_BASE: ${{ github.event.merge_group.base_sha }}
         run: bash .github/scripts/changes.sh
 
   dependencies:
@@ -360,6 +362,10 @@ jobs:
             core.setOutput('services', JSON.stringify(services));
 
             const pr = context.payload.pull_request;
+            const group = context.payload.merge_group;
+            const range = pr
+              ? { base: pr.base.sha, head: pr.head.sha }
+              : group && { base: group.base_sha, head: group.head_sha };
 
             const isDatabaseVersionChanged = async () => {
               const getContent = (ref) => github.rest.repos.getContent({
@@ -371,8 +377,8 @@ jobs:
 
               const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
               const [{ data: base }, { data: head }] = await Promise.all([
-                getContent(pr.base.sha),
-                getContent(pr.head.sha),
+                getContent(range.base),
+                getContent(range.head),
               ]);
 
               const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
@@ -380,7 +386,7 @@ jobs:
             };
 
             const fullMatrix = context.eventName === 'workflow_dispatch'
-              || (pr && await isDatabaseVersionChanged());
+              || (range && await isDatabaseVersionChanged());
 
             if (fullMatrix) {
               core.setOutput('databases', JSON.stringify(['MariaDB', 'PostgreSQL', 'MongoDB']));
@@ -419,12 +425,15 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
           BEFORE: ${{ github.event.before }}
+          MERGE_BASE: ${{ github.event.merge_group.base_sha }}
         run: |
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             CHANGED=$(ls packages)
           else
             if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
               BASE=$(git merge-base "origin/$BASE_REF" HEAD)
+            elif [ "$GITHUB_EVENT_NAME" = "merge_group" ]; then
+              BASE="$MERGE_BASE"
             elif git rev-parse -q --verify "$BEFORE" > /dev/null; then
               BASE="$BEFORE"
             else
@@ -1202,3 +1211,38 @@ jobs:
       - name: Fail benchmark
         if: always() && steps.benchmark_after.outcome != 'success'
         run: exit 1
+
+  # The one required check: skipped jobs pass (change detection skips untouched
+  # areas), failed or cancelled ones fail. Benchmark only reports.
+  gate:
+    name: CI
+    if: always()
+    needs:
+      - changes
+      - dependencies
+      - security
+      - checks
+      - locale
+      - workflows
+      - static-rules
+      - matrix
+      - packages
+      - package
+      - build
+      - unit
+      - e2e_general
+      - e2e_security
+      - e2e_service
+      - e2e_grouped
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check results
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          jq -r 'to_entries[] | "\(.value.result)\t\(.key)"' <<< "$NEEDS"
+          failed=$(jq -r '[to_entries[] | select(.value.result == "failure" or .value.result == "cancelled") | .key] | join(", ")' <<< "$NEEDS")
+          if [ -n "$failed" ]; then
+            echo "::error::Jobs did not pass: $failed"
+            exit 1
+          fi
