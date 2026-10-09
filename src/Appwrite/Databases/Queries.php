@@ -6,10 +6,9 @@ use Appwrite\Extend\Exception;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Query\Exception as QueryLibraryException;
-use Utopia\Query\Exception\ValidationException;
 
 /**
- * Only a rejected query is the caller's 400; a query-library fault stays a 5xx so it reaches error reporting.
+ * Every query the database or query library refuses is the caller's 400, as every query exception was on main.
  */
 final class Queries
 {
@@ -26,13 +25,9 @@ final class Queries
         }
     }
 
-    public static function failure(QueryException|QueryLibraryException $failure): Exception|QueryLibraryException
+    public static function failure(QueryException|QueryLibraryException $failure): Exception
     {
-        if ($failure instanceof QueryException || $failure instanceof ValidationException) {
-            return self::invalid($failure);
-        }
-
-        return $failure;
+        return self::invalid($failure);
     }
 
     private static function invalid(QueryException|QueryLibraryException $failure): Exception

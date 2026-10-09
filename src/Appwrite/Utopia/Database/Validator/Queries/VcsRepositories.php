@@ -3,11 +3,10 @@
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
 use Appwrite\Utopia\Database\Validator\Query\VcsNamespace;
-use Utopia\Database\Validator\Queries\Base;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 
-class VcsRepositories extends Base
+class VcsRepositories extends DepthFirst
 {
     public function __construct()
     {

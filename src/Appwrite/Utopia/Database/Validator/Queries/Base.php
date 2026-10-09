@@ -4,7 +4,6 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 
 use Utopia\Config\Config;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Queries\Base as Queries;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Filter;
 use Utopia\Database\Validator\Query\Limit;
@@ -13,7 +12,7 @@ use Utopia\Database\Validator\Query\Order;
 use Utopia\Database\Validator\Query\Select;
 use Utopia\Query\Schema\ColumnType;
 
-class Base extends Queries
+class Base extends DepthFirst
 {
     /**
      * Expression constructor
@@ -93,7 +92,14 @@ class Base extends Queries
         ];
 
         if ($this->isSelectQueryAllowed()) {
-            $validators[] = new Select($allAttributes);
+            $validators[] = new Select([
+                ...$allAttributes,
+                new Document([
+                    'key' => '$tenant',
+                    'type' => ColumnType::String->value,
+                    'array' => false,
+                ]),
+            ]);
         }
 
         parent::__construct($validators);

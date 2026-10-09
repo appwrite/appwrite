@@ -17,40 +17,24 @@ use Utopia\Query\Exception\ValidationException;
 final class QueriesTest extends TestCase
 {
     /**
-     * @return iterable<string, array{QueryLibraryException}>
+     * @return iterable<string, array{QueryException|QueryLibraryException}>
      */
-    public static function faults(): iterable
-    {
-        yield 'a compiler fault' => [new QueryLibraryException('Expected ROW or ROWS at position 12')];
-        yield 'a dialect gap' => [new UnsupportedException('Full-text search is not supported by this dialect.')];
-    }
-
-    /**
-     * @return iterable<string, array{QueryException|ValidationException}>
-     */
-    public static function rejections(): iterable
+    public static function refusals(): iterable
     {
         yield 'a database library rejection' => [new QueryException('Invalid query: Attribute not found in schema: missing')];
         yield 'a query library validation error' => [new ValidationException('Invalid join operator: LIKE')];
+        yield 'a query library compiler error' => [new QueryLibraryException('Expected ROW or ROWS at position 12')];
+        yield 'a dialect gap' => [new UnsupportedException('Full-text search is not supported by this dialect.')];
     }
 
-    #[DataProvider('faults')]
-    public function testAFaultIsNotTheCallersInvalidQuery(QueryLibraryException $fault): void
+    #[DataProvider('refusals')]
+    public function testEveryRefusedQueryIsTheCallersInvalidQueryAsOnMain(QueryException|QueryLibraryException $refusal): void
     {
-        $failure = Queries::failure($fault);
+        $failure = Queries::failure($refusal);
 
-        $this->assertSame($fault, $failure, 'a query-library fault must reach the error handler unchanged, which answers it with a 5xx');
-    }
-
-    #[DataProvider('rejections')]
-    public function testARejectedQueryIsTheCallersInvalidQuery(QueryException|ValidationException $rejection): void
-    {
-        $failure = Queries::failure($rejection);
-
-        $this->assertInstanceOf(Exception::class, $failure);
-        $this->assertSame(Exception::GENERAL_QUERY_INVALID, $failure->getType());
+        $this->assertSame(Exception::GENERAL_QUERY_INVALID, $failure->getType(), 'Main answered every query exception with a 400, never a 5xx');
         $this->assertSame(400, $failure->getCode());
-        $this->assertSame($rejection->getMessage(), $failure->getMessage());
+        $this->assertSame($refusal->getMessage(), $failure->getMessage());
     }
 
     public function testAnUnparsableQueryIsInvalid(): void
