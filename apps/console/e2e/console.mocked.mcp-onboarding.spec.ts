@@ -2,9 +2,8 @@ import type { Page, Route } from '@playwright/test'
 import { expect, test } from './fixtures'
 
 /**
- * MCP onboarding: the Project Agents flag is on by default, so a new unused
- * project shows the Agents page, sidebar item, and Connect MCP dialog without
- * a debug toggle.
+ * MCP onboarding is always on: a new unused project shows the Agents page,
+ * sidebar item, and Connect MCP dialog.
  */
 
 const NOW = '2026-10-09T12:00:00.000+00:00'

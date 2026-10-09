@@ -10,7 +10,6 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { canShowAgentMcpConnectCta } from '@/lib/console-access-checks'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useT } from '@/lib/i18n/translate'
 import {
   buildConnectMcpPrompt,
@@ -38,17 +37,13 @@ export function ConnectAgentCta({
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
-  const { showProjectAgents } = useDebugOverrides()
   const { data: consents, isFetched } = useAccountConsents({
     enabled: isAuthenticated,
   })
   const projectConnect = useProjectConnectDialog()
   const [copied, setCopied] = useState(false)
 
-  const canShow =
-    isAuthenticated &&
-    showProjectAgents &&
-    canShowAgentMcpConnectCta(access, features)
+  const canShow = isAuthenticated && canShowAgentMcpConnectCta(access, features)
   const connected = isFetched
     ? hasAccountMcpAgentConnected(consents)
     : initialConnected !== false
