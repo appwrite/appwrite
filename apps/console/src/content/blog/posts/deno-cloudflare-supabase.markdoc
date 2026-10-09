@@ -1,0 +1,153 @@
+---
+layout: post
+title: "Deno joins Cloudflare: what it means for Supabase users"
+description: Deno is joining Cloudflare and ending the runtime. Here's what that means for Supabase Edge Functions and an open-source alternative that is not Deno-only.
+date: 2026-10-09
+cover: /images/blog/deno-cloudflare-supabase/cover.avif
+timeToRead: 8
+author: aditya-oberai
+category: products
+featured: false
+unlisted: false
+faqs:
+  - question: "Will Supabase Edge Functions stop working because Deno is joining Cloudflare?"
+    answer: "Not on the day of the announcement. Hosted Supabase Edge Functions now run on Supabase Edge Runtime, a Deno-compatible runtime Supabase maintains, not on Deno Deploy. Deno Deploy shutting down in six months does not take those functions offline. The longer-term risk is that official Deno runtime development ends after one year of bug-fix and security releases, and Supabase functions are still written for Deno."
+  - question: "Do Supabase Edge Functions still use Deno Deploy?"
+    answer: "They used to. Supabase launched Edge Functions on Deno Deploy in 2022, then open-sourced [Supabase Edge Runtime](https://supabase.com/blog/edge-runtime-self-hosted-deno-functions) for local development and self-hosting. Current docs describe the production runtime as Supabase Edge Runtime, which is Deno-compatible and TypeScript-first. The functions product is still built on Deno, even if the host is no longer Deno Deploy."
+  - question: "What did Deno announce about the runtime and Deno Deploy?"
+    answer: "On October 9, 2026, Ryan Dahl wrote that the Deno team is [joining Cloudflare](https://deno.com/blog/cloudflare). The Deno runtime gets monthly bug-fix and security releases for one year, then official development ends. Deno stays open source. Deno Deploy keeps running for six months, then shuts down, with migration support for paying customers moving to Cloudflare Workers. JSR continues, with its infrastructure moving to Cloudflare."
+  - question: "Is Appwrite a good alternative if I use Supabase Edge Functions?"
+    answer: "Yes, if you want serverless functions that are not locked to Deno, plus a backend you can run without a third-party functions host. [Appwrite Functions](/docs/products/functions) support Deno 2.x alongside Node.js, Bun, Python, Go, PHP, Ruby, Dart, and more. The server, executor, and runtimes are open source. You can start on [Appwrite Cloud](https://cloud.appwrite.io) or [self-host](/docs/advanced/self-hosting) the same stack."
+  - question: "Can I keep writing Deno or TypeScript on Appwrite?"
+    answer: "Yes. Appwrite Cloud currently offers `deno-2.0` and `deno-2.6` for Functions, and self-hosted instances can enable additional Deno versions. You can also move the same TypeScript to Node.js or Bun if you want to leave the Deno runtime later without changing backend vendor. See the [Functions runtimes](/docs/products/functions/runtimes) list."
+  - question: "What should Supabase users do this week?"
+    answer: "Inventory every Edge Function, note Deno APIs and npm specifiers, and decide whether you want to stay on a Deno-only functions product. If you need a path that is not tied to Deno the company, stand up an Appwrite project, redeploy one function on Deno 2.6, then decide whether the rest should stay on Deno or move to another runtime."
+---
+
+On October 9, 2026, Ryan Dahl announced that [the Deno team is joining Cloudflare](https://deno.com/blog/cloudflare). Official development of the Deno runtime will stop after one year of monthly bug-fix and security releases. Deno Deploy will shut down after six months.
+
+If you run **Supabase Edge Functions**, that announcement is not abstract. Supabase functions are TypeScript functions written for Deno. The product started on Deno Deploy. It still markets itself as Deno-based, even after Supabase built its own Edge Runtime.
+
+Your hosted functions will not vanish tomorrow. The real question is whether you want backend compute that lives or dies with one runtime vendor.
+
+# What the Deno Cloudflare announcement means for Supabase
+
+**Supabase Edge Functions will keep running in the short term because hosted functions already use Supabase Edge Runtime, not Deno Deploy. The risk is structural: the functions product is still Deno-only, and Deno's maintainers just said they will stop developing that runtime.**
+
+Here is the timeline Deno published:
+
+- **Deno runtime:** monthly bug fixes and security updates for one year, then official development ends. The code stays open source. Anyone can fork it.
+- **Deno Deploy:** six more months of operation, then shutdown. Paying customers get help moving to Cloudflare Workers.
+- **JSR:** keeps running. Infrastructure moves to Cloudflare.
+- **rusty_v8:** Deno will keep supporting it and work toward integrating it into `workerd`.
+
+Kenton Varda and Ryan Dahl wrote a [joint Cloudflare post](https://blog.cloudflare.com/deno-joins-cloudflare/) about merging `celld` and `workerd`. That is the future they chose: the Workers programming model, not a standalone Deno runtime and hosting service.
+
+# How Supabase Edge Functions are built on Deno
+
+Supabase is clear about the dependency. The [Edge Functions docs](https://supabase.com/docs/guides/functions) say functions are developed using Deno, are TypeScript-first, and run on "Supabase Edge Runtime (Deno compatible runtime)."
+
+That is not a footnote. It is the product.
+
+When Supabase [launched Edge Functions](https://supabase.com/blog/supabase-edge-functions), execution happened on Deno Deploy. Deno's hosted isolate network gave them global distribution without building a functions platform. The trade-off was visible even then: Deno Deploy is proprietary. The open-source Deno CLI was the portability story.
+
+In 2023, Supabase [open-sourced Edge Runtime](https://supabase.com/blog/edge-runtime-self-hosted-deno-functions) so you could serve those same TypeScript functions locally and on your own machines. Edge Runtime is a Rust web server with a custom Deno runtime. Existing functions were supposed to run unchanged.
+
+That was a real improvement for self-hosting and local `supabase functions serve`. It did not change the language or runtime contract. You still write Deno TypeScript. You still import with Deno and `npm:` specifiers. You still cannot pick Python, Go, or PHP when the job is a long worker, a native library, or a team that does not write TypeScript.
+
+Later, Supabase moved hosted functions onto that Edge Runtime and added Deno 2.x support. Hosted compute is no longer "a Deno Deploy project behind a Supabase URL." It is still a Deno-compatible functions product.
+
+# What stops working, and what does not
+
+Treat the announcement as three separate clocks.
+
+**Deno Deploy, six months.** If any leftover workflow still deploys to Deno Deploy itself, that workflow has a shutdown date. Current hosted Supabase Edge Functions are not in that bucket. Do not panic-migrate because you think `*.supabase.co/functions/v1` is Deno Deploy.
+
+**Official Deno runtime, one year.** After the support year, security patches and compatibility work become whoever forks Deno, including Supabase if they keep Edge Runtime on it. That is doable. It is also unpaid, specialized work on a V8 embedding that the original team is no longer staffed to evolve.
+
+**Your function source, ongoing.** Every handler, import map, Deno permission assumption, and `npm:` specifier is written for a runtime whose company just left the runtime business. Portability to "any Deno-compatible platform" is a smaller set than it was last week. Deno Deploy is closing. The Deno team is joining Cloudflare to work on Workers, not to keep a general-purpose Deno host alive.
+
+JSR continuing is useful for package installs. It does not replace a maintained runtime.
+
+# Why a Deno-only functions layer is the actual risk
+
+The failure mode is not "Supabase goes down on announcement day." It is "your serverless layer has one language, one runtime family, and that family's official roadmap just ended."
+
+That shows up in ordinary product work:
+
+- A payment webhook is TypeScript on Deno, even if the rest of your backend is Python.
+- An ML preprocessing job has to be squeezed into an isolate-friendly Deno function, or you add another vendor.
+- A Node library with native bindings becomes a science project.
+- A future Deno 2.x security issue is now a question of who patches Edge Runtime.
+
+Supabase remains a strong Postgres platform. Auth, storage, and realtime do not disappear because Deno's team joined Cloudflare. **Functions are the part that inherited Deno's fate.**
+
+This is also why "we built our own Edge Runtime" is only a partial answer. Owning the host is good. Owning a host that embeds a runtime the upstream team is abandoning is a maintenance commitment you did not sign up for as a user.
+
+# Appwrite as an open-source alternative that does not rent the runtime
+
+[Appwrite](/) is an open-source backend you can run without a third-party functions SaaS. Auth, databases, storage, messaging, realtime, and [Functions](/docs/products/functions) ship in one Docker stack. The same APIs run on [Appwrite Cloud](https://cloud.appwrite.io) or on [your own infrastructure](/docs/advanced/self-hosting).
+
+That difference matters on a week like this. Appwrite does not outsource function execution to Deno Deploy, Cloudflare Workers, or any other hosted isolate network. Functions run in [Open Runtimes](https://github.com/open-runtimes/open-runtimes) containers that Appwrite maintains. You can read the server, the executor, and the runtime images.
+
+If Deno the company disappears as a product org, Appwrite users are not waiting on Deno Deploy migration emails. You keep the containers you already run. You can keep a Deno image pinned. You can switch the function to Node.js or Bun. You can [self-host](/docs/advanced/self-hosting) the entire product if you do not want a managed vendor in the path at all.
+
+We have written before about how [Appwrite Functions compare to Supabase and Firebase](/blog/post/appwrite-vs-firebase-vs-supabase-functions-comparison). The Deno announcement does not change that comparison so much as it makes the runtime column load-bearing.
+
+# Functions that are not limited to Deno
+
+Appwrite Functions are not a Deno product with extra steps. Deno is one runtime in a list.
+
+On Cloud, that list currently includes **Deno 2.0 and 2.6**, Node.js, Bun, Python (including a Python ML image), Go, PHP, Ruby, Dart, and Rust. Self-hosted instances can enable a wider set, including Java, Kotlin, Swift, .NET, and C++. The full matrix lives in the [runtimes docs](/docs/products/functions/runtimes).
+
+A typical Deno function looks like this:
+
+```deno
+import { Client } from "npm:node-appwrite";
+
+export default ({ req, res, log, error }: any) => {
+  if (req.method === "GET") {
+    return res.text("Hello, World!");
+  }
+
+  return res.json({
+    ok: true,
+    runtime: "deno",
+  });
+};
+```
+
+That is close to a Supabase Edge Function: TypeScript, `npm:` imports, a default export, HTTP in and HTTP out. The difference is what sits around it.
+
+You can trigger the same function from [HTTP, the SDK, platform events, or a schedule](/docs/products/functions/execute). You can give it a domain. You can run it synchronously when you need the response, or asynchronously when the work is a webhook, a cron, or a delayed job. Sync executions have a 30-second cap so API calls stay snappy. Async executions follow the timeout you configure.
+
+If Deno becomes the wrong tool for the next function, you do not start a second backend. You create another function, pick Python or Go, and keep Auth, Databases, and Storage on the same project. That is the option Supabase Edge Functions do not give you. For a runtime-level comparison of the JavaScript options, see [Deno vs Bun](/blog/post/deno-vs-bun-javascript-runtime).
+
+# What to do if you already have Supabase Edge Functions
+
+Do the inventory first. Then decide whether you are migrating compute, or the whole backend.
+
+1. **List every function and its trigger.** HTTP, database webhook, cron, and third-party webhook are different migration jobs.
+2. **Mark Deno-specific APIs.** `Deno.env`, permission flags, import maps, and older Deno APIs are the rewrite surface. Straight `fetch` and TypeScript usually port.
+3. **Separate "talks to Postgres" from "is a generic webhook."** SQL-heavy functions may stay next to Supabase longer. Stripe, AI, and email functions are easier to move first.
+4. **Run one function on Appwrite Deno 2.6.** Use the [Functions quick start](/docs/products/functions/quick-start) and [local CLI](/docs/products/functions/develop-locally) so you see the request and response model before you bet the rest of the app.
+5. **Only then pick Node, Bun, or another language** for functions that were on Deno out of habit.
+
+If you also want Auth, Databases, and Storage on the same open-source stack, read the [Appwrite vs Supabase comparison](/blog/post/appwrite-compared-to-supabase). If you are leaving Deno Deploy itself rather than Supabase, use the companion post on [Appwrite Deno Functions as a Deno Deploy alternative](/blog/post/deno-deploy-alternative).
+
+You do not have to move everything this week. You should not discover in twelve months that your only functions runtime is a community fork.
+
+# Evaluating Appwrite after the Deno announcement
+
+The Deno team is allowed to join Cloudflare and work on Workers. Users who built on Deno are allowed to treat that as a platform risk.
+
+If you searched for what this means for Supabase, the short version is: **your Edge Functions keep running, but they are still Deno functions, and Deno is no longer a company whose job is to maintain that runtime.** Appwrite is the alternative if you want an [open-source](https://github.com/appwrite/appwrite) backend whose functions layer is not rented from a third party and is not limited to Deno.
+
+Create a project on [Appwrite Cloud](https://cloud.appwrite.io), deploy one function from the [quick start](/docs/products/functions/quick-start), and keep the [runtimes list](/docs/products/functions/runtimes) open while you decide what the next handler should be written in.
+
+- [Appwrite Functions](/docs/products/functions)
+- [Functions runtimes](/docs/products/functions/runtimes)
+- [Develop Functions](/docs/products/functions/develop)
+- [Execute Functions](/docs/products/functions/execute)
+- [Self-host Appwrite](/docs/advanced/self-hosting)
+- [Deno joins Cloudflare](https://deno.com/blog/cloudflare)
