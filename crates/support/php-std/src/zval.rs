@@ -496,49 +496,6 @@ impl Array {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn numeric_keys_like_php() {
-        assert_eq!(numeric_key(b"0"), Some(0));
-        assert_eq!(numeric_key(b"7"), Some(7));
-        assert_eq!(numeric_key(b"-3"), Some(-3));
-        assert_eq!(numeric_key(b"9223372036854775807"), Some(i64::MAX));
-        assert_eq!(numeric_key(b"-9223372036854775808"), Some(i64::MIN));
-        assert_eq!(numeric_key(b"9223372036854775808"), None);
-        assert_eq!(numeric_key(b"-9223372036854775809"), None);
-        for s in ["", "-", "-0", "07", "+1", " 1", "1 ", "1.0", "1e3", "0x1"] {
-            assert_eq!(numeric_key(s.as_bytes()), None, "{s}");
-        }
-    }
-
-    #[test]
-    fn arrays_update_in_place_and_push_after_max() {
-        let mut a = Array::new();
-        a.insert(Key::from("a"), Zval::Int(1));
-        a.insert(Key::Int(5), Zval::Int(2));
-        a.insert(Key::from("a"), Zval::Int(3));
-        a.push(Zval::Int(4));
-        let keys: Vec<Key> = a.iter().map(|(k, _)| k.clone()).collect();
-        assert_eq!(keys, vec![Key::Str(b"a".to_vec()), Key::Int(5), Key::Int(6)]);
-        assert_eq!(a.get(&Key::from("a")), Some(&Zval::Int(3)));
-        assert!(!a.is_list());
-        assert!([Zval::Null, Zval::Null].into_iter().collect::<Array>().is_list());
-    }
-
-    #[test]
-    fn request_model_round_trip() {
-        let v = json!({"0": "a", "1": {"x": []}, "k": {}});
-        let z = Zval::from(&v);
-        assert!(z.is_list() == v.is_list());
-        assert_eq!(z.to_json().unwrap(), json!({"0": "a", "1": {"x": []}, "k": {}}));
-        assert_eq!(Zval::from(&json!({"0": 1, "1": 2})).to_json().unwrap(), json!([1, 2]));
-    }
-}
-
 /// Conversions to and from [`crate::types::Value`], the value model that
 /// replaces this one; they let code on either side share json, serialize
 /// and igbinary until every caller has moved.
@@ -607,5 +564,48 @@ impl Zval {
             }
             Value::Ext(x) => Zval::Array(array(&x.to_array())),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn numeric_keys_like_php() {
+        assert_eq!(numeric_key(b"0"), Some(0));
+        assert_eq!(numeric_key(b"7"), Some(7));
+        assert_eq!(numeric_key(b"-3"), Some(-3));
+        assert_eq!(numeric_key(b"9223372036854775807"), Some(i64::MAX));
+        assert_eq!(numeric_key(b"-9223372036854775808"), Some(i64::MIN));
+        assert_eq!(numeric_key(b"9223372036854775808"), None);
+        assert_eq!(numeric_key(b"-9223372036854775809"), None);
+        for s in ["", "-", "-0", "07", "+1", " 1", "1 ", "1.0", "1e3", "0x1"] {
+            assert_eq!(numeric_key(s.as_bytes()), None, "{s}");
+        }
+    }
+
+    #[test]
+    fn arrays_update_in_place_and_push_after_max() {
+        let mut a = Array::new();
+        a.insert(Key::from("a"), Zval::Int(1));
+        a.insert(Key::Int(5), Zval::Int(2));
+        a.insert(Key::from("a"), Zval::Int(3));
+        a.push(Zval::Int(4));
+        let keys: Vec<Key> = a.iter().map(|(k, _)| k.clone()).collect();
+        assert_eq!(keys, vec![Key::Str(b"a".to_vec()), Key::Int(5), Key::Int(6)]);
+        assert_eq!(a.get(&Key::from("a")), Some(&Zval::Int(3)));
+        assert!(!a.is_list());
+        assert!([Zval::Null, Zval::Null].into_iter().collect::<Array>().is_list());
+    }
+
+    #[test]
+    fn request_model_round_trip() {
+        let v = json!({"0": "a", "1": {"x": []}, "k": {}});
+        let z = Zval::from(&v);
+        assert!(z.is_list() == v.is_list());
+        assert_eq!(z.to_json().unwrap(), json!({"0": "a", "1": {"x": []}, "k": {}}));
+        assert_eq!(Zval::from(&json!({"0": 1, "1": 2})).to_json().unwrap(), json!([1, 2]));
     }
 }

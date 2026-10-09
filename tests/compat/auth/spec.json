@@ -1,7 +1,7 @@
 {
   "lib": "auth",
-  "description": "utopia-php/auth: password hashes, proofs, session store, JWT issuers and verifiers, OAuth2 server values, WebAuthn passkeys.",
-  "complete": true,
+  "description": "utopia-php/auth: password hashes, proofs, session store, JWT issuers and verifiers, OAuth2 server values, WebAuthn passkeys. Remaining before complete: JWT issuer/verifier key inputs given as file:// paths and EC private keys on curves other than P-256 (PHP accepts both through openssl_*); CBOR RationalNumberTag (30) values whose numerator or denominator exceed 128 bits are not reduced (PHP reduces them with brick/math).",
+  "complete": false,
   "php": {
     "src": [
       "packages/auth/src"
