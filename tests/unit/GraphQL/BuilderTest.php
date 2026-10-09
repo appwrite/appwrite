@@ -8,6 +8,7 @@ use Appwrite\GraphQL\Types\Mapper;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\Queries\DepthFirst;
 use Appwrite\Utopia\Response;
 use GraphQL\GraphQL;
 use GraphQL\Type\Definition\NamedType;
@@ -16,6 +17,8 @@ use GraphQL\Type\Schema;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Response as SwooleResponse;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
 use Utopia\DI\Container;
 use Utopia\Http\Adapter\FPM\Server;
 use Utopia\Http\Http;
@@ -195,6 +198,31 @@ final class BuilderTest extends TestCase
 
         $this->assertSame('[String]', (string) $fields[0]['args']['resource']['type']);
         $this->assertSame('String!', (string) $fields[0]['args']['url']['type']);
+    }
+
+    public function testDepthFirstQueriesMapToAStringListAsOnMain(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $method = new Method(
+            namespace: 'test',
+            group: null,
+            name: 'listGraphQLDepthFirstTest',
+            description: 'List test.',
+            auth: [],
+            responses: [
+                new SDKResponse(code: 200, model: Response::MODEL_ANY),
+            ],
+        );
+
+        $route = (new Route('GET', '/v1/tests'))
+            ->desc('List test')
+            ->param('queries', [], new DepthFirst([new Limit(), new Offset()]), 'Queries.', true);
+
+        $fields = \iterator_to_array($this->mapRoute($route, $method));
+
+        $this->assertSame('[String]', (string) $fields[0]['args']['queries']['type']);
     }
 
     private function mapRoute(Route $route, Method $method): iterable

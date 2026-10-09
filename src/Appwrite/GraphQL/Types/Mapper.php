@@ -300,6 +300,7 @@ class Mapper
             case \Appwrite\Utopia\Database\Validator\Queries\Collections::class:
             case \Appwrite\Utopia\Database\Validator\Queries\Columns::class:
             case \Appwrite\Utopia\Database\Validator\Queries\Databases::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\DepthFirst::class:
             case \Appwrite\Utopia\Database\Validator\Queries\Deployments::class:
             case \Appwrite\Utopia\Database\Validator\Queries\Executions::class:
             case \Appwrite\Utopia\Database\Validator\Queries\Files::class:
