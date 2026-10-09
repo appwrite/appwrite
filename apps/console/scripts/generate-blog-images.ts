@@ -50,7 +50,10 @@ async function encodeCoverAvif(input: Buffer | string): Promise<Buffer> {
     .toBuffer()
 }
 
-async function writeAvifFromPng(outputDir: string, png: Uint8Array): Promise<void> {
+async function writeAvifFromPng(
+  outputDir: string,
+  png: Uint8Array,
+): Promise<void> {
   writeFileSync(join(outputDir, 'cover-source.png'), png)
 
   const avif = await encodeCoverAvif(Buffer.from(png))
@@ -104,7 +107,12 @@ async function convertScreenshotSources(outputDir: string): Promise<void> {
   for (const name of readdirSync(outputDir)) {
     if (!name.endsWith('-source.png') || name === 'cover-source.png') continue
     const avif = await sharp(join(outputDir, name))
-      .resize({ width: 1280, height: 1280, fit: 'inside', withoutEnlargement: true })
+      .resize({
+        width: 1280,
+        height: 1280,
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
       .avif({ quality: 82, effort: 4, chromaSubsampling: '4:4:4' })
       .toBuffer()
     const outName = name.replace(/-source\.png$/, '.avif')
@@ -125,7 +133,8 @@ async function generateMcpServerOauth2Images(outputDir: string): Promise<void> {
     width,
     height,
     title: 'Turn your app into an MCP server',
-    subtitle: 'A remote MCP server on Appwrite Functions, secured by your OAuth2 server',
+    subtitle:
+      'A remote MCP server on Appwrite Functions, secured by your OAuth2 server',
     eyebrow: 'Tutorial',
   }
 
