@@ -67,14 +67,19 @@ Appwrite records every execution of a function with its status, its trigger, its
 Nightjar reads the execution list instead of events. The `sweep` function asks Appwrite for the failed executions that finished after a given time:
 
 ```javascript
-/** Failed executions that finished after `since` (and not after `until`), oldest first. */
-export async function listFailedExecutions({ functions }, functionId, { since, until, offset = 0, limit = 50 }) {
+/**
+ * Failed executions, oldest first: by end time (after `since`, not after
+ * `until`), or by start time (after `createdAfter`, not after `createdBefore`).
+ */
+export async function listFailedExecutions({ functions }, functionId, { since, until, createdAfter, createdBefore, offset = 0, limit = 50 }) {
   const { executions } = await functions.listExecutions({
     functionId,
     queries: [
       Query.equal('status', ['failed']),
-      Query.greaterThan('$updatedAt', since.toISOString()),
+      ...(since ? [Query.greaterThan('$updatedAt', since.toISOString())] : []),
       ...(until ? [Query.lessThanEqual('$updatedAt', until.toISOString())] : []),
+      ...(createdAfter ? [Query.greaterThan('$createdAt', createdAfter.toISOString())] : []),
+      ...(createdBefore ? [Query.lessThanEqual('$createdAt', createdBefore.toISOString())] : []),
       Query.orderAsc('$updatedAt'),
       Query.limit(limit),
       Query.offset(offset),
@@ -85,7 +90,7 @@ export async function listFailedExecutions({ functions }, functionId, { since, u
 }
 ```
 
-The query filters on `$updatedAt` because Appwrite updates an execution when it ends. A long execution that starts before `since` and fails after it is still in the result. The optional `until` limits the range at the other end. The `sweep` function stores the end time of the newest failure that it read, called the cursor, and passes it as `since` on the next run. The execution list covers every trigger: schedules, events, asynchronous executions, and HTTP requests, including requests to the function's domain. The query returns only failed executions, so the sweep does not page through the successful ones.
+The query filters on `$updatedAt` because Appwrite updates an execution when it ends. A long execution that starts before `since` and fails after it is still in the result. The optional `until` limits the range at the other end, and `createdAfter` and `createdBefore` filter on the start time instead, for the third pass of the sweep. The `sweep` function stores the end time of the newest failure that it read, called the cursor, and passes it as `since` on the next run. The execution list covers every trigger: schedules, events, asynchronous executions, and HTTP requests, including requests to the function's domain. The query returns only failed executions, so the sweep does not page through the successful ones.
 
 # Create the project and API key
 
@@ -223,7 +228,7 @@ The **Variables** tab of `triage` has three variables:
 
 # Sweep the execution list
 
-The sweep keeps a cursor on each monitor row: the end time of the newest failure that it read. For each watched function, the sweep makes two passes over the execution list:
+The sweep keeps a cursor on each monitor row: the end time of the newest failure that it read. For each watched function, the sweep makes three passes over the execution list:
 
 ```javascript
 // New failures after the cursor come first, so every sweep makes progress.
@@ -237,9 +242,19 @@ if (monitor.cursor && !sweep.outOfTime) {
   const until = new Date(monitor.cursor);
   await scan(appwrite, functionId, { since: new Date(until.getTime() - LOOKBACK_MS), until }, sweep, { moveCursor: false });
 }
+
+// Appwrite reports an execution that stays waiting or processing past the
+// function timeout as failed, but its end time stays where it was. These
+// failures crossed the timeout in the last 10 minutes; they do not move the cursor.
+if (!sweep.outOfTime) {
+  const timedOutBy = new Date(Date.now() - (settings.timeout ?? 15) * 1000);
+  await scan(appwrite, functionId, { createdAfter: new Date(timedOutBy.getTime() - LOOKBACK_MS), createdBefore: timedOutBy }, sweep, { moveCursor: false });
+}
 ```
 
 Appwrite can add a finished execution to the list a few seconds after the execution ends. The cursor can then move past the end time of a failure before the list shows it. The second pass catches these failures. It runs after the first pass, so a large set of recorded failures in the 10-minute window never delays the new ones.
+
+The third pass covers an execution that never finishes, for example when the runtime stops responding. Appwrite keeps it as `waiting` or `processing`, and a query for `failed` executions reports it as `failed` once it runs longer than the function timeout. Its `$updatedAt` does not change, so the first two passes can miss it. The third pass lists the failures whose start time crossed the timeout in the last 10 minutes.
 
 `scan` pages through one time range, oldest first, and records each execution that has no occurrence row yet:
 
