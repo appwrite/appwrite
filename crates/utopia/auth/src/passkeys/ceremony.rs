@@ -69,7 +69,7 @@ impl StrictCounter {
     }
 }
 
-fn passkey(message: impl Into<String>) -> Error {
+fn passkey(message: impl Into<Vec<u8>>) -> Error {
     Error::Passkey(message.into())
 }
 
@@ -93,7 +93,7 @@ fn b64_value(c: u8, url: bool) -> Option<u32> {
 const ALPHABET_ERROR: &str = "Base64::decode() only expects characters in the correct base64 alphabet";
 
 /// `Base64*::decode($s, $strictPadding)`.
-fn b64_decode(s: &[u8], url: bool, strict: bool) -> Result<Vec<u8>, String> {
+fn b64_decode(s: &[u8], url: bool, strict: bool) -> Result<Vec<u8>, Vec<u8>> {
     let mut len = s.len();
     if len == 0 {
         return Ok(vec![]);
@@ -164,7 +164,7 @@ fn b64_decode(s: &[u8], url: bool, strict: bool) -> Result<Vec<u8>, String> {
 }
 
 /// `Base64UrlSafe::decodeNoPadding()`: strict, with libsodium doing the decoding.
-fn decode_no_padding(s: &[u8]) -> Result<Vec<u8>, String> {
+fn decode_no_padding(s: &[u8]) -> Result<Vec<u8>, Vec<u8>> {
     let len = s.len();
     if len == 0 {
         return Ok(vec![]);
@@ -202,7 +202,7 @@ enum Decoder {
 }
 
 /// A response field, or the `TypeError` webauthn-lib's denormalizers raise when it is not a string.
-fn string_field<'a>(a: &'a Array, name: &str, decoder: Decoder, file: &str, line: u32) -> Result<&'a [u8], String> {
+fn string_field<'a>(a: &'a Array, name: &str, decoder: Decoder, file: &str, line: u32) -> Result<&'a [u8], Vec<u8>> {
     match get(a, name) {
         Some(Zval::String(s)) => Ok(s),
         other => {
@@ -213,13 +213,13 @@ fn string_field<'a>(a: &'a Array, name: &str, decoder: Decoder, file: &str, line
             Err(format!(
                 "{func}(): Argument #1 ({param}) must be of type string, {} given, called in {DENORMALIZERS}/{file}.php on line {line}",
                 given(other)
-            ))
+            ).into())
         }
     }
 }
 
 /// webauthn-lib's `Util\Base64::decode()`: base64url, else standard base64.
-fn decode_any(s: &[u8]) -> Result<Vec<u8>, String> {
+fn decode_any(s: &[u8]) -> Result<Vec<u8>, Vec<u8>> {
     b64_decode(s, true, false).or_else(|_| b64_decode(s, false, false)).map_err(|_| "Invalid data submitted".into())
 }
 
@@ -263,8 +263,9 @@ fn encode_json(value: &Array) -> Result<String, Error> {
     json::encode(&Zval::Array(value.clone()), Flags::THROW_ON_ERROR, json::DEFAULT_DEPTH).map_err(Error::json)
 }
 
-fn decode_json(data: &[u8]) -> Result<Zval, String> {
-    json::decode(data, Some(true), json::DEFAULT_DEPTH, Flags::THROW_ON_ERROR).map_err(|e| e.message().to_owned())
+fn decode_json(data: &[u8]) -> Result<Zval, Vec<u8>> {
+    json::decode(data, Some(true), json::DEFAULT_DEPTH, Flags::THROW_ON_ERROR)
+        .map_err(|e| e.message().as_bytes().to_vec())
 }
 
 // ---------------------------------------------------------------------------
@@ -289,7 +290,7 @@ struct Options {
     user_id: Vec<u8>,
 }
 
-fn descriptors(data: &Array, name: &str) -> Result<Vec<Descriptor>, String> {
+fn descriptors(data: &Array, name: &str) -> Result<Vec<Descriptor>, Vec<u8>> {
     let Some(list) = get_set(data, name) else {
         return Ok(vec![]);
     };
@@ -310,7 +311,7 @@ fn descriptors(data: &Array, name: &str) -> Result<Vec<Descriptor>, String> {
 /// `$serializer->deserialize($state, ...Options::class, 'json')`.
 fn decode_state(state: &[u8], creation: bool) -> Result<Options, Error> {
     let invalid = || passkey("Invalid ceremony state.");
-    let parse = || -> Result<Options, String> {
+    let parse = || -> Result<Options, Vec<u8>> {
         let Zval::Array(data) = decode_json(state)? else {
             return Err("not an object".into());
         };
@@ -429,7 +430,7 @@ fn uuid_string(b: &[u8; 16]) -> String {
     format!("{}-{}-{}-{}-{}", &h[0..8], &h[8..12], &h[12..16], &h[16..20], &h[20..32])
 }
 
-fn optional_bool(a: &Array, name: &str) -> Result<Option<bool>, String> {
+fn optional_bool(a: &Array, name: &str) -> Result<Option<bool>, Vec<u8>> {
     match get_set(a, name) {
         None => Ok(None),
         Some(Zval::Bool(b)) => Ok(Some(*b)),
@@ -440,12 +441,12 @@ fn optional_bool(a: &Array, name: &str) -> Result<Option<bool>, String> {
 impl Record {
     /// `decodeRecord()`.
     fn decode(record: &Array) -> Result<Record, Error> {
-        let parse = || -> Result<Record, String> {
+        let parse = || -> Result<Record, Vec<u8>> {
             let mut decoded = Vec::new();
             for key in ["publicKeyCredentialId", "credentialPublicKey", "userHandle"] {
                 match get(record, key) {
                     Some(Zval::String(v)) => decoded.push(decode_any(v)?),
-                    _ => return Err(format!("Missing {key}")),
+                    _ => return Err(format!("Missing {key}").into()),
                 }
             }
             let kind = string(record, "type").ok_or("type")?.to_vec();
@@ -547,14 +548,14 @@ struct ClientData {
 }
 
 impl ClientData {
-    fn parse(raw: Vec<u8>) -> Result<Self, String> {
+    fn parse(raw: Vec<u8>) -> Result<Self, Vec<u8>> {
         let data = match decode_json(&raw)? {
             Zval::Array(data) => data,
             other => {
                 return Err(format!(
                     "Webauthn\\CollectedClientData::create(): Argument #2 ($data) must be of type array, {} given, called in {DENORMALIZERS}/CollectedClientDataDenormalizer.php on line 27",
                     given(Some(&other))
-                ));
+                ).into());
             }
         };
         let kind = match get_set(&data, "type") {
@@ -580,7 +581,8 @@ impl ClientData {
                 return Err(format!(
                     "Cannot assign {} to property Webauthn\\CollectedClientData::$topOrigin of type ?string",
                     given(other)
-                ));
+                )
+                .into());
             }
         };
         let cross_origin = match get_set(&data, "crossOrigin") {
@@ -590,7 +592,8 @@ impl ClientData {
                 return Err(format!(
                     "Cannot assign {} to property Webauthn\\CollectedClientData::$crossOrigin of type bool",
                     given(other)
-                ));
+                )
+                .into());
             }
         };
         Ok(ClientData { raw, kind, challenge, origin, top_origin, cross_origin })
@@ -607,18 +610,18 @@ struct AuthData {
     attested: Option<(Vec<u8>, [u8; 16], Vec<u8>)>,
 }
 
-fn read<'a>(data: &'a [u8], at: &mut usize, n: usize) -> Result<&'a [u8], String> {
+fn read<'a>(data: &'a [u8], at: &mut usize, n: usize) -> Result<&'a [u8], Vec<u8>> {
     let end = (*at + n).min(data.len());
     let out = &data[*at..end];
     if out.len() != n {
-        return Err(format!("Out of range. Expected: {n}, read: {}.", out.len()));
+        return Err(format!("Out of range. Expected: {n}, read: {}.", out.len()).into());
     }
     *at = end;
     Ok(out)
 }
 
 /// One CBOR item of `data` from `at` (cbor-php's decoder on webauthn-lib's stream).
-fn cbor_item(data: &[u8], at: &mut usize) -> Result<Item, String> {
+fn cbor_item(data: &[u8], at: &mut usize) -> Result<Item, Vec<u8>> {
     let mut stream = cbor::Stream::new(&data[*at..]);
     let item = cbor::decode(&mut stream)?;
     *at += stream.position();
@@ -626,7 +629,7 @@ fn cbor_item(data: &[u8], at: &mut usize) -> Result<Item, String> {
 }
 
 impl AuthData {
-    fn parse(raw: Vec<u8>) -> Result<Self, String> {
+    fn parse(raw: Vec<u8>) -> Result<Self, Vec<u8>> {
         let mut at = 0;
         let rp_id_hash = read(&raw, &mut at, 32)?.to_vec();
         let flags = read(&raw, &mut at, 1)?[0];
@@ -687,7 +690,7 @@ impl Response {
 
 /// `AttestationObjectDenormalizer` and the `none` attestation statement:
 /// the format and the authenticator data.
-fn attestation_object(data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), String> {
+fn attestation_object(data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), Vec<u8>> {
     let mut stream = cbor::Stream::new(data);
     let parsed = cbor::decode(&mut stream)?;
     if !parsed.is_normalizable() {
@@ -709,14 +712,11 @@ fn attestation_object(data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), String> {
             return Err(format!(
                 "Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, {} given, called in {DENORMALIZERS}/AttestationStatementDenormalizer.php on line 25",
                 given(other)
-            ));
+            ).into());
         }
     };
     if fmt != b"none" {
-        return Err(format!(
-            "The attestation statement format \"{}\" is not supported.",
-            String::from_utf8_lossy(&fmt)
-        ));
+        return Err([b"The attestation statement format \"".as_slice(), &fmt, b"\" is not supported."].concat());
     }
     if !matches!(get_set(&object, "attStmt"), None | Some(Zval::Array(_))) {
         return Err("Invalid attestation object".into());
@@ -744,7 +744,7 @@ fn decode_credential(credential: &Array) -> Result<(Vec<u8>, Response), Error> {
     let Some(Zval::Array(response)) = get_set(credential, "response") else {
         return Err(passkey("Invalid credential: missing \"response\"."));
     };
-    let parse = || -> Result<(Vec<u8>, Response), String> {
+    let parse = || -> Result<(Vec<u8>, Response), Vec<u8>> {
         let id = decode_no_padding(string(credential, "id").unwrap_or_default())?;
         let raw_id = decode_any(string(credential, "rawId").unwrap_or_default())?;
         if !hash_equals(&id, &raw_id) {
@@ -763,7 +763,7 @@ fn decode_credential(credential: &Array) -> Result<(Vec<u8>, Response), Error> {
                     return Err(format!(
                         "Webauthn\\AuthenticatorAttestationResponse::create(): Argument #3 ($transports) must be of type array, {} given, called in {DENORMALIZERS}/{file}.php on line 45",
                         given(Some(other))
-                    ));
+                    ).into());
                 }
             };
             Response::Attestation { client, auth: AuthData::parse(auth)?, fmt, transports }
@@ -780,7 +780,7 @@ fn decode_credential(credential: &Array) -> Result<(Vec<u8>, Response), Error> {
                     return Err(format!(
                         "Webauthn\\Util\\Base64::decode(): Argument #1 ($data) must be of type string, {} given, called in {DENORMALIZERS}/{file}.php on line 33",
                         given(Some(other))
-                    ));
+                    ).into());
                 }
             };
             let client = ClientData::parse(client)?;
@@ -790,7 +790,7 @@ fn decode_credential(credential: &Array) -> Result<(Vec<u8>, Response), Error> {
         };
         Ok((raw_id, response))
     };
-    parse().map_err(|m| passkey(format!("Invalid credential: {m}")))
+    parse().map_err(|m| passkey([b"Invalid credential: ".as_slice(), &m].concat()))
 }
 
 // ---------------------------------------------------------------------------
@@ -929,7 +929,7 @@ impl Ceremony {
     }
 
     /// `AuthenticatorAttestationResponseValidator::check()`.
-    fn check_registration(&self, options: &Options, response: &Response) -> Result<Record, String> {
+    fn check_registration(&self, options: &Options, response: &Response) -> Result<Record, Vec<u8>> {
         let Response::Attestation { auth, transports, fmt, .. } = response else {
             return Err("Expected an attestation response.".into());
         };
@@ -959,7 +959,7 @@ impl Ceremony {
         let alg = key.alg()?;
         if !algorithms.contains(&alg) {
             let list: Vec<String> = algorithms.iter().map(i64::to_string).collect();
-            return Err(format!("Invalid algorithm. Expected one of {} but got {alg}", list.join(", ")));
+            return Err(format!("Invalid algorithm. Expected one of {} but got {alg}", list.join(", ")).into());
         }
         if id.len() > 1023 {
             return Err("Credential ID too long.".into());
@@ -972,7 +972,7 @@ impl Ceremony {
     }
 
     /// `AuthenticatorAssertionResponseValidator::check()`.
-    fn check_assertion(&self, mut record: Record, options: &Options, response: &Response) -> Result<Record, String> {
+    fn check_assertion(&self, mut record: Record, options: &Options, response: &Response) -> Result<Record, Vec<u8>> {
         let Response::Assertion { auth, signature, user_handle, client } = response else {
             return Err("Expected an assertion response.".into());
         };
@@ -1009,7 +1009,7 @@ impl Ceremony {
     }
 
     /// `CheckClientDataCollectorType`, `CheckChallenge`, `CheckAllowedOrigins`.
-    fn check_client_data(&self, options: &Options, response: &Response) -> Result<(), String> {
+    fn check_client_data(&self, options: &Options, response: &Response) -> Result<(), Vec<u8>> {
         let client = response.client();
         if client.kind != b"webauthn.get" && client.kind != b"webauthn.create" {
             return Err("No client data collector found.".into());
@@ -1020,12 +1020,12 @@ impl Ceremony {
         self.check_origin(options, &client.origin)
     }
 
-    fn check_origin(&self, options: &Options, origin: &[u8]) -> Result<(), String> {
+    fn check_origin(&self, options: &Options, origin: &[u8]) -> Result<(), Vec<u8>> {
         let mut full: Vec<Vec<u8>> = Vec::new();
         let mut raw: Vec<Vec<u8>> = Vec::new();
         for allowed in &self.relying_party.origins {
             let Some(p) = parse_url(allowed.as_bytes()) else {
-                return Err(format!("Invalid origin: {allowed}"));
+                return Err(format!("Invalid origin: {allowed}").into());
             };
             match (p.scheme(), p.host()) {
                 (Some(scheme), Some(host)) => full.push(build_origin(&scheme, &host, p.port())),
@@ -1080,7 +1080,7 @@ impl Ceremony {
     }
 
     /// `CheckRelyingPartyIdIdHash`.
-    fn check_rp_id_hash(&self, options: &Options, response: &Response) -> Result<(), String> {
+    fn check_rp_id_hash(&self, options: &Options, response: &Response) -> Result<(), Vec<u8>> {
         let rp_id = options.rp_id.clone().unwrap_or_else(|| self.relying_party.id.as_bytes().to_vec());
         if !hash_equals(&Sha256::digest(&rp_id), &response.auth().rp_id_hash) {
             return Err("rpId hash mismatch.".into());
@@ -1090,7 +1090,7 @@ impl Ceremony {
 }
 
 /// `CheckUserWasPresent`, `CheckUserVerification`, `CheckBackupBitsAreConsistent`.
-fn check_presence_and_verification(options: &Options, auth: &AuthData) -> Result<(), String> {
+fn check_presence_and_verification(options: &Options, auth: &AuthData) -> Result<(), Vec<u8>> {
     if !auth.has(FLAG_UP) {
         return Err("User was not present".into());
     }
@@ -1113,6 +1113,6 @@ fn assert_same_origin(response: &Response) -> Result<(), Error> {
 }
 
 /// `guard()`: every verification failure reported the same way.
-fn failed(message: String) -> Error {
-    passkey(format!("Credential verification failed: {message}"))
+fn failed(message: Vec<u8>) -> Error {
+    passkey([b"Credential verification failed: ".as_slice(), &message].concat())
 }

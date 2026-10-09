@@ -82,7 +82,7 @@ fn filter_int(s: &[u8]) -> Option<i64> {
 impl PublicKey {
     /// webauthn-lib's `getCoseKey()`: decode the stored COSE_Key (no trailing
     /// bytes), normalize it and build a `Cose\Key\Key` (which needs a `kty`).
-    pub fn from_cbor(data: &[u8]) -> Result<Self, String> {
+    pub fn from_cbor(data: &[u8]) -> Result<Self, Vec<u8>> {
         let mut stream = Stream::new(data);
         let item = cbor::decode(&mut stream)?;
         if !stream.is_eof() {
@@ -105,9 +105,9 @@ impl PublicKey {
     }
 
     /// `Key::alg()`.
-    pub fn alg(&self) -> Result<i64, String> {
+    pub fn alg(&self) -> Result<i64, Vec<u8>> {
         match self.get(ALG) {
-            None => Err(format!("The key has no data at index {ALG}")),
+            None => Err(format!("The key has no data at index {ALG}").into()),
             Some(Zval::Int(i)) => Ok(*i),
             Some(Zval::String(s)) if filter_int(s).is_some() => Ok(filter_int(s).unwrap_or_default()),
             Some(_) => Err("Invalid key: the \"alg\" parameter must be an integer algorithm identifier".into()),
@@ -115,7 +115,7 @@ impl PublicKey {
     }
 
     /// The algorithm's `verify()` (`Manager::get()` first: ES256 and RS256 only).
-    pub fn verify(&self, data: &[u8], signature: &[u8]) -> Result<bool, String> {
+    pub fn verify(&self, data: &[u8], signature: &[u8]) -> Result<bool, Vec<u8>> {
         match self.alg()? {
             -7 => self.verify_es256(data, signature),
             -257 => self.verify_rs256(data, signature),
@@ -124,7 +124,7 @@ impl PublicKey {
     }
 
     /// `Ec2Key::create()` then ES256's checks.
-    fn verify_es256(&self, data: &[u8], signature: &[u8]) -> Result<bool, String> {
+    fn verify_es256(&self, data: &[u8], signature: &[u8]) -> Result<bool, Vec<u8>> {
         // CoseSignatureFixer: DER signatures become R || S.
         let signature = if signature.len() == 64 { signature.to_vec() } else { from_asn1(signature, 32)? };
         let key = normalize_integers(&self.data, &[CURVE, TYPE]);
@@ -161,10 +161,10 @@ impl PublicKey {
         let mut coordinates = Vec::new();
         for (index, name) in [(X, "x"), (Y, "y")] {
             let Some(Zval::String(c)) = at(index) else {
-                return Err(format!("Invalid type for {name} coordinate"));
+                return Err(format!("Invalid type for {name} coordinate").into());
             };
             if c.len() != length {
-                return Err(format!("Invalid length for {name} coordinate"));
+                return Err(format!("Invalid length for {name} coordinate").into());
             }
             coordinates.push(c.clone());
         }
@@ -192,7 +192,7 @@ impl PublicKey {
     }
 
     /// `RsaKey::create()` then RS256's checks (an unusable key is an invalid signature).
-    fn verify_rs256(&self, data: &[u8], signature: &[u8]) -> Result<bool, String> {
+    fn verify_rs256(&self, data: &[u8], signature: &[u8]) -> Result<bool, Vec<u8>> {
         let key = normalize_integers(&self.data, &[TYPE]);
         let at = |k: i64| key.get(&Key::Int(k));
         if !matches!(at(TYPE), Some(Zval::Int(3))) && at(TYPE) != Some(&Zval::String(b"RSA".to_vec())) {
@@ -241,7 +241,7 @@ impl<'a> Der<'a> {
     }
 
     /// `readAsn1Length()`.
-    fn length(&mut self) -> Result<usize, String> {
+    fn length(&mut self) -> Result<usize, Vec<u8>> {
         let Some(&first) = self.read(1).first() else {
             return Err("Invalid data. Truncated length.".into());
         };
@@ -261,7 +261,7 @@ impl<'a> Der<'a> {
     }
 
     /// `readAsn1Integer()`, padded to `length` bytes.
-    fn integer(&mut self, length: usize) -> Result<Vec<u8>, String> {
+    fn integer(&mut self, length: usize) -> Result<Vec<u8>, Vec<u8>> {
         if self.read(1) != [0x02] {
             return Err("Invalid data. Should contain an integer.".into());
         }
@@ -295,7 +295,7 @@ impl<'a> Der<'a> {
 }
 
 /// `ECSignature::fromAsn1($signature, $length)` for a curve of `length` bytes.
-fn from_asn1(signature: &[u8], length: usize) -> Result<Vec<u8>, String> {
+fn from_asn1(signature: &[u8], length: usize) -> Result<Vec<u8>, Vec<u8>> {
     let mut der = Der { data: signature, at: 0 };
     if der.read(1) != [0x30] {
         return Err("Invalid data. Should start with a sequence.".into());

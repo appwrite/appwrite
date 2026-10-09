@@ -44,9 +44,10 @@ pub enum Error {
     /// `Utopia\Auth\OAuth2\InvalidClientMetadataException`.
     #[error("{0}")]
     InvalidClientMetadata(String),
-    /// `Utopia\Auth\Passkeys\Exception`.
-    #[error("{0}")]
-    Passkey(String),
+    /// `Utopia\Auth\Passkeys\Exception`. Its message can quote CBOR text
+    /// from the client (map keys, the attestation format), which need not be UTF-8.
+    #[error("{}", String::from_utf8_lossy(.0))]
+    Passkey(Vec<u8>),
     /// `Webauthn\Exception\CounterException`, raised by [`crate::passkeys::Counter::check`].
     #[error("{0}")]
     Counter(String),
@@ -93,7 +94,7 @@ impl Error {
 
     fn text(&self) -> &[u8] {
         match self {
-            Error::InvalidPrompt(m) => m,
+            Error::InvalidPrompt(m) | Error::Passkey(m) => m,
             Error::Exception(m)
             | Error::InvalidArgument(m)
             | Error::Runtime(m)
@@ -106,7 +107,6 @@ impl Error {
             | Error::InvalidRequestUri(m)
             | Error::InvalidResource(m)
             | Error::InvalidClientMetadata(m)
-            | Error::Passkey(m)
             | Error::Counter(m) => m.as_bytes(),
         }
     }

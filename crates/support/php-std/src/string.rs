@@ -1782,36 +1782,71 @@ fn bf_encode(src: &[u8]) -> Vec<u8> {
     out
 }
 
-/// `BF_set_key()`'s 18 key words, serialised: the key (with its NUL)
-/// cycled over 72 bytes, each byte sign-extended for `$2x$` (the
-/// compatibility mode for the old sign extension bug).
-fn bf_key(key: &[u8], bug: bool) -> [u8; 72] {
-    let mut out = [0u8; 72];
+/// `BF_set_key()`: the 18 key words for the expensive loop and for the
+/// initial salted expansion, serialised (the key with its NUL, cycled over
+/// 72 bytes). `bug` (`$2x$`) sign-extends 8-bit characters as old
+/// crypt_blowfish did; `safety` (`$2a$`) flips bit 16 of the initial first
+/// word when the buggy and the correct schedules coincide despite a sign
+/// extension, so such keys cannot collide with buggy hashes.
+fn bf_set_key(key: &[u8], bug: bool, safety: bool) -> ([u8; 72], [u8; 72]) {
+    let mut expanded = [0u8; 72];
+    let (mut sign, mut diff) = (0u32, 0u32);
     let mut ptr = 0usize;
     for word in 0..18 {
-        let mut w: u32 = 0;
-        for _ in 0..4 {
+        let (mut correct, mut buggy) = (0u32, 0u32);
+        for j in 0..4 {
             let c = key.get(ptr).copied().unwrap_or(0);
-            w <<= 8;
-            w |= if bug { c as i8 as i32 as u32 } else { u32::from(c) };
+            correct = (correct << 8) | u32::from(c);
+            buggy = (buggy << 8) | (c as i8 as i32 as u32);
+            if j != 0 {
+                sign |= buggy & 0x80;
+            }
             ptr = if c == 0 { 0 } else { ptr + 1 };
         }
-        out[word * 4..word * 4 + 4].copy_from_slice(&w.to_be_bytes());
+        diff |= correct ^ buggy;
+        let w = if bug { buggy } else { correct };
+        expanded[word * 4..word * 4 + 4].copy_from_slice(&w.to_be_bytes());
     }
-    out
+    diff |= diff >> 16;
+    diff &= 0xffff;
+    diff = diff.wrapping_add(0xffff);
+    sign <<= 9;
+    sign &= !diff & if safety { 0x10000 } else { 0 };
+    let mut initial = expanded;
+    let first = u32::from_be_bytes([initial[0], initial[1], initial[2], initial[3]]) ^ sign;
+    initial[..4].copy_from_slice(&first.to_be_bytes());
+    (expanded, initial)
+}
+
+/// EksBlowfish and the 64-fold encryption of "OrpheanBeholderScryDoubt".
+fn bf_crypt_raw(cost: u32, salt: &[u8; 16], expanded: &[u8; 72], initial: &[u8; 72]) -> [u8; 24] {
+    let mut state = blowfish::Blowfish::bc_init_state();
+    state.salted_expand_key(salt, initial);
+    for _ in 0..1u64 << cost {
+        state.bc_expand_key(expanded);
+        state.bc_expand_key(salt);
+    }
+    let mut ctext = [0x4f72_7068, 0x6561_6e42, 0x6568_6f6c, 0x6465_7253, 0x6372_7944, 0x6f75_6274];
+    let mut output = [0u8; 24];
+    for i in (0..6).step_by(2) {
+        for _ in 0..64 {
+            let [l, r] = state.bc_encrypt([ctext[i], ctext[i + 1]]);
+            ctext[i] = l;
+            ctext[i + 1] = r;
+        }
+        output[i * 4..i * 4 + 4].copy_from_slice(&ctext[i].to_be_bytes());
+        output[(i + 1) * 4..(i + 1) * 4 + 4].copy_from_slice(&ctext[i + 1].to_be_bytes());
+    }
+    output
 }
 
 /// `php_crypt_blowfish_rn()`: `$2a$`, `$2b$`, `$2x$` and `$2y$` hashes.
-///
-/// `$2a$` keeps crypt_blowfish's anti-collision measure only where it is a
-/// no-op: for keys whose buggy and correct schedules agree despite a sign
-/// extension (keys made of `\xff` runs) the measure flips one bit, which
-/// this port does not.
 fn blowfish_crypt(key: &[u8], setting: &[u8]) -> Option<Vec<u8>> {
     let at = |i: usize| setting.get(i).copied().unwrap_or(0);
-    let bug = match at(2) {
-        b'a' | b'b' | b'y' => false,
-        b'x' => true,
+    let (bug, safety) = match at(2) {
+        b'a' => (false, true),
+        b'b' | b'y' => (false, false),
+        b'x' => (true, false),
         _ => return None,
     };
     if at(3) != b'$'
@@ -1827,7 +1862,8 @@ fn blowfish_crypt(key: &[u8], setting: &[u8]) -> Option<Vec<u8>> {
         return None;
     }
     let salt = bf_decode_salt(&setting[7..29])?;
-    let raw = bcrypt::bcrypt(cost, salt, &bf_key(key, bug));
+    let (expanded, initial) = bf_set_key(key, bug, safety);
+    let raw = bf_crypt_raw(cost, &salt, &expanded, &initial);
     let mut out = setting[..28].to_vec();
     let last = BF_ITOA64.iter().position(|c| *c == setting[28])?;
     out.push(BF_ITOA64[last & 0x30]);

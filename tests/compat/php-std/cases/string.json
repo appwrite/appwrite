@@ -1453,6 +1453,291 @@
           "expect": false
         }
       ]
+    },
+    {
+      "name": "crypt: blowfish sign extension modes and the $2a$ countermeasure",
+      "steps": [
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "////"
+            },
+            "salt": "$2a$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2a$04$/OK.fbVrR/bpIqNJ5ianF.7R7s9dp3Nufj8vhfXpDVxA1CewHN6zK"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "////"
+            },
+            "salt": "$2b$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2b$04$/OK.fbVrR/bpIqNJ5ianF.FKw3TGe6Mjb0qZiTDXFGUVnDe/XvIVy"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "////"
+            },
+            "salt": "$2x$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2x$04$/OK.fbVrR/bpIqNJ5ianF.FKw3TGe6Mjb0qZiTDXFGUVnDe/XvIVy"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "////"
+            },
+            "salt": "$2y$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2y$04$/OK.fbVrR/bpIqNJ5ianF.FKw3TGe6Mjb0qZiTDXFGUVnDe/XvIVy"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "//+j"
+            },
+            "salt": "$2a$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2a$04$/OK.fbVrR/bpIqNJ5ianF.Ias9ej8rVP83dbQWecz/ebYDer7Sfq6"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "//+j"
+            },
+            "salt": "$2b$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2b$04$/OK.fbVrR/bpIqNJ5ianF.79F7iyfPXU.AMPgYp2WOmvgKQ4Ez/5."
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "//+j"
+            },
+            "salt": "$2x$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2x$04$/OK.fbVrR/bpIqNJ5ianF.79F7iyfPXU.AMPgYp2WOmvgKQ4Ez/5."
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "//+j"
+            },
+            "salt": "$2y$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2y$04$/OK.fbVrR/bpIqNJ5ianF.79F7iyfPXU.AMPgYp2WOmvgKQ4Ez/5."
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "ow=="
+            },
+            "salt": "$2a$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2a$04$/OK.fbVrR/bpIqNJ5ianF.zR25Qm6CVRsvf4Bqkn0H2bcEFOKb8qq"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "ow=="
+            },
+            "salt": "$2b$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2b$04$/OK.fbVrR/bpIqNJ5ianF.zR25Qm6CVRsvf4Bqkn0H2bcEFOKb8qq"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "ow=="
+            },
+            "salt": "$2x$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2x$04$/OK.fbVrR/bpIqNJ5ianF.79F7iyfPXU.AMPgYp2WOmvgKQ4Ez/5."
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "ow=="
+            },
+            "salt": "$2y$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2y$04$/OK.fbVrR/bpIqNJ5ianF.zR25Qm6CVRsvf4Bqkn0H2bcEFOKb8qq"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "/6MzNP///6MzNDU="
+            },
+            "salt": "$2a$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2a$04$/OK.fbVrR/bpIqNJ5ianF.PmnZifXAyP7sqefVHxdDlg.V55p1d56"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "/6MzNP///6MzNDU="
+            },
+            "salt": "$2b$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2b$04$/OK.fbVrR/bpIqNJ5ianF.PZmIKt.m7jAS2MaAgriAh2m0Mear0sG"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "/6MzNP///6MzNDU="
+            },
+            "salt": "$2x$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2x$04$/OK.fbVrR/bpIqNJ5ianF.PZmIKt.m7jAS2MaAgriAh2m0Mear0sG"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "/6MzNP///6MzNDU="
+            },
+            "salt": "$2y$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2y$04$/OK.fbVrR/bpIqNJ5ianF.PZmIKt.m7jAS2MaAgriAh2m0Mear0sG"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "gICAgIA="
+            },
+            "salt": "$2a$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2a$04$/OK.fbVrR/bpIqNJ5ianF.C2FaOZI7PP9.41M0euQoz1RkhhXf5sm"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "gICAgIA="
+            },
+            "salt": "$2b$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2b$04$/OK.fbVrR/bpIqNJ5ianF.C2FaOZI7PP9.41M0euQoz1RkhhXf5sm"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "gICAgIA="
+            },
+            "salt": "$2x$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2x$04$/OK.fbVrR/bpIqNJ5ianF.cLNHdcdzzQQCkVd4oNM3nL9VqeHkoj6"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "gICAgIA="
+            },
+            "salt": "$2y$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2y$04$/OK.fbVrR/bpIqNJ5ianF.C2FaOZI7PP9.41M0euQoz1RkhhXf5sm"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "//////////////////////////////////////////////////////////////////////////////////////////////////////////8="
+            },
+            "salt": "$2a$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2a$04$/OK.fbVrR/bpIqNJ5ianF.ANvvLMzSCxQBmnQyvM8T67yjOUrJNzS"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "//////////////////////////////////////////////////////////////////////////////////////////////////////////8="
+            },
+            "salt": "$2b$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2b$04$/OK.fbVrR/bpIqNJ5ianF.08bOJFQyl.kN4l8QCb5oKG0hVWpnCbm"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "//////////////////////////////////////////////////////////////////////////////////////////////////////////8="
+            },
+            "salt": "$2x$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2x$04$/OK.fbVrR/bpIqNJ5ianF.08bOJFQyl.kN4l8QCb5oKG0hVWpnCbm"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "//////////////////////////////////////////////////////////////////////////////////////////////////////////8="
+            },
+            "salt": "$2y$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2y$04$/OK.fbVrR/bpIqNJ5ianF.08bOJFQyl.kN4l8QCb5oKG0hVWpnCbm"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "Af8="
+            },
+            "salt": "$2a$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2a$04$/OK.fbVrR/bpIqNJ5ianF.II07dI/MD8pGXFwqWrdEtqeGMQmmaRa"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "Af8="
+            },
+            "salt": "$2b$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2b$04$/OK.fbVrR/bpIqNJ5ianF.II07dI/MD8pGXFwqWrdEtqeGMQmmaRa"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "Af8="
+            },
+            "salt": "$2x$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2x$04$/OK.fbVrR/bpIqNJ5ianF.ehmBE8pgaGjAy6Wx9nUtzTHfC2zugeO"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "Af8="
+            },
+            "salt": "$2y$04$/OK.fbVrR/bpIqNJ5ianF."
+          },
+          "expect": "$2y$04$/OK.fbVrR/bpIqNJ5ianF.II07dI/MD8pGXFwqWrdEtqeGMQmmaRa"
+        }
+      ]
     }
   ]
 }

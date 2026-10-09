@@ -2,6 +2,9 @@
 //! the same reads (so the same "Out of range" errors), the same head and
 //! indefinite-length checks, and the same normalization into PHP values
 //! (integers become decimal strings, map keys become array offsets).
+//! Errors are bytes: cbor-php quotes map keys, which need not be UTF-8.
+
+use std::collections::{HashMap, HashSet};
 
 use php_std::zval::{Array, Key, Zval};
 
@@ -14,9 +17,9 @@ pub(crate) enum Item {
     Text(Vec<u8>),
     List(Vec<Item>),
     /// A definite-length map (`MapObject`).
-    Map(Vec<(Item, Item)>),
+    Map(Box<Map>),
     /// An indefinite-length map (`IndefiniteLengthMapObject`, not a `MapObject`).
-    MapIndefinite(Vec<(Item, Item)>),
+    MapIndefinite(Box<Map>),
     /// A tag and its content.
     Tag(u128, Box<Item>),
     Simple(i64),
@@ -27,6 +30,269 @@ pub(crate) enum Item {
 }
 
 const MAX_DEPTH: usize = 1000;
+
+/// One map entry, stored at the PHP array offset its key resolves to.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct Entry {
+    offset: Key,
+    key: Item,
+    value: Item,
+}
+
+/// A map's entries and cbor-php's `MapKeyRegistryTrait` bookkeeping: the
+/// identity (`<major type>:<offset>`) owning each offset, the opaque offsets
+/// (keys that do not normalize to an integer or a string, stored under NUL
+/// and their encoding) and the ambiguous ones (offsets two major types
+/// resolve to).
+#[derive(Debug, Clone, PartialEq, Default)]
+pub(crate) struct Map {
+    entries: Vec<Entry>,
+    identities: HashMap<Key, Vec<u8>>,
+    opaque: HashSet<Key>,
+    ambiguous: HashMap<Key, u8>,
+}
+
+/// The CBOR major type of a decoded item.
+fn major(item: &Item) -> u8 {
+    match item {
+        Item::Int(s) if s.starts_with('-') => 1,
+        Item::Int(_) => 0,
+        Item::Bytes(_) => 2,
+        Item::Text(_) => 3,
+        Item::List(_) => 4,
+        Item::Map(_) | Item::MapIndefinite(_) => 5,
+        Item::Tag(..) => 6,
+        _ => 7,
+    }
+}
+
+/// `(string) $offset` of a PHP array offset.
+fn written(offset: &Key) -> Vec<u8> {
+    match offset {
+        Key::Int(i) => i.to_string().into_bytes(),
+        Key::Str(s) => s.clone(),
+    }
+}
+
+/// The major type an identity (`<major>:<offset>`) records.
+fn identity_major(identity: &[u8]) -> &[u8] {
+    identity.split(|b| *b == b':').next().unwrap_or_default()
+}
+
+impl Map {
+    /// `registerKey($key, false)` and the insertion `add()` makes.
+    fn add(&mut self, key: Item, raw: &[u8], value: Item) -> Result<(), Vec<u8>> {
+        let major = major(&key);
+        let identity = |offset: &[u8]| [major.to_string().as_bytes(), b":", offset].concat();
+        // offsetOf(): lists and maps are opaque without normalizing.
+        let scalar = match &key {
+            Item::List(_) | Item::Map(_) | Item::MapIndefinite(_) => None,
+            k if !k.is_normalizable() => None,
+            k => match k.normalize()? {
+                Zval::Int(i) => Some(i.to_string().into_bytes()),
+                Zval::String(s) => Some(s),
+                _ => None,
+            },
+        };
+        let opaque_offset = || {
+            let mut o = vec![0u8];
+            o.extend_from_slice(&canonical(raw));
+            o
+        };
+        let (mut offset, mut opaque) = match scalar {
+            Some(s) => (s, false),
+            None => (opaque_offset(), true),
+        };
+        let mut slot = Key::from_bytes(&offset);
+        let mut existing = self.identities.get(&slot).cloned();
+        if !opaque && existing.as_ref().is_some_and(|e| *e != identity(&offset)) {
+            // Another major type owns the offset: this key is stored opaque.
+            self.ambiguous.insert(slot, major);
+            offset = opaque_offset();
+            opaque = true;
+            slot = Key::Str(offset.clone());
+            existing = self.identities.get(&slot).cloned();
+        }
+        let own = identity(&offset);
+        if let Some(e) = existing {
+            if e != own {
+                return Err([
+                    b"Invalid key. A key of major type ".as_slice(),
+                    identity_major(&e),
+                    b" and a key of major type ",
+                    major.to_string().as_bytes(),
+                    b" both resolve to the offset \"",
+                    &offset,
+                    b"\".",
+                ]
+                .concat());
+            }
+            let shown = if opaque { hex::encode(&offset[1..]).into_bytes() } else { offset };
+            return Err(
+                [b"Invalid key. The key \"".as_slice(), &shown, b"\" is defined more than once in the map."].concat()
+            );
+        }
+        self.identities.insert(slot.clone(), own);
+        if opaque {
+            self.opaque.insert(slot.clone());
+        }
+        self.entries.push(Entry { offset: slot, key, value });
+        Ok(())
+    }
+
+    /// `normalizeEntries()`.
+    fn normalize(&self) -> Result<Zval, Vec<u8>> {
+        let mut out = Array::with_capacity(self.entries.len());
+        for Entry { offset, key, value } in &self.entries {
+            if let Some(second) = self.ambiguous.get(offset) {
+                let first = self.identities.get(offset).map(|i| identity_major(i).to_vec()).unwrap_or_default();
+                return Err([
+                    b"Invalid key. A key of major type ".as_slice(),
+                    &first,
+                    b" and a key of major type ",
+                    second.to_string().as_bytes(),
+                    b" both resolve to the offset \"",
+                    &written(offset),
+                    b"\".",
+                ]
+                .concat());
+            }
+            if self.opaque.contains(offset) {
+                let kind = match key {
+                    Item::List(_) | Item::Map(_) | Item::MapIndefinite(_) => "array",
+                    Item::Tag(0 | 1, _) => "DateTimeImmutable",
+                    k if k.is_normalizable() => match k.normalize()? {
+                        Zval::Null => "null",
+                        Zval::Bool(_) => "bool",
+                        Zval::Float(_) => "float",
+                        Zval::Int(_) => "int",
+                        Zval::String(_) => "string",
+                        _ => "array",
+                    },
+                    _ => "object",
+                };
+                return Err(format!(
+                    "Invalid key. A map key shall normalize to an integer or a string, got \"{kind}\"."
+                )
+                .into_bytes());
+            }
+            out.insert(offset.clone(), if value.is_normalizable() { value.normalize()? } else { Zval::Null });
+        }
+        Ok(Zval::Array(out))
+    }
+}
+
+/// A big-endian unsigned integer in decimal (`Utils::hexToString()`).
+fn decimal(bytes: &[u8]) -> Vec<u8> {
+    let mut limbs: Vec<u32> = bytes.iter().map(|b| u32::from(*b)).collect();
+    let mut digits = Vec::new();
+    while limbs.iter().any(|l| *l != 0) {
+        let mut rem = 0u32;
+        for l in limbs.iter_mut() {
+            let cur = (rem << 8) | *l;
+            *l = cur / 10;
+            rem = cur % 10;
+        }
+        digits.push(b'0' + rem as u8);
+    }
+    if digits.is_empty() {
+        digits.push(b'0');
+    }
+    digits.reverse();
+    digits
+}
+
+/// A big-endian unsigned integer plus one.
+fn increment(bytes: &[u8]) -> Vec<u8> {
+    let mut out = bytes.to_vec();
+    for b in out.iter_mut().rev() {
+        let (v, carry) = b.overflowing_add(1);
+        *b = v;
+        if !carry {
+            return out;
+        }
+    }
+    out.insert(0, 1);
+    out
+}
+
+/// An item as cbor-php writes it back (`__toString()`): the bytes as read,
+/// except that definite lists and maps get a minimal head for their count.
+fn canonical(raw: &[u8]) -> Vec<u8> {
+    fn head(mt: u8, n: u64, out: &mut Vec<u8>) {
+        let mt = mt << 5;
+        match n {
+            0..=23 => out.push(mt | n as u8),
+            24..=0xff => out.extend_from_slice(&[mt | 24, n as u8]),
+            0x100..=0xffff => {
+                out.push(mt | 25);
+                out.extend_from_slice(&(n as u16).to_be_bytes());
+            }
+            0x1_0000..=0xffff_ffff => {
+                out.push(mt | 26);
+                out.extend_from_slice(&(n as u32).to_be_bytes());
+            }
+            _ => {
+                out.push(mt | 27);
+                out.extend_from_slice(&n.to_be_bytes());
+            }
+        }
+    }
+    fn walk(raw: &[u8], at: &mut usize, out: &mut Vec<u8>) {
+        let Some(&ib) = raw.get(*at) else { return };
+        *at += 1;
+        let (mt, ai) = (ib >> 5, ib & 0x1f);
+        let extra = match ai {
+            24 => 1,
+            25 => 2,
+            26 => 4,
+            27 => 8,
+            _ => 0,
+        };
+        let end = (*at + extra).min(raw.len());
+        let arg_bytes = &raw[*at..end];
+        *at = end;
+        let arg = if extra == 0 { u64::from(ai) } else { arg_bytes.iter().fold(0u64, |a, b| (a << 8) | u64::from(*b)) };
+        match (mt, ai) {
+            (2..=5, 31) => {
+                out.push(ib);
+                while *at < raw.len() && raw[*at] != 0xff {
+                    walk(raw, at, out);
+                    if mt == 5 {
+                        walk(raw, at, out);
+                    }
+                }
+                out.push(0xff);
+                *at += 1;
+            }
+            (4, _) | (5, _) => {
+                head(mt, arg, out);
+                for _ in 0..arg * if mt == 5 { 2 } else { 1 } {
+                    walk(raw, at, out);
+                }
+            }
+            (6, _) => {
+                out.push(ib);
+                out.extend_from_slice(arg_bytes);
+                walk(raw, at, out);
+            }
+            (2, _) | (3, _) => {
+                out.push(ib);
+                out.extend_from_slice(arg_bytes);
+                let end = at.saturating_add(arg as usize).min(raw.len());
+                out.extend_from_slice(&raw[*at..end]);
+                *at = end;
+            }
+            _ => {
+                out.push(ib);
+                out.extend_from_slice(arg_bytes);
+            }
+        }
+    }
+    let mut out = Vec::with_capacity(raw.len());
+    walk(raw, &mut 0, &mut out);
+    out
+}
 
 /// cbor-php's `StringStream`.
 pub(crate) struct Stream<'a> {
@@ -47,13 +313,13 @@ impl<'a> Stream<'a> {
         self.at >= self.data.len()
     }
 
-    fn read(&mut self, length: usize) -> Result<&'a [u8], String> {
+    fn read(&mut self, length: usize) -> Result<&'a [u8], Vec<u8>> {
         if length == 0 {
             return Ok(&[]);
         }
         let available = self.data.len() - self.at;
         if available < length {
-            return Err(format!("Out of range. Expected: {length}, read: {available}."));
+            return Err(format!("Out of range. Expected: {length}, read: {available}.").into());
         }
         let out = &self.data[self.at..self.at + length];
         self.at += length;
@@ -62,12 +328,13 @@ impl<'a> Stream<'a> {
 }
 
 /// `Utils::binToInt()`: an argument as a PHP integer.
-fn bin_to_int(value: &[u8]) -> Result<usize, String> {
+fn bin_to_int(value: &[u8]) -> Result<usize, Vec<u8>> {
     let v = value.iter().fold(0u128, |acc, b| (acc << 8) | u128::from(*b));
+    let range = || format!("Out of range. \"{v}\" cannot be represented as a PHP integer.").into_bytes();
     if v > i64::MAX as u128 {
-        return Err(format!("Out of range. \"{v}\" cannot be represented as a PHP integer."));
+        return Err(range());
     }
-    usize::try_from(v).map_err(|_| format!("Out of range. \"{v}\" cannot be represented as a PHP integer."))
+    usize::try_from(v).map_err(|_| range())
 }
 
 fn argument(ai: u8, val: Option<&[u8]>) -> u128 {
@@ -78,13 +345,13 @@ fn argument(ai: u8, val: Option<&[u8]>) -> u128 {
 }
 
 /// `Decoder::decode()`.
-pub(crate) fn decode(stream: &mut Stream<'_>) -> Result<Item, String> {
+pub(crate) fn decode(stream: &mut Stream<'_>) -> Result<Item, Vec<u8>> {
     process(stream, false, 0)
 }
 
-fn process(stream: &mut Stream<'_>, breakable: bool, depth: usize) -> Result<Item, String> {
+fn process(stream: &mut Stream<'_>, breakable: bool, depth: usize) -> Result<Item, Vec<u8>> {
     if depth > MAX_DEPTH {
-        return Err(format!("Cannot parse the data. Maximum nesting depth of {MAX_DEPTH} exceeded."));
+        return Err(format!("Cannot parse the data. Maximum nesting depth of {MAX_DEPTH} exceeded.").into());
     }
     let ib = stream.read(1)?[0];
     let (mt, ai) = (ib >> 5, ib & 0x1f);
@@ -94,7 +361,9 @@ fn process(stream: &mut Stream<'_>, breakable: bool, depth: usize) -> Result<Ite
         26 => Some(stream.read(4)?),
         27 => Some(stream.read(8)?),
         28..=30 => {
-            return Err(format!("Cannot parse the data. Found invalid Additional Information \"{ai:08b}\" ({ai})."));
+            return Err(
+                format!("Cannot parse the data. Found invalid Additional Information \"{ai:08b}\" ({ai}).").into()
+            );
         }
         31 => return process_infinite(stream, mt, breakable, depth),
         _ => None,
@@ -118,13 +387,15 @@ fn process(stream: &mut Stream<'_>, breakable: bool, depth: usize) -> Result<Ite
         }
         5 => {
             let n = length(val)?;
-            let mut items = Vec::new();
+            let mut map = Map::default();
             for _ in 0..n {
+                let start = stream.at;
                 let key = process(stream, false, depth + 1)?;
+                let raw = &stream.data[start..stream.at];
                 let value = process(stream, false, depth + 1)?;
-                items.push((key, value));
+                map.add(key, raw, value)?;
             }
-            Item::Map(items)
+            Item::Map(Box::new(map))
         }
         6 => {
             let tag = argument(ai, val);
@@ -137,12 +408,15 @@ fn process(stream: &mut Stream<'_>, breakable: bool, depth: usize) -> Result<Ite
 }
 
 /// The content checks of cbor-php's registered tags (its `TagManager`).
-fn tag_check(tag: u128, content: &Item) -> Result<(), String> {
+fn tag_check(tag: u128, content: &Item) -> Result<(), Vec<u8>> {
     let text = matches!(content, Item::Text(_));
     let bytes = matches!(content, Item::Bytes(_));
     match tag {
         // DatetimeTag says "Byte String" although it wants a text string.
         0 if !text => Err("This tag only accepts a Byte String object.".into()),
+        1 if !matches!(content, Item::Int(_) | Item::Float(_)) => {
+            Err("This tag only accepts integer-based or float-based objects.".into())
+        }
         2 | 3 | 24 if !bytes => Err("This tag only accepts a Byte String object.".into()),
         32..=36 if !text => Err("This tag only accepts a Text String object.".into()),
         _ => Ok(()),
@@ -170,8 +444,11 @@ fn is_rfc3339(s: &[u8]) -> bool {
 }
 
 /// The "other" major type: simple values and floats.
-fn other(ai: u8, val: Option<&[u8]>) -> Result<Item, String> {
+fn other(ai: u8, val: Option<&[u8]>) -> Result<Item, Vec<u8>> {
     Ok(match ai {
+        24 if val.is_some_and(|v| v[0] < 32) => {
+            return Err(b"Invalid simple value. Content data must be between 32 and 255.".to_vec());
+        }
         20 => Item::Bool(false),
         21 => Item::Bool(true),
         22 | 23 => Item::Null,
@@ -194,7 +471,7 @@ fn other(ai: u8, val: Option<&[u8]>) -> Result<Item, String> {
     })
 }
 
-fn process_infinite(stream: &mut Stream<'_>, mt: u8, breakable: bool, depth: usize) -> Result<Item, String> {
+fn process_infinite(stream: &mut Stream<'_>, mt: u8, breakable: bool, depth: usize) -> Result<Item, Vec<u8>> {
     match mt {
         2 | 3 => {
             let mut out = Vec::new();
@@ -230,33 +507,22 @@ fn process_infinite(stream: &mut Stream<'_>, mt: u8, breakable: bool, depth: usi
             Ok(Item::List(items))
         }
         5 => {
-            let mut items = Vec::new();
+            let mut map = Map::default();
             loop {
+                let start = stream.at;
                 let key = process(stream, true, depth + 1)?;
                 if key == Item::Break {
                     break;
                 }
+                let raw = &stream.data[start..stream.at];
                 let value = process(stream, false, depth + 1)?;
-                items.push((key, value));
+                map.add(key, raw, value)?;
             }
-            Ok(Item::MapIndefinite(items))
+            Ok(Item::MapIndefinite(Box::new(map)))
         }
         7 if breakable => Ok(Item::Break),
         7 => Err("Cannot parse the data. No enclosing indefinite.".into()),
-        _ => Err(format!("Cannot parse the data. Found infinite length for Major Type \"{mt:05b}\" ({mt}).")),
-    }
-}
-
-/// PHP's `get_debug_type()` of a normalized value, for map key errors.
-fn debug_type(item: &Item) -> &'static str {
-    match item {
-        Item::List(_) | Item::Map(_) | Item::MapIndefinite(_) => "array",
-        Item::Float(_) => "float",
-        Item::Bool(_) => "bool",
-        Item::Null => "null",
-        Item::Tag(..) | Item::Break => "object",
-        Item::Int(_) | Item::Bytes(_) | Item::Text(_) => "string",
-        Item::Simple(_) => "int",
+        _ => Err(format!("Cannot parse the data. Found infinite length for Major Type \"{mt:05b}\" ({mt}).").into()),
     }
 }
 
@@ -267,7 +533,7 @@ impl Item {
     }
 
     /// `normalize()`: the PHP value webauthn-lib reads.
-    pub(crate) fn normalize(&self) -> Result<Zval, String> {
+    pub(crate) fn normalize(&self) -> Result<Zval, Vec<u8>> {
         Ok(match self {
             Item::Int(s) => Zval::String(s.clone().into_bytes()),
             Item::Bytes(b) | Item::Text(b) => Zval::String(b.clone()),
@@ -278,54 +544,84 @@ impl Item {
                 }
                 Zval::Array(out)
             }
-            Item::Map(items) | Item::MapIndefinite(items) => {
-                let mut out = Array::with_capacity(items.len());
-                let mut kinds: Vec<(Key, &'static str)> = Vec::new();
-                for (key, value) in items {
-                    let offset = match key {
-                        Item::Int(s) => Key::from_bytes(s.as_bytes()),
-                        Item::Bytes(b) | Item::Text(b) => Key::from_bytes(b),
-                        Item::Simple(i) => Key::Int(*i),
-                        other => {
-                            return Err(format!(
-                                "Invalid key. A map key shall normalize to an integer or a string, got \"{}\".",
-                                debug_type(other)
-                            ));
-                        }
-                    };
-                    let kind = match key {
-                        Item::Int(s) if s.starts_with('-') => "1",
-                        Item::Int(_) => "0",
-                        Item::Bytes(_) => "2",
-                        Item::Text(_) => "3",
-                        _ => "7",
-                    };
-                    if let Some((_, previous)) = kinds.iter().find(|(k, _)| *k == offset)
-                        && *previous != kind
-                    {
-                        let shown = match &offset {
-                            Key::Int(i) => i.to_string(),
-                            Key::Str(s) => String::from_utf8_lossy(s).into_owned(),
-                        };
-                        return Err(format!(
-                            "Invalid key. A key of major type {previous} and a key of major type {kind} both resolve to the offset \"{shown}\"."
-                        ));
-                    }
-                    kinds.push((offset.clone(), kind));
-                    out.insert(offset, if value.is_normalizable() { value.normalize()? } else { Zval::Null });
-                }
-                Zval::Array(out)
-            }
+            Item::Map(map) | Item::MapIndefinite(map) => map.normalize()?,
             Item::Simple(i) => Zval::Int(*i),
             Item::Bool(b) => Zval::Bool(*b),
             // A datetime normalizes to a DateTimeImmutable, which no caller here reads.
             Item::Tag(0, content) => match content.as_ref() {
                 Item::Text(t) if !t.contains(&0) && is_rfc3339(t) => Zval::Null,
-                _ => return Err("Invalid data. Cannot be converted into a datetime object".into()),
+                _ => return Err(b"Invalid data. Cannot be converted into a datetime object".to_vec()),
             },
+            // TimestampTag: a DateTimeImmutable too.
+            Item::Tag(1, content) => match content.as_ref() {
+                Item::Float(f) if !f.is_finite() || f.abs() > 1.0e18 => {
+                    return Err(b"Invalid data. Cannot be converted into a datetime object".to_vec());
+                }
+                _ => Zval::Null,
+            },
+            // UnsignedBigIntegerTag / NegativeBigIntegerTag: the decimal value.
+            Item::Tag(tag @ (2 | 3), content) => {
+                let Item::Bytes(b) = content.as_ref() else { return content.normalize() };
+                if b.len() > 256 {
+                    return Err(format!(
+                        "The big number is out of range. Its byte string shall not exceed 256 bytes, got {}.",
+                        b.len()
+                    )
+                    .into_bytes());
+                }
+                Zval::String(if *tag == 2 { decimal(b) } else { [b"-".as_slice(), &decimal(&increment(b))].concat() })
+            }
             Item::Tag(_, content) => content.normalize()?,
             Item::Null | Item::Break => Zval::Null,
             Item::Float(f) => Zval::Float(*f),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// cbor-php's nesting limit is reachable on a thread's default 2 MiB
+    /// stack in optimised builds (unoptimised frames are several times
+    /// larger): deep input from a client fails with its error, not an overflow.
+    #[test]
+    fn deep_nesting_fits_a_default_thread_stack() {
+        let stack = if cfg!(debug_assertions) { 16 << 20 } else { 2 << 20 };
+        std::thread::Builder::new()
+            .stack_size(stack)
+            .spawn(|| {
+                let shapes: [(&[u8], &[u8]); 4] =
+                    [(b"\x81", b""), (b"\xa1\x00", b""), (b"\x9f", b"\xff"), (b"\xd8\x18", b"")];
+                for (open, close) in shapes {
+                    let mut data = open.repeat(MAX_DEPTH);
+                    data.push(0);
+                    data.extend(close.repeat(MAX_DEPTH));
+                    if let Ok(item) = decode(&mut Stream::new(&data)) {
+                        let _ = item.normalize();
+                    }
+                    let mut deeper = open.repeat(MAX_DEPTH + 2);
+                    deeper.push(0);
+                    assert!(decode(&mut Stream::new(&deeper)).is_err());
+                }
+            })
+            .expect("spawn")
+            .join()
+            .expect("no stack overflow");
+    }
+
+    #[test]
+    fn duplicate_keys_are_rejected_while_decoding() {
+        let err = decode(&mut Stream::new(b"\xa2\x01\x01\x01\x02")).expect_err("duplicate");
+        assert_eq!(err, b"Invalid key. The key \"1\" is defined more than once in the map.");
+        let err = decode(&mut Stream::new(b"\xa2\x81\x01\x01\x98\x01\x01\x02")).expect_err("duplicate");
+        assert_eq!(err, b"Invalid key. The key \"8101\" is defined more than once in the map.");
+    }
+
+    #[test]
+    fn big_numbers_normalize_to_decimal() {
+        assert_eq!(decimal(&[0x01, 0, 0, 0, 0, 0, 0, 0, 0]), b"18446744073709551616");
+        assert_eq!(decimal(&[]), b"0");
+        assert_eq!(increment(&[0xff, 0xff]), vec![1, 0, 0]);
     }
 }

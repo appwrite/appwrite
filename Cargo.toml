@@ -50,7 +50,8 @@ aes = "0.8"
 aes-gcm = "0.10"
 argon2 = { version = "0.5", features = ["std"] }
 base64 = "0.22"
-bcrypt = "0.17"
+# EksBlowfish (php-std crypt()); RustCrypto, pure Rust.
+blowfish = { version = "0.9", features = ["bcrypt"] }
 brotli = { version = "8", default-features = false, features = ["std"] }
 bytes = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
