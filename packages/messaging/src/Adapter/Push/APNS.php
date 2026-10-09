@@ -52,7 +52,9 @@ class APNS extends PushAdapter
             $payload['aps']['alert']['body'] = $message->getBody();
         }
         if (!\is_null($message->getData())) {
-            $payload['aps']['data'] = $message->getData();
+            // Custom data belongs beside the reserved `aps` dictionary at the payload root, not inside it,
+            // so iOS surfaces it as userInfo["data"].
+            $payload['data'] = $message->getData();
         }
         if (!\is_null($message->getAction())) {
             $payload['aps']['category'] = $message->getAction();

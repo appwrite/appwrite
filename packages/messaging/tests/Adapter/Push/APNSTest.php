@@ -26,10 +26,13 @@ final class APNSTest extends TestCase
             priority: Priority::HIGH,
         ));
 
-        $aps = $stub->capturedBodies[0]['aps'];
+        $body = $stub->capturedBodies[0];
+        $aps = $body['aps'];
 
         $this->assertArrayNotHasKey('alert', $aps);
-        $this->assertSame(['type' => 'wake', 'messageId' => 'msg1'], $aps['data']);
+        $this->assertArrayNotHasKey('data', $aps);
+        // Custom data sits at the payload root, beside `aps`, so iOS reads it as userInfo["data"].
+        $this->assertSame(['type' => 'wake', 'messageId' => 'msg1'], $body['data']);
         $this->assertSame(1, $aps['content-available']);
 
         // A silent wake must be a background push (type background, priority 5) or iOS drops it.

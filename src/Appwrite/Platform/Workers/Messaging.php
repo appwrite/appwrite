@@ -243,13 +243,15 @@ class Messaging extends Action
         $deliveryErrors = [];
         $hasRecipients = false;
 
-        // Users reached over MQTT for user-/target-addressed sends. Only an Appwrite-provider target
-        // delivers on the reserved users/<userId> topic, so a native target is safe to turn into a silent
-        // wake only when its user is here. Accumulated across pages — the explicit recipients are a bounded
-        // set — so a user whose Appwrite and native targets land in different $sequence pages is still
-        // recognised. Topic campaigns are unbounded, so their MQTT-reached users are computed per page to
-        // keep memory O(page).
-        $mqttUsers = [];
+        // Users who receive an MQTT (Appwrite-provider) delivery among the explicitly addressed
+        // recipients. Only such a target delivers on the reserved users/<userId> topic, so a user's
+        // native target is safe to demote to a silent wake only when the user is here. Discovered up
+        // front from the bounded recipient set, so the per-user split below is correct no matter the
+        // $sequence order a user's Appwrite and native targets stream in. Topic campaigns are unbounded,
+        // so their MQTT-reached users are resolved per page instead to keep memory O(page).
+        $mqttUsers = $providerType === MESSAGE_TYPE_PUSH
+            ? $this->mqttReachedUsers($dbForProject, $userIds, $targetIds, $providers, $default)
+            : [];
 
         foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as [$page, $perUser]) {
             /**
@@ -257,8 +259,10 @@ class Messaging extends Action
              */
             $tasks = [];
 
+            // A topic campaign's MQTT-reached users come from this page's Appwrite-provider recipients,
+            // resolved per page since a topic's subscribers are unbounded.
             $pageMqttUsers = [];
-            if ($providerType === MESSAGE_TYPE_PUSH) {
+            if (!$perUser && $providerType === MESSAGE_TYPE_PUSH) {
                 foreach ($page as $providerId => $identifiers) {
                     if ($this->resolveProvider($dbForProject, $providerId, $providers, $default)->getAttribute('provider') !== 'appwrite') {
                         continue;
@@ -270,10 +274,6 @@ class Messaging extends Action
                         }
                     }
                 }
-            }
-
-            if ($perUser) {
-                $mqttUsers += $pageMqttUsers;
             }
 
             foreach ($page as $providerId => $identifiers) {
@@ -684,6 +684,74 @@ class Messaging extends Action
         $providers[$providerId] = $provider;
 
         return $provider;
+    }
+
+    /**
+     * The explicitly addressed users (via the `users` list or the `targets` list) who receive an MQTT
+     * delivery — i.e. hold an Appwrite-provider push target among the send's recipients. Resolved up front
+     * so the per-user wake/full split sees the complete set before any native page is dispatched, closing
+     * the gap where a user's native target streams on an earlier page than their Appwrite target. The
+     * recipient lists are bounded, so this set is bounded; topic campaigns are resolved per page instead.
+     *
+     * @param array<string> $userIds
+     * @param array<string> $targetIds
+     * @param array<string, Document> $providers  resolved-provider cache, shared with the send loop
+     * @return array<string, true>
+     */
+    private function mqttReachedUsers(
+        Database $dbForProject,
+        array $userIds,
+        array $targetIds,
+        array &$providers,
+        Document $default
+    ): array {
+        // A userId-addressed send reaches every one of a user's targets; a targetId-addressed send reaches
+        // only the listed targets. Either way an Appwrite-provider target among them means MQTT delivery.
+        $scopes = [];
+        if ($userIds !== []) {
+            $scopes[] = Query::equal('userId', $userIds);
+        }
+        if ($targetIds !== []) {
+            $scopes[] = Query::equal('$id', $targetIds);
+        }
+
+        $mqttUsers = [];
+
+        foreach ($scopes as $scope) {
+            $cursor = null;
+
+            do {
+                $queries = [
+                    $scope,
+                    Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                    Query::select(['$sequence', 'userId', 'providerId']),
+                    Query::orderAsc('$sequence'),
+                    Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
+                ];
+
+                if ($cursor !== null) {
+                    $queries[] = Query::cursorAfter($cursor);
+                }
+
+                $targets = $dbForProject->find('targets', $queries);
+                $count = \count($targets);
+
+                if ($count === 0) {
+                    break;
+                }
+
+                $cursor = $targets[$count - 1];
+
+                foreach ($targets as $target) {
+                    $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId') ?? '', $providers, $default);
+                    if ($provider->getAttribute('provider') === 'appwrite') {
+                        $mqttUsers[$target->getAttribute('userId')] = true;
+                    }
+                }
+            } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+        }
+
+        return $mqttUsers;
     }
 
     /**
