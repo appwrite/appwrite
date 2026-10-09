@@ -286,8 +286,17 @@ fn strtr(a: &Args) -> Result<Outcome, Fault> {
     Ok(Outcome::Ok(bytes_value(&string::strtr(&s, &from, &to))))
 }
 
-fn ctype(a: &Args, f: fn(&[u8]) -> bool) -> Result<Outcome, Fault> {
-    Ok(Outcome::Ok(Value::Bool(f(&a.bytes("text")?))))
+/// `ctype_*($text)`: strings (and `$bytes`) as strings, integers by PHP's
+/// integer rules, anything else is false.
+fn ctype(a: &Args, kind: string::Ctype) -> Result<Outcome, Fault> {
+    let text = a.value("text")?;
+    let result = match text {
+        Value::Number(n) if n.as_i64().is_some() => kind.on_int(n.as_i64().unwrap_or_default()),
+        Value::String(_) => kind.on_bytes(&a.bytes("text")?),
+        Value::Object(o) if o.len() == 1 && o.contains_key("$bytes") => kind.on_bytes(&a.bytes("text")?),
+        _ => false,
+    };
+    Ok(Outcome::Ok(Value::Bool(result)))
 }
 
 pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
@@ -405,17 +414,17 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
         "string.quotemeta" => ok(bytes_value(&string::quotemeta(&s()?))),
         "string.addcslashes" => ok(bytes_value(&string::addcslashes(&s()?, &a.bytes("characters")?))),
         "string.stripcslashes" => ok(bytes_value(&string::stripcslashes(&s()?))),
-        "string.ctype_alnum" => ctype(&a, string::ctype_alnum),
-        "string.ctype_alpha" => ctype(&a, string::ctype_alpha),
-        "string.ctype_cntrl" => ctype(&a, string::ctype_cntrl),
-        "string.ctype_digit" => ctype(&a, string::ctype_digit),
-        "string.ctype_graph" => ctype(&a, string::ctype_graph),
-        "string.ctype_lower" => ctype(&a, string::ctype_lower),
-        "string.ctype_print" => ctype(&a, string::ctype_print),
-        "string.ctype_punct" => ctype(&a, string::ctype_punct),
-        "string.ctype_space" => ctype(&a, string::ctype_space),
-        "string.ctype_upper" => ctype(&a, string::ctype_upper),
-        "string.ctype_xdigit" => ctype(&a, string::ctype_xdigit),
+        "string.ctype_alnum" => ctype(&a, string::Ctype::Alnum),
+        "string.ctype_alpha" => ctype(&a, string::Ctype::Alpha),
+        "string.ctype_cntrl" => ctype(&a, string::Ctype::Cntrl),
+        "string.ctype_digit" => ctype(&a, string::Ctype::Digit),
+        "string.ctype_graph" => ctype(&a, string::Ctype::Graph),
+        "string.ctype_lower" => ctype(&a, string::Ctype::Lower),
+        "string.ctype_print" => ctype(&a, string::Ctype::Print),
+        "string.ctype_punct" => ctype(&a, string::Ctype::Punct),
+        "string.ctype_space" => ctype(&a, string::Ctype::Space),
+        "string.ctype_upper" => ctype(&a, string::Ctype::Upper),
+        "string.ctype_xdigit" => ctype(&a, string::Ctype::Xdigit),
         _ => Err(Fault::new(format!("php-std: unknown operation `{op}`"))),
     }
 }

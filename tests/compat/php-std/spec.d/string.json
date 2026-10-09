@@ -1925,7 +1925,7 @@
       ]
     },
     "string.ctype_alnum": {
-      "doc": "ctype_alnum($text) on strings",
+      "doc": "ctype_alnum($text): strings, integers (character codes in -128..255, PHP 8.1+ deprecation) and other types",
       "fuzz": [
         {
           "args": {
@@ -1955,11 +1955,57 @@
             }
           },
           "iterations": 2000
+        },
+        {
+          "name": "non-strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "int"
+                  },
+                  {
+                    "gen": "float",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "bool"
+                  },
+                  {
+                    "gen": "null"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      [],
+                      [
+                        65
+                      ],
+                      {
+                        "a": 1
+                      },
+                      {}
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
         }
       ]
     },
     "string.ctype_alpha": {
-      "doc": "ctype_alpha($text) on strings",
+      "doc": "ctype_alpha($text): strings, integers (character codes in -128..255, PHP 8.1+ deprecation) and other types",
       "fuzz": [
         {
           "args": {
@@ -1989,11 +2035,57 @@
             }
           },
           "iterations": 2000
+        },
+        {
+          "name": "non-strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "int"
+                  },
+                  {
+                    "gen": "float",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "bool"
+                  },
+                  {
+                    "gen": "null"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      [],
+                      [
+                        65
+                      ],
+                      {
+                        "a": 1
+                      },
+                      {}
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
         }
       ]
     },
     "string.ctype_cntrl": {
-      "doc": "ctype_cntrl($text) on strings",
+      "doc": "ctype_cntrl($text): strings, integers (character codes in -128..255, PHP 8.1+ deprecation) and other types",
       "fuzz": [
         {
           "args": {
@@ -2023,11 +2115,57 @@
             }
           },
           "iterations": 2000
+        },
+        {
+          "name": "non-strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "int"
+                  },
+                  {
+                    "gen": "float",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "bool"
+                  },
+                  {
+                    "gen": "null"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      [],
+                      [
+                        65
+                      ],
+                      {
+                        "a": 1
+                      },
+                      {}
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
         }
       ]
     },
     "string.ctype_digit": {
-      "doc": "ctype_digit($text) on strings",
+      "doc": "ctype_digit($text): strings, integers (character codes in -128..255, PHP 8.1+ deprecation) and other types",
       "fuzz": [
         {
           "args": {
@@ -2057,11 +2195,57 @@
             }
           },
           "iterations": 2000
+        },
+        {
+          "name": "non-strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "int"
+                  },
+                  {
+                    "gen": "float",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "bool"
+                  },
+                  {
+                    "gen": "null"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      [],
+                      [
+                        65
+                      ],
+                      {
+                        "a": 1
+                      },
+                      {}
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
         }
       ]
     },
     "string.ctype_graph": {
-      "doc": "ctype_graph($text) on strings",
+      "doc": "ctype_graph($text): strings, integers (character codes in -128..255, PHP 8.1+ deprecation) and other types",
       "fuzz": [
         {
           "args": {
@@ -2091,11 +2275,57 @@
             }
           },
           "iterations": 2000
+        },
+        {
+          "name": "non-strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "int"
+                  },
+                  {
+                    "gen": "float",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "bool"
+                  },
+                  {
+                    "gen": "null"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      [],
+                      [
+                        65
+                      ],
+                      {
+                        "a": 1
+                      },
+                      {}
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
         }
       ]
     },
     "string.ctype_lower": {
-      "doc": "ctype_lower($text) on strings",
+      "doc": "ctype_lower($text): strings, integers (character codes in -128..255, PHP 8.1+ deprecation) and other types",
       "fuzz": [
         {
           "args": {
@@ -2125,11 +2355,57 @@
             }
           },
           "iterations": 2000
+        },
+        {
+          "name": "non-strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "int"
+                  },
+                  {
+                    "gen": "float",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "bool"
+                  },
+                  {
+                    "gen": "null"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      [],
+                      [
+                        65
+                      ],
+                      {
+                        "a": 1
+                      },
+                      {}
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
         }
       ]
     },
     "string.ctype_print": {
-      "doc": "ctype_print($text) on strings",
+      "doc": "ctype_print($text): strings, integers (character codes in -128..255, PHP 8.1+ deprecation) and other types",
       "fuzz": [
         {
           "args": {
@@ -2159,11 +2435,57 @@
             }
           },
           "iterations": 2000
+        },
+        {
+          "name": "non-strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "int"
+                  },
+                  {
+                    "gen": "float",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "bool"
+                  },
+                  {
+                    "gen": "null"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      [],
+                      [
+                        65
+                      ],
+                      {
+                        "a": 1
+                      },
+                      {}
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
         }
       ]
     },
     "string.ctype_punct": {
-      "doc": "ctype_punct($text) on strings",
+      "doc": "ctype_punct($text): strings, integers (character codes in -128..255, PHP 8.1+ deprecation) and other types",
       "fuzz": [
         {
           "args": {
@@ -2193,11 +2515,57 @@
             }
           },
           "iterations": 2000
+        },
+        {
+          "name": "non-strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "int"
+                  },
+                  {
+                    "gen": "float",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "bool"
+                  },
+                  {
+                    "gen": "null"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      [],
+                      [
+                        65
+                      ],
+                      {
+                        "a": 1
+                      },
+                      {}
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
         }
       ]
     },
     "string.ctype_space": {
-      "doc": "ctype_space($text) on strings",
+      "doc": "ctype_space($text): strings, integers (character codes in -128..255, PHP 8.1+ deprecation) and other types",
       "fuzz": [
         {
           "args": {
@@ -2227,11 +2595,57 @@
             }
           },
           "iterations": 2000
+        },
+        {
+          "name": "non-strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "int"
+                  },
+                  {
+                    "gen": "float",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "bool"
+                  },
+                  {
+                    "gen": "null"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      [],
+                      [
+                        65
+                      ],
+                      {
+                        "a": 1
+                      },
+                      {}
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
         }
       ]
     },
     "string.ctype_upper": {
-      "doc": "ctype_upper($text) on strings",
+      "doc": "ctype_upper($text): strings, integers (character codes in -128..255, PHP 8.1+ deprecation) and other types",
       "fuzz": [
         {
           "args": {
@@ -2261,11 +2675,57 @@
             }
           },
           "iterations": 2000
+        },
+        {
+          "name": "non-strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "int"
+                  },
+                  {
+                    "gen": "float",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "bool"
+                  },
+                  {
+                    "gen": "null"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      [],
+                      [
+                        65
+                      ],
+                      {
+                        "a": 1
+                      },
+                      {}
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
         }
       ]
     },
     "string.ctype_xdigit": {
-      "doc": "ctype_xdigit($text) on strings",
+      "doc": "ctype_xdigit($text): strings, integers (character codes in -128..255, PHP 8.1+ deprecation) and other types",
       "fuzz": [
         {
           "args": {
@@ -2295,6 +2755,52 @@
             }
           },
           "iterations": 2000
+        },
+        {
+          "name": "non-strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "int"
+                  },
+                  {
+                    "gen": "float",
+                    "min": -300,
+                    "max": 300
+                  },
+                  {
+                    "gen": "bool"
+                  },
+                  {
+                    "gen": "null"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      [],
+                      [
+                        65
+                      ],
+                      {
+                        "a": 1
+                      },
+                      {}
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
         }
       ]
     }

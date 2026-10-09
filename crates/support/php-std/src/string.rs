@@ -1293,6 +1293,55 @@ fn ctype(s: &[u8], f: impl Fn(u8) -> bool) -> bool {
     !s.is_empty() && s.iter().all(|&c| f(c))
 }
 
+/// A `ctype_*` function, for calls with a value that may not be a string.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Ctype {
+    Alnum,
+    Alpha,
+    Cntrl,
+    Digit,
+    Graph,
+    Lower,
+    Print,
+    Punct,
+    Space,
+    Upper,
+    Xdigit,
+}
+
+impl Ctype {
+    /// The function on a string (the supported call).
+    pub fn on_bytes(self, s: &[u8]) -> bool {
+        match self {
+            Ctype::Alnum => ctype_alnum(s),
+            Ctype::Alpha => ctype_alpha(s),
+            Ctype::Cntrl => ctype_cntrl(s),
+            Ctype::Digit => ctype_digit(s),
+            Ctype::Graph => ctype_graph(s),
+            Ctype::Lower => ctype_lower(s),
+            Ctype::Print => ctype_print(s),
+            Ctype::Punct => ctype_punct(s),
+            Ctype::Space => ctype_space(s),
+            Ctype::Upper => ctype_upper(s),
+            Ctype::Xdigit => ctype_xdigit(s),
+        }
+    }
+
+    /// The function on an integer (deprecated in PHP 8.1, still supported):
+    /// -128..=255 is a character code (negatives + 256); a larger integer is
+    /// true for the functions whose class contains digits, a smaller one for
+    /// those whose class also contains `-` (`ext/ctype`'s `allow_digits` and
+    /// `allow_minus`).
+    pub fn on_int(self, n: i64) -> bool {
+        match n {
+            0..=255 => self.on_bytes(&[n as u8]),
+            -128..=-1 => self.on_bytes(&[(n + 256) as u8]),
+            _ if n > 0 => matches!(self, Ctype::Alnum | Ctype::Digit | Ctype::Graph | Ctype::Print | Ctype::Xdigit),
+            _ => matches!(self, Ctype::Graph | Ctype::Print),
+        }
+    }
+}
+
 /// PHP `ctype_alnum` on a string: non-empty and all ASCII letters or digits.
 pub fn ctype_alnum(s: &[u8]) -> bool {
     ctype(s, |c| c.is_ascii_alphanumeric())
