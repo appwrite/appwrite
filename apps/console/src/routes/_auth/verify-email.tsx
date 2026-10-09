@@ -1,9 +1,5 @@
 import { useEffect } from 'react'
-import {
-  useIsMutating,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   createFileRoute,
   redirect,
@@ -33,7 +29,6 @@ import {
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
 import { measureOpenAiAdsRegistrationCompleted } from '@/lib/openai-ads'
-import { hasConsoleImpersonationSessionTarget } from '@/lib/console-impersonation'
 import { useRouter } from '@tanstack/react-router'
 
 const searchSchema = z.object({
@@ -61,29 +56,6 @@ function isInvalidTokenError(error: unknown): boolean {
  * reporting failure for a verification that had in fact just succeeded.
  */
 const attemptedSecrets = new Set<string>()
-
-/**
- * Accounts this tab already sent a link to. Sign-up, OAuth2 and sign-in all
- * land here, so the page sends the link itself rather than claim one was sent.
- * The tab session survives a reload, which would otherwise mail another link;
- * the Set covers remounts when storage is unavailable.
- */
-const sentVerifications = new Set<string>()
-
-function claimVerificationSend(accountId: string): boolean {
-  if (sentVerifications.has(accountId)) return false
-  sentVerifications.add(accountId)
-  const storageKey = `verify-email-sent:${accountId}`
-  try {
-    if (sessionStorage.getItem(storageKey)) return false
-    sessionStorage.setItem(storageKey, '1')
-  } catch {
-    // Storage can be unavailable (private mode); a reload then sends again.
-  }
-  return true
-}
-
-const RESEND_MUTATION_KEY = ['account', 'verification', 'email']
 
 /** Parse userId and secret from the current URL (used when following email link) so long tokens are not altered by router. */
 function getVerificationParamsFromUrl(): {
@@ -135,8 +107,6 @@ export const Route = createFileRoute('/_auth/verify-email')({
       }
       throw redirect({ to: CONSOLE_ENTRY_PATH, replace: true })
     }
-
-    return { accountId: account.$id }
   },
   head: () => ({ meta: [{ title: pageTitle('Verify your email') }] }),
 })
@@ -144,7 +114,6 @@ export const Route = createFileRoute('/_auth/verify-email')({
 function VerifyEmailPage() {
   const t = useT()
   const search = useSearch({ from: '/_auth/verify-email' })
-  const accountId = Route.useLoaderData()?.accountId
   const navigate = useNavigate()
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -231,7 +200,6 @@ function VerifyEmailPage() {
   })
 
   const resendMutation = useMutation({
-    mutationKey: RESEND_MUTATION_KEY,
     mutationFn: async () => {
       // Preserve the pending destination (e.g. an OAuth2 consent/device flow)
       // so the resent link returns the user to it after verification.
@@ -253,18 +221,6 @@ function VerifyEmailPage() {
       toast.error(message)
     },
   })
-
-  // The automatic send starts in a mount effect, and a remount detaches this
-  // observer from it, so pending state is read from the mutation cache.
-  const isResending = useIsMutating({ mutationKey: RESEND_MUTATION_KEY }) > 0
-
-  useEffect(() => {
-    // Impersonators cannot write to the account, so the send would only fail
-    if (hasConsoleImpersonationSessionTarget()) return
-    if (accountId && claimVerificationSend(accountId)) {
-      resendMutation.mutate()
-    }
-  }, [accountId])
 
   // When landing with userId + secret (from email link), confirm and redirect.
   // Read from URL directly so the long secret is not altered by router/search parsing.
@@ -298,7 +254,7 @@ function VerifyEmailPage() {
     >
       <VerifyEmail
         onResend={() => resendMutation.mutate()}
-        isResendLoading={isResending}
+        isResendLoading={resendMutation.isPending}
         redirect={search.redirect}
       />
     </AuthFlowShell>

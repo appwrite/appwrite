@@ -169,8 +169,22 @@ function SignUpPage() {
       const account = await refreshConsoleAccountAfterAuth(queryClient)
 
       // Cloud requires a verified console account before org/project APIs work.
-      // Skip post-auth provisioning until after /verify-email; that page sends the link and handles it.
+      // Skip post-auth provisioning until after /verify-email; that page handles it.
       if (requiresConsoleEmailVerification(account)) {
+        try {
+          const verifyUrl = `${window.location.origin}/verify-email${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
+          await sdk.forConsole.account.createEmailVerification({
+            url: verifyUrl,
+          })
+        } catch (err) {
+          console.error('Failed to send verification email:', err)
+          toast.error(
+            getErrorMessage(
+              err,
+              t('Account created but verification email could not be sent'),
+            ),
+          )
+        }
         navigate({
           to: '/verify-email',
           search: search.redirect ? { redirect: search.redirect } : undefined,
