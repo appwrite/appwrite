@@ -9,7 +9,6 @@ use Appwrite\Utopia\Database\Validator\Attributes;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
-use Utopia\Database\Filter;
 use Utopia\Query\Schema\ColumnType;
 
 final class AttributesTest extends TestCase
@@ -319,14 +318,11 @@ final class AttributesTest extends TestCase
 
     public function testInternalFiltersCoverEveryFilterAppwriteRegisters(): void
     {
-        require_once __DIR__ . '/../../../../../app/init/database/filters.php';
-
-        $registered = \array_keys((new \ReflectionProperty(Database::class, 'filters'))->getValue());
-        $library = \array_map(static fn (Filter $filter): string => $filter->value, Filter::cases());
+        \preg_match_all("/Database::addFilter\\(\\s*'([^']+)'/", (string) \file_get_contents(__DIR__ . '/../../../../../app/init/database/filters.php'), $matches);
         $public = ['encrypt'];
 
         $this->assertEqualsCanonicalizing(
-            \array_values(\array_diff($registered, $library, $public)),
+            \array_values(\array_diff($matches[1], $public)),
             Attributes::INTERNAL_FILTERS,
             'A filter Appwrite registers for its metadata must not be settable on an inline attribute.',
         );
