@@ -17,6 +17,7 @@ use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Adapter\TimeLimit\Database as AbuseDatabase;
+use Utopia\Audit\Adapter\SQL;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -906,6 +907,7 @@ class Deletes extends Action
 
             $projectCollectionIds = [
                 ...\array_keys(Config::getParam('collections', [])['projects']),
+                SQL::COLLECTION,
                 AbuseDatabase::COLLECTION,
             ];
 

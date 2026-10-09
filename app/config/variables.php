@@ -19,7 +19,7 @@ return [
             ],
             [
                 'name' => '_APP_EDITION',
-                'description' => 'Identifies the edition of the server. Defaults to \'self-hosted\'. Self-hosted deployments do not consume the audit, usage and stats-resources queues, so their producers are disabled for this edition.',
+                'description' => 'Identifies the edition of the server. Defaults to \'self-hosted\'.',
                 'introduction' => '',
                 'default' => 'self-hosted',
                 'required' => false,
@@ -1930,6 +1930,15 @@ return [
                 'description' => 'Retention in days for raw and daily usage events. Gauges have no TTL. Set to 0 to disable event TTLs.',
                 'introduction' => '',
                 'default' => '180',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_AUDITS_QUEUE_NAME',
+                'description' => 'Queue name for audit log ingestion.',
+                'introduction' => '',
+                'default' => 'v1-audits',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

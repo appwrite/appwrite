@@ -13,6 +13,7 @@ use Appwrite\Platform\Modules\Users\Http\Users\Identities\XList as ListIdentitie
 use Appwrite\Platform\Modules\Users\Http\Users\Impersonator\Update as UpdateImpersonator;
 use Appwrite\Platform\Modules\Users\Http\Users\JWTs\Create as CreateJWT;
 use Appwrite\Platform\Modules\Users\Http\Users\Labels\Update as UpdateLabels;
+use Appwrite\Platform\Modules\Users\Http\Users\Logs\XList as ListLogs;
 use Appwrite\Platform\Modules\Users\Http\Users\MD5\Create as CreateMD5User;
 use Appwrite\Platform\Modules\Users\Http\Users\Memberships\XList as ListMemberships;
 use Appwrite\Platform\Modules\Users\Http\Users\MFA\Authenticators\Delete as DeleteAuthenticator;
@@ -106,6 +107,9 @@ class Http extends Service
 
         // Memberships
         $this->addAction(ListMemberships::getName(), new ListMemberships());
+
+        // Logs
+        $this->addAction(ListLogs::getName(), new ListLogs());
 
         // Identities
         $this->addAction(ListIdentities::getName(), new ListIdentities());
