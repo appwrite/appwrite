@@ -2448,17 +2448,16 @@ fn des_crypt(key: &[u8], setting: &[u8]) -> Option<Vec<u8>> {
 // hash()
 // ---------------------------------------------------------------------------
 
-/// `hash($algo, $data)` as lowercase hex, for the algorithms ext/hash
-/// implements without large constant tables: MD4, MD5, SHA-1, SHA-2, SHA-3,
-/// Adler-32, the three CRC-32s, FNV-1/1a, Jenkins one-at-a-time, MurmurHash3
-/// and XXH32/XXH64. `None` for any other name, PHP's included (MD2, RIPEMD,
-/// Whirlpool, Tiger, Snefru, GOST, HAVAL, XXH3 and XXH128 are not ported):
-/// PHP raises "must be a valid hashing algorithm" only for names it does not
-/// know. The name is case-insensitive.
+mod tables;
+
+/// `hash($algo, $data)` as lowercase hex, for every algorithm of
+/// `hash_algos()`; `None` for any other name (PHP's "must be a valid hashing
+/// algorithm"). The name is case-insensitive.
 pub fn hash(algo: &[u8], data: &[u8]) -> Option<String> {
     use sha2::Digest;
     let hex = |b: &[u8]| b.iter().map(|x| format!("{x:02x}")).collect::<String>();
     Some(match algo.to_ascii_lowercase().as_slice() {
+        b"md2" => hex(&md2::Md2::digest(data)),
         b"md4" => hex(&md4(data)),
         b"md5" => hex(&md5::Md5::digest(data)),
         b"sha1" => hex(&sha1::Sha1::digest(data)),
@@ -2472,6 +2471,42 @@ pub fn hash(algo: &[u8], data: &[u8]) -> Option<String> {
         b"sha3-256" => hex(&sha3::Sha3_256::digest(data)),
         b"sha3-384" => hex(&sha3::Sha3_384::digest(data)),
         b"sha3-512" => hex(&sha3::Sha3_512::digest(data)),
+        b"ripemd128" => hex(&ripemd::Ripemd128::digest(data)),
+        b"ripemd160" => hex(&ripemd::Ripemd160::digest(data)),
+        b"ripemd256" => hex(&ripemd::Ripemd256::digest(data)),
+        b"ripemd320" => hex(&ripemd::Ripemd320::digest(data)),
+        b"whirlpool" => hex(&whirlpool::Whirlpool::digest(data)),
+        b"tiger128,3" => hex(&tiger(data, 0)[..16]),
+        b"tiger160,3" => hex(&tiger(data, 0)[..20]),
+        b"tiger192,3" => hex(&tiger(data, 0)),
+        b"tiger128,4" => hex(&tiger(data, 1)[..16]),
+        b"tiger160,4" => hex(&tiger(data, 1)[..20]),
+        b"tiger192,4" => hex(&tiger(data, 1)),
+        b"snefru" | b"snefru256" => hex(&snefru(data)),
+        name if name.starts_with(b"haval") => {
+            let spec = &name[5..];
+            let (bits, passes) = match spec {
+                b"128,3" => (128, 3),
+                b"160,3" => (160, 3),
+                b"192,3" => (192, 3),
+                b"224,3" => (224, 3),
+                b"256,3" => (256, 3),
+                b"128,4" => (128, 4),
+                b"160,4" => (160, 4),
+                b"192,4" => (192, 4),
+                b"224,4" => (224, 4),
+                b"256,4" => (256, 4),
+                b"128,5" => (128, 5),
+                b"160,5" => (160, 5),
+                b"192,5" => (192, 5),
+                b"224,5" => (224, 5),
+                b"256,5" => (256, 5),
+                _ => return None,
+            };
+            hex(&haval(data, passes, bits))
+        }
+        b"gost" => hex(&gost94::Gost94Test::digest(data)),
+        b"gost-crypto" => hex(&gost94::Gost94CryptoPro::digest(data)),
         b"adler32" => {
             let (mut a, mut b) = (1u32, 0u32);
             for x in data {
@@ -2534,8 +2569,265 @@ pub fn hash(algo: &[u8], data: &[u8]) -> Option<String> {
         b"murmur3f" => murmur3_x64_128(data).iter().map(|h| format!("{h:016x}")).collect(),
         b"xxh32" => format!("{:08x}", xxh32(data)),
         b"xxh64" => format!("{:016x}", xxh64(data)),
+        b"xxh3" => format!("{:016x}", xxhash_rust::xxh3::xxh3_64(data)),
+        b"xxh128" => format!("{:032x}", xxhash_rust::xxh3::xxh3_128(data)),
         _ => return None,
     })
+}
+
+/// Tiger with `extra` passes beyond three (`PHP_3TIGER` / `PHP_4TIGER`):
+/// the state's words little-endian.
+fn tiger(data: &[u8], extra: usize) -> [u8; 24] {
+    let mut msg = data.to_vec();
+    msg.push(0x01);
+    while msg.len() % 64 != 56 {
+        msg.push(0);
+    }
+    msg.extend_from_slice(&(data.len() as u64).wrapping_mul(8).to_le_bytes());
+    let mut state = [0x0123_4567_89ab_cdefu64, 0xfedc_ba98_7654_3210, 0xf096_a5b4_c3b2_e187];
+    for block in msg.chunks(64) {
+        let mut x = [0u64; 8];
+        for (i, w) in x.iter_mut().enumerate() {
+            *w = u64::from_le_bytes(block[i * 8..i * 8 + 8].try_into().unwrap_or_default());
+        }
+        tiger_compress(&mut state, &mut x, extra);
+    }
+    let mut out = [0u8; 24];
+    for (i, w) in state.iter().enumerate() {
+        out[i * 8..i * 8 + 8].copy_from_slice(&w.to_le_bytes());
+    }
+    out
+}
+
+fn tiger_round(a: &mut u64, b: &mut u64, c: &mut u64, x: u64, mul: u64) {
+    let t = &tables::TIGER;
+    let s = |box_: usize, byte: u64| t[box_ * 256 + (byte & 0xff) as usize];
+    *c ^= x;
+    let (lo, hi) = (*c & 0xffff_ffff, *c >> 32);
+    *a = a.wrapping_sub(s(0, lo) ^ s(1, lo >> 16) ^ s(2, hi) ^ s(3, hi >> 16));
+    *b = b.wrapping_add(s(3, lo >> 8) ^ s(2, lo >> 24) ^ s(1, hi >> 8) ^ s(0, hi >> 24));
+    *b = b.wrapping_mul(mul);
+}
+
+fn tiger_pass(a: &mut u64, b: &mut u64, c: &mut u64, x: &[u64; 8], mul: u64) {
+    tiger_round(a, b, c, x[0], mul);
+    tiger_round(b, c, a, x[1], mul);
+    tiger_round(c, a, b, x[2], mul);
+    tiger_round(a, b, c, x[3], mul);
+    tiger_round(b, c, a, x[4], mul);
+    tiger_round(c, a, b, x[5], mul);
+    tiger_round(a, b, c, x[6], mul);
+    tiger_round(b, c, a, x[7], mul);
+}
+
+fn tiger_key_schedule(x: &mut [u64; 8]) {
+    x[0] = x[0].wrapping_sub(x[7] ^ 0xa5a5_a5a5_a5a5_a5a5);
+    x[1] ^= x[0];
+    x[2] = x[2].wrapping_add(x[1]);
+    x[3] = x[3].wrapping_sub(x[2] ^ ((!x[1]) << 19));
+    x[4] ^= x[3];
+    x[5] = x[5].wrapping_add(x[4]);
+    x[6] = x[6].wrapping_sub(x[5] ^ ((!x[4]) >> 23));
+    x[7] ^= x[6];
+    x[0] = x[0].wrapping_add(x[7]);
+    x[1] = x[1].wrapping_sub(x[0] ^ ((!x[7]) << 19));
+    x[2] ^= x[1];
+    x[3] = x[3].wrapping_add(x[2]);
+    x[4] = x[4].wrapping_sub(x[3] ^ ((!x[2]) >> 23));
+    x[5] ^= x[4];
+    x[6] = x[6].wrapping_add(x[5]);
+    x[7] = x[7].wrapping_sub(x[6] ^ 0x0123_4567_89ab_cdef);
+}
+
+fn tiger_compress(state: &mut [u64; 3], x: &mut [u64; 8], extra: usize) {
+    let [mut a, mut b, mut c] = *state;
+    let (aa, bb, cc) = (a, b, c);
+    tiger_pass(&mut a, &mut b, &mut c, x, 5);
+    tiger_key_schedule(x);
+    tiger_pass(&mut c, &mut a, &mut b, x, 7);
+    tiger_key_schedule(x);
+    tiger_pass(&mut b, &mut c, &mut a, x, 9);
+    for _ in 0..extra {
+        tiger_key_schedule(x);
+        tiger_pass(&mut a, &mut b, &mut c, x, 9);
+        (a, b, c) = (c, a, b);
+    }
+    *state = [a ^ aa, b.wrapping_sub(bb), c.wrapping_add(cc)];
+}
+
+/// Snefru (`PHP_SNEFRU`): 32-byte blocks into the upper half of a sixteen
+/// word state, the bit count in its last two words, words big-endian.
+fn snefru(data: &[u8]) -> [u8; 32] {
+    let mut state = [0u32; 16];
+    let bits = (data.len() as u64).wrapping_mul(8);
+    // PHP_SNEFRUUpdate's carry: one when the bit count passes 32 bits.
+    let count = if bits > 0xffff_ffff { [1, (bits as u32).wrapping_sub(0xffff_ffff)] } else { [0, bits as u32] };
+    for block in data.chunks(32) {
+        let mut padded = [0u8; 32];
+        padded[..block.len()].copy_from_slice(block);
+        for (j, w) in padded.chunks(4).enumerate() {
+            state[8 + j] = u32::from_be_bytes([w[0], w[1], w[2], w[3]]);
+        }
+        snefru_block(&mut state);
+        state[8..].fill(0);
+    }
+    state[14] = count[0];
+    state[15] = count[1];
+    snefru_block(&mut state);
+    let mut out = [0u8; 32];
+    for (i, w) in state[..8].iter().enumerate() {
+        out[i * 4..i * 4 + 4].copy_from_slice(&w.to_be_bytes());
+    }
+    out
+}
+
+fn snefru_block(state: &mut [u32; 16]) {
+    let mut b = *state;
+    for index in 0..8 {
+        let boxes = [&tables::SNEFRU[2 * index], &tables::SNEFRU[2 * index + 1]];
+        for shift in [16, 8, 16, 24] {
+            for k in 0..16 {
+                let sbe = boxes[(k / 2) % 2][(b[k] & 0xff) as usize];
+                b[(k + 15) % 16] ^= sbe;
+                b[(k + 1) % 16] ^= sbe;
+            }
+            for v in b.iter_mut() {
+                *v = v.rotate_right(shift);
+            }
+        }
+    }
+    for i in 0..8 {
+        state[i] ^= b[15 - i];
+    }
+}
+
+/// HAVAL with `passes` passes and an `output`-bit digest (`PHP_HAVAL`):
+/// 128-byte blocks of little-endian words, padded to 118 mod 128, then the
+/// version, passes, length and bit count; shorter digests fold the state.
+fn haval(data: &[u8], passes: u32, output: u32) -> Vec<u8> {
+    let count = [((data.len() as u64) << 3) as u32, (data.len() as u64 >> 29) as u32];
+    let mut msg = data.to_vec();
+    let index = data.len() % 128;
+    let pad = if index < 118 { 118 - index } else { 246 - index };
+    msg.push(1);
+    msg.resize(msg.len() + pad - 1, 0);
+    msg.push((1 | ((passes & 7) << 3) | ((output & 3) << 6)) as u8);
+    msg.push((output >> 2) as u8);
+    for c in count {
+        msg.extend_from_slice(&c.to_le_bytes());
+    }
+    let mut s = tables::HAVAL_D0;
+    for block in msg.chunks(128) {
+        haval_transform(&mut s, block, passes);
+    }
+    let rotr = |x: u32, n: u32| x.rotate_right(n);
+    match output {
+        128 => {
+            s[3] = s[3].wrapping_add(
+                (s[7] & 0xff00_0000) | (s[6] & 0x00ff_0000) | (s[5] & 0x0000_ff00) | (s[4] & 0x0000_00ff),
+            );
+            s[2] = s[2].wrapping_add(
+                (((s[7] & 0x00ff_0000) | (s[6] & 0x0000_ff00) | (s[5] & 0x0000_00ff)) << 8)
+                    | ((s[4] & 0xff00_0000) >> 24),
+            );
+            s[1] = s[1].wrapping_add(
+                (((s[7] & 0x0000_ff00) | (s[6] & 0x0000_00ff)) << 16)
+                    | (((s[5] & 0xff00_0000) | (s[4] & 0x00ff_0000)) >> 16),
+            );
+            s[0] = s[0].wrapping_add(
+                ((s[7] & 0x0000_00ff) << 24)
+                    | (((s[6] & 0xff00_0000) | (s[5] & 0x00ff_0000) | (s[4] & 0x0000_ff00)) >> 8),
+            );
+        }
+        160 => {
+            s[4] = s[4].wrapping_add(((s[7] & 0xfe00_0000) | (s[6] & 0x01f8_0000) | (s[5] & 0x0007_f000)) >> 12);
+            s[3] = s[3].wrapping_add(((s[7] & 0x01f8_0000) | (s[6] & 0x0007_f000) | (s[5] & 0x0000_0fc0)) >> 6);
+            s[2] = s[2].wrapping_add((s[7] & 0x0007_f000) | (s[6] & 0x0000_0fc0) | (s[5] & 0x0000_003f));
+            s[1] = s[1].wrapping_add(rotr((s[7] & 0x0000_0fc0) | (s[6] & 0x0000_003f) | (s[5] & 0xfe00_0000), 25));
+            s[0] = s[0].wrapping_add(rotr((s[7] & 0x0000_003f) | (s[6] & 0xfe00_0000) | (s[5] & 0x01f8_0000), 19));
+        }
+        192 => {
+            s[5] = s[5].wrapping_add(((s[7] & 0xfc00_0000) | (s[6] & 0x03e0_0000)) >> 21);
+            s[4] = s[4].wrapping_add(((s[7] & 0x03e0_0000) | (s[6] & 0x001f_0000)) >> 16);
+            s[3] = s[3].wrapping_add(((s[7] & 0x001f_0000) | (s[6] & 0x0000_fc00)) >> 10);
+            s[2] = s[2].wrapping_add(((s[7] & 0x0000_fc00) | (s[6] & 0x0000_03e0)) >> 5);
+            s[1] = s[1].wrapping_add((s[7] & 0x0000_03e0) | (s[6] & 0x0000_001f));
+            s[0] = s[0].wrapping_add(rotr((s[7] & 0x0000_001f) | (s[6] & 0xfc00_0000), 26));
+        }
+        224 => {
+            s[6] = s[6].wrapping_add(s[7] & 0x0000_000f);
+            s[5] = s[5].wrapping_add((s[7] >> 4) & 0x0000_001f);
+            s[4] = s[4].wrapping_add((s[7] >> 9) & 0x0000_000f);
+            s[3] = s[3].wrapping_add((s[7] >> 13) & 0x0000_001f);
+            s[2] = s[2].wrapping_add((s[7] >> 18) & 0x0000_000f);
+            s[1] = s[1].wrapping_add((s[7] >> 22) & 0x0000_001f);
+            s[0] = s[0].wrapping_add((s[7] >> 27) & 0x0000_001f);
+        }
+        _ => {}
+    }
+    s.iter().flat_map(|w| w.to_le_bytes()).take(output as usize / 8).collect()
+}
+
+/// `PHP_{3,4,5}HAVALTransform`: each pass applies its boolean function to a
+/// permutation of the eight words (`M`), the argument orders below.
+fn haval_transform(state: &mut [u32; 8], block: &[u8], passes: u32) {
+    type F = fn(u32, u32, u32, u32, u32, u32, u32) -> u32;
+    let f1: F = |x6, x5, x4, x3, x2, x1, x0| (x1 & x4) ^ (x2 & x5) ^ (x3 & x6) ^ (x0 & x1) ^ x0;
+    let f2: F = |x6, x5, x4, x3, x2, x1, x0| {
+        (x1 & x2 & x3) ^ (x2 & x4 & x5) ^ (x1 & x2) ^ (x1 & x4) ^ (x2 & x6) ^ (x3 & x5) ^ (x4 & x5) ^ (x0 & x2) ^ x0
+    };
+    let f3: F = |x6, x5, x4, x3, x2, x1, x0| (x1 & x2 & x3) ^ (x1 & x4) ^ (x2 & x5) ^ (x3 & x6) ^ (x0 & x3) ^ x0;
+    let f4: F = |x6, x5, x4, x3, x2, x1, x0| {
+        (x1 & x2 & x3)
+            ^ (x2 & x4 & x5)
+            ^ (x3 & x4 & x6)
+            ^ (x1 & x4)
+            ^ (x2 & x6)
+            ^ (x3 & x4)
+            ^ (x3 & x5)
+            ^ (x3 & x6)
+            ^ (x4 & x5)
+            ^ (x4 & x6)
+            ^ (x0 & x4)
+            ^ x0
+    };
+    let f5: F = |x6, x5, x4, x3, x2, x1, x0| (x1 & x4) ^ (x2 & x5) ^ (x3 & x6) ^ (x0 & x1 & x2 & x3) ^ (x0 & x5) ^ x0;
+    let orders: &[[usize; 7]] = match passes {
+        3 => &[[1, 0, 3, 5, 6, 2, 4], [4, 2, 1, 0, 5, 3, 6], [6, 1, 2, 3, 4, 5, 0]],
+        4 => &[[2, 6, 1, 4, 5, 3, 0], [3, 5, 2, 0, 1, 6, 4], [1, 4, 3, 6, 0, 2, 5], [6, 4, 0, 5, 2, 1, 3]],
+        _ => &[
+            [3, 4, 1, 0, 5, 2, 6],
+            [6, 2, 1, 0, 3, 4, 5],
+            [2, 6, 0, 4, 3, 1, 5],
+            [1, 5, 3, 2, 0, 4, 6],
+            [2, 5, 0, 6, 4, 3, 1],
+        ],
+    };
+    let functions = [f1, f2, f3, f4, f5];
+    let words: [Option<(&[usize; 32], &[u32; 32])>; 5] = [
+        None,
+        Some((&tables::HAVAL_I2, &tables::HAVAL_K2)),
+        Some((&tables::HAVAL_I3, &tables::HAVAL_K3)),
+        Some((&tables::HAVAL_I4, &tables::HAVAL_K4)),
+        Some((&tables::HAVAL_I5, &tables::HAVAL_K5)),
+    ];
+    let x: Vec<u32> = block.chunks(4).map(|w| u32::from_le_bytes([w[0], w[1], w[2], w[3]])).collect();
+    let mut e = *state;
+    for (p, order) in orders.iter().enumerate() {
+        for i in 0..32 {
+            let m = |k: usize| e[(k + 8 - i % 8) % 8];
+            let f =
+                functions[p](m(order[0]), m(order[1]), m(order[2]), m(order[3]), m(order[4]), m(order[5]), m(order[6]));
+            let word = match words[p] {
+                None => x[i],
+                Some((index, k)) => x[index[i]].wrapping_add(k[i]),
+            };
+            e[7 - i % 8] = f.rotate_right(7).wrapping_add(m(7).rotate_right(11)).wrapping_add(word);
+        }
+    }
+    for (s, v) in state.iter_mut().zip(e) {
+        *s = s.wrapping_add(v);
+    }
 }
 
 fn crc32_reflected(data: &[u8], poly: u32) -> u32 {

@@ -152,7 +152,20 @@
                       "murmur3f",
                       "xxh32",
                       "xxh64",
-                      "XXH32"
+                      "XXH32",
+                      "md2",
+                      "ripemd160",
+                      "ripemd320",
+                      "whirlpool",
+                      "tiger192,3",
+                      "tiger128,4",
+                      "snefru",
+                      "gost",
+                      "gost-crypto",
+                      "haval160,4",
+                      "haval256,5",
+                      "xxh3",
+                      "xxh128"
                     ]
                   }
                 },

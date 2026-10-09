@@ -3046,7 +3046,7 @@
       }
     },
     "string.hash": {
-      "doc": "hash($algo, $data) for MD4, MD5, SHA-1/2/3, Adler-32, CRC-32 (bzip2, b, c), FNV-1/1a, joaat, MurmurHash3 (a, c, f) and XXH32/64; a ValueError for unknown names (MD2, RIPEMD, Whirlpool, Tiger, Snefru, GOST, HAVAL, XXH3 and XXH128 are not ported)",
+      "doc": "hash($algo, $data) for every algorithm of hash_algos(); a ValueError for unknown names",
       "fuzz": [
         {
           "name": "digests",
@@ -3093,7 +3093,46 @@
                       "nope",
                       "",
                       "sha512-256",
-                      "crc"
+                      "crc",
+                      "md2",
+                      "ripemd128",
+                      "ripemd160",
+                      "ripemd256",
+                      "ripemd320",
+                      "whirlpool",
+                      "tiger128,3",
+                      "tiger160,3",
+                      "tiger192,3",
+                      "tiger128,4",
+                      "tiger160,4",
+                      "tiger192,4",
+                      "snefru",
+                      "snefru256",
+                      "gost",
+                      "gost-crypto",
+                      "xxh3",
+                      "xxh128",
+                      "Tiger192,4",
+                      "SNEFRU",
+                      "GOST-Crypto",
+                      "haval128,3",
+                      "haval160,3",
+                      "haval192,3",
+                      "haval224,3",
+                      "haval256,3",
+                      "haval128,4",
+                      "haval160,4",
+                      "haval192,4",
+                      "haval224,4",
+                      "haval256,4",
+                      "haval128,5",
+                      "haval160,5",
+                      "haval192,5",
+                      "haval224,5",
+                      "haval256,5",
+                      "HAVAL160,4",
+                      "haval256",
+                      "haval128,6"
                     ]
                   }
                 ]
@@ -3127,7 +3166,7 @@
               }
             }
           },
-          "iterations": 6000
+          "iterations": 8000
         }
       ]
     }
