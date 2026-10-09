@@ -51,7 +51,8 @@ aes = "0.8"
 aes-gcm = "0.10"
 argon2 = { version = "0.5", features = ["std"] }
 base64 = "0.22"
-bcrypt = "0.17"
+# EksBlowfish (php-std crypt()); RustCrypto, pure Rust.
+blowfish = { version = "0.9", features = ["bcrypt"] }
 brotli = { version = "8", default-features = false, features = ["std"] }
 bytes = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
@@ -63,6 +64,8 @@ flate2 = "1"
 form_urlencoded = "1"
 futures-util = { version = "0.3", default-features = false, features = ["std", "async-await-macro"] }
 getrandom = "0.3"
+# GOST R 34.11-94, MD2, RIPEMD and Whirlpool for php-std hash(); RustCrypto, pure Rust.
+gost94 = "0.10"
 hex = "0.4"
 hmac = "0.12"
 http = "1"
@@ -76,9 +79,15 @@ indexmap = "2"
 icu_normalizer = { version = "2.3", default-features = false, features = ["compiled_data"] }
 icu_properties = { version = "2.3", default-features = false, features = ["compiled_data"] }
 md-5 = "0.10"
+md2 = "0.10"
+# NIST P-256 ECDSA (ES256 passkeys, utopia-auth); RustCrypto, pure Rust.
+p256 = { version = "0.13", default-features = false, features = ["ecdsa", "pkcs8", "std"] }
 mimalloc = { version = "0.1", default-features = false }
 redis = { version = "0.32", default-features = false, features = ["tokio-comp", "aio", "connection-manager", "script"] }
 regex = "1"
+# RSA PKCS#1 v1.5 signatures and PEM keys (RS256 JWTs and passkeys, utopia-auth); RustCrypto, pure Rust.
+rsa = { version = "0.9", features = ["sha2", "getrandom"] }
+ripemd = "0.1"
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 rustix = { version = "1", default-features = false, features = ["std", "fs", "system"] }
 scrypt = { version = "0.11", default-features = false }
@@ -92,6 +101,9 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time",
 tokio-postgres = { version = "0.7.12", features = ["with-chrono-0_4", "with-serde_json-1"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "env-filter", "ansi"] }
+whirlpool = "0.10"
+# XXH3 and XXH128 for php-std hash(); pure Rust.
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
 zstd = { version = "0.13", default-features = false }
 
 [profile.release]

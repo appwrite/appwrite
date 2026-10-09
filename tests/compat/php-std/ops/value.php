@@ -12,4 +12,10 @@ return [
     'value.loose_eq' => fn (array $a) => $a['a'] == $a['b'],
     'value.loose_str_eq' => fn (array $a) => (string) $a['a'] == (string) $a['b'],
     'value.le_numbers' => fn (array $a) => $a['a'] <= $a['b'],
+    'value.sort_strings' => function (array $a) {
+        $values = array_map(fn (mixed $v): string => (string) $v, array_values((array) $a['v']));
+        sort($values);
+
+        return $values;
+    },
 ];

@@ -71,6 +71,10 @@ pub const OPS: &[&str] = &[
     "string.ctype_space",
     "string.ctype_upper",
     "string.ctype_xdigit",
+    "string.crypt",
+    "string.hash",
+    "string.password_verify",
+    "string.password_hash",
 ];
 
 /// A PHP exception as an outcome.
@@ -425,6 +429,38 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
         "string.ctype_space" => ctype(&a, string::Ctype::Space),
         "string.ctype_upper" => ctype(&a, string::Ctype::Upper),
         "string.ctype_xdigit" => ctype(&a, string::Ctype::Xdigit),
+        "string.crypt" => ok(bytes_value(&string::crypt(&a.bytes("string")?, &a.bytes("salt")?))),
+        "string.hash" => match string::hash(&a.bytes("algo")?, &a.bytes("data")?) {
+            Some(digest) => ok(Value::String(digest)),
+            None => Ok(Outcome::err("ValueError", "hash(): Argument #1 ($algo) must be a valid hashing algorithm")),
+        },
+        "string.password_verify" => ok(Value::Bool(string::password_verify(&a.bytes("password")?, &a.bytes("hash")?))),
+        "string.password_hash" => {
+            let option = |key: &str, default: i64| {
+                a.opt("options")
+                    .and_then(|o| o.get(key))
+                    .map(|v| php_std::format::Arg::from(v).to_int())
+                    .unwrap_or(default)
+            };
+            let mut salt = [0u8; 16];
+            utopia_auth::random_bytes(&mut salt);
+            let password = a.bytes("password")?;
+            let hashed = if a.str("algo")? == "bcrypt" {
+                string::password_hash_bcrypt(&password, option("cost", 12), &salt)
+            } else {
+                string::password_hash_argon2id(
+                    &password,
+                    option("memory_cost", 65536),
+                    option("time_cost", 4),
+                    option("threads", 1),
+                    &salt,
+                )
+            };
+            match hashed {
+                Ok(h) => ok(bytes_value(&h)),
+                Err(e) => Ok(Outcome::err(e.php_class(), e.message())),
+            }
+        }
         _ => Err(Fault::new(format!("php-std: unknown operation `{op}`"))),
     }
 }

@@ -2,6 +2,7 @@
 
 use bytes::Bytes;
 use utopia_auth::Hash;
+use utopia_auth::hashes::{Argon2, Sha};
 use utopia_database::sql::Builder;
 use utopia_database::{Database, FromRow, Param, datetime, permission};
 use utopia_emails::Email;
@@ -13,16 +14,40 @@ use appwrite_core::response::UserModel;
 use appwrite_core::{Error, ErrorType, Result};
 
 /// The proof Appwrite uses for plaintext passwords (`proofForPassword`).
-pub fn proof() -> Hash {
-    Hash::Argon2 { memory_cost: 7168, time_cost: 5, threads: 1 }
+pub fn proof() -> Box<dyn Hash> {
+    let mut argon2 = Argon2::new();
+    argon2.set_memory_cost(7168).set_time_cost(5).set_threads(1);
+    Box::new(argon2)
 }
 
 /// Hashes a plaintext password on the blocking pool.
 pub async fn hash_password(password: String) -> Result<String> {
-    tokio::task::spawn_blocking(move || proof().hash(&password))
+    let hashed = tokio::task::spawn_blocking(move || proof().hash(password.as_bytes()))
         .await
         .map_err(|e| Error::internal(e.to_string()))?
-        .map_err(|e| Error::internal(e.to_string()))
+        .map_err(|e| Error::internal(e.to_string()))?;
+    String::from_utf8(hashed).map_err(|e| Error::internal(e.to_string()))
+}
+
+/// `proofForToken->hash($secret)`: SHA-256 hex of a session or token secret.
+pub fn token_hash(secret: &str) -> Result<String> {
+    let hashed = Sha::new().hash(secret.as_bytes()).map_err(|e| Error::internal(e.to_string()))?;
+    String::from_utf8(hashed).map_err(|e| Error::internal(e.to_string()))
+}
+
+/// The session store a client keeps (`Store` with `id` and `secret`), encoded.
+pub fn session_store(id: &str, secret: &str) -> Result<String> {
+    use php_std::zval::Zval;
+    let mut store = utopia_auth::Store::new();
+    store
+        .set_property(b"id", Zval::String(id.as_bytes().to_vec()))
+        .set_property(b"secret", Zval::String(secret.as_bytes().to_vec()));
+    store.encode().map_err(|e| Error::internal(e.to_string()))
+}
+
+/// The options document of a hash, as the `hashOptions` attribute stores it.
+pub fn hash_options(hash: &dyn Hash) -> serde_json::Value {
+    php_std::zval::Zval::Array(hash.options().as_array().clone()).to_json().unwrap_or(serde_json::Value::Null)
 }
 
 /// Loads a user or fails with `user_not_found`.
@@ -191,7 +216,7 @@ pub async fn identity_email_taken(db: &Database, email: &str, exclude_user_seque
 
 /// Input of [`create_user`].
 pub struct NewUser {
-    pub hash: Hash,
+    pub hash: Box<dyn Hash>,
     pub user_id: String,
     pub email: Option<String>,
     pub password: Option<String>,
@@ -231,7 +256,7 @@ pub async fn create_user(ctx: &mut Context, input: NewUser) -> Result<User> {
     let meta = Metadata::of(email.as_deref());
     check_email_policy(ctx, &meta)?;
 
-    let plaintext = matches!(input.hash, Hash::Plaintext);
+    let plaintext = input.hash.name() == "plaintext";
     let password = input.password.filter(|p| !p.is_empty());
     let (hashed, hash) = match &password {
         Some(p) if plaintext => {
@@ -266,7 +291,7 @@ pub async fn create_user(ctx: &mut Context, input: NewUser) -> Result<User> {
         ("passwordHistory", Param::string_list(&history)),
         ("passwordUpdate", Param::opt_timestamp(hashed.as_ref().map(|_| now))),
         ("hash", Param::text(hash.name())),
-        ("hashOptions", Param::Text(appwrite_core::json::to_string(&hash.options()))),
+        ("hashOptions", Param::Text(appwrite_core::json::to_string(&hash_options(hash.as_ref())))),
         ("registration", Param::Timestamp(now)),
         ("reset", Param::Bool(false)),
         ("name", Param::Text(name)),

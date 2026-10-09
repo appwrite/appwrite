@@ -794,11 +794,21 @@ fn parse_tz_cor(c: &mut Cursor) -> (i64, bool) {
         c.p += 1;
     }
     let len = c.p - begin;
+    // C's strtol(): it reads past the run of digits and colons when that run
+    // ends early (`+14:+5` is 14:05), skipping whitespace and taking a sign.
     let strtol = |i: usize| -> i64 {
         let mut j = begin + i;
+        while matches!(c.at(j), b' ' | b'\t' | b'\n' | 0x0b | 0x0c | b'\r') {
+            j += 1;
+        }
+        let negative = c.at(j) == b'-';
+        if matches!(c.at(j), b'+' | b'-') {
+            j += 1;
+        }
         let mut v: i64 = 0;
         while c.at(j).is_ascii_digit() {
-            v = v.saturating_mul(10).saturating_add(i64::from(c.at(j) - b'0'));
+            let d = i64::from(c.at(j) - b'0');
+            v = if negative { v.saturating_mul(10).saturating_sub(d) } else { v.saturating_mul(10).saturating_add(d) };
             j += 1;
         }
         v

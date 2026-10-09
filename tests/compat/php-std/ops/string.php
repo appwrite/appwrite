@@ -71,4 +71,12 @@ return [
     'string.ctype_space' => fn (array $a) => ctype_space($a['text']),
     'string.ctype_upper' => fn (array $a) => ctype_upper($a['text']),
     'string.ctype_xdigit' => fn (array $a) => ctype_xdigit($a['text']),
+    'string.crypt' => fn (array $a) => crypt($a['string'], $a['salt']),
+    'string.hash' => fn (array $a) => hash($a['algo'], $a['data']),
+    'string.password_verify' => fn (array $a) => password_verify($a['password'], $a['hash']),
+    'string.password_hash' => fn (array $a) => password_hash(
+        $a['password'],
+        $a['algo'] === 'bcrypt' ? PASSWORD_BCRYPT : PASSWORD_ARGON2ID,
+        \is_array($a['options'] ?? null) ? $a['options'] : [],
+    ),
 ];

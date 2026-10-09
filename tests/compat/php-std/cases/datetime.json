@@ -6652,6 +6652,851 @@
         true,
         true
       ]
+    },
+    {
+      "name": "parse_from_format: UTC offsets read past a short run (strtol)",
+      "steps": [
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+14:+5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50700,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+14:+5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50700,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+14:+5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50700,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+14:-5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50100,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+14:-5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50100,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+14:-5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50100,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+14: 5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50700,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+14: 5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50700,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+14: 5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50700,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+1:+30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "3": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 3600,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+1:+30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "3": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 3600,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+1:+30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "3": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 3600,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+1:-30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "3": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 3600,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+1:-30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "3": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 3600,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+1:-30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "3": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 3600,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+14:+"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50400,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+14:+"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50400,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+14:+"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50400,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "-02:\t7"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": -7620,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "-02:\t7"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": -7620,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "-02:\t7"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": -7620,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+14:+99999999999999999999"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50340,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+14:+99999999999999999999"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50340,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+14:+99999999999999999999"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50340,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+05:30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 19800,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+05:30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 19800,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+05:30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 19800,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+5:3"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 18180,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+5:3"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 18180,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+5:3"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 18180,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "-0130"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": -5400,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "-0130"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": -5400,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "-0130"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": -5400,
+            "is_dst": false
+          }
+        }
+      ]
     }
   ]
 }
