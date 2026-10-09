@@ -124,7 +124,9 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   const security = useAuthSecuritySnapshot(projectId)
   const mockNumbers = security.authMockNumbers ?? []
   const { platforms } = usePlatforms(projectId)
-  const { sitesDomain, functionsDomain } = useConsoleVariables()
+  const { sitesDomain, functionsDomain } = useConsoleVariables(
+    projectData?.region,
+  )
   const passkeyReady = security.authPasskey.origins.length > 0
   const [passkeySetupOpen, setPasskeySetupOpen] = useState(false)
   const passkeysAllowed = usePasskeysAllowed()

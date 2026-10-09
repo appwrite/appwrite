@@ -207,6 +207,8 @@ type MockOptions = {
   accountPrefs?: Models.Preferences
   /** When set, the policy PATCH is refused with this JSON body. */
   patchError?: { message: string; code: number; type: string }
+  /** The Sites domain from the console variables; unset by default. */
+  sitesDomain?: string
   /** The project's platforms; `example.com` and `app.example.com` by default. */
   platforms?: Platform[]
 }
@@ -289,7 +291,11 @@ async function mockAppwriteApi(
       })
     if (apiPath === '/locale/codes')
       return json(200, { total: 0, localeCodes: [] })
-    if (apiPath === '/console/variables') return json(200, {})
+    if (apiPath === '/console/variables')
+      return json(
+        200,
+        options.sitesDomain ? { _APP_DOMAIN_SITES: options.sitesDomain } : {},
+      )
     if (
       apiPath === '/console/scopes/project' ||
       apiPath === `/organizations/${ORGANIZATION.$id}/roles`
@@ -543,6 +549,29 @@ test.describe('passkeys (mocked API)', () => {
     })
     await expect.poll(() => calls.methodPatches.length).toBe(1)
     expect(calls.methodPatches[0].postDataJSON()).toEqual({ enabled: true })
+  })
+
+  test('a site on the shared Sites domain is suggested only as itself', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      rpId: '',
+      sitesDomain: 'appwrite.network',
+      platforms: [webPlatform('myapp.appwrite.network')],
+    })
+    await openAuthSettings(page)
+    await page.locator(`#${PASSKEY_ID}`).click()
+
+    const dialog = page.getByTestId('enable-passkeys-dialog')
+    await expect(
+      dialog.getByRole('radio', {
+        name: 'myapp.appwrite.network',
+        exact: true,
+      }),
+    ).toBeChecked()
+    await expect(
+      dialog.getByRole('radio', { name: 'appwrite.network', exact: true }),
+    ).toHaveCount(0)
   })
 
   test('a localhost platform turns passkeys on before a domain is chosen', async ({

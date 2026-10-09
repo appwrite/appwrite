@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -6,7 +7,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useUpdatePasskeyPolicy } from '@/lib/react-query/hooks/auth'
-import { useConsoleVariables, usePlatforms } from '@/lib/react-query/hooks'
+import {
+  projectQueryOptions,
+  useConsoleVariables,
+  usePlatforms,
+} from '@/lib/react-query/hooks'
 import {
   MAX_PASSKEY_RP_ID_LENGTH,
   passkeyRpIdError,
@@ -37,7 +42,8 @@ export function PasskeyRelyingPartyCard({
   const mutation = useUpdatePasskeyPolicy(projectId)
   const syncedPolicy = useRef(currentPolicy)
   const { platforms } = usePlatforms(projectId)
-  const { sitesDomain, functionsDomain } = useConsoleVariables()
+  const { data: project } = useQuery(projectQueryOptions(projectId))
+  const { sitesDomain, functionsDomain } = useConsoleVariables(project?.region)
 
   useEffect(() => {
     // Adopt the stored policy only when it changes, so a refused save keeps the
