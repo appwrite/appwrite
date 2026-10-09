@@ -342,6 +342,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-function-email-triggers",
+    "href": "/blog/post/announcing-function-email-triggers",
+    "title": "Announcing email triggers for Appwrite Functions",
+    "description": "Appwrite Functions can now execute when an email arrives. Each function has a built-in email address, and you can connect your own domain with MX and TXT records.",
+    "date": "2026-09-23",
+    "lastUpdated": "2026-09-23",
+    "timeToRead": 6,
+    "author": "torsten-dittmann",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-function-email-triggers/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "appwrite-codex-plugin-hosted-mcp",
     "href": "/blog/post/appwrite-codex-plugin-hosted-mcp",
     "title": "The new Appwrite plugin for Codex: Skills and hosted MCP",
