@@ -57,13 +57,38 @@ final readonly class Claim
     }
 
     /**
-     * Refuse to create, retry or claim an attempt until V26 has installed every
-     * ownership field: without them the attempt identifier would be silently
-     * dropped. A new API starts attempts only after its project schema has
-     * crossed V26, and a worker hands the delivery back to the queue, leaving
-     * the migration pending, so the queue can redeliver it once V26 has run.
+     * Refuse to claim an attempt until V26 has installed every ownership field:
+     * without them the attempt identifier would be silently dropped.
      */
     public function assertReady(): void
+    {
+        $missing = $this->missing();
+
+        if ($missing !== []) {
+            throw new Exception(
+                Exception::MIGRATION_SCHEMA_NOT_READY,
+                'Migration ownership schema is not ready; missing attributes: ' . \implode(', ', $missing),
+            );
+        }
+    }
+
+    /**
+     * Whether V26 has reached the project. Until it has, migrations are created,
+     * retried and run unclaimed, as before the claim protocol existed.
+     */
+    public function ready(): bool
+    {
+        try {
+            return $this->missing() === [];
+        } catch (Exception) {
+            return false;
+        }
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function missing(): array
     {
         $missing = [];
 
@@ -93,12 +118,7 @@ final readonly class Claim
             }
         }
 
-        if ($missing !== []) {
-            throw new Exception(
-                Exception::MIGRATION_SCHEMA_NOT_READY,
-                'Migration ownership schema is not ready; missing attributes: ' . \implode(', ', $missing),
-            );
-        }
+        return $missing;
     }
 
     /**
@@ -110,12 +130,16 @@ final readonly class Claim
         array $platform,
         MigrationPublisher $publisher,
     ): Document {
-        return $this->publish(
+        $created = $this->create($migration);
+
+        $this->publish(
             project: $project,
-            migration: $this->create($migration),
+            migration: $created,
             platform: $platform,
             publisher: $publisher,
         );
+
+        return $created;
     }
 
     /**
@@ -124,11 +148,9 @@ final readonly class Claim
      */
     public function create(Document $migration): Document
     {
-        $this->assertReady();
-
         return $this->database->createDocument('migrations', new Document([
             ...$migration->getArrayCopy(),
-            'attemptId' => Id::unique(),
+            ...($this->ready() ? ['attemptId' => Id::unique()] : []),
             'status' => self::STATUS_PENDING,
             'stage' => self::STAGE_INIT,
         ]));
@@ -150,6 +172,16 @@ final readonly class Claim
         $migrationId = $migration->getId();
         if ($migrationId === '') {
             throw new \LogicException('Migration identifier is missing');
+        }
+
+        if ($migration->getAttribute('attemptId') === null) {
+            $publisher->enqueue(new MigrationMessage(
+                project: $project,
+                migration: $migration,
+                platform: $platform,
+            ));
+
+            return $migration;
         }
 
         $claimed = $this->guard(
@@ -226,7 +258,7 @@ final readonly class Claim
                     }
 
                     if ($migration->getAttribute('status') !== self::STATUS_FAILED) {
-                        throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration is not in a terminal failed state');
+                        throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration not failed yet');
                     }
 
                     $terminal = new Document([
@@ -251,7 +283,9 @@ final readonly class Claim
 
     /**
      * Persist a retry claim before publishing it. If publishing fails, restore
-     * the failed attempt unless a newer claim already moved past this one.
+     * the failed attempt unless a newer claim already moved past this one. A
+     * retry that is claimed but not yet picked up is accepted again without
+     * publishing a second delivery.
      *
      * @param array<string, mixed> $platform
      */
@@ -261,6 +295,18 @@ final readonly class Claim
         array $platform,
         MigrationPublisher $publisher,
     ): Document {
+        if (!$this->ready()) {
+            return $this->retryUnclaimed($project, $migrationId, $platform, $publisher);
+        }
+
+        $live = $this->database->getDocument('migrations', $migrationId);
+        if (
+            $live->getAttribute('status') === self::STATUS_PENDING
+            && $live->getAttribute('stage') === self::STAGE_FINISHED
+        ) {
+            return $live;
+        }
+
         $retry = $this->reclaim($project->getId(), $migrationId);
 
         try {
@@ -288,6 +334,38 @@ final readonly class Claim
     }
 
     /**
+     * @param array<string, mixed> $platform
+     */
+    private function retryUnclaimed(
+        Document $project,
+        string $migrationId,
+        array $platform,
+        MigrationPublisher $publisher,
+    ): Document {
+        $migration = $this->database->getDocument('migrations', $migrationId);
+
+        if ($migration->isEmpty()) {
+            throw new Exception(Exception::MIGRATION_NOT_FOUND);
+        }
+
+        if ($migration->getAttribute('status') !== self::STATUS_FAILED) {
+            throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration not failed yet');
+        }
+
+        $migration
+            ->setAttribute('status', self::STATUS_PENDING)
+            ->setAttribute('dateUpdated', \time());
+
+        $publisher->enqueue(new MigrationMessage(
+            project: $project,
+            migration: $migration,
+            platform: $platform,
+        ));
+
+        return $migration;
+    }
+
+    /**
      * Claim one exact queued generation for processing. A redelivery of an
      * attempt that stopped writing for longer than its lease takes the
      * migration over with a new attempt, which fences the dead worker out.
@@ -303,7 +381,9 @@ final readonly class Claim
             return null;
         }
 
-        $this->assertReady();
+        if (!$this->ready()) {
+            return new Delivery(migration: $queued, terminal: null);
+        }
 
         try {
             return $this->guard(
@@ -401,10 +481,16 @@ final readonly class Claim
      * that produced it still own the migration. The write is pinned to the
      * generation's update timestamp, and every claim write moves that
      * timestamp strictly forward, so a takeover, retry claim, expiry or
-     * deletion since this worker's last write refuses it.
+     * deletion since this worker's last write refuses it. A generation without
+     * an attempt was delivered before V26 reached the project and is written
+     * unclaimed.
      */
     public function persist(Document $migration): ?Document
     {
+        if ($migration->getAttribute('attemptId') === null && $migration->getId() !== '') {
+            return $this->database->updateDocument('migrations', $migration->getId(), $migration);
+        }
+
         $this->assertComparable($migration);
         $attemptId = $migration->getAttribute('attemptId');
         if (

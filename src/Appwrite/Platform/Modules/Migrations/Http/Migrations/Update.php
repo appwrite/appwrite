@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations;
 
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
-use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -68,22 +67,17 @@ class Update extends Action
         MigrationPublisher $publisherForMigrations,
         callable $locks,
     ): void {
-        $claim = new Claim($dbForProject, $locks);
-        $claim->assertReady();
-
         try {
-            $migration = $claim->retry(
+            (new Claim($dbForProject, $locks))->retry(
                 project: $project,
                 migrationId: $migrationId,
                 platform: $platform,
                 publisher: $publisherForMigrations,
             );
         } catch (Contention) {
-            throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration retry is already being claimed');
+            // A concurrent request holds the claim of this retry and publishes it.
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($migration, Response::MODEL_MIGRATION);
+        $response->noContent();
     }
 }

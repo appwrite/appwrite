@@ -1019,9 +1019,9 @@ final class FormatTest extends TestCase
         $this->assertSame(['type' => 'object'], $resourceData['items']);
         $this->assertSame([
             [
-                'resource' => 'database',
+                'resource' => 'Database',
                 'id' => 'public',
-                'status' => 'success',
+                'status' => 'SUCCESS',
                 'message' => '',
             ],
         ], $resourceData['example']);

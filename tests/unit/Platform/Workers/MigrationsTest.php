@@ -9,7 +9,6 @@ use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
-use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\Platform\Modules\Migrations\Superseded;
@@ -897,7 +896,7 @@ final class MigrationsTest extends TestCase
         $this->assertSame($worker->attempts[1], $stored->getAttribute('attemptId'));
     }
 
-    public function testActionHandsTheDeliveryBackUntilTheOwnershipSchemaExists(): void
+    public function testActionRunsADeliveryBeforeTheOwnershipSchemaUnclaimedAsOnMain(): void
     {
         $database = $this->createClaimDatabase(ownership: false);
         $project = new Document([
@@ -931,14 +930,9 @@ final class MigrationsTest extends TestCase
         };
         $delivery = $this->migrationDelivery($project, $migration);
 
-        try {
-            $this->deliverClaim($worker, $database, $project, $delivery);
-            $this->fail('Expected the delivery to be handed back to the queue');
-        } catch (Exception $error) {
-            $this->assertSame(Exception::MIGRATION_SCHEMA_NOT_READY, $error->getType());
-        }
+        $this->deliverClaim($worker, $database, $project, $delivery);
 
-        $this->assertSame([], $worker->attempts);
+        $this->assertSame([null], $worker->attempts, 'Main ran every delivery, before V26 without an attempt');
         $stored = $database->getDocument('migrations', $migration->getId());
         $this->assertSame('pending', $stored->getAttribute('status'));
         $this->assertSame('init', $stored->getAttribute('stage'));
@@ -950,9 +944,58 @@ final class MigrationsTest extends TestCase
 
         $this->deliverClaim($worker, $database, $project, $delivery);
 
-        $this->assertCount(1, $worker->attempts);
-        $this->assertIsString($worker->attempts[0]);
-        $this->assertSame($worker->attempts[0], $database->getDocument('migrations', $migration->getId())->getAttribute('attemptId'));
+        $this->assertCount(2, $worker->attempts);
+        $this->assertIsString($worker->attempts[1]);
+        $this->assertSame($worker->attempts[1], $database->getDocument('migrations', $migration->getId())->getAttribute('attemptId'));
+    }
+
+    public function testRealtimeUpdatesCarryMainsPayloadAndSkipTheFinalizingClaim(): void
+    {
+        $database = $this->createClaimDatabase();
+        $migration = $database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'attemptId' => 'attempt-1',
+            'status' => 'processing',
+            'stage' => 'migrating',
+            'resourceData' => [],
+            'errors' => [],
+        ]));
+        $realtime = new class () extends Realtime {
+            /** @var array<array<string, mixed>> */
+            public array $payloads = [];
+
+            #[\Override]
+            public function trigger(): string|bool
+            {
+                $this->payloads[] = $this->getPayload();
+
+                return true;
+            }
+        };
+        $worker = new class ($database) extends Migrations {
+            public function __construct(Database $database)
+            {
+                $this->claims = new Claim($database);
+            }
+
+            public function update(Document $migration, Realtime $realtime, bool $publish): Document
+            {
+                return $this->updateMigrationDocument($migration, new Document(['$id' => 'project-1']), $realtime, $publish);
+            }
+        };
+
+        $migration->setAttribute('resourceData', '{}');
+        $migration->setAttribute('statusCounters', '{"user":{"success":1}}');
+        $migration = $worker->update($migration, $realtime, true);
+        $migration->setAttribute('stage', Claim::STAGE_FINALIZING);
+        $worker->update($migration, $realtime, false);
+
+        $this->assertCount(1, $realtime->payloads, 'Main published no update while it ran the success hooks');
+        $this->assertArrayNotHasKey('attemptId', $realtime->payloads[0], 'Main had no attempts to publish');
+        $this->assertSame('migrating', $realtime->payloads[0]['stage']);
+        $this->assertSame('{}', $realtime->payloads[0]['resourceData'], 'Main published the worker document as it set it');
+        $this->assertSame('{"user":{"success":1}}', $realtime->payloads[0]['statusCounters']);
+        $this->assertSame(Claim::STAGE_FINALIZING, $database->getDocument('migrations', 'migration-1')->getAttribute('stage'));
     }
 
     private function createClaimDatabase(bool $ownership = true): Database
@@ -1423,6 +1466,7 @@ final class MigrationsTest extends TestCase
                 Document $migration,
                 Document $project,
                 Realtime $queueForRealtime,
+                bool $publish = true,
             ): Document {
                 ($this->record)('persist:'
                     . $migration->getAttribute('status')

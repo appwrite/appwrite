@@ -92,7 +92,7 @@ final class MigrationsWorkerExportTest extends TestCase
                 );
             }
 
-            protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
+            protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime, bool $publish = true): Document
             {
                 return $migration;
             }
@@ -360,7 +360,7 @@ final class MigrationsWorkerExportTest extends TestCase
                 return 'api-key';
             }
 
-            protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
+            protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime, bool $publish = true): Document
             {
                 $this->statuses[] = (string) $migration->getAttribute('status');
                 return $migration;

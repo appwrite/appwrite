@@ -78,8 +78,6 @@ class Create extends Action
         callable $locks,
     ): void {
         $claim = new Claim($dbForProject, $locks);
-        $claim->assertReady();
-
         $serviceAccountData = json_decode($serviceAccount, true);
 
         if (empty($serviceAccountData)) {

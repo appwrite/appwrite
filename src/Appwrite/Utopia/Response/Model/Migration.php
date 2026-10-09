@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Platform\Modules\Migrations\Report;
+use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Document;
@@ -132,9 +132,9 @@ class Migration extends Model
             ])
             ->addRule('resourceData', [
                 'type' => self::TYPE_JSON,
-                'description' => 'An array of objects containing the report data of the resources that were migrated. Large migrations keep only the resources that did not succeed, errors first, with messages truncated to ' . Report::MESSAGE_LIMIT . ' characters; per-type totals are in `statusCounters`.',
+                'description' => 'An array of objects containing the report data of the resources that were migrated.',
                 'default' => [],
-                'example' => '[{"resource":"database","id":"public","status":"success","message":""}]',
+                'example' => '[{"resource":"Database","id":"public","status":"SUCCESS","message":""}]',
                 'array' => true,
             ])
             ->addRule('errors', [
@@ -175,6 +175,10 @@ class Migration extends Model
 
     public function filter(Document $document): Document
     {
+        if ($document->getAttribute('stage') === Claim::STAGE_FINALIZING) {
+            $document->setAttribute('stage', Claim::STAGE_MIGRATING);
+        }
+
         foreach (['statusCounters', 'options'] as $attribute) {
             $value = $document->getAttribute($attribute);
             if (\is_array($value) && empty($value)) {

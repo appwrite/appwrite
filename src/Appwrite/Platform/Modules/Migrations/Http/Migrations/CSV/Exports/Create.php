@@ -102,8 +102,6 @@ class Create extends Action
         callable $locks,
     ): void {
         $claim = new Claim($dbForProject, $locks);
-        $claim->assertReady();
-
         try {
             $parsedQueries = Query::parseQueries($queries);
         } catch (QueryException $e) {

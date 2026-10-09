@@ -281,7 +281,7 @@ trait MigrationsBase
         return $response['body'];
     }
 
-    public function testRetryMigrationClaimsFailedRun(): void
+    public function testRetryMigrationOfAFailedRunAnswersNoContent(): void
     {
         $project = $this->getDestinationProject();
         $headers = [
@@ -310,13 +310,18 @@ trait MigrationsBase
             $terminal = $migration['body'];
         }, 60_000, 500);
 
+        $this->assertSame('failed', $terminal['status']);
+
         $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, $headers);
 
-        $this->assertSame(202, $retry['headers']['status-code']);
-        $this->assertSame($migrationId, $retry['body']['$id']);
-        $this->assertSame('pending', $retry['body']['status']);
-        $this->assertSame('finished', $retry['body']['stage']);
-        $this->assertNotSame($terminal['$updatedAt'], $retry['body']['$updatedAt']);
+        $this->assertSame(204, $retry['headers']['status-code'], 'Main answered a retry with no content');
+        $this->assertEmpty($retry['body']);
+
+        $completed = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, $headers);
+        $this->assertContains($completed['headers']['status-code'], [204, 409], 'A repeated retry is accepted until the worker picks the migration up, then refused');
+        if ($completed['headers']['status-code'] === 409) {
+            $this->assertSame('Migration not failed yet', $completed['body']['message']);
+        }
     }
 
     public function testCreateAppwriteMigrationEvent(): void
@@ -759,12 +764,7 @@ trait MigrationsBase
         $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DATABASE]['success']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['warning']);
-        $this->assertSame([[
-            'resource' => Resource::TYPE_DATABASE,
-            'id' => $databaseId,
-            'status' => Resource::STATUS_SUCCESS,
-            'message' => '',
-        ]], $result['resourceData']);
+        $this->assertSame([], $result['resourceData'], 'Main stored the encoded transfer cache, which is always {}');
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId, [
             'content-type' => 'application/json',

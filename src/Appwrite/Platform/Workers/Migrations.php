@@ -13,7 +13,6 @@ use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Modules\Migrations\Claim;
-use Appwrite\Platform\Modules\Migrations\Report;
 use Appwrite\Platform\Modules\Migrations\Superseded;
 use Appwrite\Services\TablesDB;
 use Appwrite\Template\Template;
@@ -23,7 +22,6 @@ use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
@@ -452,9 +450,17 @@ class Migrations extends Action
         };
     }
 
+    /**
+     * A migration delivered before V26 reached the project runs without an attempt; the destination
+     * records no owner on a project without the ownership schema, so a fresh identifier stands in.
+     */
     private function provisioningOwner(Document $migration): ProvisioningOwner
     {
         $attemptId = $migration->getAttribute('attemptId');
+        if ($attemptId === null) {
+            return new ProvisioningOwner($migration->getId(), Id::unique());
+        }
+
         if (!\is_string($attemptId) || $attemptId === '') {
             throw new \LogicException('Migration attempt identifier is missing');
         }
@@ -483,13 +489,17 @@ class Migrations extends Action
      * @throws Exception
      * @throws Superseded
      */
-    protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
+    protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime, bool $publish = true): Document
     {
         $claims = $this->claims ?? throw new \LogicException('Migration claim is missing');
-        $stored = $claims->persist($migration);
-        if ($stored === null) {
-            throw new Superseded('Migration attempt was superseded');
+        $stored = $claims->persist($migration) ?? throw new Superseded('Migration attempt was superseded');
+
+        if (!$publish) {
+            return $stored;
         }
+
+        $payload = $migration->getArrayCopy();
+        unset($payload['attemptId']);
 
         try {
             $queueForRealtime
@@ -497,7 +507,7 @@ class Migrations extends Action
                 ->setSubscribers(['console', $project->getId()])
                 ->setEvent('migrations.[migrationId].update')
                 ->setParam('migrationId', $stored->getId())
-                ->setPayload($stored->getArrayCopy(), sensitive: ['credentials'])
+                ->setPayload($payload, sensitive: ['credentials'])
                 ->trigger();
         } catch (\Throwable $error) {
             Console::warning('Failed to publish migration update: ' . $error->getMessage());
@@ -505,6 +515,7 @@ class Migrations extends Action
 
         return $stored;
     }
+
 
     /**
      * @return array<string>
@@ -602,7 +613,6 @@ class Migrations extends Action
     ): void {
         $project = $this->project;
         $transfer = $source = $destination = null;
-        $report = new Report();
         $caughtError = null;
         $superseded = false;
 
@@ -631,14 +641,9 @@ class Migrations extends Action
 
             $migration->setAttribute('credentials', $credentials);
 
-            if (
-                $migration->getAttribute('stage') !== 'processing'
-                || $migration->getAttribute('status') !== 'processing'
-            ) {
-                $migration->setAttribute('stage', 'processing');
-                $migration->setAttribute('status', 'processing');
-                $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
-            }
+            $migration->setAttribute('stage', 'processing');
+            $migration->setAttribute('status', 'processing');
+            $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
             $source = $this->processSource($migration);
             $destination = $this->processDestination($migration);
@@ -656,9 +661,8 @@ class Migrations extends Action
                 $context = $this->resolveResourceContext($migration);
                 $transfer->runWithResourceSelector(
                     $migration->getAttribute('resources'),
-                    function (array $resources) use (&$migration, $transfer, $report, $project, $queueForRealtime) {
-                        $report->track($resources, $transfer->getCache());
-                        $migration->setAttribute('resourceData', $report->encode());
+                    function (array $resources) use (&$migration, $transfer, $project, $queueForRealtime) {
+                        $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
                         $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
                         $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
@@ -685,9 +689,10 @@ class Migrations extends Action
 
             // Persist a non-expirable terminal-side-effect claim before success hooks.
             // A superseded worker stops here and cannot mark databases ready or clean orphans.
+            // Clients keep seeing the migrating stage, so no update is published for it.
             $migration->setAttribute('status', 'processing');
-            $migration->setAttribute('stage', 'finalizing');
-            $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+            $migration->setAttribute('stage', Claim::STAGE_FINALIZING);
+            $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime, publish: false);
 
             $destination->success();
             $source->success();
@@ -804,13 +809,8 @@ class Migrations extends Action
                     }
                 }
 
-                if ($transfer !== null) {
-                    $report->reconcile($transfer->getCache());
-                    $migration->setAttribute('resourceData', $report->encode());
-                }
-
                 try {
-                    $this->persistTerminal($migration, $project, $queueForRealtime);
+                    $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                 } catch (Superseded $error) {
                     Console::warning($error->getMessage());
                     return;
@@ -824,23 +824,6 @@ class Migrations extends Action
                 $source = null;
                 $destination = null;
             }
-        }
-    }
-
-    /**
-     * @throws Superseded
-     * @throws DatabaseException
-     */
-    private function persistTerminal(Document $migration, Document $project, Realtime $queueForRealtime): void
-    {
-        try {
-            $this->updateMigrationDocument($migration, $project, $queueForRealtime);
-        } catch (DatabaseException $error) {
-            Console::warning('Failed to store migration ' . $migration->getId() . ' with its report, retrying without it: ' . $error->getMessage());
-
-            $migration->removeAttribute('resourceData');
-            $migration->removeAttribute('statusCounters');
-            $this->updateMigrationDocument($migration, $project, $queueForRealtime);
         }
     }
 

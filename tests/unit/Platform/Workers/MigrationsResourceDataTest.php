@@ -29,8 +29,6 @@ use Utopia\Migration\Destination;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Auth\User;
-use Utopia\Migration\Resources\Database\Database as DatabaseResource;
-use Utopia\Migration\Resources\Database\Table;
 use Utopia\Migration\Source;
 use Utopia\Migration\Transfer;
 use Utopia\Queue\Message;
@@ -38,11 +36,9 @@ use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
 
-final class MigrationsReportTest extends TestCase
+final class MigrationsResourceDataTest extends TestCase
 {
     private const string MIGRATION_ID = 'migration';
-    private const string FAILURE = 'User already exists on the destination';
-    private const string DENIED = 'Missing or insufficient permissions.';
 
     private const array ENVIRONMENT = [
         '_APP_MIGRATION_HOST' => 'localhost',
@@ -69,7 +65,7 @@ final class MigrationsReportTest extends TestCase
         }
     }
 
-    public function testLargeMigrationImportsEveryResourceAndStoresEveryErrorWithinTheColumn(): void
+    public function testLargeMigrationImportsEveryResourceAndKeepsMainsResourceData(): void
     {
         $failing = \array_map(self::userId(...), \range(0, 2_999, 100));
         $imported = new \ArrayObject();
@@ -88,18 +84,10 @@ final class MigrationsReportTest extends TestCase
         $this->assertCount(\count($failing), $stored->getAttribute('errors'));
         $this->assertSame(2_970, $stored->getAttribute('statusCounters')[Resource::TYPE_USER][Resource::STATUS_SUCCESS]);
         $this->assertSame(30, $stored->getAttribute('statusCounters')[Resource::TYPE_USER][Resource::STATUS_ERROR]);
-        $this->assertSame(\array_map(
-            static fn (string $id): array => [
-                'resource' => Resource::TYPE_USER,
-                'id' => $id,
-                'status' => Resource::STATUS_ERROR,
-                'message' => self::FAILURE,
-            ],
-            $failing,
-        ), $stored->getAttribute('resourceData'));
+        $this->assertSame([], $stored->getAttribute('resourceData'), 'Main stored the encoded transfer cache, which is always {}');
     }
 
-    public function testSmallMigrationStoresTheFullReport(): void
+    public function testSmallMigrationKeepsMainsResourceData(): void
     {
         $imported = new \ArrayObject();
         $database = $this->createDatabase([Resource::TYPE_USER]);
@@ -114,73 +102,10 @@ final class MigrationsReportTest extends TestCase
         $this->assertCount(5, $imported);
         $this->assertSame('failed', $stored->getAttribute('status'));
         $this->assertSame('finished', $stored->getAttribute('stage'));
-        $this->assertSame([
-            self::entry(self::userId(0)),
-            self::entry(self::userId(1)),
-            self::entry(self::userId(2)),
-            self::entry(self::userId(3), Resource::STATUS_ERROR, self::FAILURE),
-            self::entry(self::userId(4)),
-        ], $stored->getAttribute('resourceData'));
+        $this->assertSame([], $stored->getAttribute('resourceData'), 'Main stored the encoded transfer cache, which is always {}');
     }
 
-    public function testEntriesRecordedOutsideProgressCallbacksAreStored(): void
-    {
-        $database = $this->createDatabase([Resource::TYPE_USER, Resource::TYPE_DATABASE]);
-
-        $this->migrate(
-            $database,
-            $this->createSource(users: 2, batch: 2, denied: true),
-            $this->createDestination([], new \ArrayObject()),
-        );
-
-        $stored = $database->getDocument('migrations', self::MIGRATION_ID);
-        $this->assertSame('finished', $stored->getAttribute('stage'));
-        $this->assertSame([
-            self::entry(self::userId(0)),
-            self::entry(self::userId(1)),
-            [
-                'resource' => Resource::TYPE_TABLE,
-                'id' => 'firestore',
-                'status' => Resource::STATUS_ERROR,
-                'message' => self::DENIED,
-            ],
-        ], $stored->getAttribute('resourceData'));
-    }
-
-    public function testTerminalWriteThatCannotStoreTheReportIsRetriedWithoutIt(): void
-    {
-        $writes = [];
-        $database = $this->createDatabase([Resource::TYPE_USER]);
-
-        $this->migrate(
-            $database,
-            $this->createSource(users: 5, batch: 2),
-            $this->createDestination([self::userId(3)], new \ArrayObject()),
-            static function (Document $migration) use (&$writes): void {
-                $writes[] = $migration->getArrayCopy();
-
-                if (
-                    \array_key_exists('resourceData', $migration->getArrayCopy())
-                    || \array_key_exists('statusCounters', $migration->getArrayCopy())
-                ) {
-                    throw new Structure('Invalid document structure: Attribute "resourceData" has invalid type.');
-                }
-            },
-        );
-
-        $stored = $database->getDocument('migrations', self::MIGRATION_ID);
-        $this->assertSame('failed', $stored->getAttribute('status'));
-        $this->assertSame('finished', $stored->getAttribute('stage'));
-        $this->assertCount(1, $stored->getAttribute('errors'));
-        $this->assertStringContainsString(self::FAILURE, (string) $stored->getAttribute('errors')[0]);
-        $this->assertCount(2, $writes, 'The terminal write must be retried once');
-        $this->assertArrayNotHasKey('resourceData', $writes[1]);
-        $this->assertArrayNotHasKey('statusCounters', $writes[1]);
-        $this->assertCount(5, $stored->getAttribute('resourceData'), 'The last stored report is kept');
-        $this->assertSame(4, $stored->getAttribute('statusCounters')[Resource::TYPE_USER][Resource::STATUS_SUCCESS]);
-    }
-
-    public function testTerminalWriteIsRetriedOnlyOnce(): void
+    public function testATerminalWriteThatFailsSurfacesItsErrorWithoutARetry(): void
     {
         $writes = 0;
         $database = $this->createDatabase([Resource::TYPE_USER]);
@@ -196,31 +121,18 @@ final class MigrationsReportTest extends TestCase
                     throw new Structure('Invalid document structure: Attribute "errors" has invalid type.');
                 },
             );
-            $this->fail('A terminal write that keeps failing must surface its error');
+            $this->fail('A terminal write that fails must surface its error as on main');
         } catch (Structure $error) {
             $this->assertStringContainsString('"errors"', $error->getMessage());
         }
 
-        $this->assertSame(2, $writes);
+        $this->assertSame(1, $writes);
         $this->assertSame('processing', $database->getDocument('migrations', self::MIGRATION_ID)->getAttribute('status'));
     }
 
     private static function userId(int $index): string
     {
         return \sprintf('user%024d', $index);
-    }
-
-    /**
-     * @return array{resource: string, id: string, status: string, message: string}
-     */
-    private static function entry(string $id, string $status = Resource::STATUS_SUCCESS, string $message = ''): array
-    {
-        return [
-            'resource' => Resource::TYPE_USER,
-            'id' => $id,
-            'status' => $status,
-            'message' => $message,
-        ];
     }
 
     /**
@@ -264,13 +176,12 @@ final class MigrationsReportTest extends TestCase
         return $database;
     }
 
-    private function createSource(int $users, int $batch, bool $denied = false): Source
+    private function createSource(int $users, int $batch): Source
     {
-        return new class ($users, $batch, $denied) extends Source {
+        return new class ($users, $batch) extends Source {
             public function __construct(
                 private readonly int $users,
                 private readonly int $batch,
-                private readonly bool $denied,
             ) {
             }
 
@@ -318,13 +229,6 @@ final class MigrationsReportTest extends TestCase
 
             protected function exportGroupDatabases(int $batchSize, array $resources): void
             {
-                if (!$this->denied) {
-                    return;
-                }
-
-                $table = new Table(new DatabaseResource('(default)', '(default)'), 'firestore', 'firestore');
-                $table->setStatus(Resource::STATUS_ERROR, 'Missing or insufficient permissions.');
-                $this->cache->add($table);
             }
 
             protected function exportGroupStorage(int $batchSize, array $resources): void
@@ -449,13 +353,13 @@ final class MigrationsReportTest extends TestCase
             }
 
             #[\Override]
-            protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
+            protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime, bool $publish = true): Document
             {
                 if ($this->intercept !== null && $migration->getAttribute('stage') === 'finished') {
                     ($this->intercept)($migration);
                 }
 
-                return parent::updateMigrationDocument($migration, $project, $queueForRealtime);
+                return parent::updateMigrationDocument($migration, $project, $queueForRealtime, $publish);
             }
         };
 

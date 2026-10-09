@@ -102,8 +102,6 @@ class Create extends Action
         callable $locks,
     ): void {
         $claim = new Claim($dbForProject, $locks);
-        $claim->assertReady();
-
         $bucket = $authorization->skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
             if ($internalFile) {
                 return $dbForPlatform->getDocument('buckets', 'default');
