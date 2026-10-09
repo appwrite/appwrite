@@ -1014,7 +1014,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 return Ok(Outcome::ok("skipped: a declared length of 64 MiB or more"));
             }
             if !sign_in {
-                hex_overrides(&a, &mut args, &["attestation", "cose", "extensions"])?;
+                hex_overrides(&a, &mut args, &["attestation", "cose", "extensions", "aaguid"])?;
             }
             let response = array(Some(&authenticator::respond(&Args(&args))?));
             let registered = tri!(ceremony.verify_registration(challenge.state.as_bytes(), &response));

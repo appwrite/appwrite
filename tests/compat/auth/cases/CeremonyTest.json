@@ -27464,6 +27464,200 @@
           }
         }
       ]
+    },
+    {
+      "name": "authenticator AAGUIDs in the record",
+      "steps": [
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "aaguid": "00000000000000000000000000000000"
+          },
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "aaguid": "ffffffffffffffffffffffffffffffff"
+          },
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "aaguid": "adce000235bcc60a648b0b25f1f05503"
+          },
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "adce0002-35bc-c60a-648b-0b25f1f05503",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "aaguid": "0192f1c6a1b27c3e8d4f5a6b7c8d9e0f"
+          },
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "0192f1c6-a1b2-7c3e-8d4f-5a6b7c8d9e0f",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "aaguid": "123e4567e89b12d3a456426614174000"
+          },
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "123e4567-e89b-12d3-a456-426614174000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "aaguid": "123e4567e89b02d3c456426614174000"
+          },
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "123e4567-e89b-02d3-c456-426614174000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.ceremony_once",
+          "args": {
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "phase": "register",
+            "aaguid": "ABCDEF00112233445566778899AABBCC"
+          },
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "abcdef00-1122-3344-5566-778899aabbcc",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        }
+      ]
     }
   ]
 }

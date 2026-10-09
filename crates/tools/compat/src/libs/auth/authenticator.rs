@@ -110,7 +110,12 @@ pub fn respond(a: &Args) -> Result<Value, Fault> {
                     .concat()
             }
         };
-        auth.extend_from_slice(&[0u8; 16]);
+        match a.opt("aaguid") {
+            Some(v) => {
+                auth.extend_from_slice(&crate::adapter::bytes(v).ok_or_else(|| Fault::new("`aaguid` must be bytes"))?)
+            }
+            None => auth.extend_from_slice(&[0u8; 16]),
+        }
         auth.extend_from_slice(&(credential_id.len() as u16).to_be_bytes());
         auth.extend_from_slice(&credential_id);
         auth.extend_from_slice(&public_key);

@@ -578,7 +578,7 @@ final class Adapter implements Base
             }
         }
         $response = Authenticator::respond(['kind' => 'register', 'options' => $challenge->options] + $authenticator
-            + ($signIn ? [] : $overrides(['attestation', 'cose', 'extensions'])));
+            + ($signIn ? [] : $overrides(['attestation', 'cose', 'extensions', 'aaguid'])));
         $registered = $ceremony->verifyRegistration($challenge->state, $response);
         if (! $signIn) {
             return self::credential($registered);

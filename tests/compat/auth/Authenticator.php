@@ -68,7 +68,8 @@ final class Authenticator
             $y = str_pad((string) $details['ec']['y'], 32, "\0", STR_PAD_LEFT);
             $publicKey = isset($a['cose']) ? (string) $a['cose'] : self::head(5, 5) . self::int(1) . self::int(2) . self::int(3) . self::int(-7)
                 . self::int(-1) . self::int(1) . self::int(-2) . self::bytes($x) . self::int(-3) . self::bytes($y);
-            $authenticatorData .= str_repeat("\0", 16) . pack('n', \strlen($credentialId)) . $credentialId . $publicKey;
+            $aaguid = isset($a['aaguid']) ? (string) $a['aaguid'] : str_repeat("\0", 16);
+            $authenticatorData .= $aaguid . pack('n', \strlen($credentialId)) . $credentialId . $publicKey;
             $authenticatorData .= isset($a['extensions']) ? (string) $a['extensions'] : '';
             $attestation = self::head(5, 3) . self::text('fmt') . self::text('none') . self::text('attStmt') . self::head(5, 0)
                 . self::text('authData') . self::bytes($authenticatorData);

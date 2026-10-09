@@ -3377,6 +3377,29 @@
             }
           },
           "iterations": 1500
+        },
+        {
+          "name": "aaguid",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "key": {
+                "gen": "const",
+                "value": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n"
+              },
+              "phase": {
+                "gen": "const",
+                "value": "register"
+              },
+              "aaguid": {
+                "gen": "string",
+                "alphabet": "hex",
+                "min": 32,
+                "max": 32
+              }
+            }
+          },
+          "iterations": 500
         }
       ]
     }
