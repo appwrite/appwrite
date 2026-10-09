@@ -1,0 +1,80 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Utopia\Messaging\Tests\Adapter\Push;
+
+use PHPUnit\Framework\TestCase;
+use Utopia\Messaging\Adapter\Push\APNS;
+use Utopia\Messaging\Messages\Push;
+use Utopia\Messaging\Priority;
+
+final class APNSTest extends TestCase
+{
+    /**
+     * A wake signal (no title/body, data + content-available) must render without an alert, so iOS
+     * delivers it silently and the app can reconnect and replay rather than show a notification.
+     */
+    public function testSilentWakeHasNoAlert(): void
+    {
+        $stub = new APNSStub($this->authKey(), 'keyId', 'teamId', 'com.example.app');
+
+        $stub->send(new Push(
+            to: ['token'],
+            data: ['type' => 'wake', 'messageId' => 'msg1'],
+            contentAvailable: true,
+            priority: Priority::HIGH,
+        ));
+
+        $aps = $stub->capturedBodies[0]['aps'];
+
+        $this->assertArrayNotHasKey('alert', $aps);
+        $this->assertSame(['type' => 'wake', 'messageId' => 'msg1'], $aps['data']);
+        $this->assertSame(1, $aps['content-available']);
+    }
+
+    /**
+     * The adapter signs a real ES256 assertion before it builds any payload, so the credentials carry a
+     * freshly generated EC key rather than a literal.
+     */
+    private function authKey(): string
+    {
+        $key = \openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+        \openssl_pkey_export($key, $privateKey);
+
+        return (string) $privateKey;
+    }
+}
+
+class APNSStub extends APNS
+{
+    /**
+     * @var array<array<string, mixed>>
+     */
+    public array $capturedBodies = [];
+
+    /**
+     * @param  array<string>  $urls
+     * @param  array<string>  $headers
+     * @param  array<array<string, mixed>>  $bodies
+     * @return array<array{index: int, url: string, statusCode: int, response: array<string, mixed>|string|null, headers: array<string, string>, error: string, errorCode: int}>
+     */
+    #[\Override]
+    protected function requestMulti(
+        string $method,
+        array $urls,
+        array $headers = [],
+        array $bodies = [],
+        int $timeout = 30,
+        int $connectTimeout = 10,
+    ): array {
+        $this->capturedBodies = $bodies;
+
+        $results = [];
+        foreach ($urls as $index => $url) {
+            $results[] = ['index' => $index, 'url' => $url, 'statusCode' => 200, 'response' => null, 'headers' => [], 'error' => '', 'errorCode' => 0];
+        }
+
+        return $results;
+    }
+}
