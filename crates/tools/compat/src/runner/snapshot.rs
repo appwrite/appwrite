@@ -5,6 +5,7 @@
 //! | Kind | Captures |
 //! |---|---|
 //! | `redis` | every key containing the namespace: type, value, whether it expires |
+//! | `files` | every file under `/tmp/compat-fs/<namespace>/` (shared with the PHP driver's container): relative path and content |
 //!
 //! Add a kind by adding a branch to [`snapshot`] and [`cleanup`]. A kind must
 //! only touch resources whose names contain the namespace.
@@ -18,6 +19,7 @@ use super::config::Config;
 pub fn snapshot(cfg: &Config, kind: &str, ns: &str) -> Result<Value, String> {
     match kind {
         "redis" => redis_snapshot(&cfg.runner_service("redis")?, ns),
+        "files" => files_snapshot(ns),
         other => Err(no_kind(other)),
     }
 }
@@ -25,6 +27,13 @@ pub fn snapshot(cfg: &Config, kind: &str, ns: &str) -> Result<Value, String> {
 pub fn cleanup(cfg: &Config, kind: &str, ns: &str) -> Result<(), String> {
     match kind {
         "redis" => redis_cleanup(&cfg.runner_service("redis")?, ns),
+        "files" => {
+            let dir = files_root().join(ns);
+            if dir.exists() {
+                std::fs::remove_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+            }
+            Ok(())
+        }
         other => Err(no_kind(other)),
     }
 }
@@ -122,4 +131,32 @@ fn redis_cleanup(url: &str, ns: &str) -> Result<(), String> {
         let _: i64 = redis::cmd("DEL").arg(keys).query(&mut conn).map_err(|e| e.to_string())?;
     }
     Ok(())
+}
+
+/// Where file-writing cases put their files: `/tmp/compat-fs/${ns}/...`.
+pub fn files_root() -> std::path::PathBuf {
+    std::path::PathBuf::from("/tmp/compat-fs")
+}
+
+fn files_snapshot(ns: &str) -> Result<Value, String> {
+    fn walk(dir: &std::path::Path, base: &std::path::Path, out: &mut Vec<(String, Value)>) -> Result<(), String> {
+        let Ok(entries) = std::fs::read_dir(dir) else { return Ok(()) };
+        for e in entries.flatten() {
+            let p = e.path();
+            let rel = p.strip_prefix(base).map_err(|e| e.to_string())?.display().to_string();
+            if p.is_dir() {
+                out.push((format!("{rel}/"), Value::Null));
+                walk(&p, base, out)?;
+            } else {
+                let content = std::fs::read(&p).map_err(|e| format!("{}: {e}", p.display()))?;
+                out.push((rel, bytes(&content)));
+            }
+        }
+        Ok(())
+    }
+    let base = files_root().join(ns);
+    let mut entries = Vec::new();
+    walk(&base, &base, &mut entries)?;
+    entries.sort_by(|a, b| a.0.cmp(&b.0));
+    Ok(Value::Object(entries.into_iter().collect()))
 }

@@ -5,10 +5,14 @@
 # Works from any git worktree, not only the checkout the stack runs from.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Shared with the Rust driver and the runner: files cases create live under
+# /tmp/compat-fs/${ns} on both sides (the `files` snapshot kind).
+mkdir -p /tmp/compat-fs
 exec docker run --rm -i \
     --network "${COMPAT_NETWORK:-appwrite}" \
     -v "$PWD/tests:/usr/src/code/tests" \
     -v "$PWD/packages:/usr/src/code/packages" \
+    -v /tmp/compat-fs:/tmp/compat-fs \
     -w /usr/src/code \
     --entrypoint php \
     "${COMPAT_IMAGE:-appwrite-dev}" \

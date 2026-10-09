@@ -128,6 +128,7 @@ The runner snapshots shared state itself after each case, per namespace, for the
 | Kind | Captures |
 |---|---|
 | `redis` | every key containing the namespace: type, value, whether it expires |
+| `files` | every file under `/tmp/compat-fs/${ns}/` (mounted into the PHP driver's container at the same path): relative path and content |
 
 A library that writes to another service adds a kind there (PostgreSQL tables, MongoDB collections, files), touching only resources whose names contain the namespace.
 
