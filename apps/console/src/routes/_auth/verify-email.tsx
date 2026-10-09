@@ -33,6 +33,7 @@ import {
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
 import { measureOpenAiAdsRegistrationCompleted } from '@/lib/openai-ads'
+import { hasConsoleImpersonationSessionTarget } from '@/lib/console-impersonation'
 import { useRouter } from '@tanstack/react-router'
 
 const searchSchema = z.object({
@@ -68,16 +69,14 @@ const attemptedSecrets = new Set<string>()
  * the Set covers remounts when storage is unavailable.
  */
 const sentVerifications = new Set<string>()
-const SENT_VERIFICATION_STORAGE_KEY = 'verify-email-sent'
 
 function claimVerificationSend(accountId: string): boolean {
   if (sentVerifications.has(accountId)) return false
   sentVerifications.add(accountId)
+  const storageKey = `verify-email-sent:${accountId}`
   try {
-    if (sessionStorage.getItem(SENT_VERIFICATION_STORAGE_KEY) === accountId) {
-      return false
-    }
-    sessionStorage.setItem(SENT_VERIFICATION_STORAGE_KEY, accountId)
+    if (sessionStorage.getItem(storageKey)) return false
+    sessionStorage.setItem(storageKey, '1')
   } catch {
     // Storage can be unavailable (private mode); a reload then sends again.
   }
@@ -260,6 +259,8 @@ function VerifyEmailPage() {
   const isResending = useIsMutating({ mutationKey: RESEND_MUTATION_KEY }) > 0
 
   useEffect(() => {
+    // Impersonators cannot write to the account, so the send would only fail
+    if (hasConsoleImpersonationSessionTarget()) return
     if (accountId && claimVerificationSend(accountId)) {
       resendMutation.mutate()
     }
