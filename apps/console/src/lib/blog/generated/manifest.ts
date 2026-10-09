@@ -3,29 +3,14 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
-    "slug": "deno-cloudflare-supabase",
-    "href": "/blog/post/deno-cloudflare-supabase",
-    "title": "Deno joins Cloudflare: what it means for Supabase users",
-    "description": "Deno is joining Cloudflare and ending the runtime. Here's what that means for Supabase Edge Functions and an open-source alternative that is not Deno-only.",
-    "date": "2026-10-09",
-    "lastUpdated": "2026-10-09",
-    "timeToRead": 8,
-    "author": "aditya-oberai",
-    "category": "products",
-    "featured": false,
-    "unlisted": false,
-    "cover": "/images/blog/deno-cloudflare-supabase/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "deno-deploy-alternative",
     "href": "/blog/post/deno-deploy-alternative",
     "title": "Appwrite Deno Functions as a Deno Deploy alternative",
-    "description": "Deno Deploy shuts down in six months. Here's how Appwrite Deno Functions compare, what to migrate, and why an open-source multi-runtime stack is safer.",
+    "description": "Deno Deploy shuts down in six months. Appwrite is open source. Cloud and self-hosted stay independent, so you can keep writing Deno without a vendor host.",
     "date": "2026-10-09",
     "lastUpdated": "2026-10-09",
-    "timeToRead": 8,
-    "author": "aditya-oberai",
+    "timeToRead": 4,
+    "author": "eldad-fux",
     "category": "products",
     "featured": false,
     "unlisted": false,

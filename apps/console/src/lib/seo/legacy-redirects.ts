@@ -187,6 +187,8 @@ const LEGACY_REDIRECTS: Record<string, string> = {
   '/blog/post/10-open-source-alternatives-to-popular-software-for-startups': '/blog/post/open-source-startup-tools',
   '/blog/post/the-shift-from-SaaS-to-Vertical-AI-what-startup-founders-need-to-know': '/home',
   '/blog/post/how-can-you-rapidly-build-an-mvp-for-your-startup': '/home',
+  '/blog/post/deno-cloudflare-supabase': '/home',
+  '/blog/post/deno-cloudflare-supabase.md': '/home',
   '/docs/tooling/command-line/collections': '/docs/tooling/command-line/tables',
   '/docs/tooling/terraform/databases': '/docs/tooling/terraform/resources/databases',
   '/docs/tooling/mcp/mcp-for-docs': '/docs/tooling/ai/mcp-servers',
