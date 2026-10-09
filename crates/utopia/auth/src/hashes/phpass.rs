@@ -76,7 +76,7 @@ impl PHPass {
         out.push((i64::from(b'0') + tens).rem_euclid(256) as u8);
         out.push((i64::from(b'0') + units).rem_euclid(256) as u8);
         out.push(b'$');
-        out.extend_from_slice(&password::bf_encode(input)[..22]);
+        out.extend_from_slice(&bf_encode(input));
         Ok(out)
     }
 
@@ -129,6 +129,33 @@ fn operand(value: &Zval, op: &str) -> Result<Number, Error> {
         },
         Zval::Array(_) | Zval::Object(_) => return Err(unsupported()),
     })
+}
+
+/// The blowfish-alphabet encoding of `gensaltBlowfish()` for 16 bytes (22 characters).
+fn bf_encode(input: &[u8; 16]) -> Vec<u8> {
+    const BCRYPT64: &[u8; 64] = b"./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let mut out = Vec::with_capacity(22);
+    let mut i = 0;
+    loop {
+        let mut c1 = usize::from(input[i]);
+        i += 1;
+        out.push(BCRYPT64[c1 >> 2]);
+        c1 = (c1 & 0x03) << 4;
+        if i >= 16 {
+            out.push(BCRYPT64[c1]);
+            break;
+        }
+        let c2 = usize::from(input[i]);
+        i += 1;
+        c1 |= c2 >> 4;
+        out.push(BCRYPT64[c1]);
+        let c1 = (c2 & 0x0f) << 2;
+        let c2 = usize::from(input[i]);
+        i += 1;
+        out.push(BCRYPT64[c1 | (c2 >> 6)]);
+        out.push(BCRYPT64[c2 & 0x3f]);
+    }
+    out
 }
 
 /// `encode64()`: phpass's base64 of the first `count` bytes.

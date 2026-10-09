@@ -1107,6 +1107,352 @@
         "text": "!@#~"
       },
       "expect": true
+    },
+    {
+      "name": "crypt: every algorithm",
+      "steps": [
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "x",
+            "salt": "$1$abc$"
+          },
+          "expect": "$1$abc$OGyl6dDvZCDiGmIVbeuCq/"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "x",
+            "salt": "$1$abcdefghijkl"
+          },
+          "expect": "$1$abcdefgh$znAnv9M.XU2pRYfmSs46h/"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "x",
+            "salt": "$5$abc$"
+          },
+          "expect": "$5$abc$sCOGUciM.GdmYMCUvmUcgu03oRH87O0clF96.9mwWGB"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "x",
+            "salt": "$6$rounds=1000$abc$"
+          },
+          "expect": "$6$rounds=1000$abc$zaWpAwySRl8PX4W2aEMJwxpN82bCKtDZP0RBdOD6W7BQlilBqAsWnAZuS10iUyJZneS8Ob1gxs1BZkqJi1nTi."
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "x",
+            "salt": "$5$rounds=999$abc$"
+          },
+          "expect": "*0"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "x",
+            "salt": "$2y$04$abcdefghijklmnopqrstuu"
+          },
+          "expect": "$2y$04$abcdefghijklmnopqrstuuPp7HPfoAs8I2dCQCQ/fW7zEJv8I8C8e"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "x",
+            "salt": "$2x$04$abcdefghijklmnopqrstuu"
+          },
+          "expect": "$2x$04$abcdefghijklmnopqrstuuPp7HPfoAs8I2dCQCQ/fW7zEJv8I8C8e"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "x",
+            "salt": "ab"
+          },
+          "expect": "abiQ6Ep3EYTHc"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "x",
+            "salt": "_J9..abcd"
+          },
+          "expect": "_J9..abcd5WNy9VUCfAY"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "x",
+            "salt": "*0"
+          },
+          "expect": "*1"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "x",
+            "salt": "*1"
+          },
+          "expect": "*0"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "x",
+            "salt": ""
+          },
+          "expect": "*0"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "x",
+            "salt": "$"
+          },
+          "expect": "*0"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "x",
+            "salt": "a"
+          },
+          "expect": "*0"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "x",
+            "salt": "$3$x"
+          },
+          "expect": "*0"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "/4CBgg=="
+            },
+            "salt": "$2x$04$abcdefghijklmnopqrstuu"
+          },
+          "expect": "$2x$04$abcdefghijklmnopqrstuuE1Hu26FJ0eHs7ad0tff.DEmBcfqGYGu"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": {
+              "$bytes": "/4CBgg=="
+            },
+            "salt": "$2a$04$abcdefghijklmnopqrstuu"
+          },
+          "expect": "$2a$04$abcdefghijklmnopqrstuuv2gnxsxlFKxn8J5abOyAaMt.VHJadSa"
+        },
+        {
+          "op": "string.crypt",
+          "args": {
+            "string": "a long password for DES",
+            "salt": "_J9..abcd"
+          },
+          "expect": "_J9..abcdxRdthibiK0I"
+        }
+      ]
+    },
+    {
+      "name": "password_hash: verifiable by password_verify",
+      "steps": [
+        {
+          "op": "string.password_hash",
+          "args": {
+            "password": "pw",
+            "algo": "bcrypt",
+            "options": {
+              "cost": 4
+            }
+          },
+          "bind": "b",
+          "expect": "<masked>"
+        },
+        {
+          "op": "string.password_verify",
+          "args": {
+            "password": "pw",
+            "hash": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "string.password_hash",
+          "args": {
+            "password": "pw",
+            "algo": "argon2id",
+            "options": {
+              "memory_cost": 1024,
+              "time_cost": 1,
+              "threads": 2
+            }
+          },
+          "bind": "a",
+          "expect": "<masked>"
+        },
+        {
+          "op": "string.password_verify",
+          "args": {
+            "password": "pw",
+            "hash": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "string.password_verify",
+          "args": {
+            "password": "nope",
+            "hash": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "string.password_hash",
+          "args": {
+            "password": "pw",
+            "algo": "bcrypt",
+            "options": {
+              "cost": 3
+            }
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "string.password_hash",
+          "args": {
+            "password": "a\u0000b",
+            "algo": "bcrypt"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "string.password_hash",
+          "args": {
+            "password": "pw",
+            "algo": "argon2id",
+            "options": {
+              "memory_cost": 7
+            }
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "string.password_hash",
+          "args": {
+            "password": "pw",
+            "algo": "argon2id",
+            "options": {
+              "memory_cost": 8,
+              "threads": 2,
+              "time_cost": 1
+            }
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "string.password_hash",
+          "args": {
+            "password": "pw",
+            "algo": "argon2id",
+            "options": {
+              "time_cost": 0
+            }
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "string.password_hash",
+          "args": {
+            "password": "pw",
+            "algo": "argon2id",
+            "options": {
+              "threads": 0
+            }
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "password_hash: one runtime's hash verifies in the other",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "string.password_hash",
+          "args": {
+            "password": "pässword",
+            "algo": "bcrypt",
+            "options": {
+              "cost": 5
+            }
+          },
+          "bind": "b",
+          "expect": "<masked>"
+        },
+        {
+          "side": "b",
+          "op": "string.password_verify",
+          "args": {
+            "password": "pässword",
+            "hash": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "string.password_hash",
+          "args": {
+            "password": "pässword",
+            "algo": "argon2id",
+            "options": {
+              "memory_cost": 2048,
+              "time_cost": 2,
+              "threads": 3
+            }
+          },
+          "bind": "a",
+          "expect": "<masked>"
+        },
+        {
+          "side": "b",
+          "op": "string.password_verify",
+          "args": {
+            "password": "pässword",
+            "hash": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "side": "b",
+          "op": "string.password_verify",
+          "args": {
+            "password": "password",
+            "hash": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
     }
   ]
 }

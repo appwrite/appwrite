@@ -1511,12 +1511,16 @@ dependencies = [
 name = "php-std"
 version = "0.1.0"
 dependencies = [
+ "argon2",
+ "bcrypt",
  "getrandom 0.3.4",
  "icu_normalizer",
  "icu_properties",
  "indexmap",
+ "md-5 0.10.6",
  "rustix",
  "serde_json",
+ "sha2 0.10.9",
 ]
 
 [[package]]
@@ -2373,8 +2377,6 @@ name = "utopia-auth"
 version = "0.1.0"
 dependencies = [
  "aes",
- "argon2",
- "bcrypt",
  "ciborium",
  "ctr",
  "getrandom 0.3.4",

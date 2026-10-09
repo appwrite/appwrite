@@ -9,8 +9,6 @@ publish.workspace = true
 
 [dependencies]
 aes.workspace = true
-argon2.workspace = true
-bcrypt.workspace = true
 ciborium.workspace = true
 ctr.workspace = true
 getrandom.workspace = true

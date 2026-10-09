@@ -1446,3 +1446,1013 @@ mod tests {
         assert_eq!(strcasecmp(b"HELLO", b"hello"), 0);
     }
 }
+
+// ---------------------------------------------------------------------------
+// crypt(), password_hash(), password_verify()
+// (ext/standard/crypt.c, crypt_blowfish.c, crypt_sha256.c, crypt_sha512.c,
+// php_crypt_r.c, password.c)
+// ---------------------------------------------------------------------------
+
+/// `PHP_MAX_SALT_LEN`: `crypt()` reads at most this much of the salt.
+const PHP_MAX_SALT_LEN: usize = 123;
+/// The `./0-9A-Za-z` alphabet of MD5 and SHA crypt.
+const CRYPT_ITOA64: &[u8; 64] = b"./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+/// crypt_blowfish's `./A-Za-z0-9` alphabet.
+const BF_ITOA64: &[u8; 64] = b"./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+/// A C string: the bytes before the first NUL.
+fn c_str(s: &[u8]) -> &[u8] {
+    s.iter().position(|b| *b == 0).map_or(s, |n| &s[..n])
+}
+
+/// PHP `crypt($string, $salt)`: the hash, or `*0` (`*1` when the salt starts
+/// with `*0`) where the salt names no supported algorithm or is invalid.
+///
+/// The algorithms are PHP's own: blowfish (`$2a$`, `$2b$`, `$2x$`, `$2y$`),
+/// MD5 (`$1$`), SHA-256 (`$5$`), SHA-512 (`$6$`), and FreeSec's DES
+/// (two salt characters) and extended DES (`_`).
+pub fn crypt(string: &[u8], salt: &[u8]) -> Vec<u8> {
+    let salt = &salt[..salt.len().min(PHP_MAX_SALT_LEN)];
+    match php_crypt(string, salt) {
+        Some(hash) => hash,
+        None if c_str(salt).starts_with(b"*0") => b"*1".to_vec(),
+        None => b"*0".to_vec(),
+    }
+}
+
+/// `php_crypt()`: `crypt()` without the failure strings. Both arguments are
+/// C strings (they end at the first NUL).
+pub fn php_crypt(password: &[u8], salt: &[u8]) -> Option<Vec<u8>> {
+    let (password, salt) = (c_str(password), c_str(salt));
+    let at = |i: usize| salt.get(i).copied().unwrap_or(0);
+    if at(0) == b'*' && (at(1) == b'0' || at(1) == b'1') {
+        return None;
+    }
+    if salt.starts_with(b"$1$") {
+        return Some(md5_crypt(password, salt));
+    }
+    if salt.starts_with(b"$6$") {
+        return sha_crypt::<sha2::Sha512>(password, salt, b"$6$", &SHA512_ORDER, [0, 0, 63], 2, true);
+    }
+    if salt.starts_with(b"$5$") {
+        return sha_crypt::<sha2::Sha256>(password, salt, b"$5$", &SHA256_ORDER, [0, 31, 30], 3, false);
+    }
+    if at(0) == b'$' && at(1) == b'2' && at(2) != 0 && at(3) == b'$' {
+        return blowfish_crypt(password, salt);
+    }
+    let valid = |c: u8| matches!(c, b'.'..=b'9' | b'A'..=b'Z' | b'a'..=b'z');
+    if at(0) == b'_' || (valid(at(0)) && valid(at(1))) {
+        return des_crypt(password, salt);
+    }
+    None
+}
+
+/// `php_md5_crypt_r()`: `$1$` hashes (salt up to 8 characters).
+fn md5_crypt(password: &[u8], salt: &[u8]) -> Vec<u8> {
+    use md5::{Digest, Md5};
+    let sp = salt.strip_prefix(b"$1$").unwrap_or(salt);
+    let sl = sp.iter().take(8).take_while(|b| **b != b'$').count();
+    let sp = &sp[..sl];
+    let mut ctx = Md5::new();
+    ctx.update(password);
+    ctx.update(b"$1$");
+    ctx.update(sp);
+    let mut final_ = Md5::new().chain_update(password).chain_update(sp).chain_update(password).finalize();
+    let mut pl = password.len() as isize;
+    while pl > 0 {
+        ctx.update(&final_[..pl.min(16) as usize]);
+        pl -= 16;
+    }
+    final_.iter_mut().for_each(|b| *b = 0);
+    let mut i = password.len();
+    while i != 0 {
+        if i & 1 != 0 {
+            ctx.update(&final_[..1]);
+        } else {
+            ctx.update(&password[..1]);
+        }
+        i >>= 1;
+    }
+    let mut final_ = ctx.finalize();
+    for i in 0..1000 {
+        let mut ctx1 = Md5::new();
+        if i & 1 != 0 {
+            ctx1.update(password);
+        } else {
+            ctx1.update(final_);
+        }
+        if i % 3 != 0 {
+            ctx1.update(sp);
+        }
+        if i % 7 != 0 {
+            ctx1.update(password);
+        }
+        if i & 1 != 0 {
+            ctx1.update(final_);
+        } else {
+            ctx1.update(password);
+        }
+        final_ = ctx1.finalize();
+    }
+    let mut out = b"$1$".to_vec();
+    out.extend_from_slice(sp);
+    out.push(b'$');
+    let to64 = |out: &mut Vec<u8>, mut v: u32, n: usize| {
+        for _ in 0..n {
+            out.push(CRYPT_ITOA64[(v & 0x3f) as usize]);
+            v >>= 6;
+        }
+    };
+    let f = |i: usize| u32::from(final_[i]);
+    for [a, b, c] in [[0, 6, 12], [1, 7, 13], [2, 8, 14], [3, 9, 15], [4, 10, 5]] {
+        to64(&mut out, (f(a) << 16) | (f(b) << 8) | f(c), 4);
+    }
+    to64(&mut out, f(11), 2);
+    out
+}
+
+/// The byte triples SHA-512 crypt encodes, in order.
+const SHA512_ORDER: [[usize; 3]; 21] = [
+    [0, 21, 42],
+    [22, 43, 1],
+    [44, 2, 23],
+    [3, 24, 45],
+    [25, 46, 4],
+    [47, 5, 26],
+    [6, 27, 48],
+    [28, 49, 7],
+    [50, 8, 29],
+    [9, 30, 51],
+    [31, 52, 10],
+    [53, 11, 32],
+    [12, 33, 54],
+    [34, 55, 13],
+    [56, 14, 35],
+    [15, 36, 57],
+    [37, 58, 16],
+    [59, 17, 38],
+    [18, 39, 60],
+    [40, 61, 19],
+    [62, 20, 41],
+];
+
+/// The byte triples SHA-256 crypt encodes, in order.
+const SHA256_ORDER: [[usize; 3]; 10] = [
+    [0, 10, 20],
+    [21, 1, 11],
+    [12, 22, 2],
+    [3, 13, 23],
+    [24, 4, 14],
+    [15, 25, 5],
+    [6, 16, 26],
+    [27, 7, 17],
+    [18, 28, 8],
+    [9, 19, 29],
+];
+
+/// `strtoul(s, &end, 10)`: the value (saturated) and the bytes consumed,
+/// 0 when there are no digits.
+fn strtoul(s: &[u8]) -> (u64, usize) {
+    let mut i = s.iter().take_while(|b| matches!(b, b' ' | b'\t' | b'\n' | b'\x0b' | b'\x0c' | b'\r')).count();
+    let negative = match s.get(i) {
+        Some(b'-') => {
+            i += 1;
+            true
+        }
+        Some(b'+') => {
+            i += 1;
+            false
+        }
+        _ => false,
+    };
+    let digits = s[i..].iter().take_while(|b| b.is_ascii_digit()).count();
+    if digits == 0 {
+        return (0, 0);
+    }
+    let mut value: u64 = 0;
+    let mut overflow = false;
+    for d in &s[i..i + digits] {
+        match value.checked_mul(10).and_then(|v| v.checked_add(u64::from(d - b'0'))) {
+            Some(v) => value = v,
+            None => overflow = true,
+        }
+    }
+    let value = if overflow {
+        u64::MAX
+    } else if negative {
+        value.wrapping_neg()
+    } else {
+        value
+    };
+    (value, i + digits)
+}
+
+/// `php_sha256_crypt_r()` / `php_sha512_crypt_r()`.
+fn sha_crypt<D: sha2::Digest + Clone>(
+    key: &[u8],
+    salt: &[u8],
+    prefix: &[u8],
+    order: &[[usize; 3]],
+    last: [usize; 3],
+    last_chars: usize,
+    bounded: bool,
+) -> Option<Vec<u8>> {
+    let size = <D as sha2::Digest>::output_size();
+    let mut salt = salt.strip_prefix(prefix).unwrap_or(salt);
+    let mut rounds = 5000u64;
+    let mut custom = false;
+    if let Some(num) = salt.strip_prefix(b"rounds=") {
+        let (value, used) = strtoul(num);
+        if num.get(used) == Some(&b'$') {
+            salt = &num[used + 1..];
+            if !(1000..=999_999_999).contains(&value) {
+                return None;
+            }
+            rounds = value;
+            custom = true;
+        }
+    }
+    let salt_len = salt.iter().take_while(|b| **b != b'$').count().min(16);
+    let salt = &salt[..salt_len];
+    let key_len = key.len();
+    // The output must fit PHP_MAX_SALT_LEN with its NUL (only SHA-512 with
+    // 9-digit rounds and a 16-byte salt does not): PHP computes, then fails.
+    let rounds_len = if custom { format!("rounds={rounds}$").len() } else { 0 };
+    let chars = order.len() * 4 + last_chars;
+    if prefix.len() + rounds_len + salt_len + 1 + chars >= PHP_MAX_SALT_LEN {
+        return None;
+    }
+
+    let mut ctx = D::new();
+    ctx.update(key);
+    ctx.update(salt);
+    let alt = D::new().chain_update(key).chain_update(salt).chain_update(key).finalize();
+    let mut cnt = key_len;
+    while cnt > size {
+        ctx.update(&alt);
+        cnt -= size;
+    }
+    ctx.update(&alt[..cnt]);
+    let mut cnt = key_len;
+    while cnt > 0 {
+        if cnt & 1 != 0 {
+            ctx.update(&alt);
+        } else {
+            ctx.update(key);
+        }
+        cnt >>= 1;
+    }
+    let mut alt_result = ctx.finalize();
+
+    let mut dp = D::new();
+    for _ in 0..key_len {
+        dp.update(key);
+    }
+    let temp = dp.finalize();
+    let p_bytes: Vec<u8> = (0..key_len).map(|i| temp[i % size]).collect();
+    let mut ds = D::new();
+    for _ in 0..16 + usize::from(alt_result[0]) {
+        ds.update(salt);
+    }
+    let temp = ds.finalize();
+    let s_bytes: Vec<u8> = (0..salt_len).map(|i| temp[i % size]).collect();
+
+    for cnt in 0..rounds {
+        let mut ctx = D::new();
+        if cnt & 1 != 0 {
+            ctx.update(&p_bytes);
+        } else {
+            ctx.update(&alt_result);
+        }
+        if cnt % 3 != 0 {
+            ctx.update(&s_bytes);
+        }
+        if cnt % 7 != 0 {
+            ctx.update(&p_bytes);
+        }
+        if cnt & 1 != 0 {
+            ctx.update(&alt_result);
+        } else {
+            ctx.update(&p_bytes);
+        }
+        alt_result = ctx.finalize();
+    }
+
+    // The result goes into a PHP_MAX_SALT_LEN buffer, which must keep room for the NUL.
+    let mut buflen = PHP_MAX_SALT_LEN as isize - prefix.len() as isize;
+    let mut out = prefix.to_vec();
+    if custom {
+        let r = format!("rounds={rounds}$");
+        buflen -= r.len() as isize;
+        out.extend_from_slice(r.as_bytes());
+    }
+    let n = salt_len.min(buflen.max(0) as usize);
+    out.extend_from_slice(&salt[..n]);
+    buflen -= n as isize;
+    if buflen > 0 {
+        out.push(b'$');
+        buflen -= 1;
+    }
+    let mut b64 = |out: &mut Vec<u8>, [b2, b1, b0]: [u32; 3], n: usize| {
+        let mut w = (b2 << 16) | (b1 << 8) | b0;
+        for _ in 0..n {
+            if buflen <= 0 {
+                break;
+            }
+            out.push(CRYPT_ITOA64[(w & 0x3f) as usize]);
+            buflen -= 1;
+            w >>= 6;
+        }
+    };
+    let r = |i: usize| u32::from(alt_result[i]);
+    for [a, b, c] in order {
+        b64(&mut out, [r(*a), r(*b), r(*c)], 4);
+    }
+    let [_, b, c] = last;
+    let triple = if bounded { [0, 0, r(c)] } else { [0, r(b), r(c)] };
+    b64(&mut out, triple, last_chars);
+    if buflen <= 0 {
+        return None;
+    }
+    Some(out)
+}
+
+/// crypt_blowfish's `BF_decode` of the 22-character salt (the last
+/// character's low bits are ignored).
+fn bf_decode_salt(src: &[u8]) -> Option<[u8; 16]> {
+    let get = |i: usize| src.get(i).and_then(|c| BF_ITOA64.iter().position(|x| x == c)).map(|p| p as u32);
+    let mut out = [0u8; 16];
+    let (mut n, mut i) = (0, 0);
+    while n < 16 {
+        let (c1, c2) = (get(i)?, get(i + 1)?);
+        out[n] = ((c1 << 2) | ((c2 & 0x30) >> 4)) as u8;
+        n += 1;
+        if n >= 16 {
+            break;
+        }
+        let c3 = get(i + 2)?;
+        out[n] = (((c2 & 0x0f) << 4) | ((c3 & 0x3c) >> 2)) as u8;
+        n += 1;
+        let c4 = get(i + 3)?;
+        out[n] = (((c3 & 0x03) << 6) | c4) as u8;
+        n += 1;
+        i += 4;
+    }
+    Some(out)
+}
+
+/// crypt_blowfish's `BF_encode`.
+fn bf_encode(src: &[u8]) -> Vec<u8> {
+    let mut out = Vec::with_capacity(src.len() * 4 / 3 + 2);
+    let mut i = 0;
+    while i < src.len() {
+        let c1 = u32::from(src[i]);
+        i += 1;
+        out.push(BF_ITOA64[(c1 >> 2) as usize]);
+        let mut c1 = (c1 & 0x03) << 4;
+        if i >= src.len() {
+            out.push(BF_ITOA64[c1 as usize]);
+            break;
+        }
+        let c2 = u32::from(src[i]);
+        i += 1;
+        c1 |= c2 >> 4;
+        out.push(BF_ITOA64[c1 as usize]);
+        c1 = (c2 & 0x0f) << 2;
+        if i >= src.len() {
+            out.push(BF_ITOA64[c1 as usize]);
+            break;
+        }
+        let c2 = u32::from(src[i]);
+        i += 1;
+        c1 |= c2 >> 6;
+        out.push(BF_ITOA64[c1 as usize]);
+        out.push(BF_ITOA64[(c2 & 0x3f) as usize]);
+    }
+    out
+}
+
+/// `BF_set_key()`'s 18 key words, serialised: the key (with its NUL)
+/// cycled over 72 bytes, each byte sign-extended for `$2x$` (the
+/// compatibility mode for the old sign extension bug).
+fn bf_key(key: &[u8], bug: bool) -> [u8; 72] {
+    let mut out = [0u8; 72];
+    let mut ptr = 0usize;
+    for word in 0..18 {
+        let mut w: u32 = 0;
+        for _ in 0..4 {
+            let c = key.get(ptr).copied().unwrap_or(0);
+            w <<= 8;
+            w |= if bug { c as i8 as i32 as u32 } else { u32::from(c) };
+            ptr = if c == 0 { 0 } else { ptr + 1 };
+        }
+        out[word * 4..word * 4 + 4].copy_from_slice(&w.to_be_bytes());
+    }
+    out
+}
+
+/// `php_crypt_blowfish_rn()`: `$2a$`, `$2b$`, `$2x$` and `$2y$` hashes.
+///
+/// `$2a$` keeps crypt_blowfish's anti-collision measure only where it is a
+/// no-op: for keys whose buggy and correct schedules agree despite a sign
+/// extension (keys made of `\xff` runs) the measure flips one bit, which
+/// this port does not.
+fn blowfish_crypt(key: &[u8], setting: &[u8]) -> Option<Vec<u8>> {
+    let at = |i: usize| setting.get(i).copied().unwrap_or(0);
+    let bug = match at(2) {
+        b'a' | b'b' | b'y' => false,
+        b'x' => true,
+        _ => return None,
+    };
+    if at(3) != b'$'
+        || !(b'0'..=b'3').contains(&at(4))
+        || !at(5).is_ascii_digit()
+        || (at(4) == b'3' && at(5) > b'1')
+        || at(6) != b'$'
+    {
+        return None;
+    }
+    let cost = u32::from(at(4) - b'0') * 10 + u32::from(at(5) - b'0');
+    if cost < 4 || setting.len() < 29 {
+        return None;
+    }
+    let salt = bf_decode_salt(&setting[7..29])?;
+    let raw = bcrypt::bcrypt(cost, salt, &bf_key(key, bug));
+    let mut out = setting[..28].to_vec();
+    let last = BF_ITOA64.iter().position(|c| *c == setting[28])?;
+    out.push(BF_ITOA64[last & 0x30]);
+    out.extend_from_slice(&bf_encode(&raw[..23]));
+    Some(out)
+}
+
+/// `password_hash($password, PASSWORD_BCRYPT, ['cost' => $cost])` with
+/// `salt` (16 random bytes in PHP).
+pub fn password_hash_bcrypt(password: &[u8], cost: i64, salt: &[u8; 16]) -> Result<Vec<u8>, Error> {
+    if !(4..=31).contains(&cost) {
+        return Err(Error::Value(format!("Invalid bcrypt cost parameter specified: {cost}")));
+    }
+    if password.contains(&0) {
+        return Err(Error::Value("Bcrypt password must not contain null character".into()));
+    }
+    let mut setting = format!("$2y${cost:02}$").into_bytes();
+    setting.extend_from_slice(&bf_encode(salt)[..22]);
+    blowfish_crypt(password, &setting).ok_or_else(|| Error::Value("Invalid bcrypt cost parameter specified".into()))
+}
+
+/// The cost of allocating Argon2 memory PHP would fail to allocate: beyond
+/// this (KiB) the port reports an allocation error instead of trying.
+const ARGON2_MEMORY_LIMIT: u32 = 1 << 22;
+
+/// `password_hash($password, PASSWORD_ARGON2ID, $options)` with the
+/// options' `memory_cost`, `time_cost` and `threads` (already cast to int)
+/// and `salt` (16 random bytes in PHP).
+pub fn password_hash_argon2id(
+    password: &[u8],
+    memory_cost: i64,
+    time_cost: i64,
+    threads: i64,
+    salt: &[u8; 16],
+) -> Result<Vec<u8>, Error> {
+    use argon2::{Algorithm, Argon2, Params, Version};
+    if !(8..=0xFFFF_FFFF).contains(&memory_cost) {
+        return Err(Error::Value("Memory cost is outside of allowed memory range".into()));
+    }
+    if !(1..=0xFFFF_FFFF).contains(&time_cost) {
+        return Err(Error::Value("Time cost is outside of allowed time range".into()));
+    }
+    if !(1..=0xFF_FFFF).contains(&threads) {
+        return Err(Error::Value("Invalid number of threads".into()));
+    }
+    let (m, t, p) = (memory_cost as u32, time_cost as u32, threads as u32);
+    if m < 8 * p {
+        return Err(Error::Value("Memory cost is too small".into()));
+    }
+    let failed = || Error::Value("Memory allocation error".into());
+    if m > ARGON2_MEMORY_LIMIT {
+        return Err(failed());
+    }
+    let params = Params::new(m, t, p, Some(32)).map_err(|_| failed())?;
+    let mut out = [0u8; 32];
+    Argon2::new(Algorithm::Argon2id, Version::V0x13, params)
+        .hash_password_into(password, salt, &mut out)
+        .map_err(|_| failed())?;
+    let b64 = |b: &[u8]| crate::encoding::base64_encode(b).trim_end_matches('=').to_owned();
+    Ok(format!("$argon2id$v=19$m={m},t={t},p={p}${}${}", b64(salt), b64(&out)).into_bytes())
+}
+
+/// PHP `password_verify($password, $hash)`.
+pub fn password_verify(password: &[u8], hash: &[u8]) -> bool {
+    match password_ident(hash) {
+        Some(b"argon2i") => argon2_verify(password, hash, argon2::Algorithm::Argon2i, b"argon2i"),
+        Some(b"argon2id") => argon2_verify(password, hash, argon2::Algorithm::Argon2id, b"argon2id"),
+        _ => {
+            // php_password_bcrypt_verify: php_crypt() and a constant-time compare.
+            let Some(computed) = php_crypt(password, hash) else {
+                return false;
+            };
+            if hash.len() < 13 {
+                return false;
+            }
+            computed.len() == hash.len() && computed.iter().zip(hash).fold(0u8, |acc, (a, b)| acc | (a ^ b)) == 0
+        }
+    }
+}
+
+/// `php_password_algo_extract_ident`: between the first byte and the next `$`.
+fn password_ident(hash: &[u8]) -> Option<&[u8]> {
+    if hash.len() < 3 {
+        return None;
+    }
+    let rest = &hash[1..];
+    rest.iter().position(|b| *b == b'$').map(|end| &rest[..end])
+}
+
+/// libargon2's `decode_decimal`: digits without leading zeros.
+fn argon2_decimal(s: &[u8]) -> Option<(u64, &[u8])> {
+    let len = s.iter().take_while(|b| b.is_ascii_digit()).count();
+    if len == 0 || (s[0] == b'0' && len > 1) {
+        return None;
+    }
+    let mut acc: u64 = 0;
+    for d in &s[..len] {
+        acc = acc.checked_mul(10)?.checked_add(u64::from(d - b'0'))?;
+    }
+    Some((acc, &s[len..]))
+}
+
+fn argon2_u32<'a>(s: &'a [u8], prefix: &[u8]) -> Option<(u32, &'a [u8])> {
+    let (v, rest) = argon2_decimal(s.strip_prefix(prefix)?)?;
+    Some((u32::try_from(v).ok()?, rest))
+}
+
+/// libargon2's `from_base64`: standard alphabet, no padding, zero trailing bits.
+fn argon2_base64(s: &[u8]) -> Option<(Vec<u8>, &[u8])> {
+    let val = |c: u8| -> Option<u32> {
+        Some(match c {
+            b'A'..=b'Z' => u32::from(c - b'A'),
+            b'a'..=b'z' => u32::from(c - b'a') + 26,
+            b'0'..=b'9' => u32::from(c - b'0') + 52,
+            b'+' => 62,
+            b'/' => 63,
+            _ => return None,
+        })
+    };
+    let (mut acc, mut bits, mut out, mut i) = (0u32, 0u32, Vec::new(), 0);
+    while let Some(d) = s.get(i).copied().and_then(val) {
+        i += 1;
+        acc = (acc << 6) | d;
+        bits += 6;
+        if bits >= 8 {
+            bits -= 8;
+            out.push((acc >> bits) as u8);
+        }
+        acc &= (1 << bits) - 1;
+    }
+    if bits > 4 || acc != 0 {
+        return None;
+    }
+    Some((out, &s[i..]))
+}
+
+/// `argon2_verify()` as PHP's argon2 password algorithms call it.
+fn argon2_verify(password: &[u8], hash: &[u8], algorithm: argon2::Algorithm, name: &[u8]) -> bool {
+    use argon2::{Argon2, Params, Version};
+    let parse = || {
+        let s = hash.strip_prefix(b"$")?.strip_prefix(name)?;
+        let (version, s) = match argon2_u32(s, b"$v=") {
+            Some((v, rest)) => (v, rest),
+            None if s.starts_with(b"$v=") => return None,
+            None => (0x10, s),
+        };
+        let (m, s) = argon2_u32(s, b"$m=")?;
+        let (t, s) = argon2_u32(s, b",t=")?;
+        let (p, s) = argon2_u32(s, b",p=")?;
+        let (salt, s) = argon2_base64(s.strip_prefix(b"$")?)?;
+        let (out, s) = argon2_base64(s.strip_prefix(b"$")?)?;
+        s.is_empty().then_some((version, [m, t, p], salt, out))
+    };
+    let Some((version, [m, t, p], salt, expected)) = parse() else {
+        return false;
+    };
+    let version = match version {
+        0x10 => Version::V0x10,
+        0x13 => Version::V0x13,
+        _ => return false,
+    };
+    if expected.len() < 4 || salt.len() < 8 || m > ARGON2_MEMORY_LIMIT {
+        return false;
+    }
+    let Ok(params) = Params::new(m, t, p, Some(expected.len())) else {
+        return false;
+    };
+    let mut out = vec![0u8; expected.len()];
+    if Argon2::new(algorithm, version, params).hash_password_into(password, &salt, &mut out).is_err() {
+        return false;
+    }
+    out.iter().zip(&expected).fold(0u8, |acc, (a, b)| acc | (a ^ b)) == 0
+}
+
+/// FreeSec's DES tables (ext/standard/crypt_freesec.c), built once.
+struct DesTables {
+    m_sbox: [[u8; 4096]; 4],
+    psbox: [[u32; 256]; 4],
+    ip_maskl: [[u32; 256]; 8],
+    ip_maskr: [[u32; 256]; 8],
+    fp_maskl: [[u32; 256]; 8],
+    fp_maskr: [[u32; 256]; 8],
+    key_perm_maskl: [[u32; 128]; 8],
+    key_perm_maskr: [[u32; 128]; 8],
+    comp_maskl: [[u32; 128]; 8],
+    comp_maskr: [[u32; 128]; 8],
+}
+
+const DES_IP: [u8; 64] = [
+    58, 50, 42, 34, 26, 18, 10, 2, 60, 52, 44, 36, 28, 20, 12, 4, 62, 54, 46, 38, 30, 22, 14, 6, 64, 56, 48, 40, 32,
+    24, 16, 8, 57, 49, 41, 33, 25, 17, 9, 1, 59, 51, 43, 35, 27, 19, 11, 3, 61, 53, 45, 37, 29, 21, 13, 5, 63, 55, 47,
+    39, 31, 23, 15, 7,
+];
+const DES_KEY_PERM: [u8; 56] = [
+    57, 49, 41, 33, 25, 17, 9, 1, 58, 50, 42, 34, 26, 18, 10, 2, 59, 51, 43, 35, 27, 19, 11, 3, 60, 52, 44, 36, 63, 55,
+    47, 39, 31, 23, 15, 7, 62, 54, 46, 38, 30, 22, 14, 6, 61, 53, 45, 37, 29, 21, 13, 5, 28, 20, 12, 4,
+];
+const DES_KEY_SHIFTS: [u32; 16] = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1];
+const DES_COMP_PERM: [u8; 48] = [
+    14, 17, 11, 24, 1, 5, 3, 28, 15, 6, 21, 10, 23, 19, 12, 4, 26, 8, 16, 7, 27, 20, 13, 2, 41, 52, 31, 37, 47, 55, 30,
+    40, 51, 45, 33, 48, 44, 49, 39, 56, 34, 53, 46, 42, 50, 36, 29, 32,
+];
+const DES_SBOX: [[u8; 64]; 8] = [
+    [
+        14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7, 0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8, 4,
+        1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0, 15, 12, 8, 2, 4, 9, 1, 7, 5, 11, 3, 14, 10, 0, 6, 13,
+    ],
+    [
+        15, 1, 8, 14, 6, 11, 3, 4, 9, 7, 2, 13, 12, 0, 5, 10, 3, 13, 4, 7, 15, 2, 8, 14, 12, 0, 1, 10, 6, 9, 11, 5, 0,
+        14, 7, 11, 10, 4, 13, 1, 5, 8, 12, 6, 9, 3, 2, 15, 13, 8, 10, 1, 3, 15, 4, 2, 11, 6, 7, 12, 0, 5, 14, 9,
+    ],
+    [
+        10, 0, 9, 14, 6, 3, 15, 5, 1, 13, 12, 7, 11, 4, 2, 8, 13, 7, 0, 9, 3, 4, 6, 10, 2, 8, 5, 14, 12, 11, 15, 1, 13,
+        6, 4, 9, 8, 15, 3, 0, 11, 1, 2, 12, 5, 10, 14, 7, 1, 10, 13, 0, 6, 9, 8, 7, 4, 15, 14, 3, 11, 5, 2, 12,
+    ],
+    [
+        7, 13, 14, 3, 0, 6, 9, 10, 1, 2, 8, 5, 11, 12, 4, 15, 13, 8, 11, 5, 6, 15, 0, 3, 4, 7, 2, 12, 1, 10, 14, 9, 10,
+        6, 9, 0, 12, 11, 7, 13, 15, 1, 3, 14, 5, 2, 8, 4, 3, 15, 0, 6, 10, 1, 13, 8, 9, 4, 5, 11, 12, 7, 2, 14,
+    ],
+    [
+        2, 12, 4, 1, 7, 10, 11, 6, 8, 5, 3, 15, 13, 0, 14, 9, 14, 11, 2, 12, 4, 7, 13, 1, 5, 0, 15, 10, 3, 9, 8, 6, 4,
+        2, 1, 11, 10, 13, 7, 8, 15, 9, 12, 5, 6, 3, 0, 14, 11, 8, 12, 7, 1, 14, 2, 13, 6, 15, 0, 9, 10, 4, 5, 3,
+    ],
+    [
+        12, 1, 10, 15, 9, 2, 6, 8, 0, 13, 3, 4, 14, 7, 5, 11, 10, 15, 4, 2, 7, 12, 9, 5, 6, 1, 13, 14, 0, 11, 3, 8, 9,
+        14, 15, 5, 2, 8, 12, 3, 7, 0, 4, 10, 1, 13, 11, 6, 4, 3, 2, 12, 9, 5, 15, 10, 11, 14, 1, 7, 6, 0, 8, 13,
+    ],
+    [
+        4, 11, 2, 14, 15, 0, 8, 13, 3, 12, 9, 7, 5, 10, 6, 1, 13, 0, 11, 7, 4, 9, 1, 10, 14, 3, 5, 12, 2, 15, 8, 6, 1,
+        4, 11, 13, 12, 3, 7, 14, 10, 15, 6, 8, 0, 5, 9, 2, 6, 11, 13, 8, 1, 4, 10, 7, 9, 5, 0, 15, 14, 2, 3, 12,
+    ],
+    [
+        13, 2, 8, 4, 6, 15, 11, 1, 10, 9, 3, 14, 5, 0, 12, 7, 1, 15, 13, 8, 10, 3, 7, 4, 12, 5, 6, 11, 0, 14, 9, 2, 7,
+        11, 4, 1, 9, 12, 14, 2, 0, 6, 10, 13, 15, 3, 5, 8, 2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11,
+    ],
+];
+const DES_PBOX: [u8; 32] = [
+    16, 7, 20, 21, 29, 12, 28, 17, 1, 15, 23, 26, 5, 18, 31, 10, 2, 8, 24, 14, 32, 27, 3, 9, 19, 13, 30, 6, 22, 11, 4,
+    25,
+];
+
+fn bits32(i: usize) -> u32 {
+    0x8000_0000 >> i
+}
+
+/// `_crypt_extended_init()`.
+fn des_tables() -> Box<DesTables> {
+    let bits28 = |i: usize| bits32(i + 4);
+    let bits24 = |i: usize| bits32(i + 8);
+    let bits8 = |i: usize| 0x80u32 >> i;
+    let mut t = Box::new(DesTables {
+        m_sbox: [[0; 4096]; 4],
+        psbox: [[0; 256]; 4],
+        ip_maskl: [[0; 256]; 8],
+        ip_maskr: [[0; 256]; 8],
+        fp_maskl: [[0; 256]; 8],
+        fp_maskr: [[0; 256]; 8],
+        key_perm_maskl: [[0; 128]; 8],
+        key_perm_maskr: [[0; 128]; 8],
+        comp_maskl: [[0; 128]; 8],
+        comp_maskr: [[0; 128]; 8],
+    });
+    let mut u_sbox = [[0u8; 64]; 8];
+    for (i, row) in u_sbox.iter_mut().enumerate() {
+        for (j, v) in row.iter_mut().enumerate() {
+            let b = (j & 0x20) | ((j & 1) << 4) | ((j >> 1) & 0xf);
+            *v = DES_SBOX[i][b];
+        }
+    }
+    for b in 0..4 {
+        for i in 0..64 {
+            for j in 0..64 {
+                t.m_sbox[b][(i << 6) | j] = (u_sbox[b << 1][i] << 4) | u_sbox[(b << 1) + 1][j];
+            }
+        }
+    }
+    let mut init_perm = [0u8; 64];
+    let mut final_perm = [0u8; 64];
+    let mut inv_key_perm = [255u8; 64];
+    let mut inv_comp_perm = [255u8; 56];
+    for i in 0..64 {
+        final_perm[i] = DES_IP[i] - 1;
+        init_perm[final_perm[i] as usize] = i as u8;
+    }
+    for (i, p) in DES_KEY_PERM.iter().enumerate() {
+        inv_key_perm[*p as usize - 1] = i as u8;
+    }
+    for (i, p) in DES_COMP_PERM.iter().enumerate() {
+        inv_comp_perm[*p as usize - 1] = i as u8;
+    }
+    for k in 0..8 {
+        for i in 0..256u32 {
+            let (mut il, mut ir, mut fl, mut fr) = (0, 0, 0, 0);
+            for j in 0..8 {
+                let inbit = 8 * k + j;
+                if i & bits8(j) != 0 {
+                    let obit = init_perm[inbit] as usize;
+                    if obit < 32 {
+                        il |= bits32(obit);
+                    } else {
+                        ir |= bits32(obit - 32);
+                    }
+                    let obit = final_perm[inbit] as usize;
+                    if obit < 32 {
+                        fl |= bits32(obit);
+                    } else {
+                        fr |= bits32(obit - 32);
+                    }
+                }
+            }
+            t.ip_maskl[k][i as usize] = il;
+            t.ip_maskr[k][i as usize] = ir;
+            t.fp_maskl[k][i as usize] = fl;
+            t.fp_maskr[k][i as usize] = fr;
+        }
+        for i in 0..128u32 {
+            let (mut il, mut ir) = (0, 0);
+            for j in 0..7 {
+                let inbit = 8 * k + j;
+                if i & bits8(j + 1) != 0 {
+                    let obit = inv_key_perm[inbit];
+                    if obit == 255 {
+                        continue;
+                    }
+                    let obit = obit as usize;
+                    if obit < 28 {
+                        il |= bits28(obit);
+                    } else {
+                        ir |= bits28(obit - 28);
+                    }
+                }
+            }
+            t.key_perm_maskl[k][i as usize] = il;
+            t.key_perm_maskr[k][i as usize] = ir;
+            let (mut il, mut ir) = (0, 0);
+            for j in 0..7 {
+                let inbit = 7 * k + j;
+                if i & bits8(j + 1) != 0 {
+                    let obit = inv_comp_perm[inbit];
+                    if obit == 255 {
+                        continue;
+                    }
+                    let obit = obit as usize;
+                    if obit < 24 {
+                        il |= bits24(obit);
+                    } else {
+                        ir |= bits24(obit - 24);
+                    }
+                }
+            }
+            t.comp_maskl[k][i as usize] = il;
+            t.comp_maskr[k][i as usize] = ir;
+        }
+    }
+    let mut un_pbox = [0u8; 32];
+    for (i, p) in DES_PBOX.iter().enumerate() {
+        un_pbox[*p as usize - 1] = i as u8;
+    }
+    for b in 0..4 {
+        for i in 0..256u32 {
+            let mut p = 0;
+            for j in 0..8 {
+                if i & bits8(j) != 0 {
+                    p |= bits32(un_pbox[8 * b + j] as usize);
+                }
+            }
+            t.psbox[b][i as usize] = p;
+        }
+    }
+    t
+}
+
+static DES: std::sync::LazyLock<Box<DesTables>> = std::sync::LazyLock::new(des_tables);
+
+/// A DES key schedule and the salt bits (`struct php_crypt_extended_data`).
+struct Des {
+    keys_l: [u32; 16],
+    keys_r: [u32; 16],
+    saltbits: u32,
+}
+
+impl Des {
+    fn new() -> Self {
+        Des { keys_l: [0; 16], keys_r: [0; 16], saltbits: 0 }
+    }
+
+    /// `setup_salt()`.
+    fn set_salt(&mut self, salt: u32) {
+        let mut saltbits = 0;
+        let (mut saltbit, mut obit) = (1u32, 0x80_0000u32);
+        for _ in 0..24 {
+            if salt & saltbit != 0 {
+                saltbits |= obit;
+            }
+            saltbit <<= 1;
+            obit >>= 1;
+        }
+        self.saltbits = saltbits;
+    }
+
+    /// `des_setkey()`.
+    fn set_key(&mut self, key: &[u8; 8]) {
+        let t = &**DES;
+        let raw0 = u32::from_be_bytes([key[0], key[1], key[2], key[3]]);
+        let raw1 = u32::from_be_bytes([key[4], key[5], key[6], key[7]]);
+        let perm = |m: &[[u32; 128]; 8]| {
+            m[0][(raw0 >> 25) as usize]
+                | m[1][((raw0 >> 17) & 0x7f) as usize]
+                | m[2][((raw0 >> 9) & 0x7f) as usize]
+                | m[3][((raw0 >> 1) & 0x7f) as usize]
+                | m[4][(raw1 >> 25) as usize]
+                | m[5][((raw1 >> 17) & 0x7f) as usize]
+                | m[6][((raw1 >> 9) & 0x7f) as usize]
+                | m[7][((raw1 >> 1) & 0x7f) as usize]
+        };
+        let (k0, k1) = (perm(&t.key_perm_maskl), perm(&t.key_perm_maskr));
+        let mut shifts = 0;
+        for round in 0..16 {
+            shifts += DES_KEY_SHIFTS[round];
+            let t0 = (k0 << shifts) | (k0 >> (28 - shifts));
+            let t1 = (k1 << shifts) | (k1 >> (28 - shifts));
+            let comp = |m: &[[u32; 128]; 8]| {
+                m[0][((t0 >> 21) & 0x7f) as usize]
+                    | m[1][((t0 >> 14) & 0x7f) as usize]
+                    | m[2][((t0 >> 7) & 0x7f) as usize]
+                    | m[3][(t0 & 0x7f) as usize]
+                    | m[4][((t1 >> 21) & 0x7f) as usize]
+                    | m[5][((t1 >> 14) & 0x7f) as usize]
+                    | m[6][((t1 >> 7) & 0x7f) as usize]
+                    | m[7][(t1 & 0x7f) as usize]
+            };
+            self.keys_l[round] = comp(&t.comp_maskl);
+            self.keys_r[round] = comp(&t.comp_maskr);
+        }
+    }
+
+    /// `do_des()`, encrypting `count` times.
+    fn encrypt(&self, l_in: u32, r_in: u32, count: u32) -> (u32, u32) {
+        let t = &**DES;
+        let byte = |v: u32, s: u32| ((v >> s) & 0xff) as usize;
+        let ip = |m: &[[u32; 256]; 8]| {
+            m[0][byte(l_in, 24)]
+                | m[1][byte(l_in, 16)]
+                | m[2][byte(l_in, 8)]
+                | m[3][byte(l_in, 0)]
+                | m[4][byte(r_in, 24)]
+                | m[5][byte(r_in, 16)]
+                | m[6][byte(r_in, 8)]
+                | m[7][byte(r_in, 0)]
+        };
+        let (mut l, mut r) = (ip(&t.ip_maskl), ip(&t.ip_maskr));
+        let mut f = 0u32;
+        for _ in 0..count {
+            for round in 0..16 {
+                let mut r48l = ((r & 0x0000_0001) << 23)
+                    | ((r & 0xf800_0000) >> 9)
+                    | ((r & 0x1f80_0000) >> 11)
+                    | ((r & 0x01f8_0000) >> 13)
+                    | ((r & 0x001f_8000) >> 15);
+                let mut r48r = ((r & 0x0001_f800) << 7)
+                    | ((r & 0x0000_1f80) << 5)
+                    | ((r & 0x0000_01f8) << 3)
+                    | ((r & 0x0000_001f) << 1)
+                    | ((r & 0x8000_0000) >> 31);
+                f = (r48l ^ r48r) & self.saltbits;
+                r48l ^= f ^ self.keys_l[round];
+                r48r ^= f ^ self.keys_r[round];
+                f = t.psbox[0][t.m_sbox[0][(r48l >> 12) as usize] as usize]
+                    | t.psbox[1][t.m_sbox[1][(r48l & 0xfff) as usize] as usize]
+                    | t.psbox[2][t.m_sbox[2][(r48r >> 12) as usize] as usize]
+                    | t.psbox[3][t.m_sbox[3][(r48r & 0xfff) as usize] as usize];
+                f ^= l;
+                l = r;
+                r = f;
+            }
+            r = l;
+            l = f;
+        }
+        let fp = |m: &[[u32; 256]; 8]| {
+            m[0][byte(l, 24)]
+                | m[1][byte(l, 16)]
+                | m[2][byte(l, 8)]
+                | m[3][byte(l, 0)]
+                | m[4][byte(r, 24)]
+                | m[5][byte(r, 16)]
+                | m[6][byte(r, 8)]
+                | m[7][byte(r, 0)]
+        };
+        (fp(&t.fp_maskl), fp(&t.fp_maskr))
+    }
+}
+
+/// FreeSec's `ascii_to_bin()` (on a signed char).
+fn des_ascii_to_bin(ch: u8) -> u32 {
+    let sch = i32::from(ch as i8);
+    let mut v = sch - i32::from(b'.');
+    if sch >= i32::from(b'A') {
+        v = sch - (i32::from(b'A') - 12);
+        if sch >= i32::from(b'a') {
+            v = sch - (i32::from(b'a') - 38);
+        }
+    }
+    (v & 0x3f) as u32
+}
+
+/// `_crypt_extended_r()`: traditional DES (two salt characters, the first
+/// 8 key bytes) and BSDi extended DES (`_`, 4 count and 4 salt characters).
+fn des_crypt(key: &[u8], setting: &[u8]) -> Option<Vec<u8>> {
+    let at = |i: usize| setting.get(i).copied().unwrap_or(0);
+    let mut keybuf = [0u8; 8];
+    let mut k = 0usize;
+    for b in keybuf.iter_mut() {
+        let c = key.get(k).copied().unwrap_or(0);
+        *b = c << 1;
+        if c != 0 {
+            k += 1;
+        }
+    }
+    let mut des = Des::new();
+    des.set_key(&keybuf);
+    let (count, salt, mut out) = if at(0) == b'_' {
+        let field = |range: std::ops::Range<usize>| -> Option<u32> {
+            let mut v = 0u32;
+            for (n, i) in range.enumerate() {
+                let value = des_ascii_to_bin(at(i));
+                if CRYPT_ITOA64[value as usize] != at(i) {
+                    return None;
+                }
+                v |= value << (n * 6);
+            }
+            Some(v)
+        };
+        let count = field(1..5)?;
+        if count == 0 {
+            return None;
+        }
+        let salt = field(5..9)?;
+        while key.get(k).is_some_and(|c| *c != 0) {
+            des.set_salt(0);
+            let (l, r) = des.encrypt(
+                u32::from_be_bytes([keybuf[0], keybuf[1], keybuf[2], keybuf[3]]),
+                u32::from_be_bytes([keybuf[4], keybuf[5], keybuf[6], keybuf[7]]),
+                1,
+            );
+            keybuf[..4].copy_from_slice(&l.to_be_bytes());
+            keybuf[4..].copy_from_slice(&r.to_be_bytes());
+            for b in keybuf.iter_mut() {
+                match key.get(k) {
+                    Some(c) if *c != 0 => {
+                        *b ^= c << 1;
+                        k += 1;
+                    }
+                    _ => break,
+                }
+            }
+            des.set_key(&keybuf);
+        }
+        (count, salt, setting[..9].to_vec())
+    } else {
+        let unsafe_char = |c: u8| c == 0 || c == b'\n' || c == b':';
+        if unsafe_char(at(0)) || unsafe_char(at(1)) {
+            return None;
+        }
+        let salt = (des_ascii_to_bin(at(1)) << 6) | des_ascii_to_bin(at(0));
+        (25, salt, setting[..2].to_vec())
+    };
+    des.set_salt(salt);
+    let (r0, r1) = des.encrypt(0, 0, count);
+    let mut push = |v: u32, shifts: &[u32]| {
+        for s in shifts {
+            out.push(CRYPT_ITOA64[((v >> s) & 0x3f) as usize]);
+        }
+    };
+    push(r0 >> 8, &[18, 12, 6, 0]);
+    push((r0 << 16) | ((r1 >> 16) & 0xffff), &[18, 12, 6, 0]);
+    push(r1 << 2, &[12, 6, 0]);
+    Some(out)
+}

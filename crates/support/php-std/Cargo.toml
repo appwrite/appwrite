@@ -8,9 +8,14 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+# crypt() and password_*(): Argon2, MD5, SHA-2 (RustCrypto) and the blowfish core of `bcrypt`.
+argon2.workspace = true
+bcrypt.workspace = true
 getrandom.workspace = true
 indexmap.workspace = true
+md-5.workspace = true
 icu_normalizer.workspace = true
 icu_properties.workspace = true
 rustix.workspace = true
 serde_json.workspace = true
+sha2.workspace = true

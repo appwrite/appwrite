@@ -2803,6 +2803,229 @@
           "iterations": 3000
         }
       ]
+    },
+    "string.crypt": {
+      "doc": "crypt($string, $salt): blowfish, MD5, SHA-256/512, DES and extended DES; *0 / *1 on failure",
+      "fuzz": [
+        {
+          "name": "salts",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "unicode",
+                    "min": 0,
+                    "max": 20,
+                    "tricky": 0.3
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "x",
+                      "",
+                      "appwrite",
+                      "a\u0000b",
+                      "ÿÿ",
+                      "12345678901"
+                    ]
+                  }
+                ]
+              },
+              "salt": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "$1$",
+                          "$5$",
+                          "$6$",
+                          "$5$rounds=1000$",
+                          "$6$rounds=1000$",
+                          "$5$rounds=999$",
+                          "$6$rounds=1000000000$",
+                          "$5$rounds=-1$",
+                          "$5$rounds=$",
+                          "$5$rounds=x$",
+                          "$5$rounds= 1000$",
+                          "$6$rounds=+1000$",
+                          "$5$rounds=1000",
+                          "$2y$04$",
+                          "$2a$04$",
+                          "$2x$04$",
+                          "$2b$04$",
+                          "$2c$04$",
+                          "$2y$4$",
+                          "$2y$03$",
+                          "_J9..",
+                          "_....",
+                          "_zz..",
+                          "_/..",
+                          "",
+                          "*0",
+                          "*1",
+                          "$",
+                          "$3$",
+                          "ab",
+                          "a",
+                          ":",
+                          "$1$abcdefghij$"
+                        ]
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789$",
+                        "min": 0,
+                        "max": 30,
+                        "tricky": 0.1
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "min": 0,
+                    "max": 12,
+                    "tricky": 0.5
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "string.password_verify": {
+      "doc": "password_verify($password, $hash): Argon2i/Argon2id, else crypt()",
+      "fuzz": [
+        {
+          "name": "hashes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "password": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "unicode",
+                    "min": 0,
+                    "max": 20,
+                    "tricky": 0.3
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "x",
+                      "",
+                      "appwrite",
+                      "a\u0000b",
+                      "ÿÿ",
+                      "12345678901"
+                    ]
+                  }
+                ]
+              },
+              "hash": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "concat",
+                        "parts": [
+                          {
+                            "gen": "pick",
+                            "from": [
+                              "$1$",
+                              "$5$",
+                              "$6$",
+                              "$5$rounds=1000$",
+                              "$6$rounds=1000$",
+                              "$5$rounds=999$",
+                              "$6$rounds=1000000000$",
+                              "$5$rounds=-1$",
+                              "$5$rounds=$",
+                              "$5$rounds=x$",
+                              "$5$rounds= 1000$",
+                              "$6$rounds=+1000$",
+                              "$5$rounds=1000",
+                              "$2y$04$",
+                              "$2a$04$",
+                              "$2x$04$",
+                              "$2b$04$",
+                              "$2c$04$",
+                              "$2y$4$",
+                              "$2y$03$",
+                              "_J9..",
+                              "_....",
+                              "_zz..",
+                              "_/..",
+                              "",
+                              "*0",
+                              "*1",
+                              "$",
+                              "$3$",
+                              "ab",
+                              "a",
+                              ":",
+                              "$1$abcdefghij$"
+                            ]
+                          },
+                          {
+                            "gen": "string",
+                            "alphabet": "./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789$",
+                            "min": 0,
+                            "max": 30,
+                            "tricky": 0.1
+                          }
+                        ]
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "ascii",
+                        "min": 0,
+                        "max": 12,
+                        "tricky": 0.5
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "abiQ6Ep3EYTHc",
+                      "_J9..abcd5WNy9VUCfAY",
+                      "$1$abc$OGyl6dDvZCDiGmIVbeuCq/",
+                      "$5$abc$sCOGUciM.GdmYMCUvmUcgu03oRH87O0clF96.9mwWGB",
+                      "$2a$04$abcdefghijklmnopqrstuuPp7HPfoAs8I2dCQCQ/fW7zEJv8I8C8e",
+                      "$argon2i$v=19$m=20,t=3,p=2$YXBwd3JpdGU$A/54i238ed09ZR4NwlACU5XnkjNBZU9QeOEuhjLiexI"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.password_hash": {
+      "doc": "password_hash($password, PASSWORD_BCRYPT | PASSWORD_ARGON2ID, $options): the hash is salted, cases verify it across runtimes",
+      "mask": {
+        "paths": [
+          ""
+        ],
+        "reason": "the salt is random; cases verify the hash with password_verify in both runtimes"
+      }
     }
   },
   "generators": {
