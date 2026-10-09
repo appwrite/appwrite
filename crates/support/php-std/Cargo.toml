@@ -8,7 +8,7 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
-# crypt() and password_*(): Argon2, Blowfish (EksBlowfish), MD5 and SHA-2 (RustCrypto).
+# crypt(), password_*() and hash(): Argon2, Blowfish (EksBlowfish), MD5, SHA-1, SHA-2 and SHA-3 (RustCrypto).
 argon2.workspace = true
 blowfish.workspace = true
 getrandom.workspace = true
@@ -18,4 +18,6 @@ icu_normalizer.workspace = true
 icu_properties.workspace = true
 rustix.workspace = true
 serde_json.workspace = true
+sha1.workspace = true
 sha2.workspace = true
+sha3.workspace = true

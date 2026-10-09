@@ -19,7 +19,5 @@ p256.workspace = true
 php-std.workspace = true
 rsa.workspace = true
 serde_json.workspace = true
-sha1.workspace = true
 sha2 = { workspace = true, features = ["oid"] }
-sha3.workspace = true
 thiserror.workspace = true

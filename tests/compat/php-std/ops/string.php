@@ -72,6 +72,7 @@ return [
     'string.ctype_upper' => fn (array $a) => ctype_upper($a['text']),
     'string.ctype_xdigit' => fn (array $a) => ctype_xdigit($a['text']),
     'string.crypt' => fn (array $a) => crypt($a['string'], $a['salt']),
+    'string.hash' => fn (array $a) => hash($a['algo'], $a['data']),
     'string.password_verify' => fn (array $a) => password_verify($a['password'], $a['hash']),
     'string.password_hash' => fn (array $a) => password_hash(
         $a['password'],

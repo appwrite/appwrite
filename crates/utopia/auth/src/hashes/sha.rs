@@ -1,5 +1,3 @@
-use sha2::Digest;
-
 use super::hash_plumbing;
 use crate::hash::hash_equals;
 use crate::{Error, Hash, Options};
@@ -90,24 +88,11 @@ impl Sha {
     }
 }
 
-/// `hash($algo, $data)` for the digests a `version` option can name.
+/// `hash($algo, $data)` for the algorithm a `version` option names (php-std
+/// ports ext/hash's algorithms that need no large constant tables).
 fn digest(algo: &[u8], data: &[u8]) -> Result<String, Error> {
-    let algo = algo.to_ascii_lowercase();
-    Ok(match algo.as_slice() {
-        b"md5" => hex::encode(md5::Md5::digest(data)),
-        b"sha1" => hex::encode(sha1::Sha1::digest(data)),
-        b"sha224" => hex::encode(sha2::Sha224::digest(data)),
-        b"sha256" => hex::encode(sha2::Sha256::digest(data)),
-        b"sha384" => hex::encode(sha2::Sha384::digest(data)),
-        b"sha512/224" => hex::encode(sha2::Sha512_224::digest(data)),
-        b"sha512/256" => hex::encode(sha2::Sha512_256::digest(data)),
-        b"sha512" => hex::encode(sha2::Sha512::digest(data)),
-        b"sha3-224" => hex::encode(sha3::Sha3_224::digest(data)),
-        b"sha3-256" => hex::encode(sha3::Sha3_256::digest(data)),
-        b"sha3-384" => hex::encode(sha3::Sha3_384::digest(data)),
-        b"sha3-512" => hex::encode(sha3::Sha3_512::digest(data)),
-        _ => return Err(Error::Value("hash(): Argument #1 ($algo) must be a valid hashing algorithm".into())),
-    })
+    php_std::string::hash(algo, data)
+        .ok_or_else(|| Error::Value("hash(): Argument #1 ($algo) must be a valid hashing algorithm".into()))
 }
 
 impl Hash for Sha {

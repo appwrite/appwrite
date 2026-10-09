@@ -1463,7 +1463,9 @@ dependencies = [
  "md-5 0.10.6",
  "rustix",
  "serde_json",
+ "sha1",
  "sha2 0.10.9",
+ "sha3",
 ]
 
 [[package]]
@@ -2330,9 +2332,7 @@ dependencies = [
  "php-std",
  "rsa",
  "serde_json",
- "sha1",
  "sha2 0.10.9",
- "sha3",
  "thiserror",
 ]
 

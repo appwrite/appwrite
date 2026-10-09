@@ -1738,6 +1738,2645 @@
           "expect": "$2y$04$/OK.fbVrR/bpIqNJ5ianF.II07dI/MD8pGXFwqWrdEtqeGMQmmaRa"
         }
       ]
+    },
+    {
+      "name": "hash: every ported algorithm",
+      "steps": [
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md4",
+            "data": ""
+          },
+          "expect": "31d6cfe0d16ae931b73c59d7e0c089c0"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md4",
+            "data": "a"
+          },
+          "expect": "bde52cb31de33e46245e05fbdbd6fb24"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md4",
+            "data": "abc"
+          },
+          "expect": "a448017aaf21d8525fc10ae87aa6729d"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md4",
+            "data": "message digest"
+          },
+          "expect": "d9130a8164549fe818874806e1c7014b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md4",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "1bee69a46ba811185c194762abaeae90"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md4",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "ed801e4f462606d66837a6cb0640241f"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md4",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "92c9d1bd7845401daba184be41f089d2"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md4",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "f23213efdbf8fab4223002c179e5c056"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md4",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "01ca712d44b0e209a2592d0db6986ee1"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md4",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "a65fb989cae262574b3a50bb8500c47a"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md4",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "249bbabf898dc3e05a7d74dc6565082f"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md4",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "487c90c87144a42f291266588d3a8a0f"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md5",
+            "data": ""
+          },
+          "expect": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md5",
+            "data": "a"
+          },
+          "expect": "0cc175b9c0f1b6a831c399e269772661"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md5",
+            "data": "abc"
+          },
+          "expect": "900150983cd24fb0d6963f7d28e17f72"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md5",
+            "data": "message digest"
+          },
+          "expect": "f96b697d7cb7938d525a2f31aaf161d0"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md5",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "9e107d9d372bb6826bd81d3542a419d6"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md5",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "de59bd9061c93855e3fdd416e26f27a6"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md5",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "7d6347b403e1cb54ba71087f74d3ebbb"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md5",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "f2646cff3f9b2470280c078762cd967f"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md5",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "455677c0fdb6fcb5156c557c92252f79"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md5",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "a4d5fe6a53858d55e32d9b92863adcab"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md5",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "b1bfac46756f5c79ccdc9cc14a8e27ac"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "md5",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "f4d394e6b7204a914bd4936023d8616e"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha1",
+            "data": ""
+          },
+          "expect": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha1",
+            "data": "a"
+          },
+          "expect": "86f7e437faa5a7fce15d1ddcb9eaeaea377667b8"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha1",
+            "data": "abc"
+          },
+          "expect": "a9993e364706816aba3e25717850c26c9cd0d89d"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha1",
+            "data": "message digest"
+          },
+          "expect": "c12252ceda8be8994d5fa0290a47231c1d16aae3"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha1",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha1",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "f29546c9b9b5056412af91317f83158a4f5f06d4"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha1",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "aff9b3dbc0d0b91e9376d47afa6510dcb0c64122"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha1",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "b1bb88a489197388553bbb6ffa367280a40c0016"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha1",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "a5a25ee4f8f5fdb0348e95acfb2df5f293f1daa6"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha1",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "c1ef26b99c7aae262c4d445abcd8782c4f8ad717"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha1",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "ec686e176558444c0fbc2b1de5e5ed3a8a63e47e"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha1",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "e7e554505d36924a0e6a9879f4e3d1e99bb216d9"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha224",
+            "data": ""
+          },
+          "expect": "d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha224",
+            "data": "a"
+          },
+          "expect": "abd37534c7d9a2efb9465de931cd7055ffdb8879563ae98078d6d6d5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha224",
+            "data": "abc"
+          },
+          "expect": "23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha224",
+            "data": "message digest"
+          },
+          "expect": "2cb21c83ae2f004de7e81c3c7019cbcb65b71ab656b22d6d0c39b8eb"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha224",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "730e109bd7a8a32b1cb9d9a09aa2325d2430587ddbc0c38bad911525"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha224",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "82b8d46cc0aaea143cee81574d0a8070707131293f44e4e9677a88fd"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha224",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "442a53ccb623e6422f0a08ecf4a39b48ce1c8604e4ec80841c6e041c"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha224",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "144df47ea74c94df3bcfdbb59faf2b7db7f5425ce65487f7329ff7cf"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha224",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "e821f3818ba48b8eab6a4e49fd58e595c804467965beb80dd59f1946"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha224",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "9a6b0c9f4082691997432669a14898668070238aad5cdd50bfef2c62"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha224",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "63e1121f3bc71f3505d3024f8eadb7064dcd18146659662fe908c12b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha224",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "5067eb3113afe1a96064c539e8c5c8995a84075171cbcc55938ea4e5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha256",
+            "data": ""
+          },
+          "expect": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha256",
+            "data": "a"
+          },
+          "expect": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha256",
+            "data": "abc"
+          },
+          "expect": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha256",
+            "data": "message digest"
+          },
+          "expect": "f7846f55cf23e14eebeab5b4e1550cad5b509e3348fbc4efa3a1413d393cb650"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha256",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha256",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "b670825c8f110a2eabfb68acbebf2497ca3c91d3ba8c532a5c213d46f5eaac21"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha256",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "14ecdfa32f5e585583f464dfab14713ed175a0731161b5e473e6761467233cb0"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha256",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "b853b3692c21b32b514a6ebb7e27493908f1676f254b9ccfe6e4799df8240678"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha256",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "2ad01dabe9f8cf75726dd2cc9cc2e3406baed72b9bff8d561382e62d80092d2f"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha256",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "d71af2bc53398568e2aff5639f499ff0add6177253dbabccfe931459470856a7"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha256",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "42ecace354820cb4f46fa3034a5802cbb03fa719fceb7cd5196d28e0fabdb9b3"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha256",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "0fe476956055f27a39c2f5d6b37d46f5b447d3693b204939cafc13a08914b894"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha384",
+            "data": ""
+          },
+          "expect": "38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha384",
+            "data": "a"
+          },
+          "expect": "54a59b9f22b0b80880d8427e548b7c23abd873486e1f035dce9cd697e85175033caa88e6d57bc35efae0b5afd3145f31"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha384",
+            "data": "abc"
+          },
+          "expect": "cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha384",
+            "data": "message digest"
+          },
+          "expect": "473ed35167ec1f5d8e550368a3db39be54639f828868e9454c239fc8b52e3c61dbd0d8b4de1390c256dcbb5d5fd99cd5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha384",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "ca737f1014a48f4c0b6dd43cb177b0afd9e5169367544c494011e3317dbf9a509cb1e5dc1e85a941bbee3d7f2afbc9b1"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha384",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "6e1111229290d174cab952c5fbc78ff3225aa5577c81318cebe24112c067e526b2420b3cab24f58f4eb176a8e524c334"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha384",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "6250f5f42b7de7affc3d6a3c0aadc6ff718ba34a7841314999c65e348e33e4914f9f0842dc5af75d70f594b8fea421af"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha384",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "3320722908c56a734768a25d8c7cceb3863ce089a3afffb1522b43c0edccad7e7491632d5a44b6cd2aa1f10c7af6b2f3"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha384",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "ed167b50cdb77e57a886c2c842d251e5eb96f7de77bf63cbb558d9efa8e712112381b882cd50e02e17a27e861b8b653b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha384",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "ab0ea0b4675521404e2a49e4f99f21de5619170781a15596072e5e19c52879e8b6e25eab9dff22f57c899a426270a10c"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha384",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "949d357580b4a3358494fc4acec64914235c25eed780bbaaf4f282c526b4b0d37928de3cd26739745c54eec0a0900df0"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha384",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "072579f5b3727297130184cd76d306f7e740299a67779197ef2fcedc5f1a12ab5bf619274b65ebb8239f7b723a8d0319"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/224",
+            "data": ""
+          },
+          "expect": "6ed0dd02806fa89e25de060c19d3ac86cabb87d6a0ddd05c333b84f4"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/224",
+            "data": "a"
+          },
+          "expect": "d5cdb9ccc769a5121d4175f2bfdd13d6310e0d3d361ea75d82108327"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/224",
+            "data": "abc"
+          },
+          "expect": "4634270f707b6a54daae7530460842e20e37ed265ceee9a43e8924aa"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/224",
+            "data": "message digest"
+          },
+          "expect": "ad1a4db188fe57064f4f24609d2a83cd0afb9b398eb2fcaeaae2c564"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/224",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "944cd2847fb54558d4775db0485a50003111c8e5daa63fe722c6aa37"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/224",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "2ade91f4edf7e388a1ef68ab0e714a8a2707381cfcb9d34817aac49e"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/224",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "d94db4dfb87c3395ebaf20d4ddebe854fc2ddd47d58326fcb14980a7"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/224",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "00be635ba05c1f40242731d2a5cd3baafbf86396fc2c8cd3e21c00aa"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/224",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "2f9bee1efd2d4cdf382e190d6f5b94c38c69df0368903998c6587291"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/224",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "e5b2a7a24559cd61705c7b7d2bdbffe01025887948b2c66596b17ddc"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/224",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "c78b808389ee66cdb5fb3a078ae64821dae05a4f8ff1e3d906e266e2"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/224",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "9181d209d63baf6a745cbb1679de3eaa942569d7f9ac2c682ae0e251"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/256",
+            "data": ""
+          },
+          "expect": "c672b8d1ef56ed28ab87c3622c5114069bdd3ad7b8f9737498d0c01ecef0967a"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/256",
+            "data": "a"
+          },
+          "expect": "455e518824bc0601f9fb858ff5c37d417d67c2f8e0df2babe4808858aea830f8"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/256",
+            "data": "abc"
+          },
+          "expect": "53048e2681941ef99b2e29b76b4c7dabe4c2d0c634fc6d46e0e2f13107e7af23"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/256",
+            "data": "message digest"
+          },
+          "expect": "0cf471fd17ed69d990daf3433c89b16d63dec1bb9cb42a6094604ee5d7b4e9fb"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/256",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "dd9d67b371519c339ed8dbd25af90e976a1eeefd4ad3d889005e532fc5bef04d"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/256",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "f0ce5d57930a48547a2715c4a1ae0d16565513828968ded79bc0aaf53937a67a"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/256",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "62c20a9e67218b8cf42a76ea2a83926e2502ba4437166356305cc9802600a6d6"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/256",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "3210bba4aa5f8377c87a5f05d1a0ccf97b27db4cf521c793dc4d1e66e5f7cfdd"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/256",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "a07a6c0e18235a56619f3fb03753c5a88d20b668f4e911b023b49b88a5bce109"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/256",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "53f8b393a1fb5c9e834139728bcd2cc4345f7ee611365277ba17253a7cfe4f8b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/256",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "aa517483e8a0d075a5f417434ea9efd3fb1cdfc40efcc01fbf9660182ed5e277"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512/256",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "c6a7b9de5c455b91b407ec24171ef41ed0c451157c10a17914c728cd35f9d005"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512",
+            "data": ""
+          },
+          "expect": "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512",
+            "data": "a"
+          },
+          "expect": "1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc54d0560e0f5302860c652bf08d560252aa5e74210546f369fbbbce8c12cfc7957b2652fe9a75"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512",
+            "data": "abc"
+          },
+          "expect": "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512",
+            "data": "message digest"
+          },
+          "expect": "107dbf389d9e9f71a3a95f6c055b9251bc5268c2be16d6c13492ea45b0199f3309e16455ab1e96118e8a905d5597b72038ddb372a89826046de66687bb420e7c"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "07e547d9586f6a73f73fbac0435ed76951218fb7d0c8d788a309d785436bbb642e93a252a954f23912547d1e8a3b5ed6e1bfd7097821233fa0538f3db854fee6"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "8c190c29d1ee12894a8f3bf6c23947db269b0038506c2ec7d064ffc08bedb40d669d0fccb71e0e4dab3b7b5e702465e03da5a85b908675d9dd1247dcd564dfbc"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "34ee105656a88bf872d9a817c2eec465287fb1a595e35740f5ab438da8afe9ef204f684c3f34c956939a0257f27659f2d2300fc7919f09a663b2134b3f0115b7"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "84e6dde28008f2d6033846499c65ec7f010d4096c59bfeb2d9d5b483044d70d22c88bd9589d0bbdd6dc079d82ac9fec26327ef13e2bb31980577c31b41857985"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "06e78e268b332673816aaaa6829ae278b7bb0463ae4a52506bcb60b8d68aef5de4cfe7a3f17d8c72109ff8ce9e7a4b8a7e66e28919bc9bbff34b0cb84d6eef93"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "3f24bab274370cef30c5ebdcc458cba699a61166264ba98b89d95fa7ff99c00692f0f32c412c1a7948d24e20c5f93a8eb1c93f1586af19091afde89fcffd71ae"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "d723559d1c8ccd3785cb70604ac9ee1cd731a841a71095ad2a86b5475383baa437ed005f72b2c257007923a1498742e9baaf7d37ade1e301bc536c9351e4aae3"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha512",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "c5d849dabc172e12a0414e821016fb88b819e7908e492aef13d83f40ba256ac2ec5d34394103eb1789fab1f2bb64155bd557f26dad180f0c0a67721a3f3ec04e"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-224",
+            "data": ""
+          },
+          "expect": "6b4e03423667dbb73b6e15454f0eb1abd4597f9a1b078e3f5b5a6bc7"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-224",
+            "data": "a"
+          },
+          "expect": "9e86ff69557ca95f405f081269685b38e3a819b309ee942f482b6a8b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-224",
+            "data": "abc"
+          },
+          "expect": "e642824c3f8cf24ad09234ee7d3c766fc9a3a5168d0c94ad73b46fdf"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-224",
+            "data": "message digest"
+          },
+          "expect": "18768bb4c48eb7fc88e5ddb17efcf2964abd7798a39d86a4b4a1e4c8"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-224",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "d15dadceaa4d5d7bb3b48f446421d542e08ad8887305e28d58335795"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-224",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "45642bb0444612191d9a1cbc401700490863d4165a124bdb813929f5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-224",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "016a1163076cbb307b5279220059f5f92c74ae8a72a62b2bb109a062"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-224",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "760670883508034a42170a55676f684848ab5a08ed42c2cf7470ea4c"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-224",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "2000548f2e50401a8d647011553eeef80243a1673d5ce217215d401c"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-224",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "4829ed6f98fc57c94854faef46a782f6a40711e8fbfd303b22c8a8e9"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-224",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "50ab27c49308d48c7ecf22b892edf6a12ec55119d699a3038e3a000c"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-224",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "aa37bb136c7fcd9f4e47cd0d2d9d699da1f1da34e3921b216a5d933b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-256",
+            "data": ""
+          },
+          "expect": "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-256",
+            "data": "a"
+          },
+          "expect": "80084bf2fba02475726feb2cab2d8215eab14bc6bdd8bfb2c8151257032ecd8b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-256",
+            "data": "abc"
+          },
+          "expect": "3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-256",
+            "data": "message digest"
+          },
+          "expect": "edcdb2069366e75243860c18c3a11465eca34bce6143d30c8665cefcfd32bffd"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-256",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "69070dda01975c8c120c3aada1b282394e7f032fa9cf32f4cb2259a0897dfc04"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-256",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "9ede916aa2f632b3fcaf6387275a0aec71e840d097a5f7c5d1895c37e3175790"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-256",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "591e04c8cf3e0e1487544fb1315338a7fb36892acab0bee291013f4f2edb55f0"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-256",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "332dd1219be56d37eb066548501984271b37fb84965a0a959b5703d3b611b999"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-256",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "5a19d061d4a1b7a018360c50f90841644a5d7739a41677f9c1f939d43c24de93"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-256",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "738a125a8c3666c0cdf8990fa42acb4f01c71e83ed41bb19c2baaa8022f93050"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-256",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "cbded03655cdb2d79cabbf27cf8f3f899a8287a279a28a0585c7eac422375fcd"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-256",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "c5f4ab9176cba6b0904a75a56e63540837d2bc27696f2f2c26c1408a9d737216"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-384",
+            "data": ""
+          },
+          "expect": "0c63a75b845e4f7d01107d852e4c2485c51a50aaaa94fc61995e71bbee983a2ac3713831264adb47fb6bd1e058d5f004"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-384",
+            "data": "a"
+          },
+          "expect": "1815f774f320491b48569efec794d249eeb59aae46d22bf77dafe25c5edc28d7ea44f93ee1234aa88f61c91912a4ccd9"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-384",
+            "data": "abc"
+          },
+          "expect": "ec01498288516fc926459f58e2c6ad8df9b473cb0fc08c2596da7cf0e49be4b298d88cea927ac7f539f1edf228376d25"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-384",
+            "data": "message digest"
+          },
+          "expect": "d9519709f44af73e2c8e291109a979de3d61dc02bf69def7fbffdfffe662751513f19ad57e17d4b93ba1e484fc1980d5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-384",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "7063465e08a93bce31cd89d2e3ca8f602498696e253592ed26f07bf7e703cf328581e1471a7ba7ab119b1a9ebdf8be41"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-384",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "13be7dfffb1b35dd5b3cf010a88537337da1560afd0cd1d1dda44b953bfb3d151a2fda4197f9a2c7117b4a9958cb4cb0"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-384",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "4c4286f87102e63c22eb7b02096a262a768cb7892b70b352f780bad062582ae0fc22817baadab5046b1d0fc640b72816"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-384",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "b03609fc4cc14754ee300dcdfca5c9f65c974ce0d879bad937513464fb68487150d7812060d24d66588fc2ac0bb187ff"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-384",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "0a45dc20c91f0a140e669ba3f47e231191f47f460001fcc6ed80bc2292979cef0c8358b2f18699cc14a997db6719e993"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-384",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "3489c18968a674578d9af99e2180d207b22a01b518024b45e8b41f18fef5f823b3b71d283c4ed8ca89cacba2d1270dc8"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-384",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "b9651679bb44adae1ae50330b137edb029c055225ff3e972023102790bed0bcfd8c93a26b1cd45e7c35feb58feed70f5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-384",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "ae7a74540db5c54b751255f187e39bfdd73c67f8fa30621e57bd7df30e7997c66e239e9fa2fb3043ec48db80924bf6c6"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-512",
+            "data": ""
+          },
+          "expect": "a69f73cca23a9ac5c8b567dc185a756e97c982164fe25859e0d1dcc1475c80a615b2123af1f5f94c11e3e9402c3ac558f500199d95b6d3e301758586281dcd26"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-512",
+            "data": "a"
+          },
+          "expect": "697f2d856172cb8309d6b8b97dac4de344b549d4dee61edfb4962d8698b7fa803f4f93ff24393586e28b5b957ac3d1d369420ce53332712f997bd336d09ab02a"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-512",
+            "data": "abc"
+          },
+          "expect": "b751850b1a57168a5693cd924b6b096e08f621827444f70d884f5d0240d2712e10e116e9192af3c91a7ec57647e3934057340b4cf408d5a56592f8274eec53f0"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-512",
+            "data": "message digest"
+          },
+          "expect": "3444e155881fa15511f57726c7d7cfe80302a7433067b29d59a71415ca9dd141ac892d310bc4d78128c98fda839d18d7f0556f2fe7acb3c0cda4bff3a25f5f59"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-512",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "01dedd5de4ef14642445ba5f5b97c15e47b9ad931326e4b0727cd94cefc44fff23f07bf543139939b49128caf436dc1bdee54fcb24023a08d9403f9b4bf0d450"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-512",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "634569b261167e1b985a015288dde1fefa44b0f184ad5d42b12ad77e4213cab7384dcc74d0f78bed87460adb0bdc38f7b071328916cf2f19bf83b03c0960eba8"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-512",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "ccd40f388bafd8ea251f075aadeae5fefaca9b6d782ccfd43e8b73c054609d8e745bf218b3da8703f417e2964b780c45809823d1baabb27a9f314fc0732615c2"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-512",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "51833afd607201dc66d7c75b70aa0bd8e8d579daa897d851d253368707524c706918c3383a52fea11bc5702503b61826734d8f65c56d247ad97ebe2ea889df43"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-512",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "bb1cf0fc72bacf597c9ba82b699b437746aabdb1cba2efa05f5cec2b0f54d3ca8c1cb7108aff077729850deb74a469ab496b7d3a8f48dbf8daebd88fa589ab12"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-512",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "eaf6b8aa2273dbafcd79586d6e6fe9e1bf1b79956489b8372f2ef268966e2888dbfcfd24a0c777e85987e70710c120938bac5af5ee92dba3d30d6246741b5f0a"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-512",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "8fdafea06e899fafbda47ddfd98f1d96860a000ca7e0d25b157b0be4fa642d48fe978c98227f6026d2549a6ba067b3865b60e63ee6d59c61751c6865b2d42d16"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "sha3-512",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "8d2ac41d5ecada65e105f159cc37872cdcb0c2ceae5f8bf71ef9baa1274d29bbffc5dc21543e84fad2559d903dcfdcdf2e6b608d5305e67c3bd5ced1c52d8827"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "adler32",
+            "data": ""
+          },
+          "expect": "00000001"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "adler32",
+            "data": "a"
+          },
+          "expect": "00620062"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "adler32",
+            "data": "abc"
+          },
+          "expect": "024d0127"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "adler32",
+            "data": "message digest"
+          },
+          "expect": "29750586"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "adler32",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "5bdc0fda"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "adler32",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "384f0709"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "adler32",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "40580791"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "adler32",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "48fb081b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "adler32",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "e6af0e6a"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "adler32",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "f3800ec1"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "adler32",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "00950f16"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "adler32",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "f1242d51"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32",
+            "data": ""
+          },
+          "expect": "00000000"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32",
+            "data": "a"
+          },
+          "expect": "6b9b9319"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32",
+            "data": "abc"
+          },
+          "expect": "73bb8c64"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32",
+            "data": "message digest"
+          },
+          "expect": "5703c9bf"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "61ee9d45"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "97543924"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "387ba759"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "cb24bb17"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "a4d6a86c"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "f8fa9cd9"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "3c9985f1"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "2899e16c"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32b",
+            "data": ""
+          },
+          "expect": "00000000"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32b",
+            "data": "a"
+          },
+          "expect": "e8b7be43"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32b",
+            "data": "abc"
+          },
+          "expect": "352441c2"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32b",
+            "data": "message digest"
+          },
+          "expect": "20159d7f"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32b",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "414fa339"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32b",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "2c357ceb"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32b",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "05337bed"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32b",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "6fa37248"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32b",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "4f38f073"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32b",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "ae1bd905"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32b",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "cdfb3b64"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32b",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "1a5935b0"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32c",
+            "data": ""
+          },
+          "expect": "00000000"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32c",
+            "data": "a"
+          },
+          "expect": "c1d04330"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32c",
+            "data": "abc"
+          },
+          "expect": "364b3fb7"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32c",
+            "data": "message digest"
+          },
+          "expect": "02bd79d0"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32c",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "22620404"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32c",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "fac5c23b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32c",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "07401df3"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32c",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "5377cb95"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32c",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "091881af"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32c",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "14343f31"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32c",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "084c35c7"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "crc32c",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "939935d4"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv132",
+            "data": ""
+          },
+          "expect": "811c9dc5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv132",
+            "data": "a"
+          },
+          "expect": "050c5d7e"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv132",
+            "data": "abc"
+          },
+          "expect": "439c2f4b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv132",
+            "data": "message digest"
+          },
+          "expect": "62f6de5e"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv132",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "e9c86c6e"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv132",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "bcb6322f"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv132",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "6e84d0d5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv132",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "50f0a365"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv132",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "c3ee3c66"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv132",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "9644d145"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv132",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "c4012f0a"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv132",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "55316d45"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a32",
+            "data": ""
+          },
+          "expect": "811c9dc5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a32",
+            "data": "a"
+          },
+          "expect": "e40c292c"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a32",
+            "data": "abc"
+          },
+          "expect": "1a47e90b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a32",
+            "data": "message digest"
+          },
+          "expect": "b2c0f234"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a32",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "048fff90"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a32",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "df244b7f"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a32",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "c1335b75"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a32",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "85039a2d"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a32",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "12089510"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a32",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "4fd26645"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a32",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "736989f0"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a32",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "c1e1aca5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv164",
+            "data": ""
+          },
+          "expect": "cbf29ce484222325"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv164",
+            "data": "a"
+          },
+          "expect": "af63bd4c8601b7be"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv164",
+            "data": "abc"
+          },
+          "expect": "d8dcca186bafadcb"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv164",
+            "data": "message digest"
+          },
+          "expect": "028945f18dedb23e"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv164",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "a8b2f3117de37ace"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv164",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "8f058aba75d2296f"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv164",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "952273bf797c0c35"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv164",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "6a1e3ba4d065e7a5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv164",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "a57a53c091fd4306"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv164",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "89d78200a04d26a5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv164",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "05de87b60ee0e24a"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv164",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "ebab5293b529cfa5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a64",
+            "data": ""
+          },
+          "expect": "cbf29ce484222325"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a64",
+            "data": "a"
+          },
+          "expect": "af63dc4c8601ec8c"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a64",
+            "data": "abc"
+          },
+          "expect": "e71fa2190541574b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a64",
+            "data": "message digest"
+          },
+          "expect": "2dcbcce86fce9934"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a64",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "f3f9b7f5e7e47110"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a64",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "79ce3fa94ea34eff"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a64",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "a687cbee32086ad5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a64",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "7d2c13226e0374ed"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a64",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "0ea718bb73f85490"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a64",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "a25e97ba6df01ba5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a64",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "09e1f899994873d0"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "fnv1a64",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "02f1668230e70b05"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "joaat",
+            "data": ""
+          },
+          "expect": "00000000"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "joaat",
+            "data": "a"
+          },
+          "expect": "ca2e9442"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "joaat",
+            "data": "abc"
+          },
+          "expect": "ed131f5b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "joaat",
+            "data": "message digest"
+          },
+          "expect": "81d3c49b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "joaat",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "519e91f5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "joaat",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "635cea3c"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "joaat",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "95793f73"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "joaat",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "cc804fc7"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "joaat",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "a6b1c42c"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "joaat",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "bd515460"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "joaat",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "a6052cde"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "joaat",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "e5138ef9"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3a",
+            "data": ""
+          },
+          "expect": "00000000"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3a",
+            "data": "a"
+          },
+          "expect": "3c2569b2"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3a",
+            "data": "abc"
+          },
+          "expect": "b3dd93fa"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3a",
+            "data": "message digest"
+          },
+          "expect": "638f4169"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3a",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "2e4ff723"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3a",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "d362376a"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3a",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "5a2032bc"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3a",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "3cca1579"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3a",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "9b61bf21"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3a",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "6bb8ada1"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3a",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "8d081ab7"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3a",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "461a9ae3"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3c",
+            "data": ""
+          },
+          "expect": "00000000000000000000000000000000"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3c",
+            "data": "a"
+          },
+          "expect": "a794933c5556b01b5556b01b5556b01b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3c",
+            "data": "abc"
+          },
+          "expect": "75cdc6d1a2b006a5a2b006a5a2b006a5"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3c",
+            "data": "message digest"
+          },
+          "expect": "c1827bea26db7789bcfe30b0da4b42ef"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3c",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "2f1583c3ecee2c675d7bf66ce5e91d2c"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3c",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "82fa43b5781c405b548d3393159d871b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3c",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "3e448e31e62529d5990a6b273563e1fe"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3c",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "f0d478e9180154a08d68b82e32f6821d"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3c",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "1767be6a665c40b83c098b0b8cfde2ee"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3c",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "3998c8d44daf82a77926250a9f1a66a1"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3c",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "c78f1256697de23edc4b52bd3ea5f058"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3c",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "35c7b4bffa796f91664287a0f4f496d0"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3f",
+            "data": ""
+          },
+          "expect": "00000000000000000000000000000000"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3f",
+            "data": "a"
+          },
+          "expect": "85555565f6597889e6b53a48510e895a"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3f",
+            "data": "abc"
+          },
+          "expect": "b4963f3f3fad78673ba2744126ca2d52"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3f",
+            "data": "message digest"
+          },
+          "expect": "875d2c2d76147dfcf622b02a12bc6f39"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3f",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "e34bbc7bbc071b6c7a433ca9c49a9347"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3f",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "1cfd62bac822c29a381530a121efa404"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3f",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "7b3c3ada206564bb4dc79da8bf408784"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3f",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "109fdf94706e89d5932d936fcdc86077"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3f",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "f528c350eb137bb3eb50156c3c075248"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3f",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "31621255750dfa734f6734db86c1c974"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3f",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "3df307a16ee978af8a9ddc99dc8cca2e"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "murmur3f",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "164dc489af2f40b60bf5e6cb28473253"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh32",
+            "data": ""
+          },
+          "expect": "02cc5d05"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh32",
+            "data": "a"
+          },
+          "expect": "550d7456"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh32",
+            "data": "abc"
+          },
+          "expect": "32d153ff"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh32",
+            "data": "message digest"
+          },
+          "expect": "7c948494"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh32",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "e85ea4de"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh32",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "2e3dc0b0"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh32",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "1a9b41ab"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh32",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "700f992b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh32",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "70871aae"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh32",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "78e50b9a"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh32",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "bcf28c44"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh32",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "73958e2d"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh64",
+            "data": ""
+          },
+          "expect": "ef46db3751d8e999"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh64",
+            "data": "a"
+          },
+          "expect": "d24ec4f1a98c6e5b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh64",
+            "data": "abc"
+          },
+          "expect": "44bc2cf5ad770999"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh64",
+            "data": "message digest"
+          },
+          "expect": "066ed728fceeb3be"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh64",
+            "data": "The quick brown fox jumps over the lazy dog"
+          },
+          "expect": "0b242d361fda71bc"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh64",
+            "data": "xxxxxxxxxxxxxxx"
+          },
+          "expect": "093f6c0ea54b9e89"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh64",
+            "data": "yyyyyyyyyyyyyyyy"
+          },
+          "expect": "987127237878a868"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh64",
+            "data": "zzzzzzzzzzzzzzzzz"
+          },
+          "expect": "fafce7d515795c84"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh64",
+            "data": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+          },
+          "expect": "9ab8c08a42c91815"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh64",
+            "data": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          },
+          "expect": "1ddb4100fb9a31af"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh64",
+            "data": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+          },
+          "expect": "92b4512426dc2ca7"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "xxh64",
+            "data": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+          },
+          "expect": "87645f7a83815df8"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "SHA256",
+            "data": "abc"
+          },
+          "expect": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "Fnv1A64",
+            "data": "abc"
+          },
+          "expect": "e71fa2190541574b"
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "ripemd160x",
+            "data": "abc"
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "hash(): Argument #1 ($algo) must be a valid hashing algorithm"
+            }
+          }
+        },
+        {
+          "op": "string.hash",
+          "args": {
+            "algo": "nope",
+            "data": "abc"
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "hash(): Argument #1 ($algo) must be a valid hashing algorithm"
+            }
+          }
+        }
+      ]
     }
   ]
 }

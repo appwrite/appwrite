@@ -1,4 +1,5 @@
-//! Byte-string functions of `ext/standard/string.c` and `ext/ctype`.
+//! Byte-string functions of `ext/standard/string.c` and `ext/ctype`, plus
+//! `crypt()`, `password_hash()` / `password_verify()` and `hash()`.
 //!
 //! PHP strings are byte strings: every function here takes and returns
 //! `&[u8]` / `Vec<u8>`, never assumes UTF-8 and handles invalid UTF-8 like
@@ -2441,6 +2442,358 @@ fn des_crypt(key: &[u8], setting: &[u8]) -> Option<Vec<u8>> {
     push((r0 << 16) | ((r1 >> 16) & 0xffff), &[18, 12, 6, 0]);
     push(r1 << 2, &[12, 6, 0]);
     Some(out)
+}
+
+// ---------------------------------------------------------------------------
+// hash()
+// ---------------------------------------------------------------------------
+
+/// `hash($algo, $data)` as lowercase hex, for the algorithms ext/hash
+/// implements without large constant tables: MD4, MD5, SHA-1, SHA-2, SHA-3,
+/// Adler-32, the three CRC-32s, FNV-1/1a, Jenkins one-at-a-time, MurmurHash3
+/// and XXH32/XXH64. `None` for any other name, PHP's included (MD2, RIPEMD,
+/// Whirlpool, Tiger, Snefru, GOST, HAVAL, XXH3 and XXH128 are not ported):
+/// PHP raises "must be a valid hashing algorithm" only for names it does not
+/// know. The name is case-insensitive.
+pub fn hash(algo: &[u8], data: &[u8]) -> Option<String> {
+    use sha2::Digest;
+    let hex = |b: &[u8]| b.iter().map(|x| format!("{x:02x}")).collect::<String>();
+    Some(match algo.to_ascii_lowercase().as_slice() {
+        b"md4" => hex(&md4(data)),
+        b"md5" => hex(&md5::Md5::digest(data)),
+        b"sha1" => hex(&sha1::Sha1::digest(data)),
+        b"sha224" => hex(&sha2::Sha224::digest(data)),
+        b"sha256" => hex(&sha2::Sha256::digest(data)),
+        b"sha384" => hex(&sha2::Sha384::digest(data)),
+        b"sha512/224" => hex(&sha2::Sha512_224::digest(data)),
+        b"sha512/256" => hex(&sha2::Sha512_256::digest(data)),
+        b"sha512" => hex(&sha2::Sha512::digest(data)),
+        b"sha3-224" => hex(&sha3::Sha3_224::digest(data)),
+        b"sha3-256" => hex(&sha3::Sha3_256::digest(data)),
+        b"sha3-384" => hex(&sha3::Sha3_384::digest(data)),
+        b"sha3-512" => hex(&sha3::Sha3_512::digest(data)),
+        b"adler32" => {
+            let (mut a, mut b) = (1u32, 0u32);
+            for x in data {
+                a = (a + u32::from(*x)) % 65521;
+                b = (b + a) % 65521;
+            }
+            format!("{:08x}", (b << 16) | a)
+        }
+        // bzip2's CRC (most significant bit first), written least significant byte first.
+        b"crc32" => {
+            let mut state = !0u32;
+            for x in data {
+                let mut c = (state >> 24) ^ u32::from(*x);
+                c <<= 24;
+                for _ in 0..8 {
+                    c = if c & 0x8000_0000 != 0 { (c << 1) ^ 0x04c1_1db7 } else { c << 1 };
+                }
+                state = (state << 8) ^ c;
+            }
+            hex(&(!state).to_le_bytes())
+        }
+        b"crc32b" => format!("{:08x}", crc32_reflected(data, 0xedb8_8320)),
+        b"crc32c" => format!("{:08x}", crc32_reflected(data, 0x82f6_3b78)),
+        b"fnv132" | b"fnv1a32" => {
+            let mut h = 0x811c_9dc5u32;
+            for x in data {
+                if algo.eq_ignore_ascii_case(b"fnv132") {
+                    h = h.wrapping_mul(0x0100_0193) ^ u32::from(*x);
+                } else {
+                    h = (h ^ u32::from(*x)).wrapping_mul(0x0100_0193);
+                }
+            }
+            format!("{h:08x}")
+        }
+        b"fnv164" | b"fnv1a64" => {
+            let mut h = 0xcbf2_9ce4_8422_2325u64;
+            for x in data {
+                if algo.eq_ignore_ascii_case(b"fnv164") {
+                    h = h.wrapping_mul(0x0000_0100_0000_01b3) ^ u64::from(*x);
+                } else {
+                    h = (h ^ u64::from(*x)).wrapping_mul(0x0000_0100_0000_01b3);
+                }
+            }
+            format!("{h:016x}")
+        }
+        b"joaat" => {
+            let mut h = 0u32;
+            for x in data {
+                h = h.wrapping_add(u32::from(*x));
+                h = h.wrapping_add(h << 10);
+                h ^= h >> 6;
+            }
+            h = h.wrapping_add(h << 3);
+            h ^= h >> 11;
+            h = h.wrapping_add(h << 15);
+            format!("{h:08x}")
+        }
+        b"murmur3a" => format!("{:08x}", murmur3_x86_32(data)),
+        b"murmur3c" => murmur3_x86_128(data).iter().map(|h| format!("{h:08x}")).collect(),
+        b"murmur3f" => murmur3_x64_128(data).iter().map(|h| format!("{h:016x}")).collect(),
+        b"xxh32" => format!("{:08x}", xxh32(data)),
+        b"xxh64" => format!("{:016x}", xxh64(data)),
+        _ => return None,
+    })
+}
+
+fn crc32_reflected(data: &[u8], poly: u32) -> u32 {
+    let mut state = !0u32;
+    for x in data {
+        state ^= u32::from(*x);
+        for _ in 0..8 {
+            state = if state & 1 != 0 { (state >> 1) ^ poly } else { state >> 1 };
+        }
+    }
+    !state
+}
+
+/// RFC 1320.
+fn md4(data: &[u8]) -> [u8; 16] {
+    let mut msg = data.to_vec();
+    let bits = (data.len() as u64).wrapping_mul(8);
+    msg.push(0x80);
+    while msg.len() % 64 != 56 {
+        msg.push(0);
+    }
+    msg.extend_from_slice(&bits.to_le_bytes());
+    let mut s = [0x6745_2301u32, 0xefcd_ab89, 0x98ba_dcfe, 0x1032_5476];
+    for block in msg.chunks(64) {
+        let x: Vec<u32> = block.chunks(4).map(|w| u32::from_le_bytes([w[0], w[1], w[2], w[3]])).collect();
+        let [mut a, mut b, mut c, mut d] = s;
+        let f = |x: u32, y: u32, z: u32| (x & y) | (!x & z);
+        let g = |x: u32, y: u32, z: u32| (x & y) | (x & z) | (y & z);
+        let h = |x: u32, y: u32, z: u32| x ^ y ^ z;
+        for &i in &[0usize, 4, 8, 12] {
+            a = a.wrapping_add(f(b, c, d)).wrapping_add(x[i]).rotate_left(3);
+            d = d.wrapping_add(f(a, b, c)).wrapping_add(x[i + 1]).rotate_left(7);
+            c = c.wrapping_add(f(d, a, b)).wrapping_add(x[i + 2]).rotate_left(11);
+            b = b.wrapping_add(f(c, d, a)).wrapping_add(x[i + 3]).rotate_left(19);
+        }
+        for &i in &[0usize, 1, 2, 3] {
+            a = a.wrapping_add(g(b, c, d)).wrapping_add(x[i]).wrapping_add(0x5a82_7999).rotate_left(3);
+            d = d.wrapping_add(g(a, b, c)).wrapping_add(x[i + 4]).wrapping_add(0x5a82_7999).rotate_left(5);
+            c = c.wrapping_add(g(d, a, b)).wrapping_add(x[i + 8]).wrapping_add(0x5a82_7999).rotate_left(9);
+            b = b.wrapping_add(g(c, d, a)).wrapping_add(x[i + 12]).wrapping_add(0x5a82_7999).rotate_left(13);
+        }
+        for &i in &[0usize, 2, 1, 3] {
+            a = a.wrapping_add(h(b, c, d)).wrapping_add(x[i]).wrapping_add(0x6ed9_eba1).rotate_left(3);
+            d = d.wrapping_add(h(a, b, c)).wrapping_add(x[i + 8]).wrapping_add(0x6ed9_eba1).rotate_left(9);
+            c = c.wrapping_add(h(d, a, b)).wrapping_add(x[i + 4]).wrapping_add(0x6ed9_eba1).rotate_left(11);
+            b = b.wrapping_add(h(c, d, a)).wrapping_add(x[i + 12]).wrapping_add(0x6ed9_eba1).rotate_left(15);
+        }
+        s = [s[0].wrapping_add(a), s[1].wrapping_add(b), s[2].wrapping_add(c), s[3].wrapping_add(d)];
+    }
+    let mut out = [0u8; 16];
+    for (i, w) in s.iter().enumerate() {
+        out[i * 4..i * 4 + 4].copy_from_slice(&w.to_le_bytes());
+    }
+    out
+}
+
+fn fmix32(mut h: u32) -> u32 {
+    h ^= h >> 16;
+    h = h.wrapping_mul(0x85eb_ca6b);
+    h ^= h >> 13;
+    h = h.wrapping_mul(0xc2b2_ae35);
+    h ^ (h >> 16)
+}
+
+fn fmix64(mut k: u64) -> u64 {
+    k ^= k >> 33;
+    k = k.wrapping_mul(0xff51_afd7_ed55_8ccd);
+    k ^= k >> 33;
+    k = k.wrapping_mul(0xc4ce_b9fe_1a85_ec53);
+    k ^ (k >> 33)
+}
+
+/// The tail bytes of a block, little-endian, as one integer.
+fn tail(bytes: &[u8]) -> u64 {
+    bytes.iter().rev().fold(0u64, |acc, b| (acc << 8) | u64::from(*b))
+}
+
+/// MurmurHash3_x86_32, seed 0.
+fn murmur3_x86_32(data: &[u8]) -> u32 {
+    let (c1, c2) = (0xcc9e_2d51u32, 0x1b87_3593u32);
+    let mut h = 0u32;
+    let blocks = data.chunks_exact(4);
+    let rest = blocks.remainder();
+    for b in blocks {
+        let k = u32::from_le_bytes([b[0], b[1], b[2], b[3]]).wrapping_mul(c1).rotate_left(15).wrapping_mul(c2);
+        h = (h ^ k).rotate_left(13).wrapping_mul(5).wrapping_add(0xe654_6b64);
+    }
+    if !rest.is_empty() {
+        h ^= (tail(rest) as u32).wrapping_mul(c1).rotate_left(15).wrapping_mul(c2);
+    }
+    fmix32(h ^ data.len() as u32)
+}
+
+/// MurmurHash3_x86_128, seed 0.
+fn murmur3_x86_128(data: &[u8]) -> [u32; 4] {
+    let c = [0x239b_961bu32, 0xab0e_9789, 0x38b3_4ae5, 0xa1e3_8b93];
+    let rot = [15u32, 16, 17, 18];
+    let hrot = [19u32, 17, 15, 13];
+    let add = [0x561c_cd1bu32, 0x0bca_a747, 0x96cd_1c35, 0x32ac_3b17];
+    let mut h = [0u32; 4];
+    let blocks = data.chunks_exact(16);
+    let rest = blocks.remainder();
+    for b in blocks {
+        let k: Vec<u32> = b.chunks(4).map(|w| u32::from_le_bytes([w[0], w[1], w[2], w[3]])).collect();
+        for i in 0..4 {
+            let n = (i + 1) % 4;
+            h[i] ^= k[i].wrapping_mul(c[i]).rotate_left(rot[i]).wrapping_mul(c[n]);
+            h[i] = h[i].rotate_left(hrot[i]).wrapping_add(h[n]).wrapping_mul(5).wrapping_add(add[i]);
+        }
+    }
+    for i in (0..4).rev() {
+        let part = rest.get(i * 4..rest.len().min(i * 4 + 4)).unwrap_or_default();
+        if !part.is_empty() {
+            let n = (i + 1) % 4;
+            h[i] ^= (tail(part) as u32).wrapping_mul(c[i]).rotate_left(rot[i]).wrapping_mul(c[n]);
+        }
+    }
+    let len = data.len() as u32;
+    for x in h.iter_mut() {
+        *x ^= len;
+    }
+    let mix = |h: &mut [u32; 4]| {
+        h[0] = h[0].wrapping_add(h[1]).wrapping_add(h[2]).wrapping_add(h[3]);
+        h[1] = h[1].wrapping_add(h[0]);
+        h[2] = h[2].wrapping_add(h[0]);
+        h[3] = h[3].wrapping_add(h[0]);
+    };
+    mix(&mut h);
+    for x in h.iter_mut() {
+        *x = fmix32(*x);
+    }
+    mix(&mut h);
+    h
+}
+
+/// MurmurHash3_x64_128, seed 0.
+fn murmur3_x64_128(data: &[u8]) -> [u64; 2] {
+    let (c1, c2) = (0x87c3_7b91_1142_53d5u64, 0x4cf5_ad43_2745_937fu64);
+    let (mut h1, mut h2) = (0u64, 0u64);
+    let blocks = data.chunks_exact(16);
+    let rest = blocks.remainder();
+    for b in blocks {
+        let k1 = u64::from_le_bytes(b[0..8].try_into().unwrap_or_default());
+        let k2 = u64::from_le_bytes(b[8..16].try_into().unwrap_or_default());
+        h1 ^= k1.wrapping_mul(c1).rotate_left(31).wrapping_mul(c2);
+        h1 = h1.rotate_left(27).wrapping_add(h2).wrapping_mul(5).wrapping_add(0x52dc_e729);
+        h2 ^= k2.wrapping_mul(c2).rotate_left(33).wrapping_mul(c1);
+        h2 = h2.rotate_left(31).wrapping_add(h1).wrapping_mul(5).wrapping_add(0x3849_5ab5);
+    }
+    if rest.len() > 8 {
+        h2 ^= tail(&rest[8..]).wrapping_mul(c2).rotate_left(33).wrapping_mul(c1);
+    }
+    if !rest.is_empty() {
+        h1 ^= tail(&rest[..rest.len().min(8)]).wrapping_mul(c1).rotate_left(31).wrapping_mul(c2);
+    }
+    let len = data.len() as u64;
+    h1 ^= len;
+    h2 ^= len;
+    h1 = h1.wrapping_add(h2);
+    h2 = h2.wrapping_add(h1);
+    h1 = fmix64(h1);
+    h2 = fmix64(h2);
+    h1 = h1.wrapping_add(h2);
+    h2 = h2.wrapping_add(h1);
+    [h1, h2]
+}
+
+/// XXH32, seed 0.
+fn xxh32(data: &[u8]) -> u32 {
+    const P1: u32 = 0x9e37_79b1;
+    const P2: u32 = 0x85eb_ca77;
+    const P3: u32 = 0xc2b2_ae3d;
+    const P4: u32 = 0x27d4_eb2f;
+    const P5: u32 = 0x1656_67b1;
+    let round = |acc: u32, lane: u32| acc.wrapping_add(lane.wrapping_mul(P2)).rotate_left(13).wrapping_mul(P1);
+    let word = |b: &[u8]| u32::from_le_bytes([b[0], b[1], b[2], b[3]]);
+    let mut rest = data;
+    let mut h = if data.len() >= 16 {
+        let mut v = [P1.wrapping_add(P2), P2, 0, 0u32.wrapping_sub(P1)];
+        while rest.len() >= 16 {
+            for (i, lane) in v.iter_mut().enumerate() {
+                *lane = round(*lane, word(&rest[i * 4..]));
+            }
+            rest = &rest[16..];
+        }
+        v[0].rotate_left(1)
+            .wrapping_add(v[1].rotate_left(7))
+            .wrapping_add(v[2].rotate_left(12))
+            .wrapping_add(v[3].rotate_left(18))
+    } else {
+        P5
+    };
+    h = h.wrapping_add(data.len() as u32);
+    while rest.len() >= 4 {
+        h = h.wrapping_add(word(rest).wrapping_mul(P3)).rotate_left(17).wrapping_mul(P4);
+        rest = &rest[4..];
+    }
+    for b in rest {
+        h = h.wrapping_add(u32::from(*b).wrapping_mul(P5)).rotate_left(11).wrapping_mul(P1);
+    }
+    h ^= h >> 15;
+    h = h.wrapping_mul(P2);
+    h ^= h >> 13;
+    h = h.wrapping_mul(P3);
+    h ^ (h >> 16)
+}
+
+/// XXH64, seed 0.
+fn xxh64(data: &[u8]) -> u64 {
+    const P1: u64 = 0x9e37_79b1_85eb_ca87;
+    const P2: u64 = 0xc2b2_ae3d_27d4_eb4f;
+    const P3: u64 = 0x1656_67b1_9e37_79f9;
+    const P4: u64 = 0x85eb_ca77_c2b2_ae63;
+    const P5: u64 = 0x27d4_eb2f_1656_67c5;
+    let round = |acc: u64, lane: u64| acc.wrapping_add(lane.wrapping_mul(P2)).rotate_left(31).wrapping_mul(P1);
+    let merge = |acc: u64, v: u64| (acc ^ round(0, v)).wrapping_mul(P1).wrapping_add(P4);
+    let word = |b: &[u8]| u64::from_le_bytes(b[..8].try_into().unwrap_or_default());
+    let mut rest = data;
+    let mut h = if data.len() >= 32 {
+        let mut v = [P1.wrapping_add(P2), P2, 0, 0u64.wrapping_sub(P1)];
+        while rest.len() >= 32 {
+            for (i, lane) in v.iter_mut().enumerate() {
+                *lane = round(*lane, word(&rest[i * 8..]));
+            }
+            rest = &rest[32..];
+        }
+        let mut h = v[0]
+            .rotate_left(1)
+            .wrapping_add(v[1].rotate_left(7))
+            .wrapping_add(v[2].rotate_left(12))
+            .wrapping_add(v[3].rotate_left(18));
+        for lane in v {
+            h = merge(h, lane);
+        }
+        h
+    } else {
+        P5
+    };
+    h = h.wrapping_add(data.len() as u64);
+    while rest.len() >= 8 {
+        h = (h ^ round(0, word(rest))).rotate_left(27).wrapping_mul(P1).wrapping_add(P4);
+        rest = &rest[8..];
+    }
+    if rest.len() >= 4 {
+        h = (h ^ u64::from(u32::from_le_bytes([rest[0], rest[1], rest[2], rest[3]])).wrapping_mul(P1))
+            .rotate_left(23)
+            .wrapping_mul(P2)
+            .wrapping_add(P3);
+        rest = &rest[4..];
+    }
+    for b in rest {
+        h = (h ^ u64::from(*b).wrapping_mul(P5)).rotate_left(11).wrapping_mul(P1);
+    }
+    h ^= h >> 33;
+    h = h.wrapping_mul(P2);
+    h ^= h >> 29;
+    h = h.wrapping_mul(P3);
+    h ^ (h >> 32)
 }
 
 #[cfg(test)]

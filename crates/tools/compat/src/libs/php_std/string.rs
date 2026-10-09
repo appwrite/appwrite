@@ -72,6 +72,7 @@ pub const OPS: &[&str] = &[
     "string.ctype_upper",
     "string.ctype_xdigit",
     "string.crypt",
+    "string.hash",
     "string.password_verify",
     "string.password_hash",
 ];
@@ -429,6 +430,10 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
         "string.ctype_upper" => ctype(&a, string::Ctype::Upper),
         "string.ctype_xdigit" => ctype(&a, string::Ctype::Xdigit),
         "string.crypt" => ok(bytes_value(&string::crypt(&a.bytes("string")?, &a.bytes("salt")?))),
+        "string.hash" => match string::hash(&a.bytes("algo")?, &a.bytes("data")?) {
+            Some(digest) => ok(Value::String(digest)),
+            None => Ok(Outcome::err("ValueError", "hash(): Argument #1 ($algo) must be a valid hashing algorithm")),
+        },
         "string.password_verify" => ok(Value::Bool(string::password_verify(&a.bytes("password")?, &a.bytes("hash")?))),
         "string.password_hash" => {
             let option = |key: &str, default: i64| {

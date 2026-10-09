@@ -3044,6 +3044,92 @@
         ],
         "reason": "the salt is random; cases verify the hash with password_verify in both runtimes"
       }
+    },
+    "string.hash": {
+      "doc": "hash($algo, $data) for MD4, MD5, SHA-1/2/3, Adler-32, CRC-32 (bzip2, b, c), FNV-1/1a, joaat, MurmurHash3 (a, c, f) and XXH32/64; a ValueError for unknown names (MD2, RIPEMD, Whirlpool, Tiger, Snefru, GOST, HAVAL, XXH3 and XXH128 are not ported)",
+      "fuzz": [
+        {
+          "name": "digests",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algo": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "md4",
+                      "md5",
+                      "sha1",
+                      "sha224",
+                      "sha256",
+                      "sha384",
+                      "sha512/224",
+                      "sha512/256",
+                      "sha512",
+                      "sha3-224",
+                      "sha3-256",
+                      "sha3-384",
+                      "sha3-512",
+                      "adler32",
+                      "crc32",
+                      "crc32b",
+                      "crc32c",
+                      "fnv132",
+                      "fnv1a32",
+                      "fnv164",
+                      "fnv1a64",
+                      "joaat",
+                      "murmur3a",
+                      "murmur3c",
+                      "murmur3f",
+                      "xxh32",
+                      "xxh64",
+                      "MD4",
+                      "Crc32B",
+                      "XXH64",
+                      "Murmur3F",
+                      "nope",
+                      "",
+                      "sha512-256",
+                      "crc"
+                    ]
+                  }
+                ]
+              },
+              "data": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "unicode",
+                    "min": 0,
+                    "max": 80,
+                    "tricky": 0.3
+                  },
+                  {
+                    "gen": "repeat",
+                    "part": {
+                      "gen": "pick",
+                      "from": [
+                        "a",
+                        "abc",
+                        "\u0000",
+                        "ÿ",
+                        "0123456789abcdef"
+                      ]
+                    },
+                    "min": 0,
+                    "max": 20
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 6000
+        }
+      ]
     }
   },
   "generators": {

@@ -136,7 +136,23 @@
                       "sha512/256",
                       "nope",
                       5,
-                      null
+                      null,
+                      "md4",
+                      "crc32",
+                      "crc32b",
+                      "crc32c",
+                      "adler32",
+                      "fnv132",
+                      "fnv1a32",
+                      "fnv164",
+                      "fnv1a64",
+                      "joaat",
+                      "murmur3a",
+                      "murmur3c",
+                      "murmur3f",
+                      "xxh32",
+                      "xxh64",
+                      "XXH32"
                     ]
                   }
                 },
