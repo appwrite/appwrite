@@ -20,7 +20,7 @@ class Ceremony extends Base
     /**
      * The relying party for a ceremony started from the given origin, or null when passkeys cannot work there.
      *
-     * Origins come from the passkey policy, or else from the project's web platforms on the RP ID. A request from
+     * Origins come from the passkey policy, or else from the project's platforms on the RP ID. A request from
      * localhost gets a localhost relying party when localhost is a web platform, so local development works next
      * to the production domain without touching the policy.
      */
@@ -29,11 +29,12 @@ class Ceremony extends Base
         $auths = $project->getAttribute('auths', []);
         $id = $auths['passkeyRpId'] ?? '';
         $name = $project->getAttribute('name', '');
-        $hostnames = self::getHostnames($project);
+        $platforms = $project->getAttribute('platforms', []);
+        $hostnames = self::getHostnames($platforms);
 
         $host = \parse_url($origin, PHP_URL_HOST) ?: '';
         if ($host === Origin::LOCALHOST && $id !== Origin::LOCALHOST && \in_array(Origin::LOCALHOST, $hostnames, true)) {
-            return new self(new RelyingParty(Origin::LOCALHOST, $name, self::getOrigins(Origin::LOCALHOST, $hostnames)));
+            return new self(new RelyingParty(Origin::LOCALHOST, $name, self::getOrigins(Origin::LOCALHOST, $platforms)));
         }
 
         if ($id === '') {
@@ -42,7 +43,7 @@ class Ceremony extends Base
 
         $origins = $auths['passkeyOrigins'] ?? [];
         if (empty($origins)) {
-            $origins = self::getOrigins($id, $hostnames);
+            $origins = self::getOrigins($id, $platforms);
         }
 
         if (empty($origins)) {
@@ -54,14 +55,21 @@ class Ceremony extends Base
 
     /**
      * Origins of the web platforms on the RP ID or one of its subdomains. Wildcard platforms name no single origin.
+     * Apple apps sign in from the RP ID itself once the domain lists them as associated.
      *
-     * @param array<string> $hostnames
+     * @param array<array<string, mixed>|Document> $platforms
      * @return array<string>
      */
-    public static function getOrigins(string $rpId, array $hostnames): array
+    private static function getOrigins(string $rpId, array $platforms): array
     {
         $origins = [];
-        foreach ($hostnames as $hostname) {
+        foreach ($platforms as $platform) {
+            if ($rpId !== Origin::LOCALHOST && Platform::mapDeprecatedType(\strtolower($platform['type'] ?? '')) === Platform::TYPE_APPLE) {
+                $origins[] = 'https://' . $rpId;
+            }
+        }
+
+        foreach (self::getHostnames($platforms) as $hostname) {
             if ($rpId === Origin::LOCALHOST && $hostname === Origin::LOCALHOST) {
                 \array_push($origins, 'http://' . Origin::LOCALHOST, 'https://' . Origin::LOCALHOST);
             } elseif ($rpId !== Origin::LOCALHOST && ($hostname === $rpId || \str_ends_with($hostname, '.' . $rpId)) && !\str_contains($hostname, '*')) {
@@ -73,12 +81,13 @@ class Ceremony extends Base
     }
 
     /**
+     * @param array<array<string, mixed>|Document> $platforms
      * @return array<string>
      */
-    private static function getHostnames(Document $project): array
+    private static function getHostnames(array $platforms): array
     {
         $hostnames = [];
-        foreach ($project->getAttribute('platforms', []) as $platform) {
+        foreach ($platforms as $platform) {
             if (Platform::mapDeprecatedType(\strtolower($platform['type'] ?? '')) === Platform::TYPE_WEB && !empty($platform['hostname'])) {
                 $hostnames[] = \strtolower($platform['hostname']);
             }
