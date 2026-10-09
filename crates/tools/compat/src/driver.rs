@@ -3,7 +3,7 @@
 //!
 //! Request:  `{"id": 7, "lib": "validators", "op": "validate", "args": {...}}`
 //! Replies:  `{"id": 7, "ok": <value>}`
-//!           `{"id": 7, "err": {"class": "<PHP exception class>", "message": "..."}}`
+//!           `{"id": 7, "err": {"class": "<PHP exception class>", "message": "..." | {"$bytes": ...}}}`
 //!           `{"id": 7, "fault": "<harness problem>"}`
 //!
 //! Control operations: `$hello` (runtime and the operations of every library),

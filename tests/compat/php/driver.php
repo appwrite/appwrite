@@ -71,7 +71,7 @@ while (($line = fgets(STDIN)) !== false) {
     } catch (Fault $fault) {
         $reply = ['id' => $id, 'fault' => $fault->getMessage()];
     } catch (\Throwable $error) {
-        $reply = ['id' => $id, 'err' => ['class' => $error::class, 'message' => $error->getMessage()]];
+        $reply = ['id' => $id, 'err' => ['class' => $error::class, 'message' => Codec::encode($error->getMessage())]];
     }
     $stray = ob_get_clean();
     if ($stray !== '' && $stray !== false) {

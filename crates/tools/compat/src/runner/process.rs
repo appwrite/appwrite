@@ -150,7 +150,7 @@ fn decode(reply: &Value) -> OpResult {
     if let Some(e) = reply.get("err") {
         return Ok(Outcome::Err {
             class: e.get("class").and_then(Value::as_str).unwrap_or_default().to_owned(),
-            message: e.get("message").and_then(Value::as_str).unwrap_or_default().to_owned(),
+            message: e.get("message").cloned().unwrap_or_else(|| Value::String(String::new())),
         });
     }
     Err(Fault(reply.get("fault").and_then(Value::as_str).unwrap_or("malformed reply").to_owned()))
