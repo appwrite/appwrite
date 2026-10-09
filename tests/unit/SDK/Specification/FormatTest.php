@@ -1464,7 +1464,7 @@ final class FormatTest extends TestCase
                 Query::TYPE_ORDER_ASC,
                 Query::TYPE_ORDER_DESC,
             ],
-            $executions['methods']
+            $parameters['executionQueries']['x-appwrite']['queries']['methods']
         );
     }
 
