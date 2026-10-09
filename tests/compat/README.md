@@ -21,7 +21,7 @@ The standard it enforces is [crates/CONVERSION.md](../../crates/CONVERSION.md). 
 - **Operations** are a neutral vocabulary per library (`lock.try_acquire`, `validate`, ...) declared in `spec.json`. Each runtime has an **adapter** mapping them onto its library: thin glue with no logic.
 - **Drivers** speak JSON lines on stdin/stdout. The PHP driver runs in a throwaway container of the dev image (`appwrite-dev`) with this checkout's `tests/` and `packages/` mounted, so it works from any git worktree; the Rust driver is a binary of the `compat` crate.
 - **Values** cross as JSON. PHP decodes them like `Utopia\Http\Request` (objects are associative arrays, except empty ones, which stay `stdClass`); `{"$bytes": "<base64>"}` carries binary strings and `{"$float": "INF"}` non-finite floats. Integers and floats stay distinct (`1` ≠ `1.0`), and object key order matters.
-- **Errors** are `{"$error": {"class": "<PHP exception class>", "message": "..."}}`. Rust adapters report the PHP class of each error (every crate's error enum has `php_class()`).
+- **Errors** are `{"$error": {"class": "<PHP exception class>", "message": "..."}}`; a message that is not UTF-8 (one that quotes the input) is `{"$bytes": "<base64>"}` (`Outcome::err_bytes()`). Rust adapters report the PHP class of each error (every crate's error enum has `php_class()`).
 - **Namespaces** isolate runs: each case gets a fresh `${ns}` per runtime. Everything an operation creates (keys, tables, files) must contain it, so the runner can clean up and snapshot it. Results have the namespace replaced back with `${ns}` before comparing.
 
 ## Commands

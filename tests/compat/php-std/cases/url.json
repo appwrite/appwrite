@@ -1,61 +1,846 @@
 {
   "source": "php-std",
   "cases": [
-    { "name": "parse_url full", "op": "url.parse_url", "args": { "url": "https://u:p@example.com:8080/a/b?x=1#frag" } },
-    { "name": "parse_url empty string is an empty path", "op": "url.parse_url", "args": { "url": "" } },
-    { "name": "parse_url host:port without scheme", "op": "url.parse_url", "args": { "url": "a.com:80" } },
-    { "name": "parse_url host:port/path without scheme", "op": "url.parse_url", "args": { "url": "a.com:80/x" } },
-    { "name": "parse_url mailto", "op": "url.parse_url", "args": { "url": "mailto:a@b.c" } },
-    { "name": "parse_url scheme only", "op": "url.parse_url", "args": { "url": "http:" } },
-    { "name": "parse_url scheme-relative", "op": "url.parse_url", "args": { "url": "//example.com/x" } },
-    { "name": "parse_url empty host fails", "op": "url.parse_url", "args": { "url": "http://" } },
-    { "name": "parse_url port out of range fails", "op": "url.parse_url", "args": { "url": "http://a:65536" } },
-    { "name": "parse_url six-digit port fails", "op": "url.parse_url", "args": { "url": "http://a:123456/" } },
-    { "name": "parse_url port prefix digits", "op": "url.parse_url", "args": { "url": "http://a:8a" } },
-    { "name": "parse_url port with sign", "op": "url.parse_url", "args": { "url": "http://a:+80" } },
-    { "name": "parse_url port zero", "op": "url.parse_url", "args": { "url": "http://a:0/" } },
-    { "name": "parse_url empty port", "op": "url.parse_url", "args": { "url": "http://a:/" } },
-    { "name": "parse_url colon only fails", "op": "url.parse_url", "args": { "url": ":" } },
-    { "name": "parse_url leading colon port", "op": "url.parse_url", "args": { "url": ":80" } },
-    { "name": "parse_url ipv6 host", "op": "url.parse_url", "args": { "url": "http://[::1]:80/a" } },
-    { "name": "parse_url ipv6 without port", "op": "url.parse_url", "args": { "url": "http://[::1]/a" } },
-    { "name": "parse_url last @ separates userinfo", "op": "url.parse_url", "args": { "url": "http://a@b@c/" } },
-    { "name": "parse_url control characters become underscores", "op": "url.parse_url", "args": { "url": "http://h\u0001st/p\u007fa?q\u0000#f\u001f" } },
-    { "name": "parse_url windows drive", "op": "url.parse_url", "args": { "url": "file:///c:/dir/file.txt" } },
-    { "name": "parse_url file triple slash", "op": "url.parse_url", "args": { "url": "file:///etc/passwd" } },
-    { "name": "parse_url empty query and fragment", "op": "url.parse_url", "args": { "url": "x?#" } },
-    { "name": "parse_url invalid scheme chars become path", "op": "url.parse_url", "args": { "url": "a b:c" } },
-    { "name": "parse_url invalid utf-8", "op": "url.parse_url", "args": { "url": { "$bytes": "aHR0cDovL2V4YW1wbGUuY29tL/8=" } } },
-    { "name": "component scheme", "op": "url.parse_url_component", "args": { "url": "HTTPS://x", "component": 0 } },
-    { "name": "component host", "op": "url.parse_url_component", "args": { "url": "https://Example.com:1/p", "component": 1 } },
-    { "name": "component port", "op": "url.parse_url_component", "args": { "url": "https://h:443/p", "component": 2 } },
-    { "name": "component port absent", "op": "url.parse_url_component", "args": { "url": "https://h/p", "component": 2 } },
-    { "name": "component user", "op": "url.parse_url_component", "args": { "url": "https://u:p@h", "component": 3 } },
-    { "name": "component pass", "op": "url.parse_url_component", "args": { "url": "https://u:p@h", "component": 4 } },
-    { "name": "component path", "op": "url.parse_url_component", "args": { "url": "/a/b?c", "component": 5 } },
-    { "name": "component query", "op": "url.parse_url_component", "args": { "url": "/a?b=c#d", "component": 6 } },
-    { "name": "component fragment", "op": "url.parse_url_component", "args": { "url": "/a#", "component": 7 } },
-    { "name": "component on malformed url", "op": "url.parse_url_component", "args": { "url": "http://", "component": 1 } },
-    { "name": "rfc3986 normalization", "op": "url.rfc3986_parse", "args": { "uri": "HTTP://User:P%41ss@EXAMPLE.com:0080/A/./b/../%7e%2f?Q%41#F%61" } },
-    { "name": "rfc3986 ipv6 recomposes expanded", "op": "url.rfc3986_parse", "args": { "uri": "http://[::1]:80/a" } },
-    { "name": "rfc3986 ipv4 in ipv6", "op": "url.rfc3986_parse", "args": { "uri": "http://[::FFFF:1.2.3.4]/" } },
-    { "name": "rfc3986 ipvfuture lowercased", "op": "url.rfc3986_parse", "args": { "uri": "x://[v1.ABC]/" } },
-    { "name": "rfc3986 empty", "op": "url.rfc3986_parse", "args": { "uri": "" } },
-    { "name": "rfc3986 scheme only", "op": "url.rfc3986_parse", "args": { "uri": "a:" } },
-    { "name": "rfc3986 empty authority", "op": "url.rfc3986_parse", "args": { "uri": "//" } },
-    { "name": "rfc3986 empty host with port", "op": "url.rfc3986_parse", "args": { "uri": "//:80" } },
-    { "name": "rfc3986 empty host with userinfo", "op": "url.rfc3986_parse", "args": { "uri": "//u@" } },
-    { "name": "rfc3986 private-use scheme without host", "op": "url.rfc3986_parse", "args": { "uri": "com.example.app:/oauth" } },
-    { "name": "rfc3986 relative dot segments kept", "op": "url.rfc3986_parse", "args": { "uri": "a/../.." } },
-    { "name": "rfc3986 colon in first relative segment keeps dot", "op": "url.rfc3986_parse", "args": { "uri": "./a:b" } },
-    { "name": "rfc3986 encoded dots are removed", "op": "url.rfc3986_parse", "args": { "uri": "http://h/a/%2E%2e/b" } },
-    { "name": "rfc3986 host lowercasing stops near a trailing percent", "op": "url.rfc3986_parse", "args": { "uri": "http://AB%2C/" } },
-    { "name": "rfc3986 double at is invalid", "op": "url.rfc3986_parse", "args": { "uri": "http://a@b@c" } },
-    { "name": "rfc3986 port above PHP_INT_MAX", "op": "url.rfc3986_parse", "args": { "uri": "http://h:9223372036854775808" } },
-    { "name": "rfc3986 port at PHP_INT_MAX", "op": "url.rfc3986_parse", "args": { "uri": "http://h:9223372036854775807" } },
-    { "name": "rfc3986 space is invalid", "op": "url.rfc3986_parse", "args": { "uri": "http://h/a b" } },
-    { "name": "rfc3986 colon in first relative segment is invalid", "op": "url.rfc3986_parse", "args": { "uri": "1a:b" } },
-    { "name": "rfc3986 bad percent encoding", "op": "url.rfc3986_parse", "args": { "uri": "http://h/%zz" } },
-    { "name": "rfc3986 bad ipv6", "op": "url.rfc3986_parse", "args": { "uri": "http://[1:::2]/" } }
+    {
+      "name": "parse_url full",
+      "op": "url.parse_url",
+      "args": {
+        "url": "https://u:p@example.com:8080/a/b?x=1#frag"
+      },
+      "expect": {
+        "scheme": "https",
+        "host": "example.com",
+        "port": 8080,
+        "user": "u",
+        "pass": "p",
+        "path": "/a/b",
+        "query": "x=1",
+        "fragment": "frag"
+      }
+    },
+    {
+      "name": "parse_url empty string is an empty path",
+      "op": "url.parse_url",
+      "args": {
+        "url": ""
+      },
+      "expect": {
+        "path": ""
+      }
+    },
+    {
+      "name": "parse_url host:port without scheme",
+      "op": "url.parse_url",
+      "args": {
+        "url": "a.com:80"
+      },
+      "expect": {
+        "host": "a.com",
+        "port": 80
+      }
+    },
+    {
+      "name": "parse_url host:port/path without scheme",
+      "op": "url.parse_url",
+      "args": {
+        "url": "a.com:80/x"
+      },
+      "expect": {
+        "host": "a.com",
+        "port": 80,
+        "path": "/x"
+      }
+    },
+    {
+      "name": "parse_url mailto",
+      "op": "url.parse_url",
+      "args": {
+        "url": "mailto:a@b.c"
+      },
+      "expect": {
+        "scheme": "mailto",
+        "path": "a@b.c"
+      }
+    },
+    {
+      "name": "parse_url scheme only",
+      "op": "url.parse_url",
+      "args": {
+        "url": "http:"
+      },
+      "expect": {
+        "scheme": "http"
+      }
+    },
+    {
+      "name": "parse_url scheme-relative",
+      "op": "url.parse_url",
+      "args": {
+        "url": "//example.com/x"
+      },
+      "expect": {
+        "host": "example.com",
+        "path": "/x"
+      }
+    },
+    {
+      "name": "parse_url empty host fails",
+      "op": "url.parse_url",
+      "args": {
+        "url": "http://"
+      },
+      "expect": false
+    },
+    {
+      "name": "parse_url port out of range fails",
+      "op": "url.parse_url",
+      "args": {
+        "url": "http://a:65536"
+      },
+      "expect": false
+    },
+    {
+      "name": "parse_url six-digit port fails",
+      "op": "url.parse_url",
+      "args": {
+        "url": "http://a:123456/"
+      },
+      "expect": false
+    },
+    {
+      "name": "parse_url port prefix digits",
+      "op": "url.parse_url",
+      "args": {
+        "url": "http://a:8a"
+      },
+      "expect": {
+        "scheme": "http",
+        "host": "a",
+        "port": 8
+      }
+    },
+    {
+      "name": "parse_url port with sign",
+      "op": "url.parse_url",
+      "args": {
+        "url": "http://a:+80"
+      },
+      "expect": {
+        "scheme": "http",
+        "host": "a",
+        "port": 80
+      }
+    },
+    {
+      "name": "parse_url port zero",
+      "op": "url.parse_url",
+      "args": {
+        "url": "http://a:0/"
+      },
+      "expect": {
+        "scheme": "http",
+        "host": "a",
+        "port": 0,
+        "path": "/"
+      }
+    },
+    {
+      "name": "parse_url empty port",
+      "op": "url.parse_url",
+      "args": {
+        "url": "http://a:/"
+      },
+      "expect": {
+        "scheme": "http",
+        "host": "a",
+        "path": "/"
+      }
+    },
+    {
+      "name": "parse_url colon only fails",
+      "op": "url.parse_url",
+      "args": {
+        "url": ":"
+      },
+      "expect": false
+    },
+    {
+      "name": "parse_url leading colon port",
+      "op": "url.parse_url",
+      "args": {
+        "url": ":80"
+      },
+      "expect": false
+    },
+    {
+      "name": "parse_url ipv6 host",
+      "op": "url.parse_url",
+      "args": {
+        "url": "http://[::1]:80/a"
+      },
+      "expect": {
+        "scheme": "http",
+        "host": "[::1]",
+        "port": 80,
+        "path": "/a"
+      }
+    },
+    {
+      "name": "parse_url ipv6 without port",
+      "op": "url.parse_url",
+      "args": {
+        "url": "http://[::1]/a"
+      },
+      "expect": {
+        "scheme": "http",
+        "host": "[::1]",
+        "path": "/a"
+      }
+    },
+    {
+      "name": "parse_url last @ separates userinfo",
+      "op": "url.parse_url",
+      "args": {
+        "url": "http://a@b@c/"
+      },
+      "expect": {
+        "scheme": "http",
+        "host": "c",
+        "user": "a@b",
+        "path": "/"
+      }
+    },
+    {
+      "name": "parse_url control characters become underscores",
+      "op": "url.parse_url",
+      "args": {
+        "url": "http://h\u0001st/pa?q\u0000#f\u001f"
+      },
+      "expect": {
+        "scheme": "http",
+        "host": "h_st",
+        "path": "/p_a",
+        "query": "q_",
+        "fragment": "f_"
+      }
+    },
+    {
+      "name": "parse_url windows drive",
+      "op": "url.parse_url",
+      "args": {
+        "url": "file:///c:/dir/file.txt"
+      },
+      "expect": {
+        "scheme": "file",
+        "path": "c:/dir/file.txt"
+      }
+    },
+    {
+      "name": "parse_url file triple slash",
+      "op": "url.parse_url",
+      "args": {
+        "url": "file:///etc/passwd"
+      },
+      "expect": {
+        "scheme": "file",
+        "path": "/etc/passwd"
+      }
+    },
+    {
+      "name": "parse_url empty query and fragment",
+      "op": "url.parse_url",
+      "args": {
+        "url": "x?#"
+      },
+      "expect": {
+        "path": "x",
+        "query": "",
+        "fragment": ""
+      }
+    },
+    {
+      "name": "parse_url invalid scheme chars become path",
+      "op": "url.parse_url",
+      "args": {
+        "url": "a b:c"
+      },
+      "expect": {
+        "path": "a b:c"
+      }
+    },
+    {
+      "name": "parse_url invalid utf-8",
+      "op": "url.parse_url",
+      "args": {
+        "url": {
+          "$bytes": "aHR0cDovL2V4YW1wbGUuY29tL/8="
+        }
+      },
+      "expect": {
+        "scheme": "http",
+        "host": "example.com",
+        "path": {
+          "$bytes": "L/8="
+        }
+      }
+    },
+    {
+      "name": "component scheme",
+      "op": "url.parse_url_component",
+      "args": {
+        "url": "HTTPS://x",
+        "component": 0
+      },
+      "expect": "HTTPS"
+    },
+    {
+      "name": "component host",
+      "op": "url.parse_url_component",
+      "args": {
+        "url": "https://Example.com:1/p",
+        "component": 1
+      },
+      "expect": "Example.com"
+    },
+    {
+      "name": "component port",
+      "op": "url.parse_url_component",
+      "args": {
+        "url": "https://h:443/p",
+        "component": 2
+      },
+      "expect": 443
+    },
+    {
+      "name": "component port absent",
+      "op": "url.parse_url_component",
+      "args": {
+        "url": "https://h/p",
+        "component": 2
+      },
+      "expect": null
+    },
+    {
+      "name": "component user",
+      "op": "url.parse_url_component",
+      "args": {
+        "url": "https://u:p@h",
+        "component": 3
+      },
+      "expect": "u"
+    },
+    {
+      "name": "component pass",
+      "op": "url.parse_url_component",
+      "args": {
+        "url": "https://u:p@h",
+        "component": 4
+      },
+      "expect": "p"
+    },
+    {
+      "name": "component path",
+      "op": "url.parse_url_component",
+      "args": {
+        "url": "/a/b?c",
+        "component": 5
+      },
+      "expect": "/a/b"
+    },
+    {
+      "name": "component query",
+      "op": "url.parse_url_component",
+      "args": {
+        "url": "/a?b=c#d",
+        "component": 6
+      },
+      "expect": "b=c"
+    },
+    {
+      "name": "component fragment",
+      "op": "url.parse_url_component",
+      "args": {
+        "url": "/a#",
+        "component": 7
+      },
+      "expect": ""
+    },
+    {
+      "name": "component on malformed url",
+      "op": "url.parse_url_component",
+      "args": {
+        "url": "http://",
+        "component": 1
+      },
+      "expect": false
+    },
+    {
+      "name": "rfc3986 normalization",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "HTTP://User:P%41ss@EXAMPLE.com:0080/A/./b/../%7e%2f?Q%41#F%61"
+      },
+      "expect": {
+        "scheme": "http",
+        "rawScheme": "HTTP",
+        "userInfo": "User:PAss",
+        "rawUserInfo": "User:P%41ss",
+        "username": "User",
+        "rawUsername": "User",
+        "password": "PAss",
+        "rawPassword": "P%41ss",
+        "host": "example.com",
+        "rawHost": "EXAMPLE.com",
+        "port": 80,
+        "path": "/A/~%2F",
+        "rawPath": "/A/./b/../%7e%2f",
+        "query": "QA",
+        "rawQuery": "Q%41",
+        "fragment": "Fa",
+        "rawFragment": "F%61",
+        "string": "http://User:PAss@example.com:80/A/~%2F?QA#Fa",
+        "rawString": "HTTP://User:P%41ss@EXAMPLE.com:0080/A/./b/../%7e%2f?Q%41#F%61"
+      }
+    },
+    {
+      "name": "rfc3986 ipv6 recomposes expanded",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "http://[::1]:80/a"
+      },
+      "expect": {
+        "scheme": "http",
+        "rawScheme": "http",
+        "userInfo": null,
+        "rawUserInfo": null,
+        "username": null,
+        "rawUsername": null,
+        "password": null,
+        "rawPassword": null,
+        "host": "[::1]",
+        "rawHost": "[::1]",
+        "port": 80,
+        "path": "/a",
+        "rawPath": "/a",
+        "query": null,
+        "rawQuery": null,
+        "fragment": null,
+        "rawFragment": null,
+        "string": "http://[0000:0000:0000:0000:0000:0000:0000:0001]:80/a",
+        "rawString": "http://[0000:0000:0000:0000:0000:0000:0000:0001]:80/a"
+      }
+    },
+    {
+      "name": "rfc3986 ipv4 in ipv6",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "http://[::FFFF:1.2.3.4]/"
+      },
+      "expect": {
+        "scheme": "http",
+        "rawScheme": "http",
+        "userInfo": null,
+        "rawUserInfo": null,
+        "username": null,
+        "rawUsername": null,
+        "password": null,
+        "rawPassword": null,
+        "host": "[::ffff:1.2.3.4]",
+        "rawHost": "[::FFFF:1.2.3.4]",
+        "port": null,
+        "path": "/",
+        "rawPath": "/",
+        "query": null,
+        "rawQuery": null,
+        "fragment": null,
+        "rawFragment": null,
+        "string": "http://[0000:0000:0000:0000:0000:ffff:0102:0304]/",
+        "rawString": "http://[0000:0000:0000:0000:0000:ffff:0102:0304]/"
+      }
+    },
+    {
+      "name": "rfc3986 ipvfuture lowercased",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "x://[v1.ABC]/"
+      },
+      "expect": {
+        "scheme": "x",
+        "rawScheme": "x",
+        "userInfo": null,
+        "rawUserInfo": null,
+        "username": null,
+        "rawUsername": null,
+        "password": null,
+        "rawPassword": null,
+        "host": "[v1.abc]",
+        "rawHost": "[v1.ABC]",
+        "port": null,
+        "path": "/",
+        "rawPath": "/",
+        "query": null,
+        "rawQuery": null,
+        "fragment": null,
+        "rawFragment": null,
+        "string": "x://[v1.abc]/",
+        "rawString": "x://[v1.ABC]/"
+      }
+    },
+    {
+      "name": "rfc3986 empty",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": ""
+      },
+      "expect": {
+        "scheme": null,
+        "rawScheme": null,
+        "userInfo": null,
+        "rawUserInfo": null,
+        "username": null,
+        "rawUsername": null,
+        "password": null,
+        "rawPassword": null,
+        "host": null,
+        "rawHost": null,
+        "port": null,
+        "path": "",
+        "rawPath": "",
+        "query": null,
+        "rawQuery": null,
+        "fragment": null,
+        "rawFragment": null,
+        "string": "",
+        "rawString": ""
+      }
+    },
+    {
+      "name": "rfc3986 scheme only",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "a:"
+      },
+      "expect": {
+        "scheme": "a",
+        "rawScheme": "a",
+        "userInfo": null,
+        "rawUserInfo": null,
+        "username": null,
+        "rawUsername": null,
+        "password": null,
+        "rawPassword": null,
+        "host": null,
+        "rawHost": null,
+        "port": null,
+        "path": "",
+        "rawPath": "",
+        "query": null,
+        "rawQuery": null,
+        "fragment": null,
+        "rawFragment": null,
+        "string": "a:",
+        "rawString": "a:"
+      }
+    },
+    {
+      "name": "rfc3986 empty authority",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "//"
+      },
+      "expect": {
+        "scheme": null,
+        "rawScheme": null,
+        "userInfo": null,
+        "rawUserInfo": null,
+        "username": null,
+        "rawUsername": null,
+        "password": null,
+        "rawPassword": null,
+        "host": "",
+        "rawHost": "",
+        "port": null,
+        "path": "",
+        "rawPath": "",
+        "query": null,
+        "rawQuery": null,
+        "fragment": null,
+        "rawFragment": null,
+        "string": "//",
+        "rawString": "//"
+      }
+    },
+    {
+      "name": "rfc3986 empty host with port",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "//:80"
+      },
+      "expect": {
+        "scheme": null,
+        "rawScheme": null,
+        "userInfo": null,
+        "rawUserInfo": null,
+        "username": null,
+        "rawUsername": null,
+        "password": null,
+        "rawPassword": null,
+        "host": "",
+        "rawHost": "",
+        "port": 80,
+        "path": "",
+        "rawPath": "",
+        "query": null,
+        "rawQuery": null,
+        "fragment": null,
+        "rawFragment": null,
+        "string": "//:80",
+        "rawString": "//:80"
+      }
+    },
+    {
+      "name": "rfc3986 empty host with userinfo",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "//u@"
+      },
+      "expect": {
+        "scheme": null,
+        "rawScheme": null,
+        "userInfo": "u",
+        "rawUserInfo": "u",
+        "username": "u",
+        "rawUsername": "u",
+        "password": "",
+        "rawPassword": "",
+        "host": "",
+        "rawHost": "",
+        "port": null,
+        "path": "",
+        "rawPath": "",
+        "query": null,
+        "rawQuery": null,
+        "fragment": null,
+        "rawFragment": null,
+        "string": "//u@",
+        "rawString": "//u@"
+      }
+    },
+    {
+      "name": "rfc3986 private-use scheme without host",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "com.example.app:/oauth"
+      },
+      "expect": {
+        "scheme": "com.example.app",
+        "rawScheme": "com.example.app",
+        "userInfo": null,
+        "rawUserInfo": null,
+        "username": null,
+        "rawUsername": null,
+        "password": null,
+        "rawPassword": null,
+        "host": null,
+        "rawHost": null,
+        "port": null,
+        "path": "/oauth",
+        "rawPath": "/oauth",
+        "query": null,
+        "rawQuery": null,
+        "fragment": null,
+        "rawFragment": null,
+        "string": "com.example.app:/oauth",
+        "rawString": "com.example.app:/oauth"
+      }
+    },
+    {
+      "name": "rfc3986 relative dot segments kept",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "a/../.."
+      },
+      "expect": {
+        "scheme": null,
+        "rawScheme": null,
+        "userInfo": null,
+        "rawUserInfo": null,
+        "username": null,
+        "rawUsername": null,
+        "password": null,
+        "rawPassword": null,
+        "host": null,
+        "rawHost": null,
+        "port": null,
+        "path": "..",
+        "rawPath": "a/../..",
+        "query": null,
+        "rawQuery": null,
+        "fragment": null,
+        "rawFragment": null,
+        "string": "..",
+        "rawString": "a/../.."
+      }
+    },
+    {
+      "name": "rfc3986 colon in first relative segment keeps dot",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "./a:b"
+      },
+      "expect": {
+        "scheme": null,
+        "rawScheme": null,
+        "userInfo": null,
+        "rawUserInfo": null,
+        "username": null,
+        "rawUsername": null,
+        "password": null,
+        "rawPassword": null,
+        "host": null,
+        "rawHost": null,
+        "port": null,
+        "path": "./a:b",
+        "rawPath": "./a:b",
+        "query": null,
+        "rawQuery": null,
+        "fragment": null,
+        "rawFragment": null,
+        "string": "./a:b",
+        "rawString": "./a:b"
+      }
+    },
+    {
+      "name": "rfc3986 encoded dots are removed",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "http://h/a/%2E%2e/b"
+      },
+      "expect": {
+        "scheme": "http",
+        "rawScheme": "http",
+        "userInfo": null,
+        "rawUserInfo": null,
+        "username": null,
+        "rawUsername": null,
+        "password": null,
+        "rawPassword": null,
+        "host": "h",
+        "rawHost": "h",
+        "port": null,
+        "path": "/b",
+        "rawPath": "/a/%2E%2e/b",
+        "query": null,
+        "rawQuery": null,
+        "fragment": null,
+        "rawFragment": null,
+        "string": "http://h/b",
+        "rawString": "http://h/a/%2E%2e/b"
+      }
+    },
+    {
+      "name": "rfc3986 host lowercasing stops near a trailing percent",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "http://AB%2C/"
+      },
+      "expect": {
+        "scheme": "http",
+        "rawScheme": "http",
+        "userInfo": null,
+        "rawUserInfo": null,
+        "username": null,
+        "rawUsername": null,
+        "password": null,
+        "rawPassword": null,
+        "host": "ab%2C",
+        "rawHost": "AB%2C",
+        "port": null,
+        "path": "/",
+        "rawPath": "/",
+        "query": null,
+        "rawQuery": null,
+        "fragment": null,
+        "rawFragment": null,
+        "string": "http://ab%2C/",
+        "rawString": "http://AB%2C/"
+      }
+    },
+    {
+      "name": "rfc3986 double at is invalid",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "http://a@b@c"
+      },
+      "expect": null
+    },
+    {
+      "name": "rfc3986 port above PHP_INT_MAX",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "http://h:9223372036854775808"
+      },
+      "expect": null
+    },
+    {
+      "name": "rfc3986 port at PHP_INT_MAX",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "http://h:9223372036854775807"
+      },
+      "expect": {
+        "scheme": "http",
+        "rawScheme": "http",
+        "userInfo": null,
+        "rawUserInfo": null,
+        "username": null,
+        "rawUsername": null,
+        "password": null,
+        "rawPassword": null,
+        "host": "h",
+        "rawHost": "h",
+        "port": 9223372036854775807,
+        "path": "",
+        "rawPath": "",
+        "query": null,
+        "rawQuery": null,
+        "fragment": null,
+        "rawFragment": null,
+        "string": "http://h:9223372036854775807",
+        "rawString": "http://h:9223372036854775807"
+      }
+    },
+    {
+      "name": "rfc3986 space is invalid",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "http://h/a b"
+      },
+      "expect": null
+    },
+    {
+      "name": "rfc3986 colon in first relative segment is invalid",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "1a:b"
+      },
+      "expect": null
+    },
+    {
+      "name": "rfc3986 bad percent encoding",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "http://h/%zz"
+      },
+      "expect": null
+    },
+    {
+      "name": "rfc3986 bad ipv6",
+      "op": "url.rfc3986_parse",
+      "args": {
+        "uri": "http://[1:::2]/"
+      },
+      "expect": null
+    }
   ]
 }

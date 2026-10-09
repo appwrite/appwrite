@@ -1,11 +1,14 @@
 //! `filter_var()`: the validation filters (`FILTER_VALIDATE_INT`, `BOOL`,
-//! `FLOAT`, `REGEXP`, `URL`, `EMAIL`, `IP`, `MAC`, `DOMAIN`) and
-//! `FILTER_DEFAULT`/`FILTER_UNSAFE_RAW`, with their flags and options, ported
-//! from `ext/filter` (`logical_filters.c`, `filter.c`) of PHP 8.5.
+//! `FLOAT`, `REGEXP`, `URL`, `EMAIL`, `IP`, `MAC`, `DOMAIN`), the sanitizing
+//! filters (`FILTER_DEFAULT`/`FILTER_UNSAFE_RAW`, `FILTER_SANITIZE_*`) and
+//! `FILTER_CALLBACK`, with their flags and options, ported from `ext/filter`
+//! (`logical_filters.c`, `sanitizing_filters.c`, `callback_filter.c`,
+//! `filter.c`) of PHP 8.5.
 //!
 //! | PHP | Rust |
 //! |---|---|
 //! | `filter_var($value, $filter, $options)` | [`filter_var`] |
+//! | `filter_var($value, FILTER_CALLBACK, ['options' => $callable])` | [`filter_var_with`] |
 //!
 //! PHP values are [`Value`]s (strings are bytes). The third argument is
 //! either flags or an options array ([`Options`]), read the way
@@ -21,9 +24,21 @@
 //! with [`crate::url::rfc3986`] for `"uri_parser_class" =>
 //! Uri\Rfc3986\Uri`.
 //!
-//! Not supported (an [`Error`] with class `Unsupported`): the sanitizing
-//! filters other than `FILTER_UNSAFE_RAW`, `FILTER_CALLBACK`, and the
-//! WHATWG URL parser (`Uri\WhatWg\Url`) for `FILTER_VALIDATE_URL`.
+//! `FILTER_CALLBACK` calls a PHP callable; [`filter_var_with`] takes the
+//! [`Callables`] that stand for them: whether the `"options"` entry is
+//! callable (PHP throws `TypeError` when it is not), and calling it with the
+//! value converted to a string. [`filter_var`] knows no callable.
+//!
+//! Like PHP, filtering an array goes on after an element throws; the
+//! exception reported is the last one thrown (a failed validation does not
+//! throw while another exception is pending, and callables are not called).
+//!
+//! `FILTER_SANITIZE_FULL_SPECIAL_CHARS` encodes as `htmlentities()` with the
+//! default charset, which this port fixes at PHP's default, UTF-8
+//! (`default_charset`/`internal_encoding` are not consulted).
+//!
+//! Not supported (an [`Error`] with class `Unsupported`): the WHATWG URL
+//! parser (`Uri\WhatWg\Url`) for `FILTER_VALIDATE_URL`.
 //!
 //! Every function here is checked against the real PHP function by
 //! `bin/compat fuzz php-std` (operations `filter.*`).
@@ -32,6 +47,8 @@ use std::fmt;
 
 pub use crate::pcre::Key;
 use crate::{number, pcre, url, value};
+
+mod sanitize;
 
 pub const FILTER_FLAG_NONE: i64 = 0x0000;
 pub const FILTER_REQUIRE_ARRAY: i64 = 0x0100_0000;
@@ -73,6 +90,19 @@ pub const FILTER_VALIDATE_MAC: i64 = 0x0114;
 pub const FILTER_VALIDATE_DOMAIN: i64 = 0x0115;
 pub const FILTER_DEFAULT: i64 = 0x0204;
 pub const FILTER_UNSAFE_RAW: i64 = 0x0204;
+/// PHP deprecates the constant (8.1), not the filter: the ID runs without
+/// a notice.
+pub const FILTER_SANITIZE_STRING: i64 = 0x0201;
+/// An alias of [`FILTER_SANITIZE_STRING`] (also a deprecated constant).
+pub const FILTER_SANITIZE_STRIPPED: i64 = 0x0201;
+pub const FILTER_SANITIZE_ENCODED: i64 = 0x0202;
+pub const FILTER_SANITIZE_SPECIAL_CHARS: i64 = 0x0203;
+pub const FILTER_SANITIZE_EMAIL: i64 = 0x0205;
+pub const FILTER_SANITIZE_URL: i64 = 0x0206;
+pub const FILTER_SANITIZE_NUMBER_INT: i64 = 0x0207;
+pub const FILTER_SANITIZE_NUMBER_FLOAT: i64 = 0x0208;
+pub const FILTER_SANITIZE_FULL_SPECIAL_CHARS: i64 = 0x020a;
+pub const FILTER_SANITIZE_ADD_SLASHES: i64 = 0x020b;
 pub const FILTER_CALLBACK: i64 = 0x0400;
 
 /// A PHP value given to or returned by `filter_var()`.
@@ -96,8 +126,8 @@ pub enum Options {
     Array(Vec<(Key, Value)>),
 }
 
-/// An exception `filter_var()` throws (`ValueError`,
-/// `Filter\FilterFailedException`), or `Unsupported` for a filter this port
+/// An exception `filter_var()` throws (`ValueError`, `TypeError`,
+/// `Filter\FilterFailedException`), or `Unsupported` for what this port
 /// does not implement.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Error {
@@ -360,15 +390,15 @@ fn filter_name(id: i64) -> &'static str {
         FILTER_VALIDATE_EMAIL => "validate_email",
         FILTER_VALIDATE_IP => "validate_ip",
         FILTER_VALIDATE_MAC => "validate_mac",
-        0x0201 => "string",
-        0x0202 => "encoded",
-        0x0203 => "special_chars",
-        0x020a => "full_special_chars",
-        0x0205 => "email",
-        0x0206 => "url",
-        0x0207 => "number_int",
-        0x0208 => "number_float",
-        0x020b => "add_slashes",
+        FILTER_SANITIZE_STRING => "string",
+        FILTER_SANITIZE_ENCODED => "encoded",
+        FILTER_SANITIZE_SPECIAL_CHARS => "special_chars",
+        FILTER_SANITIZE_FULL_SPECIAL_CHARS => "full_special_chars",
+        FILTER_SANITIZE_EMAIL => "email",
+        FILTER_SANITIZE_URL => "url",
+        FILTER_SANITIZE_NUMBER_INT => "number_int",
+        FILTER_SANITIZE_NUMBER_FLOAT => "number_float",
+        FILTER_SANITIZE_ADD_SLASHES => "add_slashes",
         FILTER_CALLBACK => "callback",
         _ => "unsafe_raw",
     }
@@ -393,8 +423,44 @@ enum Outcome {
     Failed,
 }
 
-/// `filter_var($value, $filter, $options)`.
+/// The PHP callables `FILTER_CALLBACK` can call, named by its `"options"`
+/// entry.
+pub trait Callables {
+    /// `zend_is_callable()`: whether the entry names a callable.
+    fn is_callable(&self, callable: &Value) -> bool;
+
+    /// Calls the callable with the value converted to a string and returns
+    /// its result.
+    fn call(&mut self, callable: &Value, value: &[u8]) -> Value;
+}
+
+/// No callable at all: `FILTER_CALLBACK` always throws `TypeError`.
+pub struct NoCallables;
+
+impl Callables for NoCallables {
+    fn is_callable(&self, _callable: &Value) -> bool {
+        false
+    }
+
+    fn call(&mut self, _callable: &Value, _value: &[u8]) -> Value {
+        Value::Null
+    }
+}
+
+/// `filter_var($value, $filter, $options)`, without callables (see
+/// [`filter_var_with`]).
 pub fn filter_var(value: &Value, filter: i64, options: &Options) -> Result<Filtered, Error> {
+    filter_var_with(value, filter, options, &mut NoCallables)
+}
+
+/// `filter_var($value, $filter, $options)` where `callables` resolves and
+/// calls the callable of `FILTER_CALLBACK` (the `"options"` entry).
+pub fn filter_var_with(
+    value: &Value,
+    filter: i64,
+    options: &Options,
+    callables: &mut dyn Callables,
+) -> Result<Filtered, Error> {
     if !id_exists(filter) {
         return Ok(Filtered {
             value: Value::Bool(false),
@@ -404,7 +470,9 @@ pub fn filter_var(value: &Value, filter: i64, options: &Options) -> Result<Filte
     let mut warning = None;
     let mut filter = filter;
     let mut flags = FILTER_REQUIRE_SCALAR;
-    let mut opts: Option<&[(Key, Value)]> = None;
+    // `options`: the array of the filter's options, or FILTER_CALLBACK's
+    // callable.
+    let mut opts: Option<&Value> = None;
     match options {
         Options::Flags(f) => {
             flags = *f;
@@ -417,11 +485,13 @@ pub fn filter_var(value: &Value, filter: i64, options: &Options) -> Result<Filte
                 filter = get_long(f, &mut warning);
             }
             if let Some(o) = lookup(args, "options") {
-                if filter == FILTER_CALLBACK {
-                    return Err(Error::new("Unsupported", "FILTER_CALLBACK"));
-                }
-                if let Value::Array(a) = o {
-                    opts = Some(a);
+                if filter != FILTER_CALLBACK {
+                    if let Value::Array(_) = o {
+                        opts = Some(o);
+                    }
+                } else {
+                    opts = Some(o);
+                    flags = 0;
                 }
             }
             if let Some(f) = lookup(args, "flags") {
@@ -446,7 +516,11 @@ pub fn filter_var(value: &Value, filter: i64, options: &Options) -> Result<Filte
             }
             return Ok(Filtered { value: failure(flags), warning });
         }
-        let out = filter_recursive(items, filter, flags, opts, &mut warning)?;
+        let mut thrown = None;
+        let out = filter_recursive(items, filter, flags, opts, callables, &mut thrown, &mut warning);
+        if let Some(e) = thrown {
+            return Err(e);
+        }
         return Ok(Filtered { value: Value::Array(out), warning });
     }
     if flags & FILTER_REQUIRE_ARRAY != 0 {
@@ -458,40 +532,60 @@ pub fn filter_var(value: &Value, filter: i64, options: &Options) -> Result<Filte
         }
         return Ok(Filtered { value: failure(flags), warning });
     }
-    let mut out = zval_filter(value, filter, flags, opts, &mut warning)?;
+    let mut out = zval_filter(value, filter, flags, opts, callables, false, &mut warning)?.unwrap_or(Value::Null);
     if flags & FILTER_FORCE_ARRAY != 0 {
         out = Value::Array(vec![(Key::Int(0), out)]);
     }
     Ok(Filtered { value: out, warning })
 }
 
+/// `php_zval_filter_recursive()`. An element that throws does not stop the
+/// walk: `thrown` holds the exception pending, which a later one replaces.
 fn filter_recursive(
     items: &[(Key, Value)],
     filter: i64,
     flags: i64,
-    opts: Option<&[(Key, Value)]>,
+    opts: Option<&Value>,
+    callables: &mut dyn Callables,
+    thrown: &mut Option<Error>,
     warning: &mut Option<Vec<u8>>,
-) -> Result<Vec<(Key, Value)>, Error> {
+) -> Vec<(Key, Value)> {
     let mut out = Vec::with_capacity(items.len());
     for (k, v) in items {
         let r = match v {
-            Value::Array(inner) => Value::Array(filter_recursive(inner, filter, flags, opts, warning)?),
-            _ => zval_filter(v, filter, flags, opts, warning)?,
+            Value::Array(inner) => {
+                Value::Array(filter_recursive(inner, filter, flags, opts, callables, thrown, warning))
+            }
+            _ => match zval_filter(v, filter, flags, opts, callables, thrown.is_some(), warning) {
+                Ok(r) => r.unwrap_or(Value::Null),
+                Err(e) => {
+                    *thrown = Some(e);
+                    Value::Null
+                }
+            },
         };
         out.push((k.clone(), r));
     }
-    Ok(out)
+    out
 }
 
-/// `php_zval_filter()`.
+/// `php_zval_filter()`. With an exception `pending`, a failed validation
+/// does not throw and a callable is not called; `Ok(None)` stands for the
+/// value they leave.
 fn zval_filter(
     value: &Value,
     filter: i64,
     flags: i64,
-    opts: Option<&[(Key, Value)]>,
+    options: Option<&Value>,
+    callables: &mut dyn Callables,
+    pending: bool,
     warning: &mut Option<Vec<u8>>,
-) -> Result<Value, Error> {
+) -> Result<Option<Value>, Error> {
     let filter = if in_list(filter) { filter } else { FILTER_DEFAULT };
+    let opts = match options {
+        Some(Value::Array(a)) => Some(a.as_slice()),
+        _ => None,
+    };
     let result = if let Value::Object = value {
         if flags & FILTER_THROW_ON_FAILURE != 0 {
             return Err(Error::new(
@@ -502,9 +596,24 @@ fn zval_filter(
         if flags & FILTER_NULL_ON_FAILURE != 0 { Value::Null } else { Value::Bool(false) }
     } else {
         let s = to_php_string(value, warning);
-        match run_filter(filter, &s, flags, opts, warning)? {
+        let outcome = if filter == FILTER_CALLBACK {
+            // php_filter_callback(); zend_call_function() does not call
+            // while an exception is pending.
+            match options.filter(|o| callables.is_callable(o)) {
+                None => return Err(Error::new("TypeError", "filter_var(): Option must be a valid callback")),
+                Some(_) if pending => return Ok(None),
+                Some(o) => Outcome::Ok(callables.call(o, &s)),
+            }
+        } else {
+            run_filter(filter, &s, flags, opts, warning)?
+        };
+        match outcome {
             Outcome::Ok(v) => v,
             Outcome::Failed => {
+                if pending {
+                    // RETURN_VALIDATION_FAILED: nothing more to do.
+                    return Ok(None);
+                }
                 if flags & FILTER_THROW_ON_FAILURE != 0 {
                     let shown = s.iter().position(|&b| b == 0).map_or(&s[..], |n| &s[..n]);
                     let mut m = format!("filter validation failed: filter {} not satisfied by '", filter_name(filter))
@@ -522,10 +631,10 @@ fn zval_filter(
         let replace =
             if flags & FILTER_NULL_ON_FAILURE != 0 { result == Value::Null } else { result == Value::Bool(false) };
         if replace && let Some(d) = lookup(opts, "default") {
-            return Ok(d.clone());
+            return Ok(Some(d.clone()));
         }
     }
-    Ok(result)
+    Ok(Some(result))
 }
 
 fn run_filter(
@@ -628,8 +737,16 @@ fn run_filter(
             };
             Ok(if validate_mac(s, sep) { Outcome::Ok(Value::Str(s.to_vec())) } else { Outcome::Failed })
         }
-        FILTER_UNSAFE_RAW => Ok(Outcome::Ok(unsafe_raw(s, flags))),
-        _ => Err(Error::new("Unsupported", format!("filter {}", filter_name(filter)))),
+        FILTER_SANITIZE_STRING => Ok(Outcome::Ok(sanitize::string(s, flags))),
+        FILTER_SANITIZE_ENCODED => Ok(Outcome::Ok(Value::Str(sanitize::encoded(s, flags)))),
+        FILTER_SANITIZE_SPECIAL_CHARS => Ok(Outcome::Ok(Value::Str(sanitize::special_chars(s, flags)))),
+        FILTER_SANITIZE_FULL_SPECIAL_CHARS => Ok(Outcome::Ok(Value::Str(sanitize::full_special_chars(s, flags)))),
+        FILTER_SANITIZE_EMAIL => Ok(Outcome::Ok(Value::Str(sanitize::email(s)))),
+        FILTER_SANITIZE_URL => Ok(Outcome::Ok(Value::Str(sanitize::url(s)))),
+        FILTER_SANITIZE_NUMBER_INT => Ok(Outcome::Ok(Value::Str(sanitize::number_int(s)))),
+        FILTER_SANITIZE_NUMBER_FLOAT => Ok(Outcome::Ok(Value::Str(sanitize::number_float(s, flags)))),
+        FILTER_SANITIZE_ADD_SLASHES => Ok(Outcome::Ok(Value::Str(sanitize::add_slashes(s)))),
+        _ => Ok(Outcome::Ok(sanitize::unsafe_raw(s, flags))),
     }
 }
 
@@ -1300,43 +1417,6 @@ fn validate_mac(s: &[u8], expected: Option<u8>) -> bool {
         }
     }
     true
-}
-
-/// `php_filter_unsafe_raw()`.
-fn unsafe_raw(s: &[u8], flags: i64) -> Value {
-    if flags != 0 && !s.is_empty() {
-        let stripped: Vec<u8> =
-            if flags & (FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK) != 0 {
-                s.iter()
-                    .copied()
-                    .filter(|&c| {
-                        !((c >= 127 && flags & FILTER_FLAG_STRIP_HIGH != 0)
-                            || (c < 32 && flags & FILTER_FLAG_STRIP_LOW != 0)
-                            || (c == b'`' && flags & FILTER_FLAG_STRIP_BACKTICK != 0))
-                    })
-                    .collect()
-            } else {
-                s.to_vec()
-            };
-        let encode = |c: u8| {
-            (c == b'&' && flags & FILTER_FLAG_ENCODE_AMP != 0)
-                || (c < 32 && flags & FILTER_FLAG_ENCODE_LOW != 0)
-                || (c >= 127 && flags & FILTER_FLAG_ENCODE_HIGH != 0)
-        };
-        let mut out = Vec::with_capacity(stripped.len());
-        for c in stripped {
-            if encode(c) {
-                out.extend_from_slice(format!("&#{c};").as_bytes());
-            } else {
-                out.push(c);
-            }
-        }
-        Value::Str(out)
-    } else if flags & FILTER_FLAG_EMPTY_STRING_NULL != 0 && s.is_empty() {
-        Value::Null
-    } else {
-        Value::Str(s.to_vec())
-    }
 }
 
 /// The `FILTER_VALIDATE_EMAIL` regular expressions of `logical_filters.c`

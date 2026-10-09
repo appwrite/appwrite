@@ -7,6 +7,11 @@
       "args": {
         "value": "42",
         "filter": 257
+      },
+      "expect": {
+        "result": 42,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -15,6 +20,11 @@
       "args": {
         "value": " \t42\n",
         "filter": 257
+      },
+      "expect": {
+        "result": 42,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -23,6 +33,11 @@
       "args": {
         "value": "+7",
         "filter": 257
+      },
+      "expect": {
+        "result": 7,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -31,6 +46,11 @@
       "args": {
         "value": "-0",
         "filter": 257
+      },
+      "expect": {
+        "result": 0,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -39,6 +59,11 @@
       "args": {
         "value": "007",
         "filter": 257
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -48,6 +73,11 @@
         "value": "0755",
         "filter": 257,
         "options": 1
+      },
+      "expect": {
+        "result": 493,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -57,6 +87,11 @@
         "value": "0o17",
         "filter": 257,
         "options": 1
+      },
+      "expect": {
+        "result": 15,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -66,6 +101,11 @@
         "value": "0x1A",
         "filter": 257,
         "options": 2
+      },
+      "expect": {
+        "result": 26,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -74,6 +114,11 @@
       "args": {
         "value": "0x1A",
         "filter": 257
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -82,6 +127,11 @@
       "args": {
         "value": "9223372036854775807",
         "filter": 257
+      },
+      "expect": {
+        "result": 9223372036854775807,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -90,6 +140,11 @@
       "args": {
         "value": "9223372036854775808",
         "filter": 257
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -98,6 +153,11 @@
       "args": {
         "value": "-9223372036854775808",
         "filter": 257
+      },
+      "expect": {
+        "result": -9223372036854775808,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -112,6 +172,11 @@
             "max_range": 10
           }
         }
+      },
+      "expect": {
+        "result": 5,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -126,6 +191,11 @@
             "max_range": 10
           }
         }
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -139,6 +209,11 @@
             "default": 3
           }
         }
+      },
+      "expect": {
+        "result": 3,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -148,6 +223,11 @@
         "value": "abc",
         "filter": 257,
         "options": 134217728
+      },
+      "expect": {
+        "result": null,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -156,6 +236,11 @@
       "args": {
         "value": 3.0,
         "filter": 257
+      },
+      "expect": {
+        "result": 3,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -164,6 +249,11 @@
       "args": {
         "value": 3.5,
         "filter": 257
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -172,6 +262,11 @@
       "args": {
         "value": true,
         "filter": 257
+      },
+      "expect": {
+        "result": 1,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -180,6 +275,11 @@
       "args": {
         "value": null,
         "filter": 257
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -189,6 +289,12 @@
         "value": "x",
         "filter": 257,
         "options": 268435456
+      },
+      "expect": {
+        "$error": {
+          "class": "Filter\\FilterFailedException",
+          "message": "filter validation failed: filter int not satisfied by 'x'"
+        }
       }
     },
     {
@@ -202,6 +308,11 @@
             "min_range": 1e+30
           }
         }
+      },
+      "expect": {
+        "result": false,
+        "warning": "The float 1.0E+30 is not representable as an int, cast occurred",
+        "calls": []
       }
     },
     {
@@ -210,6 +321,11 @@
       "args": {
         "value": "1",
         "filter": 258
+      },
+      "expect": {
+        "result": true,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -218,6 +334,11 @@
       "args": {
         "value": "true",
         "filter": 258
+      },
+      "expect": {
+        "result": true,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -226,6 +347,11 @@
       "args": {
         "value": "On",
         "filter": 258
+      },
+      "expect": {
+        "result": true,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -234,6 +360,11 @@
       "args": {
         "value": "YES",
         "filter": 258
+      },
+      "expect": {
+        "result": true,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -242,6 +373,11 @@
       "args": {
         "value": "0",
         "filter": 258
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -250,6 +386,11 @@
       "args": {
         "value": "false",
         "filter": 258
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -258,6 +399,11 @@
       "args": {
         "value": "off",
         "filter": 258
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -266,6 +412,11 @@
       "args": {
         "value": "no",
         "filter": 258
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -274,6 +425,11 @@
       "args": {
         "value": "",
         "filter": 258
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -282,6 +438,11 @@
       "args": {
         "value": " yes ",
         "filter": 258
+      },
+      "expect": {
+        "result": true,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -290,6 +451,11 @@
       "args": {
         "value": "maybe",
         "filter": 258
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -299,6 +465,11 @@
         "value": "maybe",
         "filter": 258,
         "options": 134217728
+      },
+      "expect": {
+        "result": null,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -308,6 +479,11 @@
         "value": "",
         "filter": 258,
         "options": 134217728
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -317,6 +493,11 @@
         "value": false,
         "filter": 258,
         "options": 134217728
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -325,6 +506,11 @@
       "args": {
         "value": "1.5",
         "filter": 259
+      },
+      "expect": {
+        "result": 1.5,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -333,6 +519,11 @@
       "args": {
         "value": "1e3",
         "filter": 259
+      },
+      "expect": {
+        "result": 1000.0,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -341,6 +532,11 @@
       "args": {
         "value": "42",
         "filter": 259
+      },
+      "expect": {
+        "result": 42.0,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -349,6 +545,11 @@
       "args": {
         "value": "1,000.5",
         "filter": 259
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -358,6 +559,11 @@
         "value": "1,000.5",
         "filter": 259,
         "options": 8192
+      },
+      "expect": {
+        "result": 1000.5,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -367,6 +573,11 @@
         "value": "10,00.5",
         "filter": 259,
         "options": 8192
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -380,6 +591,11 @@
             "decimal": ","
           }
         }
+      },
+      "expect": {
+        "result": 1.5,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -392,6 +608,12 @@
           "options": {
             "decimal": ",,"
           }
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "filter_var(): \"decimal\" option must be one character long"
         }
       }
     },
@@ -407,6 +629,11 @@
             "thousand": " "
           }
         }
+      },
+      "expect": {
+        "result": 1000.5,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -418,6 +645,11 @@
         },
         "filter": 259,
         "options": 8192
+      },
+      "expect": {
+        "result": 1000.0,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -432,6 +664,11 @@
             "max_range": 5
           }
         }
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -440,6 +677,11 @@
       "args": {
         "value": "INF",
         "filter": 259
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -448,6 +690,11 @@
       "args": {
         "value": "1e400",
         "filter": 259
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -456,6 +703,11 @@
       "args": {
         "value": 5,
         "filter": 259
+      },
+      "expect": {
+        "result": 5.0,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -469,6 +721,11 @@
             "regexp": "/^a/"
           }
         }
+      },
+      "expect": {
+        "result": "abc",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -482,6 +739,11 @@
             "regexp": "/^a/"
           }
         }
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -490,6 +752,12 @@
       "args": {
         "value": "abc",
         "filter": 272
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "filter_var(): \"regexp\" option is missing"
+        }
       }
     },
     {
@@ -503,6 +771,11 @@
             "regexp": "/(/"
           }
         }
+      },
+      "expect": {
+        "result": false,
+        "warning": "filter_var(): Compilation failed: missing closing parenthesis at offset 1",
+        "calls": []
       }
     },
     {
@@ -511,6 +784,11 @@
       "args": {
         "value": "https://example.com/path?q=1#f",
         "filter": 273
+      },
+      "expect": {
+        "result": "https://example.com/path?q=1#f",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -519,6 +797,11 @@
       "args": {
         "value": "example.com",
         "filter": 273
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -527,6 +810,11 @@
       "args": {
         "value": "mailto:a@example.com",
         "filter": 273
+      },
+      "expect": {
+        "result": "mailto:a@example.com",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -536,6 +824,11 @@
         "value": "https://example.com",
         "filter": 273,
         "options": 262144
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -545,6 +838,11 @@
         "value": "https://example.com/?a=1",
         "filter": 273,
         "options": 524288
+      },
+      "expect": {
+        "result": "https://example.com/?a=1",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -553,6 +851,11 @@
       "args": {
         "value": "http://a_b.example.com/",
         "filter": 273
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -561,6 +864,11 @@
       "args": {
         "value": "http://example.com:99999/",
         "filter": 273
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -569,6 +877,11 @@
       "args": {
         "value": "http://[::1]:8080/",
         "filter": 273
+      },
+      "expect": {
+        "result": "http://[::1]:8080/",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -577,6 +890,11 @@
       "args": {
         "value": "http://exämple.com/",
         "filter": 273
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -585,6 +903,11 @@
       "args": {
         "value": "user@example.com",
         "filter": 274
+      },
+      "expect": {
+        "result": "user@example.com",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -593,6 +916,11 @@
       "args": {
         "value": "user+tag@example.co.uk",
         "filter": 274
+      },
+      "expect": {
+        "result": "user+tag@example.co.uk",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -601,6 +929,11 @@
       "args": {
         "value": "user@localhost",
         "filter": 274
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -609,6 +942,11 @@
       "args": {
         "value": "us..er@example.com",
         "filter": 274
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -617,6 +955,11 @@
       "args": {
         "value": "\"a b\"@example.com",
         "filter": 274
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -625,6 +968,11 @@
       "args": {
         "value": "user@[127.0.0.1]",
         "filter": 274
+      },
+      "expect": {
+        "result": "user@[127.0.0.1]",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -633,6 +981,11 @@
       "args": {
         "value": "üser@example.com",
         "filter": 274
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -642,6 +995,11 @@
         "value": "üser@example.com",
         "filter": 274,
         "options": 1048576
+      },
+      "expect": {
+        "result": "üser@example.com",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -650,6 +1008,11 @@
       "args": {
         "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com",
         "filter": 274
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -658,6 +1021,11 @@
       "args": {
         "value": "192.168.0.1",
         "filter": 275
+      },
+      "expect": {
+        "result": "192.168.0.1",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -666,6 +1034,11 @@
       "args": {
         "value": "2001:db8::1",
         "filter": 275
+      },
+      "expect": {
+        "result": "2001:db8::1",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -675,6 +1048,11 @@
         "value": "2001:db8::1",
         "filter": 275,
         "options": 1048576
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -684,6 +1062,11 @@
         "value": "192.168.0.1",
         "filter": 275,
         "options": 8388608
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -693,6 +1076,11 @@
         "value": "127.0.0.1",
         "filter": 275,
         "options": 4194304
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -702,6 +1090,11 @@
         "value": "100.64.0.1",
         "filter": 275,
         "options": 536870912
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -710,6 +1103,11 @@
       "args": {
         "value": "01.2.3.4",
         "filter": 275
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -719,6 +1117,11 @@
         "value": "::ffff:10.0.0.1",
         "filter": 275,
         "options": 8388608
+      },
+      "expect": {
+        "result": "::ffff:10.0.0.1",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -727,6 +1130,11 @@
       "args": {
         "value": "01:23:45:67:89:ab",
         "filter": 276
+      },
+      "expect": {
+        "result": "01:23:45:67:89:ab",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -735,6 +1143,11 @@
       "args": {
         "value": "01-23-45-67-89-AB",
         "filter": 276
+      },
+      "expect": {
+        "result": "01-23-45-67-89-AB",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -743,6 +1156,11 @@
       "args": {
         "value": "0123.4567.89ab",
         "filter": 276
+      },
+      "expect": {
+        "result": "0123.4567.89ab",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -756,6 +1174,11 @@
             "separator": "x"
           }
         }
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -764,6 +1187,11 @@
       "args": {
         "value": "01:23-45:67:89:ab",
         "filter": 276
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -772,6 +1200,11 @@
       "args": {
         "value": "example.com",
         "filter": 277
+      },
+      "expect": {
+        "result": "example.com",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -780,6 +1213,11 @@
       "args": {
         "value": "a_b.com",
         "filter": 277
+      },
+      "expect": {
+        "result": "a_b.com",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -789,6 +1227,11 @@
         "value": "a_b.com",
         "filter": 277,
         "options": 1048576
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -797,6 +1240,11 @@
       "args": {
         "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
         "filter": 277
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -806,6 +1254,11 @@
         "value": "example.com.",
         "filter": 277,
         "options": 1048576
+      },
+      "expect": {
+        "result": "example.com.",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -814,6 +1267,11 @@
       "args": {
         "value": "<b>x</b>",
         "filter": 516
+      },
+      "expect": {
+        "result": "<b>x</b>",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -822,6 +1280,11 @@
       "args": {
         "value": 1.5,
         "filter": 516
+      },
+      "expect": {
+        "result": "1.5",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -829,6 +1292,11 @@
       "op": "filter.filter_var",
       "args": {
         "value": "x"
+      },
+      "expect": {
+        "result": "x",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -840,6 +1308,11 @@
           "x"
         ],
         "filter": 257
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -855,6 +1328,17 @@
         ],
         "filter": 257,
         "options": 16777216
+      },
+      "expect": {
+        "result": [
+          1,
+          false,
+          [
+            2
+          ]
+        ],
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -864,6 +1348,13 @@
         "value": "5",
         "filter": 257,
         "options": 67108864
+      },
+      "expect": {
+        "result": [
+          5
+        ],
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -875,14 +1366,37 @@
         ],
         "filter": 257,
         "options": 33554432
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
-      "name": "unknown filter falls back to FILTER_DEFAULT",
+      "name": "unknown filter ID warns and returns false",
       "op": "filter.filter_var",
       "args": {
         "value": "x",
         "filter": 9999
+      },
+      "expect": {
+        "result": false,
+        "warning": "filter_var(): Unknown filter with ID 9999",
+        "calls": []
+      }
+    },
+    {
+      "name": "unregistered filter ID in range runs FILTER_DEFAULT",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "<b>x</b>",
+        "filter": 521
+      },
+      "expect": {
+        "result": "<b>x</b>",
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -891,6 +1405,11 @@
       "args": {
         "value": {},
         "filter": 257
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
       }
     },
     {
@@ -901,6 +1420,625 @@
         "filter": 257,
         "options": {
           "flags": 134217728
+        }
+      },
+      "expect": {
+        "result": 5,
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "array exceptions: the last thrown wins",
+      "op": "filter.filter_var",
+      "args": {
+        "value": [
+          "x",
+          "y",
+          {},
+          "z"
+        ],
+        "filter": 257,
+        "options": 285212672
+      },
+      "expect": {
+        "$error": {
+          "class": "Filter\\FilterFailedException",
+          "message": "filter validation failed: object of type stdClass has no __toString() method"
+        }
+      }
+    },
+    {
+      "name": "array exceptions: failed validations stop throwing",
+      "op": "filter.filter_var",
+      "args": {
+        "value": [
+          "x",
+          "y"
+        ],
+        "filter": 257,
+        "options": 285212672
+      },
+      "expect": {
+        "$error": {
+          "class": "Filter\\FilterFailedException",
+          "message": "filter validation failed: filter int not satisfied by 'x'"
+        }
+      }
+    },
+    {
+      "name": "string strips tags and encodes quotes",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "<a href=\"x\">it's</a> & co",
+        "filter": 513
+      },
+      "expect": {
+        "result": "it&#39;s & co",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "string a quoted > ends the tag",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "<a title=\"x>y\">z",
+        "filter": 513
+      },
+      "expect": {
+        "result": "y&#34;>z",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "string NO_ENCODE_QUOTES keeps quoted >",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "<a title=\"x>y\">z",
+        "filter": 513,
+        "options": 128
+      },
+      "expect": {
+        "result": "z",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "string comments and PHP blocks",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "a<!-- <b> -->b<?php echo '>'; ?>c<?xml x?>d",
+        "filter": 513
+      },
+      "expect": {
+        "result": "abcd",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "string DOCTYPE",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "<!DOCTYPE html>x",
+        "filter": 513
+      },
+      "expect": {
+        "result": "x",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "string ENCODE_AMP ENCODE_LOW ENCODE_HIGH",
+      "op": "filter.filter_var",
+      "args": {
+        "value": {
+          "$bytes": "YSZiAcOpAA=="
+        },
+        "filter": 513,
+        "options": 112
+      },
+      "expect": {
+        "result": "a&#38;b&#1;&#195;&#169;&#0;",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "string NUL bytes are stripped",
+      "op": "filter.filter_var",
+      "args": {
+        "value": {
+          "$bytes": "YQBi"
+        },
+        "filter": 513
+      },
+      "expect": {
+        "result": "ab",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "string EMPTY_STRING_NULL",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "<b></b>",
+        "filter": 513,
+        "options": 256
+      },
+      "expect": {
+        "result": null,
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "string STRIP_LOW STRIP_HIGH STRIP_BACKTICK",
+      "op": "filter.filter_var",
+      "args": {
+        "value": {
+          "$bytes": "YQFgYv8="
+        },
+        "filter": 513,
+        "options": 524
+      },
+      "expect": {
+        "result": "ab",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "encoded",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "a b/~é-._",
+        "filter": 514
+      },
+      "expect": {
+        "result": "a%20b%2F%7E%C3%A9-._",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "encoded STRIP_HIGH",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "a é",
+        "filter": 514,
+        "options": 8
+      },
+      "expect": {
+        "result": "a%20",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "special_chars",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "<a href='x'>&\"\t",
+        "filter": 515
+      },
+      "expect": {
+        "result": "&#60;a href=&#39;x&#39;&#62;&#38;&#34;&#9;",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "special_chars ENCODE_HIGH",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "é",
+        "filter": 515,
+        "options": 32
+      },
+      "expect": {
+        "result": "&#195;&#169;&#127;",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "full_special_chars",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "é <b> \"'& ♥ 中",
+        "filter": 522
+      },
+      "expect": {
+        "result": "&eacute; &lt;b&gt; &quot;&#039;&amp; &hearts; 中",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "full_special_chars NO_ENCODE_QUOTES",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "\"'<",
+        "filter": 522,
+        "options": 128
+      },
+      "expect": {
+        "result": "\"'&lt;",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "full_special_chars does not double encode",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "&eacute; &#233; &#xE9; &amp; &bogus; &apos; &#1114112;",
+        "filter": 522
+      },
+      "expect": {
+        "result": "&eacute; &#233; &#xE9; &amp; &amp;bogus; &amp;apos; &amp;#1114112;",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "full_special_chars keeps a hex entity with a 0x prefix",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "&#x0x1F;",
+        "filter": 522
+      },
+      "expect": {
+        "result": "&#x0x1F;",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "full_special_chars invalid UTF-8 gives an empty string",
+      "op": "filter.filter_var",
+      "args": {
+        "value": {
+          "$bytes": "b2v/"
+        },
+        "filter": 522
+      },
+      "expect": {
+        "result": "",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "email",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "a b(c)@d.e<>é",
+        "filter": 517
+      },
+      "expect": {
+        "result": "abc@d.e",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "url",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "http://a b.c/é?x=<1>",
+        "filter": 518
+      },
+      "expect": {
+        "result": "http://ab.c/?x=<1>",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "number_int",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "+1-2.3e4abc",
+        "filter": 519
+      },
+      "expect": {
+        "result": "+1-234",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "number_float",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "+1,234.5e-6x",
+        "filter": 520
+      },
+      "expect": {
+        "result": "+12345-6",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "number_float ALLOW_FRACTION ALLOW_THOUSAND ALLOW_SCIENTIFIC",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "+1,234.5e-6x",
+        "filter": 520,
+        "options": 28672
+      },
+      "expect": {
+        "result": "+1,234.5e-6",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "add_slashes",
+      "op": "filter.filter_var",
+      "args": {
+        "value": {
+          "$bytes": "YSdiImNcZAA="
+        },
+        "filter": 523
+      },
+      "expect": {
+        "result": "a\\'b\\\"c\\\\d\\0",
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "sanitizing an array",
+      "op": "filter.filter_var",
+      "args": {
+        "value": [
+          "<b>a</b>",
+          [
+            "'"
+          ]
+        ],
+        "filter": 513,
+        "options": 16777216
+      },
+      "expect": {
+        "result": [
+          "a",
+          [
+            "&#39;"
+          ]
+        ],
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "callback",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "abc",
+        "filter": 1024,
+        "options": {
+          "options": "$callback"
+        }
+      },
+      "expect": {
+        "result": "<1>",
+        "warning": null,
+        "calls": [
+          "abc"
+        ]
+      }
+    },
+    {
+      "name": "callback gets a string",
+      "op": "filter.filter_var",
+      "args": {
+        "value": 1.5,
+        "filter": 1024,
+        "options": {
+          "options": "$callback"
+        }
+      },
+      "expect": {
+        "result": "<1>",
+        "warning": null,
+        "calls": [
+          "1.5"
+        ]
+      }
+    },
+    {
+      "name": "callback filters each element of an array",
+      "op": "filter.filter_var",
+      "args": {
+        "value": [
+          "a",
+          [
+            "b",
+            "c"
+          ],
+          "d",
+          "e"
+        ],
+        "filter": 1024,
+        "options": {
+          "options": "$callback"
+        }
+      },
+      "expect": {
+        "result": [
+          "<1>",
+          [
+            2,
+            false
+          ],
+          null,
+          "<5>"
+        ],
+        "warning": null,
+        "calls": [
+          "a",
+          "b",
+          "c",
+          "d",
+          "e"
+        ]
+      }
+    },
+    {
+      "name": "callback with FORCE_ARRAY",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "a",
+        "filter": 1024,
+        "options": {
+          "options": "$callback",
+          "flags": 67108864
+        }
+      },
+      "expect": {
+        "result": [
+          "<1>"
+        ],
+        "warning": null,
+        "calls": [
+          "a"
+        ]
+      }
+    },
+    {
+      "name": "callback flags restore REQUIRE_SCALAR",
+      "op": "filter.filter_var",
+      "args": {
+        "value": [
+          "a"
+        ],
+        "filter": 1024,
+        "options": {
+          "options": "$callback",
+          "flags": 0
+        }
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "callback without options",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "a",
+        "filter": 1024
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "filter_var(): Option must be a valid callback"
+        }
+      }
+    },
+    {
+      "name": "callback not callable",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "a",
+        "filter": 1024,
+        "options": {
+          "options": "nope"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "filter_var(): Option must be a valid callback"
+        }
+      }
+    },
+    {
+      "name": "callback on an object",
+      "op": "filter.filter_var",
+      "args": {
+        "value": {},
+        "filter": 1024,
+        "options": {
+          "options": "$callback"
+        }
+      },
+      "expect": {
+        "result": false,
+        "warning": null,
+        "calls": []
+      }
+    },
+    {
+      "name": "callback selected by the filter key",
+      "op": "filter.filter_var",
+      "args": {
+        "value": "a",
+        "filter": 257,
+        "options": {
+          "filter": 1024,
+          "options": "$callback"
+        }
+      },
+      "expect": {
+        "result": "<1>",
+        "warning": null,
+        "calls": [
+          "a"
+        ]
+      }
+    },
+    {
+      "name": "callback TypeError after a FilterFailedException",
+      "op": "filter.filter_var",
+      "args": {
+        "value": [
+          {},
+          "a"
+        ],
+        "filter": 1024,
+        "options": {
+          "options": "nope",
+          "flags": 335544320
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "filter_var(): Option must be a valid callback"
+        }
+      }
+    },
+    {
+      "name": "callback not called after an exception",
+      "op": "filter.filter_var",
+      "args": {
+        "value": [
+          {},
+          "a"
+        ],
+        "filter": 1024,
+        "options": {
+          "options": "$callback",
+          "flags": 335544320
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Filter\\FilterFailedException",
+          "message": "filter validation failed: object of type stdClass has no __toString() method"
         }
       }
     }

@@ -7,6 +7,16 @@
       "args": {
         "pattern": "/(\\d+)-(\\d+)/",
         "subject": "tel 12-34"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "12-34",
+          "12",
+          "34"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -15,6 +25,12 @@
       "args": {
         "pattern": "/x/",
         "subject": "abc"
+      },
+      "expect": {
+        "result": 0,
+        "matches": [],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -23,6 +39,18 @@
       "args": {
         "pattern": "/(?<year>\\d{4})-(?<month>\\d{2})/",
         "subject": "2024-05"
+      },
+      "expect": {
+        "result": 1,
+        "matches": {
+          "0": "2024-05",
+          "year": "2024",
+          "1": "2024",
+          "month": "05",
+          "2": "05"
+        },
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -32,6 +60,21 @@
         "pattern": "/b(c)?/",
         "subject": "abc",
         "flags": 256
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          [
+            "bc",
+            1
+          ],
+          [
+            "c",
+            2
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -41,6 +84,17 @@
         "pattern": "/(a)(x)?(b)/",
         "subject": "ab",
         "flags": 512
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "ab",
+          "a",
+          null,
+          "b"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -49,6 +103,15 @@
       "args": {
         "pattern": "/(a)(x)?/",
         "subject": "a"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "a",
+          "a"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -58,6 +121,14 @@
         "pattern": "/a/",
         "subject": "aba",
         "offset": 1
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "a"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -67,6 +138,14 @@
         "pattern": "/a/",
         "subject": "aba",
         "offset": -1
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "a"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -76,6 +155,12 @@
         "pattern": "/a/",
         "subject": "aba",
         "offset": 10
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 1,
+        "warning": null
       }
     },
     {
@@ -84,6 +169,14 @@
       "args": {
         "pattern": "/ABC/i",
         "subject": "xabcx"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "abc"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -92,6 +185,14 @@
       "args": {
         "pattern": "/^b$/m",
         "subject": "a\nb\nc"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "b"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -100,6 +201,14 @@
       "args": {
         "pattern": "/a$/",
         "subject": "a\n"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "a"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -108,6 +217,12 @@
       "args": {
         "pattern": "/a$/D",
         "subject": "a\n"
+      },
+      "expect": {
+        "result": 0,
+        "matches": [],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -116,6 +231,12 @@
       "args": {
         "pattern": "/a.b/",
         "subject": "a\nb"
+      },
+      "expect": {
+        "result": 0,
+        "matches": [],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -124,6 +245,14 @@
       "args": {
         "pattern": "/a.b/s",
         "subject": "a\nb"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "a\nb"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -132,6 +261,14 @@
       "args": {
         "pattern": "/a b # comment\n c/x",
         "subject": "abc"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "abc"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -140,6 +277,14 @@
       "args": {
         "pattern": "/a.+b/U",
         "subject": "axbxb"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "axb"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -148,6 +293,12 @@
       "args": {
         "pattern": "/b/A",
         "subject": "ab"
+      },
+      "expect": {
+        "result": 0,
+        "matches": [],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -156,6 +307,14 @@
       "args": {
         "pattern": "/^\\w+$/u",
         "subject": "héllo"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "héllo"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -164,6 +323,12 @@
       "args": {
         "pattern": "/^.$/",
         "subject": "é"
+      },
+      "expect": {
+        "result": 0,
+        "matches": [],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -172,6 +337,14 @@
       "args": {
         "pattern": "/^.$/u",
         "subject": "é"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "é"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -180,6 +353,14 @@
       "args": {
         "pattern": "/\\p{Greek}+/u",
         "subject": "abc αβγ"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "αβγ"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -190,6 +371,12 @@
         "subject": {
           "$bytes": "Yf8="
         }
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 4,
+        "warning": null
       }
     },
     {
@@ -199,6 +386,12 @@
         "pattern": "/./u",
         "subject": "é",
         "offset": 1
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 5,
+        "warning": null
       }
     },
     {
@@ -207,6 +400,15 @@
       "args": {
         "pattern": "/(a+)b\\1/",
         "subject": "aabaa"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "aabaa",
+          "aa"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -215,6 +417,14 @@
       "args": {
         "pattern": "/(?<=\\$)\\d+/",
         "subject": "cost $42"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "42"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -223,6 +433,14 @@
       "args": {
         "pattern": "/(?<=ab|c)d/",
         "subject": "abd"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "d"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -231,6 +449,14 @@
       "args": {
         "pattern": "/(?>a+)b/",
         "subject": "aaab"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "aaab"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -239,6 +465,14 @@
       "args": {
         "pattern": "/\\((?:[^()]|(?R))*\\)/",
         "subject": "x(a(b)c)y"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "(a(b)c)"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -247,6 +481,14 @@
       "args": {
         "pattern": "/(a)?(?(1)b|c)/",
         "subject": "c"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "c"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -255,6 +497,14 @@
       "args": {
         "pattern": "/foo\\Kbar/",
         "subject": "foobar"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "bar"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -263,6 +513,15 @@
       "args": {
         "pattern": "/(*MARK:m)a/",
         "subject": "a"
+      },
+      "expect": {
+        "result": 1,
+        "matches": {
+          "0": "a",
+          "MARK": "m"
+        },
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -271,6 +530,12 @@
       "args": {
         "pattern": "",
         "subject": "a"
+      },
+      "expect": {
+        "result": false,
+        "matches": null,
+        "error": 1,
+        "warning": "preg_match(): Empty regular expression"
       }
     },
     {
@@ -279,6 +544,12 @@
       "args": {
         "pattern": "abc",
         "subject": "abc"
+      },
+      "expect": {
+        "result": false,
+        "matches": null,
+        "error": 1,
+        "warning": "preg_match(): Delimiter must not be alphanumeric, backslash, or NUL byte"
       }
     },
     {
@@ -287,6 +558,12 @@
       "args": {
         "pattern": "aba",
         "subject": "b"
+      },
+      "expect": {
+        "result": false,
+        "matches": null,
+        "error": 1,
+        "warning": "preg_match(): Delimiter must not be alphanumeric, backslash, or NUL byte"
       }
     },
     {
@@ -295,6 +572,14 @@
       "args": {
         "pattern": "{a}",
         "subject": "a"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "a"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -303,6 +588,12 @@
       "args": {
         "pattern": "/a/k",
         "subject": "a"
+      },
+      "expect": {
+        "result": false,
+        "matches": null,
+        "error": 1,
+        "warning": "preg_match(): Unknown modifier 'k'"
       }
     },
     {
@@ -311,6 +602,12 @@
       "args": {
         "pattern": "/a/e",
         "subject": "a"
+      },
+      "expect": {
+        "result": false,
+        "matches": null,
+        "error": 1,
+        "warning": "preg_match(): Unknown modifier 'e'"
       }
     },
     {
@@ -319,6 +616,12 @@
       "args": {
         "pattern": "/(/",
         "subject": "a"
+      },
+      "expect": {
+        "result": false,
+        "matches": null,
+        "error": 1,
+        "warning": "preg_match(): Compilation failed: missing closing parenthesis at offset 1"
       }
     },
     {
@@ -331,6 +634,14 @@
         "subject": {
           "$bytes": "YQBi"
         }
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "a\u0000b"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -339,6 +650,12 @@
       "args": {
         "pattern": "/^(a+)+$/",
         "subject": "aaaaaaaaaaaaaaaaaaa!"
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 2,
+        "warning": null
       }
     },
     {
@@ -347,6 +664,12 @@
       "args": {
         "pattern": "/^(a+)+$/",
         "subject": "aaaaaaaaaaaaaaaaaa!"
+      },
+      "expect": {
+        "result": 0,
+        "matches": [],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -355,6 +678,12 @@
       "args": {
         "pattern": "/(*LIMIT_MATCH=10)(a+)+$/",
         "subject": "aaaaaa!"
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 2,
+        "warning": null
       }
     },
     {
@@ -363,6 +692,14 @@
       "args": {
         "pattern": "/(*NOTEMPTY)a*/",
         "subject": "bbb"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          ""
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -371,6 +708,12 @@
       "args": {
         "pattern": "/(*NO_JIT)(*NOTEMPTY)a*/",
         "subject": "bbb"
+      },
+      "expect": {
+        "result": 0,
+        "matches": [],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -379,6 +722,19 @@
       "args": {
         "pattern": "~(?<=x|R?\\z)~",
         "subject": "abc"
+      },
+      "expect": {
+        "result": 4,
+        "matches": [
+          [
+            "",
+            "",
+            "",
+            ""
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -387,6 +743,16 @@
       "args": {
         "pattern": "~(*NO_JIT)(?<=x|R?\\z)~",
         "subject": "abc"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          [
+            ""
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -396,6 +762,33 @@
         "pattern": "~(*naplb:(a|ab.?))(?!b)~",
         "subject": "abc",
         "flags": 256
+      },
+      "expect": {
+        "result": 2,
+        "matches": [
+          [
+            [
+              "bc",
+              1
+            ],
+            [
+              "",
+              3
+            ]
+          ],
+          [
+            [
+              "abc",
+              0
+            ],
+            [
+              "abc",
+              0
+            ]
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -404,6 +797,18 @@
       "args": {
         "pattern": "~(?!(*SKIP:m)c|)~",
         "subject": "xcx"
+      },
+      "expect": {
+        "result": 3,
+        "matches": [
+          [
+            "",
+            "",
+            ""
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -412,6 +817,14 @@
       "args": {
         "pattern": "~(*NO_JIT)(?!(*SKIP:m)c|)~",
         "subject": "xcx"
+      },
+      "expect": {
+        "result": 0,
+        "matches": [
+          []
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -420,6 +833,14 @@
       "args": {
         "pattern": "/^(?:a|b)*$/",
         "subject": "ababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababab"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "ababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababab"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -428,6 +849,12 @@
       "args": {
         "pattern": "/^(?:a|b)*$/",
         "subject": "abababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababab"
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 6,
+        "warning": null
       }
     },
     {
@@ -436,6 +863,14 @@
       "args": {
         "pattern": "/^(?:a|b)*+$/",
         "subject": "abababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababab"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "abababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababab"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -444,6 +879,12 @@
       "args": {
         "pattern": "/(?R)?a/",
         "subject": "a"
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 6,
+        "warning": null
       }
     },
     {
@@ -452,6 +893,12 @@
       "args": {
         "pattern": "/(*NO_JIT)(?R)?a/",
         "subject": "a"
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 1,
+        "warning": null
       }
     },
     {
@@ -460,6 +907,25 @@
       "args": {
         "pattern": "/(a)(b)?/",
         "subject": "ab a"
+      },
+      "expect": {
+        "result": 2,
+        "matches": [
+          [
+            "ab",
+            "a"
+          ],
+          [
+            "a",
+            "a"
+          ],
+          [
+            "b",
+            ""
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -469,6 +935,22 @@
         "pattern": "/(a)(b)?/",
         "subject": "ab a",
         "flags": 2
+      },
+      "expect": {
+        "result": 2,
+        "matches": [
+          [
+            "ab",
+            "a",
+            "b"
+          ],
+          [
+            "a",
+            "a"
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -478,6 +960,23 @@
         "pattern": "/a/",
         "subject": "aXa",
         "flags": 257
+      },
+      "expect": {
+        "result": 2,
+        "matches": [
+          [
+            [
+              "a",
+              0
+            ],
+            [
+              "a",
+              2
+            ]
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -486,6 +985,19 @@
       "args": {
         "pattern": "/x*/",
         "subject": "abc"
+      },
+      "expect": {
+        "result": 4,
+        "matches": [
+          [
+            "",
+            "",
+            "",
+            ""
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -494,6 +1006,18 @@
       "args": {
         "pattern": "/x*/u",
         "subject": "éé"
+      },
+      "expect": {
+        "result": 3,
+        "matches": [
+          [
+            "",
+            "",
+            ""
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -502,6 +1026,17 @@
       "args": {
         "pattern": "/(*CRLF)$/m",
         "subject": "a\r\nb"
+      },
+      "expect": {
+        "result": 2,
+        "matches": [
+          [
+            "",
+            ""
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -511,6 +1046,27 @@
         "pattern": "/(?<l>[a-z])(?<d>\\d)/",
         "subject": "a1 b2",
         "flags": 2
+      },
+      "expect": {
+        "result": 2,
+        "matches": [
+          {
+            "0": "a1",
+            "l": "a",
+            "1": "a",
+            "d": "1",
+            "2": "1"
+          },
+          {
+            "0": "b2",
+            "l": "b",
+            "1": "b",
+            "d": "2",
+            "2": "2"
+          }
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -520,6 +1076,12 @@
         "pattern": "/a/",
         "subject": "a",
         "flags": 3
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "preg_match_all(): Argument #4 ($flags) must be a PREG_* constant"
+        }
       }
     },
     {
@@ -528,6 +1090,29 @@
       "args": {
         "pattern": "/(?J)(?<n>a)|(?<n>b)/",
         "subject": "ab"
+      },
+      "expect": {
+        "result": 2,
+        "matches": {
+          "0": [
+            "a",
+            "b"
+          ],
+          "n": [
+            "",
+            "b"
+          ],
+          "1": [
+            "a",
+            ""
+          ],
+          "2": [
+            "",
+            "b"
+          ]
+        },
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -537,6 +1122,12 @@
         "pattern": "/(\\w+) (\\w+)/",
         "replacement": "$2 ${1}!",
         "subject": "hello world"
+      },
+      "expect": {
+        "result": "world hello!",
+        "count": 1,
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -546,6 +1137,12 @@
         "pattern": "/(a)/",
         "replacement": "[\\1]",
         "subject": "bab"
+      },
+      "expect": {
+        "result": "b[a]b",
+        "count": 1,
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -556,6 +1153,12 @@
         "replacement": "x",
         "subject": "aaa",
         "limit": 2
+      },
+      "expect": {
+        "result": "xxa",
+        "count": 2,
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -571,6 +1174,12 @@
           "c"
         ],
         "subject": "ab"
+      },
+      "expect": {
+        "result": "cc",
+        "count": 3,
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -583,6 +1192,12 @@
         ],
         "replacement": "x",
         "subject": "abc"
+      },
+      "expect": {
+        "result": "xxc",
+        "count": 2,
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -597,6 +1212,12 @@
           "1"
         ],
         "subject": "ab"
+      },
+      "expect": {
+        "result": "1",
+        "count": 2,
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -609,6 +1230,15 @@
           "k": "a",
           "7": "ba"
         }
+      },
+      "expect": {
+        "result": {
+          "k": "x",
+          "7": "bx"
+        },
+        "count": 2,
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -618,6 +1248,12 @@
         "pattern": "/x*/",
         "replacement": "-",
         "subject": "abc"
+      },
+      "expect": {
+        "result": "-a-b-c-",
+        "count": 4,
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -627,6 +1263,12 @@
         "pattern": "/a/",
         "replacement": "$5",
         "subject": "a"
+      },
+      "expect": {
+        "result": "",
+        "count": 1,
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -636,6 +1278,12 @@
         "pattern": "/(/",
         "replacement": "x",
         "subject": "a"
+      },
+      "expect": {
+        "result": null,
+        "count": 0,
+        "error": 1,
+        "warning": "preg_replace(): Compilation failed: missing closing parenthesis at offset 1"
       }
     },
     {
@@ -647,6 +1295,12 @@
         "subject": {
           "$bytes": "/w=="
         }
+      },
+      "expect": {
+        "result": null,
+        "count": 0,
+        "error": 4,
+        "warning": null
       }
     },
     {
@@ -655,6 +1309,23 @@
       "args": {
         "pattern": "/(\\d)(x)?/",
         "subject": "1x 2"
+      },
+      "expect": {
+        "result": "<1> <2>",
+        "count": 2,
+        "calls": [
+          [
+            "1x",
+            "1",
+            "x"
+          ],
+          [
+            "2",
+            "2"
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -664,6 +1335,26 @@
         "pattern": "/\\d/",
         "subject": "a1b2",
         "flags": 256
+      },
+      "expect": {
+        "result": "a<1>b<2>",
+        "count": 2,
+        "calls": [
+          [
+            [
+              "1",
+              1
+            ]
+          ],
+          [
+            [
+              "2",
+              3
+            ]
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -673,6 +1364,19 @@
         "pattern": "/(a)(x)?/",
         "subject": "a",
         "flags": 512
+      },
+      "expect": {
+        "result": "<1>",
+        "count": 1,
+        "calls": [
+          [
+            "a",
+            "a",
+            null
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -682,6 +1386,20 @@
         "pattern": "/./",
         "subject": "abc",
         "limit": 2
+      },
+      "expect": {
+        "result": "<1><2>c",
+        "count": 2,
+        "calls": [
+          [
+            "a"
+          ],
+          [
+            "b"
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -693,6 +1411,23 @@
           "a",
           "ba"
         ]
+      },
+      "expect": {
+        "result": [
+          "<1>",
+          "b<2>"
+        ],
+        "count": 2,
+        "calls": [
+          [
+            "a"
+          ],
+          [
+            "a"
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -701,6 +1436,16 @@
       "args": {
         "pattern": "/[\\s,]+/",
         "subject": "a, b  c,d"
+      },
+      "expect": {
+        "result": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -710,6 +1455,14 @@
         "pattern": "/,/",
         "subject": ",a,,b,",
         "flags": 1
+      },
+      "expect": {
+        "result": [
+          "a",
+          "b"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -719,6 +1472,15 @@
         "pattern": "/(-)/",
         "subject": "a-b",
         "flags": 2
+      },
+      "expect": {
+        "result": [
+          "a",
+          "-",
+          "b"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -728,6 +1490,20 @@
         "pattern": "/,/",
         "subject": "a,b",
         "flags": 4
+      },
+      "expect": {
+        "result": [
+          [
+            "a",
+            0
+          ],
+          [
+            "b",
+            2
+          ]
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -737,6 +1513,14 @@
         "pattern": "/,/",
         "subject": "a,b,c",
         "limit": 2
+      },
+      "expect": {
+        "result": [
+          "a",
+          "b,c"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -746,6 +1530,15 @@
         "pattern": "/,/",
         "subject": "a,b,c",
         "limit": 0
+      },
+      "expect": {
+        "result": [
+          "a",
+          "b",
+          "c"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -755,6 +1548,15 @@
         "pattern": "//",
         "subject": "abc",
         "flags": 1
+      },
+      "expect": {
+        "result": [
+          "a",
+          "b",
+          "c"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -764,6 +1566,14 @@
         "pattern": "//u",
         "subject": "éa",
         "flags": 1
+      },
+      "expect": {
+        "result": [
+          "é",
+          "a"
+        ],
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -771,7 +1581,8 @@
       "op": "pcre.preg_quote",
       "args": {
         "str": "Hello.World?(1+1)"
-      }
+      },
+      "expect": "Hello\\.World\\?\\(1\\+1\\)"
     },
     {
       "name": "quote with delimiter",
@@ -779,7 +1590,8 @@
       "args": {
         "str": "a/b#c",
         "delimiter": "#"
-      }
+      },
+      "expect": "a/b\\#c"
     },
     {
       "name": "quote NUL",
@@ -788,14 +1600,16 @@
         "str": {
           "$bytes": "YQBi"
         }
-      }
+      },
+      "expect": "a\\000b"
     },
     {
       "name": "quote all special characters",
       "op": "pcre.preg_quote",
       "args": {
         "str": ".\\+*?[^]$(){}=!<>|:-#/"
-      }
+      },
+      "expect": "\\.\\\\\\+\\*\\?\\[\\^\\]\\$\\(\\)\\{\\}\\=\\!\\<\\>\\|\\:\\-\\#/"
     },
     {
       "name": "quote multibyte delimiter uses the first byte",
@@ -803,7 +1617,8 @@
       "args": {
         "str": "aéb",
         "delimiter": "é"
-      }
+      },
+      "expect": "a\\éb"
     },
     {
       "name": "grep",
@@ -815,6 +1630,14 @@
           "a",
           "22"
         ]
+      },
+      "expect": {
+        "result": {
+          "0": "1",
+          "2": "22"
+        },
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -828,6 +1651,13 @@
           "22"
         ],
         "flags": 1
+      },
+      "expect": {
+        "result": {
+          "1": "a"
+        },
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -840,6 +1670,14 @@
           "3": "b",
           "y": "ba"
         }
+      },
+      "expect": {
+        "result": {
+          "x": "a",
+          "y": "ba"
+        },
+        "error": 0,
+        "warning": null
       }
     },
     {
@@ -850,6 +1688,11 @@
         "array": [
           "a"
         ]
+      },
+      "expect": {
+        "result": false,
+        "error": 1,
+        "warning": "preg_grep(): Compilation failed: missing closing parenthesis at offset 1"
       }
     },
     {
@@ -862,6 +1705,12 @@
             "subject": {
               "$bytes": "/w=="
             }
+          },
+          "expect": {
+            "result": false,
+            "matches": [],
+            "error": 4,
+            "warning": null
           }
         },
         {
@@ -870,6 +1719,12 @@
             "pattern": [],
             "replacement": [],
             "subject": "abc"
+          },
+          "expect": {
+            "result": "abc",
+            "count": 0,
+            "error": 4,
+            "warning": null
           }
         }
       ]
@@ -884,6 +1739,12 @@
             "subject": {
               "$bytes": "/w=="
             }
+          },
+          "expect": {
+            "result": false,
+            "matches": [],
+            "error": 4,
+            "warning": null
           }
         },
         {
@@ -891,6 +1752,14 @@
           "args": {
             "pattern": "/a/",
             "subject": "a"
+          },
+          "expect": {
+            "result": 1,
+            "matches": [
+              "a"
+            ],
+            "error": 0,
+            "warning": null
           }
         }
       ]
@@ -905,6 +1774,12 @@
             "subject": {
               "$bytes": "/w=="
             }
+          },
+          "expect": {
+            "result": false,
+            "matches": [],
+            "error": 4,
+            "warning": null
           }
         },
         {
@@ -912,6 +1787,12 @@
           "args": {
             "pattern": "/(/",
             "subject": "a"
+          },
+          "expect": {
+            "result": false,
+            "matches": null,
+            "error": 1,
+            "warning": "preg_match(): Compilation failed: missing closing parenthesis at offset 1"
           }
         }
       ]

@@ -1,7 +1,7 @@
 {
   "ops": {
     "filter.filter_var": {
-      "doc": "filter_var($value, $filter, $options): the result (value, false or null) and the warning",
+      "doc": "filter_var($value, $filter, $options) with the validation and sanitizing filters and FILTER_CALLBACK: the result (value, false or null), the warning, and the values passed to the callable (an \"options\" entry of '$callback' is a recording closure)",
       "covers": [
         "filter_var()"
       ],
@@ -240,12 +240,220 @@
                   0,
                   999,
                   -1,
-                  256
+                  256,
+                  512,
+                  521,
+                  278,
+                  1025
                 ]
               },
               "options": {
                 "gen": "ref",
                 "name": "filter_raw_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "string",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_html_value"
+              },
+              "filter": {
+                "gen": "const",
+                "value": 513
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_san_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "encoded",
+          "iterations": 1500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_html_value"
+              },
+              "filter": {
+                "gen": "const",
+                "value": 514
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_san_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "special_chars",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_html_value"
+              },
+              "filter": {
+                "gen": "const",
+                "value": 515
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_san_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "full_special_chars",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_html_value"
+              },
+              "filter": {
+                "gen": "const",
+                "value": 522
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_san_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "email_url",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_html_value"
+              },
+              "filter": {
+                "gen": "pick",
+                "from": [
+                  517,
+                  518
+                ]
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_san_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "number",
+          "iterations": 2500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_number_value"
+              },
+              "filter": {
+                "gen": "pick",
+                "from": [
+                  519,
+                  520
+                ]
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_san_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "add_slashes",
+          "iterations": 1000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_html_value"
+              },
+              "filter": {
+                "gen": "const",
+                "value": 523
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_san_options"
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          }
+        },
+        {
+          "name": "callback",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_callback_value"
+              },
+              "filter": {
+                "gen": "pick",
+                "from": [
+                  1024,
+                  1024,
+                  1024,
+                  257,
+                  516
+                ]
+              },
+              "options": {
+                "gen": "ref",
+                "name": "filter_callback_options"
               }
             },
             "optional": [
@@ -1340,13 +1548,595 @@
           "name": "filter_scalar"
         }
       ]
+    },
+    "filter_html_piece": {
+      "gen": "pick",
+      "from": [
+        "<a href=\"x\">",
+        "</a>",
+        "<b>",
+        "</b>",
+        "<br/>",
+        "<!-- c -->",
+        "<!--",
+        "-->",
+        "--",
+        "<?php echo 1; ?>",
+        "<?= $x ?>",
+        "<?php f(')'); ?>",
+        "<?xml version=\"1.0\"?>",
+        "<?xml",
+        "<?XmL ",
+        "<!DOCTYPE html>",
+        "<!doctype",
+        "<!",
+        "<?",
+        "?>",
+        "<",
+        ">",
+        "<<",
+        ">>",
+        "< ",
+        "\"",
+        "'",
+        "\\'",
+        "\\\"",
+        "(",
+        ")",
+        "&",
+        "&amp;",
+        "&amp",
+        "&eacute;",
+        "&EACUTE;",
+        "&nbsp;",
+        "&apos;",
+        "&#39;",
+        "&#039;",
+        "&#x27;",
+        "&#X27;",
+        "&#;",
+        "&#x;",
+        "&#0;",
+        "&#1114111;",
+        "&#1114112;",
+        "&#99999999999999999999;",
+        "&#x0x1F;",
+        "&#x0xG;",
+        "&#x0X;",
+        "&#xFFFFFFFFFFFFFFFFFF;",
+        "&a1;",
+        "&;",
+        "&#",
+        "&#x",
+        "&thetasym;",
+        "&lang;",
+        "&Prime;",
+        "text",
+        " ",
+        "\t",
+        "\n",
+        "\u0000",
+        "\u0001",
+        "\u001f",
+        "",
+        "`",
+        "é",
+        "ü",
+        "€",
+        "—",
+        "♥",
+        "Ω",
+        "∑",
+        " ",
+        "ÿ",
+        "Œ",
+        "ƒ",
+        "ˆ",
+        " ",
+        "‰",
+        "⌈",
+        "◊",
+        "♦",
+        "ϑ",
+        "𝒜",
+        "中",
+        "<script>alert(1)</script>",
+        "<a title='x>y'>",
+        "<img src=x onerror=alert(1)>",
+        "@",
+        "+",
+        "-",
+        ".",
+        ",",
+        "e",
+        "E",
+        "1",
+        "42",
+        "%",
+        "/",
+        "?",
+        "#",
+        "=",
+        ";",
+        ":",
+        "[",
+        "]",
+        "{",
+        "}",
+        "|",
+        "^",
+        "~",
+        "$",
+        "*",
+        "!"
+      ]
+    },
+    "filter_html_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "filter_html_piece"
+          },
+          "min": 0,
+          "max": 10,
+          "sep": ""
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "filter_html_piece"
+          },
+          "min": 0,
+          "max": 4,
+          "sep": ""
+        },
+        {
+          "gen": "string",
+          "alphabet": "<>!?-'\"\\()ab &#;xXlmLM/=DOCTYPEdoctype",
+          "min": 0,
+          "max": 24
+        },
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 12,
+          "tricky": 0.3
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$bytes": "/w=="
+            },
+            {
+              "$bytes": "YcM="
+            },
+            {
+              "$bytes": "wyg="
+            },
+            {
+              "$bytes": "wK8="
+            },
+            {
+              "$bytes": "4ICA"
+            },
+            {
+              "$bytes": "7aCA"
+            },
+            {
+              "$bytes": "9JCAgA=="
+            },
+            {
+              "$bytes": "+IiAgIA="
+            },
+            {
+              "$bytes": "PGI+/zwvYj4="
+            },
+            {
+              "$bytes": "JmVhY3V0ZTvp"
+            },
+            {
+              "$bytes": "6XTpICJxIg=="
+            },
+            {
+              "$bytes": "eAA8Yj4AeQ=="
+            },
+            {
+              "$bytes": "gCZhbXA7gA=="
+            },
+            {
+              "$bytes": "Mf8yLjVlMw=="
+            }
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "filter_scalar"
+        }
+      ]
+    },
+    "filter_number_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "0123456789+-.,eEaZ '_\t",
+          "min": 0,
+          "max": 16
+        },
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 8,
+          "tricky": 0.3
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$bytes": "/w=="
+            },
+            {
+              "$bytes": "YcM="
+            },
+            {
+              "$bytes": "wyg="
+            },
+            {
+              "$bytes": "wK8="
+            },
+            {
+              "$bytes": "4ICA"
+            },
+            {
+              "$bytes": "7aCA"
+            },
+            {
+              "$bytes": "9JCAgA=="
+            },
+            {
+              "$bytes": "+IiAgIA="
+            },
+            {
+              "$bytes": "PGI+/zwvYj4="
+            },
+            {
+              "$bytes": "JmVhY3V0ZTvp"
+            },
+            {
+              "$bytes": "6XTpICJxIg=="
+            },
+            {
+              "$bytes": "eAA8Yj4AeQ=="
+            },
+            {
+              "$bytes": "gCZhbXA7gA=="
+            },
+            {
+              "$bytes": "Mf8yLjVlMw=="
+            }
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "filter_scalar"
+        }
+      ]
+    },
+    "filter_san_flags": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 1023
+        },
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 1023
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            4096,
+            8192,
+            16384,
+            28672,
+            4352,
+            67108864,
+            67108992,
+            16777216,
+            33554432,
+            134217728,
+            268435456,
+            134217984
+          ]
+        }
+      ]
+    },
+    "filter_san_options": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "filter_san_flags"
+        },
+        {
+          "gen": "ref",
+          "name": "filter_san_flags"
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "flags": {
+              "gen": "ref",
+              "name": "filter_san_flags"
+            },
+            "options": {
+              "gen": "object",
+              "fields": {
+                "default": {
+                  "gen": "ref",
+                  "name": "filter_default"
+                }
+              },
+              "optional": [
+                "default"
+              ]
+            }
+          },
+          "optional": [
+            "flags",
+            "options"
+          ]
+        }
+      ]
+    },
+    "filter_callback_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "filter_scalar"
+        },
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 8,
+          "tricky": 0.3
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "string",
+                "alphabet": "abc",
+                "min": 0,
+                "max": 3
+              },
+              {
+                "gen": "ref",
+                "name": "filter_scalar"
+              }
+            ]
+          },
+          "min": 0,
+          "max": 5
+        },
+        {
+          "gen": "pick",
+          "from": [
+            [
+              "a",
+              {}
+            ],
+            [
+              {},
+              "a"
+            ],
+            [
+              {},
+              [
+                "a",
+                {}
+              ]
+            ],
+            [
+              "x",
+              [
+                "y",
+                [
+                  "z"
+                ]
+              ],
+              "w"
+            ],
+            {
+              "k": "v",
+              "7": [
+                "a",
+                "b"
+              ]
+            },
+            {
+              "$bytes": "/wA="
+            }
+          ]
+        }
+      ]
+    },
+    "filter_callable": {
+      "gen": "pick",
+      "from": [
+        "$callback",
+        "$callback",
+        "$callback",
+        "$callback",
+        "nope",
+        "",
+        "$CALLBACK",
+        5,
+        1.5,
+        null,
+        true,
+        [],
+        [
+          "$callback"
+        ],
+        {
+          "default": "d"
+        }
+      ]
+    },
+    "filter_callback_options": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "options": {
+              "gen": "ref",
+              "name": "filter_callable"
+            },
+            "flags": {
+              "gen": "pick",
+              "from": [
+                0,
+                67108864,
+                16777216,
+                33554432,
+                134217728,
+                268435456,
+                335544320,
+                150994944,
+                402653184,
+                "3"
+              ]
+            }
+          },
+          "optional": [
+            "flags"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "options": {
+              "gen": "ref",
+              "name": "filter_callable"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "filter": {
+              "gen": "pick",
+              "from": [
+                1024,
+                1024,
+                257,
+                516,
+                "1024"
+              ]
+            },
+            "options": {
+              "gen": "ref",
+              "name": "filter_callable"
+            },
+            "flags": {
+              "gen": "pick",
+              "from": [
+                0,
+                67108864,
+                268435456
+              ]
+            }
+          },
+          "optional": [
+            "flags"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            67108864,
+            16777216,
+            268435456
+          ]
+        }
+      ]
     }
   },
   "deviations": [
     {
       "symbol": "filter_var()",
-      "php": "The sanitizing filters other than FILTER_UNSAFE_RAW (FILTER_SANITIZE_*), FILTER_CALLBACK, and \"uri_parser_class\" => Uri\\WhatWg\\Url",
-      "reason": "Not ported: php_std::filter::filter_var() returns an Unsupported error for them"
+      "php": "\"uri_parser_class\" => Uri\\WhatWg\\Url (FILTER_VALIDATE_URL with the WHATWG URL parser)",
+      "reason": "Not ported: php_std::filter::filter_var() returns an Unsupported error for it"
+    },
+    {
+      "symbol": "filter_var()",
+      "php": "FILTER_SANITIZE_FULL_SPECIAL_CHARS encodes for the charset of the default_charset (or internal_encoding) ini setting",
+      "reason": "php_std fixes it at PHP's default, UTF-8; the other charsets of htmlentities() are not ported"
+    },
+    {
+      "symbol": "filter_var()",
+      "php": "FILTER_CALLBACK calls any PHP callable",
+      "reason": "php_std::filter::filter_var_with() takes a Callables implementation that stands for the callables; the compat adapter provides only the recording closure '$callback' of ops/filter.php"
+    }
+  ],
+  "quirks": [
+    {
+      "symbol": "filter_var()",
+      "description": "FILTER_VALIDATE_FLOAT with FILTER_FLAG_ALLOW_THOUSAND treats a NUL byte as a thousand separator: strchr() finds the terminator of the separator list",
+      "case": "filter.json#float NUL is a thousand separator"
+    },
+    {
+      "symbol": "filter_var()",
+      "description": "A float min_range that does not fit an int is cast with a warning, and the cast value is the range",
+      "case": "filter.json#int min_range from a float option"
+    },
+    {
+      "symbol": "filter_var()",
+      "description": "An unregistered filter ID inside the filter ranges (0x0100-0x0115, 0x0200-0x020b) runs FILTER_DEFAULT; any other unknown ID warns and returns false",
+      "case": "filter.json#unregistered filter ID in range runs FILTER_DEFAULT"
+    },
+    {
+      "symbol": "filter_var()",
+      "description": "FILTER_CALLBACK with an \"options\" entry resets the flags to 0, so an array value is filtered element by element without FILTER_REQUIRE_ARRAY",
+      "case": "filter.json#callback filters each element of an array"
+    },
+    {
+      "symbol": "filter_var()",
+      "description": "Filtering an array goes on after an element throws; the exception reported is the last one thrown, while failed validations stop throwing",
+      "case": "filter.json#array exceptions: the last thrown wins"
+    },
+    {
+      "symbol": "filter_var()",
+      "description": "FILTER_SANITIZE_FULL_SPECIAL_CHARS returns an empty string for invalid UTF-8",
+      "case": "filter.json#full_special_chars invalid UTF-8 gives an empty string"
+    },
+    {
+      "symbol": "filter_var()",
+      "description": "FILTER_SANITIZE_FULL_SPECIAL_CHARS keeps &#x0x1F; as an entity: strtol() skips a 0x prefix after the x",
+      "case": "filter.json#full_special_chars keeps a hex entity with a 0x prefix"
+    },
+    {
+      "symbol": "filter_var()",
+      "description": "FILTER_SANITIZE_STRING encodes quotes before stripping tags, so a quoted > ends a tag",
+      "case": "filter.json#string a quoted > ends the tag"
     }
   ]
 }

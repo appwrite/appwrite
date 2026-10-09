@@ -6,63 +6,72 @@
       "op": "net.ip2long",
       "args": {
         "ip": "192.168.1.1"
-      }
+      },
+      "expect": 3232235777
     },
     {
       "name": "ip2long all ones",
       "op": "net.ip2long",
       "args": {
         "ip": "255.255.255.255"
-      }
+      },
+      "expect": 4294967295
     },
     {
       "name": "ip2long zero",
       "op": "net.ip2long",
       "args": {
         "ip": "0.0.0.0"
-      }
+      },
+      "expect": 0
     },
     {
       "name": "ip2long leading zero is rejected",
       "op": "net.ip2long",
       "args": {
         "ip": "01.2.3.4"
-      }
+      },
+      "expect": false
     },
     {
       "name": "ip2long three parts",
       "op": "net.ip2long",
       "args": {
         "ip": "1.2.3"
-      }
+      },
+      "expect": false
     },
     {
       "name": "ip2long octet over 255",
       "op": "net.ip2long",
       "args": {
         "ip": "1.2.3.256"
-      }
+      },
+      "expect": false
     },
     {
       "name": "ip2long empty",
       "op": "net.ip2long",
       "args": {
         "ip": ""
-      }
+      },
+      "expect": false
     },
     {
       "name": "ip2long trailing space",
       "op": "net.ip2long",
       "args": {
         "ip": "1.2.3.4 "
-      }
+      },
+      "expect": false
     },
     {
       "name": "ip2long hex is not accepted",
       "op": "net.ip2long",
       "args": {
         "ip": "0x7f.0.0.1"
-      }
+      },
+      "expect": false
     },
     {
       "name": "ip2long NUL byte",
@@ -71,6 +80,12 @@
         "ip": {
           "$bytes": "MS4yLjMuNAA="
         }
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "ip2long(): Argument #1 ($ip) must not contain any null bytes"
+        }
       }
     },
     {
@@ -78,62 +93,73 @@
       "op": "net.long2ip",
       "args": {
         "ip": 0
-      }
+      },
+      "expect": "0.0.0.0"
     },
     {
       "name": "long2ip -1 wraps",
       "op": "net.long2ip",
       "args": {
         "ip": -1
-      }
+      },
+      "expect": "255.255.255.255"
     },
     {
       "name": "long2ip 2^32 keeps the low bits",
       "op": "net.long2ip",
       "args": {
         "ip": 4294967296
-      }
+      },
+      "expect": "0.0.0.0"
     },
     {
       "name": "long2ip private address",
       "op": "net.long2ip",
       "args": {
         "ip": 3232235777
-      }
+      },
+      "expect": "192.168.1.1"
     },
     {
       "name": "long2ip PHP_INT_MAX",
       "op": "net.long2ip",
       "args": {
         "ip": 9223372036854775807
-      }
+      },
+      "expect": "255.255.255.255"
     },
     {
       "name": "long2ip PHP_INT_MIN",
       "op": "net.long2ip",
       "args": {
         "ip": -9223372036854775808
-      }
+      },
+      "expect": "0.0.0.0"
     },
     {
       "name": "inet_pton IPv4",
       "op": "net.inet_pton",
       "args": {
         "ip": "127.0.0.1"
-      }
+      },
+      "expect": "\u0000\u0000\u0001"
     },
     {
       "name": "inet_pton loopback IPv6",
       "op": "net.inet_pton",
       "args": {
         "ip": "::1"
-      }
+      },
+      "expect": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0001"
     },
     {
       "name": "inet_pton IPv4-mapped",
       "op": "net.inet_pton",
       "args": {
         "ip": "::ffff:192.0.2.1"
+      },
+      "expect": {
+        "$bytes": "AAAAAAAAAAAAAP//wAACAQ=="
       }
     },
     {
@@ -141,6 +167,9 @@
       "op": "net.inet_pton",
       "args": {
         "ip": "2001:db8:85a3:0:0:8a2e:370:7334"
+      },
+      "expect": {
+        "$bytes": "IAENuIWjAAAAAIouA3BzNA=="
       }
     },
     {
@@ -148,35 +177,40 @@
       "op": "net.inet_pton",
       "args": {
         "ip": "1::2::3"
-      }
+      },
+      "expect": false
     },
     {
       "name": "inet_pton nine groups",
       "op": "net.inet_pton",
       "args": {
         "ip": "1:2:3:4:5:6:7:8:9"
-      }
+      },
+      "expect": false
     },
     {
       "name": "inet_pton zone index",
       "op": "net.inet_pton",
       "args": {
         "ip": "fe80::1%eth0"
-      }
+      },
+      "expect": false
     },
     {
       "name": "inet_pton neither dot nor colon",
       "op": "net.inet_pton",
       "args": {
         "ip": "localhost"
-      }
+      },
+      "expect": false
     },
     {
       "name": "inet_pton empty",
       "op": "net.inet_pton",
       "args": {
         "ip": ""
-      }
+      },
+      "expect": false
     },
     {
       "name": "inet_pton NUL byte",
@@ -184,6 +218,12 @@
       "args": {
         "ip": {
           "$bytes": "OjoxAA=="
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "inet_pton(): Argument #1 ($ip) must not contain any null bytes"
         }
       }
     },
@@ -194,7 +234,8 @@
         "packed": {
           "$bytes": "fwAAAQ=="
         }
-      }
+      },
+      "expect": "127.0.0.1"
     },
     {
       "name": "inet_ntop loopback IPv6",
@@ -203,7 +244,8 @@
         "packed": {
           "$bytes": "AAAAAAAAAAAAAAAAAAAAAQ=="
         }
-      }
+      },
+      "expect": "::1"
     },
     {
       "name": "inet_ntop all zeros",
@@ -212,7 +254,8 @@
         "packed": {
           "$bytes": "AAAAAAAAAAAAAAAAAAAAAA=="
         }
-      }
+      },
+      "expect": "::"
     },
     {
       "name": "inet_ntop IPv4-mapped",
@@ -221,7 +264,8 @@
         "packed": {
           "$bytes": "AAAAAAAAAAAAAP//AQIDBA=="
         }
-      }
+      },
+      "expect": "::ffff:1.2.3.4"
     },
     {
       "name": "inet_ntop two zero runs: the first wins",
@@ -230,7 +274,8 @@
         "packed": {
           "$bytes": "AAAAAAABAAAAAAABAAAAAA=="
         }
-      }
+      },
+      "expect": "::1:0:0:1:0:0"
     },
     {
       "name": "inet_ntop longer second zero run",
@@ -239,7 +284,8 @@
         "packed": {
           "$bytes": "AAEAAAACAAAAAAAAAAMABA=="
         }
-      }
+      },
+      "expect": "1:0:2::3:4"
     },
     {
       "name": "inet_ntop single zero group is not compressed",
@@ -248,7 +294,8 @@
         "packed": {
           "$bytes": "AAEAAAACAAMABAAFAAYABw=="
         }
-      }
+      },
+      "expect": "1:0:2:3:4:5:6:7"
     },
     {
       "name": "inet_ntop wrong length",
@@ -257,20 +304,30 @@
         "packed": {
           "$bytes": "AAAAAAA="
         }
-      }
+      },
+      "expect": false
     },
     {
       "name": "inet_ntop empty",
       "op": "net.inet_ntop",
       "args": {
         "packed": ""
-      }
+      },
+      "expect": false
     },
     {
       "name": "idn_to_ascii umlaut",
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "bücher.de"
+      },
+      "expect": {
+        "result": "xn--bcher-kva.de",
+        "info": {
+          "result": "xn--bcher-kva.de",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -278,6 +335,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "Bücher.DE"
+      },
+      "expect": {
+        "result": "xn--bcher-kva.de",
+        "info": {
+          "result": "xn--bcher-kva.de",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -285,6 +350,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "faß.de"
+      },
+      "expect": {
+        "result": "xn--fa-hia.de",
+        "info": {
+          "result": "xn--fa-hia.de",
+          "isTransitionalDifferent": true,
+          "errors": 0
+        }
       }
     },
     {
@@ -293,6 +366,14 @@
       "args": {
         "domain": "faß.de",
         "flags": 0
+      },
+      "expect": {
+        "result": "fass.de",
+        "info": {
+          "result": "fass.de",
+          "isTransitionalDifferent": true,
+          "errors": 0
+        }
       }
     },
     {
@@ -301,6 +382,14 @@
       "args": {
         "domain": "faß.de",
         "flags": 16
+      },
+      "expect": {
+        "result": "xn--fa-hia.de",
+        "info": {
+          "result": "xn--fa-hia.de",
+          "isTransitionalDifferent": true,
+          "errors": 0
+        }
       }
     },
     {
@@ -308,6 +397,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "βόλος.com"
+      },
+      "expect": {
+        "result": "xn--nxasmm1c.com",
+        "info": {
+          "result": "xn--nxasmm1c.com",
+          "isTransitionalDifferent": true,
+          "errors": 0
+        }
       }
     },
     {
@@ -316,6 +413,14 @@
       "args": {
         "domain": "βόλος.com",
         "flags": 0
+      },
+      "expect": {
+        "result": "xn--nxasmq6b.com",
+        "info": {
+          "result": "xn--nxasmq6b.com",
+          "isTransitionalDifferent": true,
+          "errors": 0
+        }
       }
     },
     {
@@ -323,6 +428,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "xn--bcher-kva.de"
+      },
+      "expect": {
+        "result": "xn--bcher-kva.de",
+        "info": {
+          "result": "xn--bcher-kva.de",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -330,6 +443,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "XN--BCHER-KVA.DE"
+      },
+      "expect": {
+        "result": "xn--bcher-kva.de",
+        "info": {
+          "result": "xn--bcher-kva.de",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -337,6 +458,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "xn--a-.de"
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "xn--a-�.de",
+          "isTransitionalDifferent": false,
+          "errors": 1024
+        }
       }
     },
     {
@@ -344,6 +473,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "xn--xn---epa.de"
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "xn--xn---epa�.de",
+          "isTransitionalDifferent": false,
+          "errors": 1024
+        }
       }
     },
     {
@@ -351,6 +488,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "a..b"
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "a..b",
+          "isTransitionalDifferent": false,
+          "errors": 1
+        }
       }
     },
     {
@@ -358,6 +503,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "example.com."
+      },
+      "expect": {
+        "result": "example.com.",
+        "info": {
+          "result": "example.com.",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -365,6 +518,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "-a.de"
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "-a.de",
+          "isTransitionalDifferent": false,
+          "errors": 8
+        }
       }
     },
     {
@@ -372,6 +533,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "ab--c.de"
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "ab--c.de",
+          "isTransitionalDifferent": false,
+          "errors": 32
+        }
       }
     },
     {
@@ -379,6 +548,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "a b"
+      },
+      "expect": {
+        "result": "a b",
+        "info": {
+          "result": "a b",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -387,6 +564,14 @@
       "args": {
         "domain": "a b",
         "flags": 2
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "a�b",
+          "isTransitionalDifferent": false,
+          "errors": 128
+        }
       }
     },
     {
@@ -395,6 +580,14 @@
       "args": {
         "domain": "a_b.de",
         "flags": 2
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "a�b.de",
+          "isTransitionalDifferent": false,
+          "errors": 128
+        }
       }
     },
     {
@@ -402,6 +595,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "例え。テスト"
+      },
+      "expect": {
+        "result": "xn--r8jz45g.xn--zckzah",
+        "info": {
+          "result": "xn--r8jz45g.xn--zckzah",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -409,6 +610,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "ex­ample.com"
+      },
+      "expect": {
+        "result": "example.com",
+        "info": {
+          "result": "example.com",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -416,6 +625,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "͸.de"
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "�.de",
+          "isTransitionalDifferent": false,
+          "errors": 128
+        }
       }
     },
     {
@@ -423,6 +640,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": ".de"
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "�.de",
+          "isTransitionalDifferent": false,
+          "errors": 128
+        }
       }
     },
     {
@@ -430,6 +655,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "́a.de"
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "�a.de",
+          "isTransitionalDifferent": false,
+          "errors": 64
+        }
       }
     },
     {
@@ -437,6 +670,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.de"
+      },
+      "expect": {
+        "result": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.de",
+        "info": {
+          "result": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.de",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -444,6 +685,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.de"
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.de",
+          "isTransitionalDifferent": false,
+          "errors": 2
+        }
       }
     },
     {
@@ -451,6 +700,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expect": {
+        "result": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "info": {
+          "result": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -458,6 +715,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa."
+      },
+      "expect": {
+        "result": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.",
+        "info": {
+          "result": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -465,6 +730,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "isTransitionalDifferent": false,
+          "errors": 4
+        }
       }
     },
     {
@@ -472,6 +745,14 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": "üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü.de"
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.de",
+          "isTransitionalDifferent": false,
+          "errors": 2
+        }
       }
     },
     {
@@ -480,6 +761,14 @@
       "args": {
         "domain": "אב.1a",
         "flags": 0
+      },
+      "expect": {
+        "result": "xn--4dbc.1a",
+        "info": {
+          "result": "xn--4dbc.1a",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -488,6 +777,14 @@
       "args": {
         "domain": "אב.1a",
         "flags": 4
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "xn--4dbc.1a",
+          "isTransitionalDifferent": false,
+          "errors": 2048
+        }
       }
     },
     {
@@ -496,6 +793,14 @@
       "args": {
         "domain": "אבג.com",
         "flags": 4
+      },
+      "expect": {
+        "result": "xn--4dbcd.com",
+        "info": {
+          "result": "xn--4dbcd.com",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -504,6 +809,14 @@
       "args": {
         "domain": "क्‍ष.in",
         "flags": 24
+      },
+      "expect": {
+        "result": "xn--11b2ezcw70k.in",
+        "info": {
+          "result": "xn--11b2ezcw70k.in",
+          "isTransitionalDifferent": true,
+          "errors": 0
+        }
       }
     },
     {
@@ -512,6 +825,14 @@
       "args": {
         "domain": "a‍b.in",
         "flags": 24
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "xn--ab-m1t.in",
+          "isTransitionalDifferent": true,
+          "errors": 4096
+        }
       }
     },
     {
@@ -520,6 +841,14 @@
       "args": {
         "domain": "l·l.cat",
         "flags": 64
+      },
+      "expect": {
+        "result": "xn--ll-0ea.cat",
+        "info": {
+          "result": "xn--ll-0ea.cat",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -528,6 +857,14 @@
       "args": {
         "domain": "a·b.cat",
         "flags": 64
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "xn--ab-0ea.cat",
+          "isTransitionalDifferent": false,
+          "errors": 8192
+        }
       }
     },
     {
@@ -536,6 +873,14 @@
       "args": {
         "domain": "ب١۱.com",
         "flags": 64
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "xn--ngb8iyr.com",
+          "isTransitionalDifferent": false,
+          "errors": 16384
+        }
       }
     },
     {
@@ -544,6 +889,14 @@
       "args": {
         "domain": {
           "$bytes": "YvxjaGVyLmRl"
+        }
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "b�cher.de",
+          "isTransitionalDifferent": false,
+          "errors": 128
         }
       }
     },
@@ -554,6 +907,14 @@
         "domain": {
           "$bytes": "YQBi"
         }
+      },
+      "expect": {
+        "result": "a\u0000b",
+        "info": {
+          "result": "a\u0000b",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -562,6 +923,14 @@
       "args": {
         "domain": "bücher.de",
         "flags": 4294967296
+      },
+      "expect": {
+        "result": "xn--bcher-kva.de",
+        "info": {
+          "result": "xn--bcher-kva.de",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -569,6 +938,12 @@
       "op": "net.idn_to_ascii",
       "args": {
         "domain": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "idn_to_ascii(): Argument #1 ($domain) must not be empty"
+        }
       }
     },
     {
@@ -576,6 +951,14 @@
       "op": "net.idn_to_utf8",
       "args": {
         "domain": "xn--bcher-kva.de"
+      },
+      "expect": {
+        "result": "bücher.de",
+        "info": {
+          "result": "bücher.de",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -583,6 +966,14 @@
       "op": "net.idn_to_utf8",
       "args": {
         "domain": "xn--fa-hia.de"
+      },
+      "expect": {
+        "result": "faß.de",
+        "info": {
+          "result": "faß.de",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -590,6 +981,14 @@
       "op": "net.idn_to_utf8",
       "args": {
         "domain": "faß.de"
+      },
+      "expect": {
+        "result": "faß.de",
+        "info": {
+          "result": "faß.de",
+          "isTransitionalDifferent": true,
+          "errors": 0
+        }
       }
     },
     {
@@ -598,6 +997,14 @@
       "args": {
         "domain": "faß.de",
         "flags": 0
+      },
+      "expect": {
+        "result": "fass.de",
+        "info": {
+          "result": "fass.de",
+          "isTransitionalDifferent": true,
+          "errors": 0
+        }
       }
     },
     {
@@ -606,6 +1013,14 @@
       "args": {
         "domain": "faß.de",
         "flags": 32
+      },
+      "expect": {
+        "result": "faß.de",
+        "info": {
+          "result": "faß.de",
+          "isTransitionalDifferent": true,
+          "errors": 0
+        }
       }
     },
     {
@@ -613,6 +1028,14 @@
       "op": "net.idn_to_utf8",
       "args": {
         "domain": "XN--BCHER-KVA.DE"
+      },
+      "expect": {
+        "result": "bücher.de",
+        "info": {
+          "result": "bücher.de",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -620,6 +1043,14 @@
       "op": "net.idn_to_utf8",
       "args": {
         "domain": "xn--99999999.de"
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "xn--99999999�.de",
+          "isTransitionalDifferent": false,
+          "errors": 256
+        }
       }
     },
     {
@@ -627,6 +1058,14 @@
       "op": "net.idn_to_utf8",
       "args": {
         "domain": "xn--Bcher-kva.de"
+      },
+      "expect": {
+        "result": "bücher.de",
+        "info": {
+          "result": "bücher.de",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -634,6 +1073,14 @@
       "op": "net.idn_to_utf8",
       "args": {
         "domain": "Example.COM"
+      },
+      "expect": {
+        "result": "example.com",
+        "info": {
+          "result": "example.com",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -641,6 +1088,14 @@
       "op": "net.idn_to_utf8",
       "args": {
         "domain": "ÉXAMPLE.de"
+      },
+      "expect": {
+        "result": "éxample.de",
+        "info": {
+          "result": "éxample.de",
+          "isTransitionalDifferent": false,
+          "errors": 0
+        }
       }
     },
     {
@@ -648,6 +1103,14 @@
       "op": "net.idn_to_utf8",
       "args": {
         "domain": "a..b"
+      },
+      "expect": {
+        "result": false,
+        "info": {
+          "result": "a..b",
+          "isTransitionalDifferent": false,
+          "errors": 1
+        }
       }
     },
     {
@@ -655,6 +1118,12 @@
       "op": "net.idn_to_utf8",
       "args": {
         "domain": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "idn_to_utf8(): Argument #1 ($domain) must not be empty"
+        }
       }
     },
     {
@@ -662,6 +1131,10 @@
       "op": "net.idn_to_utf8",
       "args": {
         "domain": "xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xn--tdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expect": {
+        "result": false,
+        "info": []
       }
     }
   ]

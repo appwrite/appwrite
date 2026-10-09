@@ -1,8 +1,10 @@
-//! `filter.*`: `filter_var()` with the validation filters and
-//! `FILTER_DEFAULT` (`php_std::filter`). Reports what `ops/filter.php`
-//! reports: the result and the warning.
+//! `filter.*`: `filter_var()` with the validation and sanitizing filters
+//! and `FILTER_CALLBACK` (`php_std::filter`). Reports what `ops/filter.php`
+//! reports: the result, the warning and the values passed to the callable.
+//! An `"options"` entry of `'$callback'` is the recording closure of
+//! `ops/filter.php`; nothing else is callable.
 
-use php_std::filter::{self, Key, Options, Value as PhpValue};
+use php_std::filter::{self, Callables, Key, Options, Value as PhpValue};
 use serde_json::{Map, Value};
 
 use super::pcre::php_key;
@@ -34,17 +36,43 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
                     v.as_i64().ok_or_else(|| Fault::new("argument `options` must be an int or an array"))?,
                 ),
             };
-            Ok(match filter::filter_var(&value, filter, &options) {
+            let mut recorder = Recorder(Vec::new());
+            let filtered = filter::filter_var_with(&value, filter, &options, &mut recorder);
+            let calls = recorder.0;
+            Ok(match filtered {
                 Ok(f) => {
                     let mut o = Map::new();
                     o.insert("result".into(), encode(&f.value));
                     o.insert("warning".into(), f.warning.as_deref().map_or(Value::Null, bytes_value));
+                    o.insert("calls".into(), Value::Array(calls));
                     Outcome::Ok(Value::Object(o))
                 }
-                Err(e) => Outcome::err(e.php_class(), e.to_string()),
+                Err(e) => Outcome::err_bytes(e.php_class(), e.message()),
             })
         }
         _ => Err(Fault::new(format!("php-std: unknown operation `{op}`"))),
+    }
+}
+
+/// The recording closure of `ops/filter.php`, named `'$callback'`: it
+/// records what it receives and returns, for its n-th call, `"<n>"`, `n`,
+/// `false` and `null` in turn.
+struct Recorder(Vec<Value>);
+
+impl Callables for Recorder {
+    fn is_callable(&self, callable: &PhpValue) -> bool {
+        matches!(callable, PhpValue::Str(s) if s == b"$callback")
+    }
+
+    fn call(&mut self, _callable: &PhpValue, value: &[u8]) -> PhpValue {
+        self.0.push(bytes_value(value));
+        let n = self.0.len() as i64;
+        match n % 4 {
+            1 => PhpValue::Str(format!("<{n}>").into_bytes()),
+            2 => PhpValue::Int(n),
+            3 => PhpValue::Bool(false),
+            _ => PhpValue::Null,
+        }
     }
 }
 

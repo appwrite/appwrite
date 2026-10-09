@@ -18,8 +18,10 @@ pub enum Outcome {
     /// The operation returned a value.
     Ok(Value),
     /// The library raised an error: the PHP exception class it corresponds to,
-    /// and its message. Rust errors report the PHP class name verbatim.
-    Err { class: String, message: String },
+    /// and its message: a string, or `{"$bytes": base64}` when the message is
+    /// not UTF-8 (it can quote the input). Rust errors report the PHP class
+    /// name verbatim.
+    Err { class: String, message: Value },
 }
 
 impl Outcome {
@@ -28,7 +30,12 @@ impl Outcome {
     }
 
     pub fn err(class: impl Into<String>, message: impl Into<String>) -> Self {
-        Outcome::Err { class: class.into(), message: message.into() }
+        Outcome::Err { class: class.into(), message: Value::String(message.into()) }
+    }
+
+    /// An error whose message is bytes (see [`bytes_value`]).
+    pub fn err_bytes(class: impl Into<String>, message: &[u8]) -> Self {
+        Outcome::Err { class: class.into(), message: bytes_value(message) }
     }
 
     /// The JSON form compared and recorded by the runner.
@@ -38,7 +45,7 @@ impl Outcome {
             Outcome::Err { class, message } => {
                 let mut e = Map::new();
                 e.insert("class".into(), Value::String(class.clone()));
-                e.insert("message".into(), Value::String(message.clone()));
+                e.insert("message".into(), message.clone());
                 let mut o = Map::new();
                 o.insert("$error".into(), Value::Object(e));
                 Value::Object(o)
