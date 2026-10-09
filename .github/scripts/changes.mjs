@@ -1,7 +1,8 @@
 // Decides what a CI run tests from the files it changed, using .github/ci/e2e.json.
 // A file no rule claims runs every lane, so a gap in the map costs time, not coverage.
-// Pushes, release branches and manual runs always test everything: the nightly
-// channel ships the newest green commit on main.
+// Release branches and manual runs test everything, and on a push any server
+// change runs every lane, since the nightly channel ships the newest green commit
+// on main.
 
 import { execFileSync } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
@@ -41,7 +42,14 @@ const claims = (file, patterns) =>
 
 const base = () => {
   if (event === "pull_request") {
-    return git("merge-base", `origin/${process.env.BASE_REF}`, "HEAD").trim();
+    // The checkout is GitHub's merge commit; its first parent is the base tip it
+    // merges onto, so the diff holds only this PR's changes.
+    const [, parent, other] = git("rev-list", "--parents", "-n", "1", "HEAD")
+      .trim()
+      .split(" ");
+    return other
+      ? parent
+      : git("merge-base", `origin/${process.env.BASE_REF}`, "HEAD").trim();
   }
   if (event === "merge_group") {
     return process.env.MERGE_BASE;
