@@ -5,7 +5,6 @@ namespace Appwrite\Utopia\Database\Validator;
 use Appwrite\Utopia\Database\Attribute;
 use Utopia\Database\Attribute as DatabaseAttribute;
 use Utopia\Database\Database;
-use Utopia\Database\Filter;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Emails\Validator\Email;
@@ -20,22 +19,36 @@ use Utopia\Validator\Validator;
 
 class Attributes extends Validator
 {
-    private const string FILTER_ENCRYPT = 'encrypt';
-
-    private const string FILTER_DATETIME = 'datetime';
-
     /**
-     * Filters each per-type create endpoint sets, keyed by the type it creates.
-     *
-     * @var array<string, list<string>>
+     * Filters Appwrite registers for its own metadata. A subquery filter reads other collections when the
+     * attribute is decoded, so an attribute created inline must never carry one.
      */
-    private const array ENDPOINT_FILTERS = [
-        ColumnType::String->value => [self::FILTER_ENCRYPT],
-        ColumnType::Varchar->value => [self::FILTER_ENCRYPT],
-        ColumnType::Text->value => [self::FILTER_ENCRYPT],
-        ColumnType::MediumText->value => [self::FILTER_ENCRYPT],
-        ColumnType::LongText->value => [self::FILTER_ENCRYPT],
-        ColumnType::Datetime->value => [self::FILTER_DATETIME],
+    public const array INTERNAL_FILTERS = [
+        'casting',
+        'enum',
+        'range',
+        'messageSearch',
+        'providerSearch',
+        'subQueryAccountKeys',
+        'subQueryAttributes',
+        'subQueryAuthenticators',
+        'subQueryChallenges',
+        'subQueryDevKeys',
+        'subQueryIndexes',
+        'subQueryKeys',
+        'subQueryMemberships',
+        'subQueryOrganizationKeys',
+        'subQueryPlatforms',
+        'subQueryProjectVariables',
+        'subQueryReportInsights',
+        'subQuerySessions',
+        'subQueryTargets',
+        'subQueryTokens',
+        'subQueryTopicTargets',
+        'subQueryVariables',
+        'subQueryWebhooks',
+        'topicSearch',
+        'userSearch',
     ];
 
     protected int $maxAttributes;
@@ -184,7 +197,7 @@ class Attributes extends Validator
                 }
             }
 
-            if (!$this->hasAllowedFilters($attribute, $type, $format, $size)) {
+            if (!$this->hasNoInternalFilters($attribute)) {
                 return false;
             }
 
@@ -407,58 +420,21 @@ class Attributes extends Validator
     /**
      * @param array<string, mixed> $attribute
      */
-    private function hasAllowedFilters(array $attribute, string $type, string $format, int $size): bool
+    private function hasNoInternalFilters(array $attribute): bool
     {
         $filters = $attribute['filters'] ?? [];
-
-        if (!\is_array($filters) || !\array_is_list($filters) || \count(\array_filter($filters, \is_string(...))) !== \count($filters)) {
-            $this->message = "Invalid 'filters' value for attribute '" . $attribute['key'] . "': must be an array of strings";
-            return false;
+        if (!\is_array($filters)) {
+            return true;
         }
 
-        $allowed = self::allowedFilters($type, $format);
-        $seen = [];
-
         foreach ($filters as $filter) {
-            if (\in_array($filter, $seen, true)) {
-                $this->message = "Duplicate filter for attribute '" . $attribute['key'] . "': " . $filter;
-                return false;
-            }
-
-            if (!\in_array($filter, $allowed, true)) {
+            if (\is_string($filter) && \in_array($filter, self::INTERNAL_FILTERS, true)) {
                 $this->message = "Invalid filter for attribute '" . $attribute['key'] . "': " . $filter;
                 return false;
             }
-
-            $seen[] = $filter;
-        }
-
-        if (\in_array(self::FILTER_ENCRYPT, $filters, true) && $size < APP_DATABASE_ENCRYPT_SIZE_MIN) {
-            $this->message = "Size too small for encrypted attribute '" . $attribute['key'] . "'. Encrypted strings require a minimum size of " . APP_DATABASE_ENCRYPT_SIZE_MIN . ' characters.';
-            return false;
         }
 
         return true;
-    }
-
-    /**
-     * What the type's create endpoint sets, plus the filter the library adds to
-     * its type. The format endpoints (email, enum, ip, url) set none.
-     *
-     * @return list<string>
-     */
-    private static function allowedFilters(string $type, string $format): array
-    {
-        $filters = $format === '' ? (self::ENDPOINT_FILTERS[$type] ?? []) : [];
-
-        $columnType = ColumnType::tryFrom($type);
-        $typeFilter = $columnType !== null && \in_array($columnType, DatabaseAttribute::TYPES, true) ? Filter::tryFrom($columnType->value) : null;
-
-        if ($typeFilter !== null) {
-            $filters[] = $typeFilter->value;
-        }
-
-        return \array_values(\array_unique($filters));
     }
 
     /**

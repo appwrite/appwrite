@@ -157,10 +157,10 @@ final class TablesDBColumnsTest extends Scope
     }
 
     /**
-     * A column created inline carries only the filters its per-column endpoint
-     * sets, so an internal filter such as subQueryAttributes is refused.
+     * A column created inline must not carry a filter Appwrite registers for its
+     * own metadata, such as subQueryAttributes.
      */
-    public function testCreateTableColumnFiltersAreLimited(): void
+    public function testCreateTableColumnInternalFiltersAreRefused(): void
     {
         $headers = [
             'content-type' => 'application/json',

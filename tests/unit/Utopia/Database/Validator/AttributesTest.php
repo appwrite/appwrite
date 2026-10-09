@@ -6,8 +6,10 @@ namespace Tests\Unit\Utopia\Database\Validator;
 
 use Appwrite\Utopia\Database\Attribute;
 use Appwrite\Utopia\Database\Validator\Attributes;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
+use Utopia\Database\Filter;
 use Utopia\Query\Schema\ColumnType;
 
 final class AttributesTest extends TestCase
@@ -268,48 +270,38 @@ final class AttributesTest extends TestCase
         ]), $this->object->getDescription());
     }
 
-    public function testFiltersFollowTheCreateEndpoints(): void
+    /**
+     * @return \Iterator<string, array{array<string, mixed>}>
+     */
+    public static function filtersMainAccepted(): \Iterator
     {
-        $filters = [
-            'casting',
-            'enum',
-            'range',
-            'encrypt',
-            'userSearch',
-            'providerSearch',
-            'topicSearch',
-            'messageSearch',
-            'subQueryAttributes',
-            'subQueryIndexes',
-            'subQueryPlatforms',
-            'subQueryKeys',
-            'subQueryDevKeys',
-            'subQueryWebhooks',
-            'subQuerySessions',
-            'subQueryTokens',
-            'subQueryChallenges',
-            'subQueryAuthenticators',
-            'subQueryMemberships',
-            'subQueryVariables',
-            'subQueryProjectVariables',
-            'subQueryTargets',
-            'subQueryTopicTargets',
-            'subQueryOrganizationKeys',
-            'subQueryAccountKeys',
-            'subQueryReportInsights',
-            'json',
-            'datetime',
-            ColumnType::Point->value,
-            ColumnType::Linestring->value,
-            ColumnType::Polygon->value,
-            ColumnType::Vector->value,
-            ColumnType::Object->value,
-        ];
+        yield 'unknown filter' => [['key' => 'name', 'type' => ColumnType::String->value, 'size' => 256, 'filters' => ['bogus']]];
+        yield 'json on a string' => [['key' => 'name', 'type' => ColumnType::String->value, 'size' => 256, 'filters' => ['json']]];
+        yield 'datetime on a string' => [['key' => 'name', 'type' => ColumnType::String->value, 'size' => 256, 'filters' => ['datetime']]];
+        yield 'encrypt on an integer' => [['key' => 'count', 'type' => ColumnType::Integer->value, 'filters' => ['encrypt']]];
+        yield 'encrypt below the minimum size' => [['key' => 'secret', 'type' => ColumnType::String->value, 'size' => APP_DATABASE_ENCRYPT_SIZE_MIN - 1, 'filters' => ['encrypt']]];
+        yield 'encrypt on an email' => [['key' => 'email', 'type' => APP_DATABASE_ATTRIBUTE_EMAIL, 'size' => 256, 'filters' => ['encrypt']]];
+        yield 'encrypt on a formatted string' => [['key' => 'email', 'type' => ColumnType::String->value, 'size' => 256, 'format' => APP_DATABASE_ATTRIBUTE_EMAIL, 'filters' => ['encrypt']]];
+        yield 'duplicate filters' => [['key' => 'secret', 'type' => ColumnType::String->value, 'size' => 512, 'filters' => ['encrypt', 'encrypt']]];
+        yield 'filters not a list' => [['key' => 'secret', 'type' => ColumnType::String->value, 'size' => 256, 'filters' => 'encrypt']];
+        yield 'filters keyed' => [['key' => 'secret', 'type' => ColumnType::String->value, 'size' => 256, 'filters' => ['filter' => 'encrypt']]];
+        yield 'filters not strings' => [['key' => 'secret', 'type' => ColumnType::String->value, 'size' => 256, 'filters' => [1, ['encrypt']]]];
+    }
 
-        $accepted = [];
+    /**
+     * @param array<string, mixed> $attribute
+     */
+    #[DataProvider('filtersMainAccepted')]
+    public function testFiltersMainAcceptedAreStillAccepted(array $attribute): void
+    {
+        $this->assertTrue($this->object->isValid([$attribute]), 'Main accepted every inline filter but the internal ones: ' . $this->object->getDescription());
+    }
+
+    public function testEveryInternalFilterIsRejectedOnEveryType(): void
+    {
         foreach (Attribute::types() as $type) {
-            foreach ($filters as $filter) {
-                $attribute = ['key' => 'value', 'type' => $type, 'filters' => [$filter]];
+            foreach (Attributes::INTERNAL_FILTERS as $filter) {
+                $attribute = ['key' => 'value', 'type' => $type, 'filters' => ['encrypt', $filter]];
 
                 if (\in_array($type, [ColumnType::String->value, ColumnType::Varchar->value], true)) {
                     $attribute['size'] = 256;
@@ -319,82 +311,24 @@ final class AttributesTest extends TestCase
                     $attribute['elements'] = ['on', 'off'];
                 }
 
-                if ($this->object->isValid([$attribute])) {
-                    $accepted[$type][] = $filter;
-                }
+                $this->assertFalse($this->object->isValid([$attribute]), $type . ': ' . $filter);
+                $this->assertSame("Invalid filter for attribute 'value': " . $filter, $this->object->getDescription());
             }
         }
-
-        $this->assertSame([
-            ColumnType::String->value => ['encrypt'],
-            ColumnType::Varchar->value => ['encrypt'],
-            ColumnType::Text->value => ['encrypt'],
-            ColumnType::MediumText->value => ['encrypt'],
-            ColumnType::LongText->value => ['encrypt'],
-            ColumnType::Datetime->value => ['datetime'],
-            ColumnType::Point->value => [ColumnType::Point->value],
-            ColumnType::Linestring->value => [ColumnType::Linestring->value],
-            ColumnType::Polygon->value => [ColumnType::Polygon->value],
-        ], $accepted);
     }
 
-    public function testFiltersOutsideTheEndpointSetAreRejected(): void
+    public function testInternalFiltersCoverEveryFilterAppwriteRegisters(): void
     {
-        foreach (['subQueryAttributes', 'enum', 'range'] as $filter) {
-            $this->assertFalse($this->object->isValid([
-                ['key' => 'name', 'type' => ColumnType::String->value, 'size' => 256, 'filters' => [$filter]],
-            ]), $filter);
-            $this->assertSame("Invalid filter for attribute 'name': " . $filter, $this->object->getDescription());
-        }
-    }
+        require_once __DIR__ . '/../../../../../app/init/database/filters.php';
 
-    public function testEncryptIsRejectedOnInteger(): void
-    {
-        $this->assertFalse($this->object->isValid([
-            ['key' => 'count', 'type' => ColumnType::Integer->value, 'filters' => ['encrypt']],
-        ]));
-        $this->assertSame("Invalid filter for attribute 'count': encrypt", $this->object->getDescription());
-    }
+        $registered = \array_keys((new \ReflectionProperty(Database::class, 'filters'))->getValue());
+        $library = \array_map(static fn (Filter $filter): string => $filter->value, Filter::cases());
+        $public = ['encrypt'];
 
-    public function testEncryptNeedsTheMinimumSize(): void
-    {
-        foreach ([ColumnType::String->value, ColumnType::Varchar->value] as $type) {
-            $this->assertFalse($this->object->isValid([
-                ['key' => 'secret', 'type' => $type, 'size' => APP_DATABASE_ENCRYPT_SIZE_MIN - 1, 'filters' => ['encrypt']],
-            ]), $type);
-            $this->assertSame(
-                "Size too small for encrypted attribute 'secret'. Encrypted strings require a minimum size of " . APP_DATABASE_ENCRYPT_SIZE_MIN . ' characters.',
-                $this->object->getDescription()
-            );
-        }
-    }
-
-    public function testEncryptIsRejectedOnFormattedStrings(): void
-    {
-        foreach ([
-            ['key' => 'email', 'type' => APP_DATABASE_ATTRIBUTE_EMAIL, 'size' => 256, 'filters' => ['encrypt']],
-            ['key' => 'email', 'type' => ColumnType::String->value, 'size' => 256, 'format' => APP_DATABASE_ATTRIBUTE_EMAIL, 'filters' => ['encrypt']],
-        ] as $attribute) {
-            $this->assertFalse($this->object->isValid([$attribute]), $attribute['type']);
-            $this->assertSame("Invalid filter for attribute 'email': encrypt", $this->object->getDescription());
-        }
-    }
-
-    public function testFiltersMustBeAListOfStrings(): void
-    {
-        foreach (['encrypt', [1], ['filter' => 'encrypt'], [['encrypt']]] as $filters) {
-            $this->assertFalse($this->object->isValid([
-                ['key' => 'secret', 'type' => ColumnType::String->value, 'size' => 256, 'filters' => $filters],
-            ]), \json_encode($filters) ?: '');
-            $this->assertSame("Invalid 'filters' value for attribute 'secret': must be an array of strings", $this->object->getDescription());
-        }
-    }
-
-    public function testDuplicateFiltersAreRejected(): void
-    {
-        $this->assertFalse($this->object->isValid([
-            ['key' => 'secret', 'type' => ColumnType::String->value, 'size' => 512, 'filters' => ['encrypt', 'encrypt']],
-        ]));
-        $this->assertSame("Duplicate filter for attribute 'secret': encrypt", $this->object->getDescription());
+        $this->assertEqualsCanonicalizing(
+            \array_values(\array_diff($registered, $library, $public)),
+            Attributes::INTERNAL_FILTERS,
+            'A filter Appwrite registers for its metadata must not be settable on an inline attribute.',
+        );
     }
 }

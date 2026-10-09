@@ -1778,7 +1778,7 @@ trait DatabasesBase
         $this->assertSame(['ratio', 'score'], $keys);
     }
 
-    public function testCreateCollectionInlineFiltersAreLimited(): void
+    public function testCreateCollectionInlineInternalFiltersAreRefused(): void
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
@@ -1809,11 +1809,9 @@ trait DatabasesBase
         $this->assertSame(404, $missing['headers']['status-code']);
 
         foreach ([
-            'encrypt off a string' => ['key' => 'count', 'type' => ColumnType::Integer->value, 'filters' => ['encrypt']],
-            'encrypt below the minimum size' => ['key' => 'secret', 'type' => ColumnType::String->value, 'size' => APP_DATABASE_ENCRYPT_SIZE_MIN - 1, 'filters' => ['encrypt']],
-            'encrypt on a format' => ['key' => 'email', 'type' => APP_DATABASE_ATTRIBUTE_EMAIL, 'filters' => ['encrypt']],
             'range on a datetime' => ['key' => 'published', 'type' => ColumnType::Datetime->value, 'filters' => ['range']],
-            'filters not a list' => ['key' => 'label', 'type' => ColumnType::String->value, 'size' => 128, 'filters' => 'encrypt'],
+            'a search filter beside encrypt' => ['key' => 'label', 'type' => ColumnType::String->value, 'size' => 256, 'filters' => ['encrypt', 'userSearch']],
+            'a subquery filter on an integer' => ['key' => 'count', 'type' => ColumnType::Integer->value, 'filters' => ['subQueryKeys']],
         ] as $case => $attribute) {
             $rejected = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
                 $this->getContainerIdParam() => Id::unique(),
