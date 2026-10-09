@@ -13,6 +13,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useDocsCodeFill } from '../project-context/useDocsCodeFill'
 
 type MultiCodeContextValue = {
   selected: string | null
@@ -56,13 +57,15 @@ export function MultiCode({ children }: { children: ReactNode }) {
   const activeContent = activeLanguage
     ? (snippets.get(activeLanguage) ?? '')
     : ''
+  const { code: activeCode, actions } = useDocsCodeFill(activeContent)
 
   return (
     <MultiCodeContext.Provider value={value}>
       <div className="not-prose my-6 w-full">
         {activeLanguage && activeContent ? (
           <ConnectCodeExample
-            code={activeContent}
+            code={activeCode}
+            actions={actions}
             language={resolveFenceCodeLanguage(activeLanguage)}
             tabs={languages.map((lang) => ({
               id: lang,

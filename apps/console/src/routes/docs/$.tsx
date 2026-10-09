@@ -3,6 +3,7 @@ import { NotFoundView } from '@/components/error/NotFound'
 import { View } from '@/components/pages/docs/View'
 import { getDocsMarkdownExport, getDocsPage } from '@/lib/docs/content'
 import { isFeatureGatedDocsSlugHidden } from '@/lib/docs/feature-gated-docs'
+import { getDocsHubMarkdown } from '@/lib/docs/hub-markdown'
 import { getDocsRedirectTarget } from '@/lib/docs/redirects'
 import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
 import { generateDocsLlmsTxt } from '@/lib/seo/llms-content'
@@ -48,7 +49,9 @@ export const Route = createFileRoute('/docs/$')({
           return new Response('Not found', { status: 404 })
         }
 
-        const markdown = await getDocsMarkdownExport(slug)
+        const markdown =
+          (await getDocsMarkdownExport(slug)) ??
+          getDocsHubMarkdown(slug, new URL(request.url).origin)
         if (!markdown) {
           return new Response('Not found', { status: 404 })
         }

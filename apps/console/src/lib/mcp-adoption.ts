@@ -48,23 +48,48 @@ export function getAgentSetupUrl(origin?: string): string {
   return resolvedOrigin ? `${resolvedOrigin}${AGENT_SETUP_PATH}` : AGENT_SETUP_URL
 }
 
-/** Short handoff so a coding agent fetches public setup instructions (and we can track that fetch). */
-export function buildConnectMcpPrompt(options: {
-  projectId: string
-  projectName: string
-  endpoint?: string
-  origin?: string
-}): string {
-  const { projectId, projectName, endpoint, origin } = options
-  const lines: string[] = [
-    `Install Appwrite MCP, the Appwrite skills, the latest CLI, and the matching official SDK by following ${getAgentSetupUrl(origin)}`,
-    '',
-    `- Project ID: \`${projectId}\``,
-    `- Name: ${projectName}`,
-    ...(endpoint ? [`- Endpoint: \`${endpoint}\``] : []),
-    '',
+/**
+ * Short handoff so a coding agent fetches public setup instructions (and we can track that fetch).
+ * The project is optional: without one, the setup page has the agent link or create a project.
+ */
+export const CONSOLE_CONNECT_PROMPT_INTRO =
+  'Install Appwrite MCP, the Appwrite skills, the latest CLI, and the matching official SDK by following'
+
+/** Shorter opener for the docs, where the prompt sits in a one-line bar. */
+export const DOCS_CONNECT_PROMPT_INTRO =
+  'Set up Appwrite in this project by following'
+
+export function buildConnectMcpPrompt(
+  options: {
+    projectId?: string
+    projectName?: string
+    endpoint?: string
+    origin?: string
+    /** First words of the prompt, before the setup URL. */
+    intro?: string
+  } = {},
+): string {
+  const {
+    projectId,
+    projectName,
+    endpoint,
+    origin,
+    intro = CONSOLE_CONNECT_PROMPT_INTRO,
+  } = options
+  const lines: string[] = [`${intro} ${getAgentSetupUrl(origin)}`, '']
+
+  if (projectId) {
+    lines.push(
+      `- Project ID: \`${projectId}\``,
+      `- Name: ${projectName ?? projectId}`,
+      ...(endpoint ? [`- Endpoint: \`${endpoint}\``] : []),
+      '',
+    )
+  }
+
+  lines.push(
     'If your web tool cannot open that page, download it with curl. If you still cannot read it, ask me to paste it instead of guessing the steps.',
-  ]
+  )
 
   return `${lines.join('\n')}\n`
 }

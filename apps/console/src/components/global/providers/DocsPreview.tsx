@@ -1,11 +1,6 @@
 'use client'
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ExternalLink, Loader2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -19,15 +14,13 @@ import {
 } from '@/components/ui/breadcrumb'
 import { DocsMarkdown } from '@/components/pages/docs/DocsMarkdown'
 import { DocsHome } from '@/components/pages/docs/DocsHome'
+import { DocsProjectProvider } from '@/components/pages/docs/project-context/DocsProjectContext'
 import { DocsPartnersHome } from '@/components/pages/docs/DocsPartnersHome'
 import { DocsPreviewArticleHeader } from '@/components/pages/docs/DocsPreviewArticleHeader'
 import { DocsPreviewMenu } from '@/components/pages/docs/DocsPreviewMenu'
 import { docsHrefToPreviewSlug } from '@/lib/docs/docs-href'
 import { getDocsPageBreadcrumbItems } from '@/lib/docs/breadcrumbs'
-import {
-  DOCS_CONTAINER,
-  docsContentPaddingX,
-} from '@/lib/docs/docs-container'
+import { DOCS_CONTAINER, docsContentPaddingX } from '@/lib/docs/docs-container'
 import {
   canShowDocsPreviewMenu,
   resolveDocsPreviewView,
@@ -47,10 +40,7 @@ import {
 import { isPartnersDocsSlug } from '@/lib/docs/partners-docs-feature'
 import { CLI_SHELL_COLLAPSED_HEIGHT_PX } from '@/lib/cli-shell/constants'
 import { isClientQueryEnabled } from '@/lib/react-query/hooks/constants'
-import {
-  buildConsoleUrl,
-  openInNewTab,
-} from '@/lib/utils/context-menu'
+import { buildConsoleUrl, openInNewTab } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
@@ -81,7 +71,11 @@ export function DocsPreviewContent() {
     (!isFirewallDocsSlug(slug) || firewallDocsEnabled) &&
     (!isAgentDocsSlug(slug) || agentDocsEnabled)
 
-  const { data: page, isLoading, isError } = useQuery({
+  const {
+    data: page,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ['docs', 'page', slug],
     queryFn: () => getDocsPage(slug!),
     enabled:
@@ -233,168 +227,165 @@ export function DocsPreviewContent() {
   const isHubHome = isDocsHome || isPartnersHome
 
   return (
-    <DocsPreviewNavigationProvider navigateToSlug={navigatePreviewSlug}>
-      <div
-        className={cn(
-          DOCS_CONTAINER,
-          'flex h-full min-h-0 flex-col',
-        )}
-      >
-        <div className="flex h-14 min-h-14 shrink-0 items-center justify-between gap-3 border-b border-border px-3">
-          <button
-            type="button"
-            onClick={() => navigatePreviewSlug('')}
-            className="min-w-0 truncate text-start text-[13px] font-semibold text-foreground transition-colors hover:text-foreground/80"
-          >
-            {t('Docs')}
-          </button>
-          <div className="flex shrink-0 items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 text-[12px]"
-              onClick={handleOpenInNewTab}
-            >
-              <ExternalLink className="me-1.5 h-3.5 w-3.5" />
-              {t('Open in new tab')}
-            </Button>
+    <DocsProjectProvider>
+      <DocsPreviewNavigationProvider navigateToSlug={navigatePreviewSlug}>
+        <div className={cn(DOCS_CONTAINER, 'flex h-full min-h-0 flex-col')}>
+          <div className="flex h-14 min-h-14 shrink-0 items-center justify-between gap-3 border-b border-border px-3">
             <button
               type="button"
-              onClick={closeDocsPreview}
-              className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              aria-label={t('Close documentation preview')}
+              onClick={() => navigatePreviewSlug('')}
+              className="min-w-0 truncate text-start text-[13px] font-semibold text-foreground transition-colors hover:text-foreground/80"
             >
-              <X className="h-3.5 w-3.5" />
+              {t('Docs')}
             </button>
-          </div>
-        </div>
-
-        {!isHubHome && breadcrumbItems.length > 0 ? (
-          <div
-            className={cn(
-              'shrink-0 border-b border-border py-2.5',
-              docsContentPaddingX,
-            )}
-          >
-            <Breadcrumb>
-              <BreadcrumbList className="flex-nowrap gap-1 text-[11px] @[480px]:text-[12px]">
-                {breadcrumbItems.map((item, index) => {
-                  const isLast = index === breadcrumbItems.length - 1
-                  const isClickable =
-                    !isLast &&
-                    item.slug !== null &&
-                    (item.slug !== slug || item.view === 'menu')
-
-                  return (
-                    <span key={`${item.label}-${index}`} className="contents">
-                      {index > 0 ? (
-                        <BreadcrumbSeparator className="shrink-0" />
-                      ) : null}
-                      <BreadcrumbItem className="min-w-0">
-                        {isLast ? (
-                          <BreadcrumbPage className="truncate font-normal">
-                            {item.label}
-                          </BreadcrumbPage>
-                        ) : isClickable ? (
-                          <BreadcrumbLink asChild>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleBreadcrumbSelect(item.slug, item.view)
-                              }
-                              className="max-w-[9rem] cursor-pointer truncate text-start @[480px]:max-w-[11rem]"
-                            >
-                              {item.label}
-                            </button>
-                          </BreadcrumbLink>
-                        ) : (
-                          <span className="max-w-[9rem] truncate text-muted-foreground @[480px]:max-w-[11rem]">
-                            {item.label}
-                          </span>
-                        )}
-                      </BreadcrumbItem>
-                    </span>
-                  )
-                })}
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        ) : null}
-
-        <div
-          ref={contentRef}
-          onClick={handleContentClick}
-          className={cn(
-            'min-h-0 w-full min-w-0 flex-1 overflow-y-auto',
-            isHubHome ? 'py-0' : 'py-6',
-            docsContentPaddingX,
-          )}
-        >
-          {isDocsHome ? (
-            <DocsHome variant="preview" />
-          ) : isPartnersHome ? (
-            <DocsPartnersHome variant="preview" />
-          ) : showMenu ? (
-            <DocsPreviewMenu slug={slug} scrollContainerRef={contentRef} />
-          ) : isLoading ? (
-            <div className="flex h-full min-h-[240px] items-center justify-center text-[13px] text-muted-foreground">
-              <Loader2 className="me-2 h-4 w-4 animate-spin" />
-              {t('Loading documentation...')}
-            </div>
-          ) : isError || !page ? (
-            <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-3 px-4 text-center">
-              <p className="text-[13px] text-muted-foreground">
-                {t('Could not load this documentation page.')}
-              </p>
+            <div className="flex shrink-0 items-center gap-1">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="h-9 text-[13px]"
+                className="h-8 px-2 text-[12px]"
                 onClick={handleOpenInNewTab}
               >
                 <ExternalLink className="me-1.5 h-3.5 w-3.5" />
                 {t('Open in new tab')}
               </Button>
+              <button
+                type="button"
+                onClick={closeDocsPreview}
+                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                aria-label={t('Close documentation preview')}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             </div>
-          ) : (
-            <article className="min-w-0">
-              <DocsPreviewArticleHeader
-                title={page.meta.title}
-                description={page.meta.description}
-                readingTimeMinutes={page.meta.readingTimeMinutes}
-                slug={page.meta.slug}
-                toc={page.toc}
-                scrollContainerRef={contentRef}
-              />
-              <DocsMarkdown content={page.content} compact />
-            </article>
-          )}
-        </div>
+          </div>
 
-        <div
-          className={cn(
-            'flex shrink-0 items-center border-t border-border bg-background',
-            docsContentPaddingX,
-          )}
-          style={{
-            height: CLI_SHELL_COLLAPSED_HEIGHT_PX,
-            minHeight: CLI_SHELL_COLLAPSED_HEIGHT_PX,
-            maxHeight: CLI_SHELL_COLLAPSED_HEIGHT_PX,
-          }}
-        >
-          <Button
-            type="button"
-            size="sm"
-            className="h-8 w-full text-[13px]"
-            onClick={handleOpenInDocs}
+          {!isHubHome && breadcrumbItems.length > 0 ? (
+            <div
+              className={cn(
+                'shrink-0 border-b border-border py-2.5',
+                docsContentPaddingX,
+              )}
+            >
+              <Breadcrumb>
+                <BreadcrumbList className="flex-nowrap gap-1 text-[11px] @[480px]:text-[12px]">
+                  {breadcrumbItems.map((item, index) => {
+                    const isLast = index === breadcrumbItems.length - 1
+                    const isClickable =
+                      !isLast &&
+                      item.slug !== null &&
+                      (item.slug !== slug || item.view === 'menu')
+
+                    return (
+                      <span key={`${item.label}-${index}`} className="contents">
+                        {index > 0 ? (
+                          <BreadcrumbSeparator className="shrink-0" />
+                        ) : null}
+                        <BreadcrumbItem className="min-w-0">
+                          {isLast ? (
+                            <BreadcrumbPage className="truncate font-normal">
+                              {item.label}
+                            </BreadcrumbPage>
+                          ) : isClickable ? (
+                            <BreadcrumbLink asChild>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleBreadcrumbSelect(item.slug, item.view)
+                                }
+                                className="max-w-[9rem] cursor-pointer truncate text-start @[480px]:max-w-[11rem]"
+                              >
+                                {item.label}
+                              </button>
+                            </BreadcrumbLink>
+                          ) : (
+                            <span className="max-w-[9rem] truncate text-muted-foreground @[480px]:max-w-[11rem]">
+                              {item.label}
+                            </span>
+                          )}
+                        </BreadcrumbItem>
+                      </span>
+                    )
+                  })}
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+          ) : null}
+
+          <div
+            ref={contentRef}
+            onClick={handleContentClick}
+            className={cn(
+              'min-h-0 w-full min-w-0 flex-1 overflow-y-auto',
+              isHubHome ? 'py-0' : 'py-6',
+              docsContentPaddingX,
+            )}
           >
-            {t('Open in docs')}
-          </Button>
+            {isDocsHome ? (
+              <DocsHome variant="preview" />
+            ) : isPartnersHome ? (
+              <DocsPartnersHome variant="preview" />
+            ) : showMenu ? (
+              <DocsPreviewMenu slug={slug} scrollContainerRef={contentRef} />
+            ) : isLoading ? (
+              <div className="flex h-full min-h-[240px] items-center justify-center text-[13px] text-muted-foreground">
+                <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                {t('Loading documentation...')}
+              </div>
+            ) : isError || !page ? (
+              <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-3 px-4 text-center">
+                <p className="text-[13px] text-muted-foreground">
+                  {t('Could not load this documentation page.')}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  onClick={handleOpenInNewTab}
+                >
+                  <ExternalLink className="me-1.5 h-3.5 w-3.5" />
+                  {t('Open in new tab')}
+                </Button>
+              </div>
+            ) : (
+              <article className="min-w-0">
+                <DocsPreviewArticleHeader
+                  title={page.meta.title}
+                  description={page.meta.description}
+                  readingTimeMinutes={page.meta.readingTimeMinutes}
+                  slug={page.meta.slug}
+                  toc={page.toc}
+                  scrollContainerRef={contentRef}
+                />
+                <DocsMarkdown content={page.content} compact />
+              </article>
+            )}
+          </div>
+
+          <div
+            className={cn(
+              'flex shrink-0 items-center border-t border-border bg-background',
+              docsContentPaddingX,
+            )}
+            style={{
+              height: CLI_SHELL_COLLAPSED_HEIGHT_PX,
+              minHeight: CLI_SHELL_COLLAPSED_HEIGHT_PX,
+              maxHeight: CLI_SHELL_COLLAPSED_HEIGHT_PX,
+            }}
+          >
+            <Button
+              type="button"
+              size="sm"
+              className="h-8 w-full text-[13px]"
+              onClick={handleOpenInDocs}
+            >
+              {t('Open in docs')}
+            </Button>
+          </div>
         </div>
-      </div>
-    </DocsPreviewNavigationProvider>
+      </DocsPreviewNavigationProvider>
+    </DocsProjectProvider>
   )
 }
 

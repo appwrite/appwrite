@@ -132,6 +132,12 @@ export const ANALYTICS_ACTIONS = {
   'docs-api-references': 'Docs API References Clicked',
   'docs-mcp-cta': 'Docs MCP CTA Clicked',
   'docs-all-quick-starts': 'Docs All Quick Starts Clicked',
+  'docs-agent-prompt-copy': 'Docs Agent Prompt Copied',
+  'docs-agent-prompt-open': 'Docs Agent Prompt Opened In Agent',
+  'docs-agent-select': 'Docs Agent Selected',
+  'docs-agent-project-picker': 'Docs Agent Project Picker Clicked',
+  'docs-code-project-picker': 'Docs Code Project Picker Clicked',
+  'docs-first-prompt-copy': 'Docs First Prompt Copied',
 
   // Upgrade / change-plan wizard
   'billing-change-plan': 'Billing Change Plan Clicked',
