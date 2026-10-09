@@ -32,6 +32,16 @@
 //! | `Adapter\Swoole\Server`, `Adapter\SwooleCoroutine\Server`, `Adapter\FPM\Server` | [`serve`] with [`App`] or any [`Handler`] |
 //! | `Adapter\Swoole\Mode` | [`Mode`], [`Settings`], [`ServerOptions`] |
 //! | `Utopia\Compression\Compression::fromAcceptEncoding()` | [`compression::from_accept_encoding`] |
+//! | `Http::setTelemetry()`, `Utopia\Telemetry\Adapter` | [`Http::set_telemetry`], [`telemetry::Telemetry`] |
+//!
+//! Where Rust departs from PHP (types that make an input unrepresentable,
+//! the request model being UTF-8, hyper's parser) is recorded under
+//! `deviations` in `tests/compat/http/spec.json`; PHP behaviour kept on
+//! purpose is under `quirks` there.
+//!
+//! `utopia-php/compression` and `utopia-php/telemetry` have no crates yet:
+//! [`compression`] and [`telemetry`] hold the parts of them this crate uses.
+//! `Utopia\Servers\Hook` (from `utopia-php/servers`) is [`Hook`].
 
 pub mod compression;
 mod error;
