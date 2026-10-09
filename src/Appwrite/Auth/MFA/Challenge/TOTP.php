@@ -15,7 +15,7 @@ class TOTP extends Challenge
         $data = $authenticator->getAttribute('data');
         $instance = TOTPLibrary::create($data['secret']);
 
-        return $instance->now() === $otp;
+        return \hash_equals((string) $instance->now(), $otp);
     }
 
     public static function challenge(Document $challenge, Document $user, string $otp): bool
