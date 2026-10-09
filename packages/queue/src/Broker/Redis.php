@@ -58,6 +58,13 @@ class Redis implements Synchronous, Consumer
         // Minimum publish age for recovery without a live heartbeat.
         // Keep conservative until all workers and adapters heartbeat.
         private readonly int $reapAfter = 90_000,
+        // Sweep claims requeued this many times go to the dead queue; null is unbounded.
+        private readonly ?int $reapMaxAttempts = null,
+        // Sweep claims published longer ago than this go to the dead queue
+        // instead of replaying; null is unbounded. A requeue republishes and
+        // restarts this clock, so only $reapMaxAttempts bounds a handler that
+        // keeps crashing.
+        private readonly ?int $reapMaxAge = null,
     ) {
     }
 
@@ -274,7 +281,7 @@ class Redis implements Synchronous, Consumer
             if ($expired !== []) {
                 $this->script($this->commands, 'recover', [$registry, "{$queue->namespace}.queue.{$queue->name}", ...$expired], [self::REAP_LIMIT]);
             }
-            $this->reap($queue, $this->reapAfter, limit: self::REAP_LIMIT, scan: self::REAP_LIMIT * 2);
+            $this->reap($queue, $this->reapAfter, limit: self::REAP_LIMIT, maxAttempts: $this->reapMaxAttempts, newerThan: $this->reapMaxAge, scan: self::REAP_LIMIT * 2);
         }
     }
 
