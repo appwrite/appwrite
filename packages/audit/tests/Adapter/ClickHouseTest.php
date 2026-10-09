@@ -178,10 +178,11 @@ final class ClickHouseTest extends TestCase
 
     public function testRenamesTheUserColumnToActor(): void
     {
-        $user = \array_values(\array_filter(
+        $user = \array_find(
             new Database(new UtopiaDatabase(new Memory(), new Cache(new NoCache())))->getAttributes(),
             static fn (Attribute $attribute): bool => $attribute->key === 'userId',
-        ))[0];
+        );
+        $this->assertNotNull($user, 'the Database adapter must still declare the userId column the ClickHouse rename starts from');
         $attributes = [];
         foreach ($this->adapter->getAttributes() as $attribute) {
             $attributes[$attribute->key] = $attribute;
