@@ -481,12 +481,11 @@ class Certificates extends Action
             return;
         }
 
-        $ruleModel = new Rule();
         $queueForEvents
             ->setProject($project)
             ->setEvent('rules.[ruleId].update')
             ->setParam('ruleId', $rule->getId())
-            ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())));
+            ->setPayload((new Rule())->payload($rule));
 
         /** Trigger Webhook */
         $queueForWebhooks

@@ -1000,13 +1000,12 @@ class Jobs extends Action
         Document $project,
         Document $deployment,
     ): void {
-        $model = new Deployment();
         $update = $queueForEvents
             ->setProject($project)
             ->setEvent(self::event($deployment))
             ->setParam(self::resourceParam($deployment), $deployment->getAttribute('resourceId'))
             ->setParam('deploymentId', $deployment->getId())
-            ->setPayload($deployment->getArrayCopy(\array_keys($model->getRules())));
+            ->setPayload((new Deployment())->payload($deployment));
 
         $queueForWebhooks->from($update)->trigger();
 
