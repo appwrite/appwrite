@@ -49,6 +49,14 @@ pub const ERROR_MATCHLIMIT: i32 = -47;
 pub const ERROR_RECURSELOOP: i32 = -52;
 pub const ERROR_DEPTHLIMIT: i32 = -53;
 
+/// The backtracking frames that stand for PHP's 192 KiB JIT stack
+/// (`PCRE_JIT_STACK_MAX_SIZE`). The JIT runs out of stack after a number of
+/// nested group iterations, recursions and pending backtracking points that
+/// depends on its frame layout; one interpreter frame is close to one JIT
+/// stack slot of the common constructs, so the limit falls at about the
+/// same depth (see the `pcre` deviations in the compat spec).
+const JIT_STACK_FRAMES: usize = 16384;
+
 /// Match-time options (`pcre2_match()` options).
 pub const NOTEMPTY: u32 = 0x0000_0004;
 pub const NOTEMPTY_ATSTART: u32 = 0x0000_0008;
@@ -106,6 +114,9 @@ struct Frame {
     capture_last: u32,
     last_group: usize,
     offset_top: usize,
+    /// The subject end in effect when this frame entered an assertion,
+    /// restored when the assertion is left (see `Matcher::end`).
+    saved_end: usize,
 }
 
 /// A successful match: `ovector` holds `(start, end)` pairs for the whole
@@ -121,7 +132,16 @@ pub struct MatchData {
 pub struct Matcher<'a> {
     prog: &'a Program,
     s: &'a [u8],
+    /// The end of the subject. The JIT matches a lookbehind that has a
+    /// variable-length branch with the subject ended at the assertion's
+    /// position (its `STR_END` register): `\z`, `$`, `\b` and lookaheads
+    /// inside see that position as the end, and a variable-length branch
+    /// must reach it. Like a register, it is not restored when matching
+    /// backtracks, only when the assertion is left, so backtracking into a
+    /// non-atomic lookbehind that already succeeded runs with the outer end.
+    /// The interpreter keeps the real end.
     end: usize,
+    true_end: usize,
     utf: bool,
     ucp: bool,
     poptions: u32,
@@ -162,6 +182,7 @@ impl<'a> Matcher<'a> {
             prog,
             s: subject,
             end: subject.len(),
+            true_end: subject.len(),
             utf: poptions & opt::UTF != 0,
             ucp: poptions & opt::UCP != 0,
             poptions,
@@ -644,14 +665,100 @@ impl<'a> Matcher<'a> {
         self.frames.push(n);
         let ovs = self.ovs;
         self.ov.extend_from_within(fi * ovs..(fi + 1) * ovs);
+        if !self.jit
+            || matches!(
+                ret,
+                Ret::RepMin
+                    | Ret::RepMax
+                    | Ret::RepMaxExtuni
+                    | Ret::RefMin
+                    | Ret::RefMaxSame
+                    | Ret::RefMaxRescan
+                    | Ret::Recurse
+                    | Ret::BraMinZero
+            )
+        {
+            self.count()?;
+        }
+        if n.rdepth >= self.depth_limit {
+            return Err(ERROR_DEPTHLIMIT);
+        }
+        if self.jit && self.frames.len() > JIT_STACK_FRAMES {
+            return Err(ERROR_JIT_STACKLIMIT);
+        }
+        Ok(())
+    }
+
+    /// Saves the subject end before the assertion at `bra` (entered from
+    /// frame `fi`) and, for the JIT, ends the subject at the assertion's
+    /// position when it is a lookbehind with a variable-length branch.
+    fn enter_assertion(&mut self, bra: usize, fi: usize) {
+        self.frames[fi].saved_end = self.end;
+        if !self.jit {
+            return;
+        }
+        let Op::Bra { kind: BraKind::AssertBack | BraKind::AssertBackNot | BraKind::AssertBackNa, .. } = self.prog.code[bra]
+        else {
+            return;
+        };
+        let mut branch = bra;
+        loop {
+            if matches!(self.prog.code[branch + 1], Op::VReverse { .. }) {
+                self.end = self.frames[fi].eptr;
+                return;
+            }
+            branch = self.link(branch);
+            if !self.is_alt(branch) {
+                return;
+            }
+        }
+    }
+
+    /// Whether a variable-length lookbehind branch ending in frame `fi` ends
+    /// where it must: at the assertion's position (frame `pi`) for the
+    /// interpreter, at or after the subject end in effect for the JIT.
+    fn reaches_lookbehind_end(&self, fi: usize, pi: usize) -> bool {
+        if self.jit { self.frames[fi].eptr >= self.end } else { self.frames[fi].eptr == self.frames[pi].eptr }
+    }
+
+    /// One step against the match limit: every frame for the interpreter
+    /// (`match()` calls), every `count_match()` for the JIT.
+    fn count(&mut self) -> Result<(), i32> {
         if self.match_call_count >= self.match_limit {
             return Err(ERROR_MATCHLIMIT);
         }
         self.match_call_count += 1;
-        if n.rdepth >= self.depth_limit {
-            return Err(ERROR_DEPTHLIMIT);
-        }
         Ok(())
+    }
+
+    /// Whether the JIT counts a match step when what follows the bracket at
+    /// `bra` is entered (`compile_bracket_matchingpath()`, which also compiles
+    /// the whole pattern): repeated groups, groups after `BRAZERO` and groups
+    /// with alternatives. Assertions and possessive groups are compiled
+    /// elsewhere.
+    fn jit_counts_bracket(&self, bra: usize, ket: KetKind) -> bool {
+        let code = &self.prog.code;
+        let Op::Bra { kind, .. } = code[bra] else { return false };
+        if matches!(
+            kind,
+            BraKind::Assert
+                | BraKind::AssertNot
+                | BraKind::AssertBack
+                | BraKind::AssertBackNot
+                | BraKind::BraPos
+                | BraKind::CapturePos(_)
+        ) {
+            return false;
+        }
+        let prefix = if bra > 0 { Some(&code[bra - 1]) } else { None };
+        let brazero = matches!(prefix, Some(Op::BraZero));
+        let braminzero = matches!(prefix, Some(Op::BraMinZero));
+        let alternatives = if kind == BraKind::Cond {
+            !matches!(code[bra + 1], Op::CondRecurse(_) | Op::CondTrue | Op::CondFalse | Op::Fail)
+        } else {
+            self.is_alt(self.link(bra))
+        };
+        (ket != KetKind::Ket && !braminzero) || brazero || alternatives
     }
 
     fn truncate(&mut self, len: usize) {
@@ -689,6 +796,7 @@ impl<'a> Matcher<'a> {
         self.ov.clear();
         self.ov.resize(self.ovs, UNSET);
         self.branch_end = None;
+        self.end = self.true_end;
         self.frames.push(Frame {
             pc: 0,
             ret: Ret::None,
@@ -707,11 +815,24 @@ impl<'a> Matcher<'a> {
             capture_last: 0,
             last_group: UNSET,
             offset_top: 0,
+            saved_end: self.true_end,
         });
-        if self.match_call_count >= self.match_limit {
-            return ERROR_MATCHLIMIT;
+        if !self.jit {
+            if let Err(e) = self.count() {
+                return e;
+            }
         }
-        self.match_call_count += 1;
+
+        // A JIT `count_match()` where the interpreter makes no frame.
+        macro_rules! jit_count {
+            () => {
+                if self.jit {
+                    if let Err(e) = self.count() {
+                        return e;
+                    }
+                }
+            };
+        }
 
         macro_rules! rmatch {
             ($target:expr, $ret:expr, $gft:expr) => {
@@ -831,6 +952,7 @@ impl<'a> Matcher<'a> {
                             f.t1 = pc;
                         }
                         if min == max {
+                            jit_count!();
                             continue 'ops;
                         }
                         if kind == RepKind::Lazy {
@@ -855,6 +977,7 @@ impl<'a> Matcher<'a> {
                             f.t0 = start;
                         }
                         if kind == RepKind::Possessive || e <= start {
+                            jit_count!();
                             continue 'ops;
                         }
                         let ret = if matches!(lit, Lit::ExtUni) { Ret::RepMaxExtuni } else { Ret::RepMax };
@@ -885,9 +1008,11 @@ impl<'a> Matcher<'a> {
                         self.frames[fi].pc = pc + 1;
                         if offset < f.offset_top && self.ov_get(fi, offset) != UNSET {
                             if self.ov_get(fi, offset) == self.ov_get(fi, offset + 1) {
+                                jit_count!();
                                 continue 'ops;
                             }
                         } else if min == 0 || self.poptions & opt::MATCH_UNSET_BACKREF != 0 {
+                            jit_count!();
                             continue 'ops;
                         }
                         for _ in 0..min {
@@ -897,6 +1022,7 @@ impl<'a> Matcher<'a> {
                             }
                         }
                         if min == max {
+                            jit_count!();
                             continue 'ops;
                         }
                         {
@@ -989,10 +1115,12 @@ impl<'a> Matcher<'a> {
                         }
                         BraKind::Assert | BraKind::AssertBack | BraKind::AssertNa | BraKind::AssertBackNa => {
                             self.frames[fi].n[0] = GF_NOCAPTURE;
+                            self.enter_assertion(pc, fi);
                             rmatch!(pc + 1, Ret::Assert, GF_NOCAPTURE);
                         }
                         BraKind::AssertNot | BraKind::AssertBackNot => {
                             self.frames[fi].n[0] = GF_NOCAPTURE;
+                            self.enter_assertion(pc, fi);
                             rmatch!(pc + 1, Ret::AssertNot, GF_NOCAPTURE);
                         }
                         BraKind::Cond => {
@@ -1028,6 +1156,7 @@ impl<'a> Matcher<'a> {
                                     let f = &mut self.frames[fi];
                                     f.n[0] = u32::from(positive);
                                     f.t0 = pc + 1;
+                                    self.enter_assertion(pc + 1, fi);
                                     rmatch!(pc + 2, Ret::CondAssert, GF_CONDASSERT);
                                 }
                             }
@@ -1089,6 +1218,9 @@ impl<'a> Matcher<'a> {
                                         return ERROR_INTERNAL;
                                     }
                                     let pi = off - 1;
+                                    if self.jit_counts_bracket(bracode, ket_kind) {
+                                        jit_count!();
+                                    }
                                     self.return_from_recursion(fi, pi);
                                     continue 'ops;
                                 }
@@ -1096,28 +1228,32 @@ impl<'a> Matcher<'a> {
                             BraKind::Cond | BraKind::Bra | BraKind::BraPos => {}
                             BraKind::AssertNa | BraKind::AssertBackNa => {
                                 let pi = p_idx.unwrap_or(0);
-                                if kind == BraKind::AssertBackNa && vreverse && self.frames[fi].eptr != self.frames[pi].eptr
-                                {
+                                if kind == BraKind::AssertBackNa && vreverse && !self.reaches_lookbehind_end(fi, pi) {
                                     break 'ops MATCH_NOMATCH;
                                 }
                                 if self.frames[fi].eptr > self.last_used_ptr {
                                     self.last_used_ptr = self.frames[fi].eptr;
                                 }
-                                self.frames[fi].eptr = self.frames[pi].eptr;
+                                // The JIT leaves a non-atomic lookbehind where its
+                                // branch ended: the assertion's position, or the
+                                // outer end when the branch was retried after
+                                // backtracking into it.
+                                if !(self.jit && kind == BraKind::AssertBackNa) {
+                                    self.frames[fi].eptr = self.frames[pi].eptr;
+                                }
+                                self.end = self.frames[pi].saved_end;
                             }
                             BraKind::Assert | BraKind::AssertBack | BraKind::Once => {
                                 let pi = p_idx.unwrap_or(0);
                                 if kind != BraKind::Once {
-                                    if kind == BraKind::AssertBack
-                                        && vreverse
-                                        && self.frames[fi].eptr != self.frames[pi].eptr
-                                    {
+                                    if kind == BraKind::AssertBack && vreverse && !self.reaches_lookbehind_end(fi, pi) {
                                         break 'ops MATCH_NOMATCH;
                                     }
                                     if self.frames[fi].eptr > self.last_used_ptr {
                                         self.last_used_ptr = self.frames[fi].eptr;
                                     }
                                     self.frames[fi].eptr = self.frames[pi].eptr;
+                                    self.end = self.frames[pi].saved_end;
                                 }
                                 self.frames[fi].back = fi - pi;
                                 loop {
@@ -1130,8 +1266,7 @@ impl<'a> Matcher<'a> {
                             }
                             BraKind::AssertNot | BraKind::AssertBackNot => {
                                 let pi = p_idx.unwrap_or(0);
-                                if kind == BraKind::AssertBackNot && vreverse && self.frames[fi].eptr != self.frames[pi].eptr
-                                {
+                                if kind == BraKind::AssertBackNot && vreverse && !self.reaches_lookbehind_end(fi, pi) {
                                     break 'ops MATCH_NOMATCH;
                                 }
                                 break 'ops MATCH_MATCH;
@@ -1145,6 +1280,9 @@ impl<'a> Matcher<'a> {
                             BraKind::Capture(number) | BraKind::CapturePos(number) => {
                                 let pi = p_idx.unwrap_or(0);
                                 if self.frames[fi].current_recurse == number {
+                                    if self.jit_counts_bracket(bracode, ket_kind) {
+                                        jit_count!();
+                                    }
                                     self.return_from_recursion(fi, pi);
                                     continue 'ops;
                                 }
@@ -1187,6 +1325,9 @@ impl<'a> Matcher<'a> {
                         }
                         if ket_kind != KetKind::Ket && !empty {
                             if ket_kind == KetKind::RMin {
+                                if self.jit_counts_bracket(bracode, ket_kind) {
+                                    jit_count!();
+                                }
                                 self.frames[fi].t0 = bracode;
                                 rmatch!(pc + 1, Ret::KetRMin, 0);
                                 continue 'ops;
@@ -1194,6 +1335,9 @@ impl<'a> Matcher<'a> {
                             self.frames[fi].t0 = bracode;
                             rmatch!(bracode, Ret::KetRMax, 0);
                             continue 'ops;
+                        }
+                        if self.jit_counts_bracket(bracode, ket_kind) {
+                            jit_count!();
                         }
                         self.frames[fi].pc = pc + 1;
                     }
@@ -1261,8 +1405,11 @@ impl<'a> Matcher<'a> {
                             while off != UNSET && off != 0 {
                                 let p = &self.frames[off - 1];
                                 if self.frames[off].gft == GF_RECURSE | number {
-                                    if f.eptr == p.eptr && self.last_used_ptr == p.recurse_last_used {
-                                        return self.recursion_loop();
+                                    // The interpreter reports a recursion that would
+                                    // repeat forever; the JIT recurses until its
+                                    // stack or the match limit runs out.
+                                    if !self.jit && f.eptr == p.eptr && self.last_used_ptr == p.recurse_last_used {
+                                        return ERROR_RECURSELOOP;
                                     }
                                     break;
                                 }
@@ -1366,6 +1513,7 @@ impl<'a> Matcher<'a> {
                         }
                         self.frames[fi].eptr = e;
                         if e <= f.t0 {
+                            jit_count!();
                             continue 'exec;
                         }
                         rmatch!(pc, Ret::RepMax, 0);
@@ -1405,6 +1553,7 @@ impl<'a> Matcher<'a> {
                         }
                         self.frames[fi].eptr = e;
                         if e <= start {
+                            jit_count!();
                             continue 'exec;
                         }
                         rmatch!(pc, Ret::RepMaxExtuni, 0);
@@ -1469,6 +1618,7 @@ impl<'a> Matcher<'a> {
                         if rrc != MATCH_NOMATCH {
                             continue;
                         }
+                        jit_count!();
                         let ket = self.to_ket(f.t0);
                         self.frames[fi].pc = ket + 1;
                         continue 'exec;
@@ -1520,6 +1670,7 @@ impl<'a> Matcher<'a> {
                         if fr.n[1] != 0 || fr.n[2] != 0 {
                             fr.pc += 1;
                             fr.n[2] = 0;
+                            jit_count!();
                             continue 'exec;
                         }
                         rrc = MATCH_NOMATCH;
@@ -1570,13 +1721,16 @@ impl<'a> Matcher<'a> {
                     Ret::Assert => {
                         if rrc == MATCH_ACCEPT {
                             self.take_assert_accept(fi, true);
+                            self.end = f.saved_end;
                         } else {
                             if rrc != MATCH_NOMATCH && rrc != MATCH_THEN {
+                                self.end = f.saved_end;
                                 continue;
                             }
                             let next = self.link(pc);
                             self.frames[fi].pc = next;
                             if !self.is_alt(next) {
+                                self.end = f.saved_end;
                                 rrc = MATCH_NOMATCH;
                                 continue;
                             }
@@ -1589,12 +1743,14 @@ impl<'a> Matcher<'a> {
                     }
                     Ret::AssertNot => match rrc {
                         MATCH_ACCEPT | MATCH_MATCH => {
+                            self.end = f.saved_end;
                             rrc = MATCH_NOMATCH;
                             continue;
                         }
                         MATCH_NOMATCH | MATCH_THEN => {
                             let next = self.link(pc);
                             if !self.is_alt(next) {
+                                self.end = f.saved_end;
                                 self.frames[fi].pc = next + 1;
                                 continue 'exec;
                             }
@@ -1603,11 +1759,15 @@ impl<'a> Matcher<'a> {
                             continue 'exec;
                         }
                         MATCH_COMMIT | MATCH_SKIP | MATCH_PRUNE => {
+                            self.end = f.saved_end;
                             let ket = self.to_ket(pc);
                             self.frames[fi].pc = ket + 1;
                             continue 'exec;
                         }
-                        _ => continue,
+                        _ => {
+                            self.end = f.saved_end;
+                            continue;
+                        }
                     },
                     Ret::CondAssert => {
                         let positive = f.n[0] != 0;
@@ -1627,8 +1787,12 @@ impl<'a> Matcher<'a> {
                                 !positive
                             }
                             MATCH_COMMIT | MATCH_SKIP | MATCH_PRUNE => !positive,
-                            _ => continue,
+                            _ => {
+                                self.end = f.saved_end;
+                                continue;
+                            }
                         };
+                        self.end = f.saved_end;
                         // pc is the Cond bracket; the assertion starts at pc + 1.
                         let next = if condition { self.to_ket(pc + 1) + 1 } else { self.frames[fi].len };
                         self.frames[fi].pc = next;
@@ -1674,6 +1838,9 @@ impl<'a> Matcher<'a> {
                         if rrc != MATCH_NOMATCH {
                             continue;
                         }
+                        if self.jit_counts_bracket(f.t0, KetKind::RMax) {
+                            jit_count!();
+                        }
                         self.frames[fi].pc = pc + 1;
                         continue 'exec;
                     }
@@ -1712,19 +1879,6 @@ impl<'a> Matcher<'a> {
                     }
                 }
             }
-        }
-    }
-
-    /// A recursion that would repeat forever. The interpreter reports it;
-    /// the JIT recurses until its stack or the match limit runs out, the
-    /// limit first only when a pattern sets a small one.
-    fn recursion_loop(&self) -> i32 {
-        if !self.jit {
-            ERROR_RECURSELOOP
-        } else if self.match_limit < 15_000 {
-            ERROR_MATCHLIMIT
-        } else {
-            ERROR_JIT_STACKLIMIT
         }
     }
 
@@ -2190,6 +2344,7 @@ pub fn exec(m: &mut Matcher<'_>, start_offset: usize, options: u32, info: &Start
         m.skip_arg_count = 0;
         m.result = None;
         let rc = m.run(start_match);
+        m.end = m.true_end;
         let new_start_match;
         match rc {
             MATCH_SKIP_ARG => {

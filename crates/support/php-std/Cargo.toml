@@ -9,5 +9,7 @@ publish.workspace = true
 
 [dependencies]
 getrandom.workspace = true
+icu_normalizer.workspace = true
+icu_properties.workspace = true
 rustix.workspace = true
 serde_json.workspace = true

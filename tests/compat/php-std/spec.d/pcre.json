@@ -8,6 +8,153 @@
       ],
       "fuzz": [
         {
+          "name": "jit",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_any_pattern_jit"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  256,
+                  512,
+                  768,
+                  1,
+                  2,
+                  3
+                ]
+              },
+              "offset": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  2,
+                  -1,
+                  -3,
+                  20,
+                  -100
+                ]
+              }
+            },
+            "optional": [
+              "flags",
+              "offset"
+            ]
+          }
+        },
+        {
+          "name": "jit_na",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_any_pattern_jitna"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  256,
+                  512,
+                  768,
+                  1,
+                  2,
+                  3
+                ]
+              },
+              "offset": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  2,
+                  -1,
+                  -3,
+                  20,
+                  -100
+                ]
+              }
+            },
+            "optional": [
+              "flags",
+              "offset"
+            ]
+          }
+        },
+        {
+          "name": "limits",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_limit_pattern"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  256,
+                  512,
+                  768,
+                  1,
+                  2,
+                  3
+                ]
+              },
+              "offset": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  2,
+                  -1,
+                  -3,
+                  20,
+                  -100
+                ]
+              }
+            },
+            "optional": [
+              "flags",
+              "offset"
+            ]
+          }
+        },
+        {
           "name": "generated",
           "iterations": 4000,
           "args": {
@@ -133,6 +280,156 @@
       ],
       "fuzz": [
         {
+          "name": "jit",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_any_pattern_jit"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  1,
+                  2,
+                  256,
+                  257,
+                  258,
+                  512,
+                  513,
+                  514,
+                  768,
+                  770,
+                  3,
+                  4
+                ]
+              },
+              "offset": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  0,
+                  1,
+                  -2,
+                  50
+                ]
+              }
+            },
+            "optional": [
+              "flags",
+              "offset"
+            ]
+          }
+        },
+        {
+          "name": "jit_na",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_any_pattern_jitna"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  1,
+                  2,
+                  256,
+                  257,
+                  258,
+                  512,
+                  513,
+                  514,
+                  768,
+                  770,
+                  3,
+                  4
+                ]
+              },
+              "offset": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  0,
+                  1,
+                  -2,
+                  50
+                ]
+              }
+            },
+            "optional": [
+              "flags",
+              "offset"
+            ]
+          }
+        },
+        {
+          "name": "limits",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_limit_pattern"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  1,
+                  2,
+                  256,
+                  257,
+                  258,
+                  512,
+                  513,
+                  514,
+                  768,
+                  770,
+                  3,
+                  4
+                ]
+              },
+              "offset": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  0,
+                  1,
+                  -2,
+                  50
+                ]
+              }
+            },
+            "optional": [
+              "flags",
+              "offset"
+            ]
+          }
+        },
+        {
           "name": "generated",
           "iterations": 4000,
           "args": {
@@ -220,6 +517,114 @@
         "preg_replace()"
       ],
       "fuzz": [
+        {
+          "name": "jit",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_any_pattern_jit"
+              },
+              "replacement": {
+                "gen": "ref",
+                "name": "pcre_replacement"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "limit": {
+                "gen": "pick",
+                "from": [
+                  -1,
+                  -1,
+                  -1,
+                  0,
+                  1,
+                  2,
+                  -5
+                ]
+              }
+            },
+            "optional": [
+              "limit"
+            ]
+          }
+        },
+        {
+          "name": "jit_na",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_any_pattern_jitna"
+              },
+              "replacement": {
+                "gen": "ref",
+                "name": "pcre_replacement"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "limit": {
+                "gen": "pick",
+                "from": [
+                  -1,
+                  -1,
+                  -1,
+                  0,
+                  1,
+                  2,
+                  -5
+                ]
+              }
+            },
+            "optional": [
+              "limit"
+            ]
+          }
+        },
+        {
+          "name": "limits",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_limit_pattern"
+              },
+              "replacement": {
+                "gen": "ref",
+                "name": "pcre_replacement"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "limit": {
+                "gen": "pick",
+                "from": [
+                  -1,
+                  -1,
+                  -1,
+                  0,
+                  1,
+                  2,
+                  -5
+                ]
+              }
+            },
+            "optional": [
+              "limit"
+            ]
+          }
+        },
         {
           "name": "string",
           "iterations": 4000,
@@ -389,6 +794,129 @@
       ],
       "fuzz": [
         {
+          "name": "jit",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_any_pattern_jit"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "limit": {
+                "gen": "pick",
+                "from": [
+                  -1,
+                  -1,
+                  0,
+                  1,
+                  2
+                ]
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  256,
+                  512,
+                  768
+                ]
+              }
+            },
+            "optional": [
+              "limit",
+              "flags"
+            ]
+          }
+        },
+        {
+          "name": "jit_na",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_any_pattern_jitna"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "limit": {
+                "gen": "pick",
+                "from": [
+                  -1,
+                  -1,
+                  0,
+                  1,
+                  2
+                ]
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  256,
+                  512,
+                  768
+                ]
+              }
+            },
+            "optional": [
+              "limit",
+              "flags"
+            ]
+          }
+        },
+        {
+          "name": "limits",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_limit_pattern"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "limit": {
+                "gen": "pick",
+                "from": [
+                  -1,
+                  -1,
+                  0,
+                  1,
+                  2
+                ]
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  256,
+                  512,
+                  768
+                ]
+              }
+            },
+            "optional": [
+              "limit",
+              "flags"
+            ]
+          }
+        },
+        {
           "name": "generated",
           "iterations": 3000,
           "args": {
@@ -473,6 +1001,144 @@
         "preg_split()"
       ],
       "fuzz": [
+        {
+          "name": "jit",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_any_pattern_jit"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "limit": {
+                "gen": "pick",
+                "from": [
+                  -1,
+                  -1,
+                  0,
+                  1,
+                  2,
+                  3,
+                  -7
+                ]
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7
+                ]
+              }
+            },
+            "optional": [
+              "limit",
+              "flags"
+            ]
+          }
+        },
+        {
+          "name": "jit_na",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_any_pattern_jitna"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "limit": {
+                "gen": "pick",
+                "from": [
+                  -1,
+                  -1,
+                  0,
+                  1,
+                  2,
+                  3,
+                  -7
+                ]
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7
+                ]
+              }
+            },
+            "optional": [
+              "limit",
+              "flags"
+            ]
+          }
+        },
+        {
+          "name": "limits",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_limit_pattern"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "limit": {
+                "gen": "pick",
+                "from": [
+                  -1,
+                  -1,
+                  0,
+                  1,
+                  2,
+                  3,
+                  -7
+                ]
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7
+                ]
+              }
+            },
+            "optional": [
+              "limit",
+              "flags"
+            ]
+          }
+        },
         {
           "name": "generated",
           "iterations": 4000,
@@ -641,6 +1307,102 @@
       ],
       "fuzz": [
         {
+          "name": "jit",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_any_pattern_jit"
+              },
+              "array": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "pcre_subject"
+                },
+                "min": 0,
+                "max": 4
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  1
+                ]
+              }
+            },
+            "optional": [
+              "flags"
+            ]
+          }
+        },
+        {
+          "name": "jit_na",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_any_pattern_jitna"
+              },
+              "array": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "pcre_subject"
+                },
+                "min": 0,
+                "max": 4
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  1
+                ]
+              }
+            },
+            "optional": [
+              "flags"
+            ]
+          }
+        },
+        {
+          "name": "limits",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_limit_pattern"
+              },
+              "array": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "pcre_subject"
+                },
+                "min": 0,
+                "max": 4
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  1
+                ]
+              }
+            },
+            "optional": [
+              "flags"
+            ]
+          }
+        },
+        {
           "name": "generated",
           "iterations": 2000,
           "args": {
@@ -771,6 +1533,9 @@
         "(*nla:",
         "(*plb:",
         "(*napla:",
+        "(*naplb:",
+        "(?*",
+        "(?<*",
         "(*sr:",
         "(?^:",
         "(?xx:",
@@ -1888,6 +2653,1629 @@
           "alphabet": "ab$\\{}012",
           "min": 0,
           "max": 6
+        }
+      ]
+    },
+    "pcre_any_pattern_jit": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "pcre_pattern_jit"
+        },
+        {
+          "gen": "ref",
+          "name": "pcre_pattern_jit"
+        },
+        {
+          "gen": "ref",
+          "name": "pcre_pattern_jit"
+        },
+        {
+          "gen": "ref",
+          "name": "pcre_realistic"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$bytes": "L/8v"
+            },
+            {
+              "$bytes": "L/8vdQ=="
+            },
+            {
+              "$bytes": "L8OpL3U="
+            },
+            {
+              "$bytes": "L2EAYi8="
+            },
+            {
+              "$bytes": "L1uALf9dLw=="
+            },
+            {
+              "$bytes": "LwAv"
+            },
+            {
+              "$bytes": "L2EvAA=="
+            },
+            {
+              "$bytes": "AGEA"
+            },
+            {
+              "$bytes": "L+kvaQ=="
+            },
+            {
+              "$bytes": "LygqVVRGKe2ggC8="
+            }
+          ]
+        }
+      ]
+    },
+    "pcre_atom_jit": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "a",
+            "b",
+            "c",
+            "a",
+            "b",
+            "c",
+            "A",
+            "B",
+            "x",
+            "1",
+            "_",
+            " ",
+            "-",
+            "é",
+            "É",
+            "ß",
+            "k",
+            "s",
+            "\\.",
+            "\\-",
+            "\\/",
+            "\\\\",
+            "\\n",
+            "\\t",
+            "\\x41",
+            "\\x{e9}",
+            "\\101",
+            "\\e",
+            "\\Q.*\\E",
+            "\\$",
+            "\\(",
+            "\\)",
+            "\\[",
+            "\\{",
+            "\\|",
+            "\\?",
+            "\\*",
+            "\\+",
+            "\\^",
+            "\\x{212A}",
+            "\\x{17F}",
+            "\\cA",
+            "\\o{101}",
+            "\\N{U+E9}",
+            "\\0",
+            "\\07",
+            "\\x",
+            "\\x{100}",
+            "}",
+            "]",
+            "{",
+            "{a}",
+            "{2,x}"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "a",
+            "b",
+            "c",
+            "a",
+            "b",
+            "c",
+            "A",
+            "B",
+            "x",
+            "1",
+            "_",
+            " ",
+            "-",
+            "é",
+            "É",
+            "ß",
+            "k",
+            "s",
+            "\\.",
+            "\\-",
+            "\\/",
+            "\\\\",
+            "\\n",
+            "\\t",
+            "\\x41",
+            "\\x{e9}",
+            "\\101",
+            "\\e",
+            "\\Q.*\\E",
+            "\\$",
+            "\\(",
+            "\\)",
+            "\\[",
+            "\\{",
+            "\\|",
+            "\\?",
+            "\\*",
+            "\\+",
+            "\\^",
+            "\\x{212A}",
+            "\\x{17F}",
+            "\\cA",
+            "\\o{101}",
+            "\\N{U+E9}",
+            "\\0",
+            "\\07",
+            "\\x",
+            "\\x{100}",
+            "}",
+            "]",
+            "{",
+            "{a}",
+            "{2,x}"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "a",
+            "b",
+            "c",
+            "a",
+            "b",
+            "c",
+            "A",
+            "B",
+            "x",
+            "1",
+            "_",
+            " ",
+            "-",
+            "é",
+            "É",
+            "ß",
+            "k",
+            "s",
+            "\\.",
+            "\\-",
+            "\\/",
+            "\\\\",
+            "\\n",
+            "\\t",
+            "\\x41",
+            "\\x{e9}",
+            "\\101",
+            "\\e",
+            "\\Q.*\\E",
+            "\\$",
+            "\\(",
+            "\\)",
+            "\\[",
+            "\\{",
+            "\\|",
+            "\\?",
+            "\\*",
+            "\\+",
+            "\\^",
+            "\\x{212A}",
+            "\\x{17F}",
+            "\\cA",
+            "\\o{101}",
+            "\\N{U+E9}",
+            "\\0",
+            "\\07",
+            "\\x",
+            "\\x{100}",
+            "}",
+            "]",
+            "{",
+            "{a}",
+            "{2,x}"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "a",
+            "b",
+            "c",
+            "a",
+            "b",
+            "c",
+            "A",
+            "B",
+            "x",
+            "1",
+            "_",
+            " ",
+            "-",
+            "é",
+            "É",
+            "ß",
+            "k",
+            "s",
+            "\\.",
+            "\\-",
+            "\\/",
+            "\\\\",
+            "\\n",
+            "\\t",
+            "\\x41",
+            "\\x{e9}",
+            "\\101",
+            "\\e",
+            "\\Q.*\\E",
+            "\\$",
+            "\\(",
+            "\\)",
+            "\\[",
+            "\\{",
+            "\\|",
+            "\\?",
+            "\\*",
+            "\\+",
+            "\\^",
+            "\\x{212A}",
+            "\\x{17F}",
+            "\\cA",
+            "\\o{101}",
+            "\\N{U+E9}",
+            "\\0",
+            "\\07",
+            "\\x",
+            "\\x{100}",
+            "}",
+            "]",
+            "{",
+            "{a}",
+            "{2,x}"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            ".",
+            ".",
+            "\\d",
+            "\\D",
+            "\\w",
+            "\\W",
+            "\\s",
+            "\\S",
+            "\\h",
+            "\\H",
+            "\\v",
+            "\\V",
+            "\\R",
+            "\\N",
+            "\\X",
+            "\\p{L}",
+            "\\pL",
+            "\\p{Lu}",
+            "\\P{L}",
+            "\\p{N}",
+            "\\p{Greek}",
+            "\\p{Latin}",
+            "\\p{Xwd}",
+            "\\p{Xan}",
+            "\\p{Xsp}",
+            "\\p{Xps}",
+            "\\p{Xuc}",
+            "\\p{Any}",
+            "\\p{L&}",
+            "\\p{Zs}",
+            "\\p{^Lu}",
+            "\\P{^N}",
+            "\\p{Ll}",
+            "\\p{sc=Latin}",
+            "\\p{scx:Latn}",
+            "\\p{bc=L}",
+            "\\p{Alpha}",
+            "\\p{Nonsense}",
+            "\\p",
+            "\\p{"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            ".",
+            ".",
+            "\\d",
+            "\\D",
+            "\\w",
+            "\\W",
+            "\\s",
+            "\\S",
+            "\\h",
+            "\\H",
+            "\\v",
+            "\\V",
+            "\\R",
+            "\\N",
+            "\\X",
+            "\\p{L}",
+            "\\pL",
+            "\\p{Lu}",
+            "\\P{L}",
+            "\\p{N}",
+            "\\p{Greek}",
+            "\\p{Latin}",
+            "\\p{Xwd}",
+            "\\p{Xan}",
+            "\\p{Xsp}",
+            "\\p{Xps}",
+            "\\p{Xuc}",
+            "\\p{Any}",
+            "\\p{L&}",
+            "\\p{Zs}",
+            "\\p{^Lu}",
+            "\\P{^N}",
+            "\\p{Ll}",
+            "\\p{sc=Latin}",
+            "\\p{scx:Latn}",
+            "\\p{bc=L}",
+            "\\p{Alpha}",
+            "\\p{Nonsense}",
+            "\\p",
+            "\\p{"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "[abc]",
+            "[^abc]",
+            "[a-c]",
+            "[^a-c]",
+            "[A-Za-z]",
+            "[\\w.-]",
+            "[\\d\\s]",
+            "[^\\W_]",
+            "[[:alpha:]]",
+            "[[:^digit:]]",
+            "[[:punct:]]",
+            "[[:space:]]",
+            "[[:word:]]",
+            "[[:upper:]]",
+            "[[:lower:]]",
+            "[[:alnum:]x]",
+            "[[:xdigit:]]",
+            "[[:print:]]",
+            "[[:graph:]]",
+            "[[:cntrl:]]",
+            "[[:blank:]]",
+            "[[:ascii:]]",
+            "[a\\-]",
+            "[]a]",
+            "[^]a]",
+            "[\\x{e9}a]",
+            "[à-ÿ]",
+            "[\\p{Lu}b]",
+            "[^\\p{L}]",
+            "[.]",
+            "[$^]",
+            "[\\\\]",
+            "[a-]",
+            "[\\]]",
+            "[é]",
+            "[^é]",
+            "[Kk]",
+            "[ſs]",
+            "[\\h]",
+            "[\\V]",
+            "[\\R]",
+            "[\\b]",
+            "[z-a]",
+            "[[:foo:]]",
+            "[[.a.]]",
+            "[\\Qa]\\E]",
+            "[\\N]",
+            "[a-\\d]",
+            "[\\x00-\\x7f]",
+            "[^\\x00-\\x7f]",
+            "[\\S\\s]",
+            "[^\\D]",
+            "[ab",
+            "[]"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "[abc]",
+            "[^abc]",
+            "[a-c]",
+            "[^a-c]",
+            "[A-Za-z]",
+            "[\\w.-]",
+            "[\\d\\s]",
+            "[^\\W_]",
+            "[[:alpha:]]",
+            "[[:^digit:]]",
+            "[[:punct:]]",
+            "[[:space:]]",
+            "[[:word:]]",
+            "[[:upper:]]",
+            "[[:lower:]]",
+            "[[:alnum:]x]",
+            "[[:xdigit:]]",
+            "[[:print:]]",
+            "[[:graph:]]",
+            "[[:cntrl:]]",
+            "[[:blank:]]",
+            "[[:ascii:]]",
+            "[a\\-]",
+            "[]a]",
+            "[^]a]",
+            "[\\x{e9}a]",
+            "[à-ÿ]",
+            "[\\p{Lu}b]",
+            "[^\\p{L}]",
+            "[.]",
+            "[$^]",
+            "[\\\\]",
+            "[a-]",
+            "[\\]]",
+            "[é]",
+            "[^é]",
+            "[Kk]",
+            "[ſs]",
+            "[\\h]",
+            "[\\V]",
+            "[\\R]",
+            "[\\b]",
+            "[z-a]",
+            "[[:foo:]]",
+            "[[.a.]]",
+            "[\\Qa]\\E]",
+            "[\\N]",
+            "[a-\\d]",
+            "[\\x00-\\x7f]",
+            "[^\\x00-\\x7f]",
+            "[\\S\\s]",
+            "[^\\D]",
+            "[ab",
+            "[]"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "^",
+            "$",
+            "\\A",
+            "\\z",
+            "\\Z",
+            "\\b",
+            "\\B",
+            "\\G",
+            "\\K",
+            "^",
+            "$"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "\\1",
+            "\\2",
+            "\\g1",
+            "\\g{-1}",
+            "\\k<n>",
+            "\\k{n}",
+            "\\k'n'",
+            "(?1)",
+            "(?R)",
+            "(?&n)",
+            "\\g<1>",
+            "(?P=n)",
+            "(?2)",
+            "\\g{2}",
+            "(?-1)",
+            "(?+1)",
+            "\\8"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "(*FAIL)",
+            "(*F)",
+            "(*ACCEPT)",
+            "(*COMMIT)",
+            "(*PRUNE)",
+            "(*SKIP)",
+            "(*THEN)",
+            "(*MARK:m)",
+            "(*:x)",
+            "(*PRUNE:p)",
+            "(*THEN:t)",
+            "(*SKIP:m)"
+          ]
+        }
+      ]
+    },
+    "pcre_group1_jit": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "ref",
+          "name": "pcre_open_jit"
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "repeat",
+            "part": {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "ref",
+                  "name": "pcre_atom_jit"
+                },
+                {
+                  "gen": "ref",
+                  "name": "pcre_quant"
+                }
+              ]
+            },
+            "min": 0,
+            "max": 3,
+            "sep": ""
+          },
+          "min": 1,
+          "max": 3,
+          "sep": "|"
+        },
+        {
+          "gen": "const",
+          "value": ")"
+        }
+      ]
+    },
+    "pcre_open_jit": {
+      "gen": "pick",
+      "from": [
+        "(",
+        "(",
+        "(?:",
+        "(?:",
+        "(?<n>",
+        "(?'n'",
+        "(?P<n>",
+        "(?>",
+        "(?=",
+        "(?!",
+        "(?<=",
+        "(?<!",
+        "(?|",
+        "(?i:",
+        "(?-i:",
+        "(?s:",
+        "(?x:",
+        "(?U:",
+        "(?m:",
+        "(?i)(?:",
+        "(?n:",
+        "(?J:",
+        "(?(1)",
+        "(?(<n>)",
+        "(?(?=a)",
+        "(?(?!b)",
+        "(?(?<=a)",
+        "(?(R)",
+        "(?(R1)",
+        "(?(DEFINE)",
+        "(*atomic:",
+        "(*pla:",
+        "(*nla:",
+        "(*plb:",
+        "(*sr:",
+        "(?^:",
+        "(?xx:",
+        "(?#c)("
+      ]
+    },
+    "pcre_pattern_jit": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "const",
+          "value": "~"
+        },
+        {
+          "gen": "ref",
+          "name": "pcre_start"
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "repeat",
+            "part": {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "pcre_atom_jit"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "pcre_atom_jit"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "pcre_group1_jit"
+                    },
+                    {
+                      "gen": "concat",
+                      "parts": [
+                        {
+                          "gen": "ref",
+                          "name": "pcre_open_jit"
+                        },
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "repeat",
+                            "part": {
+                              "gen": "concat",
+                              "parts": [
+                                {
+                                  "gen": "one_of",
+                                  "of": [
+                                    {
+                                      "gen": "ref",
+                                      "name": "pcre_atom_jit"
+                                    },
+                                    {
+                                      "gen": "ref",
+                                      "name": "pcre_atom_jit"
+                                    },
+                                    {
+                                      "gen": "ref",
+                                      "name": "pcre_group1_jit"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "gen": "ref",
+                                  "name": "pcre_quant"
+                                }
+                              ]
+                            },
+                            "min": 1,
+                            "max": 4,
+                            "sep": ""
+                          },
+                          "min": 1,
+                          "max": 2,
+                          "sep": "|"
+                        },
+                        {
+                          "gen": "const",
+                          "value": ")"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "gen": "ref",
+                  "name": "pcre_quant"
+                }
+              ]
+            },
+            "min": 1,
+            "max": 5,
+            "sep": ""
+          },
+          "min": 1,
+          "max": 2,
+          "sep": "|"
+        },
+        {
+          "gen": "const",
+          "value": "~"
+        },
+        {
+          "gen": "ref",
+          "name": "pcre_modifiers"
+        }
+      ]
+    },
+    "pcre_any_pattern_jitna": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "pcre_pattern_jitna"
+        },
+        {
+          "gen": "ref",
+          "name": "pcre_pattern_jitna"
+        },
+        {
+          "gen": "ref",
+          "name": "pcre_pattern_jitna"
+        },
+        {
+          "gen": "ref",
+          "name": "pcre_realistic"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$bytes": "L/8v"
+            },
+            {
+              "$bytes": "L/8vdQ=="
+            },
+            {
+              "$bytes": "L8OpL3U="
+            },
+            {
+              "$bytes": "L2EAYi8="
+            },
+            {
+              "$bytes": "L1uALf9dLw=="
+            },
+            {
+              "$bytes": "LwAv"
+            },
+            {
+              "$bytes": "L2EvAA=="
+            },
+            {
+              "$bytes": "AGEA"
+            },
+            {
+              "$bytes": "L+kvaQ=="
+            },
+            {
+              "$bytes": "LygqVVRGKe2ggC8="
+            }
+          ]
+        }
+      ]
+    },
+    "pcre_atom_jitna": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "a",
+            "b",
+            "c",
+            "a",
+            "b",
+            "c",
+            "A",
+            "B",
+            "x",
+            "1",
+            "_",
+            " ",
+            "-",
+            "é",
+            "É",
+            "ß",
+            "k",
+            "s",
+            "\\.",
+            "\\-",
+            "\\/",
+            "\\\\",
+            "\\n",
+            "\\t",
+            "\\x41",
+            "\\x{e9}",
+            "\\101",
+            "\\e",
+            "\\Q.*\\E",
+            "\\$",
+            "\\(",
+            "\\)",
+            "\\[",
+            "\\{",
+            "\\|",
+            "\\?",
+            "\\*",
+            "\\+",
+            "\\^",
+            "\\x{212A}",
+            "\\x{17F}",
+            "\\cA",
+            "\\o{101}",
+            "\\N{U+E9}",
+            "\\0",
+            "\\07",
+            "\\x",
+            "\\x{100}",
+            "}",
+            "]",
+            "{",
+            "{a}",
+            "{2,x}"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "a",
+            "b",
+            "c",
+            "a",
+            "b",
+            "c",
+            "A",
+            "B",
+            "x",
+            "1",
+            "_",
+            " ",
+            "-",
+            "é",
+            "É",
+            "ß",
+            "k",
+            "s",
+            "\\.",
+            "\\-",
+            "\\/",
+            "\\\\",
+            "\\n",
+            "\\t",
+            "\\x41",
+            "\\x{e9}",
+            "\\101",
+            "\\e",
+            "\\Q.*\\E",
+            "\\$",
+            "\\(",
+            "\\)",
+            "\\[",
+            "\\{",
+            "\\|",
+            "\\?",
+            "\\*",
+            "\\+",
+            "\\^",
+            "\\x{212A}",
+            "\\x{17F}",
+            "\\cA",
+            "\\o{101}",
+            "\\N{U+E9}",
+            "\\0",
+            "\\07",
+            "\\x",
+            "\\x{100}",
+            "}",
+            "]",
+            "{",
+            "{a}",
+            "{2,x}"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "a",
+            "b",
+            "c",
+            "a",
+            "b",
+            "c",
+            "A",
+            "B",
+            "x",
+            "1",
+            "_",
+            " ",
+            "-",
+            "é",
+            "É",
+            "ß",
+            "k",
+            "s",
+            "\\.",
+            "\\-",
+            "\\/",
+            "\\\\",
+            "\\n",
+            "\\t",
+            "\\x41",
+            "\\x{e9}",
+            "\\101",
+            "\\e",
+            "\\Q.*\\E",
+            "\\$",
+            "\\(",
+            "\\)",
+            "\\[",
+            "\\{",
+            "\\|",
+            "\\?",
+            "\\*",
+            "\\+",
+            "\\^",
+            "\\x{212A}",
+            "\\x{17F}",
+            "\\cA",
+            "\\o{101}",
+            "\\N{U+E9}",
+            "\\0",
+            "\\07",
+            "\\x",
+            "\\x{100}",
+            "}",
+            "]",
+            "{",
+            "{a}",
+            "{2,x}"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "a",
+            "b",
+            "c",
+            "a",
+            "b",
+            "c",
+            "A",
+            "B",
+            "x",
+            "1",
+            "_",
+            " ",
+            "-",
+            "é",
+            "É",
+            "ß",
+            "k",
+            "s",
+            "\\.",
+            "\\-",
+            "\\/",
+            "\\\\",
+            "\\n",
+            "\\t",
+            "\\x41",
+            "\\x{e9}",
+            "\\101",
+            "\\e",
+            "\\Q.*\\E",
+            "\\$",
+            "\\(",
+            "\\)",
+            "\\[",
+            "\\{",
+            "\\|",
+            "\\?",
+            "\\*",
+            "\\+",
+            "\\^",
+            "\\x{212A}",
+            "\\x{17F}",
+            "\\cA",
+            "\\o{101}",
+            "\\N{U+E9}",
+            "\\0",
+            "\\07",
+            "\\x",
+            "\\x{100}",
+            "}",
+            "]",
+            "{",
+            "{a}",
+            "{2,x}"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            ".",
+            ".",
+            "\\d",
+            "\\D",
+            "\\w",
+            "\\W",
+            "\\s",
+            "\\S",
+            "\\h",
+            "\\H",
+            "\\v",
+            "\\V",
+            "\\R",
+            "\\N",
+            "\\X",
+            "\\p{L}",
+            "\\pL",
+            "\\p{Lu}",
+            "\\P{L}",
+            "\\p{N}",
+            "\\p{Greek}",
+            "\\p{Latin}",
+            "\\p{Xwd}",
+            "\\p{Xan}",
+            "\\p{Xsp}",
+            "\\p{Xps}",
+            "\\p{Xuc}",
+            "\\p{Any}",
+            "\\p{L&}",
+            "\\p{Zs}",
+            "\\p{^Lu}",
+            "\\P{^N}",
+            "\\p{Ll}",
+            "\\p{sc=Latin}",
+            "\\p{scx:Latn}",
+            "\\p{bc=L}",
+            "\\p{Alpha}",
+            "\\p{Nonsense}",
+            "\\p",
+            "\\p{"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            ".",
+            ".",
+            "\\d",
+            "\\D",
+            "\\w",
+            "\\W",
+            "\\s",
+            "\\S",
+            "\\h",
+            "\\H",
+            "\\v",
+            "\\V",
+            "\\R",
+            "\\N",
+            "\\X",
+            "\\p{L}",
+            "\\pL",
+            "\\p{Lu}",
+            "\\P{L}",
+            "\\p{N}",
+            "\\p{Greek}",
+            "\\p{Latin}",
+            "\\p{Xwd}",
+            "\\p{Xan}",
+            "\\p{Xsp}",
+            "\\p{Xps}",
+            "\\p{Xuc}",
+            "\\p{Any}",
+            "\\p{L&}",
+            "\\p{Zs}",
+            "\\p{^Lu}",
+            "\\P{^N}",
+            "\\p{Ll}",
+            "\\p{sc=Latin}",
+            "\\p{scx:Latn}",
+            "\\p{bc=L}",
+            "\\p{Alpha}",
+            "\\p{Nonsense}",
+            "\\p",
+            "\\p{"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "[abc]",
+            "[^abc]",
+            "[a-c]",
+            "[^a-c]",
+            "[A-Za-z]",
+            "[\\w.-]",
+            "[\\d\\s]",
+            "[^\\W_]",
+            "[[:alpha:]]",
+            "[[:^digit:]]",
+            "[[:punct:]]",
+            "[[:space:]]",
+            "[[:word:]]",
+            "[[:upper:]]",
+            "[[:lower:]]",
+            "[[:alnum:]x]",
+            "[[:xdigit:]]",
+            "[[:print:]]",
+            "[[:graph:]]",
+            "[[:cntrl:]]",
+            "[[:blank:]]",
+            "[[:ascii:]]",
+            "[a\\-]",
+            "[]a]",
+            "[^]a]",
+            "[\\x{e9}a]",
+            "[à-ÿ]",
+            "[\\p{Lu}b]",
+            "[^\\p{L}]",
+            "[.]",
+            "[$^]",
+            "[\\\\]",
+            "[a-]",
+            "[\\]]",
+            "[é]",
+            "[^é]",
+            "[Kk]",
+            "[ſs]",
+            "[\\h]",
+            "[\\V]",
+            "[\\R]",
+            "[\\b]",
+            "[z-a]",
+            "[[:foo:]]",
+            "[[.a.]]",
+            "[\\Qa]\\E]",
+            "[\\N]",
+            "[a-\\d]",
+            "[\\x00-\\x7f]",
+            "[^\\x00-\\x7f]",
+            "[\\S\\s]",
+            "[^\\D]",
+            "[ab",
+            "[]"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "[abc]",
+            "[^abc]",
+            "[a-c]",
+            "[^a-c]",
+            "[A-Za-z]",
+            "[\\w.-]",
+            "[\\d\\s]",
+            "[^\\W_]",
+            "[[:alpha:]]",
+            "[[:^digit:]]",
+            "[[:punct:]]",
+            "[[:space:]]",
+            "[[:word:]]",
+            "[[:upper:]]",
+            "[[:lower:]]",
+            "[[:alnum:]x]",
+            "[[:xdigit:]]",
+            "[[:print:]]",
+            "[[:graph:]]",
+            "[[:cntrl:]]",
+            "[[:blank:]]",
+            "[[:ascii:]]",
+            "[a\\-]",
+            "[]a]",
+            "[^]a]",
+            "[\\x{e9}a]",
+            "[à-ÿ]",
+            "[\\p{Lu}b]",
+            "[^\\p{L}]",
+            "[.]",
+            "[$^]",
+            "[\\\\]",
+            "[a-]",
+            "[\\]]",
+            "[é]",
+            "[^é]",
+            "[Kk]",
+            "[ſs]",
+            "[\\h]",
+            "[\\V]",
+            "[\\R]",
+            "[\\b]",
+            "[z-a]",
+            "[[:foo:]]",
+            "[[.a.]]",
+            "[\\Qa]\\E]",
+            "[\\N]",
+            "[a-\\d]",
+            "[\\x00-\\x7f]",
+            "[^\\x00-\\x7f]",
+            "[\\S\\s]",
+            "[^\\D]",
+            "[ab",
+            "[]"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "^",
+            "$",
+            "\\A",
+            "\\z",
+            "\\Z",
+            "\\b",
+            "\\B",
+            "\\G",
+            "\\K",
+            "^",
+            "$"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "\\1",
+            "\\2",
+            "\\g1",
+            "\\g{-1}",
+            "\\k<n>",
+            "\\k{n}",
+            "\\k'n'",
+            "(?1)",
+            "(?R)",
+            "(?&n)",
+            "\\g<1>",
+            "(?P=n)",
+            "(?2)",
+            "\\g{2}",
+            "(?-1)",
+            "(?+1)",
+            "\\8"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "(*FAIL)",
+            "(*F)",
+            "(*THEN)",
+            "(*MARK:m)",
+            "(*:x)"
+          ]
+        }
+      ]
+    },
+    "pcre_group1_jitna": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "ref",
+          "name": "pcre_open_jitna"
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "repeat",
+            "part": {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "ref",
+                  "name": "pcre_atom_jitna"
+                },
+                {
+                  "gen": "ref",
+                  "name": "pcre_quant"
+                }
+              ]
+            },
+            "min": 0,
+            "max": 3,
+            "sep": ""
+          },
+          "min": 1,
+          "max": 3,
+          "sep": "|"
+        },
+        {
+          "gen": "const",
+          "value": ")"
+        }
+      ]
+    },
+    "pcre_open_jitna": {
+      "gen": "pick",
+      "from": [
+        "(",
+        "(",
+        "(?:",
+        "(?:",
+        "(?<n>",
+        "(?'n'",
+        "(?P<n>",
+        "(?>",
+        "(?=",
+        "(?!",
+        "(?<=",
+        "(?<!",
+        "(?|",
+        "(?i:",
+        "(?-i:",
+        "(?s:",
+        "(?x:",
+        "(?U:",
+        "(?m:",
+        "(?i)(?:",
+        "(?n:",
+        "(?J:",
+        "(?(1)",
+        "(?(<n>)",
+        "(?(?=a)",
+        "(?(?!b)",
+        "(?(?<=a)",
+        "(?(R)",
+        "(?(R1)",
+        "(?(DEFINE)",
+        "(*atomic:",
+        "(*pla:",
+        "(*nla:",
+        "(*plb:",
+        "(*napla:",
+        "(*naplb:",
+        "(?*",
+        "(?<*",
+        "(*sr:",
+        "(?^:",
+        "(?xx:",
+        "(?#c)("
+      ]
+    },
+    "pcre_pattern_jitna": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "const",
+          "value": "~"
+        },
+        {
+          "gen": "ref",
+          "name": "pcre_start"
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "repeat",
+            "part": {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "pcre_atom_jitna"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "pcre_atom_jitna"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "pcre_group1_jitna"
+                    },
+                    {
+                      "gen": "concat",
+                      "parts": [
+                        {
+                          "gen": "ref",
+                          "name": "pcre_open_jitna"
+                        },
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "repeat",
+                            "part": {
+                              "gen": "concat",
+                              "parts": [
+                                {
+                                  "gen": "one_of",
+                                  "of": [
+                                    {
+                                      "gen": "ref",
+                                      "name": "pcre_atom_jitna"
+                                    },
+                                    {
+                                      "gen": "ref",
+                                      "name": "pcre_atom_jitna"
+                                    },
+                                    {
+                                      "gen": "ref",
+                                      "name": "pcre_group1_jitna"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "gen": "ref",
+                                  "name": "pcre_quant"
+                                }
+                              ]
+                            },
+                            "min": 1,
+                            "max": 4,
+                            "sep": ""
+                          },
+                          "min": 1,
+                          "max": 2,
+                          "sep": "|"
+                        },
+                        {
+                          "gen": "const",
+                          "value": ")"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "gen": "ref",
+                  "name": "pcre_quant"
+                }
+              ]
+            },
+            "min": 1,
+            "max": 5,
+            "sep": ""
+          },
+          "min": 1,
+          "max": 2,
+          "sep": "|"
+        },
+        {
+          "gen": "const",
+          "value": "~"
+        },
+        {
+          "gen": "ref",
+          "name": "pcre_modifiers"
+        }
+      ]
+    },
+    "pcre_limit_start": {
+      "gen": "pick",
+      "from": [
+        "(*LIMIT_MATCH=1)",
+        "(*LIMIT_MATCH=2)",
+        "(*LIMIT_MATCH=3)",
+        "(*LIMIT_MATCH=5)",
+        "(*LIMIT_MATCH=10)",
+        "(*LIMIT_MATCH=30)",
+        "(*LIMIT_MATCH=100)",
+        "(*LIMIT_MATCH=1000)",
+        "(*LIMIT_DEPTH=1)",
+        "(*LIMIT_DEPTH=2)",
+        "(*LIMIT_DEPTH=5)",
+        "(*LIMIT_DEPTH=20)",
+        "(*NO_JIT)(*LIMIT_MATCH=3)",
+        "(*NO_JIT)(*LIMIT_MATCH=20)",
+        "(*NO_JIT)(*LIMIT_DEPTH=2)",
+        "(*NO_JIT)(*LIMIT_DEPTH=10)",
+        "(*LIMIT_DEPTH=3)(*LIMIT_MATCH=50)(*NOTEMPTY)"
+      ]
+    },
+    "pcre_limit_pattern": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "const",
+          "value": "~"
+        },
+        {
+          "gen": "ref",
+          "name": "pcre_limit_start"
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "repeat",
+            "part": {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "pcre_atom_jit"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "pcre_atom_jit"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "pcre_group1_jit"
+                    },
+                    {
+                      "gen": "concat",
+                      "parts": [
+                        {
+                          "gen": "ref",
+                          "name": "pcre_open_jit"
+                        },
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "repeat",
+                            "part": {
+                              "gen": "concat",
+                              "parts": [
+                                {
+                                  "gen": "one_of",
+                                  "of": [
+                                    {
+                                      "gen": "ref",
+                                      "name": "pcre_atom_jit"
+                                    },
+                                    {
+                                      "gen": "ref",
+                                      "name": "pcre_atom_jit"
+                                    },
+                                    {
+                                      "gen": "ref",
+                                      "name": "pcre_group1_jit"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "gen": "ref",
+                                  "name": "pcre_quant"
+                                }
+                              ]
+                            },
+                            "min": 1,
+                            "max": 4,
+                            "sep": ""
+                          },
+                          "min": 1,
+                          "max": 2,
+                          "sep": "|"
+                        },
+                        {
+                          "gen": "const",
+                          "value": ")"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "gen": "ref",
+                  "name": "pcre_quant"
+                }
+              ]
+            },
+            "min": 1,
+            "max": 5,
+            "sep": ""
+          },
+          "min": 1,
+          "max": 2,
+          "sep": "|"
+        },
+        {
+          "gen": "const",
+          "value": "~"
+        },
+        {
+          "gen": "ref",
+          "name": "pcre_modifiers"
         }
       ]
     }
