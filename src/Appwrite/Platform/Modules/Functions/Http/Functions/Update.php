@@ -81,7 +81,6 @@ class Update extends Base
             ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
             ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
             ->param('schedule', '', new Cron(), 'Schedule CRON syntax. Cannot be combined with interval.', true)
-            ->param('interval', 0, new Range(0, Database::MAX_INT), 'Minutes between scheduled executions. Appwrite picks when within each interval the function runs. Use 0 to disable. Cannot be combined with schedule.', true, example: '60')
             ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
             ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
             ->param('logging', true, new Boolean(), 'When disabled, executions will exclude logs and errors, and will be slightly faster.', true)
@@ -109,6 +108,7 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
             )), 'Runtime specification for the function executions.', true, ['plan'], example: 's-1vcpu-512mb')
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
+            ->param('interval', null, new Nullable(new Range(0, Database::MAX_INT)), 'Minutes between scheduled executions. Appwrite picks when within each interval the function runs. Use 0 to disable. Cannot be combined with schedule. When omitted, the current interval is kept unless schedule is set.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -133,7 +133,6 @@ class Update extends Base
         array $execute,
         array $events,
         string $schedule,
-        int $interval,
         int $timeout,
         bool $enabled,
         bool $logging,
@@ -150,6 +149,7 @@ class Update extends Base
         ?string $buildSpecification,
         ?string $runtimeSpecification,
         int $deploymentRetention,
+        ?int $interval,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -182,9 +182,12 @@ class Update extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
-        if ($schedule !== '' && $interval !== 0) {
+        if ($schedule !== '' && !empty($interval)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Set either "schedule" or "interval", not both.');
         }
+
+        // Clients that predate interval omit it, so keep the stored one unless a cron replaces it.
+        $interval ??= $schedule === '' ? $function->getAttribute('interval', 0) : 0;
 
         if (empty($runtime)) {
             $runtime = $function->getAttribute('runtime');

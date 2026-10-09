@@ -220,6 +220,28 @@ final class FunctionsScheduleTest extends Scope
             $this->assertSame('', $function['body']['schedule']);
 
             $function = $this->updateFunction($functionId, [
+                'name' => 'Renamed',
+                'runtime' => 'node-22',
+            ]);
+            $this->assertSame(200, $function['headers']['status-code']);
+            $this->assertSame(45, $function['body']['interval']);
+
+            $function = $this->updateFunction($functionId, [
+                'name' => 'Unscheduled',
+                'runtime' => 'node-22',
+                'interval' => 0,
+            ]);
+            $this->assertSame(200, $function['headers']['status-code']);
+            $this->assertSame(0, $function['body']['interval']);
+
+            $function = $this->updateFunction($functionId, [
+                'name' => 'Interval',
+                'runtime' => 'node-22',
+                'interval' => 45,
+            ]);
+            $this->assertSame(45, $function['body']['interval']);
+
+            $function = $this->updateFunction($functionId, [
                 'name' => 'Cron',
                 'runtime' => 'node-22',
                 'schedule' => '0 0 * * *',
