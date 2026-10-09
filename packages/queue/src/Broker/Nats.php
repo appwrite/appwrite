@@ -575,8 +575,9 @@ class Nats implements Synchronous, Consumer, Bounded
     private function republishing(\Closure $publish): mixed
     {
         $deadline = microtime(true) + self::PUBLISH_RETRY_BUDGET;
+        $republishes = 0;
 
-        foreach (self::PUBLISH_RETRY_DELAYS as $delay) {
+        while (true) {
             try {
                 return $publish();
             } catch (NoRespondersException $error) {
@@ -587,16 +588,16 @@ class Nats implements Synchronous, Consumer, Bounded
                 }
             }
 
-            // Checked before every republish, the last one included.
-            if (microtime(true) + $delay >= $deadline) {
+            // The only way to another attempt: a republish is left, and it would start
+            // inside the budget once its wait is over.
+            $delay = self::PUBLISH_RETRY_DELAYS[$republishes++] ?? null;
+            if ($delay === null || microtime(true) + $delay >= $deadline) {
                 throw $error;
             }
             if ($delay > 0) {
                 usleep((int) ($delay * 1_000_000));
             }
         }
-
-        return $publish();
     }
 
     /**
