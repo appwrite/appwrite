@@ -48,6 +48,32 @@ final class InterleavingClaimDatabase extends Database
 
     public ?\Closure $afterMigrationRead = null;
 
+    public ?\Closure $beforeMigrationUpdate = null;
+
+    public int $transactions = 0;
+
+    public int $lockedReads = 0;
+
+    #[\Override]
+    public function withTransaction(callable $callback): mixed
+    {
+        $this->transactions++;
+
+        return parent::withTransaction($callback);
+    }
+
+    #[\Override]
+    public function updateDocument(string $collection, string $id, Document $document): Document
+    {
+        if ($collection === 'migrations' && $this->beforeMigrationUpdate !== null) {
+            $callback = $this->beforeMigrationUpdate;
+            $this->beforeMigrationUpdate = null;
+            $callback();
+        }
+
+        return parent::updateDocument($collection, $id, $document);
+    }
+
     #[\Override]
     public function createDocument(string $collection, Document $document): Document
     {
@@ -64,6 +90,10 @@ final class InterleavingClaimDatabase extends Database
     #[\Override]
     public function getDocument(string $collection, string $id, array $queries = [], bool $forUpdate = false): Document
     {
+        if ($forUpdate) {
+            $this->lockedReads++;
+        }
+
         $document = parent::getDocument($collection, $id, $queries, $forUpdate);
         if ($forUpdate && $collection === 'migrations' && $this->afterMigrationRead !== null) {
             $callback = $this->afterMigrationRead;
@@ -994,7 +1024,7 @@ final class ClaimTest extends TestCase
     }
 
     #[DataProvider('staleIdentities')]
-    public function testWorkerPersistenceRejectsMatchingTimestampWithWrongIdentity(string $attribute, int|string|null $value): void
+    public function testWorkerPersistenceReportsMatchingTimestampWithWrongIdentityAsSuperseded(string $attribute, int|string|null $value): void
     {
         $active = $this->database->createDocument('migrations', new Document([
             '$id' => 'migration-identity',
@@ -1011,8 +1041,7 @@ final class ClaimTest extends TestCase
         $this->assertNotInstanceOf(Document::class, (new Claim($this->database))->persist($stale));
 
         $stored = $this->database->getDocument('migrations', $active->getId());
-        $this->assertSame('processing', $stored->getAttribute('status'));
-        $this->assertSame($active->getUpdatedAt(), $stored->getUpdatedAt());
+        $this->assertSame('attempt-a', $stored->getAttribute('attemptId'));
         $this->assertSame($active->getSequence(), $stored->getSequence());
     }
 
@@ -1042,7 +1071,7 @@ final class ClaimTest extends TestCase
         $this->assertSame($active->getUpdatedAt(), $stored->getUpdatedAt());
     }
 
-    public function testWorkerPersistenceLosesStorageRaceAfterGenerationRead(): void
+    public function testWorkerPersistenceLosesStorageRaceBeforeItsWrite(): void
     {
         $active = $this->database->createDocument('migrations', new Document([
             '$id' => 'migration-1',
@@ -1053,7 +1082,7 @@ final class ClaimTest extends TestCase
         ]));
         $database = $this->database;
         $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
-        $database->afterMigrationRead = static function () use ($active, $database): void {
+        $database->beforeMigrationUpdate = static function () use ($active, $database): void {
             $database->updateDocument('migrations', $active->getId(), new Document([
                 'attemptId' => 'attempt-b',
                 'status' => 'pending',
@@ -1069,6 +1098,109 @@ final class ClaimTest extends TestCase
         $this->assertSame('attempt-b', $stored->getAttribute('attemptId'));
         $this->assertSame('pending', $stored->getAttribute('status'));
         $this->assertSame('finished', $stored->getAttribute('stage'));
+    }
+
+    public function testWorkerPersistenceWritesProgressOfTheOwningAttempt(): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-progress',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'processing',
+            'resourceData' => [],
+        ]));
+        $claims = new Claim($this->database);
+
+        $active->setAttribute('stage', 'migrating');
+        $migrating = $claims->persist($active) ?? throw new \LogicException('Expected the owning attempt to persist');
+        $migrating->setAttribute('resourceData', ['users' => ['success' => 1]]);
+        $progressed = $claims->persist($migrating) ?? throw new \LogicException('Expected the owning attempt to keep persisting');
+
+        $stored = $this->database->getDocument('migrations', $active->getId());
+        $this->assertSame('attempt-a', $stored->getAttribute('attemptId'));
+        $this->assertSame('processing', $stored->getAttribute('status'));
+        $this->assertSame('migrating', $stored->getAttribute('stage'));
+        $this->assertSame(['users' => ['success' => 1]], $stored->getAttribute('resourceData'));
+        $this->assertSame($stored->getUpdatedAt(), $progressed->getUpdatedAt(), 'the returned generation fences the next write');
+        $this->assertGreaterThan(
+            new \DateTime($active->getUpdatedAt() ?? ''),
+            new \DateTime($progressed->getUpdatedAt() ?? ''),
+        );
+    }
+
+    public function testWorkerPersistenceOpensNoTransactionAndTakesNoRowLock(): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-unlocked',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'migrating',
+            'resourceData' => [],
+        ]));
+        $database = $this->database;
+        $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
+        $claims = new Claim($database);
+        $database->transactions = 0;
+        $database->lockedReads = 0;
+
+        $active->setAttribute('resourceData', ['users' => ['success' => 1]]);
+        $progressed = $claims->persist($active) ?? throw new \LogicException('Expected the owning attempt to persist');
+        $progressed->setAttribute('resourceData', ['users' => ['success' => 2]]);
+        $claims->persist($progressed) ?? throw new \LogicException('Expected the owning attempt to keep persisting');
+
+        $this->assertSame(0, $database->transactions, 'progress writes must not open a claim transaction');
+        $this->assertSame(0, $database->lockedReads, 'progress writes must not read the migration for update');
+    }
+
+    public function testWorkerPersistenceRefusesAGenerationAnotherWriterAdvanced(): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-advanced',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'migrating',
+            'resourceData' => [],
+        ]));
+        $advanced = $this->database->updateDocument('migrations', $active->getId(), new Document([
+            'stage' => 'finalizing',
+        ]));
+        $active->setAttribute('resourceData', ['users' => ['success' => 1]]);
+
+        $this->assertNotInstanceOf(Document::class, (new Claim($this->database))->persist($active));
+
+        $stored = $this->database->getDocument('migrations', $active->getId());
+        $this->assertSame('finalizing', $stored->getAttribute('stage'));
+        $this->assertSame([], $stored->getAttribute('resourceData'));
+        $this->assertSame($advanced->getUpdatedAt(), $stored->getUpdatedAt());
+    }
+
+    /** @return \Iterator<string, array{string, string|null}> */
+    public static function incompleteIdentities(): \Iterator
+    {
+        yield 'missing attempt' => ['attemptId', null];
+        yield 'empty attempt' => ['attemptId', ''];
+        yield 'missing sequence' => ['$sequence', ''];
+    }
+
+    #[DataProvider('incompleteIdentities')]
+    public function testWorkerPersistenceRefusesAnIncompleteIdentityWithoutWriting(string $attribute, ?string $value): void
+    {
+        $active = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-incomplete',
+            'attemptId' => 'attempt-a',
+            'status' => 'processing',
+            'stage' => 'migrating',
+            'resourceData' => [],
+        ]));
+        $incomplete = new Document($active->getArrayCopy());
+        $incomplete->setAttribute($attribute, $value);
+        $incomplete->setAttribute('status', 'completed');
+
+        $this->assertNotInstanceOf(Document::class, (new Claim($this->database))->persist($incomplete));
+
+        $stored = $this->database->getDocument('migrations', $active->getId());
+        $this->assertSame('processing', $stored->getAttribute('status'));
+        $this->assertSame($active->getUpdatedAt(), $stored->getUpdatedAt());
     }
 
     #[DataProvider('starts')]
@@ -1131,7 +1263,7 @@ final class ClaimTest extends TestCase
         $this->assertNotInstanceOf(Delivery::class, $delivery);
     }
 
-    public function testWorkerPersistenceRefusesDocumentDeletedAfterGenerationRead(): void
+    public function testWorkerPersistenceRefusesDocumentDeletedBeforeItsWrite(): void
     {
         $migration = $this->database->createDocument('migrations', new Document([
             '$id' => 'migration-1',
@@ -1140,7 +1272,11 @@ final class ClaimTest extends TestCase
             'stage' => 'migrating',
             'resourceData' => [],
         ]));
-        $this->deleteAfterRead($migration->getId());
+        $database = $this->database;
+        $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
+        $database->beforeMigrationUpdate = static function () use ($database, $migration): void {
+            $database->deleteDocument('migrations', $migration->getId());
+        };
         $migration->setAttribute('stage', 'finalizing');
 
         $this->assertNotInstanceOf(Document::class, (new Claim($this->database))->persist($migration));

@@ -398,26 +398,40 @@ final readonly class Claim
 
     /**
      * Persist worker state only while the exact attempt and update generation
-     * that produced it still own the migration.
+     * that produced it still own the migration. The write is pinned to the
+     * generation's update timestamp, and every claim write moves that
+     * timestamp strictly forward, so a takeover, retry claim, expiry or
+     * deletion since this worker's last write refuses it.
      */
     public function persist(Document $migration): ?Document
     {
-        return $this->withGeneration($migration, function (Document $live) use ($migration): Document {
-            $updates = [];
-            foreach ($migration->getArrayCopy() as $attribute => $value) {
-                if (\str_starts_with($attribute, '$') || $attribute === 'attemptId') {
-                    continue;
-                }
+        $this->assertComparable($migration);
+        $attemptId = $migration->getAttribute('attemptId');
+        if (
+            $migration->getId() === ''
+            || $migration->getSequence() === ''
+            || !\is_string($attemptId)
+            || $attemptId === ''
+        ) {
+            return null;
+        }
 
-                if ($live->getAttribute($attribute) !== $value) {
-                    $updates[$attribute] = $value;
-                }
+        $updates = [];
+        foreach ($migration->getArrayCopy() as $attribute => $value) {
+            if (\str_starts_with($attribute, '$') || $attribute === 'attemptId') {
+                continue;
             }
 
-            return $updates === []
-                ? $live
-                : $this->write($live, new Document($updates));
-        });
+            $updates[$attribute] = $value;
+        }
+
+        try {
+            $stored = $this->write($migration, new Document($updates));
+        } catch (Conflict) {
+            return null;
+        }
+
+        return $this->sameIdentity($stored, $migration) ? $stored : null;
     }
 
     /**
@@ -522,11 +536,16 @@ final readonly class Claim
         );
     }
 
-    private function withGeneration(Document $migration, callable $callback): mixed
+    private function assertComparable(Document $migration): void
     {
         if ($migration->getUpdatedAt() === null) {
             throw new \LogicException('Migration generation cannot be compared without an update timestamp');
         }
+    }
+
+    private function withGeneration(Document $migration, callable $callback): mixed
+    {
+        $this->assertComparable($migration);
 
         try {
             return $this->database->withTransaction(function () use ($callback, $migration): mixed {
@@ -575,12 +594,17 @@ final readonly class Claim
 
     private function sameObservation(Document $live, Document $queued): bool
     {
+        return $this->sameIdentity($live, $queued)
+            && $live->getUpdatedAt() !== null
+            && $live->getUpdatedAt() === $queued->getUpdatedAt();
+    }
+
+    private function sameIdentity(Document $live, Document $queued): bool
+    {
         return !$live->isEmpty()
             && $live->getId() !== ''
             && $live->getId() === $queued->getId()
             && $live->getAttribute('attemptId') === $queued->getAttribute('attemptId')
-            && $live->getUpdatedAt() !== null
-            && $live->getUpdatedAt() === $queued->getUpdatedAt()
             && $live->getSequence() !== ''
             && $live->getSequence() === $queued->getSequence();
     }
