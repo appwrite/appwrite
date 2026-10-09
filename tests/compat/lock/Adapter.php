@@ -49,7 +49,7 @@ final class Adapter implements Base
             'distributed.adopt' => function (array $a, Session $s) {
                 self::distributed($a, $s)->adopt($a['token']);
 
-                return null;
+                return;
             },
             'distributed.token' => fn (array $a, Session $s) => self::distributed($a, $s)->token(),
             'distributed.has_token' => fn (array $a, Session $s) => self::distributed($a, $s)->token() !== null,
@@ -61,7 +61,7 @@ final class Adapter implements Base
                 });
                 self::$logs[spl_object_id(self::distributed($a, $s))] = $logs;
 
-                return null;
+                return;
             },
             'distributed.retry_spread' => fn (array $a, Session $s) => self::retrySpread($s, $a),
             'lock.acquire_elapsed' => function (array $a, Session $s) {
