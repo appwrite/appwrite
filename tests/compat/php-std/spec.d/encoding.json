@@ -581,31 +581,139 @@
       ]
     },
     "encoding.parse_str": {
-      "doc": "parse_str($string, $result); $result as nested [key, value] pairs (keys keep their int/string type)",
+      "doc": "parse_str($string, $result): $result",
       "fuzz": [
         {
+          "name": "pairs",
           "args": {
             "gen": "object",
             "fields": {
               "string": {
-                "gen": "ref",
-                "name": "encoding_parse_str"
+                "gen": "repeat",
+                "part": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "concat",
+                      "parts": [
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "pick",
+                            "from": [
+                              "a",
+                              "b",
+                              "[",
+                              "]",
+                              ".",
+                              " ",
+                              "+",
+                              "_",
+                              "%5B",
+                              "%5D",
+                              "0",
+                              "1",
+                              "-",
+                              "%20",
+                              "%00",
+                              "%2E",
+                              "é",
+                              "[]",
+                              "[0]",
+                              "[ "
+                            ]
+                          },
+                          "sep": "",
+                          "min": 0,
+                          "max": 7
+                        },
+                        {
+                          "gen": "const",
+                          "value": "="
+                        },
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "pick",
+                            "from": [
+                              "a",
+                              "%2B",
+                              "+",
+                              "=",
+                              "%5B",
+                              ".",
+                              "é",
+                              "%20",
+                              "%00",
+                              "%41",
+                              "%FF",
+                              "%",
+                              "%4",
+                              "[",
+                              "]"
+                            ]
+                          },
+                          "sep": "",
+                          "min": 0,
+                          "max": 5
+                        }
+                      ]
+                    },
+                    {
+                      "gen": "repeat",
+                      "part": {
+                        "gen": "pick",
+                        "from": [
+                          "a",
+                          "b",
+                          "[",
+                          "]",
+                          ".",
+                          " ",
+                          "+",
+                          "_",
+                          "%5B",
+                          "%5D",
+                          "0",
+                          "1",
+                          "-",
+                          "%20",
+                          "%00",
+                          "%2E",
+                          "é",
+                          "[]",
+                          "[0]",
+                          "[ "
+                        ]
+                      },
+                      "sep": "",
+                      "min": 0,
+                      "max": 7
+                    }
+                  ]
+                },
+                "sep": "&",
+                "min": 0,
+                "max": 6
               }
             }
           },
-          "iterations": 4000
+          "iterations": 3000
         },
         {
+          "name": "bytes",
           "args": {
             "gen": "object",
             "fields": {
               "string": {
-                "gen": "ref",
-                "name": "encoding_bytes"
+                "gen": "string",
+                "alphabet": "x[]=&.%0 \u0000",
+                "min": 0,
+                "max": 16
               }
             }
           },
-          "iterations": 1000
+          "iterations": 2000
         }
       ]
     }
@@ -1267,6 +1375,13 @@
       ]
     }
   },
+  "quirks": [
+    {
+      "symbol": "html_entity_decode() / htmlspecialchars() numeric entities",
+      "description": "hexadecimal entities are read with C strtol, which accepts a '0x' prefix after '&#x': '&#x0x41;' is 'A'",
+      "case": "encoding.json#html_entity_decode hexadecimal 0x prefix (strtol)"
+    }
+  ],
   "deviations": [
     {
       "symbol": "htmlspecialchars(), htmlentities(), html_entity_decode() $encoding",
@@ -1277,13 +1392,6 @@
       "symbol": "http_build_query() objects",
       "php": "objects with private/protected properties and backed enums",
       "reason": "php_std::encoding::http_build_query takes JSON-decoded data (arrays and stdClass), where every property is public"
-    }
-  ],
-  "quirks": [
-    {
-      "symbol": "html_entity_decode() / htmlspecialchars() numeric entities",
-      "description": "hexadecimal entities are read with C strtol, which accepts a '0x' prefix after '&#x': '&#x0x41;' is 'A'",
-      "case": "encoding.json#html_entity_decode hexadecimal 0x prefix (strtol)"
     }
   ]
 }

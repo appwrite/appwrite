@@ -1,6 +1,6 @@
 [package]
 name = "utopia-http"
-description = "Lean HTTP server, router and request/response types with Utopia semantics."
+description = "Utopia HTTP for Rust: routes, hooks, params with validators, requests and responses with utopia-php/http semantics, on hyper."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,12 +11,20 @@ publish.workspace = true
 brotli.workspace = true
 bytes.workspace = true
 flate2.workspace = true
-form_urlencoded.workspace = true
+futures-util.workspace = true
 http.workspace = true
 http-body-util.workspace = true
 hyper.workspace = true
 hyper-util.workspace = true
+indexmap.workspace = true
+php-std.workspace = true
 serde_json.workspace = true
+thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+utopia-system.workspace = true
+utopia-validators.workspace = true
 zstd.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros", "io-util"] }

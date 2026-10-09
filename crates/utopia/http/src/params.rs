@@ -1,93 +1,103 @@
-//! Request parameter decoding with PHP semantics.
+//! Request parameters in the request model: `serde_json::Value`s where PHP
+//! lists are arrays, other PHP arrays are objects and an empty `stdClass`
+//! is an empty object (see `php_std::zval`).
 //!
-//! PHP (`parse_str`, Swoole `$request->get/post`) turns `a[]=1&a[]=2` into a
-//! list, `a[k]=v` into a map and `a[0]=x&a[1]=y` into a list. The result is
-//! expressed as `serde_json::Value` so validators can treat JSON bodies and
-//! query strings uniformly.
+//! Query strings and form bodies are parsed by PHP's own rules
+//! ([`php_std::encoding::parse_str`]), JSON bodies by
+//! [`decode_payload`] (`Utopia\Http\Request::decodePayload`).
 
+use php_std::zval::{Array, Key, Zval};
 use serde_json::{Map, Value};
 
 /// Decoded request parameters.
 pub type Params = Map<String, Value>;
 
 /// Parses an `application/x-www-form-urlencoded` string (query string or
-/// form body) the way PHP's `parse_str` does.
+/// form body) like PHP's `parse_str`.
 pub fn parse_query(input: &str) -> Params {
-    let mut root = Map::new();
-    for (key, value) in form_urlencoded::parse(input.as_bytes()) {
-        insert(&mut root, &key, Value::String(value.into_owned()));
-    }
-    normalize_map(&mut root);
-    root
+    parse_query_bytes(input.as_bytes())
 }
 
-fn insert(root: &mut Map<String, Value>, raw_key: &str, value: Value) {
-    // Split `name[a][b][]` into the base name and the bracket path.
-    let (base, rest) = match raw_key.find('[') {
-        Some(pos) if pos > 0 && raw_key[pos..].contains(']') => (&raw_key[..pos], &raw_key[pos..]),
-        _ => (raw_key, ""),
-    };
-    if base.is_empty() {
-        return;
-    }
-    // PHP replaces '.' and ' ' in the top-level name with '_'.
-    let base: String = base.chars().map(|c| if c == '.' || c == ' ' { '_' } else { c }).collect();
+/// [`parse_query`] over bytes.
+pub fn parse_query_bytes(input: &[u8]) -> Params {
+    array_to_params(&php_std::encoding::parse_str(input))
+}
 
-    let mut path: Vec<Option<String>> = Vec::new();
-    let mut remaining = rest;
-    while let Some(stripped) = remaining.strip_prefix('[') {
-        match stripped.find(']') {
-            Some(end) => {
-                let segment = &stripped[..end];
-                path.push(if segment.is_empty() { None } else { Some(segment.to_owned()) });
-                remaining = &stripped[end + 1..];
-            }
-            None => break,
+/// `Request::decodePayload($raw)`: a JSON body as params. Objects become
+/// associative arrays except empty ones, which stay objects; anything that is
+/// not an array or object (or not JSON) is no params.
+pub fn decode_payload(raw: &[u8]) -> Params {
+    // PHP decodes into objects only when the body can hold an empty object
+    // (`/\{\s*\}/`); the two modes differ for property names PHP objects reject.
+    let assoc = !has_empty_object(raw);
+    match php_std::json::decode(raw, Some(assoc), php_std::json::DEFAULT_DEPTH, php_std::json::Flags::NONE)
+        .map(|v| Zval::from_value(&v))
+    {
+        Ok(Zval::Array(a)) => array_to_params(&a),
+        Ok(Zval::Object(o)) if !o.is_empty() => {
+            array_to_params(&o.iter().map(|(k, v)| (Key::from_bytes(k), v.clone())).collect())
         }
-    }
-
-    if path.is_empty() {
-        root.insert(base, value);
-        return;
-    }
-
-    let mut current = root.entry(base).or_insert_with(|| Value::Object(Map::new()));
-    for (i, segment) in path.iter().enumerate() {
-        if !current.is_object() {
-            *current = Value::Object(Map::new());
-        }
-        let map = current.as_object_mut().expect("object");
-        let key = match segment {
-            Some(k) => k.clone(),
-            None => next_index(map).to_string(),
-        };
-        if i == path.len() - 1 {
-            map.insert(key, value);
-            return;
-        }
-        current = map.entry(key).or_insert_with(|| Value::Object(Map::new()));
+        _ => Map::new(),
     }
 }
 
-fn next_index(map: &Map<String, Value>) -> i64 {
-    map.keys().filter_map(|k| k.parse::<i64>().ok()).filter(|i| *i >= 0).max().map(|m| m + 1).unwrap_or(0)
+/// `preg_match('/\{\s*\}/', $raw)`: `\s` is PCRE's ASCII whitespace.
+fn has_empty_object(raw: &[u8]) -> bool {
+    raw.iter().enumerate().any(|(i, &b)| {
+        b == b'{'
+            && raw[i + 1..].iter().find(|c| !matches!(c, b' ' | b'\t' | b'\n' | 0x0B | 0x0C | b'\r')) == Some(&b'}')
+    })
 }
 
-/// Converts maps whose keys are exactly `0..n-1` (in order) into lists, recursively.
-fn normalize_map(map: &mut Map<String, Value>) {
-    for value in map.values_mut() {
-        normalize(value);
+/// A PHP array as params (keys as strings, in order).
+pub fn array_to_params(array: &Array) -> Params {
+    let mut map = Map::with_capacity(array.len());
+    for (k, v) in array.iter() {
+        map.insert(key_string(k), zval_to_value(v));
+    }
+    map
+}
+
+/// The request-model value of a PHP value. Binary strings are decoded
+/// lossily (the model holds UTF-8 only); non-finite floats become `null`.
+pub fn zval_to_value(value: &Zval) -> Value {
+    match value {
+        Zval::Null => Value::Null,
+        Zval::Bool(b) => Value::Bool(*b),
+        Zval::Int(i) => Value::from(*i),
+        Zval::Float(f) => serde_json::Number::from_f64(*f).map(Value::Number).unwrap_or(Value::Null),
+        Zval::String(s) => Value::String(String::from_utf8_lossy(s).into_owned()),
+        Zval::Array(a) if !a.is_empty() && a.is_list() => {
+            Value::Array(a.iter().map(|(_, v)| zval_to_value(v)).collect())
+        }
+        Zval::Array(a) if a.is_empty() => Value::Array(Vec::new()),
+        Zval::Array(a) => Value::Object(array_to_params(a)),
+        // `(array) $object`: numeric property names become integer keys.
+        Zval::Object(o) if o.is_empty() => Value::Object(Map::new()),
+        Zval::Object(o) => {
+            let array: Array = o.iter().map(|(k, v)| (Key::from_bytes(k), v.clone())).collect();
+            zval_to_value(&Zval::Array(array))
+        }
     }
 }
 
-fn normalize(value: &mut Value) {
-    if let Value::Object(map) = value {
-        normalize_map(map);
-        let is_list = !map.is_empty() && map.keys().enumerate().all(|(i, k)| *k == i.to_string());
-        if is_list {
-            let items: Vec<Value> = std::mem::take(map).into_iter().map(|(_, v)| v).collect();
-            *value = Value::Array(items);
-        }
+fn key_string(key: &Key) -> String {
+    match key {
+        Key::Int(i) => i.to_string(),
+        Key::Str(s) => String::from_utf8_lossy(s).into_owned(),
+    }
+}
+
+/// Params as the PHP array they model: a list when the keys are `0..n`.
+pub fn params_value(params: &Params) -> Value {
+    if !params.is_empty()
+        && params.keys().enumerate().all(|(i, k)| php_std::zval::numeric_key(k.as_bytes()) == Some(i as i64))
+    {
+        Value::Array(params.values().cloned().collect())
+    } else if params.is_empty() {
+        Value::Array(Vec::new())
+    } else {
+        Value::Object(params.clone())
     }
 }
 
@@ -104,5 +114,14 @@ mod tests {
         assert_eq!(Value::Object(p), json!({"a": ["x", "y"], "b": {"k": "v"}, "c": {"2": "z"}}));
         let p = parse_query("a.b=1&labels%5B%5D=vip");
         assert_eq!(Value::Object(p), json!({"a_b": "1", "labels": ["vip"]}));
+    }
+
+    #[test]
+    fn json_bodies_keep_empty_objects() {
+        let p = decode_payload(br#"{"data":{"a":{},"b":{"c":1},"l":[],"n":{"0":"x"}}}"#);
+        assert_eq!(Value::Object(p), json!({"data": {"a": {}, "b": {"c": 1}, "l": [], "n": ["x"]}}));
+        for body in [&b"{}"[..], b"{ }", b"[]", b"", b"not json", b"\"a string\"", b"5"] {
+            assert!(decode_payload(body).is_empty());
+        }
     }
 }

@@ -55,8 +55,8 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
     let request = &ctx.request;
     let origin_host = request.header("origin").and_then(crate::network::url_host);
     let info = RequestInfo {
-        path: request.path.clone(),
-        method: request.method.as_str().to_owned(),
+        path: request.path().to_owned(),
+        method: request.method().to_owned(),
         user_agent: request.header_or_empty("user-agent").to_owned(),
         hostname: origin_host.unwrap_or_else(|| ctx.hostname.clone()),
         ip: ctx.ip.clone(),
@@ -68,7 +68,7 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
             .unwrap_or_else(|| "http".to_owned()),
         accept: request.header_or_empty("accept").to_owned(),
         accept_language: request.header_or_empty("accept-language").to_owned(),
-        size: request.size() + request.body.len(),
+        size: request.size() + request.body().len(),
     };
     let actor = match (&ctx.key, ctx.roles_user()) {
         (Some(_), _) | (None, None) => event::empty_user(),
