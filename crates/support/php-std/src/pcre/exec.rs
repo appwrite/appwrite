@@ -15,7 +15,7 @@ use super::parse::{
     PT_ALNUM, PT_ANY, PT_BIDICL, PT_BOOL, PT_CLIST, PT_GC, PT_LAMP, PT_PC, PT_PXGRAPH, PT_PXPRINT, PT_PXPUNCT,
     PT_PXSPACE, PT_PXXDIGIT, PT_SC, PT_SCX, PT_SPACE, PT_UCNC, PT_WORD,
 };
-use super::program::{BraKind, KetKind, Op, Program};
+use super::program::{BraKind, KetKind, LoopCount, Op, Program};
 use super::study::StartInfo;
 use super::unicode::{self, CTYPE_DIGIT, CTYPE_SPACE, CTYPE_WORD};
 
@@ -89,6 +89,10 @@ enum Ret {
     KetRMin,
     KetRMax,
     JitEmptyLoop,
+    /// What follows a lazily optional group with alternatives that matched:
+    /// backtracking into the group goes through the JIT's `BRAMINZERO`
+    /// entry, which counts a match step.
+    JitBraMinZeroAgain,
     Mark,
     Commit,
     Prune,
@@ -683,9 +687,8 @@ impl<'a> Matcher<'a> {
                     | Ret::RefMin
                     | Ret::RefMaxSame
                     | Ret::RefMaxRescan
-                    | Ret::Recurse
-                    | Ret::BraMinZero
             )
+            || (ret == Ret::BraMinZero && self.prog.jit.count[self.frames[fi].pc] != LoopCount::Silent)
         {
             self.count()?;
         }
@@ -747,8 +750,8 @@ impl<'a> Matcher<'a> {
     /// Whether the JIT counts a match step when what follows the bracket at
     /// `bra` is entered (`compile_bracket_matchingpath()`, which also compiles
     /// the whole pattern): repeated groups, groups after `BRAZERO` and groups
-    /// with alternatives. Assertions and possessive groups are compiled
-    /// elsewhere.
+    /// with alternatives; a group after `BRAMINZERO` goes back to its count.
+    /// Assertions and possessive groups are compiled elsewhere.
     fn jit_counts_bracket(&self, bra: usize, ket: KetKind) -> bool {
         let code = &self.prog.code;
         let Op::Bra { kind, .. } = code[bra] else { return false };
@@ -771,7 +774,7 @@ impl<'a> Matcher<'a> {
         } else {
             self.is_alt(self.link(bra))
         };
-        (ket != KetKind::Ket && !braminzero) || brazero || alternatives
+        braminzero || ket != KetKind::Ket || brazero || alternatives
     }
 
     fn truncate(&mut self, len: usize) {
@@ -1062,6 +1065,9 @@ impl<'a> Matcher<'a> {
                             p.start_match = f.start_match;
                             p.pc += 1;
                             self.truncate(p_idx + 1);
+                            if let Err(e) = self.jit_push(2, p_idx) {
+                                return e;
+                            }
                             continue 'ops;
                         }
                         let f = self.frames[fi];
@@ -1287,9 +1293,18 @@ impl<'a> Matcher<'a> {
                         if self.jit {
                             let words = self.jit_entry_words(pc, fi);
                             if *kind == BraKind::Once {
-                                self.frames[fi].jit_assert = words;
-                            }
-                            if let Err(e) = self.jit_push(words, fi) {
+                                // The words saved before the first branch
+                                // (repeat and zero marks) outlive the group;
+                                // its own go when it matches.
+                                let own = self.jit_bracket_words(pc);
+                                if let Err(e) = self.jit_push(words - own, fi) {
+                                    return e;
+                                }
+                                self.frames[fi].jit_assert = own;
+                                if let Err(e) = self.jit_push(own, fi) {
+                                    return e;
+                                }
+                            } else if let Err(e) = self.jit_push(words, fi) {
                                 return e;
                             }
                         }
@@ -1401,7 +1416,25 @@ impl<'a> Matcher<'a> {
                         }
                         let Op::Bra { kind, empty, .. } = code[bracode] else { return ERROR_INTERNAL };
                         if self.jit && kind != BraKind::Once {
-                            let words = self.jit_end_words(bracode);
+                            // The end of a recursion is not the end of its
+                            // group: `compile_recurse()` runs the branches
+                            // without the bracket.
+                            let recursion = match kind {
+                                BraKind::Root => {
+                                    self.frames[fi].current_recurse == 0 && matches!(code[pc + 1], Op::End)
+                                }
+                                BraKind::Capture(n) | BraKind::CapturePos(n) => self.frames[fi].current_recurse == n,
+                                _ => false,
+                            };
+                            let words = if recursion {
+                                let group = match kind {
+                                    BraKind::Capture(n) | BraKind::CapturePos(n) => n as usize,
+                                    _ => 0,
+                                };
+                                self.prog.jit.recurse_end[group]
+                            } else {
+                                self.jit_end_words(bracode)
+                            };
                             if let Err(e) = self.jit_push(words, fi) {
                                 return e;
                             }
@@ -1438,9 +1471,6 @@ impl<'a> Matcher<'a> {
                                         return ERROR_INTERNAL;
                                     }
                                     let pi = off - 1;
-                                    if self.jit_counts_bracket(bracode, ket_kind) {
-                                        jit_count!();
-                                    }
                                     self.return_from_recursion(fi, pi);
                                     continue 'ops;
                                 }
@@ -1525,9 +1555,6 @@ impl<'a> Matcher<'a> {
                             BraKind::Capture(number) | BraKind::CapturePos(number) => {
                                 let pi = p_idx.unwrap_or(0);
                                 if self.frames[fi].current_recurse == number {
-                                    if self.jit_counts_bracket(bracode, ket_kind) {
-                                        jit_count!();
-                                    }
                                     self.return_from_recursion(fi, pi);
                                     continue 'ops;
                                 }
@@ -1581,8 +1608,25 @@ impl<'a> Matcher<'a> {
                             rmatch!(bracode, Ret::KetRMax, 0);
                             continue 'ops;
                         }
-                        if self.jit_counts_bracket(bracode, ket_kind) {
-                            jit_count!();
+                        match prog.jit.count[pc] {
+                            LoopCount::Normal => {
+                                if self.jit_counts_bracket(bracode, ket_kind) {
+                                    jit_count!();
+                                }
+                                if self.jit
+                                    && ket_kind == KetKind::Ket
+                                    && bracode > 0
+                                    && matches!(code[bracode - 1], Op::BraMinZero)
+                                    && self.jit_has_alternatives(bracode)
+                                {
+                                    rmatch!(pc + 1, Ret::JitBraMinZeroAgain, 0);
+                                    continue 'ops;
+                                }
+                            }
+                            LoopCount::Exact => {
+                                jit_count!();
+                            }
+                            LoopCount::Silent => {}
                         }
                         self.frames[fi].pc = pc + 1;
                     }
@@ -1665,9 +1709,11 @@ impl<'a> Matcher<'a> {
                         f.recurse_last_used = self.last_used_ptr;
                         f.t0 = bracode;
                         f.n[0] = GF_RECURSE | number;
-                        if self.jit {
-                            let words = self.prog.jit.recurse[number as usize] + self.jit_bracket_words(bracode);
-                            if let Err(e) = self.jit_push(words, fi) {
+                        if self.jit && !self.prog.jit.recurse_inline[number as usize] {
+                            // compile_recurse(): count_match(), then the
+                            // saved data.
+                            jit_count!();
+                            if let Err(e) = self.jit_push(self.prog.jit.recurse[number as usize], fi) {
                                 return e;
                             }
                         }
@@ -1884,14 +1930,34 @@ impl<'a> Matcher<'a> {
                         if rrc != MATCH_NOMATCH {
                             continue;
                         }
-                        jit_count!();
                         let ket = self.to_ket(f.t0);
+                        // The JIT takes the zero path with the words the
+                        // group saved before its first branch still on the
+                        // stack (the start position, and the iteration mark
+                        // of a repeated group).
+                        let words = if matches!(code[ket], Op::Ket { kind: KetKind::RMax, .. }) { 2 } else { 1 };
+                        if let Err(e) = self.jit_push(words, fi) {
+                            return e;
+                        }
+                        if prog.jit.count[pc] != LoopCount::Silent {
+                            jit_count!();
+                        }
                         self.frames[fi].pc = ket + 1;
                         continue 'exec;
                     }
                     Ret::BraMinZero => {
                         if rrc != MATCH_NOMATCH {
                             continue;
+                        }
+                        // Trying the group releases the start position
+                        // (kept for a lazily repeated group).
+                        if self.jit
+                            && !matches!(code[self.to_ket(pc + 1)], Op::Ket { kind: KetKind::RMin, .. })
+                            && let Some(&(f, w)) = self.jit_alloc.last()
+                            && f == fi
+                        {
+                            self.jit_alloc.pop();
+                            self.jit_words -= w;
                         }
                         self.frames[fi].pc = pc + 1;
                         continue 'exec;
@@ -2140,6 +2206,12 @@ impl<'a> Matcher<'a> {
                         }
                         continue;
                     }
+                    Ret::JitBraMinZeroAgain => {
+                        if rrc == MATCH_NOMATCH {
+                            jit_count!();
+                        }
+                        continue;
+                    }
                     Ret::KetRMax => {
                         if rrc != MATCH_NOMATCH {
                             continue;
@@ -2205,15 +2277,6 @@ impl<'a> Matcher<'a> {
     /// End of a recursion: reinstate the captures of the frame before it
     /// and continue after the recursion item.
     fn return_from_recursion(&mut self, fi: usize, pi: usize) {
-        if self.jit {
-            // The JIT releases what the call saved when the recursion
-            // returns (the words the calling frame took last).
-            let i = self.jit_alloc.partition_point(|&(f, _)| f <= pi);
-            if i > 0 && self.jit_alloc[i - 1].0 == pi {
-                self.jit_words -= self.jit_alloc[i - 1].1;
-                self.jit_alloc[i - 1].1 = 0;
-            }
-        }
         let p = self.frames[pi];
         let ovs = self.ovs;
         let top = self.frames[fi].offset_top;
