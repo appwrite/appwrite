@@ -497,8 +497,12 @@ async lock(projectId, runId) {
   if (await take()) return 'taken';
 
   const held = await getRow('locks', projectId);
-  if (held && !(await holderStopped(held))) return null;
-  // ...mark the run that held the lock as failed, and remove its lock
+  if (held) {
+    if (!(await holderStopped(held))) return null;
+    // Only one build can remove a stopped lock: the delete fails for every other build.
+    if (!(await deleteLock(held))) return null;
+    // ...mark the run that held the lock as failed, if it never finished
+  }
   if (!(await take())) return null;
   // The lock can also have been released between the two attempts.
   return held ? 'replaced' : 'taken';
@@ -508,16 +512,38 @@ async lock(projectId, runId) {
 The lock works like this:
 
 - Row IDs are unique in a table, so only one `createRow` call can succeed. That build gets `'taken'` from `lock`.
-- Any other build gets a `409` error. `lock` returns `null`, and the run fails with "Another build is running for this site".
-- At the end of a run, the function deletes the lock row if the row still belongs to that run.
+- Any other build gets a `409` error and reads the lock row. If the run that holds the lock is still running, `lock` returns `null`, and the run fails with "Another build is running for this site".
+- At the end of a run, the function deletes the lock row with `deleteLock` if the row still belongs to that run.
 - Each run row stores the ID of its execution, from the `x-appwrite-execution-id` header. `holderStopped` reads the execution of the run that holds the lock with `functions.getExecution`.
 - If Appwrite reports that execution as `completed` while the lock still exists, the run stopped before it could release the lock.
 - Appwrite also reports an execution as `failed` when the function timeout has passed since the execution was queued. A run that waited in the queue can still be working then. So a `failed` execution counts only after 5 minutes without a new step or a change to the run row. A model call takes at most 4 minutes.
 - Appwrite can store the record of an execution late, so a missing record does not count.
 - A lock older than 16 minutes also counts as stopped, whatever the execution says. No run can last longer than the 15-minute timeout of the function.
-- When the run that holds the lock has stopped, the next build marks that run as failed and replaces the lock. `lock` then returns `'replaced'`. The function puts back the files of the live version, because the stopped run can have left half-written files.
+- When the run that holds the lock has stopped, the next build deletes the lock with `deleteLock`, marks that run as failed, and takes the lock. `lock` then returns `'replaced'`. The function puts back the files of the live version, because the stopped run can have left half-written files.
 
-Two builds that find the same stopped lock at the same moment can both take the lock. Both builds then run, so the lock prevents accidental overlap, not every overlap.
+Two builds can find the same stopped lock at the same moment, and only one of them may remove it. `deleteLock` sends the delete as a [conditional write](/blog/post/discord-bot-appwrite-functions). With the `X-Appwrite-Timestamp` header, Appwrite deletes the row only if the row did not change after that time:
+
+```javascript
+async function deleteLock(held) {
+  const client = new Client()
+    .setEndpoint(endpoint)
+    .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+    .setKey(key)
+    .addHeader('X-Appwrite-Timestamp', held.$updatedAt);
+  try {
+    await new TablesDB(client).deleteRow({ databaseId, tableId: 'locks', rowId: held.$id });
+    return true;
+  } catch (err) {
+    if (isConflict(err) || isMissing(err)) return false;
+    throw err;
+  }
+}
+```
+
+- The header holds the `$updatedAt` value of the lock row that the build read.
+- The first build deletes the row and creates a new lock row, which has a newer `$updatedAt` value.
+- The delete of the second build then fails with a `409` error, or with a `404` error if the row is gone. `deleteLock` returns `false`, and that build fails with "Another build is running for this site".
+- `unlock` also uses `deleteLock`, so a run never deletes a lock that another build took after the read.
 
 # Follow the build with Realtime
 
