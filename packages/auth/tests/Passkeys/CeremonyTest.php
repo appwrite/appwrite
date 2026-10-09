@@ -230,6 +230,36 @@ final class CeremonyTest extends TestCase
         $ceremony->verifyRegistration($challenge->state, (new Authenticator())->register($challenge->options, 'http://localhost:5173/login'));
     }
 
+    /**
+     * @return array<string, array{string, bool}>
+     */
+    public static function wildcardOrigins(): array
+    {
+        return [
+            'subdomain' => ['https://app.example.com', true],
+            'nested subdomain' => ['https://eu.app.example.com', true],
+            'apex' => ['https://example.com', false],
+            'lookalike' => ['https://evilexample.com', false],
+            'http' => ['http://app.example.com', false],
+            'port' => ['https://app.example.com:8443', false],
+            'path' => ['https://app.example.com/login', false],
+        ];
+    }
+
+    #[DataProvider('wildcardOrigins')]
+    public function testWildcardOriginAllowsSubdomains(string $origin, bool $allowed): void
+    {
+        $ceremony = new Ceremony(new RelyingParty('example.com', 'Test', ['https://*.example.com']));
+        $challenge = $ceremony->register('user@example.com', 'User');
+        $credential = (new Authenticator())->register($challenge->options, $origin, 'example.com');
+
+        if (!$allowed) {
+            $this->expectException(Exception::class);
+        }
+
+        $this->assertNotEmpty($ceremony->verifyRegistration($challenge->state, $credential)->identifier);
+    }
+
     public function testPortlessOriginAllowsOnlyDefaultPortOutsideLocalhost(): void
     {
         $ceremony = new Ceremony(new RelyingParty('example.com', 'Test', ['https://example.com']));
