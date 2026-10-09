@@ -962,9 +962,9 @@ class Jobs extends Action
 
     /**
      * (Re)activate the resource's schedule document so the scheduler enqueues
-     * cron executions. Mirrors the executor Builds worker: a schedule is active
-     * only when the resource has both a cron expression and an active
-     * deployment. Re-reads the resource so it sees a deploymentId just set by
+     * scheduled executions. Mirrors the executor Builds worker: a schedule is
+     * active only when the resource has a cron expression or an interval and an
+     * active deployment. Re-reads the resource so it sees a deploymentId just set by
      * activate().
      */
     protected function schedule(Database $dbForProject, Database $dbForPlatform, Document $resource): void
@@ -983,7 +983,8 @@ class Jobs extends Action
         $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
             'resourceUpdatedAt' => DateTime::now(),
             'schedule' => $resource->getAttribute('schedule', ''),
-            'active' => ! empty($resource->getAttribute('schedule')) && ! empty($resource->getAttribute('deploymentId')),
+            'interval' => $resource->getAttribute('interval', 0),
+            'active' => (! empty($resource->getAttribute('schedule')) || ! empty($resource->getAttribute('interval'))) && ! empty($resource->getAttribute('deploymentId')),
         ]));
     }
 

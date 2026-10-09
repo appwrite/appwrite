@@ -742,6 +742,17 @@ return [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('interval'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => 0,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('timeout'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
