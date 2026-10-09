@@ -1,0 +1,1093 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "sprintf every conversion",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%s|%d|%u|%c|%o|%x|%X|%b|%e|%E|%f|%F|%g|%G|%h|%H|%%",
+        "values": [
+          "s",
+          -42,
+          -1,
+          65,
+          8,
+          255,
+          255,
+          5,
+          1234.5,
+          0.00012,
+          3.14159,
+          -2.5,
+          0.0001,
+          1e+20,
+          0.00001,
+          123456789.0
+        ]
+      },
+      "expect": "s|-42|18446744073709551615|A|10|ff|FF|101|1.234500e+3|1.200000E-4|3.141590|-2.500000|0.0001|1.0E+20|1.0e-5|1.23457E+8|%"
+    },
+    {
+      "name": "sprintf padding and alignment",
+      "op": "format.sprintf",
+      "args": {
+        "format": "[%5s][%-5s][%05d][%-05d][%'*8s][%+d][%+d][% 5d]",
+        "values": [
+          "ab",
+          "ab",
+          -3,
+          -3,
+          "x",
+          5,
+          -5,
+          7
+        ]
+      },
+      "expect": "[   ab][ab   ][-0003][-3   ][*******x][+5][-5][    7]"
+    },
+    {
+      "name": "sprintf left-aligned zero padding of floats pads with zeros",
+      "op": "format.sprintf",
+      "args": {
+        "format": "[%-08.2f][%08.2f][%+08.2f]",
+        "values": [
+          1.5,
+          -1.5,
+          1.5
+        ]
+      },
+      "expect": "[1.500000][-0001.50][+0001.50]"
+    },
+    {
+      "name": "sprintf precision of strings",
+      "op": "format.sprintf",
+      "args": {
+        "format": "[%.2s][%.s][%5.1s][%.0s]",
+        "values": [
+          "abc",
+          "abc",
+          "abc",
+          "abc"
+        ]
+      },
+      "expect": "[ab][abc][    a][]"
+    },
+    {
+      "name": "sprintf argument numbers",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%2$s %1$s %2$s %s",
+        "values": [
+          "a",
+          "b"
+        ]
+      },
+      "expect": "b a b a"
+    },
+    {
+      "name": "sprintf star width and precision",
+      "op": "format.sprintf",
+      "args": {
+        "format": "[%*d][%-*s][%.*f][%*.*f]",
+        "values": [
+          5,
+          42,
+          4,
+          "ab",
+          2,
+          3.14159,
+          8,
+          3,
+          2.5
+        ]
+      },
+      "expect": "[   42][ab  ][3.14][   2.500]"
+    },
+    {
+      "name": "sprintf %e exponent has no padding",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%e %.0e %.3e %e",
+        "values": [
+          1234.5,
+          15.0,
+          0.000123456,
+          0.0
+        ]
+      },
+      "expect": "1.234500e+3 2e+1 1.235e-4 0.000000e+0"
+    },
+    {
+      "name": "sprintf %f rounds half to even on exact ties",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%.0f %.0f %.0f %.2f %.1f",
+        "values": [
+          0.5,
+          1.5,
+          2.5,
+          0.125,
+          0.25
+        ]
+      },
+      "expect": "0 2 2 0.12 0.2"
+    },
+    {
+      "name": "sprintf negative values rounding to zero keep the sign",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%.2f %.0f %f",
+        "values": [
+          -0.0001,
+          -0.4,
+          -0.0
+        ]
+      },
+      "expect": "-0.00 -0 0.000000"
+    },
+    {
+      "name": "sprintf %g",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%g %g %g %.3g %G %g",
+        "values": [
+          0.00001234,
+          123456789.0,
+          100000.0,
+          1234.5,
+          1e-10,
+          -0.0
+        ]
+      },
+      "expect": "1.234e-5 1.23457e+8 100000 1.23e+3 1.0E-10 -0"
+    },
+    {
+      "name": "sprintf %g precision -1",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%.*g",
+        "values": [
+          -1,
+          0.30000000000000004
+        ]
+      },
+      "expect": "0.30000000000000004"
+    },
+    {
+      "name": "sprintf precision above 53",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%.60f",
+        "values": [
+          0.1
+        ]
+      },
+      "expect": "0.10000000000000000555111512312578270211815834045410156"
+    },
+    {
+      "name": "sprintf NaN and INF with sign and zero padding (quirk)",
+      "op": "format.sprintf",
+      "args": {
+        "format": "[%+05f][%+05f][%010f][%-10f]",
+        "values": [
+          {
+            "$float": "NAN"
+          },
+          {
+            "$float": "INF"
+          },
+          {
+            "$float": "-INF"
+          },
+          {
+            "$float": "NAN"
+          }
+        ]
+      },
+      "expect": "[+aN][+NF][-INF][NaN]"
+    },
+    {
+      "name": "sprintf converts strings",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%d %d %d %f %s %s",
+        "values": [
+          "12abc",
+          " 1e3",
+          "0x1A",
+          "1e400",
+          true,
+          null
+        ]
+      },
+      "expect": "12 1000 0 INF 1 "
+    },
+    {
+      "name": "sprintf %u and %b of negatives",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%u %b %o %X",
+        "values": [
+          -1,
+          -1,
+          -1,
+          -255
+        ]
+      },
+      "expect": "18446744073709551615 1111111111111111111111111111111111111111111111111111111111111111 1777777777777777777777 FFFFFFFFFFFFFF01"
+    },
+    {
+      "name": "sprintf %c truncates to a byte",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%c%c",
+        "values": [
+          321,
+          -191
+        ]
+      },
+      "expect": "AA"
+    },
+    {
+      "name": "sprintf missing arguments",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%d %d %3$s",
+        "values": [
+          1
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ArgumentCountError",
+          "message": "4 arguments are required, 2 given"
+        }
+      }
+    },
+    {
+      "name": "sprintf unknown specifier",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%y",
+        "values": [
+          1
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Unknown format specifier \"y\""
+        }
+      }
+    },
+    {
+      "name": "sprintf missing specifier at the end",
+      "op": "format.sprintf",
+      "args": {
+        "format": "abc%",
+        "values": [
+          1
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Missing format specifier at end of string"
+        }
+      }
+    },
+    {
+      "name": "sprintf trailing percent without arguments is a count error",
+      "op": "format.sprintf",
+      "args": {
+        "format": "abc%",
+        "values": []
+      },
+      "expect": {
+        "$error": {
+          "class": "ArgumentCountError",
+          "message": "2 arguments are required, 1 given"
+        }
+      }
+    },
+    {
+      "name": "sprintf missing padding character",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%'",
+        "values": [
+          1
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Missing padding character"
+        }
+      }
+    },
+    {
+      "name": "sprintf argument number zero",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%0$s",
+        "values": [
+          1
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Argument number specifier must be greater than zero and less than 2147483647"
+        }
+      }
+    },
+    {
+      "name": "sprintf width too large",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%2147483647d",
+        "values": [
+          1
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Width must be between 0 and 2147483647"
+        }
+      }
+    },
+    {
+      "name": "sprintf star width must be an integer",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%*d",
+        "values": [
+          "5",
+          1
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Width must be an integer"
+        }
+      }
+    },
+    {
+      "name": "sprintf star precision -1 only for g",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%.*f",
+        "values": [
+          -1,
+          1.5
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Precision -1 is only supported for %g, %G, %h and %H"
+        }
+      }
+    },
+    {
+      "name": "sprintf a stdClass is superseded by a later error",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%s%s",
+        "values": [
+          {}
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ArgumentCountError",
+          "message": "3 arguments are required, 2 given"
+        }
+      }
+    },
+    {
+      "name": "sprintf a stdClass as a string",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%s",
+        "values": [
+          {}
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Object of class stdClass could not be converted to string"
+        }
+      }
+    },
+    {
+      "name": "sprintf arrays",
+      "op": "format.sprintf",
+      "args": {
+        "format": "%s %d %d %.1f",
+        "values": [
+          [
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [],
+          {
+            "a": 1
+          }
+        ]
+      },
+      "expect": "Array 1 0 1.0"
+    },
+    {
+      "name": "vsprintf missing arguments",
+      "op": "format.vsprintf",
+      "args": {
+        "format": "%s %s",
+        "values": [
+          "a"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "The arguments array must contain 2 items, 1 given"
+        }
+      }
+    },
+    {
+      "name": "vsprintf",
+      "op": "format.vsprintf",
+      "args": {
+        "format": "%04d-%02d-%02d",
+        "values": [
+          2026,
+          10,
+          9
+        ]
+      },
+      "expect": "2026-10-09"
+    },
+    {
+      "name": "number_format defaults round half up",
+      "op": "format.number_format",
+      "args": {
+        "num": 1234.5
+      },
+      "expect": "1,235"
+    },
+    {
+      "name": "number_format separators",
+      "op": "format.number_format",
+      "args": {
+        "num": 1234567.891,
+        "decimals": 2,
+        "decimal_separator": ",",
+        "thousands_separator": "."
+      },
+      "expect": "1.234.567,89"
+    },
+    {
+      "name": "number_format multi-byte separators",
+      "op": "format.number_format",
+      "args": {
+        "num": -1234567.5,
+        "decimals": 1,
+        "decimal_separator": "::",
+        "thousands_separator": " "
+      },
+      "expect": "-1 234 567::5"
+    },
+    {
+      "name": "number_format never prints -0",
+      "op": "format.number_format",
+      "args": {
+        "num": -0.4
+      },
+      "expect": "0"
+    },
+    {
+      "name": "number_format pre-rounding",
+      "op": "format.number_format",
+      "args": {
+        "num": 1.005,
+        "decimals": 2
+      },
+      "expect": "1.01"
+    },
+    {
+      "name": "number_format negative decimals",
+      "op": "format.number_format",
+      "args": {
+        "num": 1250.0,
+        "decimals": -2
+      },
+      "expect": "1,300"
+    },
+    {
+      "name": "number_format integers",
+      "op": "format.number_format",
+      "args": {
+        "num": -9223372036854775808,
+        "decimals": 2
+      },
+      "expect": "-9,223,372,036,854,775,808.00"
+    },
+    {
+      "name": "number_format integer rounding",
+      "op": "format.number_format",
+      "args": {
+        "num": 9223372036854775807,
+        "decimals": -18
+      },
+      "expect": "9,000,000,000,000,000,000"
+    },
+    {
+      "name": "number_format large float takes the integer path",
+      "op": "format.number_format",
+      "args": {
+        "num": 4503599627370497.0,
+        "decimals": 2
+      },
+      "expect": "4,503,599,627,370,497.00"
+    },
+    {
+      "name": "number_format infinity has no sign",
+      "op": "format.number_format",
+      "args": {
+        "num": {
+          "$float": "-INF"
+        },
+        "decimals": 2
+      },
+      "expect": "inf"
+    },
+    {
+      "name": "number_format NaN",
+      "op": "format.number_format",
+      "args": {
+        "num": {
+          "$float": "NAN"
+        }
+      },
+      "expect": "nan"
+    },
+    {
+      "name": "number_format more than 318 decimals",
+      "op": "format.number_format",
+      "args": {
+        "num": 0.1,
+        "decimals": 330,
+        "thousands_separator": ""
+      },
+      "expect": "0.100000000000000005551115123125782702118158340454101562500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "round pre-rounding",
+      "op": "format.round",
+      "args": {
+        "num": 0.285,
+        "precision": 2
+      },
+      "expect": 0.29
+    },
+    {
+      "name": "round half away from zero",
+      "op": "format.round",
+      "args": {
+        "num": -2.5
+      },
+      "expect": -3.0
+    },
+    {
+      "name": "round modes",
+      "op": "format.round",
+      "args": {
+        "num": 2.5,
+        "precision": 0,
+        "mode": 3
+      },
+      "expect": 2.0
+    },
+    {
+      "name": "round half odd",
+      "op": "format.round",
+      "args": {
+        "num": 2.5,
+        "precision": 0,
+        "mode": 4
+      },
+      "expect": 3.0
+    },
+    {
+      "name": "round half down",
+      "op": "format.round",
+      "args": {
+        "num": 1.955,
+        "precision": 2,
+        "mode": 2
+      },
+      "expect": 1.95
+    },
+    {
+      "name": "round towards positive infinity",
+      "op": "format.round",
+      "args": {
+        "num": -1.11,
+        "precision": 1,
+        "mode": 5
+      },
+      "expect": -1.1
+    },
+    {
+      "name": "round towards negative infinity",
+      "op": "format.round",
+      "args": {
+        "num": 1.19,
+        "precision": 1,
+        "mode": 6
+      },
+      "expect": 1.1
+    },
+    {
+      "name": "round towards zero",
+      "op": "format.round",
+      "args": {
+        "num": -1.99,
+        "precision": 1,
+        "mode": 7
+      },
+      "expect": -1.9
+    },
+    {
+      "name": "round away from zero",
+      "op": "format.round",
+      "args": {
+        "num": 1.01,
+        "precision": 1,
+        "mode": 8
+      },
+      "expect": 1.1
+    },
+    {
+      "name": "round integer with negative precision",
+      "op": "format.round",
+      "args": {
+        "num": 1250,
+        "precision": -2
+      },
+      "expect": 1300.0
+    },
+    {
+      "name": "round integer keeps value",
+      "op": "format.round",
+      "args": {
+        "num": 9007199254740993
+      },
+      "expect": 9007199254740992.0
+    },
+    {
+      "name": "round with musl pow(10, 23) (quirk)",
+      "op": "format.round",
+      "args": {
+        "num": 4.5e-23,
+        "precision": 23
+      },
+      "expect": 5e-23
+    },
+    {
+      "name": "round huge precision",
+      "op": "format.round",
+      "args": {
+        "num": 1.5,
+        "precision": 9223372036854775807
+      },
+      "expect": 1.5
+    },
+    {
+      "name": "floor negative half",
+      "op": "format.floor",
+      "args": {
+        "num": -0.5
+      },
+      "expect": -1.0
+    },
+    {
+      "name": "ceil negative half is -0",
+      "op": "format.ceil",
+      "args": {
+        "num": -0.5
+      },
+      "expect": -0.0
+    },
+    {
+      "name": "floor integer",
+      "op": "format.floor",
+      "args": {
+        "num": 7
+      },
+      "expect": 7.0
+    },
+    {
+      "name": "abs PHP_INT_MIN is a float",
+      "op": "format.abs",
+      "args": {
+        "num": -9223372036854775808
+      },
+      "expect": 9.223372036854776e+18
+    },
+    {
+      "name": "fmod sign of the dividend",
+      "op": "format.fmod",
+      "args": {
+        "num1": -7.5,
+        "num2": 2.0
+      },
+      "expect": -1.5
+    },
+    {
+      "name": "fmod by zero",
+      "op": "format.fmod",
+      "args": {
+        "num1": 1.0,
+        "num2": 0.0
+      },
+      "expect": {
+        "$float": "NAN"
+      }
+    },
+    {
+      "name": "fdiv by zero",
+      "op": "format.fdiv",
+      "args": {
+        "num1": -1.0,
+        "num2": 0.0
+      },
+      "expect": {
+        "$float": "-INF"
+      }
+    },
+    {
+      "name": "intdiv truncates",
+      "op": "format.intdiv",
+      "args": {
+        "num1": -7,
+        "num2": 2
+      },
+      "expect": -3
+    },
+    {
+      "name": "intdiv by zero",
+      "op": "format.intdiv",
+      "args": {
+        "num1": 1,
+        "num2": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "DivisionByZeroError",
+          "message": "Division by zero"
+        }
+      }
+    },
+    {
+      "name": "intdiv PHP_INT_MIN by -1",
+      "op": "format.intdiv",
+      "args": {
+        "num1": -9223372036854775808,
+        "num2": -1
+      },
+      "expect": {
+        "$error": {
+          "class": "ArithmeticError",
+          "message": "Division of PHP_INT_MIN by -1 is not an integer"
+        }
+      }
+    },
+    {
+      "name": "intval leading number",
+      "op": "format.intval",
+      "args": {
+        "value": "12abc"
+      },
+      "expect": 12
+    },
+    {
+      "name": "intval float string",
+      "op": "format.intval",
+      "args": {
+        "value": " 1e3"
+      },
+      "expect": 1000
+    },
+    {
+      "name": "intval hex string is 0",
+      "op": "format.intval",
+      "args": {
+        "value": "0x1A"
+      },
+      "expect": 0
+    },
+    {
+      "name": "intval overflowing string saturates",
+      "op": "format.intval",
+      "args": {
+        "value": "99999999999999999999"
+      },
+      "expect": 9223372036854775807
+    },
+    {
+      "name": "intval infinite float string is 0",
+      "op": "format.intval",
+      "args": {
+        "value": "1e1000"
+      },
+      "expect": 0
+    },
+    {
+      "name": "intval 19 digits and an empty signed exponent (quirk)",
+      "op": "format.intval",
+      "args": {
+        "value": "9223372036854775808e+"
+      },
+      "expect": -9223372036854775808
+    },
+    {
+      "name": "intval float out of range wraps",
+      "op": "format.intval",
+      "args": {
+        "value": 1e+19
+      },
+      "expect": -8446744073709551616
+    },
+    {
+      "name": "intval infinity",
+      "op": "format.intval",
+      "args": {
+        "value": {
+          "$float": "INF"
+        }
+      },
+      "expect": 0
+    },
+    {
+      "name": "intval array",
+      "op": "format.intval",
+      "args": {
+        "value": [
+          0
+        ]
+      },
+      "expect": 1
+    },
+    {
+      "name": "intval base 16 with prefix",
+      "op": "format.intval",
+      "args": {
+        "value": "0x1A",
+        "base": 16
+      },
+      "expect": 26
+    },
+    {
+      "name": "intval base 0",
+      "op": "format.intval",
+      "args": {
+        "value": "012",
+        "base": 0
+      },
+      "expect": 10
+    },
+    {
+      "name": "intval base 0 binary",
+      "op": "format.intval",
+      "args": {
+        "value": " -0b101",
+        "base": 0
+      },
+      "expect": -5
+    },
+    {
+      "name": "intval base 36",
+      "op": "format.intval",
+      "args": {
+        "value": "zz",
+        "base": 36
+      },
+      "expect": 1295
+    },
+    {
+      "name": "intval invalid base",
+      "op": "format.intval",
+      "args": {
+        "value": "12",
+        "base": 1
+      },
+      "expect": 0
+    },
+    {
+      "name": "intval base overflow",
+      "op": "format.intval",
+      "args": {
+        "value": "-ffffffffffffffffff",
+        "base": 16
+      },
+      "expect": -9223372036854775808
+    },
+    {
+      "name": "floatval negative zero",
+      "op": "format.floatval",
+      "args": {
+        "value": "-0"
+      },
+      "expect": -0.0
+    },
+    {
+      "name": "floatval overflow",
+      "op": "format.floatval",
+      "args": {
+        "value": "1e400"
+      },
+      "expect": {
+        "$float": "INF"
+      }
+    },
+    {
+      "name": "floatval leading dot",
+      "op": "format.floatval",
+      "args": {
+        "value": "  .5e1x"
+      },
+      "expect": 5.0
+    },
+    {
+      "name": "floatval incomplete exponent",
+      "op": "format.floatval",
+      "args": {
+        "value": "1e+"
+      },
+      "expect": 1.0
+    },
+    {
+      "name": "floatval INF is not a number",
+      "op": "format.floatval",
+      "args": {
+        "value": "INF"
+      },
+      "expect": 0.0
+    },
+    {
+      "name": "boolval string 0.0",
+      "op": "format.boolval",
+      "args": {
+        "value": "0.0"
+      },
+      "expect": true
+    },
+    {
+      "name": "boolval stdClass",
+      "op": "format.boolval",
+      "args": {
+        "value": {}
+      },
+      "expect": true
+    },
+    {
+      "name": "max keeps the first of equal values",
+      "op": "format.max",
+      "args": {
+        "values": [
+          1,
+          1.0
+        ]
+      },
+      "expect": 1
+    },
+    {
+      "name": "max float first",
+      "op": "format.max",
+      "args": {
+        "values": [
+          1.0,
+          1
+        ]
+      },
+      "expect": 1.0
+    },
+    {
+      "name": "max NaN first",
+      "op": "format.max",
+      "args": {
+        "values": [
+          {
+            "$float": "NAN"
+          },
+          1,
+          2
+        ]
+      },
+      "expect": {
+        "$float": "NAN"
+      }
+    },
+    {
+      "name": "max NaN later",
+      "op": "format.max",
+      "args": {
+        "values": [
+          1,
+          {
+            "$float": "NAN"
+          }
+        ]
+      },
+      "expect": 1
+    },
+    {
+      "name": "min mixed",
+      "op": "format.min",
+      "args": {
+        "values": [
+          3,
+          2.5,
+          9007199254740993,
+          -1
+        ]
+      },
+      "expect": -1
+    },
+    {
+      "name": "max of an array",
+      "op": "format.max_array",
+      "args": {
+        "value": [
+          1,
+          {
+            "$float": "NAN"
+          },
+          3
+        ]
+      },
+      "expect": 3
+    },
+    {
+      "name": "min of an empty array",
+      "op": "format.min_array",
+      "args": {
+        "value": []
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "min(): Argument #1 ($value) must contain at least one element"
+        }
+      }
+    }
+  ]
+}

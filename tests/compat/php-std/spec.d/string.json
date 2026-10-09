@@ -1,0 +1,2678 @@
+{
+  "ops": {
+    "string.strtolower": {
+      "doc": "strtolower($string): ASCII-only lowercase",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_bytes"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.strtoupper": {
+      "doc": "strtoupper($string): ASCII-only uppercase",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_bytes"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.ucfirst": {
+      "doc": "ucfirst($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_bytes"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.lcfirst": {
+      "doc": "lcfirst($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_bytes"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.ucwords": {
+      "doc": "ucwords($string, $separators)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "separators": {
+                "gen": "ref",
+                "name": "string_charlist"
+              }
+            },
+            "optional": [
+              "separators"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.trim": {
+      "doc": "trim($string, $characters), with `..` ranges",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "characters": {
+                "gen": "ref",
+                "name": "string_charlist"
+              }
+            },
+            "optional": [
+              "characters"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.ltrim": {
+      "doc": "ltrim($string, $characters), with `..` ranges",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "characters": {
+                "gen": "ref",
+                "name": "string_charlist"
+              }
+            },
+            "optional": [
+              "characters"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.rtrim": {
+      "doc": "rtrim($string, $characters), with `..` ranges",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "characters": {
+                "gen": "ref",
+                "name": "string_charlist"
+              }
+            },
+            "optional": [
+              "characters"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.str_pad": {
+      "doc": "str_pad($string, $length, $pad_string, $pad_type)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "length": {
+                "gen": "int",
+                "min": -3,
+                "max": 30
+              },
+              "pad_string": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_needle"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "",
+                      "-=",
+                      "é"
+                    ]
+                  }
+                ]
+              },
+              "pad_type": {
+                "gen": "int",
+                "min": 0,
+                "max": 2
+              }
+            },
+            "optional": [
+              "pad_string",
+              "pad_type"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.substr": {
+      "doc": "substr($string, $offset, $length)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_bytes"
+              },
+              "offset": {
+                "gen": "ref",
+                "name": "string_offset"
+              },
+              "length": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_offset"
+                  },
+                  {
+                    "gen": "null"
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "length"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.strpos": {
+      "doc": "strpos($haystack, $needle, $offset)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "haystack": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "needle": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "offset": {
+                "gen": "ref",
+                "name": "string_offset"
+              }
+            },
+            "optional": [
+              "offset"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.stripos": {
+      "doc": "stripos($haystack, $needle, $offset)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "haystack": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "needle": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "offset": {
+                "gen": "ref",
+                "name": "string_offset"
+              }
+            },
+            "optional": [
+              "offset"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.strrpos": {
+      "doc": "strrpos($haystack, $needle, $offset)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "haystack": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "needle": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "offset": {
+                "gen": "ref",
+                "name": "string_offset"
+              }
+            },
+            "optional": [
+              "offset"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.strripos": {
+      "doc": "strripos($haystack, $needle, $offset)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "haystack": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "needle": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "offset": {
+                "gen": "ref",
+                "name": "string_offset"
+              }
+            },
+            "optional": [
+              "offset"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.str_contains": {
+      "doc": "str_contains($haystack, $needle)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "haystack": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "needle": {
+                "gen": "ref",
+                "name": "string_needle"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.str_starts_with": {
+      "doc": "str_starts_with($haystack, $needle)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "haystack": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "needle": {
+                "gen": "ref",
+                "name": "string_needle"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.str_ends_with": {
+      "doc": "str_ends_with($haystack, $needle)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "haystack": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "needle": {
+                "gen": "ref",
+                "name": "string_needle"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.strstr": {
+      "doc": "strstr($haystack, $needle, $before_needle)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "haystack": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "needle": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "before_needle": {
+                "gen": "bool"
+              }
+            },
+            "optional": [
+              "before_needle"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.stristr": {
+      "doc": "stristr($haystack, $needle, $before_needle)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "haystack": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "needle": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "before_needle": {
+                "gen": "bool"
+              }
+            },
+            "optional": [
+              "before_needle"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.strrchr": {
+      "doc": "strrchr($haystack, $needle, $before_needle)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "haystack": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "needle": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "before_needle": {
+                "gen": "bool"
+              }
+            },
+            "optional": [
+              "before_needle"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.strpbrk": {
+      "doc": "strpbrk($string, $characters)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "characters": {
+                "gen": "ref",
+                "name": "string_needle"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.substr_count": {
+      "doc": "substr_count($haystack, $needle, $offset, $length)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "haystack": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "needle": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "offset": {
+                "gen": "ref",
+                "name": "string_offset"
+              },
+              "length": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_offset"
+                  },
+                  {
+                    "gen": "null"
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "offset",
+              "length"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.strspn": {
+      "doc": "strspn($string, $characters, $offset, $length)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "characters": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "offset": {
+                "gen": "ref",
+                "name": "string_offset"
+              },
+              "length": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_offset"
+                  },
+                  {
+                    "gen": "null"
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "offset",
+              "length"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.strcspn": {
+      "doc": "strcspn($string, $characters, $offset, $length)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "characters": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "offset": {
+                "gen": "ref",
+                "name": "string_offset"
+              },
+              "length": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_offset"
+                  },
+                  {
+                    "gen": "null"
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "offset",
+              "length"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.substr_replace": {
+      "doc": "substr_replace($string, $replace, $offset, $length), string and array forms",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_bytes"
+              },
+              "replace": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "offset": {
+                "gen": "ref",
+                "name": "string_offset"
+              },
+              "length": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_offset"
+                  },
+                  {
+                    "gen": "null"
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "length"
+            ]
+          },
+          "iterations": 3000,
+          "name": "string"
+        },
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "replace": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "string_needle"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "string_scalar"
+                    }
+                  ]
+                },
+                "max": 3
+              },
+              "offset": {
+                "gen": "ref",
+                "name": "string_offset"
+              },
+              "length": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_offset"
+                  },
+                  {
+                    "gen": "null"
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "length"
+            ]
+          },
+          "iterations": 2000,
+          "name": "string-replace-array"
+        },
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "ref",
+                          "name": "string_text"
+                        },
+                        {
+                          "gen": "ref",
+                          "name": "string_scalar"
+                        }
+                      ]
+                    },
+                    "max": 4
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "k": {
+                        "gen": "ref",
+                        "name": "string_text"
+                      },
+                      "3": {
+                        "gen": "ref",
+                        "name": "string_text"
+                      },
+                      "0": {
+                        "gen": "ref",
+                        "name": "string_scalar"
+                      }
+                    }
+                  }
+                ]
+              },
+              "replace": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_needle"
+                  },
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "ref",
+                          "name": "string_needle"
+                        },
+                        {
+                          "gen": "ref",
+                          "name": "string_scalar"
+                        }
+                      ]
+                    },
+                    "max": 3
+                  }
+                ]
+              },
+              "offset": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_offset"
+                  },
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "int",
+                          "min": -6,
+                          "max": 6
+                        },
+                        {
+                          "gen": "pick",
+                          "from": [
+                            "2",
+                            "-1",
+                            1.9,
+                            true,
+                            null,
+                            "x"
+                          ]
+                        }
+                      ]
+                    },
+                    "max": 3
+                  }
+                ]
+              },
+              "length": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "ref",
+                        "name": "string_offset"
+                      },
+                      {
+                        "gen": "null"
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "int",
+                          "min": -6,
+                          "max": 6
+                        },
+                        {
+                          "gen": "pick",
+                          "from": [
+                            "2",
+                            "-1",
+                            1.9,
+                            true,
+                            null,
+                            "x"
+                          ]
+                        }
+                      ]
+                    },
+                    "max": 3
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "length"
+            ]
+          },
+          "iterations": 4000,
+          "name": "arrays"
+        }
+      ]
+    },
+    "string.substr_compare": {
+      "doc": "substr_compare($haystack, $needle, $offset, $length, $case_insensitive)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "haystack": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "needle": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "offset": {
+                "gen": "ref",
+                "name": "string_offset"
+              },
+              "length": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_offset"
+                  },
+                  {
+                    "gen": "null"
+                  }
+                ]
+              },
+              "case_insensitive": {
+                "gen": "bool"
+              }
+            },
+            "optional": [
+              "length",
+              "case_insensitive"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.strcmp": {
+      "doc": "strcmp($string1, $string2)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string1": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "string2": {
+                "gen": "ref",
+                "name": "string_text"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.strcasecmp": {
+      "doc": "strcasecmp($string1, $string2)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string1": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "string2": {
+                "gen": "ref",
+                "name": "string_text"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.strncmp": {
+      "doc": "strncmp($string1, $string2, $length)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string1": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "string2": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "length": {
+                "gen": "int",
+                "min": -2,
+                "max": 12
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.strncasecmp": {
+      "doc": "strncasecmp($string1, $string2, $length)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string1": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "string2": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "length": {
+                "gen": "int",
+                "min": -2,
+                "max": 12
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.str_replace": {
+      "doc": "[str_replace($search, $replace, $subject, $count), $count]",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "search": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "replace": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "string_text"
+              }
+            }
+          },
+          "iterations": 3000,
+          "name": "strings"
+        },
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "search": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "string_needle"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "string_scalar"
+                    }
+                  ]
+                },
+                "max": 4
+              },
+              "replace": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_needle"
+                  },
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "ref",
+                          "name": "string_needle"
+                        },
+                        {
+                          "gen": "ref",
+                          "name": "string_scalar"
+                        }
+                      ]
+                    },
+                    "max": 4
+                  }
+                ]
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "string_text"
+              }
+            }
+          },
+          "iterations": 3000,
+          "name": "arrays"
+        },
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "search": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_needle"
+                  },
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "ref",
+                          "name": "string_needle"
+                        },
+                        {
+                          "gen": "ref",
+                          "name": "string_scalar"
+                        }
+                      ]
+                    },
+                    "max": 4
+                  }
+                ]
+              },
+              "replace": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "subject": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "ref",
+                          "name": "string_text"
+                        },
+                        {
+                          "gen": "ref",
+                          "name": "string_scalar"
+                        }
+                      ]
+                    },
+                    "max": 3
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "k": {
+                        "gen": "ref",
+                        "name": "string_text"
+                      },
+                      "7": {
+                        "gen": "ref",
+                        "name": "string_text"
+                      },
+                      "0": {
+                        "gen": "ref",
+                        "name": "string_scalar"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000,
+          "name": "subjects"
+        }
+      ]
+    },
+    "string.str_ireplace": {
+      "doc": "[str_ireplace($search, $replace, $subject, $count), $count] (ASCII case-insensitive)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "search": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "replace": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "string_text"
+              }
+            }
+          },
+          "iterations": 3000,
+          "name": "strings"
+        },
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "search": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "string_needle"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "string_scalar"
+                    }
+                  ]
+                },
+                "max": 4
+              },
+              "replace": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_needle"
+                  },
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "ref",
+                          "name": "string_needle"
+                        },
+                        {
+                          "gen": "ref",
+                          "name": "string_scalar"
+                        }
+                      ]
+                    },
+                    "max": 4
+                  }
+                ]
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "string_text"
+              }
+            }
+          },
+          "iterations": 3000,
+          "name": "arrays"
+        },
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "search": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_needle"
+                  },
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "ref",
+                          "name": "string_needle"
+                        },
+                        {
+                          "gen": "ref",
+                          "name": "string_scalar"
+                        }
+                      ]
+                    },
+                    "max": 4
+                  }
+                ]
+              },
+              "replace": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "subject": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "ref",
+                          "name": "string_text"
+                        },
+                        {
+                          "gen": "ref",
+                          "name": "string_scalar"
+                        }
+                      ]
+                    },
+                    "max": 3
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "k": {
+                        "gen": "ref",
+                        "name": "string_text"
+                      },
+                      "7": {
+                        "gen": "ref",
+                        "name": "string_text"
+                      },
+                      "0": {
+                        "gen": "ref",
+                        "name": "string_scalar"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000,
+          "name": "subjects"
+        }
+      ]
+    },
+    "string.strtr": {
+      "doc": "strtr($string, $from, $to) and strtr($string, $replace_pairs)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "from": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "to": {
+                "gen": "ref",
+                "name": "string_needle"
+              }
+            }
+          },
+          "iterations": 3000,
+          "name": "chars"
+        },
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "from": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "a": {
+                        "gen": "ref",
+                        "name": "string_needle"
+                      },
+                      "ab": {
+                        "gen": "ref",
+                        "name": "string_needle"
+                      },
+                      "b": {
+                        "gen": "ref",
+                        "name": "string_scalar"
+                      },
+                      "": {
+                        "gen": "ref",
+                        "name": "string_needle"
+                      },
+                      "ba": {
+                        "gen": "ref",
+                        "name": "string_needle"
+                      }
+                    },
+                    "optional": [
+                      "ab",
+                      "b",
+                      "",
+                      "ba"
+                    ]
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "1": {
+                        "gen": "ref",
+                        "name": "string_needle"
+                      },
+                      "10": {
+                        "gen": "ref",
+                        "name": "string_needle"
+                      },
+                      ",": {
+                        "gen": "ref",
+                        "name": "string_needle"
+                      },
+                      "é": {
+                        "gen": "ref",
+                        "name": "string_needle"
+                      }
+                    },
+                    "optional": [
+                      "10",
+                      ",",
+                      "é"
+                    ]
+                  },
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "string_needle"
+                    },
+                    "max": 3
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000,
+          "name": "pairs"
+        }
+      ]
+    },
+    "string.explode": {
+      "doc": "explode($separator, $string, $limit)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "separator": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "string": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "limit": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -4,
+                    "max": 4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      -9223372036854775808,
+                      9223372036854775807
+                    ]
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "limit"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.implode": {
+      "doc": "implode($separator, $array) of strings and scalars",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "separator": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "array": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "string_bytes"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "string_value"
+                    }
+                  ]
+                },
+                "max": 5
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.implode_values": {
+      "doc": "implode($separator, $array) of PHP values (php_std::string::implode_values)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "separator": {
+                "gen": "string",
+                "alphabet": "ascii",
+                "min": 0,
+                "max": 3
+              },
+              "array": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "string_json"
+                },
+                "max": 5
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.strval": {
+      "doc": "strval($value): PHP's string conversion (php_std::string::to_php_string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "string_json"
+              }
+            }
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "string.str_split": {
+      "doc": "str_split($string, $length)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_bytes"
+              },
+              "length": {
+                "gen": "int",
+                "min": -1,
+                "max": 6
+              }
+            },
+            "optional": [
+              "length"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.chunk_split": {
+      "doc": "chunk_split($string, $length, $separator)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_bytes"
+              },
+              "length": {
+                "gen": "int",
+                "min": -1,
+                "max": 6
+              },
+              "separator": {
+                "gen": "ref",
+                "name": "string_needle"
+              }
+            },
+            "optional": [
+              "length",
+              "separator"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.wordwrap": {
+      "doc": "wordwrap($string, $width, $break, $cut_long_words)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "string",
+                "alphabet": "ab -\n",
+                "min": 0,
+                "max": 30
+              },
+              "width": {
+                "gen": "int",
+                "min": -3,
+                "max": 8
+              },
+              "break": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "\n",
+                      "<br>",
+                      "--",
+                      "-",
+                      " ",
+                      "a",
+                      "\u0000x"
+                    ]
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "string_needle"
+                  }
+                ]
+              },
+              "cut_long_words": {
+                "gen": "bool"
+              }
+            },
+            "optional": [
+              "width",
+              "break",
+              "cut_long_words"
+            ]
+          },
+          "iterations": 4000,
+          "name": "words"
+        },
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_text"
+              },
+              "width": {
+                "gen": "int",
+                "min": -3,
+                "max": 8
+              },
+              "break": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "cut_long_words": {
+                "gen": "bool"
+              }
+            },
+            "optional": [
+              "width",
+              "break",
+              "cut_long_words"
+            ]
+          },
+          "iterations": 2000,
+          "name": "bytes"
+        }
+      ]
+    },
+    "string.nl2br": {
+      "doc": "nl2br($string, $use_xhtml)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "a\r\n",
+                    "min": 0,
+                    "max": 10
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  }
+                ]
+              },
+              "use_xhtml": {
+                "gen": "bool"
+              }
+            },
+            "optional": [
+              "use_xhtml"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.str_repeat": {
+      "doc": "str_repeat($string, $times)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_needle"
+              },
+              "times": {
+                "gen": "int",
+                "min": -2,
+                "max": 5
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.strrev": {
+      "doc": "strrev($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_bytes"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.ord": {
+      "doc": "ord($character)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "character": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.chr": {
+      "doc": "chr($codepoint)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "codepoint": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -300,
+                    "max": 600
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      -9223372036854775808,
+                      9223372036854775807
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.quotemeta": {
+      "doc": "quotemeta($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": ".\\+*?[^]$()ab",
+                    "min": 0,
+                    "max": 10
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.addcslashes": {
+      "doc": "addcslashes($string, $characters)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "string_bytes"
+              },
+              "characters": {
+                "gen": "ref",
+                "name": "string_charlist"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.stripcslashes": {
+      "doc": "stripcslashes($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "\\nrtxabf0123789AF",
+                    "min": 0,
+                    "max": 14
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.ctype_alnum": {
+      "doc": "ctype_alnum($text) on strings",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "0123456789abcdefABCDEF \t\n!.~",
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.ctype_alpha": {
+      "doc": "ctype_alpha($text) on strings",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "0123456789abcdefABCDEF \t\n!.~",
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.ctype_cntrl": {
+      "doc": "ctype_cntrl($text) on strings",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "0123456789abcdefABCDEF \t\n!.~",
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.ctype_digit": {
+      "doc": "ctype_digit($text) on strings",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "0123456789abcdefABCDEF \t\n!.~",
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.ctype_graph": {
+      "doc": "ctype_graph($text) on strings",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "0123456789abcdefABCDEF \t\n!.~",
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.ctype_lower": {
+      "doc": "ctype_lower($text) on strings",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "0123456789abcdefABCDEF \t\n!.~",
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.ctype_print": {
+      "doc": "ctype_print($text) on strings",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "0123456789abcdefABCDEF \t\n!.~",
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.ctype_punct": {
+      "doc": "ctype_punct($text) on strings",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "0123456789abcdefABCDEF \t\n!.~",
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.ctype_space": {
+      "doc": "ctype_space($text) on strings",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "0123456789abcdefABCDEF \t\n!.~",
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.ctype_upper": {
+      "doc": "ctype_upper($text) on strings",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "0123456789abcdefABCDEF \t\n!.~",
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "string.ctype_xdigit": {
+      "doc": "ctype_xdigit($text) on strings",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "0123456789abcdefABCDEF \t\n!.~",
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "string_b64": {
+      "gen": "repeat",
+      "part": {
+        "gen": "one_of",
+        "of": [
+          {
+            "gen": "pick",
+            "from": [
+              "YWJj",
+              "QUJD",
+              "YUIu",
+              "IAkK",
+              "AAAA",
+              "w6lh",
+              "YcOp",
+              "4oKs",
+              "8J+Y",
+              "gGFi",
+              "//79",
+              "wyhh",
+              "4oJh",
+              "7aCA",
+              "wK9h",
+              "9JCA",
+              "+IiA",
+              "zqNh",
+              "z4Ig",
+              "Li5h",
+              "YS16",
+              "JTQx",
+              "Jmx0",
+              "PGI+",
+              "XCci",
+              "YQBi",
+              "CwwN",
+              "4bqe",
+              "xLBh",
+              "77+9",
+              "n5iA",
+              "zIFh",
+              "4ICA",
+              "4KCA",
+              "77u/",
+              "wqBh",
+              "DQog",
+              "YSBi",
+              "w58u",
+              "4b6I",
+              "8JCQ",
+              "kKiA"
+            ]
+          },
+          {
+            "gen": "string",
+            "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+            "min": 4,
+            "max": 4
+          }
+        ]
+      },
+      "sep": "",
+      "min": 0,
+      "max": 8
+    },
+    "string_raw": {
+      "gen": "object",
+      "fields": {
+        "$bytes": {
+          "gen": "ref",
+          "name": "string_b64"
+        }
+      }
+    },
+    "string_bytes": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 16,
+          "tricky": 0.3
+        },
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 16
+        },
+        {
+          "gen": "string",
+          "alphabet": "aAbBzZ09 .-_\t\n\r\u000b\f\u0000",
+          "min": 0,
+          "max": 16
+        },
+        {
+          "gen": "ref",
+          "name": "string_raw"
+        }
+      ]
+    },
+    "string_text": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "abAB ,.-\n",
+          "min": 0,
+          "max": 20
+        },
+        {
+          "gen": "string",
+          "alphabet": "aAéÉΣσς ,",
+          "min": 0,
+          "max": 12
+        },
+        {
+          "gen": "ref",
+          "name": "string_bytes"
+        }
+      ]
+    },
+    "string_needle": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "abAB ,.-\n",
+          "min": 0,
+          "max": 3
+        },
+        {
+          "gen": "string",
+          "alphabet": "aAéÉΣσς ,",
+          "min": 0,
+          "max": 2
+        },
+        {
+          "gen": "ref",
+          "name": "string_raw"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "a",
+            "ab",
+            "AB",
+            ",",
+            "..",
+            "\u0000"
+          ]
+        }
+      ]
+    },
+    "string_charlist": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "abAB .-_\t\n",
+          "min": 0,
+          "max": 5
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "a..z",
+            "A..Z",
+            "0..9",
+            "a..",
+            "..z",
+            "z..a",
+            "a..b..c",
+            "..",
+            ".",
+            "a.b",
+            "\u0000..\u001f",
+            " \n\r\t\u000b\u0000"
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "string_raw"
+        }
+      ]
+    },
+    "string_offset": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -25,
+          "max": 25
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            1,
+            -1,
+            -9223372036854775808,
+            9223372036854775807,
+            -9223372036854775807,
+            9223372036854775806
+          ]
+        }
+      ]
+    },
+    "string_scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "string_bytes"
+        },
+        {
+          "gen": "int",
+          "min": -1000,
+          "max": 1000
+        },
+        {
+          "gen": "float",
+          "min": -1000000.0,
+          "max": 1000000.0
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0.1,
+            1e+25,
+            -0.0,
+            1.5,
+            100.0,
+            9223372036854775807,
+            true,
+            false,
+            null,
+            "",
+            "0",
+            "1"
+          ]
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        }
+      ]
+    },
+    "string_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "string_scalar"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "int",
+            "min": 0,
+            "max": 9
+          },
+          "max": 2
+        }
+      ]
+    },
+    "string_json": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 12,
+          "tricky": 0.4
+        },
+        {
+          "gen": "int",
+          "min": -9223372036854775808,
+          "max": 9223372036854775807
+        },
+        {
+          "gen": "float",
+          "min": -1000000.0,
+          "max": 1000000.0
+        },
+        {
+          "gen": "float",
+          "min": -1e+300,
+          "max": 1e+300
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0.1,
+            0.30000000000000004,
+            1e+25,
+            1000000000000000.0,
+            100000000000000.0,
+            1e-05,
+            0.0001,
+            -0.0,
+            1.5,
+            100.0,
+            1.2345678901234568e+17,
+            9223372036854775807,
+            -9223372036854775808,
+            9223372036854775808,
+            true,
+            false,
+            null,
+            "",
+            "0"
+          ]
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "int",
+            "min": 0,
+            "max": 9
+          },
+          "max": 2
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "k": {
+              "gen": "int",
+              "min": 0,
+              "max": 9
+            }
+          }
+        }
+      ]
+    }
+  },
+  "deviations": [
+    {
+      "symbol": "str_pad() / mb_str_pad() $pad_type",
+      "php": "an int outside STR_PAD_LEFT/RIGHT/BOTH throws ValueError once padding is needed",
+      "reason": "php_std::string::Pad is an enum; Pad::from_php maps the three constants"
+    },
+    {
+      "symbol": "str_replace() / str_ireplace() with a string $search and an array $replace",
+      "php": "TypeError: Argument #2 ($replace) must be of type string when argument #1 ($search) is a string",
+      "reason": "str_replace takes a string replacement and str_replace_array an array search: the combination has no type"
+    },
+    {
+      "symbol": "substr_replace() with a string $string and an array $offset or $length",
+      "php": "TypeError: Argument #3 ($offset) / #4 ($length) cannot be an array when working on a single string",
+      "reason": "substr_replace takes integers and substr_replace_array the per-string forms: the combination has no type"
+    }
+  ],
+  "quirks": [
+    {
+      "symbol": "ucwords()",
+      "description": "the separator test reads the previous byte after it was uppercased, so a separator list with uppercase letters cascades: ucwords('aab', 'A') is 'AAB'",
+      "case": "string.json#ucwords tests the uppercased previous byte (quirk)"
+    },
+    {
+      "symbol": "wordwrap()",
+      "description": "PHP 8.5.10 only treats an occurrence of a multi-byte (or cut) break as an existing break when it does not end the text (`<` where later releases use `<=`), and compares it with strncmp (up to a NUL)",
+      "case": "string.json#wordwrap break at the end is not an existing break (8.5.10 quirk)"
+    }
+  ]
+}

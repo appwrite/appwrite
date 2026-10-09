@@ -1,0 +1,1098 @@
+{
+  "ops": {
+    "encoding.urlencode": {
+      "doc": "urlencode($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "encoding_bytes"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "encoding.rawurlencode": {
+      "doc": "rawurlencode($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "encoding_bytes"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "encoding.urldecode": {
+      "doc": "urldecode($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "%+2Fafz0 9AG.~",
+                    "min": 0,
+                    "max": 14
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "encoding_bytes"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "encoding.rawurldecode": {
+      "doc": "rawurldecode($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "%+2Fafz0 9AG.~",
+                    "min": 0,
+                    "max": 14
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "encoding_bytes"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "encoding.http_build_query": {
+      "doc": "http_build_query($data, $numeric_prefix, $arg_separator, $encoding_type)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "ref",
+                "name": "encoding_query"
+              },
+              "numeric_prefix": {
+                "gen": "pick",
+                "from": [
+                  "",
+                  "p_",
+                  "%",
+                  "a b"
+                ]
+              },
+              "arg_separator": {
+                "gen": "pick",
+                "from": [
+                  "&",
+                  ";",
+                  "",
+                  "&amp;",
+                  null
+                ]
+              },
+              "encoding_type": {
+                "gen": "pick",
+                "from": [
+                  1,
+                  2,
+                  0,
+                  3,
+                  -1
+                ]
+              }
+            },
+            "optional": [
+              "numeric_prefix",
+              "arg_separator",
+              "encoding_type"
+            ]
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "encoding.base64_encode": {
+      "doc": "base64_encode($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "encoding_bytes"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "encoding.base64_decode": {
+      "doc": "base64_decode($string, $strict)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/= \t\n\r!.",
+                    "min": 0,
+                    "max": 24
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "ref",
+                        "name": "encoding_b64"
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "",
+                          "=",
+                          "==",
+                          "===",
+                          "= =",
+                          "=a",
+                          " ",
+                          "\n",
+                          "-",
+                          "_"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "repeat",
+                    "part": {
+                      "gen": "string",
+                      "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+                      "min": 4,
+                      "max": 4
+                    },
+                    "sep": "",
+                    "min": 15,
+                    "max": 30
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "repeat",
+                        "part": {
+                          "gen": "string",
+                          "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+                          "min": 4,
+                          "max": 4
+                        },
+                        "sep": "",
+                        "min": 15,
+                        "max": 25
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=!\n",
+                        "min": 0,
+                        "max": 3
+                      },
+                      {
+                        "gen": "repeat",
+                        "part": {
+                          "gen": "string",
+                          "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+                          "min": 4,
+                          "max": 4
+                        },
+                        "sep": "",
+                        "min": 0,
+                        "max": 5
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "encoding_bytes"
+                  }
+                ]
+              },
+              "strict": {
+                "gen": "bool"
+              }
+            },
+            "optional": [
+              "strict"
+            ]
+          },
+          "iterations": 5000
+        }
+      ]
+    },
+    "encoding.bin2hex": {
+      "doc": "bin2hex($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "encoding_bytes"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "encoding.hex2bin": {
+      "doc": "hex2bin($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "0123456789abcdefABCDEF",
+                    "min": 0,
+                    "max": 12
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "0123456789abcdefgxyz ",
+                    "min": 0,
+                    "max": 8
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "encoding_bytes"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "encoding.htmlspecialchars": {
+      "doc": "htmlspecialchars($string, $flags, 'UTF-8', $double_encode)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "encoding_html"
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "encoding_flags"
+              },
+              "encoding": {
+                "gen": "pick",
+                "from": [
+                  null,
+                  "UTF-8",
+                  "utf-8"
+                ]
+              },
+              "double_encode": {
+                "gen": "bool"
+              }
+            },
+            "optional": [
+              "flags",
+              "encoding",
+              "double_encode"
+            ]
+          },
+          "iterations": 8000
+        }
+      ]
+    },
+    "encoding.htmlentities": {
+      "doc": "htmlentities($string, $flags, 'UTF-8', $double_encode)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "encoding_html"
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "encoding_flags"
+              },
+              "encoding": {
+                "gen": "pick",
+                "from": [
+                  null,
+                  "UTF-8",
+                  "utf-8"
+                ]
+              },
+              "double_encode": {
+                "gen": "bool"
+              }
+            },
+            "optional": [
+              "flags",
+              "encoding",
+              "double_encode"
+            ]
+          },
+          "iterations": 8000
+        }
+      ]
+    },
+    "encoding.htmlspecialchars_decode": {
+      "doc": "htmlspecialchars_decode($string, $flags)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "encoding_html"
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "encoding_flags"
+              }
+            },
+            "optional": [
+              "flags"
+            ]
+          },
+          "iterations": 5000
+        }
+      ]
+    },
+    "encoding.html_entity_decode": {
+      "doc": "html_entity_decode($string, $flags, 'UTF-8')",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "encoding_html"
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "encoding_flags"
+              },
+              "encoding": {
+                "gen": "pick",
+                "from": [
+                  null,
+                  "UTF-8"
+                ]
+              }
+            },
+            "optional": [
+              "flags",
+              "encoding"
+            ]
+          },
+          "iterations": 8000
+        }
+      ]
+    },
+    "encoding.addslashes": {
+      "doc": "addslashes($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "ab'\"\\\u0000",
+                    "min": 0,
+                    "max": 20
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "encoding_bytes"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "encoding.stripslashes": {
+      "doc": "stripslashes($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "ab'\"\\0",
+                    "min": 0,
+                    "max": 40
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "encoding_bytes"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "encoding.quoted_printable_encode": {
+      "doc": "quoted_printable_encode($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "encoding_bytes"
+                  },
+                  {
+                    "gen": "repeat",
+                    "part": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "string",
+                          "alphabet": "ascii",
+                          "min": 1,
+                          "max": 10
+                        },
+                        {
+                          "gen": "pick",
+                          "from": [
+                            " \r\n",
+                            "=",
+                            "\r",
+                            "\t",
+                            "é",
+                            "€",
+                            "😀",
+                            " "
+                          ]
+                        }
+                      ]
+                    },
+                    "sep": "",
+                    "min": 5,
+                    "max": 40
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "encoding.quoted_printable_decode": {
+      "doc": "quoted_printable_decode($string)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "encoding_bytes"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "=0123456789ABCDEFabcdefg \t\r\n",
+                    "min": 0,
+                    "max": 20
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "encoding_b64": {
+      "gen": "repeat",
+      "part": {
+        "gen": "one_of",
+        "of": [
+          {
+            "gen": "pick",
+            "from": [
+              "YWJj",
+              "YSBi",
+              "JTQx",
+              "JTR6",
+              "JXp6",
+              "KyUy",
+              "XCci",
+              "XFww",
+              "YQBi",
+              "AFww",
+              "PTQx",
+              "PQ0K",
+              "PSAK",
+              "Jmx0",
+              "PGI+",
+              "JiMz",
+              "OTsm",
+              "w6lh",
+              "4oKs",
+              "8J+Y",
+              "gGFi",
+              "//79",
+              "wyhh",
+              "4oJh",
+              "7aCA",
+              "wK9h",
+              "9JCA",
+              "77++",
+              "fwEf",
+              "woVh",
+              "77eQ",
+              "8J2S",
+              "nKBh",
+              "Zmog",
+              "POKD",
+              "kiBh",
+              "DQoJ",
+              "fi1f",
+              "Ln4q",
+              "WVdK",
+              "aj09"
+            ]
+          },
+          {
+            "gen": "string",
+            "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+            "min": 4,
+            "max": 4
+          }
+        ]
+      },
+      "sep": "",
+      "min": 0,
+      "max": 10
+    },
+    "encoding_raw": {
+      "gen": "object",
+      "fields": {
+        "$bytes": {
+          "gen": "ref",
+          "name": "encoding_b64"
+        }
+      }
+    },
+    "encoding_bytes": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 16,
+          "tricky": 0.3
+        },
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 20
+        },
+        {
+          "gen": "ref",
+          "name": "encoding_raw"
+        }
+      ]
+    },
+    "encoding_html": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "pick",
+            "from": [
+              "&",
+              "&amp;",
+              "&amp",
+              "&lt;",
+              "&gt;",
+              "&quot;",
+              "&apos;",
+              "&#039;",
+              "&#39;",
+              "&#x27;",
+              "&#X27;",
+              "&#34;",
+              "&#x22;",
+              "&eacute;",
+              "&Eacute;",
+              "&nbsp;",
+              "&copy;",
+              "&euro;",
+              "&hellip;",
+              "&NotEqualTilde;",
+              "&nvlt;",
+              "&fjlig;",
+              "&bogus;",
+              "&#65;",
+              "&#x41;",
+              "&#x0x41;",
+              "&#0;",
+              "&#9;",
+              "&#13;",
+              "&#12;",
+              "&#11;",
+              "&#127;",
+              "&#128;",
+              "&#xD800;",
+              "&#xFFFE;",
+              "&#xFDD0;",
+              "&#x10FFFF;",
+              "&#x110000;",
+              "&#99999999999999999999;",
+              "&#;",
+              "&#x;",
+              "&;",
+              "&a b;",
+              "&lt",
+              "&Amp;",
+              "&AMP;",
+              "&nGt;",
+              "&ThickSpace;",
+              "&#x1D4B5;",
+              "&Zscr;",
+              "&ldquo;",
+              "<",
+              ">",
+              "\"",
+              "'",
+              "a",
+              " ",
+              "é",
+              "😀",
+              " ",
+              "fj",
+              "<⃒",
+              "=⃥",
+              " ",
+              "  ",
+              "",
+              "\u0001",
+              "",
+              "﷐",
+              "￾",
+              "&#x00000041;",
+              "&#0065;",
+              "&#x;a",
+              "&;;",
+              "&&lt;"
+            ]
+          },
+          "sep": "",
+          "min": 0,
+          "max": 10
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "pick",
+            "from": [
+              "&",
+              "&amp;",
+              "&amp",
+              "&lt;",
+              "&gt;",
+              "&quot;",
+              "&apos;",
+              "&#039;",
+              "&#39;",
+              "&#x27;",
+              "&#X27;",
+              "&#34;",
+              "&#x22;",
+              "&eacute;",
+              "&Eacute;",
+              "&nbsp;",
+              "&copy;",
+              "&euro;",
+              "&hellip;",
+              "&NotEqualTilde;",
+              "&nvlt;",
+              "&fjlig;",
+              "&bogus;",
+              "&#65;",
+              "&#x41;",
+              "&#x0x41;",
+              "&#0;",
+              "&#9;",
+              "&#13;",
+              "&#12;",
+              "&#11;",
+              "&#127;",
+              "&#128;",
+              "&#xD800;",
+              "&#xFFFE;",
+              "&#xFDD0;",
+              "&#x10FFFF;",
+              "&#x110000;",
+              "&#99999999999999999999;",
+              "&#;",
+              "&#x;",
+              "&;",
+              "&a b;",
+              "&lt",
+              "&Amp;",
+              "&AMP;",
+              "&nGt;",
+              "&ThickSpace;",
+              "&#x1D4B5;",
+              "&Zscr;",
+              "&ldquo;",
+              "<",
+              ">",
+              "\"",
+              "'",
+              "a",
+              " ",
+              "é",
+              "😀",
+              " ",
+              "fj",
+              "<⃒",
+              "=⃥",
+              " ",
+              "  ",
+              "",
+              "\u0001",
+              "",
+              "﷐",
+              "￾",
+              "&#x00000041;",
+              "&#0065;",
+              "&#x;a",
+              "&;;",
+              "&&lt;"
+            ]
+          },
+          "sep": "",
+          "min": 0,
+          "max": 10
+        },
+        {
+          "gen": "ref",
+          "name": "encoding_bytes"
+        }
+      ]
+    },
+    "encoding_flags": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            1,
+            2,
+            3,
+            8,
+            11,
+            19,
+            35,
+            51,
+            59,
+            43,
+            27,
+            4,
+            7,
+            12,
+            131,
+            187,
+            155,
+            163,
+            50,
+            49,
+            48
+          ]
+        },
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 255
+        }
+      ]
+    },
+    "encoding_query_scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 6,
+          "tricky": 0.3
+        },
+        {
+          "gen": "int",
+          "min": -1000,
+          "max": 1000
+        },
+        {
+          "gen": "pick",
+          "from": [
+            9223372036854775807,
+            -9223372036854775808,
+            1.5,
+            0.1,
+            1e+25,
+            -0.0,
+            100.0,
+            1000000000000000.0,
+            true,
+            false,
+            null,
+            "",
+            "a b",
+            "~*'()",
+            "a&b=c"
+          ]
+        }
+      ]
+    },
+    "encoding_query_leaf": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "encoding_query_scalar"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "encoding_query_scalar"
+          },
+          "min": 0,
+          "max": 3
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "x": {
+              "gen": "ref",
+              "name": "encoding_query_scalar"
+            },
+            "0": {
+              "gen": "ref",
+              "name": "encoding_query_scalar"
+            },
+            "a b": {
+              "gen": "ref",
+              "name": "encoding_query_scalar"
+            },
+            "-1": {
+              "gen": "ref",
+              "name": "encoding_query_scalar"
+            },
+            "01": {
+              "gen": "ref",
+              "name": "encoding_query_scalar"
+            },
+            "[]": {
+              "gen": "ref",
+              "name": "encoding_query_scalar"
+            }
+          },
+          "optional": [
+            "x",
+            "0",
+            "a b",
+            "-1",
+            "01",
+            "[]"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {},
+            []
+          ]
+        }
+      ]
+    },
+    "encoding_query": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "encoding_query_leaf"
+          },
+          "min": 0,
+          "max": 4
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "a": {
+              "gen": "ref",
+              "name": "encoding_query_leaf"
+            },
+            "1": {
+              "gen": "ref",
+              "name": "encoding_query_leaf"
+            },
+            "é": {
+              "gen": "ref",
+              "name": "encoding_query_leaf"
+            },
+            "k[]": {
+              "gen": "ref",
+              "name": "encoding_query_leaf"
+            },
+            "-0": {
+              "gen": "ref",
+              "name": "encoding_query_leaf"
+            },
+            "9223372036854775807": {
+              "gen": "ref",
+              "name": "encoding_query_leaf"
+            },
+            "9223372036854775808": {
+              "gen": "ref",
+              "name": "encoding_query_leaf"
+            },
+            "n": {
+              "gen": "object",
+              "fields": {
+                "0": {
+                  "gen": "array",
+                  "items": {
+                    "gen": "ref",
+                    "name": "encoding_query_leaf"
+                  },
+                  "min": 0,
+                  "max": 2
+                },
+                "m": {
+                  "gen": "ref",
+                  "name": "encoding_query_leaf"
+                }
+              }
+            }
+          },
+          "optional": [
+            "a",
+            "1",
+            "é",
+            "k[]",
+            "-0",
+            "9223372036854775807",
+            "9223372036854775808",
+            "n"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {},
+            []
+          ]
+        }
+      ]
+    }
+  },
+  "deviations": [
+    {
+      "symbol": "htmlspecialchars(), htmlentities(), html_entity_decode() $encoding",
+      "php": "charsets other than UTF-8 (ISO-8859-1, Windows-1252, Big5, ...)",
+      "reason": "php_std::encoding's HTML functions implement UTF-8, PHP's default_charset and the only charset the libraries use"
+    },
+    {
+      "symbol": "http_build_query() objects",
+      "php": "objects with private/protected properties and backed enums",
+      "reason": "php_std::encoding::http_build_query takes JSON-decoded data (arrays and stdClass), where every property is public"
+    }
+  ],
+  "quirks": [
+    {
+      "symbol": "html_entity_decode() / htmlspecialchars() numeric entities",
+      "description": "hexadecimal entities are read with C strtol, which accepts a '0x' prefix after '&#x': '&#x0x41;' is 'A'",
+      "case": "encoding.json#html_entity_decode hexadecimal 0x prefix (strtol)"
+    }
+  ]
+}

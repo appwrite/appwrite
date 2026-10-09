@@ -1,0 +1,478 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "urlencode space and tilde",
+      "op": "encoding.urlencode",
+      "args": {
+        "string": "a b~c&d=é"
+      },
+      "expect": "a+b%7Ec%26d%3D%C3%A9"
+    },
+    {
+      "name": "rawurlencode keeps tilde",
+      "op": "encoding.rawurlencode",
+      "args": {
+        "string": "a b~c&d=é"
+      },
+      "expect": "a%20b~c%26d%3D%C3%A9"
+    },
+    {
+      "name": "urldecode plus and incomplete escape",
+      "op": "encoding.urldecode",
+      "args": {
+        "string": "a+b%20c%2%zz%41"
+      },
+      "expect": "a b c%2%zzA"
+    },
+    {
+      "name": "urldecode to invalid UTF-8",
+      "op": "encoding.urldecode",
+      "args": {
+        "string": "%FF%c3"
+      },
+      "expect": {
+        "$bytes": "/8M="
+      }
+    },
+    {
+      "name": "rawurldecode keeps plus",
+      "op": "encoding.rawurldecode",
+      "args": {
+        "string": "a+b%20c"
+      },
+      "expect": "a+b c"
+    },
+    {
+      "name": "http_build_query nested",
+      "op": "encoding.http_build_query",
+      "args": {
+        "data": {
+          "a": [
+            1,
+            {
+              "b c": null,
+              "d": true,
+              "e": false
+            }
+          ],
+          "f": "x y",
+          "g": 1.5,
+          "h": []
+        }
+      },
+      "expect": "a%5B0%5D=1&a%5B1%5D%5Bd%5D=1&a%5B1%5D%5Be%5D=0&f=x+y&g=1.5"
+    },
+    {
+      "name": "http_build_query numeric prefix only for top-level integer keys",
+      "op": "encoding.http_build_query",
+      "args": {
+        "data": {
+          "0": "a",
+          "01": "b",
+          "-1": "c",
+          "n": {
+            "0": "d"
+          },
+          "1": [
+            2
+          ]
+        },
+        "numeric_prefix": "p_"
+      },
+      "expect": "p_0=a&01=b&p_-1=c&n%5B0%5D=d&p_1%5B0%5D=2"
+    },
+    {
+      "name": "http_build_query RFC 3986",
+      "op": "encoding.http_build_query",
+      "args": {
+        "data": {
+          "a b": "c d~"
+        },
+        "encoding_type": 2
+      },
+      "expect": "a%20b=c%20d~"
+    },
+    {
+      "name": "http_build_query other encoding types are RFC 1738",
+      "op": "encoding.http_build_query",
+      "args": {
+        "data": {
+          "a b": "c d~"
+        },
+        "encoding_type": 9
+      },
+      "expect": "a+b=c+d%7E"
+    },
+    {
+      "name": "http_build_query separator",
+      "op": "encoding.http_build_query",
+      "args": {
+        "data": [
+          "a",
+          "b"
+        ],
+        "arg_separator": ";"
+      },
+      "expect": "0=a;1=b"
+    },
+    {
+      "name": "http_build_query empty separator",
+      "op": "encoding.http_build_query",
+      "args": {
+        "data": [
+          "a",
+          "b"
+        ],
+        "arg_separator": ""
+      },
+      "expect": "0=a1=b"
+    },
+    {
+      "name": "http_build_query floats use precision 14",
+      "op": "encoding.http_build_query",
+      "args": {
+        "data": {
+          "a": 0.30000000000000004,
+          "b": 1e+25,
+          "c": -0.0
+        }
+      },
+      "expect": "a=0.3&b=1.0E%2B25&c=-0"
+    },
+    {
+      "name": "http_build_query stdClass",
+      "op": "encoding.http_build_query",
+      "args": {
+        "data": {}
+      },
+      "expect": ""
+    },
+    {
+      "name": "base64_encode",
+      "op": "encoding.base64_encode",
+      "args": {
+        "string": {
+          "$bytes": "AP8="
+        }
+      },
+      "expect": "AP8="
+    },
+    {
+      "name": "base64_decode non-strict skips unknown characters",
+      "op": "encoding.base64_decode",
+      "args": {
+        "string": "Y!W-I"
+      },
+      "expect": "ab"
+    },
+    {
+      "name": "base64_decode non-strict decodes after padding",
+      "op": "encoding.base64_decode",
+      "args": {
+        "string": "YQ==YQ=="
+      },
+      "expect": "a\u0006\u0010"
+    },
+    {
+      "name": "base64_decode strict white space",
+      "op": "encoding.base64_decode",
+      "args": {
+        "string": "YW\nI=",
+        "strict": true
+      },
+      "expect": "ab"
+    },
+    {
+      "name": "base64_decode strict bad character",
+      "op": "encoding.base64_decode",
+      "args": {
+        "string": "YW!I",
+        "strict": true
+      },
+      "expect": false
+    },
+    {
+      "name": "base64_decode strict data after padding",
+      "op": "encoding.base64_decode",
+      "args": {
+        "string": "YQ==YQ",
+        "strict": true
+      },
+      "expect": false
+    },
+    {
+      "name": "base64_decode strict lone final character",
+      "op": "encoding.base64_decode",
+      "args": {
+        "string": "YWJjZ",
+        "strict": true
+      },
+      "expect": false
+    },
+    {
+      "name": "base64_decode strict without padding",
+      "op": "encoding.base64_decode",
+      "args": {
+        "string": "YWI",
+        "strict": true
+      },
+      "expect": "ab"
+    },
+    {
+      "name": "base64_decode strict bad padding",
+      "op": "encoding.base64_decode",
+      "args": {
+        "string": "YWI==",
+        "strict": true
+      },
+      "expect": false
+    },
+    {
+      "name": "bin2hex",
+      "op": "encoding.bin2hex",
+      "args": {
+        "string": {
+          "$bytes": "AP+A"
+        }
+      },
+      "expect": "00ff80"
+    },
+    {
+      "name": "hex2bin",
+      "op": "encoding.hex2bin",
+      "args": {
+        "string": "48656C6c6f"
+      },
+      "expect": "Hello"
+    },
+    {
+      "name": "hex2bin odd length",
+      "op": "encoding.hex2bin",
+      "args": {
+        "string": "abc"
+      },
+      "expect": false
+    },
+    {
+      "name": "hex2bin invalid",
+      "op": "encoding.hex2bin",
+      "args": {
+        "string": "zz"
+      },
+      "expect": false
+    },
+    {
+      "name": "htmlspecialchars defaults",
+      "op": "encoding.htmlspecialchars",
+      "args": {
+        "string": "<a href='x' title=\"y\">&amp;</a>"
+      },
+      "expect": "&lt;a href=&#039;x&#039; title=&quot;y&quot;&gt;&amp;amp;&lt;/a&gt;"
+    },
+    {
+      "name": "htmlspecialchars ENT_NOQUOTES",
+      "op": "encoding.htmlspecialchars",
+      "args": {
+        "string": "'\"&",
+        "flags": 0
+      },
+      "expect": "'\"&amp;"
+    },
+    {
+      "name": "htmlspecialchars XHTML apostrophe",
+      "op": "encoding.htmlspecialchars",
+      "args": {
+        "string": "'",
+        "flags": 35
+      },
+      "expect": "&apos;"
+    },
+    {
+      "name": "htmlspecialchars invalid UTF-8 without ENT_SUBSTITUTE is empty",
+      "op": "encoding.htmlspecialchars",
+      "args": {
+        "string": {
+          "$bytes": "YeKCYg=="
+        },
+        "flags": 3
+      },
+      "expect": ""
+    },
+    {
+      "name": "htmlspecialchars ENT_SUBSTITUTE",
+      "op": "encoding.htmlspecialchars",
+      "args": {
+        "string": {
+          "$bytes": "YeKCYsCv/w=="
+        }
+      },
+      "expect": "a�b���"
+    },
+    {
+      "name": "htmlspecialchars ENT_IGNORE",
+      "op": "encoding.htmlspecialchars",
+      "args": {
+        "string": {
+          "$bytes": "YeKCYsCv/w=="
+        },
+        "flags": 7
+      },
+      "expect": "ab"
+    },
+    {
+      "name": "htmlspecialchars keeps valid entities without double encoding",
+      "op": "encoding.htmlspecialchars",
+      "args": {
+        "string": "&amp; &eacute; &#39; &#x0x41; &bogus; &#xZ; & &amp",
+        "double_encode": false
+      },
+      "expect": "&amp; &eacute; &#39; &#x0x41; &amp;bogus; &amp;#xZ; &amp; &amp;amp"
+    },
+    {
+      "name": "htmlspecialchars ENT_DISALLOWED",
+      "op": "encoding.htmlspecialchars",
+      "args": {
+        "string": "a\u0001b￾&#1;",
+        "flags": 139,
+        "double_encode": false
+      },
+      "expect": "a�b￾&#1;"
+    },
+    {
+      "name": "htmlentities HTML 4.01",
+      "op": "encoding.htmlentities",
+      "args": {
+        "string": "café € ©'"
+      },
+      "expect": "caf&eacute; &euro; &copy;&#039;"
+    },
+    {
+      "name": "htmlentities XHTML apostrophe",
+      "op": "encoding.htmlentities",
+      "args": {
+        "string": "'",
+        "flags": 35
+      },
+      "expect": "&#039;"
+    },
+    {
+      "name": "htmlentities HTML5 two-character entities",
+      "op": "encoding.htmlentities",
+      "args": {
+        "string": "fj <⃒ =⃥   ",
+        "flags": 51
+      },
+      "expect": "&fjlig; &nvlt; &bne; &ThickSpace;"
+    },
+    {
+      "name": "htmlentities XML 1.0 is basic only",
+      "op": "encoding.htmlentities",
+      "args": {
+        "string": "café'",
+        "flags": 19
+      },
+      "expect": "café&apos;"
+    },
+    {
+      "name": "html_entity_decode HTML 4.01",
+      "op": "encoding.html_entity_decode",
+      "args": {
+        "string": "&eacute;&euro;&apos;&#39;&#x41;&#0;&#xD800;&NotEqualTilde;"
+      },
+      "expect": "é€&apos;'A&#0;&#xD800;&NotEqualTilde;"
+    },
+    {
+      "name": "html_entity_decode HTML5",
+      "op": "encoding.html_entity_decode",
+      "args": {
+        "string": "&NotEqualTilde;&apos;&AMP;&fjlig;&#13;&#12;",
+        "flags": 51
+      },
+      "expect": "≂̸'&fj&#13;\f"
+    },
+    {
+      "name": "html_entity_decode XHTML apos",
+      "op": "encoding.html_entity_decode",
+      "args": {
+        "string": "&apos;&eacute;",
+        "flags": 35
+      },
+      "expect": "'é"
+    },
+    {
+      "name": "html_entity_decode hexadecimal 0x prefix (strtol)",
+      "op": "encoding.html_entity_decode",
+      "args": {
+        "string": "&#x0x41;&#0x41;"
+      },
+      "expect": "A&#0x41;"
+    },
+    {
+      "name": "html_entity_decode quotes off",
+      "op": "encoding.html_entity_decode",
+      "args": {
+        "string": "&quot;&#39;&apos;",
+        "flags": 48
+      },
+      "expect": "&quot;&#39;&apos;"
+    },
+    {
+      "name": "htmlspecialchars_decode only basic entities",
+      "op": "encoding.htmlspecialchars_decode",
+      "args": {
+        "string": "&lt;&eacute;&#39;&#x27;&apos;&#65;&quot;"
+      },
+      "expect": "<&eacute;''&apos;&#65;\""
+    },
+    {
+      "name": "htmlspecialchars_decode HTML5 apos",
+      "op": "encoding.htmlspecialchars_decode",
+      "args": {
+        "string": "&apos;&#039;",
+        "flags": 51
+      },
+      "expect": "''"
+    },
+    {
+      "name": "addslashes",
+      "op": "encoding.addslashes",
+      "args": {
+        "string": "O'Re\"il\\ly\u0000"
+      },
+      "expect": "O\\'Re\\\"il\\\\ly\\0"
+    },
+    {
+      "name": "stripslashes",
+      "op": "encoding.stripslashes",
+      "args": {
+        "string": "a\\'b\\\\c\\0d\\"
+      },
+      "expect": "a'b\\c\u0000d"
+    },
+    {
+      "name": "quoted_printable_encode",
+      "op": "encoding.quoted_printable_encode",
+      "args": {
+        "string": "Hé = ok \r\nline \u0000 ünïcödé ünïcödé ünïcödé ünïcödé ünïcödé ünïcödé ünïcödé ünïcödé"
+      },
+      "expect": "H=C3=A9 =3D ok=20\r\nline =00 =C3=BCn=C3=AFc=C3=B6d=C3=A9 =C3=BCn=C3=AFc=C3=B6d=C3=A9 =C3=BCn=\r\n=C3=AFc=C3=B6d=C3=A9 =C3=BCn=C3=AFc=C3=B6d=C3=A9 =C3=BCn=C3=AFc=C3=B6d=\r\n=C3=A9 =C3=BCn=C3=AFc=C3=B6d=C3=A9 =C3=BCn=C3=AFc=C3=B6d=C3=A9 =C3=BCn=\r\n=C3=AFc=C3=B6d=C3=A9"
+    },
+    {
+      "name": "quoted_printable_decode soft breaks",
+      "op": "encoding.quoted_printable_decode",
+      "args": {
+        "string": "a=3Db=\r\nc= \t\nd=\ne=4"
+      },
+      "expect": "a=bcde=4"
+    },
+    {
+      "name": "quoted_printable_decode stops at NUL",
+      "op": "encoding.quoted_printable_decode",
+      "args": {
+        "string": "a\u0000b"
+      },
+      "expect": "a"
+    }
+  ]
+}
