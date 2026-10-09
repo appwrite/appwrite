@@ -358,6 +358,7 @@ final class AccountCustomServerTest extends Scope
 
         $this->assertEquals(201, $otp['headers']['status-code']);
         $this->assertNotEmpty($otp['body']['userId']);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $otp['body']['expire']));
         $this->assertEmpty($otp['body']['secret']);
         $this->assertNotEmpty($this->getLastEmailByAddress($email));
 
@@ -383,6 +384,7 @@ final class AccountCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(201, $recoveryOtp['headers']['status-code']);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $recoveryOtp['body']['expire']));
         $this->assertEmpty($recoveryOtp['body']['secret']);
 
         $usersKeyOtp = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
