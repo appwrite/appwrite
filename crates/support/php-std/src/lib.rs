@@ -13,7 +13,18 @@
 //! `Utopia\Http\Request` decodes request bodies: objects are associative
 //! arrays, except empty objects, which stay `stdClass`.
 
+pub mod datetime;
+pub mod encoding;
+pub mod filter;
+pub mod format;
+pub mod json;
+pub mod mb;
+pub mod net;
 pub mod number;
 pub mod path;
+pub mod pcre;
+pub mod serialize;
+pub mod string;
 pub mod system;
+pub mod url;
 pub mod value;

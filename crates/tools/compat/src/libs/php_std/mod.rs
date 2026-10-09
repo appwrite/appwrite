@@ -8,9 +8,33 @@ use serde_json::Value;
 
 use crate::adapter::{Fault, OpResult, Session};
 
+mod datetime;
+mod encoding;
+mod filter;
+mod format;
+mod json;
+mod mb;
+mod net;
+mod pcre;
+mod serialize;
+mod string;
+mod url;
 mod value;
 
-const AREAS: &[&[&str]] = &[value::OPS];
+const AREAS: &[&[&str]] = &[
+    datetime::OPS,
+    encoding::OPS,
+    filter::OPS,
+    format::OPS,
+    json::OPS,
+    mb::OPS,
+    net::OPS,
+    pcre::OPS,
+    serialize::OPS,
+    string::OPS,
+    url::OPS,
+    value::OPS,
+];
 
 /// Every operation of every area.
 pub const OPS: &[&str] = &concat_ops();
@@ -43,6 +67,17 @@ const fn concat_ops() -> [&'static str; ops_len()] {
 
 pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
     match op.split_once('.').map(|(area, _)| area) {
+        Some("datetime") => datetime::call(op, args, session).await,
+        Some("encoding") => encoding::call(op, args, session).await,
+        Some("filter") => filter::call(op, args, session).await,
+        Some("format") => format::call(op, args, session).await,
+        Some("json") => json::call(op, args, session).await,
+        Some("mb") => mb::call(op, args, session).await,
+        Some("net") => net::call(op, args, session).await,
+        Some("pcre") => pcre::call(op, args, session).await,
+        Some("serialize") => serialize::call(op, args, session).await,
+        Some("string") => string::call(op, args, session).await,
+        Some("url") => url::call(op, args, session).await,
         Some("value") => value::call(op, args, session).await,
         _ => Err(Fault::new(format!("php-std: unknown operation `{op}`"))),
     }
