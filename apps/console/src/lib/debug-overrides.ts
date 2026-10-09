@@ -89,7 +89,7 @@ export type DebugOverrides = {
   showFunctionsLocalEditor: boolean
   /**
    * When true, exposes the project Agents page and lands new projects on it
-   * from the project root. When false, the root always opens Overview. Default false.
+   * from the project root. When false, the root always opens Overview. Default true.
    */
   showProjectAgents: boolean
   /**
@@ -264,7 +264,7 @@ export function loadDebugOverrides(): DebugOverrides {
     ),
     showProjectAgents: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showProjectAgents,
-      false,
+      true,
     ),
     showConstruction: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showConstruction,
@@ -392,7 +392,7 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
   showProjectEnvironments: false,
   showNativeAppBar: false,
   showSuccessTeamCard: false,
-  showProjectAgents: false,
+  showProjectAgents: true,
   showConstruction: getShowConstructionDefault(),
   unlockOnboardingLocks: false,
   previewOnboardingComplete: false,
@@ -466,7 +466,7 @@ export function getDefaultDebugOverrides(): DebugOverrides {
     mockCloudStatusAlert: 'live',
     showFullscreenLoader: ephemeralOverrides.showFullscreenLoader ?? false,
     showFunctionsLocalEditor: false,
-    showProjectAgents: false,
+    showProjectAgents: true,
     showConstruction: getShowConstructionDefault(),
     mockInitCurrentDay: getInitMockCurrentDayDefault(),
     mockInitTicketType: null,
