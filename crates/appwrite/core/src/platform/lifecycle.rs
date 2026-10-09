@@ -48,7 +48,7 @@ pub(super) async fn run(platform: &Platform, request: Request) -> Response {
     }
     // `Http::match()`: HEAD runs as GET.
     let method = if request.method() == Method::HEAD { Method::GET.as_str() } else { request.method() };
-    let (route, params) = match platform.router.find(method, request.path()) {
+    let (route, params) = match platform.router.find(method, &request.route_path()) {
         Some(m) => (m.route.clone(), m.params),
         None => (platform.wildcard.clone(), Vec::new()),
     };

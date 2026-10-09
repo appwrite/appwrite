@@ -5445,6 +5445,225 @@
           }
         ]
       }
+    },
+    {
+      "name": "match uses the URL path of the target",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/users",
+              "action": [
+                {
+                  "emit": "users"
+                }
+              ]
+            },
+            {
+              "path": "/v1/users",
+              "action": [
+                {
+                  "emit": "v1"
+                }
+              ]
+            },
+            {
+              "path": "/",
+              "action": [
+                {
+                  "emit": "root"
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "//v1//users",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "/v1//users",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "///users",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "//users",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "/v1/users#frag",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "http://example.com/v1/users",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "/v1:80/users",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "/v1/users;x",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "users"
+            ],
+            "error": null,
+            "match": "/users"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "v1"
+            ],
+            "error": null,
+            "match": "/v1/users"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "root"
+            ],
+            "error": null,
+            "match": "/"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "root"
+            ],
+            "error": null,
+            "match": "/"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "v1"
+            ],
+            "error": null,
+            "match": "/v1/users"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "v1"
+            ],
+            "error": null,
+            "match": "/v1/users"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "root"
+            ],
+            "error": null,
+            "match": "/"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": null
+          }
+        ]
+      }
     }
   ]
 }

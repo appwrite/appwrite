@@ -280,9 +280,27 @@ impl Request {
         &self.uri
     }
 
-    /// The path the router matches: `parse_url($uri, PHP_URL_PATH)`, `/` when empty.
+    /// The path as sent (the request-line target without its query).
     pub fn path(&self) -> &str {
         &self.uri
+    }
+
+    /// The path the router matches (`Http::match()`): `parse_url($uri,
+    /// PHP_URL_PATH)`, `/` when it has none. `//host/path` is a network
+    /// path: only `/path` is matched.
+    pub fn route_path(&self) -> std::borrow::Cow<'_, str> {
+        // A plain absolute path is its own path; anything else goes through parse_url().
+        let plain = self.uri.starts_with('/')
+            && !self.uri.starts_with("//")
+            && !self.uri.bytes().any(|b| matches!(b, b'#' | b'?' | b':' | b'@'));
+        if plain {
+            return std::borrow::Cow::Borrowed(&self.uri);
+        }
+        let path = php_std::url::parse_url(self.uri.as_bytes()).and_then(|u| u.path().map(|p| p.into_owned()));
+        std::borrow::Cow::Owned(match path {
+            Some(p) if !p.is_empty() => String::from_utf8_lossy(&p).into_owned(),
+            _ => "/".to_owned(),
+        })
     }
 
     /// `setURI($uri)`.

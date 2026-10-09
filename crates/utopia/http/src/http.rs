@@ -367,13 +367,7 @@ impl Http {
     /// `match($request)`: the route for the request's method (HEAD as GET)
     /// and path.
     pub fn find(&self, request: &Request) -> Option<Match<'_, Route>> {
-        let uri = request.uri();
-        let path = php_std::url::parse_url(uri.as_bytes()).and_then(|u| u.path().map(|p| p.into_owned()));
-        let path = match path {
-            Some(p) if p.is_empty() => "/".to_owned(),
-            Some(p) => String::from_utf8_lossy(&p).into_owned(),
-            None => "/".to_owned(),
-        };
+        let path = request.route_path();
         let method = if request.method() == "HEAD" { "GET" } else { request.method() };
         self.router.find(method, &path)
     }
