@@ -689,6 +689,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "partners/guides/oauth-connect",
+    "title": "Manage a customer's Appwrite project",
+    "description": "Build a product that works inside your customers' Appwrite projects. Register an app, ask for consent, and act with access the customer can revoke at any time.",
+    "layout": "article",
+    "readingTimeMinutes": 8
+  },
+  {
     "slug": "partners/guides/provisioning",
     "title": "Provisioning",
     "description": "End-to-end guide for provisioning an Appwrite project per customer from a partner platform using organization API keys.",
