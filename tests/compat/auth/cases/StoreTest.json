@@ -772,6 +772,60 @@
       ]
     },
     {
+      "name": "one-shot decoding",
+      "steps": [
+        {
+          "op": "store.decode_once",
+          "args": {
+            "data": "eyJpZCI6InUiLCJzZWNyZXQiOiJzIn0="
+          },
+          "expect": "eyJpZCI6InUiLCJzZWNyZXQiOiJzIn0="
+        },
+        {
+          "op": "store.decode_once",
+          "args": {
+            "data": "WzEsMl0="
+          },
+          "expect": "WzEsMl0="
+        },
+        {
+          "op": "store.decode_once",
+          "args": {
+            "data": "eyIwIjoxLCIxIjoyfQ=="
+          },
+          "expect": "WzEsMl0="
+        },
+        {
+          "op": "store.decode_once",
+          "args": {
+            "data": "e30="
+          },
+          "expect": "W10="
+        },
+        {
+          "op": "store.decode_once",
+          "args": {
+            "data": "bnVsbA=="
+          },
+          "expect": "W10="
+        },
+        {
+          "op": "store.decode_once",
+          "args": {
+            "data": "!!"
+          },
+          "expect": "W10="
+        },
+        {
+          "op": "store.decode_once",
+          "args": {
+            "data": ""
+          },
+          "expect": "W10="
+        }
+      ]
+    },
+    {
       "name": "decode is strict base64",
       "steps": [
         {

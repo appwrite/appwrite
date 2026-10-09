@@ -71,8 +71,8 @@ fn string_list(metadata: &Array, property: &str, default: &[&str]) -> Result<Vec
 
 /// `validateRedirectUri()`.
 fn validate_redirect_uri(uri: &[u8]) -> Result<(), Error> {
-    let ok = parse_url(uri)
-        .is_some_and(|p| p.scheme.is_some_and(|s| !s.is_empty() && s != b"0") && p.fragment.is_none());
+    let ok =
+        parse_url(uri).is_some_and(|p| p.scheme.is_some_and(|s| !s.is_empty() && s != b"0") && p.fragment.is_none());
     if !ok {
         return Err(invalid("redirect URIs must be absolute URIs without fragments."));
     }
@@ -158,14 +158,7 @@ impl ClientIdMetadataDocument {
             validate_jwks(jwks)?;
         }
         let redirect_uris = RedirectUris::from_strings(redirect_uris.iter().map(Vec::as_slice));
-        Ok(Self {
-            client_id,
-            metadata,
-            token_endpoint_auth_method: method,
-            grant_types,
-            response_types,
-            redirect_uris,
-        })
+        Ok(Self { client_id, metadata, token_endpoint_auth_method: method, grant_types, response_types, redirect_uris })
     }
 
     /// `clientId()`.

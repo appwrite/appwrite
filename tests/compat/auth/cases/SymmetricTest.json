@@ -2357,6 +2357,83 @@
           }
         }
       ]
+    },
+    {
+      "name": "one-shot verification",
+      "steps": [
+        {
+          "op": "verifier.check",
+          "args": {
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000005,
+              "aud": [
+                "a",
+                "b"
+              ]
+            },
+            "audience": "b",
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": 1700000005,
+            "aud": [
+              "a",
+              "b"
+            ]
+          }
+        },
+        {
+          "op": "verifier.check",
+          "args": {
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1699999995
+            },
+            "leeway": 10,
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": 1699999995
+          }
+        },
+        {
+          "op": "verifier.check",
+          "args": {
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "token": "a.b.c",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Header is not valid base64url"
+            }
+          }
+        },
+        {
+          "op": "verifier.check",
+          "args": {
+            "secret": "",
+            "token": "a.b.c",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "A signing secret is required"
+            }
+          }
+        }
+      ]
     }
   ]
 }

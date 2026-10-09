@@ -59,8 +59,7 @@ impl Store {
         let Some(decoded) = base64_decode(data, true) else {
             return self;
         };
-        if let Ok(Zval::Array(values)) =
-            json::decode(&decoded, Some(true), json::DEFAULT_DEPTH, Flags::THROW_ON_ERROR)
+        if let Ok(Zval::Array(values)) = json::decode(&decoded, Some(true), json::DEFAULT_DEPTH, Flags::THROW_ON_ERROR)
         {
             for (key, value) in values.iter() {
                 self.data.insert(key.clone(), value.clone());

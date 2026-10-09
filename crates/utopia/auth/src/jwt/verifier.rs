@@ -179,8 +179,7 @@ impl<S: SignatureCheck> Verifier<S> {
         let signature =
             base64url_decode(encoded_signature).ok_or_else(|| verification("Signature is not valid base64url"))?;
         let get = |a: &Array, k: &str| a.get(&Key::Str(k.as_bytes().to_vec())).cloned();
-        if get(&header, Header::Algorithm.as_str()) != Some(Zval::String(self.check.algorithm().as_bytes().to_vec()))
-        {
+        if get(&header, Header::Algorithm.as_str()) != Some(Zval::String(self.check.algorithm().as_bytes().to_vec())) {
             return Err(verification("Unexpected token algorithm"));
         }
         if let Some(kind) = &self.kind
@@ -258,7 +257,8 @@ fn identical(a: &Zval, b: &Zval) -> bool {
 
 /// `decodeSegment()`: base64url JSON of an object (or `[]`).
 fn decode_segment(segment: &[u8], label: &str) -> Result<Array, Error> {
-    let decoded = base64url_decode(segment).ok_or_else(|| Error::Verification(format!("{label} is not valid base64url")))?;
+    let decoded =
+        base64url_decode(segment).ok_or_else(|| Error::Verification(format!("{label} is not valid base64url")))?;
     let data = json::decode(&decoded, Some(true), json::DEFAULT_DEPTH, Flags::THROW_ON_ERROR)
         .map_err(|_| Error::Verification(format!("{label} is not valid JSON")))?;
     match data {

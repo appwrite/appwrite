@@ -325,6 +325,43 @@
       ]
     },
     {
+      "name": "one-shot hashing with options",
+      "steps": [
+        {
+          "op": "hash.once",
+          "args": {
+            "algo": "sha",
+            "options": {
+              "version": "sha1"
+            },
+            "value": "x"
+          },
+          "expect": "11f6ad8ec52a2984abaafd7c3b516503785c2072"
+        },
+        {
+          "op": "hash.once",
+          "args": {
+            "algo": "sha",
+            "options": {
+              "version": "sha1"
+            },
+            "value": "x",
+            "hash_value": "11f6ad8ec52a2984abaafd7c3b516503785c2072"
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.once",
+          "args": {
+            "algo": "md5",
+            "value": "x",
+            "hash_value": "nope"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
       "name": "setting an existing option keeps its position",
       "steps": [
         {

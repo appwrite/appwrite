@@ -10,4 +10,10 @@ return [
     'value.empty' => fn (array $a) => empty($a['v']),
     'value.is_array' => fn (array $a) => \is_array($a['v']),
     'value.loose_eq' => fn (array $a) => $a['a'] == $a['b'],
+    'value.sort_strings' => function (array $a) {
+        $values = array_map(fn (mixed $v): string => (string) $v, array_values((array) $a['v']));
+        sort($values);
+
+        return $values;
+    },
 ];

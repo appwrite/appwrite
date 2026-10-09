@@ -13,6 +13,7 @@ pub const OPS: &[&str] = &[
     "value.empty",
     "value.is_array",
     "value.loose_eq",
+    "value.sort_strings",
 ];
 
 pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
@@ -30,6 +31,15 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
         "value.empty" => Value::Bool(value::empty(v()?)),
         "value.is_array" => Value::Bool(value::is_array(v()?)),
         "value.loose_eq" => Value::Bool(value::loose_eq(a.value("a")?, a.value("b")?)),
+        "value.sort_strings" => {
+            let mut values: Vec<String> = a
+                .array("v")?
+                .iter()
+                .map(|v| value::to_string(v).ok_or_else(|| Fault::new("not a scalar")))
+                .collect::<Result<_, _>>()?;
+            value::sort_strings(&mut values);
+            Value::Array(values.into_iter().map(Value::String).collect())
+        }
         _ => return Err(Fault::new(format!("php-std: unknown operation `{op}`"))),
     }))
 }

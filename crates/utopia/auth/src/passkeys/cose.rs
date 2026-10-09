@@ -69,9 +69,9 @@ impl PublicKey {
         let alg = label(&map, 3).and_then(int).ok_or_else(|| "The key has no algorithm.".to_owned())?;
         Ok(match kty {
             Some(2) => {
-                let crv = label(&map, -1).and_then(int).ok_or_else(|| {
-                    "Invalid EC2 key. The curve or the \"x/y\" coordinates are missing".to_owned()
-                })?;
+                let crv = label(&map, -1)
+                    .and_then(int)
+                    .ok_or_else(|| "Invalid EC2 key. The curve or the \"x/y\" coordinates are missing".to_owned())?;
                 let (Some(x), Some(y)) = (bytes(label(&map, -2)), bytes(label(&map, -3))) else {
                     return Err("Invalid EC2 key. The curve or the \"x/y\" coordinates are missing".into());
                 };

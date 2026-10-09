@@ -77,6 +77,12 @@ final class Adapter implements Base
             },
             'hash.hash' => fn (array $a, Session $s) => self::hash($a, $s)->hash((string) $a['value']),
             'hash.verify' => fn (array $a, Session $s) => self::hash($a, $s)->verify((string) $a['value'], (string) $a['hash_value']),
+            'hash.once' => function (array $a, Session $s) {
+                $hash = self::newHash((string) $a['algo']);
+                $hash->setOptions(self::map($a['options'] ?? []));
+
+                return isset($a['hash_value']) ? $hash->verify((string) $a['value'], (string) $a['hash_value']) : $hash->hash((string) $a['value']);
+            },
 
             // Proofs
             'proof.new' => fn (array $a, Session $s) => $s->handle(self::newProof($a, $s)),
@@ -157,6 +163,12 @@ final class Adapter implements Base
             },
             'store.get_key' => fn (array $a, Session $s) => self::store($a, $s)->getKey(),
             'store.encode' => fn (array $a, Session $s) => self::store($a, $s)->encode(),
+            'store.decode_once' => function (array $a, Session $s) {
+                $store = new Store();
+                $store->decode((string) $a['data']);
+
+                return $store->encode();
+            },
             'store.decode' => function (array $a, Session $s) {
                 self::store($a, $s)->decode((string) $a['data']);
 
@@ -185,6 +197,12 @@ final class Adapter implements Base
                 Clock::$now = isset($a['now']) ? (int) $a['now'] : null;
 
                 return $verifier->verify((string) $a['token']);
+            },
+            'verifier.check' => function (array $a, Session $s) {
+                $verifier = self::newVerifier(['kind' => 'symmetric'] + $a);
+                Clock::$now = isset($a['now']) ? (int) $a['now'] : null;
+
+                return $verifier->verify(isset($a['token']) ? (string) $a['token'] : self::jws(['alg' => 'HS256', 'key' => $a['secret']] + $a));
             },
             'verifier.key_id' => function (array $a, Session $s) {
                 $verifier = $s->get($a['verifier']);
@@ -272,20 +290,7 @@ final class Adapter implements Base
             'fixture.matches' => fn (array $a, Session $s) => preg_match((string) $a['pattern'], (string) $a['value']),
             'fixture.strlen' => fn (array $a, Session $s) => \strlen((string) $a['value']),
             'fixture.substr' => fn (array $a, Session $s) => substr((string) $a['value'], (int) $a['start'], isset($a['length']) ? (int) $a['length'] : null),
-            'fixture.jws' => function (array $a, Session $s) {
-                $encode = fn (string $v): string => rtrim(strtr(base64_encode($v), '+/', '-_'), '=');
-                $header = isset($a['raw_header']) ? (string) $a['raw_header'] : (string) json_encode($a['header'] ?? null);
-                $claims = isset($a['raw_claims']) ? (string) $a['raw_claims'] : (string) json_encode($a['claims'] ?? null);
-                $input = $encode($header) . '.' . $encode($claims);
-                $signature = '';
-                if (($a['alg'] ?? '') === 'HS256') {
-                    $signature = hash_hmac('sha256', $input, (string) $a['key'], true);
-                } elseif (!openssl_sign($input, $signature, (string) $a['key'], OPENSSL_ALGO_SHA256)) {
-                    throw new Fault('unable to sign');
-                }
-
-                return $input . '.' . $encode((string) $signature);
-            },
+            'fixture.jws' => fn (array $a, Session $s) => self::jws($a),
             'fixture.jwt' => function (array $a, Session $s) {
                 $parts = explode('.', (string) $a['token']);
                 $decode = fn (string $segment): mixed => json_decode((string) base64_decode(strtr($segment, '-_', '+/')), true);
@@ -293,6 +298,26 @@ final class Adapter implements Base
                 return ['header' => $decode($parts[0]), 'claims' => $decode($parts[1] ?? '')];
             },
         ];
+    }
+
+    /**
+     * A compact JWS of json_encode(header) and json_encode(claims) (or the raw
+     * segments), signed HS256 or RS256 with `key`.
+     */
+    private static function jws(array $a): string
+    {
+        $encode = fn (string $v): string => rtrim(strtr(base64_encode($v), '+/', '-_'), '=');
+        $header = isset($a['raw_header']) ? (string) $a['raw_header'] : (string) json_encode($a['header'] ?? null);
+        $claims = isset($a['raw_claims']) ? (string) $a['raw_claims'] : (string) json_encode($a['claims'] ?? null);
+        $input = $encode($header) . '.' . $encode($claims);
+        $signature = '';
+        if (($a['alg'] ?? '') === 'HS256') {
+            $signature = hash_hmac('sha256', $input, (string) $a['key'], true);
+        } elseif (!openssl_sign($input, $signature, (string) $a['key'], OPENSSL_ALGO_SHA256)) {
+            throw new Fault('unable to sign');
+        }
+
+        return $input . '.' . $encode((string) $signature);
     }
 
     private static function newHash(string $algo): Hash

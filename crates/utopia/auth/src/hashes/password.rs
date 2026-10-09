@@ -5,9 +5,9 @@
 use argon2::{Algorithm, Argon2, Params, Version};
 use php_std::encoding::base64_encode;
 
+use crate::Error;
 use crate::hash::{hash_equals, random_bytes};
 use crate::options::Options;
-use crate::Error;
 
 /// crypt_blowfish's base64 alphabet.
 pub(crate) const BF_ITOA64: &[u8; 64] = b"./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -249,8 +249,11 @@ fn from_base64(s: &[u8]) -> Option<(Vec<u8>, &[u8])> {
     Some((out, &s[i..]))
 }
 
+/// A decoded Argon2 hash: version, memory, time, lanes, salt and output.
+type Encoded = (u32, u32, u32, u32, Vec<u8>, Vec<u8>);
+
 fn verify_argon2(value: &[u8], hash: &[u8], algorithm: Algorithm, name: &[u8]) -> bool {
-    let parse = || -> Option<(u32, u32, u32, u32, Vec<u8>, Vec<u8>)> {
+    let parse = || -> Option<Encoded> {
         let s = hash.strip_prefix(b"$")?.strip_prefix(name)?;
         let (version, s) = match u32_field(s, b"$v=") {
             Some((v, rest)) => (v, rest),

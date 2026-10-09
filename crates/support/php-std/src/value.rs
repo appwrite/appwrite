@@ -335,3 +335,235 @@ mod tests {
         assert_eq!(to_string(&json!(1e25)).unwrap(), "1.0E+25");
     }
 }
+
+// ---------------------------------------------------------------------------
+// String comparison and sorting (Zend/zend_operators.c, Zend/zend_sort.c)
+// ---------------------------------------------------------------------------
+
+/// `zendi_smart_strcmp`: PHP 8's `<=>` for two strings. Numeric strings
+/// compare as numbers (integers that overflowed to the same side compare as
+/// strings); anything else compares byte by byte, then by length.
+pub fn smart_strcmp(a: &[u8], b: &[u8]) -> Ordering {
+    let numeric = |s: &[u8]| std::str::from_utf8(s).ok().and_then(numeric_str_ex);
+    if let (Some((x, oflow1)), Some((y, oflow2))) = (numeric(a), numeric(b)) {
+        let both_overflowed = oflow1 != 0 && oflow1 == oflow2 && x.as_f64() - y.as_f64() == 0.0;
+        if !both_overflowed {
+            return match (x, y) {
+                (Number::Int(p), Number::Int(q)) => p.cmp(&q),
+                (Number::Int(_), Number::Float(_)) if oflow2 != 0 => {
+                    if oflow2 > 0 {
+                        Ordering::Less
+                    } else {
+                        Ordering::Greater
+                    }
+                }
+                (Number::Float(_), Number::Int(_)) if oflow1 != 0 => {
+                    if oflow1 > 0 {
+                        Ordering::Greater
+                    } else {
+                        Ordering::Less
+                    }
+                }
+                (Number::Float(p), Number::Float(q)) if p == q && !p.is_finite() => a.cmp(b),
+                _ => {
+                    let d = x.as_f64() - y.as_f64();
+                    if d > 0.0 {
+                        Ordering::Greater
+                    } else if d < 0.0 {
+                        Ordering::Less
+                    } else {
+                        Ordering::Equal
+                    }
+                }
+            };
+        }
+    }
+    // zend_binary_strcmp: memcmp of the common prefix, then the length.
+    a.cmp(b)
+}
+
+/// `zend_sort`: the engine's hybrid insertion sort / quicksort, with its
+/// exact sequence of comparisons, so that a comparison that is not a total
+/// order (PHP's `<=>` across numeric and non-numeric strings) sorts the way
+/// PHP does. `after(a, b)` answers whether `a` sorts after `b` (`cmp > 0`).
+pub fn zend_sort<T>(items: &mut [T], after: &mut impl FnMut(&T, &T) -> bool) {
+    let mut base = 0usize;
+    let mut nmemb = items.len();
+    loop {
+        if nmemb <= 16 {
+            insert_sort(&mut items[base..base + nmemb], after);
+            return;
+        }
+        let start = base;
+        let end = base + nmemb;
+        let offset = nmemb >> 1;
+        let pivot = start + offset;
+        if nmemb >> 10 != 0 {
+            let delta = offset >> 1;
+            sort5(items, [start, start + delta, pivot, pivot + delta, end - 1], after);
+        } else {
+            sort3(items, [start, pivot, end - 1], after);
+        }
+        items.swap(start + 1, pivot);
+        let pivot = start + 1;
+        let mut i = pivot + 1;
+        let mut j = end - 1;
+        'partition: loop {
+            while after(&items[pivot], &items[i]) {
+                i += 1;
+                if i == j {
+                    break 'partition;
+                }
+            }
+            j -= 1;
+            if j == i {
+                break 'partition;
+            }
+            while after(&items[j], &items[pivot]) {
+                j -= 1;
+                if j == i {
+                    break 'partition;
+                }
+            }
+            items.swap(i, j);
+            i += 1;
+            if i == j {
+                break 'partition;
+            }
+        }
+        items.swap(pivot, i - 1);
+        if (i - 1) - start < end - i {
+            zend_sort(&mut items[start..i - 1], after);
+            base = i;
+            nmemb = end - i;
+        } else {
+            zend_sort(&mut items[i..end], after);
+            base = start;
+            nmemb = i - start - 1;
+        }
+    }
+}
+
+fn sort2<T>(items: &mut [T], [a, b]: [usize; 2], after: &mut impl FnMut(&T, &T) -> bool) {
+    if after(&items[a], &items[b]) {
+        items.swap(a, b);
+    }
+}
+
+fn sort3<T>(items: &mut [T], [a, b, c]: [usize; 3], after: &mut impl FnMut(&T, &T) -> bool) {
+    if !after(&items[a], &items[b]) {
+        if !after(&items[b], &items[c]) {
+            return;
+        }
+        items.swap(b, c);
+        if after(&items[a], &items[b]) {
+            items.swap(a, b);
+        }
+        return;
+    }
+    if !after(&items[c], &items[b]) {
+        items.swap(a, c);
+        return;
+    }
+    items.swap(a, b);
+    if after(&items[b], &items[c]) {
+        items.swap(b, c);
+    }
+}
+
+fn sort4<T>(items: &mut [T], [a, b, c, d]: [usize; 4], after: &mut impl FnMut(&T, &T) -> bool) {
+    sort3(items, [a, b, c], after);
+    if after(&items[c], &items[d]) {
+        items.swap(c, d);
+        if after(&items[b], &items[c]) {
+            items.swap(b, c);
+            if after(&items[a], &items[b]) {
+                items.swap(a, b);
+            }
+        }
+    }
+}
+
+fn sort5<T>(items: &mut [T], [a, b, c, d, e]: [usize; 5], after: &mut impl FnMut(&T, &T) -> bool) {
+    sort4(items, [a, b, c, d], after);
+    if after(&items[d], &items[e]) {
+        items.swap(d, e);
+        if after(&items[c], &items[d]) {
+            items.swap(c, d);
+            if after(&items[b], &items[c]) {
+                items.swap(b, c);
+                if after(&items[a], &items[b]) {
+                    items.swap(a, b);
+                }
+            }
+        }
+    }
+}
+
+/// `zend_insert_sort`.
+fn insert_sort<T>(items: &mut [T], after: &mut impl FnMut(&T, &T) -> bool) {
+    let n = items.len();
+    match n {
+        0 | 1 => {}
+        2 => sort2(items, [0, 1], after),
+        3 => sort3(items, [0, 1, 2], after),
+        4 => sort4(items, [0, 1, 2, 3], after),
+        5 => sort5(items, [0, 1, 2, 3, 4], after),
+        _ => {
+            for i in 1..6 {
+                let mut j = i - 1;
+                if !after(&items[j], &items[i]) {
+                    continue;
+                }
+                while j != 0 {
+                    j -= 1;
+                    if !after(&items[j], &items[i]) {
+                        j += 1;
+                        break;
+                    }
+                }
+                items[j..=i].rotate_right(1);
+            }
+            for i in 6..n {
+                let mut j = i - 1;
+                if !after(&items[j], &items[i]) {
+                    continue;
+                }
+                loop {
+                    j -= 2;
+                    if !after(&items[j], &items[i]) {
+                        j += 1;
+                        if !after(&items[j], &items[i]) {
+                            j += 1;
+                        }
+                        break;
+                    }
+                    if j == 0 {
+                        break;
+                    }
+                    if j == 1 {
+                        j -= 1;
+                        if after(&items[i], &items[j]) {
+                            j += 1;
+                        }
+                        break;
+                    }
+                }
+                items[j..=i].rotate_right(1);
+            }
+        }
+    }
+}
+
+/// `sort($strings)` (`SORT_REGULAR`) on a list of strings: [`smart_strcmp`]
+/// through [`zend_sort`], stable (ties keep their order) as since PHP 8.0.
+pub fn sort_strings<S: AsRef<[u8]> + Clone>(items: &mut [S]) {
+    let mut indexed: Vec<(usize, S)> = items.iter().cloned().enumerate().collect();
+    zend_sort(&mut indexed, &mut |a, b| match smart_strcmp(a.1.as_ref(), b.1.as_ref()) {
+        Ordering::Equal => a.0 > b.0,
+        o => o == Ordering::Greater,
+    });
+    for (slot, (_, item)) in items.iter_mut().zip(indexed) {
+        *slot = item;
+    }
+}

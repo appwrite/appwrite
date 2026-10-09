@@ -75,8 +75,8 @@ pub fn respond(a: &Args) -> Result<Value, Fault> {
     .into_iter()
     .map(|(k, v)| (Key::from_bytes(k.as_bytes()), v))
     .collect();
-    let client_data =
-        php_std::json::encode(&Zval::Array(client), php_std::json::Flags::THROW_ON_ERROR, 512).map_err(|e| Fault::new(e.to_string()))?;
+    let client_data = php_std::json::encode(&Zval::Array(client), php_std::json::Flags::THROW_ON_ERROR, 512)
+        .map_err(|e| Fault::new(e.to_string()))?;
 
     let mut flags = FLAG_USER_PRESENT;
     if a.opt_bool("user_verified")?.unwrap_or(true) {
@@ -96,13 +96,16 @@ pub fn respond(a: &Args) -> Result<Value, Fault> {
     if register {
         let point = key.verifying_key().to_encoded_point(false);
         let (x, y) = (point.x().ok_or_else(|| Fault::new("no x"))?, point.y().ok_or_else(|| Fault::new("no y"))?);
-        let public_key = [head(5, 5), int(1), int(2), int(3), int(-7), int(-1), int(1), int(-2), bytes(x), int(-3), bytes(y)].concat();
+        let public_key =
+            [head(5, 5), int(1), int(2), int(3), int(-7), int(-1), int(1), int(-2), bytes(x), int(-3), bytes(y)]
+                .concat();
         auth.extend_from_slice(&[0u8; 16]);
         auth.extend_from_slice(&(credential_id.len() as u16).to_be_bytes());
         auth.extend_from_slice(&credential_id);
         auth.extend_from_slice(&public_key);
         let attestation =
-            [head(5, 3), text("fmt"), text("none"), text("attStmt"), head(5, 0), text("authData"), bytes(&auth)].concat();
+            [head(5, 3), text("fmt"), text("none"), text("attStmt"), head(5, 0), text("authData"), bytes(&auth)]
+                .concat();
         return Ok(json!({
             "id": encode(&credential_id),
             "rawId": encode(&credential_id),

@@ -140,6 +140,72 @@
           "iterations": 3000
         }
       ]
+    },
+    "value.sort_strings": {
+      "doc": "sort($strings) (SORT_REGULAR): zend_sort with PHP 8's string <=>, stable",
+      "fuzz": [
+        {
+          "name": "strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "10",
+                        "9",
+                        "1e1",
+                        "1.0",
+                        " 1",
+                        "1 ",
+                        "01",
+                        "0x1A",
+                        "-1",
+                        "+1",
+                        ".5",
+                        "5.",
+                        "1e999",
+                        "-1e999",
+                        "9223372036854775807",
+                        "9223372036854775808",
+                        "-9223372036854775809",
+                        "18446744073709551616",
+                        "6F",
+                        "5'",
+                        "a",
+                        "A",
+                        "",
+                        " ",
+                        "abc",
+                        "10abc",
+                        "INF",
+                        "NAN",
+                        "1_000",
+                        "١"
+                      ]
+                    },
+                    {
+                      "gen": "string",
+                      "alphabet": "0123456789.e+- aZ",
+                      "min": 0,
+                      "max": 5,
+                      "tricky": 0.2
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 40
+              }
+            }
+          },
+          "iterations": 5000
+        }
+      ]
     }
   },
   "generators": {

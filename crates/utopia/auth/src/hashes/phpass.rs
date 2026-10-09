@@ -113,7 +113,11 @@ fn operand(value: &Zval, op: &str) -> Result<Number, Error> {
                 let rest = rest.strip_prefix(b"-").or_else(|| rest.strip_prefix(b"+")).unwrap_or(rest);
                 if rest.first().is_some_and(|b| b.is_ascii_digit() || *b == b'.') {
                     let f = str_to_float(s);
-                    if f.fract() == 0.0 && f.abs() < 9.2e18 && !s.contains(&b'.') && !s.iter().any(|b| *b == b'e' || *b == b'E') {
+                    if f.fract() == 0.0
+                        && f.abs() < 9.2e18
+                        && !s.contains(&b'.')
+                        && !s.iter().any(|b| *b == b'e' || *b == b'E')
+                    {
                         Number::Int(f as i64)
                     } else {
                         Number::Float(f)

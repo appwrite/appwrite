@@ -10,9 +10,6 @@ pub use ceremony::{Ceremony, Challenge, Counter, Credential, StrictCounter, TIME
 pub use cose::{Algorithm, PublicKey};
 pub use origin::Origin;
 
-use std::cmp::Ordering;
-
-use php_std::value::{compare_numbers, numeric_str};
 use sha2::{Digest, Sha256};
 
 /// The relying party passkeys are bound to (`Utopia\Auth\Passkeys\RelyingParty`):
@@ -24,14 +21,6 @@ pub struct RelyingParty {
     pub origins: Vec<String>,
 }
 
-/// `sort()`'s default comparison of two strings: numerically when both are numeric.
-fn php_compare(a: &str, b: &str) -> Ordering {
-    match (numeric_str(a), numeric_str(b)) {
-        (Some(x), Some(y)) => compare_numbers(x, y),
-        _ => a.as_bytes().cmp(b.as_bytes()),
-    }
-}
-
 impl RelyingParty {
     pub fn new(id: impl Into<String>, name: impl Into<String>, origins: Vec<String>) -> Self {
         Self { id: id.into(), name: name.into(), origins }
@@ -41,7 +30,7 @@ impl RelyingParty {
     /// invalidate ceremonies started under another configuration.
     pub fn fingerprint(&self) -> String {
         let mut origins: Vec<&str> = self.origins.iter().map(String::as_str).collect();
-        origins.sort_by(|a, b| php_compare(a, b));
+        php_std::value::sort_strings(&mut origins);
         hex::encode(Sha256::digest(format!("{}\n{}", self.id, origins.join("\n"))))
     }
 }

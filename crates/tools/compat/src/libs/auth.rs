@@ -9,8 +9,7 @@ use php_std::zval::{Array, Key, Object, Zval};
 use serde_json::{Map, Value, json};
 use utopia_auth::hashes::{Argon2, Bcrypt, Md5, PHPass, Plaintext, Scrypt, ScryptModified, Sha};
 use utopia_auth::jwt::{
-    AccessToken, Asymmetric, Audience, Hs256, IdToken, Jwt, RefreshToken, Rs256, Symmetric, Verifier,
-    generate_key_pair,
+    AccessToken, Asymmetric, Audience, Hs256, IdToken, Jwt, RefreshToken, Rs256, Symmetric, Verifier, generate_key_pair,
 };
 use utopia_auth::oauth2::{
     AuthorizationDetails, ClientIdMetadataDocument, ClientIdentifierUrl, Par, Prompt, Prompts, RedirectUris,
@@ -32,6 +31,9 @@ pub const OPS: &[&str] = &[
     "hash.setter",
     "hash.hash",
     "hash.verify",
+    "hash.once",
+    "store.decode_once",
+    "verifier.check",
     "proof.new",
     "proof.generate",
     "proof.hash",
@@ -265,15 +267,15 @@ fn setter(hash: &mut dyn Hash, method: &str, value: &Value) -> Result<Result<(),
             "setMemoryCost" => {
                 let _ = h.set_memory_cost(int());
                 Ok(())
-            },
+            }
             "setTimeCost" => {
                 let _ = h.set_time_cost(int());
                 Ok(())
-            },
+            }
             "setThreads" => {
                 let _ = h.set_threads(int());
                 Ok(())
-            },
+            }
             _ => return Err(unknown()),
         }
     } else if let Some(h) = any.downcast_mut::<Bcrypt>() {
@@ -287,7 +289,7 @@ fn setter(hash: &mut dyn Hash, method: &str, value: &Value) -> Result<Result<(),
             "setPortableHashes" => {
                 let _ = h.set_portable_hashes(php_std::format::Arg::from(value).to_bool());
                 Ok(())
-            },
+            }
             _ => return Err(unknown()),
         }
     } else if let Some(h) = any.downcast_mut::<Scrypt>() {
@@ -341,7 +343,9 @@ fn audience(value: Option<&Value>) -> Option<Audience> {
 }
 
 fn opt_bytes(a: &Args, key: &str) -> Result<Option<Vec<u8>>, Fault> {
-    a.opt(key).map(|v| crate::adapter::bytes(v).ok_or_else(|| Fault::new(format!("`{key}` must be a string")))).transpose()
+    a.opt(key)
+        .map(|v| crate::adapter::bytes(v).ok_or_else(|| Fault::new(format!("`{key}` must be a string"))))
+        .transpose()
 }
 
 fn scopes(a: &Args) -> Vec<Vec<u8>> {
@@ -349,7 +353,9 @@ fn scopes(a: &Args) -> Vec<Vec<u8>> {
         .into_iter()
         .map(|z| match z {
             Zval::String(s) => s,
-            other => php_std::format::Arg::from(&from_zval(&other)).to_bytes().map(|c| c.into_owned()).unwrap_or_default(),
+            other => {
+                php_std::format::Arg::from(&from_zval(&other)).to_bytes().map(|c| c.into_owned()).unwrap_or_default()
+            }
         })
         .collect()
 }
@@ -413,6 +419,29 @@ fn client_id(a: &Args) -> Result<Result<ClientIdentifierUrl, Error>, Fault> {
     Ok(ClientIdentifierUrl::from_string(&a.bytes("client_id")?, a.opt_bool("allow_http")?.unwrap_or(false)))
 }
 
+/// A compact JWS of `json_encode(header).json_encode(claims)` (or the raw
+/// segments), signed HS256 or RS256 with `key` (the PHP adapter's `jws()`).
+fn jws(a: &Args, alg: &str, key: &[u8]) -> Result<String, Fault> {
+    let encode = |v: &[u8]| -> String {
+        php_std::encoding::base64_encode(v).trim_end_matches('=').replace('+', "-").replace('/', "_")
+    };
+    let json = |raw: &str, value: &str| -> Result<Vec<u8>, Fault> {
+        if let Some(r) = opt_bytes(a, raw)? {
+            return Ok(r);
+        }
+        let z = to_zval(a.opt(value).unwrap_or(&Value::Null));
+        // json_encode() failing gives false, which (string) casts to "".
+        Ok(php_std::json::encode(&z, php_std::json::Flags::NONE, 512).map(String::into_bytes).unwrap_or_default())
+    };
+    let input = format!("{}.{}", encode(&json("raw_header", "header")?), encode(&json("raw_claims", "claims")?));
+    let signature = if alg == "HS256" {
+        utopia_auth::jwt::hs256(key, input.as_bytes())
+    } else {
+        utopia_auth::jwt::rs256(key, input.as_bytes()).map_err(|e| Fault::new(e.to_string()))?
+    };
+    Ok(format!("{input}.{}", encode(&signature)))
+}
+
 fn ceremony<'a>(s: &'a Session, a: &Args) -> Result<&'a Ceremony, Fault> {
     s.get::<Ceremony>(a.value("ceremony")?)
 }
@@ -454,9 +483,8 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "hash.hash" => {
             let value = a.bytes("value")?;
             let hash = hash_of(session, &a)?.boxed_clone();
-            let out = tokio::task::spawn_blocking(move || hash.hash(&value))
-                .await
-                .map_err(|e| Fault::new(e.to_string()))?;
+            let out =
+                tokio::task::spawn_blocking(move || hash.hash(&value)).await.map_err(|e| Fault::new(e.to_string()))?;
             bytes(tri!(out))
         }
         "hash.verify" => {
@@ -466,6 +494,20 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 .await
                 .map_err(|e| Fault::new(e.to_string()))?;
             Outcome::ok(tri!(out))
+        }
+
+        "hash.once" => {
+            let mut hash = new_hash(a.str("algo")?)?;
+            tri!(utopia_auth::proofs::set_options(hash.as_mut(), &array(a.opt("options"))));
+            let value = a.bytes("value")?;
+            let stored = opt_bytes(&a, "hash_value")?;
+            let out = tokio::task::spawn_blocking(move || match stored {
+                Some(stored) => hash.verify(&value, &stored).map(Value::Bool),
+                None => hash.hash(&value).map(|h| bytes_value(&h)),
+            })
+            .await
+            .map_err(|e| Fault::new(e.to_string()))?;
+            Outcome::Ok(tri!(out))
         }
 
         // Proofs
@@ -497,9 +539,8 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "proof.hash" => {
             let value = a.bytes("value")?;
             let hash = session.get::<AnyProof>(a.value("proof")?)?.proof().hasher().boxed_clone();
-            let out = tokio::task::spawn_blocking(move || hash.hash(&value))
-                .await
-                .map_err(|e| Fault::new(e.to_string()))?;
+            let out =
+                tokio::task::spawn_blocking(move || hash.hash(&value)).await.map_err(|e| Fault::new(e.to_string()))?;
             bytes(tri!(out))
         }
         "proof.verify" => {
@@ -511,7 +552,9 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             Outcome::ok(tri!(out))
         }
         "proof.hash_name" => Outcome::ok(session.get::<AnyProof>(a.value("proof")?)?.proof().hasher().name()),
-        "proof.hash_options" => Outcome::Ok(options_value(session.get::<AnyProof>(a.value("proof")?)?.proof().hasher())),
+        "proof.hash_options" => {
+            Outcome::Ok(options_value(session.get::<AnyProof>(a.value("proof")?)?.proof().hasher()))
+        }
         "proof.hash_setter" => {
             let method = a.str("method")?.to_owned();
             let value = a.opt("value").cloned().unwrap_or(Value::Null);
@@ -626,6 +669,11 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             None => Outcome::Ok(Value::Null),
         },
         "store.encode" => Outcome::ok(tri!(session.get::<Store>(a.value("store")?)?.encode())),
+        "store.decode_once" => {
+            let mut store = Store::new();
+            store.decode(&a.bytes("data")?);
+            Outcome::ok(tri!(store.encode()))
+        }
         "store.decode" => {
             let data = a.bytes("data")?;
             session.get_mut::<Store>(a.value("store")?)?.decode(&data);
@@ -721,9 +769,11 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         }
         "issuer.generate_key_pair" => {
             let bits = a.opt_i64("bits")?.unwrap_or(2048);
-            let pair = tri!(tokio::task::spawn_blocking(move || generate_key_pair(bits))
-                .await
-                .map_err(|e| Fault::new(e.to_string()))?);
+            let pair = tri!(
+                tokio::task::spawn_blocking(move || generate_key_pair(bits))
+                    .await
+                    .map_err(|e| Fault::new(e.to_string()))?
+            );
             Outcome::Ok(json!({ "private": pair.private_key, "public": pair.public_key }))
         }
         "verifier.new" => {
@@ -761,6 +811,22 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 AnyVerifier::Asymmetric(v) => v.verify(&token, now),
             };
             Outcome::Ok(from_array(&tri!(claims)))
+        }
+        "verifier.check" => {
+            let now = a.opt_i64("now")?.unwrap_or_else(php_std::datetime::time);
+            let verifier = tri!(Verifier::new(
+                tri!(Hs256::new(&a.bytes("secret")?)),
+                opt_bytes(&a, "issuer")?.as_deref(),
+                audience(a.opt("audience")).as_ref(),
+                opt_bytes(&a, "type")?.as_deref(),
+                a.opt_bool("allow_expired")?.unwrap_or(false),
+                a.opt_i64("leeway")?.unwrap_or(0)
+            ));
+            let token = match opt_bytes(&a, "token")? {
+                Some(t) => t,
+                None => jws(&a, "HS256", &a.bytes("secret")?)?.into_bytes(),
+            };
+            Outcome::Ok(from_array(&tri!(verifier.verify(&token, now))))
         }
         "verifier.key_id" => match session.get::<AnyVerifier>(a.value("verifier")?)? {
             AnyVerifier::Asymmetric(v) => Outcome::ok(tri!(v.check().key_id())),
@@ -845,7 +911,8 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         }
         "client_id_url.is_candidate" => Outcome::ok(ClientIdentifierUrl::is_candidate(&a.bytes("value")?)),
         "client_id_url.from_string" => {
-            let url = tri!(ClientIdentifierUrl::from_string(&a.bytes("value")?, a.opt_bool("allow_http")?.unwrap_or(false)));
+            let url =
+                tri!(ClientIdentifierUrl::from_string(&a.bytes("value")?, a.opt_bool("allow_http")?.unwrap_or(false)));
             Outcome::Ok(json!({ "string": bytes_value(url.as_bytes()), "host": bytes_value(url.host()) }))
         }
         "client_metadata.from_json" => {
@@ -876,11 +943,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                     _ => Array::new(),
                 })
                 .collect();
-            challenge(tri!(ceremony(session, &a)?.register(
-                &a.bytes("name")?,
-                &a.bytes("display_name")?,
-                &records
-            )))
+            challenge(tri!(ceremony(session, &a)?.register(&a.bytes("name")?, &a.bytes("display_name")?, &records)))
         }
         "passkeys.authenticate" => challenge(tri!(ceremony(session, &a)?.authenticate())),
         "passkeys.identify" => Outcome::ok(tri!(ceremony(session, &a)?.identify(&array(a.opt("credential"))))),
@@ -909,28 +972,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             let value = a.bytes("value")?;
             bytes(php_std::string::substr(&value, a.i64("start")?, a.opt_i64("length")?).to_vec())
         }
-        "fixture.jws" => {
-            let encode = |v: &[u8]| -> String {
-                php_std::encoding::base64_encode(v).trim_end_matches('=').replace('+', "-").replace('/', "_")
-            };
-            let json = |raw: &str, value: &str| -> Result<Vec<u8>, Fault> {
-                if let Some(r) = opt_bytes(&a, raw)? {
-                    return Ok(r);
-                }
-                let z = to_zval(a.opt(value).unwrap_or(&Value::Null));
-                php_std::json::encode(&z, php_std::json::Flags::NONE, 512)
-                    .map(String::into_bytes)
-                    .map_err(|e| Fault::new(e.to_string()))
-            };
-            let input = format!("{}.{}", encode(&json("raw_header", "header")?), encode(&json("raw_claims", "claims")?));
-            let key = a.bytes("key")?;
-            let signature = if a.opt_str("alg")? == Some("HS256") {
-                utopia_auth::jwt::hs256(&key, input.as_bytes())
-            } else {
-                utopia_auth::jwt::rs256(&key, input.as_bytes()).map_err(|e| Fault::new(e.to_string()))?
-            };
-            Outcome::ok(format!("{input}.{}", encode(&signature)))
-        }
+        "fixture.jws" => Outcome::ok(jws(&a, a.opt_str("alg")?.unwrap_or("RS256"), &a.bytes("key")?)?),
         "fixture.jwt" => {
             let token = a.bytes("token")?;
             let parts: Vec<&[u8]> = token.split(|b| *b == b'.').collect();

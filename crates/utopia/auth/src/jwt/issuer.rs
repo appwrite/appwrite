@@ -300,9 +300,7 @@ impl AccessToken {
             return Err(Error::InvalidArgument("audience must be a list of resource server identifiers.".into()));
         }
         if audience.iter().any(|(_, v)| matches!(v, Zval::String(s) if s.is_empty())) {
-            return Err(Error::InvalidArgument(
-                "audience must contain non-empty resource server identifiers.".into(),
-            ));
+            return Err(Error::InvalidArgument("audience must contain non-empty resource server identifiers.".into()));
         }
         let mut out = spread(&unset(claims, Claim::Scope));
         set(&mut out, Claim::Issuer, string(&self.0.issuer));

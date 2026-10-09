@@ -92,7 +92,8 @@ impl Hash for ScryptModified {
         let mut full = base64_decode(salt, false).unwrap_or_default();
         full.extend_from_slice(&base64_decode(separator, false).unwrap_or_default());
         let derived = scrypt(&mb_scrub(value), &full, 16384, 8, 1, 64)?;
-        let derived = hex2bin(&derived).ok_or_else(|| Error::Runtime("Failed to convert derived key from hex to binary".into()))?;
+        let derived = hex2bin(&derived)
+            .ok_or_else(|| Error::Runtime("Failed to convert derived key from hex to binary".into()))?;
         let mut data = base64_decode(signer, false).unwrap_or_default();
         let iv = [0u8; 16];
         let mut cipher = ctr::Ctr128BE::<aes::Aes256>::new((&derived[..32]).into(), (&iv).into());

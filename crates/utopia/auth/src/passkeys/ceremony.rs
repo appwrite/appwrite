@@ -99,7 +99,7 @@ fn b64_decode(s: &[u8], url: bool, strict: bool) -> Result<Vec<u8>, String> {
         return Ok(vec![]);
     }
     if strict {
-        if len % 4 == 0 && s[len - 1] == b'=' {
+        if len.is_multiple_of(4) && s[len - 1] == b'=' {
             len -= 1;
             if s[len - 1] == b'=' {
                 len -= 1;
@@ -169,7 +169,7 @@ fn decode_no_padding(s: &[u8]) -> Result<Vec<u8>, String> {
     if len == 0 {
         return Ok(vec![]);
     }
-    if len % 4 == 0 && (s[len - 1] == b'=' || s[len - 2] == b'=') {
+    if len.is_multiple_of(4) && (s[len - 1] == b'=' || s[len - 2] == b'=') {
         return Err("decodeNoPadding() doesn't tolerate padding".into());
     }
     if len % 4 == 1 || s[len - 1] == b'=' {
@@ -837,7 +837,8 @@ impl Ceremony {
         let existing = records.iter().map(Record::decode).collect::<Result<Vec<_>, _>>()?;
         let user_handle = existing.first().map(|r| r.user_handle.clone()).unwrap_or_else(random32);
         let rp = &self.relying_party;
-        let params = |alg: Algorithm| Zval::Array(object(vec![("type", s("public-key")), ("alg", Zval::Int(alg.id()))]));
+        let params =
+            |alg: Algorithm| Zval::Array(object(vec![("type", s("public-key")), ("alg", Zval::Int(alg.id()))]));
         Self::start(object(vec![
             ("challenge", s(&encode(&random32()))),
             ("timeout", Zval::Int(TIMEOUT * 1000)),
@@ -850,7 +851,10 @@ impl Ceremony {
                     ("displayName", Zval::String(display_name.to_vec())),
                 ])),
             ),
-            ("pubKeyCredParams", Zval::Array([params(Algorithm::Es256), params(Algorithm::Rs256)].into_iter().collect())),
+            (
+                "pubKeyCredParams",
+                Zval::Array([params(Algorithm::Es256), params(Algorithm::Rs256)].into_iter().collect()),
+            ),
             (
                 "authenticatorSelection",
                 Zval::Array(object(vec![
@@ -976,7 +980,9 @@ impl Ceremony {
             return Err("Invalid signature.".into());
         }
         if auth.sign_count != 0 || record.counter != 0 {
-            Counter.check(record.counter, record.backup_eligible, auth.sign_count).map_err(|e| e.message().to_owned())?;
+            Counter
+                .check(record.counter, record.backup_eligible, auth.sign_count)
+                .map_err(|e| e.message().to_owned())?;
         }
         record.counter = auth.sign_count;
         record.backup_eligible = Some(auth.has(FLAG_BE));
