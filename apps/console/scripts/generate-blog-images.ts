@@ -204,6 +204,28 @@ async function generateAnnouncingBitbucketSupportCover(
   await writeAvifFromPng(outputDir, png)
 }
 
+async function generateAnnouncingFunctionIntervalsCover(
+  outputDir: string,
+): Promise<void> {
+  mkdirSync(outputDir, { recursive: true })
+
+  const { width, height } = resolveCoverSizePresetKey('blog')
+
+  const data: CoverRenderData = {
+    template: 'simple-title',
+    theme: 'dark',
+    format: 'png',
+    width,
+    height,
+    title: 'Run functions on an interval',
+    subtitle: 'Set how often a function runs, and Appwrite picks the minute',
+    eyebrow: 'Product update',
+  }
+
+  const png = await renderCoverImage(data)
+  await writeAvifFromPng(outputDir, png)
+}
+
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'announcing-sites-dynamic-api-keys': convertCoverSourceToAvif,
   'announcing-console-terminal': convertCoverSourceToAvif,
@@ -215,6 +237,7 @@ const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'announcing-appwrite-2': generateAnnouncingAppwrite2Cover,
   'announcing-console-iv': convertCoverSourceToAvif,
   'build-support-chatbot-vectorsdb': convertCoverSourceToAvif,
+  'announcing-function-intervals': generateAnnouncingFunctionIntervalsCover,
 }
 
 async function main() {
