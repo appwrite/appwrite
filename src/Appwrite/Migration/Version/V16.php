@@ -39,7 +39,7 @@ class V16 extends Migration
      */
     protected function migrateCollections(): void
     {
-        foreach ($this->projectCollections() as $collection) {
+        foreach ($this->collections as $collection) {
             $id = $collection['$id'];
 
             Console::log("Migrating Collection \"{$id}\"");
