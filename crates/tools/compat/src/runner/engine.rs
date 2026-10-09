@@ -115,6 +115,16 @@ impl Engine {
         format!("cx{}{}{tag}", self.run, self.counter)
     }
 
+    /// Drops both drivers, so the next call starts fresh processes. Each
+    /// library's run, fuzz and record starts from them: none inherits the
+    /// process-wide state another left behind (PHP's PCRE cache and JIT
+    /// switch, which a pattern that fails to JIT-compile turns off for good),
+    /// and a library behaves in `ci` exactly as it does alone.
+    fn restart(&mut self) {
+        self.php = None;
+        self.rust = None;
+    }
+
     fn configure(&mut self, side: &'static str, ns: &str) -> Result<(), String> {
         let services = self.cfg.services_for(side);
         self.driver(side)?.configure(ns, &services)
@@ -139,6 +149,7 @@ impl Engine {
 
     /// Runs every case of `lib` (optionally only those whose label contains `filter`).
     pub fn run_lib(&mut self, lib: &str, filter: Option<&str>, fail_fast: bool) -> Result<Report, String> {
+        self.restart();
         let spec = spec::load(&self.cfg.root, lib)?;
         let files = cases::load_dir(&spec::lib_dir(&self.cfg.root, lib).join("cases"))?;
         let mut report = Report::default();
@@ -317,6 +328,7 @@ impl Engine {
 
     /// Runs the cases on PHP only and writes the results as `expect`.
     pub fn record_lib(&mut self, lib: &str, filter: Option<&str>) -> Result<(usize, usize, Vec<String>), String> {
+        self.restart();
         let spec = spec::load(&self.cfg.root, lib)?;
         let files = cases::load_dir(&spec::lib_dir(&self.cfg.root, lib).join("cases"))?;
         let (mut written, mut changed, mut faults) = (0, 0, Vec::new());
@@ -366,6 +378,7 @@ impl Engine {
 
     /// Generates inputs for every fuzz profile and compares both runtimes.
     pub fn fuzz_lib(&mut self, lib: &str, opts: &FuzzOptions) -> Result<Report, String> {
+        self.restart();
         let spec = spec::load(&self.cfg.root, lib)?;
         let (ns_p, ns_r) = (self.ns('p'), self.ns('r'));
         self.configure("php", &ns_p)?;
@@ -382,8 +395,7 @@ impl Engine {
                     format!("{op_name}[{}]", profile.name)
                 };
                 if profile.isolate {
-                    self.php = None;
-                    self.rust = None;
+                    self.restart();
                     self.configure("php", &ns_p)?;
                     self.configure("rust", &ns_r)?;
                 }
