@@ -11,6 +11,7 @@ use Utopia\NATS\ConnectionOptions;
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\JetStreamException;
 use Utopia\NATS\Exception\NatsException;
+use Utopia\NATS\Exception\NoRespondersException;
 use Utopia\NATS\JetStream\ConsumerConfig;
 use Utopia\NATS\JetStream\DiscardPolicy;
 use Utopia\NATS\JetStream\StorageType;
@@ -1008,9 +1009,14 @@ final class NatsBrokerTest extends TestCase
     public static function lostPublishConnection(): iterable
     {
         foreach (['publish' => false, 'publishMany' => true] as $call => $batch) {
-            yield "{$call}, socket closed before the write" => ['before', $batch];
-            yield "{$call}, socket closed after the write landed" => ['after', $batch];
-            yield "{$call}, server reported the connection stale" => ['stale', $batch];
+            yield "{$call}, socket closed before the write" => ['before', $batch, 1];
+            yield "{$call}, socket closed after the write landed" => ['after', $batch, 1];
+            yield "{$call}, server reported the connection stale" => ['stale', $batch, 1];
+            // A server going away is still going away on the first republish.
+            yield "{$call}, socket closed on the republish too" => ['before', $batch, 2];
+            // What JetStream answers while no peer leads the stream: a server
+            // restarting, draining or evicted. It lasts as long as the election.
+            yield "{$call}, no responders while the stream elects a leader" => ['no-responders', $batch, 2];
         }
     }
 
@@ -1018,19 +1024,18 @@ final class NatsBrokerTest extends TestCase
      * An idle publisher's socket is closed by the server when its pings go
      * unanswered, and the next publish is the first to find out: the write fails,
      * or lands and the reply never comes, or the server's last word is a stale
-     * -ERR. Every envelope carries its pid as Nats-Msg-Id, so republishing on a
-     * fresh connection is safe whichever it was -- a copy that did land collapses.
+     * -ERR. A server restarting or being evicted does the same, and for as long as
+     * its streams elect new leaders JetStream answers a publish with 503 No
+     * Responders. Every envelope carries its pid as Nats-Msg-Id, so republishing is
+     * safe whichever it was -- a copy that did land collapses.
      */
     #[DataProvider('lostPublishConnection')]
-    public function testAPublishSurvivesTheServerHavingClosedItsConnection(string $fault, bool $batch): void
+    public function testAPublishSurvivesTheServerHavingClosedItsConnection(string $fault, bool $batch, int $times): void
     {
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
-        $state = new class () {
-            public bool $armed = true;
-            public bool $stale = false;
-        };
+        $state = new PublishFaults($times);
         $fire = (static fn (TcpTransport $transport): Transport => new readonly class ($transport, $state, $fault) implements Transport {
-            public function __construct(private TcpTransport $inner, private object $state, private string $fault)
+            public function __construct(private TcpTransport $inner, private PublishFaults $state, private string $fault)
             {
             }
 
@@ -1041,8 +1046,24 @@ final class NatsBrokerTest extends TestCase
 
             public function write(string $data): int
             {
-                if ($this->state->armed && preg_match('/^H?PUB q\./m', $data) === 1) {
-                    $this->state->armed = false;
+                preg_match_all('/^SUB (\S+) (\d+)\r$/m', $data, $subs, PREG_SET_ORDER);
+                foreach ($subs as [, $subject, $sid]) {
+                    $this->state->inboxes[$subject] = $sid;
+                }
+
+                if ($this->state->faults > 0 && preg_match('/^H?PUB q\.\S+ (\S+) /m', $data, $publish) === 1) {
+                    --$this->state->faults;
+                    if ($this->fault === 'no-responders') {
+                        // Nothing stored: the server answers the first publish's reply
+                        // inbox with a bare 503, as JetStream does with no stream leader.
+                        $reply = $publish[1];
+                        $sid = $this->state->inboxes[$reply]
+                            ?? $this->state->inboxes[substr($reply, 0, (int) strrpos($reply, '.')) . '.*']
+                            ?? throw new \LogicException("no inbox subscription for {$reply}");
+                        $this->state->injected .= "HMSG {$reply} {$sid} 16 16\r\nNATS/1.0 503\r\n\r\n\r\n";
+
+                        return \strlen($data);
+                    }
                     if ($this->fault === 'before') {
                         $this->inner->close();
                         throw new ConnectionException('Connection closed by server');
@@ -1062,6 +1083,12 @@ final class NatsBrokerTest extends TestCase
 
             public function read(int $maxBytes, ?float $timeout = null): string
             {
+                if ($this->state->injected !== '') {
+                    $injected = $this->state->injected;
+                    $this->state->injected = '';
+
+                    return $injected;
+                }
                 if ($this->state->stale) {
                     $this->state->stale = false;
                     $this->inner->close();
@@ -1107,12 +1134,34 @@ final class NatsBrokerTest extends TestCase
 
             $this->assertTrue($batch ? $broker->publishMany($queue, $payloads) : $broker->publish($queue, $payloads[0]));
 
-            $this->assertFalse($state->armed, 'the fault fired');
+            $this->assertSame(0, $state->faults, 'every fault fired');
             $stored = Connection::connect($url)->jetStream()->getStreamInfo('Q_' . strtoupper($queue->name))->state->messages;
             $this->assertSame(\count($payloads), $stored, 'every payload stored exactly once');
         } finally {
             $broker->close();
         }
+    }
+
+    /**
+     * The republishes are bounded. A stream nobody answers for longer than an
+     * election -- here, one deleted from under the broker that provisioned it --
+     * fails the publish with the server's answer, rather than holding the caller.
+     */
+    public function testAPublishNoStreamAnswersFailsWithinItsBudget(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $this->broker->provision($queue);
+        Connection::connect($url)->jetStream()->deleteStream('Q_' . strtoupper($queue->name));
+
+        $started = microtime(true);
+        try {
+            $this->broker->publish($queue, ['task' => 'a']);
+            $this->fail('a publish no stream answered must not report success');
+        } catch (NoRespondersException) {
+        }
+
+        $this->assertLessThan(10.0, microtime(true) - $started, 'the caller is released within the retry budget');
     }
 
     public function testRetriedPublishUnderAStableIdStoresOneMessage(): void
