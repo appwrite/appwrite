@@ -38,7 +38,7 @@ every 60 minutes  →  14:37, 15:37, 16:37, ...
 
 Each function gets its own time within the interval, so functions with the same interval spread out across it instead of all starting at once. Your scheduled work starts on time without queueing behind every other function scheduled for the top of the hour.
 
-Run times are fixed to the UTC clock, not counted from when you save the function. The first run can be up to one full interval away, and an interval that doesn't divide evenly into an hour or a day, such as 90 minutes, runs at a different minute each time.
+Run times are fixed to the UTC clock, not counted from when you save the function. The first run can be up to one full interval away, and an interval that isn't a factor or multiple of 60, such as 90 minutes, doesn't run at the same minute every hour.
 
 A function uses either an interval or a cron expression:
 
@@ -52,7 +52,7 @@ A function uses either an interval or a cron expression:
 
 Open your function, go to **Settings** > **Schedule**, and choose **Interval**. Pick a preset such as every 15 minutes, every hour or every day, or enter your own number of minutes.
 
-# Set an interval with a Server SDK
+# Set an interval with a Server SDK or the CLI
 
 Pass `interval` when you create or update a function:
 
@@ -71,6 +71,12 @@ await functions.update({
     name: 'Sync orders', // name is required by update
     interval: 30 // every 30 minutes
 });
+```
+
+With the Appwrite CLI 28.3.0 or later, pass `--interval`, or set `"interval"` on the function in `appwrite.config.json` and run `appwrite push functions`:
+
+```bash
+appwrite functions update --function-id <FUNCTION_ID> --name "Sync orders" --interval 30
 ```
 
 Set `interval` to `0` to stop it. An update that leaves `interval` out keeps the current one, so existing code that updates other settings won't clear it. Setting the `schedule` parameter (a cron expression) switches the function back to cron.

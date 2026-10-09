@@ -568,7 +568,7 @@ Run times are fixed to the UTC clock, not counted from when you save the functio
 
 - The first run can be up to one full interval away. A daily interval may first run almost 24 hours after you set it.
 - A daily interval (1440 minutes) runs at one fixed UTC time of day, which you can't choose. Use cron if the time of day matters.
-- An interval that doesn't divide evenly into an hour or a day, such as 45 or 90 minutes, runs at a different minute each hour or day.
+- An interval that isn't a factor or multiple of 60, such as 45 or 90 minutes, doesn't run at the same minute every hour.
 - Changing the interval can move the time Appwrite picks.
 
 {% multicode %}
@@ -609,7 +609,15 @@ functions.update(
 ```
 {% /multicode %}
 
-Set `interval` to `0` to stop running on an interval. An update that leaves out `interval` keeps the current one, but an update that leaves out `schedule` clears the cron expression, so send both when you update a function that uses cron.
+With the [Appwrite CLI](/docs/tooling/command-line/installation) 28.3.0 or later, pass `--interval`:
+
+```bash
+appwrite functions update --function-id <FUNCTION_ID> --name <NAME> --interval 360
+```
+
+To keep an interval in `appwrite.config.json`, set `"interval"` on the function and run `appwrite push functions`.
+
+Set `interval` to `0` to stop running on an interval. An update that leaves out `interval` keeps the current one, but an update that leaves out `schedule` clears the cron expression, so pass `schedule` again whenever you update a function that uses cron.
 
 ## Cron {% #cron %}
 
