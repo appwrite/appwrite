@@ -77,7 +77,7 @@ final class MigrationVersionsTest extends TestCase
         }
 
         $collection = $database->findCollection('notifications');
-        $this->assertNotNull($collection);
+        $this->assertInstanceOf(Collection::class, $collection);
 
         $attributes = [];
         foreach ($collection->getAttribute('attributes', []) as $attribute) {

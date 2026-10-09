@@ -48,15 +48,20 @@ final class BranchPreviewRuleTest extends TestCase
         $dbForPlatform->expects($this->once())
             ->method('updateDocument')
             ->with('rules', 'manualRule', $this->callback(
-                fn (Document $update) => $update->getAttribute('deploymentId') === 'deployment1'
-                    && $update->getAttribute('deploymentInternalId') === '3'
+                function (Document $update): bool {
+                    $this->assertSame('deployment1', $update->getAttribute('deploymentId'));
+                    $this->assertSame('3', $update->getAttribute('deploymentInternalId'));
+                    return true;
+                }
             ))
             ->willReturnCallback(fn (string $collection, string $id, Document $update) => new Document(['$id' => $id, ...$update->getArrayCopy()]));
 
         $bus = $this->createMock(Bus::class);
         $bus->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(fn (RuleUpdated $event) => $event->rule['$id'] === 'manualRule'));
+            ->willReturnCallback(function (RuleUpdated $event): void {
+                $this->assertSame('manualRule', $event->rule['$id']);
+            });
 
         $this->activate($dbForPlatform, 'appwrite.network/path', $bus);
     }

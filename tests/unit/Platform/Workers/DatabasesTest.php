@@ -56,9 +56,12 @@ final class DatabasesTest extends TestCase
         $dbForDatabases->expects($this->once())
             ->method('createAttribute')
             ->with(self::PHYSICAL_COLLECTION, $this->callback(
-                static fn (Attribute $created): bool => $created->key === 'note'
-                    && $created->type === ColumnType::String
-                    && $created->size === 64
+                function (Attribute $created): bool {
+                    $this->assertSame('note', $created->key);
+                    $this->assertSame(ColumnType::String, $created->type);
+                    $this->assertSame(64, $created->size);
+                    return true;
+                }
             ))
             ->willReturnArgument(1);
 
@@ -94,11 +97,14 @@ final class DatabasesTest extends TestCase
         $dbForDatabases->expects($this->once())
             ->method('createRelationship')
             ->with(self::PHYSICAL_COLLECTION, $this->callback(
-                static fn (Relationship $relationship): bool => $relationship->relatedCollection === 'database_30360_collection_2'
-                    && $relationship->type === RelationshipType::ManyToOne
-                    && $relationship->key === 'author'
-                    && $relationship->twoWayKey === 'books'
-                    && $relationship->onDelete === RelationshipDeleteAction::SetNull
+                function (Relationship $relationship): bool {
+                    $this->assertSame('database_30360_collection_2', $relationship->relatedCollection);
+                    $this->assertSame(RelationshipType::ManyToOne, $relationship->type);
+                    $this->assertSame('author', $relationship->key);
+                    $this->assertSame('books', $relationship->twoWayKey);
+                    $this->assertSame(RelationshipDeleteAction::SetNull, $relationship->onDelete);
+                    return true;
+                }
             ))
             ->willReturnArgument(1);
 

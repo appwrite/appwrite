@@ -162,7 +162,7 @@ final class V25Test extends TestCase
         $migration->execute();
         $migration->execute();
 
-        $this->assertNotNull($database->findCollection('pushLedger'));
+        $this->assertInstanceOf(Collection::class, $database->findCollection('pushLedger'));
         $topics = \array_map(
             fn (Document $attribute) => $attribute->getId(),
             $database->getCollection('topics')->getAttribute('attributes', [])

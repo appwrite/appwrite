@@ -76,12 +76,12 @@ final class AttributesActionTest extends TestCase
         $dbForDatabases = $this->createMock(Database::class);
         $dbForDatabases->expects($this->once())
             ->method('updateAttribute')
-            ->with(self::PHYSICAL_COLLECTION, 'count', $this->equalTo(new AttributeUpdate(
+            ->with(self::PHYSICAL_COLLECTION, 'count', new AttributeUpdate(
                 required: false,
                 default: 5,
                 format: new Format(APP_DATABASE_ATTRIBUTE_INT_RANGE, ['min' => 1, 'max' => 10]),
                 key: 'total',
-            )))
+            ))
             ->willReturn(Attribute::integer('total'));
 
         $updated = $this->update(
@@ -109,10 +109,13 @@ final class AttributesActionTest extends TestCase
         $dbForDatabases->expects($this->once())
             ->method('updateAttribute')
             ->with(self::PHYSICAL_COLLECTION, 'title', $this->callback(
-                static fn (AttributeUpdate $update): bool => $update->changesDefault()
-                    && $update->default === null
-                    && $update->format === Unchanged::Value
-                    && $update->key === null
+                function (AttributeUpdate $update): bool {
+                    $this->assertTrue($update->changesDefault());
+                    $this->assertNull($update->default);
+                    $this->assertSame(Unchanged::Value, $update->format);
+                    $this->assertNull($update->key);
+                    return true;
+                }
             ))
             ->willReturn(Attribute::string('title', 64));
 
