@@ -78,7 +78,7 @@ icu_normalizer = { version = "2.3", default-features = false, features = ["compi
 icu_properties = { version = "2.3", default-features = false, features = ["compiled_data"] }
 md-5 = "0.10"
 # NIST P-256 ECDSA (ES256 passkeys, utopia-auth); RustCrypto, pure Rust.
-p256 = { version = "0.13", default-features = false, features = ["ecdsa", "std"] }
+p256 = { version = "0.13", default-features = false, features = ["ecdsa", "pkcs8", "std"] }
 mimalloc = { version = "0.1", default-features = false }
 redis = { version = "0.32", default-features = false, features = ["tokio-comp", "aio", "connection-manager", "script"] }
 regex = "1"

@@ -5,6 +5,7 @@ namespace Tests\Compat\Auth;
 use Tests\Compat\Adapter as Base;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
+use Utopia\Auth\Enums\Prompt;
 use Utopia\Auth\Hash;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Hashes\Bcrypt;
@@ -28,7 +29,6 @@ use Utopia\Auth\OAuth2\PAR;
 use Utopia\Auth\OAuth2\Prompts;
 use Utopia\Auth\OAuth2\RedirectUris;
 use Utopia\Auth\OAuth2\ResourceIndicators;
-use Utopia\Auth\Enums\Prompt;
 use Utopia\Auth\Passkeys\Ceremony;
 use Utopia\Auth\Passkeys\Challenge;
 use Utopia\Auth\Passkeys\Credential;
@@ -63,17 +63,17 @@ final class Adapter implements Base
             'hash.set_option' => function (array $a, Session $s) {
                 self::hash($a, $s)->setOption((string) $a['key'], $a['value'] ?? null);
 
-                return null;
+                return;
             },
             'hash.set_options' => function (array $a, Session $s) {
                 self::hash($a, $s)->setOptions(self::map($a['options'] ?? []));
 
-                return null;
+                return;
             },
             'hash.setter' => function (array $a, Session $s) {
                 self::setter(self::hash($a, $s), (string) $a['method'], $a['value'] ?? null);
 
-                return null;
+                return;
             },
             'hash.hash' => fn (array $a, Session $s) => self::hash($a, $s)->hash((string) $a['value']),
             'hash.verify' => fn (array $a, Session $s) => self::hash($a, $s)->verify((string) $a['value'], (string) $a['hash_value']),
@@ -94,19 +94,19 @@ final class Adapter implements Base
             'proof.hash_setter' => function (array $a, Session $s) {
                 self::setter(self::proof($a, $s)->getHash(), (string) $a['method'], $a['value'] ?? null);
 
-                return null;
+                return;
             },
             'proof.hash_set_option' => function (array $a, Session $s) {
                 self::proof($a, $s)->getHash()->setOption((string) $a['key'], $a['value'] ?? null);
 
-                return null;
+                return;
             },
             'proof.set_hash' => function (array $a, Session $s) {
                 $hash = $s->get($a['hash']);
                 $hash instanceof Hash || throw new Fault('not a hash');
                 self::proof($a, $s)->setHash($hash);
 
-                return null;
+                return;
             },
             'proof.length' => function (array $a, Session $s) {
                 $proof = self::proof($a, $s);
@@ -120,31 +120,31 @@ final class Adapter implements Base
                 }
                 $proof->setLength((int) $a['length']);
 
-                return null;
+                return;
             },
             'password.set_charset' => function (array $a, Session $s) {
                 self::password($a, $s)->setCharset((string) $a['charset']);
 
-                return null;
+                return;
             },
             'password.add_hash' => function (array $a, Session $s) {
                 $hash = $s->get($a['hash']);
                 $hash instanceof Hash || throw new Fault('not a hash');
                 self::password($a, $s)->addHash((string) $a['name'], $hash);
 
-                return null;
+                return;
             },
             'password.remove_hash' => function (array $a, Session $s) {
                 self::password($a, $s)->removeHash((string) $a['name']);
 
-                return null;
+                return;
             },
             'password.hash_by_name' => fn (array $a, Session $s) => self::password($a, $s)->getHashByName((string) $a['name'])->getName(),
             'password.use_hash' => function (array $a, Session $s) {
                 $password = self::password($a, $s);
                 $password->setHash($password->getHashByName((string) $a['name']));
 
-                return null;
+                return;
             },
             'password.create_hash' => fn (array $a, Session $s) => $s->handle(Password::createHash((string) $a['type'], self::map($a['options'] ?? []))),
 
@@ -153,13 +153,13 @@ final class Adapter implements Base
             'store.set_property' => function (array $a, Session $s) {
                 self::store($a, $s)->setProperty((string) $a['key'], $a['value'] ?? null);
 
-                return null;
+                return;
             },
             'store.get_property' => fn (array $a, Session $s) => self::store($a, $s)->getProperty((string) $a['key'], $a['default'] ?? null),
             'store.set_key' => function (array $a, Session $s) {
                 self::store($a, $s)->setKey(isset($a['key']) ? (string) $a['key'] : null);
 
-                return null;
+                return;
             },
             'store.get_key' => fn (array $a, Session $s) => self::store($a, $s)->getKey(),
             'store.encode' => fn (array $a, Session $s) => self::store($a, $s)->encode(),
@@ -172,7 +172,7 @@ final class Adapter implements Base
             'store.decode' => function (array $a, Session $s) {
                 self::store($a, $s)->decode((string) $a['data']);
 
-                return null;
+                return;
             },
 
             // JWT issuers and verifiers

@@ -903,6 +903,392 @@
       ]
     },
     {
+      "name": "private key formats OpenSSL reads",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "id",
+            "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEAzp1OZBqsEmXdgN/FHFns3gb4u93dDXuyTXqQMNeNlUaQr1Xj\noYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYqGFBn2iPT7rXS93HM1HK5LsWYGUKL\nvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVWygvKlXn/qUk6Ny+WwyKsWaywsylG\no62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pcBU285vP9VmGK+WYqnJUnru/ZVQJy\nZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFUb/xLjc2YHkzsVrxxmg5Wq6V4dkn0\nFnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0aJwIDAQABAoIBADTZAaMTO24dRhHf\nqrA8xBxqVhbfgdogCJROxDDqAZnsCbf/VREOQgGVxgZpzDWk7RyrZKqTKcNGVtAP\nDe3JHw1HC7k9LslBEqweHJE+ouU2v1e+sLVAceTNDY+HL1zWTjILIBqdq5ZGURrl\nyIvBVoipiXDAWsd3Jn/VGU/iP4lT70Ho9skqdXWpM1K6uvYYGWiPyLD9/f5OQ45h\nArUC3IN8hpjWLHnB1dMRCHRZG4gQK4iglU+gOHs9GWapSbcZFWvmTHyGjqE4ulPi\nMS7/VA+tC7YEFDPjknKUFCHsC0ADcmtBKVGSh0XXfB/dgt7m0hRCKTW0GOiuWX1A\nw/tMmDECgYEA/mahtG5vPAiF+O3m3dHepYct7wMk8UnTKVXWkXTpp4vNxxBqy+ur\nWK0Fk+qR0GmYLaLUr/T0AkWZutBc5kjmhzn662G0vHBafgtibe349pCNUL4Dt2vz\nr4zdCJaBpQ6LQFph0pOBxcSc50jDoQjzdrBDL9eYgH+/7L8L3ImMPN8CgYEAz+nH\neQH1DrnBQtmJ2YRoLYTc8Dr2MPO9UVEvPS3ys42Q+MPBU7+tycPN7SCl7PJMoqiC\njJOuwPFh2GYaa79Bu/i1yG0SRJOVO8YG0fOmIGdtN7L5Wqwm1ep4RPURvQ0j9Lgs\natXQA+X2tWoQc/4UGaJQDFoipvD0vk/foK7Rg7kCgYBLiiYR8YjOBqnhVKLs0tiN\nxin5grGBhC5TY82mu1R2D6k2psVPb9cdKaMyXMCXZgNt6Z/F77JUyl3vftdW+eaZ\n2LmNEyIbojD8pFzBz5vRevK7OvDXkhJ12hn35tjwLfVjUnMhl/M8yjjc5FpSgtno\nMEaC+j2qSkSvA7t97MnbeQKBgQCIh5/xmpNt5BVA7NFVAVnX6lObfVyFsMk1SPaY\nWj/yIJh+gy3E7S4WPHpRqQrMmiAxAC8aWTB8iwYRsJrQ/nsQELZusxE37yIkalm4\nLSN+S+ywktqj7EBkYOAxiCzp1GM0JG0mitladfyYDNpZERPp8WhXdCklLz3Ia3MS\ndTooIQKBgQDbF85KIfoyF5zUpP26XguowGhFHKZ8l4qmPqbCckys8r8nSrrFEh5f\n145EkLx4D5j9A3zlVZkBfQ9M6ry1mVTe6eczZyUhRQG2/MRsvfTcVY20ERYklAqy\nZkmJjQoN2HD64qeHjDfeV87ye+ls8unrEJfttjd4pWK5UtVLQFuLsg==\n-----END RSA PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "s",
+            "audience": "a",
+            "auth_time": 1,
+            "duration": 60,
+            "now": 1700000000
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "RS256",
+              "kid": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "sub": "s",
+              "aud": "a",
+              "exp": 1700000060,
+              "iat": 1700000000,
+              "auth_time": 1
+            }
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "id",
+            "private_key": "x\n-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "s",
+            "audience": "a",
+            "auth_time": 1,
+            "duration": 60,
+            "now": 1700000000
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "RS256",
+              "kid": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "sub": "s",
+              "aud": "a",
+              "exp": 1700000060,
+              "iat": 1700000000,
+              "auth_time": 1
+            }
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "id",
+            "private_key": "-----BEGIN PRIVATE KEY-----\r\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\r\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\r\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\r\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\r\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\r\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\r\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\r\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\r\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\r\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\r\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\r\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\r\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\r\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\r\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\r\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\r\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\r\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\r\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\r\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\r\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\r\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\r\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\r\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\r\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\r\n6esQl+22N3ilYrlS1UtAW4uy\r\n-----END PRIVATE KEY-----\r\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "s",
+            "audience": "a",
+            "auth_time": 1,
+            "duration": 60,
+            "now": 1700000000
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "RS256",
+              "kid": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "sub": "s",
+              "aud": "a",
+              "exp": 1700000060,
+              "iat": 1700000000,
+              "auth_time": 1
+            }
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "id",
+            "private_key": "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIJW8MDnUChEs8WYFyVJAcv2yWhqSut3TLlCj1HaGOmsloAoGCCqGSM49\nAwEHoUQDQgAECg6cRTDlWgpOcm+lt8zUh1Qsy3HfQ+knu6r2uaEL4whkGpoVufEJ\nHufdQCLjHjtwo/HyJYOQK58/7D7X4tCQ5A==\n-----END EC PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "s",
+            "audience": "a",
+            "auth_time": 1,
+            "duration": 60,
+            "now": 1700000000
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "RS256",
+              "kid": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "sub": "s",
+              "aud": "a",
+              "exp": 1700000060,
+              "iat": 1700000000,
+              "auth_time": 1
+            }
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "id",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "s",
+            "audience": "a",
+            "auth_time": 1,
+            "duration": 60,
+            "now": 1700000000
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "RS256",
+              "kid": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "sub": "s",
+              "aud": "a",
+              "exp": 1700000060,
+              "iat": 1700000000,
+              "auth_time": 1
+            }
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "id",
+            "private_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "s",
+            "audience": "a",
+            "auth_time": 1,
+            "duration": 60,
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the private key"
+            }
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "id",
+            "private_key": "-----BEGIN PRIVATE KEY-----\n MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n 38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\n RnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\n GGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\n pxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n 8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\n Vf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\n t/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\n V76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\n Qej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\n iKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\n a0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n 0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\n SOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\n CPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\n US89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\n xgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\n T9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n 1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\n EnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\n n/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\n LxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\n bSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\n C6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\n VN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n 6esQl+22N3ilYrlS1UtAW4uy\n -----END PRIVATE KEY-----\n ",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "s",
+            "audience": "a",
+            "auth_time": 1,
+            "duration": 60,
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the private key"
+            }
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "id",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nAAAA\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "s",
+            "audience": "a",
+            "auth_time": 1,
+            "duration": 60,
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the private key"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "generate key pair",
       "steps": [
         {

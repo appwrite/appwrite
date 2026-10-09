@@ -2868,6 +2868,68 @@
   },
   "waivers": {},
   "tests_waived": {},
-  "quirks": [],
-  "deviations": []
+  "quirks": [
+    {
+      "symbol": "Utopia\\Auth\\Store::encode",
+      "description": "Properties set under the keys \"0\", \"1\", ... in order make a PHP list, so the store encodes as a JSON array instead of an object.",
+      "case": "StoreTest.json#a list of properties encodes as a JSON array"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Hashes\\Sha::hash",
+      "description": "setVersion() accepts only the nine lowercase SHA names, but hash() passes the stored `version` option to PHP's hash(), which takes any case and other algorithms (md5, sha512/256).",
+      "case": "ShaTest.json#the version option goes to hash()"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Proofs\\Password::createHash",
+      "description": "Integer option keys (a JSON object with numeric keys) reach Hash::setOption(string $key) under strict types and raise a TypeError whose message quotes the PHP file and line.",
+      "case": "PasswordTest.json#create hash from stored options"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Hashes\\PHPass::hash",
+      "description": "`iteration_count_log2` goes through PHP arithmetic: numeric strings work, other strings and arrays raise \"Unsupported operand types\".",
+      "case": "PHPassTest.json#iteration counts from options are juggled"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Verifier::verify",
+      "description": "A JSON `[]` header or claims segment decodes to an empty PHP array and passes the \"must be a JSON object\" check.",
+      "case": "AsymmetricTest.json#empty claims object"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Issuers\\Asymmetric\\AccessToken::issue",
+      "description": "Only empty-string audience identifiers are rejected; integers and other non-strings are accepted and signed.",
+      "case": "AccessTokenTest.json#non-string audience identifiers pass"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Issuers\\Asymmetric\\IdToken::issue",
+      "description": "A nonce, access token or code of \"0\" counts as absent (in_array against [null, '', '0']).",
+      "case": "IdTokenTest.json#empty and zero nonce, access token and code are absent"
+    },
+    {
+      "symbol": "Utopia\\Auth\\OAuth2\\ResourceIndicators::from",
+      "description": "`!empty($parts['host'])` treats a host of \"0\" as missing, so https://0/x is not an absolute URI.",
+      "case": "ResourceIndicatorsTest.json#rejects invalid resources (host zero)"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Hashes\\Bcrypt::verify",
+      "description": "password_verify() recomputes with a canonicalised 22nd salt character, so a stored $2a$ hash with a non-canonical one never verifies.",
+      "case": "BcryptTest.json#verifies PHP fixtures"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Hashes\\Scrypt::setSalt",
+      "description": "The salt \"0\" is rejected as empty (PHP's falsy string).",
+      "case": "ScryptTest.json#setter validation"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Auth\\Proofs\\Password::setHash",
+      "php": "The hash in use is found by object identity: the instance returned by getHashByName() can be passed to setHash(), and one instance can be registered under several names, each then guarded as current by removeHash().",
+      "reason": "Rust's registry owns its hashes: Password::use_hash(name) selects a registered one (removeHash() guards that name) and set_hash() takes an unregistered copy; one value cannot be registered twice."
+    },
+    {
+      "symbol": "Utopia\\Auth\\Proof::getHash",
+      "php": "Returns the shared instance, so setters called on it change the hash the proof (and a Password registry) uses.",
+      "reason": "Rust returns a borrow: Proof::hasher_mut() (and Password::hash_by_name_mut()) change it in place instead."
+    }
+  ]
 }

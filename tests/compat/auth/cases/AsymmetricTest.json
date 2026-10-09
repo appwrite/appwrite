@@ -1519,6 +1519,413 @@
           }
         }
       ]
+    },
+    {
+      "name": "public key formats OpenSSL reads",
+      "steps": [
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "-----BEGIN CERTIFICATE-----\nMIIDcDCCAligAwIBAgIBATANBgkqhkiG9w0BAQUFADBRMQowCAYDVQQDDAF4MQsw\nCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJu\nZXQgV2lkZ2l0cyBQdHkgTHRkMB4XDTI2MTAwOTE5MzQ0M1oXDTI2MTAxMDE5MzQ0\nM1owUTEKMAgGA1UEAwwBeDELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3Rh\ndGUxITAfBgNVBAoMGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDCCASIwDQYJKoZI\nhvcNAQEBBQADggEPADCCAQoCggEBAM6dTmQarBJl3YDfxRxZ7N4G+Lvd3Q17sk16\nkDDXjZVGkK9V46GMn37b4FwdyhUP0VqdaS0IojkWWAhGdqyWKhhQZ9oj0+610vdx\nzNRyuS7FmBlCi7xFr+dOB16uS2mB3wyHGJF5nKQrbF8YaTcVVsoLypV5/6lJOjcv\nlsMirFmssLMpRqOtj2BpbTpUkM3Detzmzdg9HPYFLv2nEAuaXAVNvObz/VZhivlm\nKpyVJ67v2VUCcmZ7Jjp5Oa+sTcbl6i3Io5oLdEhzbB/yQNTBVG/8S43NmB5M7Fa8\ncZoOVquleHZJ9BZ3z99OYoTDaqmP1UaPWRYYC8uH2ShV/22NGicCAwEAAaNTMFEw\nHQYDVR0OBBYEFPUZV4YqkR8rRO6kWY5e4ujhfyJDMB8GA1UdIwQYMBaAFPUZV4Yq\nkR8rRO6kWY5e4ujhfyJDMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQEFBQAD\nggEBALnjv13SPJ6GJuZmznE75FDwhyFW6Sa6ooUFPvcCnf3bb1IWY22c4dkhufoB\n+CXbHwylCt40WtyKztqpWR5GgAtVSOS6ohJwR3Wk+ufQIscul+PVS7+iZIHNhbM2\nFwOk5+/IvDW+fpkDzR3Rt3g00A2PcMZNcMOyEoF+qjzNPVISNPpUS9pHGX6RQx7l\niz1BcvfrS+xGLAKfCWjh65aTT62gi9w/di1U4khCdXmLG2G+8xDMhxJANbhdEK15\n/FxEg1/rx0tMYyHJwWYRJ/DM0BiTkXj8NnMu7ICzySIqItoaSg8bIV7Xvn22AyUi\nMZchdU9GBAPO5ruOqcpAK/JmAxg=\n-----END CERTIFICATE-----\n"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyf\nftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYqGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv\n504HXq5LaYHfDIcYkXmcpCtsXxhpNxVWygvKlXn/qUk6Ny+WwyKsWaywsylGo62P\nYGltOlSQzcN63ObN2D0c9gUu/acQC5pcBU285vP9VmGK+WYqnJUnru/ZVQJyZnsm\nOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFUb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP\n305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0aJwIDAQAB\n-----END RSA PUBLIC KEY-----\n"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "hello\n-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "-----BEGIN PUBLIC KEY-----\r\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\r\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\r\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\r\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\r\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\r\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\r\nJwIDAQAB\r\n-----END PUBLIC KEY-----\r\n"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYqGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVWygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pcBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFUb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0aJwIDAQAB-----END PUBLIC KEY-----"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "-----BEGIN PUBLIC KEY-----\n MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n 3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\n GFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\n ygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\n BU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\n b/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\n JwIDAQAB\n -----END PUBLIC KEY-----\n "
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAECg6cRTDlWgpOcm+lt8zUh1Qsy3Hf\nQ+knu6r2uaEL4whkGpoVufEJHufdQCLjHjtwo/HyJYOQK58/7D7X4tCQ5A==\n-----END PUBLIC KEY-----\n"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Public key is not an RSA key"
+            }
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAonm1wjxem32zHnPU0FGm\nhwjd/hh5mlYtD4/ob+08sXK2jEl8w6S62zDxbfzzHUYLph5ltn0wJuGcOedo3OFX\n0mvWk12FIdbQ1+Gxn1F2T7lDy4fPWwJWdqkn/U3PUlADoLMoQ7dgU73y1le6wN97\ntpLP+zUhwpsm6zBoUSqXDfKG55VP7MVzxqKQoRMKyDzq6/AhAHc3ptIAuxiSWwCZ\nMX1bjExSjqUhiXtb63J9L5O4mIa1i2AhtFmxm09I92QR7aNR4vNPx7zMajd/+fml\nbgjMycYx+0ZLWUXX8c/ME280GrfNM4LOwrW4gtRNedFQ6X0laLOMKDRRsthXOh5G\nEwIDAQAB\n-----END PUBLIC KEY-----\n-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": "f25639cd43456ed57c072e9b3c6c717dbe20ba3d77237f303d07120cb70002da"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "-----BEGIN X509 CERTIFICATE-----\nMIIDcDCCAligAwIBAgIBATANBgkqhkiG9w0BAQUFADBRMQowCAYDVQQDDAF4MQsw\nCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJu\nZXQgV2lkZ2l0cyBQdHkgTHRkMB4XDTI2MTAwOTE5MzQ0M1oXDTI2MTAxMDE5MzQ0\nM1owUTEKMAgGA1UEAwwBeDELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3Rh\ndGUxITAfBgNVBAoMGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDCCASIwDQYJKoZI\nhvcNAQEBBQADggEPADCCAQoCggEBAM6dTmQarBJl3YDfxRxZ7N4G+Lvd3Q17sk16\nkDDXjZVGkK9V46GMn37b4FwdyhUP0VqdaS0IojkWWAhGdqyWKhhQZ9oj0+610vdx\nzNRyuS7FmBlCi7xFr+dOB16uS2mB3wyHGJF5nKQrbF8YaTcVVsoLypV5/6lJOjcv\nlsMirFmssLMpRqOtj2BpbTpUkM3Detzmzdg9HPYFLv2nEAuaXAVNvObz/VZhivlm\nKpyVJ67v2VUCcmZ7Jjp5Oa+sTcbl6i3Io5oLdEhzbB/yQNTBVG/8S43NmB5M7Fa8\ncZoOVquleHZJ9BZ3z99OYoTDaqmP1UaPWRYYC8uH2ShV/22NGicCAwEAAaNTMFEw\nHQYDVR0OBBYEFPUZV4YqkR8rRO6kWY5e4ujhfyJDMB8GA1UdIwQYMBaAFPUZV4Yq\nkR8rRO6kWY5e4ujhfyJDMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQEFBQAD\nggEBALnjv13SPJ6GJuZmznE75FDwhyFW6Sa6ooUFPvcCnf3bb1IWY22c4dkhufoB\n+CXbHwylCt40WtyKztqpWR5GgAtVSOS6ohJwR3Wk+ufQIscul+PVS7+iZIHNhbM2\nFwOk5+/IvDW+fpkDzR3Rt3g00A2PcMZNcMOyEoF+qjzNPVISNPpUS9pHGX6RQx7l\niz1BcvfrS+xGLAKfCWjh65aTT62gi9w/di1U4khCdXmLG2G+8xDMhxJANbhdEK15\n/FxEg1/rx0tMYyHJwWYRJ/DM0BiTkXj8NnMu7ICzySIqItoaSg8bIV7Xvn22AyUi\nMZchdU9GBAPO5ruOqcpAK/JmAxg=\n-----END X509 CERTIFICATE-----\n"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END RSA PUBLIC KEY-----\n"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "-----BEGIN PUBLIC KEY-----\n-----END PUBLIC KEY-----\n"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unable to parse the public key"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "tokens verify with a certificate",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJhdCtqd3QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjhlMDc4MjgyZTBiMjk4Y2VmYmJhZTk4ZWFmMmUwNmJhZTJlZjY3MTA1ZTc4Y2IyMmNlMzFjNGM4OGI2OWZmMWUifQ.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOlsiYXVkIl0sInN1YiI6InUiLCJjbGllbnRfaWQiOiJjIiwiZXhwIjoxNzAwMDAzNjAwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoiLCJhdXRoX3RpbWUiOjEwMDB9.PeYDoleqUwmUxkK_mC167pugwWAVbC89-QZcuypJq6qx-dBEV9Hen_7audNODzwQBAFcjX-zUJ_F5wU3-iUa2K8o5NcJaTe6T9m1F6nfLRKcBq1hvgE8YLsF1GirehNg_YMlrk98lkhCxanEHjl8yij7q2Rg_OIkdIu-aK9NftLaem7lDnx9z8Wp8RnkJ-JlZB69I8KNRbEZvCja6lZIgD5r2ejTNzqrGiZ5D64JpogX8uVpyqEsqq3V_jqfqaJPZINSfOOdec-SpT712IgJmqkYKHFvfA-0vaFpWcGaqvYVY2b4mGk4bE2FFg3UqJ8o7cn-AvrGawrlj0gY51Dezg"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "-----BEGIN CERTIFICATE-----\nMIIDcDCCAligAwIBAgIBATANBgkqhkiG9w0BAQUFADBRMQowCAYDVQQDDAF4MQsw\nCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJu\nZXQgV2lkZ2l0cyBQdHkgTHRkMB4XDTI2MTAwOTE5MzQ0M1oXDTI2MTAxMDE5MzQ0\nM1owUTEKMAgGA1UEAwwBeDELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3Rh\ndGUxITAfBgNVBAoMGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDCCASIwDQYJKoZI\nhvcNAQEBBQADggEPADCCAQoCggEBAM6dTmQarBJl3YDfxRxZ7N4G+Lvd3Q17sk16\nkDDXjZVGkK9V46GMn37b4FwdyhUP0VqdaS0IojkWWAhGdqyWKhhQZ9oj0+610vdx\nzNRyuS7FmBlCi7xFr+dOB16uS2mB3wyHGJF5nKQrbF8YaTcVVsoLypV5/6lJOjcv\nlsMirFmssLMpRqOtj2BpbTpUkM3Detzmzdg9HPYFLv2nEAuaXAVNvObz/VZhivlm\nKpyVJ67v2VUCcmZ7Jjp5Oa+sTcbl6i3Io5oLdEhzbB/yQNTBVG/8S43NmB5M7Fa8\ncZoOVquleHZJ9BZ3z99OYoTDaqmP1UaPWRYYC8uH2ShV/22NGicCAwEAAaNTMFEw\nHQYDVR0OBBYEFPUZV4YqkR8rRO6kWY5e4ujhfyJDMB8GA1UdIwQYMBaAFPUZV4Yq\nkR8rRO6kWY5e4ujhfyJDMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQEFBQAD\nggEBALnjv13SPJ6GJuZmznE75FDwhyFW6Sa6ooUFPvcCnf3bb1IWY22c4dkhufoB\n+CXbHwylCt40WtyKztqpWR5GgAtVSOS6ohJwR3Wk+ufQIscul+PVS7+iZIHNhbM2\nFwOk5+/IvDW+fpkDzR3Rt3g00A2PcMZNcMOyEoF+qjzNPVISNPpUS9pHGX6RQx7l\niz1BcvfrS+xGLAKfCWjh65aTT62gi9w/di1U4khCdXmLG2G+8xDMhxJANbhdEK15\n/FxEg1/rx0tMYyHJwWYRJ/DM0BiTkXj8NnMu7ICzySIqItoaSg8bIV7Xvn22AyUi\nMZchdU9GBAPO5ruOqcpAK/JmAxg=\n-----END CERTIFICATE-----\n"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "iss": "https://example.com/v1/oauth2/test",
+            "aud": [
+              "aud"
+            ],
+            "sub": "u",
+            "client_id": "c",
+            "exp": 1700003600,
+            "iat": 1700000000,
+            "jti": "j",
+            "auth_time": 1000
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyf\nftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYqGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv\n504HXq5LaYHfDIcYkXmcpCtsXxhpNxVWygvKlXn/qUk6Ny+WwyKsWaywsylGo62P\nYGltOlSQzcN63ObN2D0c9gUu/acQC5pcBU285vP9VmGK+WYqnJUnru/ZVQJyZnsm\nOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFUb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP\n305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0aJwIDAQAB\n-----END RSA PUBLIC KEY-----\n"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "iss": "https://example.com/v1/oauth2/test",
+            "aud": [
+              "aud"
+            ],
+            "sub": "u",
+            "client_id": "c",
+            "exp": 1700003600,
+            "iat": 1700000000,
+            "jti": "j",
+            "auth_time": 1000
+          }
+        }
+      ]
     }
   ]
 }
