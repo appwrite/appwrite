@@ -48,7 +48,7 @@ class Update extends Action
                 group: 'policies',
                 name: 'updatePasskeyPolicy',
                 description: <<<EOT
-                Configure the relying party passkeys are bound to. The relying party ID is the domain of your application, and origins are the exact web origins allowed to register and sign in with passkeys. Passkeys stay unavailable until both are set and the passkey auth method is enabled. The relying party ID cannot change while users have passkeys, and any change invalidates ceremonies in progress.
+                Configure the relying party passkeys are bound to. The relying party ID is the domain of your application. Passkeys work on the project's web platforms on that domain or its subdomains, unless you list origins to allow instead. A localhost web platform also enables passkeys for local development. The relying party ID cannot change while users have passkeys, and any change invalidates ceremonies in progress.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -59,7 +59,7 @@ class Update extends Action
                 ],
             ))
             ->param('rpId', null, new Text(253, 0), 'Relying party ID: the domain of your application, such as `example.com`. Use `localhost` for local development.', optional: true)
-            ->param('origins', null, new ArrayList(new Text(2048), 10), 'Web origins allowed to use passkeys, such as `https://example.com` or `https://app.example.com`. Each must be HTTPS on the relying party ID or one of its subdomains, without a path. HTTP is only allowed for `localhost`. Maximum of 10 origins.', optional: true)
+            ->param('origins', null, new ArrayList(new Text(2048), 10), 'Web origins allowed to use passkeys instead of the project\'s web platforms, such as `https://example.com` or `https://app.example.com`. Each must be HTTPS on the relying party ID or one of its subdomains, without a path. HTTP is only allowed for `localhost`, where an origin without a port allows any port. Leave empty to use the web platforms. Maximum of 10 origins.', optional: true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('dbForProject')

@@ -548,6 +548,168 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame(200, $response['headers']['status-code']);
     }
 
+    public function testOriginsFromWebPlatforms(): void
+    {
+        $project = $this->getProject(true);
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $this->getServerHeaders($project), [
+            'rpId' => 'example.com',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_GET, '/project/policies/passkey', $this->getServerHeaders($project));
+        $this->assertSame('example.com', $response['body']['rpId']);
+        $this->assertSame([], $response['body']['origins']);
+        $this->enablePasskeys($project, true);
+
+        /**
+         * Test for FAILURE
+         */
+        // No web platform on the relying party ID yet, so passkeys still fail closed
+        $this->createWebPlatform($project, 'other.dev');
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/passkey', $this->getGuestHeaders($project));
+        $this->assertSame(501, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->createWebPlatform($project, 'app.example.com');
+        $this->createWebPlatform($project, '*.example.com');
+        [$user, $session] = $this->createUserWithSession($project);
+        $headers = $this->getSessionHeaders($project, $session);
+
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/passkeys', $headers);
+        $this->assertSame(201, $challenge['headers']['status-code']);
+        $this->assertSame('example.com', $challenge['body']['publicKey']['rp']['id']);
+
+        $authenticator = new Authenticator();
+        $response = $this->client->call(Client::METHOD_PUT, '/account/passkeys/' . $challenge['body']['passkeyId'] . '/verification', $headers, [
+            'credential' => $authenticator->register($challenge['body']['publicKey'], 'https://app.example.com'),
+        ]);
+        $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
+
+        $token = $this->signIn($project, $authenticator, 'https://app.example.com');
+        $this->assertSame(201, $token['headers']['status-code']);
+        $this->assertSame($user['$id'], $token['body']['userId']);
+
+        /**
+         * Test for FAILURE
+         */
+        // Only the platforms' own origins: not other subdomains, ports, schemes, or wildcard platforms
+        foreach (['https://evil.example.com', 'https://app.example.com:8443', 'http://app.example.com', 'https://other.dev'] as $origin) {
+            $this->assertSame(401, $this->signIn($project, $authenticator, $origin)['headers']['status-code'], $origin);
+        }
+
+        $this->assertSame(401, $this->signIn($project, $authenticator, 'https://example.com')['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Apple apps sign in from the relying party ID itself
+        $response = $this->client->call(Client::METHOD_POST, '/project/platforms/apple', $this->getServerHeaders($project), [
+            'platformId' => ID::unique(),
+            'name' => 'iOS',
+            'bundleIdentifier' => 'com.example.app',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code'], \json_encode($response['body']));
+        $this->assertSame(201, $this->signIn($project, $authenticator, 'https://example.com')['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        // Listed origins replace the web platforms
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $this->getServerHeaders($project), [
+            'origins' => ['https://example.com'],
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(401, $this->signIn($project, $authenticator, 'https://app.example.com')['headers']['status-code']);
+    }
+
+    public function testLocalhostWebPlatformNeedsNoPolicy(): void
+    {
+        $project = $this->getProject(true);
+        $this->enablePasskeys($project, true);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/passkey', $this->getGuestHeaders($project));
+        $this->assertSame(501, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $platform = $this->createWebPlatform($project, 'localhost');
+        [$user, $session] = $this->createUserWithSession($project);
+
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/passkeys', $this->getSessionHeaders($project, $session));
+        $this->assertSame(201, $challenge['headers']['status-code']);
+        $this->assertSame('localhost', $challenge['body']['publicKey']['rp']['id']);
+
+        // Any port on localhost, as development servers pick their own
+        $authenticator = new Authenticator();
+        $response = $this->client->call(Client::METHOD_PUT, '/account/passkeys/' . $challenge['body']['passkeyId'] . '/verification', $this->getSessionHeaders($project, $session), [
+            'credential' => $authenticator->register($challenge['body']['publicKey'], 'http://localhost:5173'),
+        ]);
+        $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
+
+        $token = $this->signIn($project, $authenticator, 'http://localhost:3000');
+        $this->assertSame(201, $token['headers']['status-code']);
+        $this->assertSame($user['$id'], $token['body']['userId']);
+
+        // The policy is untouched, so the production relying party can still be chosen later
+        $response = $this->client->call(Client::METHOD_GET, '/project/policies/passkey', $this->getServerHeaders($project));
+        $this->assertSame('', $response['body']['rpId']);
+
+        /**
+         * Test for FAILURE
+         */
+        $this->assertSame(401, $this->signIn($project, $authenticator, 'http://evil.localhost:3000')['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/project/platforms/' . $platform, $this->getServerHeaders($project));
+        $this->assertSame(204, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/passkey', $this->getGuestHeaders($project));
+        $this->assertSame(501, $response['headers']['status-code']);
+    }
+
+    public function testLocalhostBesideProductionDomain(): void
+    {
+        $project = $this->getProject(true);
+        $this->createWebPlatform($project, 'localhost');
+        $this->createWebPlatform($project, 'example.com');
+        $this->enablePasskeys($project, true);
+        [$user, $session] = $this->createUserWithSession($project);
+        $authenticator = $this->registerPasskey($project, $session);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Local passkeys do not lock the relying party ID before it is first chosen
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $this->getServerHeaders($project), [
+            'rpId' => 'example.com',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $local = $this->client->call(Client::METHOD_POST, '/account/tokens/passkey', $this->getGuestHeaders($project));
+        $this->assertSame(201, $local['headers']['status-code']);
+        $this->assertSame('localhost', $local['body']['publicKey']['rpId']);
+
+        $production = $this->client->call(Client::METHOD_POST, '/account/tokens/passkey', \array_merge($this->getGuestHeaders($project), [
+            'origin' => 'https://example.com',
+        ]));
+        $this->assertSame(201, $production['headers']['status-code']);
+        $this->assertSame('example.com', $production['body']['publicKey']['rpId']);
+
+        // Server-side requests carry no origin and use the production relying party
+        $headers = $this->getGuestHeaders($project);
+        unset($headers['origin']);
+        $server = $this->client->call(Client::METHOD_POST, '/account/tokens/passkey', $headers);
+        $this->assertSame(201, $server['headers']['status-code']);
+        $this->assertSame('example.com', $server['body']['publicKey']['rpId']);
+
+        $token = $this->signIn($project, $authenticator);
+        $this->assertSame(201, $token['headers']['status-code']);
+        $this->assertSame($user['$id'], $token['body']['userId']);
+    }
+
     public function testPasskeyLimit(): void
     {
         $project = $this->getProject(true);
@@ -1098,6 +1260,18 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
 
         $this->enablePasskeys($project, true);
+    }
+
+    private function createWebPlatform(array $project, string $hostname): string
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/project/platforms/web', $this->getServerHeaders($project), [
+            'platformId' => ID::unique(),
+            'name' => $hostname,
+            'hostname' => $hostname,
+        ]);
+        $this->assertSame(201, $response['headers']['status-code'], \json_encode($response['body']));
+
+        return $response['body']['$id'];
     }
 
     private function enablePasskeys(array $project, bool $enabled): void
