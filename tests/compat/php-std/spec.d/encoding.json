@@ -579,6 +579,35 @@
           "iterations": 3000
         }
       ]
+    },
+    "encoding.parse_str": {
+      "doc": "parse_str($string, $result); $result as nested [key, value] pairs (keys keep their int/string type)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "encoding_parse_str"
+              }
+            }
+          },
+          "iterations": 4000
+        },
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "encoding_bytes"
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
     }
   },
   "generators": {
@@ -1072,6 +1101,168 @@
             {},
             []
           ]
+        }
+      ]
+    },
+    "encoding_parse_str_name": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "ab01 .[]%+_-",
+          "min": 0,
+          "max": 12
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "string",
+              "alphabet": "ab .",
+              "min": 0,
+              "max": 3
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "const",
+                    "value": "["
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "ab01 .-[",
+                    "min": 0,
+                    "max": 3
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "]",
+                      "]",
+                      "]",
+                      ""
+                    ]
+                  }
+                ]
+              },
+              "sep": "",
+              "min": 0,
+              "max": 4
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "x",
+                "[",
+                "]",
+                " "
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "a",
+            "0",
+            "1",
+            "-1",
+            "01",
+            "9223372036854775807",
+            "9223372036854775808",
+            "%41",
+            "%00a",
+            "a%00",
+            "%20a",
+            "a%5Bb%5D",
+            "[a]",
+            " [a]",
+            "a[",
+            "a[]",
+            "a[][]",
+            "a[b]c",
+            "a[b c.d]",
+            "a.b c[",
+            "this",
+            "GLOBALS",
+            "%E2%82%AC",
+            "%FF"
+          ]
+        }
+      ]
+    },
+    "encoding_parse_str_pair": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "ref",
+          "name": "encoding_parse_str_name"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "=",
+            "=",
+            "=="
+          ]
+        },
+        {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "ab1%+= 2F.",
+              "min": 0,
+              "max": 6
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "%00",
+                "%FF",
+                "a+b",
+                "%2",
+                "%zz"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "encoding_parse_str": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "encoding_parse_str_pair"
+          },
+          "sep": "&",
+          "min": 0,
+          "max": 6
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "encoding_parse_str_pair"
+          },
+          "sep": "&&",
+          "min": 1,
+          "max": 3
+        },
+        {
+          "gen": "string",
+          "alphabet": "url",
+          "min": 0,
+          "max": 24
         }
       ]
     }

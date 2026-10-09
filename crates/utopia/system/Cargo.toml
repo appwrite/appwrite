@@ -1,6 +1,6 @@
 [package]
 name = "utopia-system"
-description = "Process environment helpers with Utopia (PHP) semantics."
+description = "Environment variables and machine facts (OS, architecture, CPU, memory, disk, IO, network) with utopia-php/system semantics."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,3 +8,8 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+indexmap.workspace = true
+php-std.workspace = true
+rustix.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["time"] }

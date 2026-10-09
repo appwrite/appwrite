@@ -22,4 +22,12 @@ return [
     'format.min' => fn (array $a) => min(...$a['values']),
     'format.max_array' => fn (array $a) => max(...$a),
     'format.min_array' => fn (array $a) => min(...$a),
+    'format.arith' => fn (array $a) => match ($a['op']) {
+        '+' => $a['a'] + $a['b'],
+        '-' => $a['a'] - $a['b'],
+        '*' => $a['a'] * $a['b'],
+        '/' => $a['a'] / $a['b'],
+        default => throw new \Tests\Compat\Fault('unknown operator'),
+    },
+    'format.array_sum' => fn (array $a) => array_sum(...$a),
 ];

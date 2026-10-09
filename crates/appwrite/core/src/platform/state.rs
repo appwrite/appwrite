@@ -7,7 +7,6 @@ use std::time::Duration;
 use utopia_cache::Cache;
 use utopia_cache::redis::aio::ConnectionManager;
 use utopia_database::{Pool, PoolOptions};
-use utopia_locale::Translations;
 use utopia_queue::Publisher;
 
 use super::Hooks;
@@ -16,6 +15,7 @@ use crate::config::Config;
 use crate::database::Databases;
 use crate::database::project::ProjectStore;
 use crate::geo::Geo;
+use crate::locale::Translations;
 
 /// Shared state, created once at startup.
 pub struct State {
@@ -93,7 +93,7 @@ impl State {
             utopia_emails::Lists::default()
         });
         lists.install();
-        let translations = Translations::load(&config.asset("app/config/locale/translations"));
+        let translations = Translations::load(&config.asset("app/config/locale/translations")).await;
         let dictionary = crate::validators::load_dictionary(&config.asset("app/assets/security/10k-common-passwords"));
         let geo = Geo::new(config.geo_endpoint.clone(), config.geo_secret.clone());
         let pwned = Pwned::from_dsn(&config.pwned_dsn, !config.development)?;

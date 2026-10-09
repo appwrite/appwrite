@@ -165,8 +165,8 @@ impl<'a> Input<'a> {
     /// `json_encode($value)`, `None` where PHP returns `false`.
     pub fn json_encode(self) -> Option<String> {
         match self {
-            Input::Json(v) => json::encode(v, json::Flags::NONE, json::DEFAULT_DEPTH).ok(),
-            Input::Zval(z) => json::encode(z, json::Flags::NONE, json::DEFAULT_DEPTH).ok(),
+            Input::Json(v) => json::encode(&php_std::Value::<php_std::Never>::from_json(v), json::Flags::NONE, json::DEFAULT_DEPTH).ok(),
+            Input::Zval(z) => json::encode(&z.to_value(), json::Flags::NONE, json::DEFAULT_DEPTH).ok(),
         }
     }
 

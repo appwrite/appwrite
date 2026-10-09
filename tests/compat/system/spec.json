@@ -1,0 +1,730 @@
+{
+  "lib": "system",
+  "description": "utopia-php/system: getEnv, OS and architecture detection, CPU, memory, disk, IO and network metrics.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/system/src"
+    ],
+    "tests": [
+      "packages/system/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/system"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "system.env": {
+      "doc": "putenv(name=value) (no `value`: unset), then System::getEnv(name, default?)",
+      "covers": [
+        "Utopia\\System\\System::getEnv"
+      ],
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "name": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "const",
+                    "value": "COMPAT_SYSTEM_ENV_"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "upper",
+                    "min": 1,
+                    "max": 3
+                  }
+                ]
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "",
+                      "0",
+                      "00",
+                      "1",
+                      " ",
+                      "false",
+                      "null",
+                      "0.0",
+                      "-0",
+                      " 0",
+                      "0 ",
+                      "value"
+                    ]
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "min": 0,
+                    "max": 6
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "é😀ß =",
+                    "min": 1,
+                    "max": 3
+                  }
+                ]
+              },
+              "default": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "null"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "",
+                      "0",
+                      "DEFAULT"
+                    ]
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "value",
+              "default"
+            ]
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "system.fixture": {
+      "doc": "System::<call>(duration?, directory?, arch?) on a described machine (tests/compat/system/Fixture.php): {value, sleeps}",
+      "covers": [
+        "Utopia\\System\\System::getOS",
+        "Utopia\\System\\System::getArch",
+        "Utopia\\System\\System::getArchEnum",
+        "Utopia\\System\\System::getHostname",
+        "Utopia\\System\\System::getCPUCores",
+        "Utopia\\System\\System::getCPU",
+        "Utopia\\System\\System::getCPUUsage",
+        "Utopia\\System\\System::getMemoryTotal",
+        "Utopia\\System\\System::getMemory",
+        "Utopia\\System\\System::getMemoryFree",
+        "Utopia\\System\\System::getMemoryAvailable",
+        "Utopia\\System\\System::getDiskTotal",
+        "Utopia\\System\\System::getDiskFree",
+        "Utopia\\System\\System::getIOUsage",
+        "Utopia\\System\\System::getNetworkUsage",
+        "Utopia\\System\\System::isX86",
+        "Utopia\\System\\System::isPPC",
+        "Utopia\\System\\System::isArm64",
+        "Utopia\\System\\System::isArmV7",
+        "Utopia\\System\\System::isArmV8",
+        "Utopia\\System\\System::isArch"
+      ],
+      "fuzz": [
+        {
+          "name": "cpu",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "call": {
+                "gen": "pick",
+                "from": [
+                  "getCPU",
+                  "getCPUCores"
+                ]
+              },
+              "machine": {
+                "gen": "object",
+                "fields": {
+                  "os": {
+                    "gen": "pick",
+                    "from": [
+                      "Linux",
+                      "Linux",
+                      "Linux",
+                      "Darwin",
+                      "Windows",
+                      "SunOS"
+                    ]
+                  },
+                  "files": {
+                    "gen": "object",
+                    "fields": {
+                      "/sys/fs/cgroup/cpu.max": {
+                        "gen": "ref",
+                        "name": "cpu_max"
+                      },
+                      "/sys/fs/cgroup/cpu/cpu.cfs_quota_us": {
+                        "gen": "ref",
+                        "name": "numeric_text"
+                      },
+                      "/sys/fs/cgroup/cpu/cpu.cfs_period_us": {
+                        "gen": "ref",
+                        "name": "numeric_text"
+                      },
+                      "/sys/fs/cgroup/cpuset.cpus.effective": {
+                        "gen": "ref",
+                        "name": "cpu_list"
+                      },
+                      "/sys/fs/cgroup/cpuset/cpuset.cpus": {
+                        "gen": "ref",
+                        "name": "cpu_list"
+                      },
+                      "/sys/devices/system/cpu/online": {
+                        "gen": "ref",
+                        "name": "cpu_list"
+                      },
+                      "/proc/cpuinfo": {
+                        "gen": "ref",
+                        "name": "cpuinfo"
+                      }
+                    },
+                    "optional": [
+                      "/sys/fs/cgroup/cpu.max",
+                      "/sys/fs/cgroup/cpu/cpu.cfs_quota_us",
+                      "/sys/fs/cgroup/cpu/cpu.cfs_period_us",
+                      "/sys/fs/cgroup/cpuset.cpus.effective",
+                      "/sys/fs/cgroup/cpuset/cpuset.cpus",
+                      "/sys/devices/system/cpu/online"
+                    ]
+                  },
+                  "exec": {
+                    "gen": "object",
+                    "fields": {
+                      "sysctl -n hw.ncpu": {
+                        "gen": "ref",
+                        "name": "numeric_text"
+                      },
+                      "wmic cpu get NumberOfCores": {
+                        "gen": "ref",
+                        "name": "numeric_text"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "memory",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "call": {
+                "gen": "pick",
+                "from": [
+                  "getMemory",
+                  "getMemoryTotal",
+                  "getMemoryFree",
+                  "getMemoryAvailable"
+                ]
+              },
+              "machine": {
+                "gen": "object",
+                "fields": {
+                  "os": {
+                    "gen": "pick",
+                    "from": [
+                      "Linux",
+                      "Linux",
+                      "Linux",
+                      "Darwin",
+                      "Windows"
+                    ]
+                  },
+                  "files": {
+                    "gen": "object",
+                    "fields": {
+                      "/proc/meminfo": {
+                        "gen": "ref",
+                        "name": "meminfo"
+                      },
+                      "/sys/fs/cgroup/memory.max": {
+                        "gen": "ref",
+                        "name": "numeric_text"
+                      },
+                      "/sys/fs/cgroup/memory/memory.limit_in_bytes": {
+                        "gen": "ref",
+                        "name": "numeric_text"
+                      }
+                    },
+                    "optional": [
+                      "/sys/fs/cgroup/memory.max",
+                      "/sys/fs/cgroup/memory/memory.limit_in_bytes"
+                    ]
+                  },
+                  "exec": {
+                    "gen": "object",
+                    "fields": {
+                      "sysctl -n hw.memsize": {
+                        "gen": "ref",
+                        "name": "numeric_text"
+                      },
+                      "sysctl -n vm.page_free_count": {
+                        "gen": "ref",
+                        "name": "numeric_text"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "cpu usage",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "call": {
+                "gen": "const",
+                "value": "getCPUUsage"
+              },
+              "duration": {
+                "gen": "int",
+                "min": 0,
+                "max": 3
+              },
+              "machine": {
+                "gen": "object",
+                "fields": {
+                  "files": {
+                    "gen": "object",
+                    "fields": {
+                      "/proc/stat": {
+                        "gen": "array",
+                        "items": {
+                          "gen": "ref",
+                          "name": "proc_stat"
+                        },
+                        "min": 1,
+                        "max": 2
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "arch",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "call": {
+                "gen": "pick",
+                "from": [
+                  "getArchEnum",
+                  "isX86",
+                  "isPPC",
+                  "isArm64",
+                  "isArmV7",
+                  "isArmV8",
+                  "isArch"
+                ]
+              },
+              "arch": {
+                "gen": "pick",
+                "from": [
+                  "x86",
+                  "ppc",
+                  "arm64",
+                  "armv7",
+                  "armv8",
+                  "X86",
+                  "arm",
+                  ""
+                ]
+              },
+              "machine": {
+                "gen": "object",
+                "fields": {
+                  "arch": {
+                    "gen": "ref",
+                    "name": "machine_name"
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "system.machine": {
+      "doc": "System::<call>(duration?, directory?, arch?) on the real machine: the result's type and the facts SystemTest asserts ({type, empty} for strings, {type, sign} for numbers, {type, total} for arrays)"
+    }
+  },
+  "generators": {
+    "numeric_text": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "0",
+            "-1",
+            "max",
+            "100000",
+            "50000",
+            "536870912",
+            "268435456\n",
+            "9223372036854771712",
+            "18446744073709551615",
+            "1572864",
+            "524288",
+            "-2",
+            "536870912.5",
+            "invalid",
+            " 12 ",
+            "1e3",
+            "0x10",
+            "12abc",
+            "8\n",
+            "17179869184",
+            "1e400",
+            false
+          ]
+        },
+        {
+          "gen": "int",
+          "min": -1000,
+          "max": 100000000000
+        },
+        {
+          "gen": "string",
+          "alphabet": "0123456789 .-e",
+          "min": 0,
+          "max": 8
+        }
+      ]
+    },
+    "cpu_max": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "max 100000",
+            "50000 100000",
+            "200000 100000\n",
+            "max",
+            "",
+            "-100000 100000",
+            "50000 0",
+            "1e400 1e400",
+            "\f50000 100000",
+            "50000\t\t100000",
+            "abc 100000",
+            "50000",
+            false
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "ref",
+              "name": "numeric_text"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                " ",
+                "\t",
+                "\n",
+                "  "
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "numeric_text"
+            }
+          ]
+        }
+      ]
+    },
+    "cpu_list": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "0-3",
+            "0-15",
+            "0-1,3",
+            "0",
+            "",
+            "3-1",
+            "0-3,5,7-8",
+            "a-b",
+            "1-",
+            "-1",
+            ",,",
+            "0-9223372036854775807,1",
+            " 1, 2",
+            false
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "0123-, \n",
+          "min": 0,
+          "max": 10
+        }
+      ]
+    },
+    "cpuinfo": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "processor\t: 0\nprocessor\t: 1\n",
+            "",
+            "0",
+            "model name: x\n",
+            " processor\nprocessor",
+            "processorprocessor\nprocessor",
+            false
+          ]
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "pick",
+            "from": [
+              "processor\t: 0",
+              "flags",
+              "",
+              "Processor",
+              "processor"
+            ]
+          },
+          "sep": "\n",
+          "min": 0,
+          "max": 5
+        }
+      ]
+    },
+    "meminfo": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "const",
+          "value": "MemTotal:       8388608 kB\nMemFree:         1048576 kB\nMemAvailable:    4194304 kB\n"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "0",
+            "MemTotal: 1024 kB",
+            "MemTotal:1024",
+            "MemTotal:\n\t2048 kB",
+            "XMemTotal: 3072\nMemTotal: 4096",
+            "MemTotal: x\nMemTotal: 5120",
+            "MemFree: 1\nMemAvailable: 1023",
+            "MemTotal: 99999999999999999999999",
+            "MemTotal: 1023",
+            "MemTotal:\f2048",
+            false
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "MemTotal:",
+                "MemFree:",
+                "MemAvailable:"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                " ",
+                "\t",
+                "  \n"
+              ]
+            },
+            {
+              "gen": "int",
+              "min": 0,
+              "max": 100000000
+            },
+            {
+              "gen": "pick",
+              "from": [
+                " kB\n",
+                "",
+                "\nMemFree: 7"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "proc_stat": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "pick",
+                "from": [
+                  "cpu ",
+                  "cpu  ",
+                  "cpu0 ",
+                  "cpu1 ",
+                  "cpu0 ",
+                  "cpu01 ",
+                  "cpux ",
+                  "intr ",
+                  "cpu9\t"
+                ]
+              },
+              {
+                "gen": "repeat",
+                "part": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "int",
+                      "min": 0,
+                      "max": 1000000
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "",
+                        "x",
+                        "9223372036854775807",
+                        "1e3",
+                        "-5"
+                      ]
+                    }
+                  ]
+                },
+                "sep": " ",
+                "min": 0,
+                "max": 10
+              }
+            ]
+          },
+          "sep": "\n",
+          "min": 0,
+          "max": 4
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "0",
+            false
+          ]
+        }
+      ]
+    },
+    "machine_name": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "x86_64",
+            "i386",
+            "i686",
+            "amd64",
+            "aarch64",
+            "arm64",
+            "armv7l",
+            "armv8l",
+            "ppc64le",
+            "ppc",
+            "riscv64",
+            "s390x",
+            "x8",
+            ""
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "armvx8647pc_il",
+          "min": 0,
+          "max": 7
+        }
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\System\\System::getCPUUsage",
+      "description": "the aggregate `cpu` line of /proc/stat never matches /^cpu[0-999]/, so the total is always the sum of the cpuN lines; fields are split on single spaces, so a double space shifts them",
+      "case": "SystemTest.json#cpu usage sums cpuN lines"
+    },
+    {
+      "symbol": "Utopia\\System\\System::getCPUUsage",
+      "description": "two identical samples (duration 0) divide by zero: DivisionByZeroError",
+      "case": "SystemTest.json#cpu usage without elapsed time"
+    },
+    {
+      "symbol": "Utopia\\System\\System::getIOUsage",
+      "description": "/proc/diskstats lines are split on single spaces after trim, so real (space-aligned) lines are keyed by an empty third field and overwrite each other; read/write are integers when the MiB division is exact, floats otherwise",
+      "case": "SystemTest.json#io usage on space aligned diskstats"
+    },
+    {
+      "symbol": "Utopia\\System\\System::getNetworkUsage",
+      "description": "interfaces are skipped when their name contains any of veth, docker, lo, tun, vboxnet, '.', bonding_masters (so wlo1 and eth0.100 are skipped); the duration is slept once per interface",
+      "case": "SystemTest.json#network usage filters and sleeps per interface"
+    },
+    {
+      "symbol": "Utopia\\System\\System::getCPU",
+      "description": "a negative cgroup v2 quota gives a negative CPU count",
+      "case": "SystemTest.json#negative cgroup quota"
+    },
+    {
+      "symbol": "Utopia\\System\\System::getCPU",
+      "description": "a cpuset list counting more CPUs than PHP_INT_MAX overflows to a float, which countCpuList()'s int return type refuses with a TypeError",
+      "case": "SystemTest.json#cpuset count overflow is a TypeError"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\System\\System::getCPUUsage",
+      "php": "a negative $duration raises ValueError from sleep() after the first sample",
+      "reason": "durations are u64 seconds in Rust; the adapters only pass non-negative ones"
+    },
+    {
+      "symbol": "Utopia\\System\\System::getDiskTotal",
+      "php": "$directory defaults to the library's own source directory (__DIR__)",
+      "reason": "System::disk_total takes the directory explicitly: the PHP default names a path inside the PHP package"
+    },
+    {
+      "symbol": "Utopia\\System\\System::getDiskFree",
+      "php": "$directory defaults to the library's own source directory (__DIR__)",
+      "reason": "System::disk_free takes the directory explicitly"
+    }
+  ]
+}

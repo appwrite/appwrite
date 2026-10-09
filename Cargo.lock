@@ -126,7 +126,6 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "utopia-http",
- "utopia-system",
 ]
 
 [[package]]
@@ -2091,7 +2090,8 @@ dependencies = [
 name = "utopia-dsn"
 version = "0.1.0"
 dependencies = [
- "form_urlencoded",
+ "php-std",
+ "thiserror",
 ]
 
 [[package]]
@@ -2127,8 +2127,10 @@ dependencies = [
 name = "utopia-locale"
 version = "0.1.0"
 dependencies = [
- "serde_json",
- "tracing",
+ "indexmap",
+ "php-std",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]
@@ -2156,6 +2158,13 @@ dependencies = [
 [[package]]
 name = "utopia-system"
 version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "php-std",
+ "rustix",
+ "thiserror",
+ "tokio",
+]
 
 [[package]]
 name = "utopia-user-agent"

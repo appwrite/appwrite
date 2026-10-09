@@ -930,6 +930,133 @@
           "iterations": 3000
         }
       ]
+    },
+    "format.arith": {
+      "doc": "$a <op> $b for op in + - * / on numbers (integer overflow to float, exact integer division, DivisionByZeroError)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "op": {
+                "gen": "pick",
+                "from": [
+                  "+",
+                  "-",
+                  "*",
+                  "/"
+                ]
+              },
+              "a": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "format_int"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "format_float"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0,
+                      1,
+                      -1,
+                      2,
+                      1024,
+                      1048576,
+                      9223372036854775807,
+                      -9223372036854775808,
+                      0.0,
+                      -0.0,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "b": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "format_int"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "format_float"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0,
+                      1,
+                      -1,
+                      2,
+                      1024,
+                      1048576,
+                      9223372036854775807,
+                      -9223372036854775808,
+                      0.0,
+                      -0.0,
+                      0.5
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "format.array_sum": {
+      "doc": "array_sum($array) of numbers",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "array": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "format_int"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "format_float"
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        0,
+                        1,
+                        -1,
+                        2,
+                        1024,
+                        1048576,
+                        9223372036854775807,
+                        -9223372036854775808,
+                        0.0,
+                        -0.0,
+                        0.5
+                      ]
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 4
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
     }
   },
   "generators": {

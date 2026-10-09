@@ -20,4 +20,3 @@ tokio.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
 utopia-http.workspace = true
-utopia-system.workspace = true

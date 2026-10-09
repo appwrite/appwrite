@@ -1088,6 +1088,116 @@
           "message": "min(): Argument #1 ($value) must contain at least one element"
         }
       }
+    },
+    {
+      "name": "arith add overflows to float",
+      "op": "format.arith",
+      "args": {
+        "op": "+",
+        "a": 9223372036854775807,
+        "b": 1
+      },
+      "expect": 9.223372036854776e+18
+    },
+    {
+      "name": "arith sub overflows to float",
+      "op": "format.arith",
+      "args": {
+        "op": "-",
+        "a": -9223372036854775808,
+        "b": 1
+      },
+      "expect": -9.223372036854776e+18
+    },
+    {
+      "name": "arith mul overflows to float",
+      "op": "format.arith",
+      "args": {
+        "op": "*",
+        "a": 4294967296,
+        "b": 4294967296
+      },
+      "expect": 1.8446744073709552e+19
+    },
+    {
+      "name": "arith exact division is an integer",
+      "op": "format.arith",
+      "args": {
+        "op": "/",
+        "a": 1048576,
+        "b": 1024
+      },
+      "expect": 1024
+    },
+    {
+      "name": "arith inexact division is a float",
+      "op": "format.arith",
+      "args": {
+        "op": "/",
+        "a": 1,
+        "b": 1048576
+      },
+      "expect": 9.5367431640625e-7
+    },
+    {
+      "name": "arith min int by -1",
+      "op": "format.arith",
+      "args": {
+        "op": "/",
+        "a": -9223372036854775808,
+        "b": -1
+      },
+      "expect": 9.223372036854776e+18
+    },
+    {
+      "name": "arith division by zero",
+      "op": "format.arith",
+      "args": {
+        "op": "/",
+        "a": 1,
+        "b": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "DivisionByZeroError",
+          "message": "Division by zero"
+        }
+      }
+    },
+    {
+      "name": "arith division by float zero",
+      "op": "format.arith",
+      "args": {
+        "op": "/",
+        "a": 0,
+        "b": 0.0
+      },
+      "expect": {
+        "$error": {
+          "class": "DivisionByZeroError",
+          "message": "Division by zero"
+        }
+      }
+    },
+    {
+      "name": "array_sum empty",
+      "op": "format.array_sum",
+      "args": {
+        "array": []
+      },
+      "expect": 0
+    },
+    {
+      "name": "array_sum mixed",
+      "op": "format.array_sum",
+      "args": {
+        "array": [
+          1,
+          0.5,
+          9223372036854775807
+        ]
+      },
+      "expect": 9.223372036854776e+18
     }
   ]
 }

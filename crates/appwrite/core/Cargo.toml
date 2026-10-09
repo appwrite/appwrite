@@ -26,7 +26,7 @@ serde.workspace = true
 serde_json.workspace = true
 sha1.workspace = true
 sha2.workspace = true
-tokio.workspace = true
+tokio = { workspace = true, features = ["fs"] }
 tracing.workspace = true
 utopia-auth.workspace = true
 utopia-cache.workspace = true

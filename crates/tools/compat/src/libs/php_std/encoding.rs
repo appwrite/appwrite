@@ -28,6 +28,7 @@ pub const OPS: &[&str] = &[
     "encoding.stripslashes",
     "encoding.quoted_printable_encode",
     "encoding.quoted_printable_decode",
+    "encoding.parse_str",
 ];
 
 /// The HTML functions' `$flags` (default `ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401`).
@@ -81,6 +82,32 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
         "encoding.stripslashes" => ok(bytes_value(&encoding::stripslashes(&s()?))),
         "encoding.quoted_printable_encode" => ok(bytes_value(&encoding::quoted_printable_encode(&s()?))),
         "encoding.quoted_printable_decode" => ok(bytes_value(&encoding::quoted_printable_decode(&s()?))),
+        "encoding.parse_str" => {
+            let mut out = Vec::new();
+            leaves(&encoding::parse_str(&s()?), &mut Vec::new(), &mut out)?;
+            ok(Value::Array(out))
+        }
         _ => Err(Fault::new(format!("php-std: unknown operation `{op}`"))),
     }
+}
+
+/// A PHP array's leaves in order, as `[[key, ...], value]` (an empty array
+/// is a leaf with value `[]`): keys keep their int/string type and may be
+/// binary (`{"$bytes"}`), and deep nesting stays shallow on the wire.
+fn leaves(array: &php_std::types::Array, path: &mut Vec<Value>, out: &mut Vec<Value>) -> Result<(), Fault> {
+    use php_std::types::{KeyRef, Value as Php};
+    for (k, v) in array.iter() {
+        path.push(match k {
+            KeyRef::Int(i) => Value::from(i),
+            KeyRef::Str(s) => bytes_value(s),
+        });
+        match v {
+            Php::Array(a) if !a.is_empty() => leaves(a, path, out)?,
+            Php::Array(_) => out.push(Value::Array(vec![Value::Array(path.clone()), Value::Array(Vec::new())])),
+            Php::Str(s) => out.push(Value::Array(vec![Value::Array(path.clone()), bytes_value(s.as_bytes())])),
+            other => return Err(Fault::new(format!("parse_str produced {}", other.type_name()))),
+        }
+        path.pop();
+    }
+    Ok(())
 }

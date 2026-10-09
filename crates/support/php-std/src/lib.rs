@@ -36,5 +36,8 @@ pub mod system;
 pub mod types;
 pub mod url;
 pub mod value;
+/// The first PHP value model (wave 1), still used by validators, locale,
+/// dsn and system. Superseded by [`types`]; those crates move onto it next.
+pub mod zval;
 
 pub use types::{Array, ArrayKey, EngineError, Extension, Never, Str, Value};

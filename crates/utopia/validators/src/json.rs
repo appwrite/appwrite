@@ -13,7 +13,7 @@ use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate};
 
 /// `json_decode($json)` (objects as `stdClass`), `None` where it fails.
 fn decode(json: &[u8]) -> Option<Zval> {
-    php_json::decode(json, None, DEFAULT_DEPTH, Flags::NONE).ok()
+    php_json::decode(json, None, DEFAULT_DEPTH, Flags::NONE).ok().map(|v| Zval::from_value(&v))
 }
 
 /// `Utopia\Validator\JSON`: an array, or a string `json_decode()` accepts.

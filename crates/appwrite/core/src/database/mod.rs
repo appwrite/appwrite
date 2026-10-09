@@ -48,19 +48,21 @@ impl Databases {
         if project.database.is_empty() {
             return Err(Error::with_message(ErrorType::GeneralServerError, "Project database is not configured"));
         }
-        let dsn = utopia_dsn::Dsn::parse(&project.database).unwrap_or_else(|| utopia_dsn::Dsn {
-            scheme: "mysql".into(),
-            host: project.database.clone(),
-            ..Default::default()
-        });
+        // A bare pool name (no scheme) reads as `mysql://<name>`, as in PHP.
+        let dsn = utopia_dsn::Dsn::parse(&project.database)
+            .or_else(|_| utopia_dsn::Dsn::parse(&format!("mysql://{}", project.database)))
+            .map_err(|e| Error::internal(format!("Invalid project database DSN: {e}")))?;
         let pool = self
             .pools
-            .get(&dsn.host)
-            .ok_or_else(|| Error::internal(format!("Unknown database pool: {}", dsn.host)))?
+            .get(dsn.host())
+            .ok_or_else(|| Error::internal(format!("Unknown database pool: {}", dsn.host())))?
             .clone();
         let sequence = project.sequence_i64();
-        if self.shared_tables.contains(&dsn.host) {
-            let namespace = dsn.param("namespace").unwrap_or_default();
+        if self.shared_tables.iter().any(|t| t == dsn.host()) {
+            let namespace = match dsn.param("namespace") {
+                Ok(Some(ns)) => String::from_utf8_lossy(ns).into_owned(),
+                _ => String::new(),
+            };
             Ok(Database::new(pool, SCHEMA, &namespace, Some(sequence), Some(self.cache.clone())))
         } else {
             Ok(Database::new(pool, SCHEMA, &format!("_{sequence}"), None, Some(self.cache.clone())))
