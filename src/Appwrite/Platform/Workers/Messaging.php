@@ -239,6 +239,7 @@ class Messaging extends Action
 
         $deliveredTotal = 0;
         $failedTotal = 0;
+        $wakeSignals = 0;
         $deliveryErrors = [];
         $hasRecipients = false;
 
@@ -353,11 +354,19 @@ class Messaging extends Action
             $hasRecipients = true;
 
             /**
-             * @var array<array{delivered: int, recipients: int, errors: array<string>}> $results
+             * @var array<array{delivered: int, recipients: int, errors: array<string>, wake: bool}> $results
              */
             $results = batch($tasks);
 
             foreach ($results as $result) {
+                // A wake is auxiliary to the MQTT delivery: billed inside sendBatch, but kept out of the
+                // message's status so a stale token can't fail the message, leak into deliveryErrors, or
+                // double-count a recipient who was already delivered to over MQTT.
+                if ($result['wake']) {
+                    $wakeSignals += $result['delivered'];
+                    continue;
+                }
+
                 $deliveredTotal += $result['delivered'];
                 $failedTotal += $result['recipients'] - $result['delivered'];
 
@@ -391,6 +400,7 @@ class Messaging extends Action
 
         Span::add('message.delivered_total', $deliveredTotal);
         Span::add('message.errors_total', $failedTotal);
+        Span::add('message.wake_signals', $wakeSignals);
 
         $message->removeAttribute('to');
 
@@ -774,9 +784,13 @@ class Messaging extends Action
      * retried, so `delivered` is summed across attempts without double-counting, and `recipients` always
      * reports the original batch size so the caller's `failed = recipients - delivered` holds.
      *
+     * A wake send is billed like any other (usage is still enqueued) but reports `wake: true` so the
+     * caller can keep it out of the message's own delivery status — a silent wake is auxiliary to the
+     * MQTT delivery, so its failure must not fail the message nor its success double-count the recipient.
+     *
      * @param array<string> $batch
      * @param array<Attachment> $attachments
-     * @return array{delivered: int, recipients: int, errors: array<string>}
+     * @return array{delivered: int, recipients: int, errors: array<string>, wake: bool}
      */
     private function sendBatch(
         array $batch,
@@ -823,6 +837,7 @@ class Messaging extends Action
             'delivered' => $delivered,
             'recipients' => $recipients,
             'errors' => $errors,
+            'wake' => $wake,
         ];
     }
 
