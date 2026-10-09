@@ -230,8 +230,8 @@ function VerifyEmailPage() {
   })
 
   // Sign-up, OAuth2 and sign-in all land here, so this page sends the link.
-  // Deferred so StrictMode's throwaway mount never sends; impersonators
-  // cannot write to the account.
+  // Deferred because a send from StrictMode's first effect run leaves Resend
+  // disabled; impersonators cannot write to the account.
   useEffect(() => {
     if (!accountId || hasConsoleImpersonationSessionTarget()) return
     const timer = setTimeout(() => {
