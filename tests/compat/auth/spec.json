@@ -524,6 +524,9 @@
     },
     "fixture.jwt": {
       "doc": "fixture: a token's header and claims, decoded without verification"
+    },
+    "fixture.jws": {
+      "doc": "fixture: a compact JWS of json_encode(header).json_encode(claims) (or raw_header/raw_claims) signed HS256 or RS256 with key"
     }
   },
   "generators": {},

@@ -98,6 +98,22 @@ impl Header {
     }
 }
 
+/// The HS256 signature (`hash_hmac('sha256', $input, $secret, true)`).
+pub fn hs256(secret: &[u8], input: &[u8]) -> Vec<u8> {
+    use hmac::Mac;
+    let mut mac = hmac::Hmac::<sha2::Sha256>::new_from_slice(secret).expect("HMAC takes any key length");
+    mac.update(input);
+    mac.finalize().into_bytes().to_vec()
+}
+
+/// The RS256 signature (`openssl_sign($input, $signature, $privateKey, OPENSSL_ALGO_SHA256)`)
+/// with a PEM RSA private key.
+pub fn rs256(private_key: &[u8], input: &[u8]) -> Result<Vec<u8>, crate::Error> {
+    let key = key::private_key(private_key)
+        .ok_or_else(|| crate::Error::Exception("Unable to parse the private key".into()))?;
+    key::sign(key, input)
+}
+
 /// `base64UrlEncode()`: base64url without padding.
 pub(crate) fn base64url_encode(value: &[u8]) -> String {
     let mut s = base64_encode(value);

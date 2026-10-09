@@ -1,0 +1,1111 @@
+{
+  "source": "packages/auth/tests/OAuth2/ClientIdMetadataDocumentTest.php",
+  "cases": [
+    {
+      "name": "parses a public client document",
+      "steps": [
+        {
+          "op": "client_metadata.from_json",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "json": "{\"client_id\": \"https://client.example/metadata\", \"client_name\": \"Example MCP Client\", \"redirect_uris\": [\"https://client.example/callback\", \"myapp:/callback\"], \"grant_types\": [\"authorization_code\", \"refresh_token\"], \"response_types\": [\"code\"], \"token_endpoint_auth_method\": \"none\", \"extension_property\": {\"enabled\": true}, \"nullable_extension\": null}",
+            "get": "extension_property"
+          },
+          "expect": {
+            "clientId": "https://client.example/metadata",
+            "tokenEndpointAuthMethod": "none",
+            "grantTypes": [
+              "authorization_code",
+              "refresh_token"
+            ],
+            "responseTypes": [
+              "code"
+            ],
+            "redirectUris": [
+              "https://client.example/callback",
+              "myapp:/callback"
+            ],
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "client_name": "Example MCP Client",
+              "redirect_uris": [
+                "https://client.example/callback",
+                "myapp:/callback"
+              ],
+              "grant_types": [
+                "authorization_code",
+                "refresh_token"
+              ],
+              "response_types": [
+                "code"
+              ],
+              "token_endpoint_auth_method": "none",
+              "extension_property": {
+                "enabled": true
+              },
+              "nullable_extension": null
+            },
+            "get": {
+              "enabled": true
+            }
+          }
+        },
+        {
+          "op": "client_metadata.from_json",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "json": "{\"client_id\": \"https://client.example/metadata\", \"client_name\": \"Example MCP Client\", \"redirect_uris\": [\"https://client.example/callback\", \"myapp:/callback\"], \"grant_types\": [\"authorization_code\", \"refresh_token\"], \"response_types\": [\"code\"], \"token_endpoint_auth_method\": \"none\", \"extension_property\": {\"enabled\": true}, \"nullable_extension\": null}",
+            "get": "nullable_extension",
+            "default": "fallback"
+          },
+          "expect": {
+            "clientId": "https://client.example/metadata",
+            "tokenEndpointAuthMethod": "none",
+            "grantTypes": [
+              "authorization_code",
+              "refresh_token"
+            ],
+            "responseTypes": [
+              "code"
+            ],
+            "redirectUris": [
+              "https://client.example/callback",
+              "myapp:/callback"
+            ],
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "client_name": "Example MCP Client",
+              "redirect_uris": [
+                "https://client.example/callback",
+                "myapp:/callback"
+              ],
+              "grant_types": [
+                "authorization_code",
+                "refresh_token"
+              ],
+              "response_types": [
+                "code"
+              ],
+              "token_endpoint_auth_method": "none",
+              "extension_property": {
+                "enabled": true
+              },
+              "nullable_extension": null
+            },
+            "get": null
+          }
+        },
+        {
+          "op": "client_metadata.from_json",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "json": "{\"client_id\": \"https://client.example/metadata\", \"client_name\": \"Example MCP Client\", \"redirect_uris\": [\"https://client.example/callback\", \"myapp:/callback\"], \"grant_types\": [\"authorization_code\", \"refresh_token\"], \"response_types\": [\"code\"], \"token_endpoint_auth_method\": \"none\", \"extension_property\": {\"enabled\": true}, \"nullable_extension\": null}",
+            "get": "unknown",
+            "default": "fallback"
+          },
+          "expect": {
+            "clientId": "https://client.example/metadata",
+            "tokenEndpointAuthMethod": "none",
+            "grantTypes": [
+              "authorization_code",
+              "refresh_token"
+            ],
+            "responseTypes": [
+              "code"
+            ],
+            "redirectUris": [
+              "https://client.example/callback",
+              "myapp:/callback"
+            ],
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "client_name": "Example MCP Client",
+              "redirect_uris": [
+                "https://client.example/callback",
+                "myapp:/callback"
+              ],
+              "grant_types": [
+                "authorization_code",
+                "refresh_token"
+              ],
+              "response_types": [
+                "code"
+              ],
+              "token_endpoint_auth_method": "none",
+              "extension_property": {
+                "enabled": true
+              },
+              "nullable_extension": null
+            },
+            "get": "fallback"
+          }
+        }
+      ]
+    },
+    {
+      "name": "applies registration defaults",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none"
+            },
+            "get": "unknown",
+            "default": "fallback"
+          },
+          "expect": {
+            "clientId": "https://client.example/metadata",
+            "tokenEndpointAuthMethod": "none",
+            "grantTypes": [
+              "authorization_code"
+            ],
+            "responseTypes": [
+              "code"
+            ],
+            "redirectUris": [],
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none"
+            },
+            "get": "fallback"
+          }
+        }
+      ]
+    },
+    {
+      "name": "accepts public key authentication",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "private_key_jwt",
+              "jwks": {
+                "keys": [
+                  {
+                    "kty": "RSA",
+                    "n": "public-modulus",
+                    "e": "AQAB"
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "clientId": "https://client.example/metadata",
+            "tokenEndpointAuthMethod": "private_key_jwt",
+            "grantTypes": [
+              "authorization_code"
+            ],
+            "responseTypes": [
+              "code"
+            ],
+            "redirectUris": [],
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "private_key_jwt",
+              "jwks": {
+                "keys": [
+                  {
+                    "kty": "RSA",
+                    "n": "public-modulus",
+                    "e": "AQAB"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid JSON (malformed)",
+      "steps": [
+        {
+          "op": "client_metadata.from_json",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "json": "{"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client ID Metadata Document is not valid JSON."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid JSON (list root)",
+      "steps": [
+        {
+          "op": "client_metadata.from_json",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "json": "[]"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client ID Metadata Document must be a JSON object."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid JSON (scalar root)",
+      "steps": [
+        {
+          "op": "client_metadata.from_json",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "json": "true"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client ID Metadata Document must be a JSON object."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid JSON (empty)",
+      "steps": [
+        {
+          "op": "client_metadata.from_json",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "json": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client ID Metadata Document is not valid JSON."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid JSON (string root)",
+      "steps": [
+        {
+          "op": "client_metadata.from_json",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "json": "\"x\""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client ID Metadata Document must be a JSON object."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JSON objects with numeric keys",
+      "steps": [
+        {
+          "op": "client_metadata.from_json",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "json": "{\"client_id\": \"https://client.example/metadata\", \"token_endpoint_auth_method\": \"none\", \"0\": \"zero\", \"x\": {\"1\": \"one\"}}"
+          },
+          "expect": {
+            "clientId": "https://client.example/metadata",
+            "tokenEndpointAuthMethod": "none",
+            "grantTypes": [
+              "authorization_code"
+            ],
+            "responseTypes": [
+              "code"
+            ],
+            "redirectUris": [],
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "0": "zero",
+              "x": {
+                "1": "one"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JSON empty objects become arrays",
+      "steps": [
+        {
+          "op": "client_metadata.from_json",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "json": "{\"client_id\": \"https://client.example/metadata\", \"token_endpoint_auth_method\": \"none\", \"extra\": {}, \"jwks\": {\"keys\": [{}]}}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "jwks must contain JSON Web Key objects."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (missing client id)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "token_endpoint_auth_method": "none"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "client_id must exactly match the Client Identifier URL."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (mismatched client id)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://other.example/metadata",
+              "token_endpoint_auth_method": "none"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "client_id must exactly match the Client Identifier URL."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (missing auth method)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "token_endpoint_auth_method must be explicitly declared."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (empty auth method)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "token_endpoint_auth_method must be explicitly declared."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (client secret basic)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "client_secret_basic"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "token_endpoint_auth_method must not use a shared symmetric secret."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (future client secret method)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "client_secret_custom"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "token_endpoint_auth_method must not use a shared symmetric secret."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (client secret)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "client_secret": "secret"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client ID Metadata Documents must not contain client_secret."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (client secret expiry)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "client_secret_expires_at": 0
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client ID Metadata Documents must not contain client_secret_expires_at."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (client secret null)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "client_secret": null
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client ID Metadata Documents must not contain client_secret."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (grant types not a list)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "grant_types": "authorization_code"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "grant_types must be a list of strings."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (empty grant type)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "grant_types": [
+                ""
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "grant_types must contain non-empty strings."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (response types not strings)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "response_types": [
+                1
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "response_types must contain non-empty strings."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (redirect URI with fragment)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "redirect_uris": [
+                "https://client.example/callback#fragment"
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "redirect URIs must be absolute URIs without fragments."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (relative redirect URI)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "redirect_uris": [
+                "/callback"
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "redirect URIs must be absolute URIs without fragments."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (contacts not a list)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "contacts": "owner@example.com"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "contacts must be a list of strings."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (client name not a string)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "client_name": [
+                "Example"
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "client_name must be a string."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (client name null)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "client_name": null
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "client_name must be a string."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (jwks null)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "jwks": null
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "jwks must be a JSON Web Key Set object."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (malformed jwks)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "jwks": {
+                "keys": "not-a-list"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "jwks must be a JSON Web Key Set object."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (jwks and jwks uri)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "jwks": {
+                "keys": []
+              },
+              "jwks_uri": "https://client.example/jwks.json"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "jwks and jwks_uri must not both be present."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (symmetric JWK)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "jwks": {
+                "keys": [
+                  {
+                    "kty": "oct",
+                    "k": "secret"
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "jwks must not contain private or symmetric key material."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (private RSA JWK)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "jwks": {
+                "keys": [
+                  {
+                    "kty": "RSA",
+                    "n": "n",
+                    "e": "AQAB",
+                    "d": "private"
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "jwks must not contain private or symmetric key material."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (list JWK)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "jwks": {
+                "keys": [
+                  [
+                    "kty"
+                  ]
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "jwks must contain JSON Web Key objects."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (post logout redirect with fragment)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "post_logout_redirect_uris": [
+                "https://x/#f"
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "redirect URIs must be absolute URIs without fragments."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (redirect URI scheme zero)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "redirect_uris": [
+                "0://x"
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "redirect URIs must be absolute URIs without fragments."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (auth method not a string)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": 5
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "token_endpoint_auth_method must be explicitly declared."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (scope number)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "scope": 1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "scope must be a string."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid metadata (grant types object)",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "grant_types": {
+                "a": "b"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "grant_types must be a list of strings."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "client id must be a valid client identifier URL",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "http://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client Identifier URL must use the https scheme."
+            }
+          }
+        },
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "http://client.example/metadata",
+            "allow_http": true,
+            "metadata": {
+              "client_id": "http://client.example/metadata",
+              "token_endpoint_auth_method": "none"
+            }
+          },
+          "expect": {
+            "clientId": "http://client.example/metadata",
+            "tokenEndpointAuthMethod": "none",
+            "grantTypes": [
+              "authorization_code"
+            ],
+            "responseTypes": [
+              "code"
+            ],
+            "redirectUris": [],
+            "metadata": {
+              "client_id": "http://client.example/metadata",
+              "token_endpoint_auth_method": "none"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty jwks key list and contacts",
+      "steps": [
+        {
+          "op": "client_metadata.from_array",
+          "args": {
+            "client_id": "https://client.example/metadata",
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "jwks": {
+                "keys": []
+              },
+              "contacts": [
+                "a@b.c"
+              ],
+              "post_logout_redirect_uris": [
+                "https://client.example/bye"
+              ]
+            }
+          },
+          "expect": {
+            "clientId": "https://client.example/metadata",
+            "tokenEndpointAuthMethod": "none",
+            "grantTypes": [
+              "authorization_code"
+            ],
+            "responseTypes": [
+              "code"
+            ],
+            "redirectUris": [],
+            "metadata": {
+              "client_id": "https://client.example/metadata",
+              "token_endpoint_auth_method": "none",
+              "jwks": {
+                "keys": []
+              },
+              "contacts": [
+                "a@b.c"
+              ],
+              "post_logout_redirect_uris": [
+                "https://client.example/bye"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

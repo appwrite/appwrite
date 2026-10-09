@@ -1,0 +1,159 @@
+{
+  "source": "packages/auth/tests/OAuth2/PromptsTest.php",
+  "cases": [
+    {
+      "name": "parses an empty prompt",
+      "steps": [
+        {
+          "op": "prompts.from_string",
+          "args": {
+            "prompt": ""
+          },
+          "expect": {
+            "array": [],
+            "string": "",
+            "contains": {
+              "none": false,
+              "login": false,
+              "consent": false,
+              "select_account": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "parses valid prompt values",
+      "steps": [
+        {
+          "op": "prompts.from_string",
+          "args": {
+            "prompt": "login consent select_account consent"
+          },
+          "expect": {
+            "array": [
+              "login",
+              "consent",
+              "select_account"
+            ],
+            "string": "login consent select_account",
+            "contains": {
+              "none": false,
+              "login": true,
+              "consent": true,
+              "select_account": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "collapses repeated spaces",
+      "steps": [
+        {
+          "op": "prompts.from_string",
+          "args": {
+            "prompt": "  none  "
+          },
+          "expect": {
+            "array": [
+              "none"
+            ],
+            "string": "none",
+            "contains": {
+              "none": true,
+              "login": false,
+              "consent": false,
+              "select_account": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "tabs are not separators",
+      "steps": [
+        {
+          "op": "prompts.from_string",
+          "args": {
+            "prompt": "login\tconsent"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidPromptException",
+              "message": "Invalid prompt value 'login\tconsent'."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects an unknown value",
+      "steps": [
+        {
+          "op": "prompts.from_string",
+          "args": {
+            "prompt": "login unknown"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidPromptException",
+              "message": "Invalid prompt value 'unknown'."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects none combined",
+      "steps": [
+        {
+          "op": "prompts.from_string",
+          "args": {
+            "prompt": "none consent"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidPromptException",
+              "message": "prompt=none cannot be combined with other prompt values."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "unknown values are reported before combinations",
+      "steps": [
+        {
+          "op": "prompts.from_string",
+          "args": {
+            "prompt": "none consent x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidPromptException",
+              "message": "Invalid prompt value 'x'."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "values are case sensitive",
+      "steps": [
+        {
+          "op": "prompts.from_string",
+          "args": {
+            "prompt": "Login"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidPromptException",
+              "message": "Invalid prompt value 'Login'."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

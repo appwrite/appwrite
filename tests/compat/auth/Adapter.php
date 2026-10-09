@@ -272,6 +272,20 @@ final class Adapter implements Base
             'fixture.matches' => fn (array $a, Session $s) => preg_match((string) $a['pattern'], (string) $a['value']),
             'fixture.strlen' => fn (array $a, Session $s) => \strlen((string) $a['value']),
             'fixture.substr' => fn (array $a, Session $s) => substr((string) $a['value'], (int) $a['start'], isset($a['length']) ? (int) $a['length'] : null),
+            'fixture.jws' => function (array $a, Session $s) {
+                $encode = fn (string $v): string => rtrim(strtr(base64_encode($v), '+/', '-_'), '=');
+                $header = isset($a['raw_header']) ? (string) $a['raw_header'] : (string) json_encode($a['header'] ?? null);
+                $claims = isset($a['raw_claims']) ? (string) $a['raw_claims'] : (string) json_encode($a['claims'] ?? null);
+                $input = $encode($header) . '.' . $encode($claims);
+                $signature = '';
+                if (($a['alg'] ?? '') === 'HS256') {
+                    $signature = hash_hmac('sha256', $input, (string) $a['key'], true);
+                } elseif (!openssl_sign($input, $signature, (string) $a['key'], OPENSSL_ALGO_SHA256)) {
+                    throw new Fault('unable to sign');
+                }
+
+                return $input . '.' . $encode((string) $signature);
+            },
             'fixture.jwt' => function (array $a, Session $s) {
                 $parts = explode('.', (string) $a['token']);
                 $decode = fn (string $segment): mixed => json_decode((string) base64_decode(strtr($segment, '-_', '+/')), true);

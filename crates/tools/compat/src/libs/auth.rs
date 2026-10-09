@@ -95,6 +95,7 @@ pub const OPS: &[&str] = &[
     "fixture.strlen",
     "fixture.substr",
     "fixture.jwt",
+    "fixture.jws",
 ];
 
 // ---------------------------------------------------------------------------
@@ -907,6 +908,28 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "fixture.substr" => {
             let value = a.bytes("value")?;
             bytes(php_std::string::substr(&value, a.i64("start")?, a.opt_i64("length")?).to_vec())
+        }
+        "fixture.jws" => {
+            let encode = |v: &[u8]| -> String {
+                php_std::encoding::base64_encode(v).trim_end_matches('=').replace('+', "-").replace('/', "_")
+            };
+            let json = |raw: &str, value: &str| -> Result<Vec<u8>, Fault> {
+                if let Some(r) = opt_bytes(&a, raw)? {
+                    return Ok(r);
+                }
+                let z = to_zval(a.opt(value).unwrap_or(&Value::Null));
+                php_std::json::encode(&z, php_std::json::Flags::NONE, 512)
+                    .map(String::into_bytes)
+                    .map_err(|e| Fault::new(e.to_string()))
+            };
+            let input = format!("{}.{}", encode(&json("raw_header", "header")?), encode(&json("raw_claims", "claims")?));
+            let key = a.bytes("key")?;
+            let signature = if a.opt_str("alg")? == Some("HS256") {
+                utopia_auth::jwt::hs256(&key, input.as_bytes())
+            } else {
+                utopia_auth::jwt::rs256(&key, input.as_bytes()).map_err(|e| Fault::new(e.to_string()))?
+            };
+            Outcome::ok(format!("{input}.{}", encode(&signature)))
         }
         "fixture.jwt" => {
             let token = a.bytes("token")?;
