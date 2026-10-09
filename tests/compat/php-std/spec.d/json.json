@@ -1,0 +1,4701 @@
+{
+  "ops": {
+    "json.encode": {
+      "doc": "['json' => json_encode($v, $flags, $depth), 'error' => json_last_error(), 'message' => json_last_error_msg()] (flags without JSON_THROW_ON_ERROR)",
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "json_v3"
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "json_flags"
+              },
+              "depth": {
+                "gen": "ref",
+                "name": "json_depth"
+              }
+            },
+            "optional": [
+              "depth"
+            ]
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "json_scalar"
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "json_flags"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "library flags",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "json_v3"
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  64,
+                  256,
+                  320,
+                  1024,
+                  1280,
+                  1344,
+                  2097152
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "json.encode_value": {
+      "doc": "json_encode($v, $flags, $depth) of a request-model serde_json::Value (no binary strings or non-finite floats)",
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "json_pv3"
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "json_flags"
+              },
+              "depth": {
+                "gen": "ref",
+                "name": "json_depth"
+              }
+            },
+            "optional": [
+              "depth"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "json.encode_throw": {
+      "doc": "json_encode($v, $flags | JSON_THROW_ON_ERROR, $depth): the JSON or JsonException",
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "json_v2"
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "json_flags"
+              },
+              "depth": {
+                "gen": "ref",
+                "name": "json_depth"
+              }
+            },
+            "optional": [
+              "depth"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "json.decode": {
+      "doc": "['value' => json_decode($s, $assoc, $depth, $flags), 'error' => json_last_error(), 'message' => json_last_error_msg()] (flags without JSON_THROW_ON_ERROR)",
+      "fuzz": [
+        {
+          "name": "texts",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "s": {
+                "gen": "ref",
+                "name": "jttext"
+              },
+              "assoc": {
+                "gen": "pick",
+                "from": [
+                  true,
+                  false,
+                  null
+                ]
+              },
+              "depth": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": 512
+                  },
+                  {
+                    "gen": "int",
+                    "min": 1,
+                    "max": 5
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0,
+                      -1,
+                      2147483647,
+                      2147483648
+                    ]
+                  }
+                ]
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  1048576,
+                  2097152,
+                  3145728,
+                  1048578,
+                  2097154,
+                  1048577,
+                  2097153,
+                  3145730
+                ]
+              }
+            },
+            "optional": [
+              "depth",
+              "flags"
+            ]
+          },
+          "iterations": 4000
+        },
+        {
+          "name": "objects",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "s": {
+                "gen": "ref",
+                "name": "jt3"
+              },
+              "assoc": {
+                "gen": "pick",
+                "from": [
+                  false,
+                  null
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "json.decode_throw": {
+      "doc": "json_decode($s, $assoc, $depth, $flags | JSON_THROW_ON_ERROR): the value or JsonException",
+      "fuzz": [
+        {
+          "name": "texts",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "s": {
+                "gen": "ref",
+                "name": "jttext"
+              },
+              "assoc": {
+                "gen": "pick",
+                "from": [
+                  true,
+                  false,
+                  null
+                ]
+              },
+              "depth": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": 512
+                  },
+                  {
+                    "gen": "int",
+                    "min": 1,
+                    "max": 5
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0,
+                      -1,
+                      2147483647,
+                      2147483648
+                    ]
+                  }
+                ]
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  1048576,
+                  2097152,
+                  3145728,
+                  1048578,
+                  2097154,
+                  1048577,
+                  2097153,
+                  3145730
+                ]
+              }
+            },
+            "optional": [
+              "depth",
+              "flags"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "json.decode_value": {
+      "doc": "json_decode($s, true, $depth, $flags) into the request-model serde_json::Value (php_std::json::decode_value)",
+      "fuzz": [
+        {
+          "name": "texts",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "s": {
+                "gen": "ref",
+                "name": "jtftext"
+              },
+              "depth": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": 512
+                  },
+                  {
+                    "gen": "int",
+                    "min": 1,
+                    "max": 5
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0,
+                      -1,
+                      2147483647,
+                      2147483648
+                    ]
+                  }
+                ]
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  1048576,
+                  2097152,
+                  3145728,
+                  1048578,
+                  2097154,
+                  1048577,
+                  2097153,
+                  3145730
+                ]
+              }
+            },
+            "optional": [
+              "depth",
+              "flags"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "json.validate": {
+      "doc": "['valid' => json_validate($s, $depth, $flags), 'error' => json_last_error(), 'message' => json_last_error_msg()]",
+      "fuzz": [
+        {
+          "name": "texts",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "s": {
+                "gen": "ref",
+                "name": "jttext"
+              },
+              "depth": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": 512
+                  },
+                  {
+                    "gen": "int",
+                    "min": 1,
+                    "max": 5
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0,
+                      -1,
+                      2147483647,
+                      2147483648
+                    ]
+                  }
+                ]
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  1048576,
+                  1,
+                  2097152,
+                  4194304
+                ]
+              }
+            },
+            "optional": [
+              "depth",
+              "flags"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "json_str": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "max": 12,
+          "tricky": 0.5
+        },
+        {
+          "gen": "string",
+          "alphabet": "\"\\/<>&'\b\f\n\r\t\u0000\u001f  é😀𝔘 a0",
+          "max": 8
+        },
+        {
+          "gen": "pick",
+          "from": [
+            " 1",
+            "1 ",
+            "1e3",
+            "1E+3",
+            ".5",
+            "1.",
+            "-0",
+            "-0.0",
+            "0x1A",
+            "1e999",
+            "-1e999",
+            "9223372036854775807",
+            "9223372036854775808",
+            "-9223372036854775808",
+            "-9223372036854775808 ",
+            "-9223372036854775809",
+            "00012",
+            "+5",
+            " \t\n1\r",
+            "1e",
+            "1e+",
+            "NAN",
+            "INF",
+            "1_000",
+            "١٢",
+            "0.1",
+            "1.5e-7",
+            "123456789012345678901234567890",
+            "\u000b1\f",
+            "1\u0000",
+            "-.5",
+            "+.5e1",
+            "0e0",
+            "-",
+            ".",
+            "e1",
+            "1.5.5",
+            "0009223372036854775808"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": " +-.0123456789eE",
+          "max": 8
+        }
+      ]
+    },
+    "json_bytes": {
+      "gen": "pick",
+      "from": [
+        {
+          "$bytes": "/w=="
+        },
+        {
+          "$bytes": "Yf9i"
+        },
+        {
+          "$bytes": "/+KAqDw+JiciL1wK"
+        },
+        {
+          "$bytes": "w6n//w=="
+        },
+        {
+          "$bytes": "/g=="
+        },
+        {
+          "$bytes": "Yf5i"
+        },
+        {
+          "$bytes": "/uKAqDw+JiciL1wK"
+        },
+        {
+          "$bytes": "w6n+/g=="
+        },
+        {
+          "$bytes": "gA=="
+        },
+        {
+          "$bytes": "YYBi"
+        },
+        {
+          "$bytes": "gOKAqDw+JiciL1wK"
+        },
+        {
+          "$bytes": "w6mAgA=="
+        },
+        {
+          "$bytes": "vw=="
+        },
+        {
+          "$bytes": "Yb9i"
+        },
+        {
+          "$bytes": "v+KAqDw+JiciL1wK"
+        },
+        {
+          "$bytes": "w6m/vw=="
+        },
+        {
+          "$bytes": "wIA="
+        },
+        {
+          "$bytes": "YcCAYg=="
+        },
+        {
+          "$bytes": "wIDigKg8PiYnIi9cCg=="
+        },
+        {
+          "$bytes": "w6nAgMCA"
+        },
+        {
+          "$bytes": "wb8="
+        },
+        {
+          "$bytes": "YcG/Yg=="
+        },
+        {
+          "$bytes": "wb/igKg8PiYnIi9cCg=="
+        },
+        {
+          "$bytes": "w6nBv8G/"
+        },
+        {
+          "$bytes": "wg=="
+        },
+        {
+          "$bytes": "YcJi"
+        },
+        {
+          "$bytes": "wuKAqDw+JiciL1wK"
+        },
+        {
+          "$bytes": "w6nCwg=="
+        },
+        {
+          "$bytes": "wkE="
+        },
+        {
+          "$bytes": "YcJBYg=="
+        },
+        {
+          "$bytes": "wkHigKg8PiYnIi9cCg=="
+        },
+        {
+          "$bytes": "w6nCQcJB"
+        },
+        {
+          "$bytes": "wsI="
+        },
+        {
+          "$bytes": "YcLCYg=="
+        },
+        {
+          "$bytes": "wsLigKg8PiYnIi9cCg=="
+        },
+        {
+          "$bytes": "w6nCwsLC"
+        },
+        "",
+        "ab",
+        " <>&'\"/\\\n",
+        "é",
+        "߿",
+        "a߿b",
+        "߿ <>&'\"/\\\n",
+        "é߿߿",
+        {
+          "$bytes": "4A=="
+        },
+        {
+          "$bytes": "YeBi"
+        },
+        {
+          "$bytes": "4OKAqDw+JiciL1wK"
+        },
+        {
+          "$bytes": "w6ng4A=="
+        },
+        {
+          "$bytes": "4IA="
+        },
+        {
+          "$bytes": "YeCAYg=="
+        },
+        {
+          "$bytes": "4IDigKg8PiYnIi9cCg=="
+        },
+        {
+          "$bytes": "w6nggOCA"
+        },
+        {
+          "$bytes": "4ICA"
+        },
+        {
+          "$bytes": "YeCAgGI="
+        },
+        {
+          "$bytes": "4ICA4oCoPD4mJyIvXAo="
+        },
+        {
+          "$bytes": "w6nggIDggIA="
+        },
+        {
+          "$bytes": "4J+/"
+        },
+        {
+          "$bytes": "YeCfv2I="
+        },
+        {
+          "$bytes": "4J+/4oCoPD4mJyIvXAo="
+        },
+        {
+          "$bytes": "w6ngn7/gn78="
+        },
+        {
+          "$bytes": "4KA="
+        },
+        {
+          "$bytes": "YeCgYg=="
+        },
+        {
+          "$bytes": "4KDigKg8PiYnIi9cCg=="
+        },
+        {
+          "$bytes": "w6ngoOCg"
+        },
+        "ࠀ",
+        "aࠀb",
+        "ࠀ <>&'\"/\\\n",
+        "éࠀࠀ",
+        {
+          "$bytes": "4KBB"
+        },
+        {
+          "$bytes": "YeCgQWI="
+        },
+        {
+          "$bytes": "4KBB4oCoPD4mJyIvXAo="
+        },
+        {
+          "$bytes": "w6ngoEHgoEE="
+        },
+        {
+          "$bytes": "4EGA"
+        },
+        {
+          "$bytes": "YeBBgGI="
+        },
+        {
+          "$bytes": "4EGA4oCoPD4mJyIvXAo="
+        },
+        {
+          "$bytes": "w6ngQYDgQYA="
+        },
+        {
+          "$bytes": "4MKA"
+        },
+        {
+          "$bytes": "YeDCgGI="
+        },
+        {
+          "$bytes": "4MKA4oCoPD4mJyIvXAo="
+        },
+        {
+          "$bytes": "w6ngwoDgwoA="
+        },
+        {
+          "$bytes": "7aCA"
+        },
+        {
+          "$bytes": "Ye2ggGI="
+        },
+        {
+          "$bytes": "7aCA4oCoPD4mJyIvXAo="
+        },
+        {
+          "$bytes": "w6ntoIDtoIA="
+        },
+        {
+          "$bytes": "7b+/"
+        },
+        {
+          "$bytes": "Ye2/v2I="
+        },
+        {
+          "$bytes": "7b+/4oCoPD4mJyIvXAo="
+        },
+        {
+          "$bytes": "w6ntv7/tv78="
+        },
+        "퟿",
+        "a퟿b",
+        "퟿ <>&'\"/\\\n",
+        "é퟿퟿",
+        "�",
+        "a�b",
+        "� <>&'\"/\\\n",
+        "é��",
+        "￿",
+        "a￿b",
+        "￿ <>&'\"/\\\n",
+        "é￿￿",
+        " ",
+        "a b",
+        "  <>&'\"/\\\n",
+        "é  ",
+        {
+          "$bytes": "8A=="
+        },
+        {
+          "$bytes": "YfBi"
+        },
+        {
+          "$bytes": "8OKAqDw+JiciL1wK"
+        },
+        {
+          "$bytes": "w6nw8A=="
+        },
+        {
+          "$bytes": "8JA="
+        },
+        {
+          "$bytes": "YfCQYg=="
+        },
+        {
+          "$bytes": "8JDigKg8PiYnIi9cCg=="
+        },
+        {
+          "$bytes": "w6nwkPCQ"
+        },
+        {
+          "$bytes": "8JCA"
+        },
+        {
+          "$bytes": "YfCQgGI="
+        },
+        {
+          "$bytes": "8JCA4oCoPD4mJyIvXAo="
+        },
+        {
+          "$bytes": "w6nwkIDwkIA="
+        },
+        "𐀀",
+        "a𐀀b",
+        "𐀀 <>&'\"/\\\n",
+        "é𐀀𐀀",
+        {
+          "$bytes": "8ICAgA=="
+        },
+        {
+          "$bytes": "YfCAgIBi"
+        },
+        {
+          "$bytes": "8ICAgOKAqDw+JiciL1wK"
+        },
+        {
+          "$bytes": "w6nwgICA8ICAgA=="
+        },
+        {
+          "$bytes": "8I+/vw=="
+        },
+        {
+          "$bytes": "YfCPv79i"
+        },
+        {
+          "$bytes": "8I+/v+KAqDw+JiciL1wK"
+        },
+        {
+          "$bytes": "w6nwj7+/8I+/vw=="
+        },
+        "􏿿",
+        "a􏿿b",
+        "􏿿 <>&'\"/\\\n",
+        "é􏿿􏿿",
+        {
+          "$bytes": "9JCAgA=="
+        },
+        {
+          "$bytes": "YfSQgIBi"
+        },
+        {
+          "$bytes": "9JCAgOKAqDw+JiciL1wK"
+        },
+        {
+          "$bytes": "w6n0kICA9JCAgA=="
+        },
+        {
+          "$bytes": "9YCAgA=="
+        },
+        {
+          "$bytes": "YfWAgIBi"
+        },
+        {
+          "$bytes": "9YCAgOKAqDw+JiciL1wK"
+        },
+        {
+          "$bytes": "w6n1gICA9YCAgA=="
+        },
+        {
+          "$bytes": "+IiAgIA="
+        },
+        {
+          "$bytes": "YfiIgICAYg=="
+        },
+        {
+          "$bytes": "+IiAgIDigKg8PiYnIi9cCg=="
+        },
+        {
+          "$bytes": "w6n4iICAgPiIgICA"
+        },
+        {
+          "$bytes": "/ISAgICA"
+        },
+        {
+          "$bytes": "YfyEgICAgGI="
+        },
+        {
+          "$bytes": "/ISAgICA4oCoPD4mJyIvXAo="
+        },
+        {
+          "$bytes": "w6n8hICAgID8hICAgIA="
+        },
+        {
+          "$bytes": "8JBBgA=="
+        },
+        {
+          "$bytes": "YfCQQYBi"
+        },
+        {
+          "$bytes": "8JBBgOKAqDw+JiciL1wK"
+        },
+        {
+          "$bytes": "w6nwkEGA8JBBgA=="
+        },
+        {
+          "$bytes": "8JCAQQ=="
+        },
+        {
+          "$bytes": "YfCQgEFi"
+        },
+        {
+          "$bytes": "8JCAQeKAqDw+JiciL1wK"
+        },
+        {
+          "$bytes": "w6nwkIBB8JCAQQ=="
+        },
+        {
+          "$bytes": "8MKAgA=="
+        },
+        {
+          "$bytes": "YfDCgIBi"
+        },
+        {
+          "$bytes": "8MKAgOKAqDw+JiciL1wK"
+        },
+        {
+          "$bytes": "w6nwwoCA8MKAgA=="
+        },
+        {
+          "$bytes": "4YA="
+        },
+        {
+          "$bytes": "YeGAYg=="
+        },
+        {
+          "$bytes": "4YDigKg8PiYnIi9cCg=="
+        },
+        {
+          "$bytes": "w6nhgOGA"
+        },
+        {
+          "$bytes": "4YDA"
+        },
+        {
+          "$bytes": "YeGAwGI="
+        },
+        {
+          "$bytes": "4YDA4oCoPD4mJyIvXAo="
+        },
+        {
+          "$bytes": "w6nhgMDhgMA="
+        },
+        {
+          "$bytes": "w6n/"
+        },
+        {
+          "$bytes": "YcOp/2I="
+        },
+        {
+          "$bytes": "w6n/4oCoPD4mJyIvXAo="
+        },
+        {
+          "$bytes": "w6nDqf/Dqf8="
+        }
+      ]
+    },
+    "json_float": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "float"
+        },
+        {
+          "gen": "float",
+          "min": -1e+300,
+          "max": 1e+300
+        },
+        {
+          "gen": "float",
+          "min": -0.001,
+          "max": 0.001
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0.1,
+            1e+25,
+            1000000000000000.0,
+            100000000000000.0,
+            1e-07,
+            1e-05,
+            0.0001,
+            -0.0,
+            1.0,
+            100.0,
+            0.30000000000000004,
+            1.7976931348623157e+308,
+            5e-324,
+            123456789.12345678,
+            1.5,
+            -2.5e-300,
+            9007199254740992.0,
+            1e+21,
+            1.2345678901234568e+17
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$float": "INF"
+            },
+            {
+              "$float": "-INF"
+            },
+            {
+              "$float": "NAN"
+            }
+          ]
+        }
+      ]
+    },
+    "json_scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "json_str"
+        },
+        {
+          "gen": "ref",
+          "name": "json_str"
+        },
+        {
+          "gen": "ref",
+          "name": "json_bytes"
+        },
+        {
+          "gen": "int"
+        },
+        {
+          "gen": "ref",
+          "name": "json_float"
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        }
+      ]
+    },
+    "json_plain_scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "json_str"
+        },
+        {
+          "gen": "ref",
+          "name": "json_str"
+        },
+        {
+          "gen": "int"
+        },
+        {
+          "gen": "float"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0.1,
+            1e+25,
+            1000000000000000.0,
+            100000000000000.0,
+            1e-07,
+            1e-05,
+            0.0001,
+            -0.0,
+            1.0,
+            100.0,
+            0.30000000000000004,
+            1.7976931348623157e+308,
+            5e-324,
+            123456789.12345678,
+            1.5,
+            -2.5e-300,
+            9007199254740992.0,
+            1e+21,
+            1.2345678901234568e+17
+          ]
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        }
+      ]
+    },
+    "json_flags": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 4194303
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            64,
+            256,
+            320,
+            1024,
+            1344,
+            128,
+            512,
+            1048576,
+            2097152,
+            2097408,
+            1048832,
+            32,
+            16,
+            15,
+            2304,
+            3145728,
+            1536,
+            2368,
+            544,
+            640
+          ]
+        }
+      ]
+    },
+    "json_depth": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "const",
+          "value": 512
+        },
+        {
+          "gen": "int",
+          "min": -1,
+          "max": 4
+        },
+        {
+          "gen": "pick",
+          "from": [
+            4294967297,
+            2147483648,
+            4294967296,
+            1
+          ]
+        }
+      ]
+    },
+    "jnum": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "int"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "float",
+              "min": -1e+300,
+              "max": 1e+300
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "float"
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "0",
+            "-0",
+            "-0.0",
+            "1.0",
+            "1E+2",
+            "1e-2",
+            "0.5e1",
+            "9223372036854775807",
+            "9223372036854775808",
+            "-9223372036854775808",
+            "-9223372036854775809",
+            "12345678901234567890123",
+            "01",
+            "1.",
+            ".5",
+            "-",
+            "1e",
+            "1e+",
+            "+1",
+            "0x1",
+            "1.5e308",
+            "4.9e-324",
+            "123456789012345678",
+            "-01",
+            "00",
+            "1.0e+",
+            "2e-400"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "1e400",
+            "-1e400",
+            "1E309"
+          ]
+        }
+      ]
+    },
+    "jnum_finite": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "int"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "float"
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "0",
+            "-0",
+            "-0.0",
+            "1.0",
+            "1E+2",
+            "1e-2",
+            "0.5e1",
+            "9223372036854775807",
+            "9223372036854775808",
+            "-9223372036854775808",
+            "-9223372036854775809",
+            "12345678901234567890123",
+            "01",
+            "1.",
+            ".5",
+            "-",
+            "1e",
+            "1e+",
+            "+1",
+            "0x1",
+            "1.5e30",
+            "4.9e-324",
+            "123456789012345678",
+            "-01",
+            "00",
+            "1.0e+",
+            "2e-400"
+          ]
+        }
+      ]
+    },
+    "jstr": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "const",
+          "value": "\""
+        },
+        {
+          "gen": "repeat",
+          "min": 0,
+          "max": 4,
+          "part": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "pick",
+                "from": [
+                  "\\n",
+                  "\\\"",
+                  "\\\\",
+                  "\\/",
+                  "\\b",
+                  "\\f",
+                  "\\r",
+                  "\\t",
+                  "\\u0041",
+                  "\\u00e9",
+                  "\\u20ac",
+                  "\\ud83d\\ude00",
+                  "\\ud800",
+                  "\\udc00",
+                  "\\ud800\\u0041",
+                  "\\uD834\\uDD1E",
+                  "\\u0000",
+                  "\\u12",
+                  "\\x",
+                  "\\",
+                  "\\uFFFF",
+                  "\\u0080",
+                  "\\u07ff",
+                  "\\u0800",
+                  "\\uDBFF\\uDFFF",
+                  "\\ud800\\ud800",
+                  "\\u007f",
+                  "\\u2028",
+                  "\\uDC00\\uD800",
+                  "\\U0041",
+                  "\\u00",
+                  "\\ud83d\\u",
+                  "\\'",
+                  "\\a"
+                ]
+              },
+              {
+                "gen": "string",
+                "alphabet": "unicode",
+                "max": 4
+              },
+              {
+                "gen": "string",
+                "alphabet": "ascii",
+                "max": 4
+              }
+            ]
+          }
+        },
+        {
+          "gen": "const",
+          "value": "\""
+        }
+      ]
+    },
+    "jkey": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "jstr"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "\"a\"",
+            "\"\"",
+            "\"0\"",
+            "\"1\"",
+            "\"\\u0000a\"",
+            "\"\\u0000\"",
+            "\"-0\"",
+            "\"01\"",
+            "\"9223372036854775808\"",
+            "\"2\"",
+            "\"a\""
+          ]
+        }
+      ]
+    },
+    "jws": {
+      "gen": "pick",
+      "from": [
+        "",
+        "",
+        "",
+        " ",
+        "\n",
+        "\t",
+        "\r\n",
+        "\r",
+        " \u000b",
+        " ",
+        "  "
+      ]
+    },
+    "json_v1": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "json_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "json_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "json_scalar"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "json_scalar"
+          },
+          "max": 4
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "a": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "b": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "é": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "a/b": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "k\u0000": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "<k>": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "-0": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "01": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "1.5": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "9223372036854775808": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "-5": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            " ": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "\"q\"": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "7": {
+              "gen": "ref",
+              "name": "json_scalar"
+            }
+          },
+          "optional": [
+            "a",
+            "b",
+            "",
+            "é",
+            "a/b",
+            "k\u0000",
+            "<k>",
+            "-0",
+            "01",
+            "1.5",
+            "9223372036854775808",
+            "-5",
+            " ",
+            "\"q\"",
+            "7"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "0": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "1": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "2": {
+              "gen": "ref",
+              "name": "json_scalar"
+            }
+          },
+          "optional": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "1": {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            "0": {
+              "gen": "ref",
+              "name": "json_scalar"
+            }
+          },
+          "optional": [
+            "1",
+            "0"
+          ]
+        },
+        {
+          "gen": "const",
+          "value": {}
+        },
+        {
+          "gen": "const",
+          "value": []
+        }
+      ]
+    },
+    "json_v2": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "json_v1"
+        },
+        {
+          "gen": "ref",
+          "name": "json_v1"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "json_v1"
+          },
+          "max": 3
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "a": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "b": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "é": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "a/b": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "k\u0000": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "<k>": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "-0": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "01": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "1.5": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "9223372036854775808": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "-5": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            " ": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "\"q\"": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "7": {
+              "gen": "ref",
+              "name": "json_v1"
+            }
+          },
+          "optional": [
+            "a",
+            "b",
+            "",
+            "é",
+            "a/b",
+            "k\u0000",
+            "<k>",
+            "-0",
+            "01",
+            "1.5",
+            "9223372036854775808",
+            "-5",
+            " ",
+            "\"q\"",
+            "7"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "0": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "1": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "2": {
+              "gen": "ref",
+              "name": "json_v1"
+            }
+          },
+          "optional": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "1": {
+              "gen": "ref",
+              "name": "json_v1"
+            },
+            "0": {
+              "gen": "ref",
+              "name": "json_v1"
+            }
+          },
+          "optional": [
+            "1",
+            "0"
+          ]
+        },
+        {
+          "gen": "const",
+          "value": {}
+        },
+        {
+          "gen": "const",
+          "value": []
+        }
+      ]
+    },
+    "json_v3": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "json_v2"
+        },
+        {
+          "gen": "ref",
+          "name": "json_v2"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "json_v2"
+          },
+          "max": 3
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "a": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "b": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "é": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "a/b": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "k\u0000": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "<k>": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "-0": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "01": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "1.5": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "9223372036854775808": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "-5": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            " ": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "\"q\"": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "7": {
+              "gen": "ref",
+              "name": "json_v2"
+            }
+          },
+          "optional": [
+            "a",
+            "b",
+            "",
+            "é",
+            "a/b",
+            "k\u0000",
+            "<k>",
+            "-0",
+            "01",
+            "1.5",
+            "9223372036854775808",
+            "-5",
+            " ",
+            "\"q\"",
+            "7"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "0": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "1": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "2": {
+              "gen": "ref",
+              "name": "json_v2"
+            }
+          },
+          "optional": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "1": {
+              "gen": "ref",
+              "name": "json_v2"
+            },
+            "0": {
+              "gen": "ref",
+              "name": "json_v2"
+            }
+          },
+          "optional": [
+            "1",
+            "0"
+          ]
+        },
+        {
+          "gen": "const",
+          "value": {}
+        },
+        {
+          "gen": "const",
+          "value": []
+        }
+      ]
+    },
+    "json_pv1": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "json_plain_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "json_plain_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "json_plain_scalar"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "json_plain_scalar"
+          },
+          "max": 4
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "a": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "b": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "é": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "a/b": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "k\u0000": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "<k>": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "-0": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "01": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "1.5": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "9223372036854775808": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "-5": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            " ": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "\"q\"": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "7": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            }
+          },
+          "optional": [
+            "a",
+            "b",
+            "",
+            "é",
+            "a/b",
+            "k\u0000",
+            "<k>",
+            "-0",
+            "01",
+            "1.5",
+            "9223372036854775808",
+            "-5",
+            " ",
+            "\"q\"",
+            "7"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "0": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "1": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "2": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            }
+          },
+          "optional": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "1": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            },
+            "0": {
+              "gen": "ref",
+              "name": "json_plain_scalar"
+            }
+          },
+          "optional": [
+            "1",
+            "0"
+          ]
+        },
+        {
+          "gen": "const",
+          "value": {}
+        },
+        {
+          "gen": "const",
+          "value": []
+        }
+      ]
+    },
+    "json_pv2": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "json_pv1"
+        },
+        {
+          "gen": "ref",
+          "name": "json_pv1"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "json_pv1"
+          },
+          "max": 3
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "a": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "b": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "é": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "a/b": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "k\u0000": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "<k>": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "-0": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "01": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "1.5": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "9223372036854775808": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "-5": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            " ": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "\"q\"": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "7": {
+              "gen": "ref",
+              "name": "json_pv1"
+            }
+          },
+          "optional": [
+            "a",
+            "b",
+            "",
+            "é",
+            "a/b",
+            "k\u0000",
+            "<k>",
+            "-0",
+            "01",
+            "1.5",
+            "9223372036854775808",
+            "-5",
+            " ",
+            "\"q\"",
+            "7"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "0": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "1": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "2": {
+              "gen": "ref",
+              "name": "json_pv1"
+            }
+          },
+          "optional": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "1": {
+              "gen": "ref",
+              "name": "json_pv1"
+            },
+            "0": {
+              "gen": "ref",
+              "name": "json_pv1"
+            }
+          },
+          "optional": [
+            "1",
+            "0"
+          ]
+        },
+        {
+          "gen": "const",
+          "value": {}
+        },
+        {
+          "gen": "const",
+          "value": []
+        }
+      ]
+    },
+    "json_pv3": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "json_pv2"
+        },
+        {
+          "gen": "ref",
+          "name": "json_pv2"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "json_pv2"
+          },
+          "max": 3
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "a": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "b": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "é": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "a/b": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "k\u0000": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "<k>": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "-0": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "01": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "1.5": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "9223372036854775808": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "-5": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            " ": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "\"q\"": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "7": {
+              "gen": "ref",
+              "name": "json_pv2"
+            }
+          },
+          "optional": [
+            "a",
+            "b",
+            "",
+            "é",
+            "a/b",
+            "k\u0000",
+            "<k>",
+            "-0",
+            "01",
+            "1.5",
+            "9223372036854775808",
+            "-5",
+            " ",
+            "\"q\"",
+            "7"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "0": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "1": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "2": {
+              "gen": "ref",
+              "name": "json_pv2"
+            }
+          },
+          "optional": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "1": {
+              "gen": "ref",
+              "name": "json_pv2"
+            },
+            "0": {
+              "gen": "ref",
+              "name": "json_pv2"
+            }
+          },
+          "optional": [
+            "1",
+            "0"
+          ]
+        },
+        {
+          "gen": "const",
+          "value": {}
+        },
+        {
+          "gen": "const",
+          "value": []
+        }
+      ]
+    },
+    "jt0": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "jnum"
+        },
+        {
+          "gen": "ref",
+          "name": "jstr"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "true",
+            "false",
+            "null",
+            "TRUE",
+            "nul",
+            "nulll",
+            "True",
+            "\"\""
+          ]
+        }
+      ]
+    },
+    "jt1": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "jt0"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "["
+            },
+            {
+              "gen": "ref",
+              "name": "jws"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 4,
+              "sep": ",",
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jt0"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "]"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "{"
+            },
+            {
+              "gen": "ref",
+              "name": "jws"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 3,
+              "sep": ",",
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jkey"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "const",
+                    "value": ":"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jt0"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        }
+      ]
+    },
+    "jt2": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "jt1"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "["
+            },
+            {
+              "gen": "ref",
+              "name": "jws"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 4,
+              "sep": ",",
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jt1"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "]"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "{"
+            },
+            {
+              "gen": "ref",
+              "name": "jws"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 3,
+              "sep": ",",
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jkey"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "const",
+                    "value": ":"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jt1"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        }
+      ]
+    },
+    "jt3": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "jt2"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "["
+            },
+            {
+              "gen": "ref",
+              "name": "jws"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 4,
+              "sep": ",",
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jt2"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "]"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "{"
+            },
+            {
+              "gen": "ref",
+              "name": "jws"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 3,
+              "sep": ",",
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jkey"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "const",
+                    "value": ":"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jt2"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        }
+      ]
+    },
+    "jttext": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "jt3"
+        },
+        {
+          "gen": "ref",
+          "name": "jt3"
+        },
+        {
+          "gen": "ref",
+          "name": "jt3"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "ref",
+              "name": "jt2"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                ",",
+                "]",
+                "}",
+                "[",
+                "{",
+                ":",
+                "\"",
+                "1",
+                " x",
+                "\u0000",
+                "\u0001",
+                "é",
+                "\\",
+                "]]",
+                "}}",
+                ",1"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                ",",
+                "]",
+                "}",
+                "[",
+                "{",
+                ":",
+                "\"",
+                "1",
+                " x",
+                "\u0000",
+                "\u0001",
+                "é",
+                "\\",
+                "]]",
+                "}}",
+                ",1"
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "jt2"
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "{}[]:,\" \t\n\r0123456789-+.eEtrufalsn\\u\u0000\u0001éxd8",
+          "max": 12
+        },
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "max": 8,
+          "tricky": 0.5
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "[1}",
+            "{]",
+            "{\"a\":1]",
+            "[}",
+            "{\"a\" 1}",
+            "{\"a\":}",
+            "[1,]",
+            "{,}",
+            "{\"a\":1,}",
+            "[1 2]",
+            "\"abc",
+            "",
+            " ",
+            "1\u0000",
+            "\u0000",
+            "[\"\\ud800\"]",
+            "[[[]]]",
+            "{\"a\":{\"b\":{}}}",
+            "[1,[2,[3]]]",
+            "nul",
+            "tru",
+            "falsee",
+            "[-]",
+            "[01]",
+            "[1.]",
+            "[.5]",
+            "[1e]",
+            "[+1]",
+            "{1:2}",
+            "{\"a\"}",
+            "[\"a\":1]",
+            "{\"\\u0000\":1}",
+            "{\"\\u0000a\":1,\"b\":2}",
+            "{\"\":1}",
+            "{\"a\":1,\"a\":2}",
+            "{\"1\":1,\"0\":2}",
+            "{\"0\":1,\"1\":2}",
+            "{\"0\":1,\"2\":2}",
+            "[\"\\u0000\"]",
+            " ",
+            "\u000b1",
+            " \r\n\t1 \r\n\t",
+            "﻿1",
+            "1 2",
+            "[1]x",
+            "{}}",
+            "[]]",
+            "{\"a\":[}",
+            "{\"a\":[]]",
+            "[{]",
+            "[{}}",
+            "/*c*/1",
+            "'a'",
+            "[\"\u0001\"]",
+            "[\"\u001f\"]",
+            "[\"\"]",
+            "{\"a\":1}\u0000"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$bytes": "Iv8i"
+            },
+            {
+              "$bytes": "WyJh/yIsMV0="
+            },
+            {
+              "$bytes": "/w=="
+            },
+            {
+              "$bytes": "eyL/IjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs/10="
+            },
+            {
+              "$bytes": "Ilx1MDA0Mf9cbiI="
+            },
+            {
+              "$bytes": "Iv4i"
+            },
+            {
+              "$bytes": "WyJh/iIsMV0="
+            },
+            {
+              "$bytes": "/g=="
+            },
+            {
+              "$bytes": "eyL+IjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs/l0="
+            },
+            {
+              "$bytes": "Ilx1MDA0Mf5cbiI="
+            },
+            {
+              "$bytes": "IoAi"
+            },
+            {
+              "$bytes": "WyJhgCIsMV0="
+            },
+            {
+              "$bytes": "gA=="
+            },
+            {
+              "$bytes": "eyKAIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEsgF0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MYBcbiI="
+            },
+            {
+              "$bytes": "Ir8i"
+            },
+            {
+              "$bytes": "WyJhvyIsMV0="
+            },
+            {
+              "$bytes": "vw=="
+            },
+            {
+              "$bytes": "eyK/IjoxfQ=="
+            },
+            {
+              "$bytes": "WzEsv10="
+            },
+            {
+              "$bytes": "Ilx1MDA0Mb9cbiI="
+            },
+            {
+              "$bytes": "IsCAIg=="
+            },
+            {
+              "$bytes": "WyJhwIAiLDFd"
+            },
+            {
+              "$bytes": "wIA="
+            },
+            {
+              "$bytes": "eyLAgCI6MX0="
+            },
+            {
+              "$bytes": "WzEswIBd"
+            },
+            {
+              "$bytes": "Ilx1MDA0McCAXG4i"
+            },
+            {
+              "$bytes": "IsG/Ig=="
+            },
+            {
+              "$bytes": "WyJhwb8iLDFd"
+            },
+            {
+              "$bytes": "wb8="
+            },
+            {
+              "$bytes": "eyLBvyI6MX0="
+            },
+            {
+              "$bytes": "WzEswb9d"
+            },
+            {
+              "$bytes": "Ilx1MDA0McG/XG4i"
+            },
+            {
+              "$bytes": "IsIi"
+            },
+            {
+              "$bytes": "WyJhwiIsMV0="
+            },
+            {
+              "$bytes": "wg=="
+            },
+            {
+              "$bytes": "eyLCIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEswl0="
+            },
+            {
+              "$bytes": "Ilx1MDA0McJcbiI="
+            },
+            {
+              "$bytes": "IsJBIg=="
+            },
+            {
+              "$bytes": "WyJhwkEiLDFd"
+            },
+            {
+              "$bytes": "wkE="
+            },
+            {
+              "$bytes": "eyLCQSI6MX0="
+            },
+            {
+              "$bytes": "WzEswkFd"
+            },
+            {
+              "$bytes": "Ilx1MDA0McJBXG4i"
+            },
+            {
+              "$bytes": "IsLCIg=="
+            },
+            {
+              "$bytes": "WyJhwsIiLDFd"
+            },
+            {
+              "$bytes": "wsI="
+            },
+            {
+              "$bytes": "eyLCwiI6MX0="
+            },
+            {
+              "$bytes": "WzEswsJd"
+            },
+            {
+              "$bytes": "Ilx1MDA0McLCXG4i"
+            },
+            "\"\"",
+            "[\"a\",1]",
+            "",
+            "{\"\":1}",
+            "[1,]",
+            "\"\\u0041\\n\"",
+            "\"߿\"",
+            "[\"a߿\",1]",
+            "߿",
+            "{\"߿\":1}",
+            "[1,߿]",
+            "\"\\u0041߿\\n\"",
+            {
+              "$bytes": "IuAi"
+            },
+            {
+              "$bytes": "WyJh4CIsMV0="
+            },
+            {
+              "$bytes": "4A=="
+            },
+            {
+              "$bytes": "eyLgIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs4F0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MeBcbiI="
+            },
+            {
+              "$bytes": "IuCAIg=="
+            },
+            {
+              "$bytes": "WyJh4IAiLDFd"
+            },
+            {
+              "$bytes": "4IA="
+            },
+            {
+              "$bytes": "eyLggCI6MX0="
+            },
+            {
+              "$bytes": "WzEs4IBd"
+            },
+            {
+              "$bytes": "Ilx1MDA0MeCAXG4i"
+            },
+            {
+              "$bytes": "IuCAgCI="
+            },
+            {
+              "$bytes": "WyJh4ICAIiwxXQ=="
+            },
+            {
+              "$bytes": "4ICA"
+            },
+            {
+              "$bytes": "eyLggIAiOjF9"
+            },
+            {
+              "$bytes": "WzEs4ICAXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MeCAgFxuIg=="
+            },
+            {
+              "$bytes": "IuCfvyI="
+            },
+            {
+              "$bytes": "WyJh4J+/IiwxXQ=="
+            },
+            {
+              "$bytes": "4J+/"
+            },
+            {
+              "$bytes": "eyLgn78iOjF9"
+            },
+            {
+              "$bytes": "WzEs4J+/XQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MeCfv1xuIg=="
+            },
+            {
+              "$bytes": "IuCgIg=="
+            },
+            {
+              "$bytes": "WyJh4KAiLDFd"
+            },
+            {
+              "$bytes": "4KA="
+            },
+            {
+              "$bytes": "eyLgoCI6MX0="
+            },
+            {
+              "$bytes": "WzEs4KBd"
+            },
+            {
+              "$bytes": "Ilx1MDA0MeCgXG4i"
+            },
+            "\"ࠀ\"",
+            "[\"aࠀ\",1]",
+            "ࠀ",
+            "{\"ࠀ\":1}",
+            "[1,ࠀ]",
+            "\"\\u0041ࠀ\\n\"",
+            {
+              "$bytes": "IuCgQSI="
+            },
+            {
+              "$bytes": "WyJh4KBBIiwxXQ=="
+            },
+            {
+              "$bytes": "4KBB"
+            },
+            {
+              "$bytes": "eyLgoEEiOjF9"
+            },
+            {
+              "$bytes": "WzEs4KBBXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MeCgQVxuIg=="
+            },
+            {
+              "$bytes": "IuBBgCI="
+            },
+            {
+              "$bytes": "WyJh4EGAIiwxXQ=="
+            },
+            {
+              "$bytes": "4EGA"
+            },
+            {
+              "$bytes": "eyLgQYAiOjF9"
+            },
+            {
+              "$bytes": "WzEs4EGAXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MeBBgFxuIg=="
+            },
+            {
+              "$bytes": "IuDCgCI="
+            },
+            {
+              "$bytes": "WyJh4MKAIiwxXQ=="
+            },
+            {
+              "$bytes": "4MKA"
+            },
+            {
+              "$bytes": "eyLgwoAiOjF9"
+            },
+            {
+              "$bytes": "WzEs4MKAXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MeDCgFxuIg=="
+            },
+            {
+              "$bytes": "Iu2ggCI="
+            },
+            {
+              "$bytes": "WyJh7aCAIiwxXQ=="
+            },
+            {
+              "$bytes": "7aCA"
+            },
+            {
+              "$bytes": "eyLtoIAiOjF9"
+            },
+            {
+              "$bytes": "WzEs7aCAXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0Me2ggFxuIg=="
+            },
+            {
+              "$bytes": "Iu2/vyI="
+            },
+            {
+              "$bytes": "WyJh7b+/IiwxXQ=="
+            },
+            {
+              "$bytes": "7b+/"
+            },
+            {
+              "$bytes": "eyLtv78iOjF9"
+            },
+            {
+              "$bytes": "WzEs7b+/XQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0Me2/v1xuIg=="
+            },
+            "\"퟿\"",
+            "[\"a퟿\",1]",
+            "퟿",
+            "{\"퟿\":1}",
+            "[1,퟿]",
+            "\"\\u0041퟿\\n\"",
+            "\"�\"",
+            "[\"a�\",1]",
+            "�",
+            "{\"�\":1}",
+            "[1,�]",
+            "\"\\u0041�\\n\"",
+            "\"￿\"",
+            "[\"a￿\",1]",
+            "￿",
+            "{\"￿\":1}",
+            "[1,￿]",
+            "\"\\u0041￿\\n\"",
+            "\" \"",
+            "[\"a \",1]",
+            " ",
+            "{\" \":1}",
+            "[1, ]",
+            "\"\\u0041 \\n\"",
+            {
+              "$bytes": "IvAi"
+            },
+            {
+              "$bytes": "WyJh8CIsMV0="
+            },
+            {
+              "$bytes": "8A=="
+            },
+            {
+              "$bytes": "eyLwIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs8F0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfBcbiI="
+            },
+            {
+              "$bytes": "IvCQIg=="
+            },
+            {
+              "$bytes": "WyJh8JAiLDFd"
+            },
+            {
+              "$bytes": "8JA="
+            },
+            {
+              "$bytes": "eyLwkCI6MX0="
+            },
+            {
+              "$bytes": "WzEs8JBd"
+            },
+            {
+              "$bytes": "Ilx1MDA0MfCQXG4i"
+            },
+            {
+              "$bytes": "IvCQgCI="
+            },
+            {
+              "$bytes": "WyJh8JCAIiwxXQ=="
+            },
+            {
+              "$bytes": "8JCA"
+            },
+            {
+              "$bytes": "eyLwkIAiOjF9"
+            },
+            {
+              "$bytes": "WzEs8JCAXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfCQgFxuIg=="
+            },
+            "\"𐀀\"",
+            "[\"a𐀀\",1]",
+            "𐀀",
+            "{\"𐀀\":1}",
+            "[1,𐀀]",
+            "\"\\u0041𐀀\\n\"",
+            {
+              "$bytes": "IvCAgIAi"
+            },
+            {
+              "$bytes": "WyJh8ICAgCIsMV0="
+            },
+            {
+              "$bytes": "8ICAgA=="
+            },
+            {
+              "$bytes": "eyLwgICAIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs8ICAgF0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfCAgIBcbiI="
+            },
+            {
+              "$bytes": "IvCPv78i"
+            },
+            {
+              "$bytes": "WyJh8I+/vyIsMV0="
+            },
+            {
+              "$bytes": "8I+/vw=="
+            },
+            {
+              "$bytes": "eyLwj7+/IjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs8I+/v10="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfCPv79cbiI="
+            },
+            "\"􏿿\"",
+            "[\"a􏿿\",1]",
+            "􏿿",
+            "{\"􏿿\":1}",
+            "[1,􏿿]",
+            "\"\\u0041􏿿\\n\"",
+            {
+              "$bytes": "IvSQgIAi"
+            },
+            {
+              "$bytes": "WyJh9JCAgCIsMV0="
+            },
+            {
+              "$bytes": "9JCAgA=="
+            },
+            {
+              "$bytes": "eyL0kICAIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs9JCAgF0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfSQgIBcbiI="
+            },
+            {
+              "$bytes": "IvWAgIAi"
+            },
+            {
+              "$bytes": "WyJh9YCAgCIsMV0="
+            },
+            {
+              "$bytes": "9YCAgA=="
+            },
+            {
+              "$bytes": "eyL1gICAIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs9YCAgF0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfWAgIBcbiI="
+            },
+            {
+              "$bytes": "IviIgICAIg=="
+            },
+            {
+              "$bytes": "WyJh+IiAgIAiLDFd"
+            },
+            {
+              "$bytes": "+IiAgIA="
+            },
+            {
+              "$bytes": "eyL4iICAgCI6MX0="
+            },
+            {
+              "$bytes": "WzEs+IiAgIBd"
+            },
+            {
+              "$bytes": "Ilx1MDA0MfiIgICAXG4i"
+            },
+            {
+              "$bytes": "IvyEgICAgCI="
+            },
+            {
+              "$bytes": "WyJh/ISAgICAIiwxXQ=="
+            },
+            {
+              "$bytes": "/ISAgICA"
+            },
+            {
+              "$bytes": "eyL8hICAgIAiOjF9"
+            },
+            {
+              "$bytes": "WzEs/ISAgICAXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfyEgICAgFxuIg=="
+            },
+            {
+              "$bytes": "IvCQQYAi"
+            },
+            {
+              "$bytes": "WyJh8JBBgCIsMV0="
+            },
+            {
+              "$bytes": "8JBBgA=="
+            },
+            {
+              "$bytes": "eyLwkEGAIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs8JBBgF0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfCQQYBcbiI="
+            },
+            {
+              "$bytes": "IvCQgEEi"
+            },
+            {
+              "$bytes": "WyJh8JCAQSIsMV0="
+            },
+            {
+              "$bytes": "8JCAQQ=="
+            },
+            {
+              "$bytes": "eyLwkIBBIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs8JCAQV0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfCQgEFcbiI="
+            },
+            {
+              "$bytes": "IvDCgIAi"
+            },
+            {
+              "$bytes": "WyJh8MKAgCIsMV0="
+            },
+            {
+              "$bytes": "8MKAgA=="
+            },
+            {
+              "$bytes": "eyLwwoCAIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs8MKAgF0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfDCgIBcbiI="
+            },
+            {
+              "$bytes": "IuGAIg=="
+            },
+            {
+              "$bytes": "WyJh4YAiLDFd"
+            },
+            {
+              "$bytes": "4YA="
+            },
+            {
+              "$bytes": "eyLhgCI6MX0="
+            },
+            {
+              "$bytes": "WzEs4YBd"
+            },
+            {
+              "$bytes": "Ilx1MDA0MeGAXG4i"
+            },
+            {
+              "$bytes": "IuGAwCI="
+            },
+            {
+              "$bytes": "WyJh4YDAIiwxXQ=="
+            },
+            {
+              "$bytes": "4YDA"
+            },
+            {
+              "$bytes": "eyLhgMAiOjF9"
+            },
+            {
+              "$bytes": "WzEs4YDAXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MeGAwFxuIg=="
+            },
+            {
+              "$bytes": "IsOp/yI="
+            },
+            {
+              "$bytes": "WyJhw6n/IiwxXQ=="
+            },
+            {
+              "$bytes": "w6n/"
+            },
+            {
+              "$bytes": "eyLDqf8iOjF9"
+            },
+            {
+              "$bytes": "WzEsw6n/XQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0McOp/1xuIg=="
+            }
+          ]
+        }
+      ]
+    },
+    "jtf_str": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "const",
+          "value": "\""
+        },
+        {
+          "gen": "repeat",
+          "min": 0,
+          "max": 4,
+          "part": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "pick",
+                "from": [
+                  "\\n",
+                  "\\\"",
+                  "\\\\",
+                  "\\/",
+                  "\\b",
+                  "\\f",
+                  "\\r",
+                  "\\t",
+                  "\\u0041",
+                  "\\u00e9",
+                  "\\u20ac",
+                  "\\ud83d\\ude00",
+                  "\\ud800",
+                  "\\udc00",
+                  "\\ud800\\u0041",
+                  "\\uD834\\uDD1E",
+                  "\\u0000",
+                  "\\u12",
+                  "\\x",
+                  "\\",
+                  "\\uFFFF",
+                  "\\u0080",
+                  "\\u07ff",
+                  "\\u0800",
+                  "\\uDBFF\\uDFFF",
+                  "\\ud800\\ud800",
+                  "\\u007f",
+                  "\\u2028",
+                  "\\uDC00\\uD800",
+                  "\\U0041",
+                  "\\u00",
+                  "\\ud83d\\u",
+                  "\\'",
+                  "\\a"
+                ]
+              },
+              {
+                "gen": "string",
+                "alphabet": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdfghijklmnopqrstuvwxyz{|}~éßİΣ́​‮﻿\u0000\u0007\u001b  日😀",
+                "max": 4
+              }
+            ]
+          }
+        },
+        {
+          "gen": "const",
+          "value": "\""
+        }
+      ]
+    },
+    "jtf_key": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "jtf_str"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "\"a\"",
+            "\"\"",
+            "\"0\"",
+            "\"1\"",
+            "\"\\u0000a\"",
+            "\"-0\"",
+            "\"01\"",
+            "\"2\""
+          ]
+        }
+      ]
+    },
+    "jtf0": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "jnum_finite"
+        },
+        {
+          "gen": "ref",
+          "name": "jtf_str"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "true",
+            "false",
+            "null",
+            "TRUE",
+            "nul",
+            "nulll",
+            "True",
+            "\"\""
+          ]
+        }
+      ]
+    },
+    "jtf1": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "jtf0"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "["
+            },
+            {
+              "gen": "ref",
+              "name": "jws"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 4,
+              "sep": ",",
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jtf0"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "]"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "{"
+            },
+            {
+              "gen": "ref",
+              "name": "jws"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 3,
+              "sep": ",",
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jtf_key"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "const",
+                    "value": ":"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jtf0"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        }
+      ]
+    },
+    "jtf2": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "jtf1"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "["
+            },
+            {
+              "gen": "ref",
+              "name": "jws"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 4,
+              "sep": ",",
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jtf1"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "]"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "{"
+            },
+            {
+              "gen": "ref",
+              "name": "jws"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 3,
+              "sep": ",",
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jtf_key"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "const",
+                    "value": ":"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jtf1"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        }
+      ]
+    },
+    "jtf3": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "jtf2"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "["
+            },
+            {
+              "gen": "ref",
+              "name": "jws"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 4,
+              "sep": ",",
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jtf2"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "]"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "{"
+            },
+            {
+              "gen": "ref",
+              "name": "jws"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 3,
+              "sep": ",",
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jtf_key"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "const",
+                    "value": ":"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jtf2"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "jws"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        }
+      ]
+    },
+    "jtftext": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "jtf3"
+        },
+        {
+          "gen": "ref",
+          "name": "jtf3"
+        },
+        {
+          "gen": "ref",
+          "name": "jtf3"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "ref",
+              "name": "jtf2"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                ",",
+                "]",
+                "}",
+                "[",
+                "{",
+                ":",
+                "\"",
+                "1",
+                " x",
+                "\u0000",
+                "\u0001",
+                "é",
+                "\\",
+                "]]",
+                "}}",
+                ",1"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                ",",
+                "]",
+                "}",
+                "[",
+                "{",
+                ":",
+                "\"",
+                "1",
+                " x",
+                "\u0000",
+                "\u0001",
+                "é",
+                "\\",
+                "]]",
+                "}}",
+                ",1"
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "jtf2"
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "{}[]:,\" \t\n\r0123456789-+.trufalsn\\u\u0000\u0001éxd8",
+          "max": 12
+        },
+        {
+          "gen": "string",
+          "alphabet": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdfghijklmnopqrstuvwxyz{|}~éßİΣ́​‮﻿\u0000\u0007\u001b  日😀",
+          "max": 8
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "[1}",
+            "{]",
+            "{\"a\":1]",
+            "[}",
+            "{\"a\" 1}",
+            "{\"a\":}",
+            "[1,]",
+            "{,}",
+            "{\"a\":1,}",
+            "[1 2]",
+            "\"abc",
+            "",
+            " ",
+            "1\u0000",
+            "\u0000",
+            "[\"\\ud800\"]",
+            "[[[]]]",
+            "{\"a\":{\"b\":{}}}",
+            "[1,[2,[3]]]",
+            "nul",
+            "tru",
+            "falsee",
+            "[-]",
+            "[01]",
+            "[1.]",
+            "[.5]",
+            "[1e]",
+            "[+1]",
+            "{1:2}",
+            "{\"a\"}",
+            "[\"a\":1]",
+            "{\"\\u0000\":1}",
+            "{\"\\u0000a\":1,\"b\":2}",
+            "{\"\":1}",
+            "{\"a\":1,\"a\":2}",
+            "{\"1\":1,\"0\":2}",
+            "{\"0\":1,\"1\":2}",
+            "{\"0\":1,\"2\":2}",
+            "[\"\\u0000\"]",
+            " ",
+            "\u000b1",
+            " \r\n\t1 \r\n\t",
+            "﻿1",
+            "1 2",
+            "[1]x",
+            "{}}",
+            "[]]",
+            "{\"a\":[}",
+            "{\"a\":[]]",
+            "[{]",
+            "[{}}",
+            "/*c*/1",
+            "'a'",
+            "[\"\u0001\"]",
+            "[\"\u001f\"]",
+            "[\"\"]",
+            "{\"a\":1}\u0000"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$bytes": "Iv8i"
+            },
+            {
+              "$bytes": "WyJh/yIsMV0="
+            },
+            {
+              "$bytes": "/w=="
+            },
+            {
+              "$bytes": "eyL/IjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs/10="
+            },
+            {
+              "$bytes": "Ilx1MDA0Mf9cbiI="
+            },
+            {
+              "$bytes": "Iv4i"
+            },
+            {
+              "$bytes": "WyJh/iIsMV0="
+            },
+            {
+              "$bytes": "/g=="
+            },
+            {
+              "$bytes": "eyL+IjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs/l0="
+            },
+            {
+              "$bytes": "Ilx1MDA0Mf5cbiI="
+            },
+            {
+              "$bytes": "IoAi"
+            },
+            {
+              "$bytes": "WyJhgCIsMV0="
+            },
+            {
+              "$bytes": "gA=="
+            },
+            {
+              "$bytes": "eyKAIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEsgF0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MYBcbiI="
+            },
+            {
+              "$bytes": "Ir8i"
+            },
+            {
+              "$bytes": "WyJhvyIsMV0="
+            },
+            {
+              "$bytes": "vw=="
+            },
+            {
+              "$bytes": "eyK/IjoxfQ=="
+            },
+            {
+              "$bytes": "WzEsv10="
+            },
+            {
+              "$bytes": "Ilx1MDA0Mb9cbiI="
+            },
+            {
+              "$bytes": "IsCAIg=="
+            },
+            {
+              "$bytes": "WyJhwIAiLDFd"
+            },
+            {
+              "$bytes": "wIA="
+            },
+            {
+              "$bytes": "eyLAgCI6MX0="
+            },
+            {
+              "$bytes": "WzEswIBd"
+            },
+            {
+              "$bytes": "Ilx1MDA0McCAXG4i"
+            },
+            {
+              "$bytes": "IsG/Ig=="
+            },
+            {
+              "$bytes": "WyJhwb8iLDFd"
+            },
+            {
+              "$bytes": "wb8="
+            },
+            {
+              "$bytes": "eyLBvyI6MX0="
+            },
+            {
+              "$bytes": "WzEswb9d"
+            },
+            {
+              "$bytes": "Ilx1MDA0McG/XG4i"
+            },
+            {
+              "$bytes": "IsIi"
+            },
+            {
+              "$bytes": "WyJhwiIsMV0="
+            },
+            {
+              "$bytes": "wg=="
+            },
+            {
+              "$bytes": "eyLCIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEswl0="
+            },
+            {
+              "$bytes": "Ilx1MDA0McJcbiI="
+            },
+            {
+              "$bytes": "IsJBIg=="
+            },
+            {
+              "$bytes": "WyJhwkEiLDFd"
+            },
+            {
+              "$bytes": "wkE="
+            },
+            {
+              "$bytes": "eyLCQSI6MX0="
+            },
+            {
+              "$bytes": "WzEswkFd"
+            },
+            {
+              "$bytes": "Ilx1MDA0McJBXG4i"
+            },
+            {
+              "$bytes": "IsLCIg=="
+            },
+            {
+              "$bytes": "WyJhwsIiLDFd"
+            },
+            {
+              "$bytes": "wsI="
+            },
+            {
+              "$bytes": "eyLCwiI6MX0="
+            },
+            {
+              "$bytes": "WzEswsJd"
+            },
+            {
+              "$bytes": "Ilx1MDA0McLCXG4i"
+            },
+            "\"\"",
+            "[\"a\",1]",
+            "",
+            "{\"\":1}",
+            "[1,]",
+            "\"\\u0041\\n\"",
+            "\"߿\"",
+            "[\"a߿\",1]",
+            "߿",
+            "{\"߿\":1}",
+            "[1,߿]",
+            "\"\\u0041߿\\n\"",
+            {
+              "$bytes": "IuAi"
+            },
+            {
+              "$bytes": "WyJh4CIsMV0="
+            },
+            {
+              "$bytes": "4A=="
+            },
+            {
+              "$bytes": "eyLgIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs4F0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MeBcbiI="
+            },
+            {
+              "$bytes": "IuCAIg=="
+            },
+            {
+              "$bytes": "WyJh4IAiLDFd"
+            },
+            {
+              "$bytes": "4IA="
+            },
+            {
+              "$bytes": "eyLggCI6MX0="
+            },
+            {
+              "$bytes": "WzEs4IBd"
+            },
+            {
+              "$bytes": "Ilx1MDA0MeCAXG4i"
+            },
+            {
+              "$bytes": "IuCAgCI="
+            },
+            {
+              "$bytes": "WyJh4ICAIiwxXQ=="
+            },
+            {
+              "$bytes": "4ICA"
+            },
+            {
+              "$bytes": "eyLggIAiOjF9"
+            },
+            {
+              "$bytes": "WzEs4ICAXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MeCAgFxuIg=="
+            },
+            {
+              "$bytes": "IuCfvyI="
+            },
+            {
+              "$bytes": "WyJh4J+/IiwxXQ=="
+            },
+            {
+              "$bytes": "4J+/"
+            },
+            {
+              "$bytes": "eyLgn78iOjF9"
+            },
+            {
+              "$bytes": "WzEs4J+/XQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MeCfv1xuIg=="
+            },
+            {
+              "$bytes": "IuCgIg=="
+            },
+            {
+              "$bytes": "WyJh4KAiLDFd"
+            },
+            {
+              "$bytes": "4KA="
+            },
+            {
+              "$bytes": "eyLgoCI6MX0="
+            },
+            {
+              "$bytes": "WzEs4KBd"
+            },
+            {
+              "$bytes": "Ilx1MDA0MeCgXG4i"
+            },
+            "\"ࠀ\"",
+            "[\"aࠀ\",1]",
+            "ࠀ",
+            "{\"ࠀ\":1}",
+            "[1,ࠀ]",
+            "\"\\u0041ࠀ\\n\"",
+            {
+              "$bytes": "IuCgQSI="
+            },
+            {
+              "$bytes": "WyJh4KBBIiwxXQ=="
+            },
+            {
+              "$bytes": "4KBB"
+            },
+            {
+              "$bytes": "eyLgoEEiOjF9"
+            },
+            {
+              "$bytes": "WzEs4KBBXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MeCgQVxuIg=="
+            },
+            {
+              "$bytes": "IuBBgCI="
+            },
+            {
+              "$bytes": "WyJh4EGAIiwxXQ=="
+            },
+            {
+              "$bytes": "4EGA"
+            },
+            {
+              "$bytes": "eyLgQYAiOjF9"
+            },
+            {
+              "$bytes": "WzEs4EGAXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MeBBgFxuIg=="
+            },
+            {
+              "$bytes": "IuDCgCI="
+            },
+            {
+              "$bytes": "WyJh4MKAIiwxXQ=="
+            },
+            {
+              "$bytes": "4MKA"
+            },
+            {
+              "$bytes": "eyLgwoAiOjF9"
+            },
+            {
+              "$bytes": "WzEs4MKAXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MeDCgFxuIg=="
+            },
+            {
+              "$bytes": "Iu2ggCI="
+            },
+            {
+              "$bytes": "WyJh7aCAIiwxXQ=="
+            },
+            {
+              "$bytes": "7aCA"
+            },
+            {
+              "$bytes": "eyLtoIAiOjF9"
+            },
+            {
+              "$bytes": "WzEs7aCAXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0Me2ggFxuIg=="
+            },
+            {
+              "$bytes": "Iu2/vyI="
+            },
+            {
+              "$bytes": "WyJh7b+/IiwxXQ=="
+            },
+            {
+              "$bytes": "7b+/"
+            },
+            {
+              "$bytes": "eyLtv78iOjF9"
+            },
+            {
+              "$bytes": "WzEs7b+/XQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0Me2/v1xuIg=="
+            },
+            "\"퟿\"",
+            "[\"a퟿\",1]",
+            "퟿",
+            "{\"퟿\":1}",
+            "[1,퟿]",
+            "\"\\u0041퟿\\n\"",
+            "\"�\"",
+            "[\"a�\",1]",
+            "�",
+            "{\"�\":1}",
+            "[1,�]",
+            "\"\\u0041�\\n\"",
+            "\"￿\"",
+            "[\"a￿\",1]",
+            "￿",
+            "{\"￿\":1}",
+            "[1,￿]",
+            "\"\\u0041￿\\n\"",
+            "\" \"",
+            "[\"a \",1]",
+            " ",
+            "{\" \":1}",
+            "[1, ]",
+            "\"\\u0041 \\n\"",
+            {
+              "$bytes": "IvAi"
+            },
+            {
+              "$bytes": "WyJh8CIsMV0="
+            },
+            {
+              "$bytes": "8A=="
+            },
+            {
+              "$bytes": "eyLwIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs8F0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfBcbiI="
+            },
+            {
+              "$bytes": "IvCQIg=="
+            },
+            {
+              "$bytes": "WyJh8JAiLDFd"
+            },
+            {
+              "$bytes": "8JA="
+            },
+            {
+              "$bytes": "eyLwkCI6MX0="
+            },
+            {
+              "$bytes": "WzEs8JBd"
+            },
+            {
+              "$bytes": "Ilx1MDA0MfCQXG4i"
+            },
+            {
+              "$bytes": "IvCQgCI="
+            },
+            {
+              "$bytes": "WyJh8JCAIiwxXQ=="
+            },
+            {
+              "$bytes": "8JCA"
+            },
+            {
+              "$bytes": "eyLwkIAiOjF9"
+            },
+            {
+              "$bytes": "WzEs8JCAXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfCQgFxuIg=="
+            },
+            "\"𐀀\"",
+            "[\"a𐀀\",1]",
+            "𐀀",
+            "{\"𐀀\":1}",
+            "[1,𐀀]",
+            "\"\\u0041𐀀\\n\"",
+            {
+              "$bytes": "IvCAgIAi"
+            },
+            {
+              "$bytes": "WyJh8ICAgCIsMV0="
+            },
+            {
+              "$bytes": "8ICAgA=="
+            },
+            {
+              "$bytes": "eyLwgICAIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs8ICAgF0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfCAgIBcbiI="
+            },
+            {
+              "$bytes": "IvCPv78i"
+            },
+            {
+              "$bytes": "WyJh8I+/vyIsMV0="
+            },
+            {
+              "$bytes": "8I+/vw=="
+            },
+            {
+              "$bytes": "eyLwj7+/IjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs8I+/v10="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfCPv79cbiI="
+            },
+            "\"􏿿\"",
+            "[\"a􏿿\",1]",
+            "􏿿",
+            "{\"􏿿\":1}",
+            "[1,􏿿]",
+            "\"\\u0041􏿿\\n\"",
+            {
+              "$bytes": "IvSQgIAi"
+            },
+            {
+              "$bytes": "WyJh9JCAgCIsMV0="
+            },
+            {
+              "$bytes": "9JCAgA=="
+            },
+            {
+              "$bytes": "eyL0kICAIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs9JCAgF0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfSQgIBcbiI="
+            },
+            {
+              "$bytes": "IvWAgIAi"
+            },
+            {
+              "$bytes": "WyJh9YCAgCIsMV0="
+            },
+            {
+              "$bytes": "9YCAgA=="
+            },
+            {
+              "$bytes": "eyL1gICAIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs9YCAgF0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfWAgIBcbiI="
+            },
+            {
+              "$bytes": "IviIgICAIg=="
+            },
+            {
+              "$bytes": "WyJh+IiAgIAiLDFd"
+            },
+            {
+              "$bytes": "+IiAgIA="
+            },
+            {
+              "$bytes": "eyL4iICAgCI6MX0="
+            },
+            {
+              "$bytes": "WzEs+IiAgIBd"
+            },
+            {
+              "$bytes": "Ilx1MDA0MfiIgICAXG4i"
+            },
+            {
+              "$bytes": "IvyEgICAgCI="
+            },
+            {
+              "$bytes": "WyJh/ISAgICAIiwxXQ=="
+            },
+            {
+              "$bytes": "/ISAgICA"
+            },
+            {
+              "$bytes": "eyL8hICAgIAiOjF9"
+            },
+            {
+              "$bytes": "WzEs/ISAgICAXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfyEgICAgFxuIg=="
+            },
+            {
+              "$bytes": "IvCQQYAi"
+            },
+            {
+              "$bytes": "WyJh8JBBgCIsMV0="
+            },
+            {
+              "$bytes": "8JBBgA=="
+            },
+            {
+              "$bytes": "eyLwkEGAIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs8JBBgF0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfCQQYBcbiI="
+            },
+            {
+              "$bytes": "IvCQgEEi"
+            },
+            {
+              "$bytes": "WyJh8JCAQSIsMV0="
+            },
+            {
+              "$bytes": "8JCAQQ=="
+            },
+            {
+              "$bytes": "eyLwkIBBIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs8JCAQV0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfCQgEFcbiI="
+            },
+            {
+              "$bytes": "IvDCgIAi"
+            },
+            {
+              "$bytes": "WyJh8MKAgCIsMV0="
+            },
+            {
+              "$bytes": "8MKAgA=="
+            },
+            {
+              "$bytes": "eyLwwoCAIjoxfQ=="
+            },
+            {
+              "$bytes": "WzEs8MKAgF0="
+            },
+            {
+              "$bytes": "Ilx1MDA0MfDCgIBcbiI="
+            },
+            {
+              "$bytes": "IuGAIg=="
+            },
+            {
+              "$bytes": "WyJh4YAiLDFd"
+            },
+            {
+              "$bytes": "4YA="
+            },
+            {
+              "$bytes": "eyLhgCI6MX0="
+            },
+            {
+              "$bytes": "WzEs4YBd"
+            },
+            {
+              "$bytes": "Ilx1MDA0MeGAXG4i"
+            },
+            {
+              "$bytes": "IuGAwCI="
+            },
+            {
+              "$bytes": "WyJh4YDAIiwxXQ=="
+            },
+            {
+              "$bytes": "4YDA"
+            },
+            {
+              "$bytes": "eyLhgMAiOjF9"
+            },
+            {
+              "$bytes": "WzEs4YDAXQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0MeGAwFxuIg=="
+            },
+            {
+              "$bytes": "IsOp/yI="
+            },
+            {
+              "$bytes": "WyJhw6n/IiwxXQ=="
+            },
+            {
+              "$bytes": "w6n/"
+            },
+            {
+              "$bytes": "eyLDqf8iOjF9"
+            },
+            {
+              "$bytes": "WzEsw6n/XQ=="
+            },
+            {
+              "$bytes": "Ilx1MDA0McOp/1xuIg=="
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "deviations": [
+    {
+      "symbol": "json_decode",
+      "php": "json_decode('1e999', true) returns INF (numbers beyond the float range decode to infinite floats).",
+      "reason": "php_std::json::decode_value builds serde_json::Value, which cannot hold a non-finite float; it fails with Error::Unrepresentable. php_std::json::decode (Zval) returns INF like PHP and is fuzzed with such numbers; the json.decode_value profile leaves them out."
+    },
+    {
+      "symbol": "json_encode",
+      "php": "Objects other than stdClass (JsonSerializable, enums, public properties), resources and recursive arrays.",
+      "reason": "Not representable in Zval or serde_json::Value; the libraries only encode arrays, scalars and stdClass."
+    }
+  ]
+}

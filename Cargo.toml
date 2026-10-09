@@ -68,6 +68,7 @@ http = "1"
 http-body-util = "0.1"
 hyper = { version = "1", features = ["server", "http1"] }
 hyper-util = { version = "0.1", features = ["tokio"] }
+indexmap = "2"
 md-5 = "0.10"
 mimalloc = { version = "0.1", default-features = false }
 redis = { version = "0.32", default-features = false, features = ["tokio-comp", "aio", "connection-manager", "script"] }

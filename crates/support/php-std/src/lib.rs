@@ -11,7 +11,9 @@
 //!
 //! PHP values are carried as `serde_json::Value`, decoded the way
 //! `Utopia\Http\Request` decodes request bodies: objects are associative
-//! arrays, except empty objects, which stay `stdClass`.
+//! arrays, except empty objects, which stay `stdClass`. Functions that need
+//! more (binary strings, integer keys, `stdClass` with properties: `json`,
+//! `serialize`) use the exact model in [`zval`].
 
 pub mod datetime;
 pub mod encoding;
@@ -28,3 +30,4 @@ pub mod string;
 pub mod system;
 pub mod url;
 pub mod value;
+pub mod zval;
