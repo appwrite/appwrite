@@ -66,7 +66,7 @@ class V15 extends Migration
         Console::info('Migrating Documents');
         $this->forEachDocument([$this, 'fixDocument']);
         Console::info("Clean up 'write' Permissions");
-        foreach ($this->collections as $collection) {
+        foreach ($this->projectCollections() as $collection) {
             if ($collection['$collection'] === Database::METADATA) {
                 $this->removeWritePermissions($collection['$id']);
             }
@@ -466,7 +466,7 @@ class V15 extends Migration
      */
     protected function migrateCollections(): void
     {
-        foreach ($this->collections as $collection) {
+        foreach ($this->projectCollections() as $collection) {
             $id = $collection['$id'];
 
             Console::log("Migrating Collection \"{$id}\"");
