@@ -30,13 +30,24 @@ jobs:
           # the persisted GITHUB_TOKEN header would override the app token on push
           persist-credentials: false
 
-      # Every mirror: one missing repository in a list would fail the token for all of them.
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0 # zizmor: ignore[github-app]
+      # A tag pushes one mirror; main pushes every package that carries a manifest.
+      - name: Resolve mirrors
+        id: mirrors
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            repositories="${GITHUB_REF_NAME%%/*}"
+          else
+            repositories=$(for manifest in packages/*/composer.json; do basename "$(dirname "$manifest")"; done | paste -sd, -)
+          fi
+          echo "repositories=$repositories" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: app-token
         with:
           app-id: ${{ vars.SPLIT_APP_ID }}
           private-key: ${{ secrets.SPLIT_APP_PRIVATE_KEY }}
           owner: utopia-php
+          repositories: ${{ steps.mirrors.outputs.repositories }}
           permission-contents: write
           permission-workflows: write
 
