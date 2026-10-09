@@ -89,6 +89,10 @@ class Create extends Action
             'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
             'passwordHistory' => 0,
             'passwordDictionary' => false,
+            'passwordRotation' => [
+                'enabled' => false,
+                'duration' => 365,
+            ],
             'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,
             'passwordPwned' => [
