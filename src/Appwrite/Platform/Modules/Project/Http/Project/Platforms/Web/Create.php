@@ -45,6 +45,7 @@ class Create extends Action
             ->groups(['api', 'project'])
             ->label('scope', 'platforms.write')
             ->label('event', 'platforms.[platformId].create')
+            ->label('limits', ['platforms'])
             ->label('audits.event', 'project.platform.create')
             ->label('audits.resource', 'project.platform/{response.$id}')
             ->label('sdk', new Method(
