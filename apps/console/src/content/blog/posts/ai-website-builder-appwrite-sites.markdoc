@@ -1,0 +1,697 @@
+---
+layout: post
+title: "Build an AI website builder on Appwrite Sites and Functions"
+description: Build Kiln, an AI website builder. An agent in an Appwrite Function writes the files, Appwrite Sites deploys them, and each build becomes a version you can restore.
+date: 2026-10-09
+cover: /images/blog/ai-website-builder-appwrite-sites/cover.avif
+timeToRead: 18
+author: atharva
+category: tutorials
+faqs:
+  - question: "How can an AI agent deploy a website with Appwrite?"
+    answer: "Run the agent in an Appwrite Function. When the agent is done, the function packs the files into a .tar.gz archive in memory and calls sites.createDeployment. A static Site needs no build command: set the framework to other, the adapter to static, and the output directory to ./. When the deployment is ready, sites.updateSiteDeployment makes it the live version. A domain rule from proxy.createSiteRule gives the Site its public domain."
+  - question: "Why should AI-generated websites live in a separate Appwrite project?"
+    answer: "A Site can call the API of its own Appwrite project, and the call can carry the session of the visitor. Suppose a generated website were a Site in the project that holds your users. A script on that website could then call your API as any signed-in user who opens it. In a separate Appwrite project, the generated websites get no access to your users' data."
+  - question: "Where can an AI agent store the files it writes inside a serverless function?"
+    answer: "Store each file as a row in a TablesDB table, with the path, the content, and the size. If the row ID is a hash of the website ID and the path, every write is one upsertRow call. The rows survive between executions, permissions decide who can read them, and Realtime sends every write to your web app."
+  - question: "How do I roll back an Appwrite Site to an earlier deployment?"
+    answer: "Call sites.updateSiteDeployment with the ID of a ready deployment. Appwrite serves that deployment again without a new build. To get the files of that deployment back, call sites.getDeploymentDownload with the type source, which returns the archive that was uploaded."
+  - question: "How do I stop a user from building on another user's website?"
+    answer: "Let only the function write the rows that link a user to a Site, and give each row a read permission for its owner. The function reads the user ID from the x-appwrite-user-id header, which Appwrite sets from the session of the request. Then it checks that ID against the owner of the website row. The Site ID never comes from the browser."
+  - question: "Can a prompt make an AI website builder write server code or leak an API key?"
+    answer: "No, if the design limits the model to file tools. In a builder where the model can only call five file tools, the function checks every path, file type, size, and file count before a write. The API keys of the function never reach the model, and each generated Site is static, so no generated code runs on the server."
+  - question: "How do I show the progress of an asynchronous Appwrite Function execution?"
+    answer: "Let your web app choose the row IDs, subscribe with Realtime, and then start the execution with async set to true. The function writes its progress to those rows. A Realtime query on the column that holds the website ID, such as Query.equal('projectId', [projectId]), makes Appwrite send only the rows of one website."
+---
+
+Kiln is an AI website builder on Appwrite. A signed-in user describes a website, such as a landing page for a bakery. An AI agent writes the HTML, CSS, and JavaScript. Appwrite Sites serves those files at a domain of the website. Follow-up prompts change the same website. Each build is a new version, and the user can restore an earlier version without a new build.
+
+Every AI website builder needs four parts, and Appwrite has each of them:
+
+- A place where the agent runs
+- Storage for the files that the agent writes
+- Hosting that puts each new version live
+- A way to show the progress of a build while it runs
+
+This tutorial shows how each part of Kiln works.
+
+{% info title="Companion repository" %}
+The complete project lives at [appwrite-community/kiln-site-builder](https://github.com/appwrite-community/kiln-site-builder). It contains the web app, the builder function, and the script that creates the database, the function, and the Site.
+{% /info %}
+
+# Kiln architecture
+
+![The Kiln build lifecycle: the web app starts the builder function, the agent writes rows in the files table, the function deploys the files as a new Site deployment, Realtime sends each change to the web app, and a restore activates an earlier deployment without a new build](/images/blog/ai-website-builder-appwrite-sites/architecture.avif)
+
+Kiln uses two Appwrite projects:
+
+- **The Kiln project** holds the users, the database, the builder function, and the web app.
+- **The Kiln Sites project** holds the websites that Kiln generates, and nothing else.
+
+Inside these Appwrite projects, Kiln has four parts:
+
+- **The web app** is a React app that Appwrite Sites hosts in the Kiln project. Users sign in with an email and a password.
+- **The builder function** is an Appwrite Function. One execution handles one build, one restore, or one deletion of a website.
+- **TablesDB** holds the websites, the runs, every step of every run, and the files. The `files` table is the file system of the agent: one row for each file of each website.
+- **Appwrite Sites** hosts each generated website as a static Site in the Kiln Sites project. Each build is a deployment of that Site, so the list of deployments is the version history.
+
+The agent is a loop inside the builder function. It sends the conversation to the model, GPT-6 Luna through OpenRouter, and runs the tool calls that the model returns. The agent gives the model five file tools, and the model never sees an API key. The function alone decides when to deploy.
+
+In the code, a website is a *project*: the `projects` table has one row for each website, and `projectId` is the ID of that row. This tutorial writes "Appwrite project" for the Appwrite resource. The web app and its messages call a website a *site*.
+
+{% info title="Why the generated websites live in a second Appwrite project" %}
+Browsers normally stop a web page from calling an API on another domain. Appwrite makes an exception for Sites. A Site can call the API of its own Appwrite project, and the call can carry the session of the visitor.
+
+Kiln users decide what the generated websites contain, and the agent can write JavaScript. Suppose those websites were Sites in the Kiln project. A script on one of them could then call the Kiln API as any signed-in user who opens the page. That script could list or delete the websites of that user.
+
+In the Kiln Sites project, the generated websites get no such access to the Kiln project. The web app stays in the Kiln project, because it calls the Kiln API with the session of the user.
+{% /info %}
+
+# Create the Appwrite projects
+
+You need Node.js 22.9 or later, pnpm, and an API key from [OpenRouter](https://openrouter.ai). Clone the companion repository:
+
+```bash
+git clone https://github.com/appwrite-community/kiln-site-builder.git
+cd kiln-site-builder
+```
+
+Install the dependencies:
+
+```bash
+pnpm install
+```
+
+In the [Appwrite Console](https://appwrite.io/console), create two Appwrite projects in the same region: `Kiln` and `Kiln Sites`. The builder function reaches both Appwrite projects through one regional endpoint.
+
+## Create the API key for the Kiln Sites project
+
+![The Create API key panel of the Kiln Sites project in the Appwrite Console, with 2 scopes selected under Sites and the rules.read and rules.write scopes selected under Proxy](/images/blog/ai-website-builder-appwrite-sites/console-sites-key.avif)
+
+The builder function uses this key to create and deploy the generated websites:
+
+1. Open the **Kiln Sites** project.
+2. Open **API Keys** in the sidebar and select **Create API key**.
+3. Name the key `Kiln Sites key`.
+4. Under **Sites**, select `sites.read` and `sites.write`. Under **Proxy**, select `rules.read` and `rules.write`. Do not select other scopes.
+5. Select **Create API key** and copy the key.
+
+## Create the setup key for the Kiln project
+
+The setup script uses this key to create the database, the function, and the web app:
+
+1. Open the **Kiln** project.
+2. Open **API Keys** in the sidebar and select **Create API key**.
+3. Name the key `Kiln setup key`.
+4. Select these scopes: `databases.read`, `databases.write`, `tables.read`, `tables.write`, `columns.read`, `columns.write`, `indexes.read`, `indexes.write`, `functions.read`, `functions.write`, `sites.read`, `sites.write`, `rules.read`, `rules.write`, `platforms.read`, and `platforms.write`.
+5. Select **Create API key** and copy the key.
+
+## Run the setup script
+
+Copy [`.env.example`](https://github.com/appwrite-community/kiln-site-builder/blob/main/.env.example) to `.env` in the root of the repository. Then fill in these values:
+
+```bash
+APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1
+APPWRITE_PROJECT_ID=<KILN_PROJECT_ID>
+APPWRITE_API_KEY=<the Kiln setup key>
+SITES_PROJECT_ID=<KILN_SITES_PROJECT_ID>
+SITES_API_KEY=<the Kiln Sites key>
+KILN_DOMAIN=<a name for the web app>.appwrite.network
+SITES_DOMAIN=appwrite.network
+OPENROUTER_API_KEY=<your OpenRouter key>
+```
+
+The project ID of each Appwrite project is on its **Settings** page. `KILN_DOMAIN` is the domain of the web app. `SITES_DOMAIN` is the domain that Appwrite Sites serves websites on. Each generated website gets a domain under it, such as `crumb-co-06ta.appwrite.network`.
+
+Run the setup script:
+
+```bash
+pnpm run provision
+```
+
+The script creates these resources in the Kiln project:
+
+- The `kiln` database and its five tables.
+- The `builder` function, with the OpenRouter key and the Kiln Sites key stored as secret variables.
+- A Site for the web app. Appwrite builds [`apps/web`](https://github.com/appwrite-community/kiln-site-builder/tree/main/apps/web) with the Vite framework, the static adapter, the `./dist` output directory, and `index.html` as the fallback file.
+- The domain from `KILN_DOMAIN` for that Site, and web platforms for `localhost` and that domain. The web platforms let the web app call the Kiln project from the browser.
+
+To try Kiln, open the URL that the script prints. The last section, "Build a website with Kiln", lists the steps. The next sections explain how each part works.
+
+# Review the Kiln database
+
+![The Rows tab of the files table in the Kiln database in the Appwrite Console, with one row per file and the path, size, and content columns](/images/blog/ai-website-builder-appwrite-sites/console-files.avif)
+
+Open **Databases** in the Kiln project and select the **Kiln** database. Only the `builder` function writes to its tables:
+
+| Table | Holds |
+| --- | --- |
+| `projects` | One row per website: the name, the owner, the Site ID, the domain, the status, the latest version, and the live version |
+| `files` | One row per file of a website: the path, the content, and the size |
+| `runs` | One row per build, restore, or deletion: the prompt, the status, the summary, the error, and the deployment |
+| `steps` | One row per action of the agent during a run: list, read, write, delete, or deploy |
+| `locks` | One row per website that has a run in progress |
+
+To create the tables by hand, copy the columns from [`scripts/schema.ts`](https://github.com/appwrite-community/kiln-site-builder/blob/main/scripts/schema.ts).
+
+# Review the table permissions
+
+![The Security tab of the projects table in the Appwrite Console, with no permissions and row level security turned on](/images/blog/ai-website-builder-appwrite-sites/console-projects-security.avif)
+
+Open the `projects` table and select the **Security** tab. The tables of Kiln give no permission to users, and **Row level security** is on. The function creates every row and gives the owner of the website a read permission on it:
+
+```javascript
+// Every row Kiln writes can be read by its owner and nobody else.
+const ownedBy = (ownerId) => [Permission.read(Role.user(ownerId))];
+```
+
+A user can read only the rows of their own websites, and cannot create or update a row. This matters most for the `projects` table, because its rows link a website to a Site ID. If a user could change that ID, the next build of their website would deploy over the Site of another user.
+
+The function uses API keys, so its scopes limit it, and table permissions do not.
+
+# Review the scopes of the builder function
+
+![The Scopes section in the execution settings of the builder function in the Appwrite Console, with 2 scopes selected under Databases and only executions.read selected under Functions](/images/blog/ai-website-builder-appwrite-sites/console-builder-scopes.avif)
+
+Open **Functions** in the Kiln project and select **builder**. On the **Security** tab, **Permissions** lists **All users**, so any signed-in user can execute the function. Open **Settings** > **Executions** to see the scopes of the function:
+
+- `rows.read` and `rows.write`, which cover all tables in the Kiln project.
+- `executions.read`, to check whether the run that holds a lock is still running.
+
+# Read the user and the key in the builder function
+
+Appwrite sets several headers on each execution that a user starts. Two of them matter here:
+
+- `x-appwrite-user-id` holds the ID of the user, from the session of the request. A caller cannot change it.
+- `x-appwrite-key` holds an [ephemeral API key](/docs/products/functions/develop#ephemeral-api-key). Appwrite creates it for each execution, with the scopes of the function.
+
+The function reads both headers first:
+
+```javascript
+export default async ({ req, res, log, error }) => {
+  // Appwrite sets this header to the user who started the execution.
+  const userId = req.headers['x-appwrite-user-id'];
+  if (!userId) return res.json({ error: 'Sign in to build a site.' }, 401);
+
+  const input = readInput(req.bodyJson);
+  if (input.error) return res.json({ error: input.error }, 400);
+
+  const appwrite = connect(req.headers['x-appwrite-key']);
+  // ...
+};
+```
+
+An execution without a user gets a `401` response. `readInput` checks the body: the action (build, restore, or delete), the IDs, and a prompt of 1 to 2,000 characters. A body that fails the check gets a `400` response.
+
+`connect` creates one client for each Appwrite project:
+
+```javascript
+const kiln = new Client()
+  .setEndpoint(endpoint)
+  .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+  .setKey(key);
+const hosting = new Client()
+  .setEndpoint(endpoint)
+  .setProject(process.env.SITES_PROJECT_ID)
+  .setKey(process.env.SITES_API_KEY);
+```
+
+The `kiln` client uses the ephemeral key and makes the TablesDB calls. The `hosting` client uses the Kiln Sites key from `SITES_API_KEY` and makes the Sites and domain rule calls.
+
+Every Appwrite call of the function is in [`functions/builder/src/appwrite.js`](https://github.com/appwrite-community/kiln-site-builder/blob/main/functions/builder/src/appwrite.js). The agent code and the model code do not import the Appwrite SDK.
+
+# Limit what each user can start
+
+The function loads the website and checks its owner:
+
+```javascript
+const project = await appwrite.getProject(input.projectId);
+if (project) {
+  if (project.ownerId !== userId) throw new Rejection('This site does not exist.');
+  return project;
+}
+```
+
+A website that belongs to another user gets the same answer as a website that does not exist. A user cannot find out which IDs are in use.
+
+The function also enforces two limits for each user:
+
+- Up to 5 websites. Each website is a Site in the Kiln Sites project.
+- Up to 25 builds a day. Each build calls the model, so this limit also caps the spend on the OpenRouter key.
+
+Also set a spend limit on the OpenRouter key itself.
+
+# Start a build from the web app
+
+A build can take more than a minute, so the web app starts the function with an asynchronous execution. The call returns immediately, and the progress arrives through Realtime. `startBuild` in the web app makes this call:
+
+```typescript
+const runId = ID.unique();
+await functions.createExecution({
+  functionId: 'builder',
+  body: JSON.stringify({ action: 'build', projectId, runId, prompt, name }),
+  async: true,
+});
+```
+
+The web app chooses the ID of the website and the ID of the run. It can subscribe to the website before the function writes any row. It can then match each update to the run that it started.
+
+The function creates the run row first, with the ID from the web app:
+
+- If a row with that ID already exists, the function stops, so a user cannot send the same run twice.
+- The function writes every result of the run to that row, including a rejected request.
+
+All web app calls to Appwrite are in [`apps/web/src/lib/appwrite.ts`](https://github.com/appwrite-community/kiln-site-builder/blob/main/apps/web/src/lib/appwrite.ts).
+
+# Store the files of each website in TablesDB
+
+A function execution has no persistent disk, so Kiln keeps the files in the `files` table.
+
+Kiln calculates the row ID of a file from the website ID and the path:
+
+```javascript
+export const fileRowId = (projectId, path) =>
+  createHash('md5').update(`${projectId}:${path}`).digest('hex');
+```
+
+The same path always gives the same row ID, so a write needs one `upsertRow` call:
+
+```javascript
+write(path, content) {
+  return tablesDB.upsertRow({
+    databaseId,
+    tableId: 'files',
+    rowId: fileRowId(projectId, path),
+    data: { projectId, path, content, size: Buffer.byteLength(content) },
+    permissions: ownedBy(project.ownerId),
+  });
+},
+```
+
+`upsertRow` creates the row or replaces it. The row stores the size in bytes, so the agent and the web app can show it without loading the content. The permission gives the owner of the website read access, as every row of Kiln does.
+
+`write` is a method of the workspace, the object that gives the agent access to the files of one website. The tools use three more methods of the workspace, and each one is one TablesDB call:
+
+- `list` reads only the paths and the sizes, with `Query.select(['path', 'size'])`.
+- `read` loads the row of one file.
+- `delete` deletes the row of one file.
+
+# Check every tool call of the agent
+
+The agent gives the model five tools:
+
+- `list_files` lists the paths and sizes of all files.
+- `read_file` returns the content of one file.
+- `write_file` creates a file or replaces it.
+- `delete_file` deletes one file.
+- `finish` ends the build with a summary for the user.
+
+Before a file tool touches a row, the agent checks the path:
+
+```javascript
+export function checkPath(path) {
+  if (typeof path !== 'string' || path.length === 0 || path.length > 128) {
+    return 'A path has 1 to 128 characters.';
+  }
+  if ([...path].some((character) => !PATH_CHARACTERS.includes(character))) {
+    return 'A path uses only lowercase letters, digits, "-", "_", ".", and "/".';
+  }
+  const segments = path.split('/');
+  if (segments.some((segment) => segment === '' || segment.startsWith('.'))) {
+    return 'A path is relative, has no empty parts, and no part starts with ".".';
+  }
+  if (!EXTENSIONS.some((extension) => path.endsWith(extension))) {
+    return `Allowed file types: ${EXTENSIONS.join(', ')}.`;
+  }
+  return null;
+}
+```
+
+`checkPath` returns a message for a path that is not allowed, and `null` for a path that is. The agent sends the message to the model instead of a write, and the model can try again. Together with checks in `write_file`, the tools enforce these rules:
+
+- **Paths:** relative, lowercase, and inside the website. `../index.html`, `.env`, and `/index.html` fail.
+- **File types:** `.html`, `.css`, `.js`, `.svg`, `.json`, `.txt`, `.xml`, and `.webmanifest`. `server.php` fails.
+- **Sizes:** each file is at most 100 KB, and a website has at most 16 files.
+- **Folders:** a path cannot be a file and a folder at the same time, such as `about.html` next to `about.html/index.html`.
+
+# Run the agent loop
+
+The agent loop sends the conversation and the tools to the model, runs each tool call, and repeats until the model calls `finish`:
+
+```javascript
+const deadline = Date.now() + LIMITS.minutes * 60_000;
+for (let turn = 0; turn < LIMITS.turns; turn++) {
+  if (Date.now() > deadline) {
+    throw new Error(`The agent did not finish within ${LIMITS.minutes} minutes.`);
+  }
+  const message = await complete({ messages, tools: TOOLS });
+  messages.push(message);
+  const calls = message.tool_calls ?? [];
+  if (calls.length === 0) {
+    return { summary: (message.content ?? '').trim(), changed: [...changed] };
+  }
+
+  for (const call of calls) {
+    if (call.function.name === 'finish') {
+      // ...read the summary from the arguments of the call
+      return { summary: summary.trim().slice(0, 600), changed: [...changed] };
+    }
+    const result = await run(call);
+    messages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(result) });
+  }
+}
+```
+
+Each turn works like this:
+
+- `complete` sends the conversation and the tool definitions (`TOOLS`) to the model through OpenRouter.
+- `run` checks and runs one tool call, and its result goes back into the conversation.
+- A `finish` call ends the loop with the summary and the list of changed files. A reply without tool calls ends it too, and its text becomes the summary.
+
+The loop has two limits:
+
+- **Turns:** `LIMITS.turns` is 30. If the model does not call `finish` within 30 turns, the run fails.
+- **Time:** `LIMITS.minutes` is 6. The agent does not start a model call after 6 minutes.
+
+A model call can take up to 4 minutes, because the model writes whole files. A call that starts at minute 6 ends by minute 10, and the deployment then ends by minute 13. Both times are inside the 15-minute timeout of the function.
+
+Two more details complete the loop:
+
+- **Context:** the first message of a build gives the model the name of the website, the paths and sizes of the current files, and the prompts and summaries of the last six builds. To edit a website, the model reads the files that it needs. For example, the request "Add a separate Menu page" made the agent read `index.html`, write `styles.css`, rewrite `index.html`, and write `menu/index.html`.
+- **Steps:** each tool call also writes a row in the `steps` table, such as `write menu/index.html 5416`, where `5416` is the size of the file in bytes. The web app shows these rows while the agent works.
+
+# Create a Site for each website
+
+![The Domains tab of the Crumb & Co. Site in the Kiln Sites project in the Appwrite Console, with its appwrite.network domain verified and pointing at the active deployment](/images/blog/ai-website-builder-appwrite-sites/console-domains.avif)
+
+Each generated website is a Site under **Sites** in the Kiln Sites project. The first build of a website creates that Site:
+
+```javascript
+async createSite(name) {
+  const site = await sites.create({
+    siteId: ID.unique(),
+    name,
+    framework: Framework.Other,
+    buildRuntime: BuildRuntime.Node22,
+    adapter: Adapter.Static,
+    outputDirectory: './',
+    scopes: [],
+  });
+  return site.$id;
+},
+```
+
+The settings make the Site a static website:
+
+- **Framework** `other` and **adapter** `static`: Appwrite serves the files as they are.
+- **Output directory** `./` with no install or build command: the uploaded files are the website.
+- **Scopes** `[]`: the ephemeral API key of the Site has no access. With the static adapter, no generated code runs on the server.
+
+The function saves the Site ID in the website row, and then gives the Site a domain with `proxy.createSiteRule`. The domain is the name of the website plus four random characters. The **Domains** tab of the Site shows it.
+
+If another Site already has the domain, Appwrite returns a `409` error, and the function tries a new suffix.
+
+# Deploy the files as a new version
+
+![The deployments of the Site at crumb-co-06ta.appwrite.network in the Kiln Sites project in the Appwrite Console, with one deployment for each version and the active deployment marked](/images/blog/ai-website-builder-appwrite-sites/console-deployments.avif)
+
+When the model calls `finish`, the function reads all files of the website and checks that `index.html` exists. Then it packs the files into a `.tar.gz` archive:
+
+```javascript
+export async function pack(files) {
+  const archive = tar.pack();
+  for (const file of files) archive.entry({ name: file.path }, file.content);
+  archive.finalize();
+  const chunks = [];
+  for await (const chunk of archive) chunks.push(chunk);
+  return gzipSync(Buffer.concat(chunks));
+}
+```
+
+The `tar-stream` package adds one entry for each file, and `gzipSync` from Node.js compresses the result. The whole archive stays in memory, with no file on disk.
+
+The function uploads the archive as a new deployment of the Site and waits for the build:
+
+```javascript
+async uploadDeployment(siteId, archive) {
+  const deployment = await sites.createDeployment({
+    siteId,
+    code: InputFile.fromBuffer(archive, 'site.tar.gz'),
+    activate: false,
+  });
+  const deadline = Date.now() + 3 * 60 * 1000;
+  for (;;) {
+    const current = await sites.getDeployment({ siteId, deploymentId: deployment.$id });
+    if (current.status === 'ready') return current;
+    if (current.status === 'failed' || current.status === 'canceled') {
+      throw new Error(`The deployment ${current.status}: ${current.buildLogs.slice(-500)}`);
+    }
+    if (Date.now() > deadline) {
+      await sites
+        .updateDeploymentStatus({ siteId, deploymentId: deployment.$id })
+        .catch(() => {});
+      throw new Error('The deployment did not finish within 3 minutes.');
+    }
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+},
+```
+
+`activate: false` keeps the current version live while the new deployment builds. The function reads the status of the deployment every two seconds:
+
+- `ready`: the deployment can go live.
+- `failed` or `canceled`: the run fails and shows the end of the build logs.
+- No result after three minutes: `sites.updateDeploymentStatus` cancels the deployment, and the run fails.
+
+When the deployment is ready, the function makes it the live version:
+
+```javascript
+// The new version goes live only now, after its build is ready.
+const version = project.latestVersion + 1;
+await appwrite.updateRun(run.$id, { deploymentId: deployment.$id, version });
+await appwrite.activate(project.siteId, deployment.$id);
+```
+
+The function records the deployment and the version number in the run row first. `activate` then calls `sites.updateSiteDeployment`. Last, the function marks the website row and the run row as live.
+
+# Allow one build at a time for each website
+
+Two builds of the same website at the same time would write over the files of each other. Before a build, the function creates a row in the `locks` table, with the ID of the website as the row ID:
+
+```javascript
+async lock(projectId, runId) {
+  const take = async () => {
+    try {
+      await tablesDB.createRow({
+        databaseId,
+        tableId: 'locks',
+        rowId: projectId,
+        data: { runId },
+      });
+      return true;
+    } catch (err) {
+      if (isConflict(err)) return false;
+      throw err;
+    }
+  };
+  if (await take()) return 'taken';
+
+  const held = await getRow('locks', projectId);
+  if (held) {
+    if (!(await holderStopped(held))) return null;
+    // Only one build can remove a stopped lock: the delete fails for every other build.
+    if (!(await deleteLock(held))) return null;
+    // ...mark the run that held the lock as failed, if it never finished
+  }
+  if (!(await take())) return null;
+  // The lock can also have been released between the two attempts.
+  return held ? 'replaced' : 'taken';
+},
+```
+
+The lock works like this:
+
+- Row IDs are unique in a table, so only one `createRow` call can succeed. That build gets `'taken'` from `lock`.
+- Any other build gets a `409` error and reads the lock row. If the run that holds the lock is still running, `lock` returns `null`, and the run fails with "Another build is running for this site".
+- At the end of a run, the function deletes the lock row with `deleteLock` if the row still belongs to that run.
+- Each run row stores the ID of its execution, from the `x-appwrite-execution-id` header. `holderStopped` reads the execution of the run that holds the lock with `functions.getExecution`.
+- If Appwrite reports that execution as `completed` while the lock still exists, the run stopped before it could release the lock.
+- Appwrite also reports an execution as `failed` when the function timeout has passed since the execution was queued. A run that waited in the queue can still be working then. So a `failed` execution counts only after 5 minutes without a new step or a change to the run row. A model call takes at most 4 minutes.
+- Appwrite can store the record of an execution late, so a missing record does not count.
+- A lock older than 16 minutes also counts as stopped, whatever the execution says. No run can last longer than the 15-minute timeout of the function.
+- When the run that holds the lock has stopped, the next build deletes the lock with `deleteLock`, marks that run as failed, and takes the lock. `lock` then returns `'replaced'`. The function puts back the files of the live version, because the stopped run can have left half-written files.
+
+Two builds can find the same stopped lock at the same moment, and only one of them may remove it. `deleteLock` sends the delete as a [conditional write](/blog/post/discord-bot-appwrite-functions). With the `X-Appwrite-Timestamp` header, Appwrite deletes the row only if the row did not change after that time:
+
+```javascript
+async function deleteLock(held) {
+  const client = new Client()
+    .setEndpoint(endpoint)
+    .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+    .setKey(key)
+    .addHeader('X-Appwrite-Timestamp', held.$updatedAt);
+  try {
+    await new TablesDB(client).deleteRow({ databaseId, tableId: 'locks', rowId: held.$id });
+    return true;
+  } catch (err) {
+    if (isConflict(err) || isMissing(err)) return false;
+    throw err;
+  }
+}
+```
+
+- The header holds the `$updatedAt` value of the lock row that the build read.
+- The first build deletes the row and creates a new lock row, which has a newer `$updatedAt` value.
+- The delete of the second build then fails with a `409` error, or with a `404` error if the row is gone. `deleteLock` returns `false`, and that build fails with "Another build is running for this site".
+- `unlock` also uses `deleteLock`, so a run never deletes a lock that another build took after the read.
+
+# Follow the build with Realtime
+
+![The Kiln editor during a build: the conversation shows the prompt and each file that the agent writes, and the preview shows the progress of the first version](/images/blog/ai-website-builder-appwrite-sites/app-building.avif)
+
+The editor of the web app subscribes to the website row and to the runs, steps, and files of the website. The code below is part of `subscribeToProject`, where `database` is `Channel.tablesdb('kiln')`, the Realtime channel of the `kiln` database.
+
+For the three tables, a Realtime query makes Appwrite send only the rows of the open website:
+
+```typescript
+const tables = {
+  runs: database.table('runs').row(),
+  steps: database.table('steps').row(),
+  files: database.table('files').row(),
+};
+const rowsSubscription = await realtime.subscribe(
+  Object.values(tables),
+  (event) => {
+    // ...send the row to the handler for its table
+  },
+  [Query.equal('projectId', [projectId])],
+);
+```
+
+The third argument of `realtime.subscribe` is a list of queries. Appwrite applies them on the server, so the browser receives only the rows with the `projectId` of the open website. The rows have a read permission for their owner only, so Realtime sends a user only their own rows.
+
+`subscribeToProject` also opens a separate subscription to the website row. For a new website, the editor waits for `subscribeToProject` to return, and only then calls `startBuild`.
+
+The editor also handles three cases:
+
+- When it opens, it reads the existing rows with `listRows`, so a reload of the page shows the full history.
+- When the run turns `live`, the preview reloads with the new version.
+- Every 10 seconds while a run is active, it reads the rows again and checks the execution of the run with `functions.getExecution`. A user can read the executions that they started.
+- If the execution has ended while the run still says it is active, the editor shows the run as failed. It uses the same rule as `holderStopped`. This covers a function that Appwrite stopped before it could write the failure.
+
+# Restore an earlier version
+
+![The Versions tab of the Kiln editor, with one entry for each version, the live version marked, and a Restore button on the others](/images/blog/ai-website-builder-appwrite-sites/app-versions.avif)
+
+Each version of a website is a deployment of its Site. To restore a version, the function makes Appwrite serve that deployment again:
+
+```javascript
+// Download the files first: if the download fails, nothing has changed yet.
+const files = await sourceFiles({
+  appwrite,
+  siteId: project.siteId,
+  deploymentId: from.deploymentId,
+});
+await appwrite.activate(project.siteId, from.deploymentId);
+await appwrite.updateProject(project.$id, {
+  status: 'live',
+  deploymentId: from.deploymentId,
+  liveVersion: from.version,
+});
+await appwrite.workspace(project).replaceAll(files);
+```
+
+The restore has four steps:
+
+1. `sourceFiles` calls `sites.getDeploymentDownload` with the type `source`. Appwrite returns the archive that the function uploaded for that deployment, and the function unpacks it.
+2. `activate` calls `sites.updateSiteDeployment`, which is the [instant rollback](/docs/products/sites/instant-rollbacks) of Appwrite Sites. Appwrite changes the deployment that it serves and does not build anything. In Kiln, a restore takes about two seconds.
+3. `updateProject` saves the status, the deployment ID, and the live version in the website row.
+4. `replaceAll` makes the `files` table match the restored files, so the next prompt edits the restored version.
+
+# Recover from a failed build
+
+A build can fail. The model provider can return an error, the agent can run out of turns or time, or the website can have no `index.html`. In each case, the function marks the run as `failed` with a message for the user and releases the lock.
+
+The agent may have written some files before the failure. The function asks the Site which deployment it serves, and puts back the files of that deployment:
+
+```javascript
+const project = await appwrite.getProject(projectId);
+if (!project) return;
+const deploymentId = project.siteId ? await appwrite.getLiveDeploymentId(project.siteId) : null;
+const files = deploymentId
+  ? await sourceFiles({ appwrite, siteId: project.siteId, deploymentId })
+  : [];
+await appwrite.workspace(project).replaceAll(files);
+```
+
+The Site itself is the record of the live version, so the reset also works when an earlier step failed to update the website row. A website that never went live gets an empty file list.
+
+The live website changes only when a new deployment is ready and the function activates it. The error of the model provider goes to the logs of the function. The user sees only the status code, such as "The model request failed with status 400."
+
+# Delete a website
+
+The same function deletes a website. It deletes the Site first, and Appwrite removes the deployments, the variables, the logs, and the domain of the Site. Then the function cleans up the rows of the website:
+
+- `deleteRows` deletes the rows of the website in the `files` and `steps` tables.
+- A second `deleteRows` call deletes the restore and delete runs of the website.
+- The build runs stay, because the limit of 25 builds a day counts them. Without them, a user could delete a website to start more builds. `updateRows` removes their prompts, summaries, and errors.
+
+```javascript
+const ofProject = Query.equal('projectId', [projectId]);
+for (const tableId of ['files', 'steps']) {
+  await tablesDB.deleteRows({ databaseId, tableId, queries: [ofProject] });
+}
+await tablesDB.deleteRows({
+  databaseId,
+  tableId: 'runs',
+  queries: [ofProject, Query.notEqual('kind', 'build')],
+});
+await tablesDB.updateRows({
+  databaseId,
+  tableId: 'runs',
+  data: { prompt: null, summary: null, error: null },
+  queries: [ofProject],
+});
+```
+
+Last, the function deletes the website row. A deletion also takes the lock, so a website cannot be deleted during a build. The function removes the lock row when the deletion ends.
+
+# Build a website with Kiln
+
+![The Kiln editor with the live Crumb & Co. bakery website in the preview, the conversation of its build on the left, and the domain of the website in the header](/images/blog/ai-website-builder-appwrite-sites/app-preview.avif)
+
+To build a website:
+
+1. Open the URL that `pnpm run provision` printed and create an account.
+2. Describe a website and give it a name.
+3. Select **Build site**.
+
+Kiln opens the editor and shows each step of the agent. After the first build, the preview shows the live website. The domain in the header opens it in a new tab.
+
+To change the website, send a second prompt. To restore an earlier version, open the **Versions** tab. To read the files that the agent wrote, open the **Code** tab.
+
+Each generated website is public. Before you open a builder like Kiln to everyone, add a way to report and take down abusive websites. The system prompt cannot stop a user who wants to publish a phishing page.
+
+# Conclusion
+
+Four decisions shape Kiln:
+
+- **The model only writes files.** The function checks every file and decides when to deploy.
+- **The database decides who owns what.** Only the function writes rows, and each row is readable by its owner only.
+- **User content lives in its own Appwrite project.** The generated websites cannot call the Appwrite project that holds the users.
+- **Every version stays available.** A deployment is a version, so a restore is one call, and a new version goes live only when its deployment is ready.
+
+The same decisions apply to other agents that create content for users, such as agents that write email templates or campaign landing pages.
+
+# Resources
+
+- [Appwrite Sites](/docs/products/sites)
+- [Deploy a Site manually](/docs/products/sites/deploy-manually)
+- [Instant rollbacks](/docs/products/sites/instant-rollbacks)
+- [Site domains](/docs/products/sites/domains)
+- [Appwrite Functions](/docs/products/functions)
+- [Function execution](/docs/products/functions/execute)
+- [Function headers and the ephemeral API key](/docs/products/functions/develop)
+- [TablesDB permissions](/docs/products/databases/tablesdb/permissions)
+- [Realtime queries](/docs/apis/realtime/queries)
+- [Join the Appwrite Discord](https://appwrite.io/discord)

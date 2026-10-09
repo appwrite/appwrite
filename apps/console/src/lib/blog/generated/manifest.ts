@@ -3,6 +3,19 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "ai-website-builder-appwrite-sites",
+    "href": "/blog/post/ai-website-builder-appwrite-sites",
+    "title": "Build an AI website builder on Appwrite Sites and Functions",
+    "description": "Build Kiln, an AI website builder. An agent in an Appwrite Function writes the files, Appwrite Sites deploys them, and each build becomes a version you can restore.",
+    "date": "2026-10-09",
+    "lastUpdated": "2026-10-09",
+    "timeToRead": 18,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/ai-website-builder-appwrite-sites/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "android-sdk-r8-support",
     "href": "/blog/post/android-sdk-r8-support",
     "title": "R8 code shrinking now works with the Appwrite Android SDK",
