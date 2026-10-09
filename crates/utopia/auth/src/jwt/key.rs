@@ -146,7 +146,7 @@ pub(crate) fn public_key(pem: &[u8]) -> Option<Public> {
 
 /// A private key `openssl_pkey_get_private()` accepts and this port can sign with.
 pub(crate) enum Private {
-    Rsa(RsaPrivateKey),
+    Rsa(Box<RsaPrivateKey>),
     /// A NIST P-256 key: OpenSSL signs with ECDSA whatever `alg` the header claims.
     P256(p256::ecdsa::SigningKey),
 }
@@ -162,10 +162,10 @@ pub(crate) fn private_key(pem: &[u8]) -> Option<Private> {
         };
         return match label {
             b"PRIVATE KEY" => RsaPrivateKey::from_pkcs8_der(&der)
-                .map(Private::Rsa)
+                .map(|k| Private::Rsa(Box::new(k)))
                 .ok()
                 .or_else(|| p256::ecdsa::SigningKey::from_pkcs8_der(&der).ok().map(Private::P256)),
-            b"RSA PRIVATE KEY" => RsaPrivateKey::from_pkcs1_der(&der).ok().map(Private::Rsa),
+            b"RSA PRIVATE KEY" => RsaPrivateKey::from_pkcs1_der(&der).ok().map(|k| Private::Rsa(Box::new(k))),
             b"EC PRIVATE KEY" => {
                 p256::SecretKey::from_sec1_der(&der).ok().map(|k| Private::P256(p256::ecdsa::SigningKey::from(k)))
             }
@@ -195,7 +195,7 @@ impl Rsa {
 pub(crate) fn sign(key: Private, input: &[u8]) -> Result<Vec<u8>, Error> {
     let failed = || Error::Exception("Unable to sign the token".into());
     match key {
-        Private::Rsa(key) => SigningKey::<Sha256>::new(key).try_sign(input).map(|s| s.to_vec()).map_err(|_| failed()),
+        Private::Rsa(key) => SigningKey::<Sha256>::new(*key).try_sign(input).map(|s| s.to_vec()).map_err(|_| failed()),
         Private::P256(key) => {
             let signature: p256::ecdsa::Signature = key.try_sign(input).map_err(|_| failed())?;
             Ok(signature.to_der().as_bytes().to_vec())

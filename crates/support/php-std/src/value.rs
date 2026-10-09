@@ -279,63 +279,6 @@ pub fn compare_numbers(x: Number, y: Number) -> Ordering {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn numeric_strings() {
-        assert_eq!(numeric_str("8"), Some(Number::Int(8)));
-        assert_eq!(numeric_str(" 8"), Some(Number::Int(8)));
-        assert_eq!(numeric_str("8 "), Some(Number::Int(8)));
-        assert_eq!(numeric_str("-1.5"), Some(Number::Float(-1.5)));
-        assert_eq!(numeric_str(".5"), Some(Number::Float(0.5)));
-        assert_eq!(numeric_str("1e3"), Some(Number::Float(1000.0)));
-        assert_eq!(numeric_str("abc"), None);
-        assert_eq!(numeric_str("0x1A"), None);
-        assert_eq!(numeric_str(""), None);
-        assert_eq!(numeric_str("."), None);
-    }
-
-    #[test]
-    fn php_arrays() {
-        assert!(is_array(&json!([])));
-        assert!(is_array(&json!({"a": 1})));
-        assert!(!is_array(&json!({})));
-        assert!(!is_array(&json!("x")));
-    }
-
-    #[test]
-    fn truthiness() {
-        assert!(truthy(&json!("false")));
-        assert!(!truthy(&json!("0")));
-        assert!(!truthy(&json!("")));
-        assert!(truthy(&json!({})));
-        assert!(!truthy(&json!([])));
-    }
-
-    #[test]
-    fn loose_equality_matches_php() {
-        assert!(!loose_eq(&json!(1.5), &json!("1.5abc")));
-        assert!(!loose_eq(&json!(0.30000000000000004), &json!("0.3")));
-        assert!(!loose_eq(&json!("abc"), &json!(0)));
-        assert!(!loose_eq(&json!(null), &json!("0")));
-        assert!(loose_eq(&json!("1e3"), &json!("1000")));
-        assert!(!loose_eq(&json!("9223372036854775808"), &json!("9223372036854775809")));
-        assert!(loose_eq(&json!([]), &json!(false)));
-        assert!(!loose_eq(&json!({}), &json!([])));
-        assert!(loose_eq(&json!({}), &json!(1)));
-        assert!(loose_eq(&json!({"0": 1}), &json!([1])));
-    }
-
-    #[test]
-    fn strings_of_floats() {
-        assert_eq!(to_string(&json!(1.0)).unwrap(), "1");
-        assert_eq!(to_string(&json!(1e25)).unwrap(), "1.0E+25");
-    }
-}
-
 // ---------------------------------------------------------------------------
 // String comparison and sorting (Zend/zend_operators.c, Zend/zend_sort.c)
 // ---------------------------------------------------------------------------
@@ -565,5 +508,62 @@ pub fn sort_strings<S: AsRef<[u8]> + Clone>(items: &mut [S]) {
     });
     for (slot, (_, item)) in items.iter_mut().zip(indexed) {
         *slot = item;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn numeric_strings() {
+        assert_eq!(numeric_str("8"), Some(Number::Int(8)));
+        assert_eq!(numeric_str(" 8"), Some(Number::Int(8)));
+        assert_eq!(numeric_str("8 "), Some(Number::Int(8)));
+        assert_eq!(numeric_str("-1.5"), Some(Number::Float(-1.5)));
+        assert_eq!(numeric_str(".5"), Some(Number::Float(0.5)));
+        assert_eq!(numeric_str("1e3"), Some(Number::Float(1000.0)));
+        assert_eq!(numeric_str("abc"), None);
+        assert_eq!(numeric_str("0x1A"), None);
+        assert_eq!(numeric_str(""), None);
+        assert_eq!(numeric_str("."), None);
+    }
+
+    #[test]
+    fn php_arrays() {
+        assert!(is_array(&json!([])));
+        assert!(is_array(&json!({"a": 1})));
+        assert!(!is_array(&json!({})));
+        assert!(!is_array(&json!("x")));
+    }
+
+    #[test]
+    fn truthiness() {
+        assert!(truthy(&json!("false")));
+        assert!(!truthy(&json!("0")));
+        assert!(!truthy(&json!("")));
+        assert!(truthy(&json!({})));
+        assert!(!truthy(&json!([])));
+    }
+
+    #[test]
+    fn loose_equality_matches_php() {
+        assert!(!loose_eq(&json!(1.5), &json!("1.5abc")));
+        assert!(!loose_eq(&json!(0.30000000000000004), &json!("0.3")));
+        assert!(!loose_eq(&json!("abc"), &json!(0)));
+        assert!(!loose_eq(&json!(null), &json!("0")));
+        assert!(loose_eq(&json!("1e3"), &json!("1000")));
+        assert!(!loose_eq(&json!("9223372036854775808"), &json!("9223372036854775809")));
+        assert!(loose_eq(&json!([]), &json!(false)));
+        assert!(!loose_eq(&json!({}), &json!([])));
+        assert!(loose_eq(&json!({}), &json!(1)));
+        assert!(loose_eq(&json!({"0": 1}), &json!([1])));
+    }
+
+    #[test]
+    fn strings_of_floats() {
+        assert_eq!(to_string(&json!(1.0)).unwrap(), "1");
+        assert_eq!(to_string(&json!(1e25)).unwrap(), "1.0E+25");
     }
 }

@@ -1397,56 +1397,6 @@ pub fn ctype_xdigit(s: &[u8]) -> bool {
     ctype(s, |c| c.is_ascii_hexdigit())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn trims_with_ranges() {
-        assert_eq!(trim(b"  abc  ", TRIM_CHARACTERS), b"abc");
-        assert_eq!(trim(b"abcxyz", b"a..c"), b"xyz");
-        assert_eq!(trim(b"a..", b"a.."), b"");
-        assert_eq!(rtrim(b"1.500", b"0"), b"1.5");
-    }
-
-    #[test]
-    fn substr_like_php() {
-        assert_eq!(substr(b"abcdef", -2, None), b"ef");
-        assert_eq!(substr(b"abcdef", 1, Some(-1)), b"bcde");
-        assert_eq!(substr(b"abc", 5, None), b"");
-        assert_eq!(substr(b"abc", i64::MIN, Some(i64::MIN)), b"");
-    }
-
-    #[test]
-    fn explode_limits() {
-        assert_eq!(explode(b",", b"a,b,c", 2).unwrap(), vec![&b"a"[..], b"b,c"]);
-        assert_eq!(explode(b",", b"a,b,c", -1).unwrap(), vec![&b"a"[..], b"b"]);
-        assert_eq!(explode(b",", b"abc", -1).unwrap(), Vec::<&[u8]>::new());
-        assert!(explode(b"", b"a", 1).is_err());
-    }
-
-    #[test]
-    fn replaces_and_counts() {
-        assert_eq!(str_replace(b"a", b"bb", b"aXa"), (Cow::Owned(b"bbXbb".to_vec()), 2));
-        assert_eq!(str_ireplace(b"AB", b"x", b"abAb"), (Cow::Owned(b"xx".to_vec()), 2));
-        let (r, n) = str_replace_array(&[b"a", b"b"], Replace::All(b"b"), b"ab", false);
-        assert_eq!((r.as_ref(), n), (&b"bb"[..], 3));
-    }
-
-    #[test]
-    fn strtr_longest_first() {
-        let r = strtr_array(b"Hi all", &[(b"Hi", b"Hello"), (b"Hi all", b"Hey"), (b"a", b"A")]);
-        assert_eq!(r.as_ref(), b"Hey");
-    }
-
-    #[test]
-    fn compares_like_php() {
-        assert_eq!(strcmp(b"a", b"c"), -2);
-        assert_eq!(strcmp(b"ab", b"abcd"), -1);
-        assert_eq!(strcasecmp(b"HELLO", b"hello"), 0);
-    }
-}
-
 // ---------------------------------------------------------------------------
 // crypt(), password_hash(), password_verify()
 // (ext/standard/crypt.c, crypt_blowfish.c, crypt_sha256.c, crypt_sha512.c,
@@ -2295,8 +2245,8 @@ impl Des {
         };
         let (k0, k1) = (perm(&t.key_perm_maskl), perm(&t.key_perm_maskr));
         let mut shifts = 0;
-        for round in 0..16 {
-            shifts += DES_KEY_SHIFTS[round];
+        for (round, shift) in DES_KEY_SHIFTS.iter().enumerate() {
+            shifts += shift;
             let t0 = (k0 << shifts) | (k0 >> (28 - shifts));
             let t1 = (k1 << shifts) | (k1 >> (28 - shifts));
             let comp = |m: &[[u32; 128]; 8]| {
@@ -2455,4 +2405,54 @@ fn des_crypt(key: &[u8], setting: &[u8]) -> Option<Vec<u8>> {
     push((r0 << 16) | ((r1 >> 16) & 0xffff), &[18, 12, 6, 0]);
     push(r1 << 2, &[12, 6, 0]);
     Some(out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn trims_with_ranges() {
+        assert_eq!(trim(b"  abc  ", TRIM_CHARACTERS), b"abc");
+        assert_eq!(trim(b"abcxyz", b"a..c"), b"xyz");
+        assert_eq!(trim(b"a..", b"a.."), b"");
+        assert_eq!(rtrim(b"1.500", b"0"), b"1.5");
+    }
+
+    #[test]
+    fn substr_like_php() {
+        assert_eq!(substr(b"abcdef", -2, None), b"ef");
+        assert_eq!(substr(b"abcdef", 1, Some(-1)), b"bcde");
+        assert_eq!(substr(b"abc", 5, None), b"");
+        assert_eq!(substr(b"abc", i64::MIN, Some(i64::MIN)), b"");
+    }
+
+    #[test]
+    fn explode_limits() {
+        assert_eq!(explode(b",", b"a,b,c", 2).unwrap(), vec![&b"a"[..], b"b,c"]);
+        assert_eq!(explode(b",", b"a,b,c", -1).unwrap(), vec![&b"a"[..], b"b"]);
+        assert_eq!(explode(b",", b"abc", -1).unwrap(), Vec::<&[u8]>::new());
+        assert!(explode(b"", b"a", 1).is_err());
+    }
+
+    #[test]
+    fn replaces_and_counts() {
+        assert_eq!(str_replace(b"a", b"bb", b"aXa"), (Cow::Owned(b"bbXbb".to_vec()), 2));
+        assert_eq!(str_ireplace(b"AB", b"x", b"abAb"), (Cow::Owned(b"xx".to_vec()), 2));
+        let (r, n) = str_replace_array(&[b"a", b"b"], Replace::All(b"b"), b"ab", false);
+        assert_eq!((r.as_ref(), n), (&b"bb"[..], 3));
+    }
+
+    #[test]
+    fn strtr_longest_first() {
+        let r = strtr_array(b"Hi all", &[(b"Hi", b"Hello"), (b"Hi all", b"Hey"), (b"a", b"A")]);
+        assert_eq!(r.as_ref(), b"Hey");
+    }
+
+    #[test]
+    fn compares_like_php() {
+        assert_eq!(strcmp(b"a", b"c"), -2);
+        assert_eq!(strcmp(b"ab", b"abcd"), -1);
+        assert_eq!(strcasecmp(b"HELLO", b"hello"), 0);
+    }
 }

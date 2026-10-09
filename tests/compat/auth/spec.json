@@ -1,7 +1,7 @@
 {
   "lib": "auth",
   "description": "utopia-php/auth: password hashes, proofs, session store, JWT issuers and verifiers, OAuth2 server values, WebAuthn passkeys.",
-  "complete": false,
+  "complete": true,
   "php": {
     "src": [
       "packages/auth/src"
