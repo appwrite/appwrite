@@ -15,7 +15,7 @@ use super::parse::{
     PT_ALNUM, PT_ANY, PT_BIDICL, PT_BOOL, PT_CLIST, PT_GC, PT_LAMP, PT_PC, PT_PXGRAPH, PT_PXPRINT, PT_PXPUNCT,
     PT_PXSPACE, PT_PXXDIGIT, PT_SC, PT_SCX, PT_SPACE, PT_UCNC, PT_WORD,
 };
-use super::program::{BraKind, KetKind, LoopCount, Op, Program};
+use super::program::{self, BraKind, EarlyFail, KetKind, LoopCount, LoopKind, Op, Program, UNLIMITED};
 use super::study::StartInfo;
 use super::unicode::{self, CTYPE_DIGIT, CTYPE_SPACE, CTYPE_WORD};
 
@@ -50,10 +50,8 @@ pub const ERROR_DEPTHLIMIT: i32 = -53;
 
 /// PHP's JIT stack (`PCRE_JIT_STACK_MAX_SIZE`, 192 KiB) in 8-byte words.
 /// The matcher keeps the words the JIT's code would hold for the groups,
-/// iterators, assertions and recursions on the current path
-/// (`allocate_stack()` in `pcre2_jit_compile.c`): exact for groups and
-/// iterators, approximate for recursion (see the `pcre` deviations in the
-/// compat spec).
+/// iterators, assertions, recursions, marks and THEN traps on the current
+/// path (`allocate_stack()` in `pcre2_jit_compile.c`).
 const JIT_STACK_WORDS: u32 = 192 * 1024 / 8;
 
 /// Match-time options (`pcre2_match()` options).
@@ -88,7 +86,20 @@ enum Ret {
     VReverse,
     KetRMin,
     KetRMax,
-    JitEmptyLoop,
+    /// What follows an empty iteration that ended a repeated atomic group
+    /// without captures: the JIT keeps that iteration's end on its stack, so
+    /// backtracking leaves the loop at the same place once more.
+    JitOnceAgain,
+    /// What follows the last iteration of a counted loop of atomic groups
+    /// without a frame: when the counter runs out the JIT keeps that
+    /// iteration's end, so backtracking leaves the loop there once more.
+    JitOnceLoopAgain,
+    /// The same for atomic groups with a frame: the end is kept, but
+    /// backtracking restores the frame and drops it.
+    JitOnceLoopKeep,
+    /// What follows a greedy iterator that stops only where its next
+    /// character follows (`charpos`): `t0` is the first such position.
+    RepCharpos,
     /// What follows a lazily optional group with alternatives that matched:
     /// backtracking into the group goes through the JIT's `BRAMINZERO`
     /// entry, which counts a match step.
@@ -127,6 +138,9 @@ struct Frame {
     saved_end: usize,
     /// The JIT stack words of the assertion this frame entered.
     jit_assert: u32,
+    /// Inside a recursion the JIT compiled as a function, where early fail
+    /// is off.
+    jit_rec: bool,
 }
 
 /// A successful match: `ovector` holds `(start, end)` pairs for the whole
@@ -187,6 +201,13 @@ pub struct Matcher<'a> {
     /// that frame is backtracked out of).
     jit_alloc: Vec<(usize, u32)>,
     jit_words: u32,
+    /// The early-fail slots (`detect_early_fail()`): a position plus one,
+    /// 0 for none. They last for the whole match call.
+    early: Vec<usize>,
+    /// A repeat `x{1,n}` whose first character an iterator before it
+    /// consumed (`charpos`): it runs as `x{0,n-1}`, the `OP_UPTO` after
+    /// that `OP_CHAR`.
+    charpos_rest: Option<usize>,
 }
 
 impl<'a> Matcher<'a> {
@@ -229,6 +250,8 @@ impl<'a> Matcher<'a> {
             result: None,
             jit_alloc: Vec::new(),
             jit_words: 0,
+            early: Vec::new(),
+            charpos_rest: None,
         }
     }
 
@@ -347,6 +370,50 @@ impl<'a> Matcher<'a> {
 
     /// One single-character item at `p` (the single-item opcodes of
     /// `match()`); the position after it, or `None`.
+    /// Where `pcre2_match()` leaves the subject pointer when one item fails
+    /// at `p` (`repeat`: inside a repeat): most items read the character,
+    /// moving past it, before testing it, so the failure counts it as
+    /// inspected (`last_used_ptr`, which the recursion-loop check compares).
+    fn fail_eptr(&self, lit: &Lit, p: usize, repeat: bool) -> usize {
+        if p >= self.end {
+            return p;
+        }
+        let next = if self.utf { self.forwardchar(p + 1) } else { p + 1 };
+        match lit {
+            // `.` fails on a newline before reading; the others only fail at
+            // the end.
+            Lit::Any | Lit::AllAny | Lit::AnyByte | Lit::ExtUni => p,
+            Lit::CharI(c) => {
+                if self.utf && *c >= 128 && !repeat {
+                    next
+                } else {
+                    p
+                }
+            }
+            Lit::Char(c) if self.utf && *c >= 128 => {
+                if repeat {
+                    return p;
+                }
+                // Code unit by code unit, the mismatching one included.
+                let mut buf = [0u8; 4];
+                let units = char::from_u32(*c).map_or(&[][..], |ch| ch.encode_utf8(&mut buf).as_bytes());
+                if units.len() > self.end - p {
+                    return p;
+                }
+                let mut q = p;
+                for &u in units {
+                    let su = self.s[q];
+                    q += 1;
+                    if u != su {
+                        break;
+                    }
+                }
+                q
+            }
+            _ => next,
+        }
+    }
+
     fn match_one(&mut self, lit: &Lit, p: usize) -> Option<usize> {
         let s = self.s;
         let end = self.end;
@@ -672,11 +739,31 @@ impl<'a> Matcher<'a> {
             n.last_group = fi + 1;
             if gft & GF_IDMASK == GF_RECURSE {
                 n.current_recurse = gft & GF_DATAMASK;
+                // Every branch of a recursion the JIT compiled as a function
+                // runs without early fail.
+                if !self.prog.jit.recurse_inline[n.current_recurse as usize] {
+                    n.jit_rec = true;
+                }
             }
         }
         self.frames.push(n);
         let ovs = self.ovs;
         self.ov.extend_from_within(fi * ovs..(fi + 1) * ovs);
+        // A branch with a `(*THEN)` starts with its trap.
+        if self.jit
+            && matches!(
+                ret,
+                Ret::GroupLoop
+                    | Ret::BraBranch
+                    | Ret::Assert
+                    | Ret::AssertNot
+                    | Ret::CondAssert
+                    | Ret::BraPos
+                    | Ret::Recurse
+            )
+        {
+            self.jit_push(self.prog.jit.then_trap[target], fi + 1)?;
+        }
         if !self.jit
             || matches!(
                 ret,
@@ -789,6 +876,27 @@ impl<'a> Matcher<'a> {
         }
     }
 
+    /// `free_stack()` of `words` held by frame `fi` (its latest).
+    fn jit_release(&mut self, fi: usize, words: u32) {
+        let mut left = words;
+        for entry in self.jit_alloc.iter_mut().rev() {
+            if entry.0 != fi || left == 0 {
+                break;
+            }
+            let take = entry.1.min(left);
+            entry.1 -= take;
+            self.jit_words -= take;
+            left -= take;
+        }
+    }
+
+    /// An iterator with an early-fail slot records where it got to.
+    fn early_record(&mut self, early: EarlyFail, pos: usize) {
+        if let EarlyFail::Skip(slot) | EarlyFail::Fail(slot) | EarlyFail::Range(slot) = early {
+            self.early[slot] = pos + 1;
+        }
+    }
+
     /// `allocate_stack()`: `words` more on the JIT stack, held by frame `fi`.
     fn jit_push(&mut self, words: u32, fi: usize) -> Result<(), i32> {
         if !self.jit || words == 0 {
@@ -828,11 +936,23 @@ impl<'a> Matcher<'a> {
     fn jit_entry_words(&self, bra: usize, fi: usize) -> u32 {
         let code = &self.prog.code;
         let Op::Bra { kind, .. } = code[bra] else { return 0 };
+        // A copy of a bounded repeat is an iteration of the loop the JIT
+        // runs; the loop saves its mark once.
+        if self.prog.jit.loop_wrapper[bra] {
+            return 0;
+        }
+        if let Some((_, first)) = self.prog.jit.loop_copy[bra] {
+            return self.jit_bracket_words(bra) + u32::from(first);
+        }
         let Op::Ket { kind: ket, .. } = code[self.to_ket(bra)] else { return 0 };
         let mut words = self.jit_bracket_words(bra);
         let iteration = (fi > 0 && self.frames[fi - 1].ret == Ret::KetRMax && self.frames[fi - 1].t0 == bra)
             || (self.frames[fi].ret == Ret::KetRMin && self.frames[fi].t0 == bra);
-        if !iteration && !matches!(kind, BraKind::BraPos | BraKind::CapturePos(_)) {
+        // An atomic assertion is no bracket for the JIT: an optional one
+        // keeps its mark in its own words.
+        let assertion =
+            matches!(kind, BraKind::Assert | BraKind::AssertNot | BraKind::AssertBack | BraKind::AssertBackNot);
+        if !iteration && !assertion && !matches!(kind, BraKind::BraPos | BraKind::CapturePos(_)) {
             let prefix = if bra > 0 { &code[bra - 1] } else { &Op::End };
             if ket == KetKind::RMax || (ket == KetKind::RMin && !matches!(prefix, Op::BraMinZero)) {
                 words += 1;
@@ -850,6 +970,11 @@ impl<'a> Matcher<'a> {
         let code = &self.prog.code;
         let Op::Bra { kind, empty, .. } = code[bra] else { return 0 };
         let Op::Ket { kind: ket, .. } = code[self.to_ket(bra)] else { return 0 };
+        let ket = match self.prog.jit.loop_copy[bra] {
+            Some((LoopKind::Upto, _)) => KetKind::RMax,
+            Some((LoopKind::MinUpto, _)) => KetKind::RMin,
+            None => ket,
+        };
         let has_alt = self.jit_has_alternatives(bra);
         match kind {
             BraKind::Capture(n) => {
@@ -859,18 +984,18 @@ impl<'a> Matcher<'a> {
                     1
                 }
             }
-            BraKind::AssertNa | BraKind::AssertBackNa | BraKind::ScriptRun => 1,
+            BraKind::AssertNa | BraKind::AssertBackNa => self.prog.jit.assert_words[bra],
+            BraKind::ScriptRun => 1,
             BraKind::Bra | BraKind::Cond if empty => 1,
-            BraKind::Once => {
-                if ket == KetKind::RMin {
-                    2
-                } else {
-                    u32::from(ket != KetKind::Ket || has_alt)
-                }
-            }
+            // A frame saves what the items inside change; without one only
+            // the start (and, lazily, the end) is saved.
+            BraKind::Once => match self.prog.jit.once_frame[bra] {
+                Some(frame) => frame + 1 + u32::from(ket != KetKind::Ket || has_alt),
+                None if ket == KetKind::RMin => 2,
+                None => u32::from(ket != KetKind::Ket || has_alt),
+            },
             BraKind::Bra | BraKind::Cond | BraKind::Root => u32::from(has_alt),
-            BraKind::BraPos => 1,
-            BraKind::CapturePos(_) => 3,
+            BraKind::BraPos | BraKind::CapturePos(_) => self.prog.jit.brapos[bra][1],
             _ => 0,
         }
     }
@@ -893,7 +1018,15 @@ impl<'a> Matcher<'a> {
         }
         let Op::Ket { kind: ket, .. } = code[self.to_ket(bra)] else { return 0 };
         let prefix = if bra > 0 { &code[bra - 1] } else { &Op::End };
-        let mut words = u32::from(ket != KetKind::Ket || matches!(prefix, Op::BraZero | Op::BraMinZero));
+        if self.prog.jit.loop_wrapper[bra] {
+            return 0;
+        }
+        // A loop iteration saves its end (and, lazily, the counter).
+        let mut words = match self.prog.jit.loop_copy[bra] {
+            Some((LoopKind::Upto, _)) => 1,
+            Some((LoopKind::MinUpto, _)) => 2,
+            None => u32::from(ket != KetKind::Ket || matches!(prefix, Op::BraZero | Op::BraMinZero)),
+        };
         if let BraKind::Capture(n) = kind
             && !self.prog.jit.optimized[n as usize]
         {
@@ -958,6 +1091,7 @@ impl<'a> Matcher<'a> {
             offset_top: 0,
             saved_end: self.true_end,
             jit_assert: 0,
+            jit_rec: false,
         });
         if !self.jit
             && let Err(e) = self.count()
@@ -980,14 +1114,14 @@ impl<'a> Matcher<'a> {
         // (`compile_assert_matchingpath()`), in its first frame.
         macro_rules! jit_assertion {
             ($bra:expr) => {
-                if self.jit {
-                    let bra = $bra;
-                    let back = matches!(
-                        self.prog.code[bra],
-                        Op::Bra { kind: BraKind::AssertBack | BraKind::AssertBackNot | BraKind::AssertBackNa, .. }
-                    ) && self.lookbehind_has_vreverse(bra);
+                let bra = $bra;
+                // A non-atomic assertion is a bracket for the JIT (its words
+                // were saved on entry).
+                if self.jit
+                    && !matches!(self.prog.code[bra], Op::Bra { kind: BraKind::AssertNa | BraKind::AssertBackNa, .. })
+                {
                     let top = self.top();
-                    let words = if back { 4 } else { 1 };
+                    let words = self.prog.jit.assert_words[bra];
                     self.frames[top - 1].jit_assert = words;
                     if let Err(e) = self.jit_push(words, top) {
                         return e;
@@ -1098,19 +1232,45 @@ impl<'a> Matcher<'a> {
                                 f.eptr = e;
                                 f.pc += 1;
                             }
-                            None => break 'ops MATCH_NOMATCH,
+                            None => {
+                                if !self.jit {
+                                    self.frames[fi].eptr = self.fail_eptr(lit, e, false);
+                                }
+                                break 'ops MATCH_NOMATCH;
+                            }
                         }
                     }
                     Op::Rep { lit, min, max, kind } => {
-                        let (min, max, kind) = (*min, *max, *kind);
+                        let (mut min, mut max, kind) = (*min, *max, *kind);
+                        if self.charpos_rest == Some(pc) {
+                            self.charpos_rest = None;
+                            min = 0;
+                            max -= 1;
+                        }
                         if let Err(e) = self.jit_push(u32::from(prog.jit.rep[pc]), fi) {
                             return e;
                         }
+                        let early =
+                            if self.jit && !self.frames[fi].jit_rec { prog.jit.early[pc] } else { EarlyFail::None };
+                        // `{n,}` with n >= 2 is `OP_EXACT` and then the
+                        // iterator that fails early.
+                        let split = min >= 2 && !matches!(lit, Lit::Class(_));
                         let mut e = self.frames[fi].eptr;
+                        if !split
+                            && let EarlyFail::Fail(slot) = early
+                            && e < self.early[slot]
+                        {
+                            break 'ops MATCH_NOMATCH;
+                        }
                         for _ in 0..min {
                             match self.match_one(lit, e) {
                                 Some(x) => e = x,
-                                None => break 'ops MATCH_NOMATCH,
+                                None => {
+                                    if !self.jit {
+                                        self.frames[fi].eptr = self.fail_eptr(lit, e, true);
+                                    }
+                                    break 'ops MATCH_NOMATCH;
+                                }
                             }
                         }
                         {
@@ -1126,14 +1286,68 @@ impl<'a> Matcher<'a> {
                         // {n,m} with n >= 2 is OP_EXACT and then the variable
                         // part, two iterators for the JIT (a class repeat is
                         // one).
-                        if min >= 2 && !matches!(lit, Lit::Class(_)) {
+                        if split {
                             jit_count!();
                         }
+                        match early {
+                            EarlyFail::Fail(slot) if split && e < self.early[slot] => break 'ops MATCH_NOMATCH,
+                            EarlyFail::Range(slot) => {
+                                let (end, start) = (self.early[slot], self.early[slot + 1]);
+                                if (e + 1).wrapping_sub(start) <= end.wrapping_sub(start) {
+                                    break 'ops MATCH_NOMATCH;
+                                }
+                                self.early[slot] = e + 1;
+                                self.early[slot + 1] = e + 1;
+                            }
+                            _ => {}
+                        }
                         if kind == RepKind::Lazy {
+                            self.early_record(early, e);
                             let f = &mut self.frames[fi];
                             f.n[0] = min;
                             f.n[1] = max;
                             rmatch!(pc + 1, Ret::RepMin, 0);
+                            continue 'ops;
+                        }
+                        if self.jit
+                            && kind == RepKind::Greedy
+                            && let Some((chr, bit)) = prog.jit.charpos[pc]
+                        {
+                            // Only the positions where the character follows
+                            // are tried, from the last; the character is
+                            // matched here.
+                            let limit = if max == UNLIMITED { u32::MAX } else { max - min };
+                            let (mut first, mut last) = (None, None);
+                            let mut n = 0;
+                            loop {
+                                if e < self.end && (self.s[e] | bit) == chr {
+                                    first.get_or_insert(e);
+                                    last = Some(e);
+                                }
+                                if n >= limit {
+                                    break;
+                                }
+                                match self.match_one(lit, e) {
+                                    Some(x) => e = x,
+                                    None => break,
+                                }
+                                n += 1;
+                            }
+                            self.early_record(early, e);
+                            let (Some(first), Some(last)) = (first, last) else { break 'ops MATCH_NOMATCH };
+                            // The character may be the first of a repeat,
+                            // which goes on from there.
+                            let next =
+                                if matches!(code[pc + 1], Op::Rep { max, .. } if max > 1) { pc + 1 } else { pc + 2 };
+                            let f = &mut self.frames[fi];
+                            f.t0 = first;
+                            f.eptr = last + 1;
+                            f.pc = next;
+                            jit_count!();
+                            if next == pc + 1 {
+                                self.charpos_rest = Some(next);
+                            }
+                            rmatch!(next, Ret::RepCharpos, 0);
                             continue 'ops;
                         }
                         let start = e;
@@ -1145,11 +1359,22 @@ impl<'a> Matcher<'a> {
                             }
                             i += 1;
                         }
+                        // A greedy `\R` or `\X` repeat keeps where each
+                        // iteration ended (all but the last, which it goes on
+                        // from), or only its end mark after none.
+                        if self.jit && program::stacked_iterator(lit, min, max, kind) {
+                            if i == min {
+                                self.jit_release(fi, 1);
+                            } else if let Err(e) = self.jit_push(i - min - 1, fi) {
+                                return e;
+                            }
+                        }
                         {
                             let f = &mut self.frames[fi];
                             f.eptr = e;
                             f.t0 = start;
                         }
+                        self.early_record(early, e);
                         if kind == RepKind::Possessive {
                             jit_count!();
                             continue 'ops;
@@ -1190,14 +1415,34 @@ impl<'a> Matcher<'a> {
                         }
                         let (min, max, lazy) = (*min, *max, *lazy);
                         self.frames[fi].pc = pc + 1;
-                        if offset < f.offset_top && self.ov_get(fi, offset) != UNSET {
-                            if self.ov_get(fi, offset) == self.ov_get(fi, offset + 1) {
-                                jit_count!();
-                                continue 'ops;
+                        // compile_ref_iterator_matchingpath(): a lazy repeat
+                        // keeps its position and counter (and the group for
+                        // a duplicate name); a greedy one its start and a
+                        // mark, then one position per repetition.
+                        let entry = if lazy {
+                            if groups.len() > 1 { 3 } else { 2 }
+                        } else if min == 0 {
+                            2
+                        } else {
+                            1
+                        };
+                        if let Err(e) = self.jit_push(entry, fi) {
+                            return e;
+                        }
+                        let zero = if offset < f.offset_top && self.ov_get(fi, offset) != UNSET {
+                            self.ov_get(fi, offset) == self.ov_get(fi, offset + 1)
+                        } else {
+                            min == 0 || self.poptions & opt::MATCH_UNSET_BACKREF != 0
+                        };
+                        if zero {
+                            if !lazy && min == 0 {
+                                self.jit_release(fi, 1);
                             }
-                        } else if min == 0 || self.poptions & opt::MATCH_UNSET_BACKREF != 0 {
                             jit_count!();
                             continue 'ops;
+                        }
+                        if !(offset < f.offset_top && self.ov_get(fi, offset) != UNSET) {
+                            break 'ops MATCH_NOMATCH;
                         }
                         for _ in 0..min {
                             match self.match_ref(fi, offset, caseless) {
@@ -1236,6 +1481,18 @@ impl<'a> Matcher<'a> {
                             }
                             i += 1;
                         }
+                        // One position saved per repetition from the
+                        // minimum (one) on, short of the maximum; the
+                        // repetition that failed gives one back.
+                        let lo = min.max(1);
+                        let upper = if max == UNLIMITED { i } else { i.min(max - 1) };
+                        let saved = if upper >= lo { upper - lo + 1 } else { 0 };
+                        if let Err(e) = self.jit_push(saved, fi) {
+                            return e;
+                        }
+                        if max == UNLIMITED || i < max {
+                            self.jit_release(fi, 1);
+                        }
                         let f = &mut self.frames[fi];
                         f.t0 = start;
                         f.t1 = flength;
@@ -1255,17 +1512,29 @@ impl<'a> Matcher<'a> {
                         self.frames[fi].pc += 1;
                     }
                     Op::SetSom => {
+                        if let Err(e) = self.jit_push(1, fi) {
+                            return e;
+                        }
                         let f = &mut self.frames[fi];
                         f.start_match = f.eptr;
                         f.pc += 1;
                     }
                     Op::BraZero => {
-                        self.frames[fi].t0 = pc + 1;
+                        let f = &mut self.frames[fi];
+                        f.t0 = pc + 1;
+                        // Set when an optional negative assertion holds.
+                        f.n[3] = 0;
                         rmatch!(pc + 1, Ret::BraZero, 0);
                     }
                     Op::BraMinZero => {
                         let ket = self.to_ket(pc + 1);
-                        let words = if matches!(code[ket], Op::Ket { kind: KetKind::RMin, .. }) { 2 } else { 1 };
+                        let words = if prog.jit.loop_zero[pc] {
+                            0
+                        } else if matches!(code[ket], Op::Ket { kind: KetKind::RMin, .. }) {
+                            2
+                        } else {
+                            1
+                        };
                         if let Err(e) = self.jit_push(words, fi) {
                             return e;
                         }
@@ -1276,6 +1545,9 @@ impl<'a> Matcher<'a> {
                         self.frames[fi].pc = ket + 1;
                     }
                     Op::BraPosZero => {
+                        if let Err(e) = self.jit_push(prog.jit.brapos[pc + 1][0], fi) {
+                            return e;
+                        }
                         let f = &mut self.frames[fi];
                         f.n[2] = 1;
                         f.pc = pc + 1;
@@ -1415,6 +1687,7 @@ impl<'a> Matcher<'a> {
                             branch_start = self.link(branch_start);
                         }
                         let Op::Bra { kind, empty, .. } = code[bracode] else { return ERROR_INTERNAL };
+                        let is_s = empty;
                         if self.jit && kind != BraKind::Once {
                             // The end of a recursion is not the end of its
                             // group: `compile_recurse()` runs the branches
@@ -1450,6 +1723,16 @@ impl<'a> Matcher<'a> {
                             let pi = n_idx - 1;
                             self.frames[fi].last_group = self.frames[pi].last_group;
                             if self.frames[n_idx].gft & GF_IDMASK == GF_CONDASSERT {
+                                // The JIT holds the branch of a variable-length
+                                // lookbehind to the lookbehind's end in a
+                                // condition too; `pcre2_match()` does not.
+                                if self.jit
+                                    && matches!(kind, BraKind::AssertBack | BraKind::AssertBackNot)
+                                    && matches!(code[branch_start + 1], Op::VReverse { .. })
+                                    && !self.reaches_lookbehind_end(fi, pi)
+                                {
+                                    break 'ops MATCH_NOMATCH;
+                                }
                                 let f = self.frames[fi];
                                 let ovs = self.ovs;
                                 let (lo, hi) = self.ov.split_at_mut(fi * ovs);
@@ -1507,24 +1790,33 @@ impl<'a> Matcher<'a> {
                                 }
                                 if self.jit {
                                     // `match_once_common()`: the group's own
-                                    // words go too unless it saved a frame
-                                    // (captures inside), which stays.
+                                    // words go too unless it saved a frame,
+                                    // which stays.
                                     self.jit_discard(pi);
+                                    if kind != BraKind::Once
+                                        && let Err(e) = self.jit_assertion_held(bracode, fi)
+                                    {
+                                        return e;
+                                    }
                                     if kind == BraKind::Once {
                                         let entry = self.frames[pi].jit_assert;
-                                        if let Some(&(f, w)) = self.jit_alloc.last()
+                                        if self.prog.jit.once_frame[bracode].is_none()
+                                            && let Some(&(f, w)) = self.jit_alloc.last()
                                             && f == pi
                                             && w == entry
                                         {
-                                            self.jit_alloc.pop();
-                                            self.jit_words -= w;
+                                            // A lazy group keeps the saved
+                                            // start of the previous iteration.
+                                            let lazy = ket_kind == KetKind::RMin
+                                                || matches!(prog.jit.loop_copy[bracode], Some((LoopKind::MinUpto, _)));
+                                            if lazy && w > 1 {
+                                                self.jit_release(pi, w - 1);
+                                            } else {
+                                                self.jit_alloc.pop();
+                                                self.jit_words -= w;
+                                            }
                                         }
-                                        let captures = self.prog.jit.once_frame[bracode];
-                                        let mut words = self.jit_end_words(bracode);
-                                        if captures > 0 {
-                                            let alt = ket_kind != KetKind::Ket || self.jit_has_alternatives(bracode);
-                                            words += captures + if alt { 2 } else { 1 };
-                                        }
+                                        let words = self.jit_end_words(bracode);
                                         if let Err(e) = self.jit_push(words, fi) {
                                             return e;
                                         }
@@ -1590,11 +1882,9 @@ impl<'a> Matcher<'a> {
                         let empty = p_idx.is_some_and(|pi| self.frames[fi].eptr == self.frames[pi].eptr);
                         // The JIT does not stop a lazily repeated script run
                         // after an empty iteration: when what follows fails,
-                        // it iterates again forever, until its stack runs out.
-                        if self.jit && empty && ket_kind == KetKind::RMin && kind == BraKind::ScriptRun {
-                            rmatch!(pc + 1, Ret::JitEmptyLoop, 0);
-                            continue 'ops;
-                        }
+                        // it iterates again, until its stack or the match
+                        // limit runs out.
+                        let empty = empty && !(self.jit && ket_kind == KetKind::RMin && kind == BraKind::ScriptRun);
                         if ket_kind != KetKind::Ket && !empty {
                             if ket_kind == KetKind::RMin {
                                 if self.jit_counts_bracket(bracode, ket_kind) {
@@ -1608,13 +1898,62 @@ impl<'a> Matcher<'a> {
                             rmatch!(bracode, Ret::KetRMax, 0);
                             continue 'ops;
                         }
+                        let brazero = bracode > 0 && matches!(code[bracode - 1], Op::BraZero);
+                        // An empty iteration of a group that can match empty
+                        // ends the loop and drops its end position (`Drop
+                        // STR_PTR for greedy plus quantifier`).
+                        if self.jit
+                            && empty
+                            && ket_kind == KetKind::RMax
+                            && !brazero
+                            && (kind == BraKind::ScriptRun || (kind != BraKind::Once && is_s))
+                            && let Some(last) = self.jit_alloc.last_mut()
+                            && last.0 == fi
+                            && last.1 > 0
+                        {
+                            last.1 -= 1;
+                            self.jit_words -= 1;
+                        }
+                        if self.jit
+                            && empty
+                            && kind == BraKind::Once
+                            && ket_kind == KetKind::RMax
+                            && prog.jit.once_frame[bracode].is_none()
+                            && !(bracode > 0 && matches!(code[bracode - 1], Op::BraZero))
+                            && prog.jit.count[pc] == LoopCount::Normal
+                        {
+                            jit_count!();
+                            rmatch!(pc + 1, Ret::JitOnceAgain, 0);
+                            continue 'ops;
+                        }
+                        if self.jit
+                            && kind == BraKind::Once
+                            && matches!(prog.jit.loop_copy[bracode], Some((LoopKind::Upto, _)))
+                            && matches!(code.get(pc + 1), Some(Op::Ket { bra, .. }) if prog.jit.loop_wrapper[*bra])
+                        {
+                            if let Err(e) = self.jit_push(1, fi) {
+                                return e;
+                            }
+                            if prog.jit.once_frame[bracode].is_none() {
+                                rmatch!(pc + 1, Ret::JitOnceLoopAgain, 0);
+                            } else {
+                                rmatch!(pc + 1, Ret::JitOnceLoopKeep, 0);
+                            }
+                            continue 'ops;
+                        }
                         match prog.jit.count[pc] {
                             LoopCount::Normal => {
                                 if self.jit_counts_bracket(bracode, ket_kind) {
                                     jit_count!();
                                 }
+                                // Backtracking into a lazily optional group
+                                // with alternatives, or past an empty lazy
+                                // iteration of one, goes through the
+                                // `BRAMINZERO` entry, which counts.
                                 if self.jit
-                                    && ket_kind == KetKind::Ket
+                                    && !matches!(kind, BraKind::Assert | BraKind::AssertBack)
+                                    && (ket_kind == KetKind::Ket
+                                        || (ket_kind == KetKind::RMin && empty && (is_s || kind == BraKind::Once)))
                                     && bracode > 0
                                     && matches!(code[bracode - 1], Op::BraMinZero)
                                     && self.jit_has_alternatives(bracode)
@@ -1721,6 +2060,9 @@ impl<'a> Matcher<'a> {
                     }
                     Op::Fail => break 'ops MATCH_NOMATCH,
                     Op::Mark(id) => {
+                        if let Err(e) = self.jit_push(if prog.jit.skip_arg { 5 } else { 1 }, fi) {
+                            return e;
+                        }
                         let f = &mut self.frames[fi];
                         f.mark = Some(*id);
                         rmatch!(pc + 1, Ret::Mark, 0);
@@ -1738,6 +2080,9 @@ impl<'a> Matcher<'a> {
                         rmatch!(pc + 1, Ret::Prune, 0);
                     }
                     Op::Skip => {
+                        if let Err(e) = self.jit_push(1, fi) {
+                            return e;
+                        }
                         rmatch!(pc + 1, Ret::Skip, 0);
                     }
                     Op::SkipArg(_) => {
@@ -1787,8 +2132,16 @@ impl<'a> Matcher<'a> {
                         }
                         let Op::Rep { lit, .. } = &code[f.t1] else { return ERROR_INTERNAL };
                         match self.match_one(lit, f.eptr) {
-                            Some(e) => self.frames[fi].eptr = e,
+                            Some(e) => {
+                                self.frames[fi].eptr = e;
+                                if self.jit && !f.jit_rec {
+                                    self.early_record(prog.jit.early[f.t1], e);
+                                }
+                            }
                             None => {
+                                if !self.jit {
+                                    self.frames[fi].eptr = self.fail_eptr(lit, f.eptr, true);
+                                }
                                 rrc = MATCH_NOMATCH;
                                 continue;
                             }
@@ -1808,12 +2161,45 @@ impl<'a> Matcher<'a> {
                         if matches!(lit, Lit::AnyNl) && e > f.t0 && self.s[e] == b'\n' && self.s[e - 1] == b'\r' {
                             e -= 1;
                         }
+                        if self.jit
+                            && let Op::Rep { lit, min, max, kind } = &code[f.t1]
+                            && program::stacked_iterator(lit, *min, *max, *kind)
+                        {
+                            self.jit_release(fi, 1);
+                        }
                         self.frames[fi].eptr = e;
                         if e <= f.t0 {
                             jit_count!();
                             continue 'exec;
                         }
                         rmatch!(pc, Ret::RepMax, 0);
+                        continue 'exec;
+                    }
+                    Ret::RepCharpos => {
+                        if rrc != MATCH_NOMATCH {
+                            continue;
+                        }
+                        let Some((chr, bit)) = prog.jit.charpos[f.t1] else { return ERROR_INTERNAL };
+                        let mut p = f.eptr - 1;
+                        let found = loop {
+                            if p <= f.t0 {
+                                break None;
+                            }
+                            p -= 1;
+                            if (self.s[p] | bit) == chr {
+                                break Some(p);
+                            }
+                        };
+                        let Some(c) = found else {
+                            rrc = MATCH_NOMATCH;
+                            continue;
+                        };
+                        self.frames[fi].eptr = c + 1;
+                        jit_count!();
+                        if pc == f.t1 + 1 {
+                            self.charpos_rest = Some(pc);
+                        }
+                        rmatch!(pc, Ret::RepCharpos, 0);
                         continue 'exec;
                     }
                     Ret::RepMaxClass => {
@@ -1863,6 +2249,12 @@ impl<'a> Matcher<'a> {
                             e = fptr;
                             rgb = lgb;
                         }
+                        if self.jit
+                            && let Op::Rep { lit, min, max, kind } = &code[f.t1]
+                            && program::stacked_iterator(lit, *min, *max, *kind)
+                        {
+                            self.jit_release(fi, 1);
+                        }
                         self.frames[fi].eptr = e;
                         if e <= start {
                             jit_count!();
@@ -1903,6 +2295,7 @@ impl<'a> Matcher<'a> {
                         }
                         let e = f.eptr - f.t1;
                         self.frames[fi].eptr = e;
+                        self.jit_release(fi, 1);
                         rmatch!(pc, Ret::RefMaxSame, 0);
                         continue 'exec;
                     }
@@ -1914,6 +2307,7 @@ impl<'a> Matcher<'a> {
                             rrc = MATCH_NOMATCH;
                             continue;
                         }
+                        self.jit_release(fi, 1);
                         let fr = &mut self.frames[fi];
                         fr.eptr = fr.t0;
                         fr.n[1] -= 1;
@@ -1930,16 +2324,43 @@ impl<'a> Matcher<'a> {
                         if rrc != MATCH_NOMATCH {
                             continue;
                         }
+                        // The JIT does not come back to the zero path of an
+                        // optional negative assertion that held: what follows
+                        // would only run again at the same place.
+                        if self.jit
+                            && f.n[3] == 1
+                            && matches!(code[f.t0], Op::Bra { kind: BraKind::AssertNot | BraKind::AssertBackNot, .. })
+                        {
+                            continue;
+                        }
                         let ket = self.to_ket(f.t0);
                         // The JIT takes the zero path with the words the
                         // group saved before its first branch still on the
                         // stack (the start position, and the iteration mark
                         // of a repeated group).
-                        let words = if matches!(code[ket], Op::Ket { kind: KetKind::RMax, .. }) { 2 } else { 1 };
+                        let words = if prog.jit.loop_zero[pc] {
+                            0
+                        } else if matches!(code[ket], Op::Ket { kind: KetKind::RMax, .. }) {
+                            2
+                        } else {
+                            1
+                        };
                         if let Err(e) = self.jit_push(words, fi) {
                             return e;
                         }
-                        if prog.jit.count[pc] != LoopCount::Silent {
+                        // An optional assertion counts no step
+                        // (`compile_assert_matchingpath()`).
+                        let assertion = matches!(
+                            code[f.t0],
+                            Op::Bra {
+                                kind: BraKind::Assert
+                                    | BraKind::AssertNot
+                                    | BraKind::AssertBack
+                                    | BraKind::AssertBackNot,
+                                ..
+                            }
+                        );
+                        if prog.jit.count[pc] != LoopCount::Silent && !assertion {
                             jit_count!();
                         }
                         self.frames[fi].pc = ket + 1;
@@ -1951,7 +2372,17 @@ impl<'a> Matcher<'a> {
                         }
                         // Trying the group releases the start position
                         // (kept for a lazily repeated group).
-                        if self.jit
+                        if self.jit && prog.jit.loop_zero[pc] {
+                            // The lazy loop's next iteration drops the
+                            // counter the last one saved.
+                            if let Some(last) = self.jit_alloc.last_mut()
+                                && last.0 == fi
+                                && last.1 > 0
+                            {
+                                last.1 -= 1;
+                                self.jit_words -= 1;
+                            }
+                        } else if self.jit
                             && !matches!(code[self.to_ket(pc + 1)], Op::Ket { kind: KetKind::RMin, .. })
                             && let Some(&(f, w)) = self.jit_alloc.last()
                             && f == fi
@@ -2092,6 +2523,11 @@ impl<'a> Matcher<'a> {
                         }
                         let ket = self.to_ket(self.frames[fi].pc);
                         self.frames[fi].pc = ket + 1;
+                        if let Op::Ket { bra, .. } = code[ket]
+                            && let Err(e) = self.jit_assertion_held(bra, fi)
+                        {
+                            return e;
+                        }
                         continue 'exec;
                     }
                     Ret::AssertNot => match if self.jit && rrc == MATCH_SKIP_ARG { MATCH_SKIP } else { rrc } {
@@ -2105,6 +2541,12 @@ impl<'a> Matcher<'a> {
                             if !self.is_alt(next) {
                                 self.end = f.saved_end;
                                 self.frames[fi].pc = next + 1;
+                                self.jit_optional_assert_not_held(fi);
+                                if let Op::Ket { bra, .. } = code[next]
+                                    && let Err(e) = self.jit_assertion_held(bra, fi)
+                                {
+                                    return e;
+                                }
                                 continue 'exec;
                             }
                             self.frames[fi].pc = next;
@@ -2124,6 +2566,12 @@ impl<'a> Matcher<'a> {
                             self.end = f.saved_end;
                             let ket = self.to_ket(pc);
                             self.frames[fi].pc = ket + 1;
+                            self.jit_optional_assert_not_held(fi);
+                            if let Op::Ket { bra, .. } = code[ket]
+                                && let Err(e) = self.jit_assertion_held(bra, fi)
+                            {
+                                return e;
+                            }
                             continue 'exec;
                         }
                         _ => {
@@ -2162,6 +2610,14 @@ impl<'a> Matcher<'a> {
                                 continue;
                             }
                         };
+                        // When its branch matched, a condition that saved a
+                        // frame keeps it.
+                        if self.jit
+                            && matches!(rrc, MATCH_ACCEPT | MATCH_MATCH)
+                            && let Err(e) = self.jit_push(prog.jit.cond_kept[pc + 1], fi)
+                        {
+                            return e;
+                        }
                         self.end = f.saved_end;
                         // pc is the Cond bracket; the assertion starts at pc + 1.
                         let next = if condition { self.to_ket(pc + 1) + 1 } else { self.frames[fi].len };
@@ -2200,11 +2656,33 @@ impl<'a> Matcher<'a> {
                         self.frames[fi].pc = f.t0;
                         continue 'exec;
                     }
-                    Ret::JitEmptyLoop => {
-                        if rrc == MATCH_NOMATCH {
-                            return ERROR_JIT_STACKLIMIT;
+                    Ret::JitOnceAgain => {
+                        if rrc != MATCH_NOMATCH {
+                            continue;
                         }
+                        // Backtracking pops the iteration's end and leaves the
+                        // loop there again.
+                        if let Some(&(f, w)) = self.jit_alloc.last()
+                            && f == fi
+                        {
+                            self.jit_alloc.pop();
+                            self.jit_words -= w;
+                        }
+                        jit_count!();
+                        self.frames[fi].pc = pc + 1;
+                        continue 'exec;
+                    }
+                    Ret::JitOnceLoopKeep => {
+                        self.jit_release(fi, 1);
                         continue;
+                    }
+                    Ret::JitOnceLoopAgain => {
+                        if rrc != MATCH_NOMATCH {
+                            continue;
+                        }
+                        self.jit_release(fi, 1);
+                        self.frames[fi].pc = pc + 1;
+                        continue 'exec;
                     }
                     Ret::JitBraMinZeroAgain => {
                         if rrc == MATCH_NOMATCH {
@@ -2218,6 +2696,12 @@ impl<'a> Matcher<'a> {
                         }
                         if self.jit_counts_bracket(f.t0, KetKind::RMax) {
                             jit_count!();
+                        }
+                        // Leaving the loop pops the last iteration's end
+                        // (the `OP_KETRMAX` backtracking path), unless a
+                        // `BRAZERO` keeps it for its own backtracking.
+                        if self.jit && !(f.t0 > 0 && matches!(code[f.t0 - 1], Op::BraZero)) {
+                            self.jit_release(fi, 1);
                         }
                         self.frames[fi].pc = pc + 1;
                         continue 'exec;
@@ -2247,7 +2731,15 @@ impl<'a> Matcher<'a> {
                             Ret::SkipArg => {
                                 let Op::SkipArg(id) = code[pc] else { return ERROR_INTERNAL };
                                 self.verb_skip_name = id;
-                                MATCH_SKIP_ARG
+                                // The JIT looks for the mark on the spot
+                                // (`do_search_mark()`) and, without one,
+                                // goes on backtracking; `pcre2_match()`
+                                // retries the attempt ignoring the verb.
+                                if self.jit && !self.jit_skip_arg_caught(fi, id) {
+                                    MATCH_NOMATCH
+                                } else {
+                                    MATCH_SKIP_ARG
+                                }
                             }
                             _ => {
                                 self.verb_ecode = pc;
@@ -2258,6 +2750,54 @@ impl<'a> Matcher<'a> {
                     }
                 }
             }
+        }
+    }
+
+    /// Whether the `(*SKIP:NAME)` that failed at frame `fi` is caught on the
+    /// way back: by its `(*MARK:NAME)`, or by a negative or conditional
+    /// assertion or a recursion the JIT compiled as a function, which it
+    /// leaves at once (`local_quit_available`).
+    fn jit_skip_arg_caught(&self, fi: usize, name: u32) -> bool {
+        let target = &self.prog.marks[name as usize];
+        let mut k = fi;
+        while self.frames[k].rdepth > 0 {
+            k -= self.frames[k].back;
+            let f = &self.frames[k];
+            match f.ret {
+                Ret::Mark => {
+                    if let Op::Mark(id) = self.prog.code[f.pc]
+                        && self.prog.marks[id as usize] == *target
+                    {
+                        return true;
+                    }
+                }
+                Ret::AssertNot | Ret::CondAssert => return true,
+                Ret::Recurse if !self.prog.jit.recurse_inline[(f.n[0] & GF_DATAMASK) as usize] => return true,
+                _ => {}
+            }
+        }
+        false
+    }
+
+    /// What the atomic assertion at `bra` leaves on the JIT stack when it
+    /// holds (kept by frame `fi`), and the step a lazily optional one counts
+    /// as it goes back to what follows.
+    fn jit_assertion_held(&mut self, bra: usize, fi: usize) -> Result<(), i32> {
+        if !self.jit {
+            return Ok(());
+        }
+        self.jit_push(self.prog.jit.assert_kept[bra], fi)?;
+        if bra > 0 && matches!(self.prog.code[bra - 1], Op::BraMinZero) {
+            self.count()?;
+        }
+        Ok(())
+    }
+
+    /// Notes on the `BRAZERO` frame before the negative assertion at frame
+    /// `fi` that the assertion held.
+    fn jit_optional_assert_not_held(&mut self, fi: usize) {
+        if self.jit && fi > 0 && self.frames[fi].back == 1 && self.frames[fi - 1].ret == Ret::BraZero {
+            self.frames[fi - 1].n[3] = 1;
         }
     }
 
@@ -2287,6 +2827,7 @@ impl<'a> Matcher<'a> {
         f.offset_top = p.offset_top;
         f.capture_last = p.capture_last;
         f.current_recurse = p.current_recurse;
+        f.jit_rec = p.jit_rec;
         f.pc = p.pc + 1;
     }
 
@@ -2655,10 +3196,16 @@ pub fn exec(m: &mut Matcher<'_>, start_offset: usize, options: u32, info: &Start
     let start_bits = if info.startline { None } else { info.start_bits };
     let mut req_cu_ptr: isize = start_offset as isize - 1;
     let mut start_match = start_offset;
+    let fast_forward = if m.jit { m.prog.jit.fast_forward } else { None };
+    if m.jit {
+        m.early = vec![0; m.prog.jit.early_slots];
+    }
     loop {
         if !info.disabled {
             if anchored {
-                if first.is_some() || start_bits.is_some() {
+                // The JIT does not check the first code unit of an anchored
+                // pattern (only `pcre2_match()` does).
+                if !m.jit && (first.is_some() || start_bits.is_some()) {
                     let mut ok = start_match < end;
                     if ok {
                         let c = s[start_match];
@@ -2670,6 +3217,13 @@ pub fn exec(m: &mut Matcher<'_>, start_offset: usize, options: u32, info: &Start
                     if !ok {
                         return Exec::NoMatch;
                     }
+                }
+            } else if m.jit
+                && let Some(forward) = &info.forward
+            {
+                match forward.next(&s[..end], start_match, m.utf) {
+                    Some(p) => start_match = p,
+                    None => return Exec::NoMatch,
                 }
             } else if let Some((a, b)) = first {
                 start_match = s[start_match..].iter().position(|&c| c == a || c == b).map_or(end, |i| start_match + i);
@@ -2712,7 +3266,14 @@ pub fn exec(m: &mut Matcher<'_>, start_offset: usize, options: u32, info: &Start
                 && p as isize > req_cu_ptr
             {
                 let check_length = end - start_match;
-                if check_length < REQ_CU_MAX || (!anchored && check_length < REQ_CU_MAX * 1000) {
+                // The JIT searches when at most `REQ_CU_MAX * 100` code units
+                // remain (`search_requested_char()`).
+                let search = if m.jit {
+                    check_length <= REQ_CU_MAX * 100
+                } else {
+                    check_length < REQ_CU_MAX || (!anchored && check_length < REQ_CU_MAX * 1000)
+                };
+                if search {
                     let find = |c: u8| s.get(p..).and_then(|t| t.iter().position(|&x| x == c)).map(|i| p + i);
                     let found = if rc != rc2 { find(rc).or_else(|| find(rc2)) } else { find(rc) };
                     match found {
@@ -2721,6 +3282,9 @@ pub fn exec(m: &mut Matcher<'_>, start_offset: usize, options: u32, info: &Start
                     }
                 }
             }
+        }
+        if let Some(slot) = fast_forward {
+            m.early[slot] = start_match + 1;
         }
         m.start_used_ptr = start_match;
         m.last_used_ptr = start_match;
@@ -2740,7 +3304,10 @@ pub fn exec(m: &mut Matcher<'_>, start_offset: usize, options: u32, info: &Start
             }
             MATCH_SKIP | MATCH_NOMATCH | MATCH_PRUNE | MATCH_THEN => {
                 m.ignore_skip_arg = 0;
-                let mut n = start_match + 1;
+                // The JIT restarts after where the pattern's first
+                // iterator got to (`fast_forward_bc_ptr`).
+                let from = fast_forward.map_or(start_match, |slot| m.early[slot] - 1);
+                let mut n = from + 1;
                 if m.utf {
                     n = m.forwardchar(n);
                 }

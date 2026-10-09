@@ -1,7 +1,7 @@
 {
   "ops": {
     "pcre.preg_match": {
-      "doc": "preg_match($pattern, $subject, $matches, $flags, $offset): result, $matches, preg_last_error() and the warning",
+      "doc": "preg_match($pattern, $subject, $matches, $flags, $offset): result, $matches, preg_last_error() and the warning; with \"matches\": false, $matches is left out of the call",
       "covers": [
         "preg_match()",
         "preg_last_error()"
@@ -270,6 +270,104 @@
               "flags"
             ]
           }
+        },
+        {
+          "name": "bare",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "pcre_any_pattern_jit"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "pcre_limit_pattern"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "pcre_verb_pattern"
+                  }
+                ]
+              },
+              "subject": {
+                "gen": "ref",
+                "name": "pcre_subject"
+              },
+              "matches": {
+                "gen": "const",
+                "value": false
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  256,
+                  512
+                ]
+              },
+              "offset": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  0,
+                  1,
+                  -1,
+                  3
+                ]
+              }
+            },
+            "optional": [
+              "flags",
+              "offset"
+            ]
+          }
+        },
+        {
+          "name": "verbs",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_verb_pattern"
+              },
+              "subject": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "abcx",
+                    "min": 0,
+                    "max": 6
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "pcre_subject"
+                  }
+                ]
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  0,
+                  256,
+                  512
+                ]
+              }
+            },
+            "optional": [
+              "flags"
+            ]
+          }
         }
       ]
     },
@@ -501,6 +599,46 @@
                   2,
                   256,
                   258
+                ]
+              }
+            },
+            "optional": [
+              "flags"
+            ]
+          }
+        },
+        {
+          "name": "verbs",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "pattern": {
+                "gen": "ref",
+                "name": "pcre_verb_pattern"
+              },
+              "subject": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "abcx",
+                    "min": 0,
+                    "max": 6
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "pcre_subject"
+                  }
+                ]
+              },
+              "flags": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  1,
+                  2,
+                  256
                 ]
               }
             },
@@ -4150,6 +4288,14 @@
     "pcre_limit_start": {
       "gen": "pick",
       "from": [
+        "(*LIMIT_MATCH=1)",
+        "(*LIMIT_MATCH=2)",
+        "(*LIMIT_MATCH=3)",
+        "(*LIMIT_MATCH=5)",
+        "(*LIMIT_MATCH=10)",
+        "(*LIMIT_MATCH=30)",
+        "(*LIMIT_MATCH=100)",
+        "(*LIMIT_MATCH=1000)",
         "(*NO_JIT)(*LIMIT_MATCH=1)",
         "(*NO_JIT)(*LIMIT_MATCH=2)",
         "(*NO_JIT)(*LIMIT_MATCH=3)",
@@ -4277,18 +4423,187 @@
           "name": "pcre_modifiers"
         }
       ]
+    },
+    "pcre_verb_atom": {
+      "gen": "pick",
+      "from": [
+        "a",
+        "b",
+        "ab",
+        "x",
+        "b*",
+        "a?",
+        "\\w",
+        "a+",
+        "[ab]",
+        "(*THEN)",
+        "(*THEN:t)",
+        "(*MARK:m)",
+        "(*MARK:n)",
+        "(*:m)",
+        "(*SKIP:m)",
+        "(*SKIP:n)",
+        "(*SKIP)",
+        "(*PRUNE)",
+        "(*PRUNE:p)",
+        "(*COMMIT)",
+        "(*ACCEPT)",
+        "(*F)"
+      ]
+    },
+    "pcre_verb_quant": {
+      "gen": "pick",
+      "from": [
+        "",
+        "",
+        "",
+        "*",
+        "+",
+        "?",
+        "*?",
+        "+?",
+        "{2}",
+        "{1,3}",
+        "++"
+      ]
+    },
+    "pcre_verb_group": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "pick",
+          "from": [
+            "(?:",
+            "(?:",
+            "(",
+            "(?>",
+            "(*sr:",
+            "(?=",
+            "(?!",
+            "(?(1)",
+            "(?|"
+          ]
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "repeat",
+            "part": {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "ref",
+                  "name": "pcre_verb_atom"
+                },
+                {
+                  "gen": "ref",
+                  "name": "pcre_verb_quant"
+                }
+              ]
+            },
+            "min": 1,
+            "max": 3,
+            "sep": ""
+          },
+          "min": 1,
+          "max": 3,
+          "sep": "|"
+        },
+        {
+          "gen": "const",
+          "value": ")"
+        },
+        {
+          "gen": "ref",
+          "name": "pcre_verb_quant"
+        }
+      ]
+    },
+    "pcre_verb_pattern": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "const",
+          "value": "~"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "",
+            "",
+            "(*NO_START_OPT)",
+            "(*LIMIT_MATCH=3)",
+            "(*LIMIT_MATCH=20)",
+            "(*NO_JIT)"
+          ]
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "pcre_verb_atom"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "pcre_verb_quant"
+                  }
+                ]
+              },
+              {
+                "gen": "ref",
+                "name": "pcre_verb_group"
+              },
+              {
+                "gen": "ref",
+                "name": "pcre_verb_group"
+              }
+            ]
+          },
+          "min": 1,
+          "max": 4,
+          "sep": ""
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "",
+            "",
+            "",
+            "c",
+            "$",
+            "(*sr:x|)+?(?<=x)",
+            "(*sr:)+?(?<=x)"
+          ]
+        },
+        {
+          "gen": "const",
+          "value": "~"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "",
+            "u",
+            "i"
+          ]
+        }
+      ]
     }
   },
   "deviations": [
     {
       "symbol": "preg_match()",
-      "php": "PHP runs patterns in the PCRE2 JIT with a 192 KiB stack (pcre.jit=1, applies to every preg_* function): deep recursion and long runs of group repetitions fail with PREG_JIT_STACKLIMIT_ERROR after a number of iterations set by the JIT's stack frame layout (4095 repetitions of (?:a|b)*, 24574 of (?:ab)*, 4915 levels of (a(?1)?b)), and a recursion that never consumes input runs until that stack or pcre.backtrack_limit gives out",
-      "reason": "php_std keeps the words the JIT's code would hold on that stack (exec::JIT_STACK_WORDS, from allocate_stack() in pcre2_jit_compile.c): groups, alternatives, captures, BRAZERO and iterators in repeated groups match PHP's limits exactly, recursion only approximately (within a word per level for simple recursions). How deep a recursive pattern may go, and which limit error a recursion that never consumes input reports (PREG_JIT_STACKLIMIT_ERROR or PREG_BACKTRACK_LIMIT_ERROR, e.g. ~(*NOTEMPTY)(?R)*?~u), can differ. Matches that stay within PHP's limits are identical"
-    },
-    {
-      "symbol": "preg_match()",
-      "php": "Under the JIT a pattern's own (*LIMIT_MATCH=n) counts the steps where the generated code calls count_match(); the JIT also loops replicated groups such as (?:x){1,3} and skips retries it knows to fail",
-      "reason": "php_std counts the JIT's steps for iterators, group ends, BRAZERO and recursion, which reproduces where pcre.backtrack_limit (1000000) runs out on backtracking-heavy patterns, but not the replicated-group loops: a small (*LIMIT_MATCH=n) can run out at a different step under the JIT. The interpreter's counting ((*NO_JIT), the retry after an empty match) is exact and fuzzed"
+      "php": "PHP runs patterns in the PCRE2 JIT with a 192 KiB stack (pcre.jit=1, applies to every preg_* function): deep recursion and long runs of group repetitions fail with PREG_JIT_STACKLIMIT_ERROR after a number of iterations set by the words the JIT's code keeps on that stack, and pcre.backtrack_limit or a pattern's (*LIMIT_MATCH=n) counts the steps where that code calls count_match()",
+      "reason": "php_std keeps the same words (allocate_stack() in pcre2_jit_compile.c: groups, alternatives, captures, BRAZERO, iterators, counted loops, recursions, assertions, atomic frames, marks and THEN traps), counts the same steps and searches start positions the same way (fast_forward_first_n_chars()); this is checked by comparing, for some 50,000 generated patterns, the smallest (*LIMIT_MATCH=n) with which PHP and php_std give each result. Callouts ((?C), which PHP never calls) are left out of the compiled pattern, so a pattern with a callout can run out of stack or steps at a different point"
     },
     {
       "symbol": "preg_match()",
@@ -4308,6 +4623,21 @@
       "case": "pcre.json#JIT ignores (*NOTEMPTY)"
     },
     {
+      "symbol": "preg_match()",
+      "description": "Called with only $pattern and $subject, preg_match() has no $matches and treats an empty match like preg_match_all() does: it retries at the same position with PCRE2_NOTEMPTY_ATSTART | PCRE2_ANCHORED (in the interpreter), and when that retry hits a limit the result is false. Passing $flags or $offset by name gives it a $matches to fill, which turns this off",
+      "case": "pcre.json#preg_match without matches retries an empty match"
+    },
+    {
+      "symbol": "preg_match()",
+      "description": "The JIT only tries start positions where the code units at some fixed offsets fit the pattern, so a small (*LIMIT_MATCH=n) does not run out at positions the interpreter would try",
+      "case": "pcre.json#JIT start search skips positions it never tries"
+    },
+    {
+      "symbol": "preg_match()",
+      "description": "Under the JIT, each branch holding a (*THEN) keeps a trap of three or more words on the JIT stack",
+      "case": "pcre.json#JIT THEN trap holds stack words"
+    },
+    {
       "symbol": "preg_match_all()",
       "description": "Under the JIT a lookbehind with a variable-length branch sees its own position as the end of the subject (\\z, $, \\b and lookaheads inside it)",
       "case": "pcre.json#JIT ends the subject at a variable-length lookbehind"
@@ -4316,6 +4646,11 @@
       "symbol": "preg_match_all()",
       "description": "Under the JIT, backtracking into a non-atomic lookbehind that already succeeded retries it against the real end of the subject and continues where that retry ended",
       "case": "pcre.json#JIT resumes after a non-atomic lookbehind retried at the subject end"
+    },
+    {
+      "symbol": "preg_match()",
+      "description": "Under the JIT a variable-length lookbehind used as a condition only holds when its branch ends where the lookbehind started; pcre2_match() also accepts a branch that ends earlier",
+      "case": "pcre.json#JIT holds a lookbehind condition to its end"
     },
     {
       "symbol": "preg_match_all()",

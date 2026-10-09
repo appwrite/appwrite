@@ -902,6 +902,239 @@
       }
     },
     {
+      "name": "preg_match without matches retries an empty match",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=30)|(?:a|aa)*b~",
+        "subject": "aaaaaaaaaaaa",
+        "matches": false
+      },
+      "expect": {
+        "result": false,
+        "error": 2,
+        "warning": null
+      }
+    },
+    {
+      "name": "preg_match with matches keeps an empty match",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=30)|(?:a|aa)*b~",
+        "subject": "aaaaaaaaaaaa"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          ""
+        ],
+        "error": 0,
+        "warning": null
+      }
+    },
+    {
+      "name": "preg_match without matches",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "/b(c)/",
+        "subject": "abc",
+        "matches": false
+      },
+      "expect": {
+        "result": 1,
+        "error": 0,
+        "warning": null
+      }
+    },
+    {
+      "name": "preg_match with flags by name keeps an empty match",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=30)|(?:a|aa)*b~",
+        "subject": "aaaaaaaaaaaa",
+        "matches": false,
+        "flags": 0
+      },
+      "expect": {
+        "result": 1,
+        "error": 0,
+        "warning": null
+      }
+    },
+    {
+      "name": "JIT start search skips positions it never tries",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=1)x?(?:a){3}~",
+        "subject": "abab"
+      },
+      "expect": {
+        "result": 0,
+        "matches": [],
+        "error": 0,
+        "warning": null
+      }
+    },
+    {
+      "name": "the interpreter tries every start position",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*NO_JIT)(*LIMIT_MATCH=1)x?(?:a){3}~",
+        "subject": "abab"
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 2,
+        "warning": null
+      }
+    },
+    {
+      "name": "JIT stops a class repeat only before the character after it",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=2)[ab]*a{1,3}b~",
+        "subject": "ab"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "ab"
+        ],
+        "error": 0,
+        "warning": null
+      }
+    },
+    {
+      "name": "JIT stack after leaving a repeated group",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=12287)(*sr:(?:\\w+)+)*(*sr:)+?(?<=a)~",
+        "subject": "b"
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 6,
+        "warning": null
+      }
+    },
+    {
+      "name": "JIT match limit before leaving a repeated group",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=12286)(*sr:(?:\\w+)+)*(*sr:)+?(?<=a)~",
+        "subject": "b"
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 2,
+        "warning": null
+      }
+    },
+    {
+      "name": "JIT THEN trap holds stack words",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=12285)((*THEN)a|(?:a|b))(*sr:)+?(?<=x)~",
+        "subject": "abab"
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 6,
+        "warning": null
+      }
+    },
+    {
+      "name": "JIT match limit before the THEN trap overflows",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=12284)((*THEN)a|(?:a|b))(*sr:)+?(?<=x)~",
+        "subject": "abab"
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 2,
+        "warning": null
+      }
+    },
+    {
+      "name": "JIT ignores an unmatched SKIP name and backtracks",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(?:b*|c)(?:(*SKIP:m)a)*~",
+        "subject": "b"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "b"
+        ],
+        "error": 0,
+        "warning": null
+      }
+    },
+    {
+      "name": "JIT holds a lookbehind condition to its end",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~ab(?(?<=a(x)?)Y|N)~",
+        "subject": "abN"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          "abN"
+        ],
+        "error": 0,
+        "warning": null
+      }
+    },
+    {
+      "name": "the interpreter lets a lookbehind condition end early",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*NO_JIT)ab(?(?<=a(x)?)Y|N)~",
+        "subject": "abN"
+      },
+      "expect": {
+        "result": 0,
+        "matches": [],
+        "error": 0,
+        "warning": null
+      }
+    },
+    {
+      "name": "JIT keeps each \\X iteration on its stack",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=12286)\\X*(*sr:)+?(?<=x)~",
+        "subject": "abc"
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 6,
+        "warning": null
+      }
+    },
+    {
+      "name": "JIT keeps a positive assertion's frame",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=8192)\\w*(?=(a|b))(*sr:x|)+?(?<=x)~",
+        "subject": "a"
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 2,
+        "warning": null
+      }
+    },
+    {
       "name": "all pattern order",
       "op": "pcre.preg_match_all",
       "args": {

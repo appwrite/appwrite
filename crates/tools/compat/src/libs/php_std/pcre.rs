@@ -2,6 +2,8 @@
 //! `preg_replace_callback`, `preg_split`, `preg_quote`, `preg_grep`
 //! (`php_std::pcre`). Each reports what `ops/pcre.php` reports: the return
 //! value, the by-reference outputs, `preg_last_error()` and the warning.
+//! `pcre.preg_match` with `"matches": false` leaves `$matches` out of the
+//! call: with no flags or offset that is [`pcre::preg_match_bare`].
 
 use php_std::pcre::{self, Array, Key, Preg, StrOrArray};
 use serde_json::{Map, Value};
@@ -26,6 +28,26 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
             let pattern = a.bytes("pattern")?;
             let subject = a.bytes("subject")?;
             let offset = a.opt_i64("offset")?.unwrap_or(0);
+            if op == "pcre.preg_match" && a.opt_bool("matches")? == Some(false) {
+                let named = a.opt_i64("flags")?.is_some() || a.opt_i64("offset")?.is_some();
+                let r = if named {
+                    pcre::preg_match(&pattern, &subject, flags, offset).map(|p| Preg {
+                        value: p.value.result,
+                        error: p.error,
+                        warning: p.warning,
+                    })
+                } else {
+                    pcre::preg_match_bare(&pattern, &subject)
+                };
+                return Ok(match r {
+                    Ok(p) => {
+                        let mut o = Map::new();
+                        o.insert("result".into(), php_value(&p.value));
+                        report(o, &p)
+                    }
+                    Err(e) => Outcome::err(e.php_class(), e.to_string()),
+                });
+            }
             let r = if op == "pcre.preg_match" {
                 pcre::preg_match(&pattern, &subject, flags, offset)
             } else {

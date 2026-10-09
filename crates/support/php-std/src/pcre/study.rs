@@ -9,6 +9,7 @@
 //! position behaves differently without them.
 
 use super::compile::{Assert, Class, Lit, REQ_CASELESS, REQ_NONE, REQ_VARY, XItem};
+use super::forward::Forward;
 use super::parse::{PT_CLIST, opt};
 use super::program::{BraKind, Op, Program, UNLIMITED};
 use super::unicode::{self, CBIT_DIGIT, CBIT_SPACE, CBIT_WORD, CBITS};
@@ -29,6 +30,9 @@ pub struct StartInfo {
     pub minlength: usize,
     /// `PCRE2_NO_START_OPTIMIZE`: none of the above is used.
     pub disabled: bool,
+    /// How the JIT searches for start positions before it falls back to
+    /// the first code unit, the start of a line or the start bits.
+    pub forward: Option<Forward>,
 }
 
 const SSB_FAIL: i32 = 0;
@@ -66,6 +70,9 @@ pub fn study(prog: &Program, options: u32) -> StartInfo {
     }
     let utf = s.utf;
     let ucp = s.ucp;
+    if !anchored {
+        info.forward = Forward::plan(&prog.code, utf, ucp);
+    }
     let mut minminlength = 0usize;
     let mut units = prog.units;
     if units.firstcuflags >= REQ_NONE {

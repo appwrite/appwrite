@@ -5,6 +5,7 @@
 //! | PHP | Rust |
 //! |---|---|
 //! | `preg_match($p, $s, $m, $flags, $offset)` | [`preg_match`] |
+//! | `preg_match($p, $s)` | [`preg_match_bare`] |
 //! | `preg_match_all($p, $s, $m, $flags, $offset)` | [`preg_match_all`] |
 //! | `preg_replace($p, $r, $s, $limit, $count)` | [`preg_replace`] |
 //! | `preg_replace_callback($p, $fn, $s, $limit, $count, $flags)` | [`preg_replace_callback`] |
@@ -31,13 +32,16 @@
 //! `(*NOTEMPTY)` when called directly, ends the subject at a lookbehind
 //! with a variable-length branch (and keeps that end like a register when
 //! backtracking into a non-atomic lookbehind), lets an unmatched
-//! `(*SKIP:NAME)` end a negative assertion, has no recursion-loop check,
-//! counts match steps where its code calls `count_match()` (so
-//! `pcre.backtrack_limit` runs out at the same subject length), and fails a
-//! JIT compilation (disabling the JIT for the process) for `\C` in UTF mode
-//! and backtracking verbs in non-atomic assertions. The 192 KiB JIT stack is
-//! approximated by a budget of backtracking frames; see the `pcre`
-//! deviations in `tests/compat/php-std/spec.d/pcre.json`.
+//! `(*SKIP:NAME)` end a negative assertion and otherwise just backtracks
+//! past it, has no recursion-loop check, searches for start positions its
+//! own way (`fast_forward_first_n_chars()`), counts match steps where its
+//! code calls `count_match()` (so `pcre.backtrack_limit` and
+//! `(*LIMIT_MATCH=n)` run out at the same step), keeps the words its code
+//! would hold on the 192 KiB JIT stack (so `PREG_JIT_STACKLIMIT_ERROR`
+//! comes at the same depth), and fails a JIT compilation (disabling the
+//! JIT for the process) for `\C` in UTF mode and backtracking verbs in
+//! non-atomic assertions. See the `pcre` deviations in
+//! `tests/compat/php-std/spec.d/pcre.json`.
 //!
 //! Every function here is checked against the real PHP function by
 //! `bin/compat fuzz php-std` (operations `pcre.*`).
@@ -48,6 +52,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 
 mod compile;
 mod exec;
+mod forward;
 mod lookbehind;
 mod parse;
 mod possess;
@@ -406,14 +411,19 @@ impl Regex {
         if parsed.options & opt::NO_AUTO_POSSESS == 0 {
             possess::auto_possessify(&mut prog.code, parsed.options & opt::UTF != 0, parsed.options & opt::UCP != 0);
         }
-        prog.jit = program::JitLayout::new(&prog.code, prog.top_bracket, &prog.group_start);
+        let start = study::study(&prog, parsed.options);
+        let jit_options = program::JitOptions {
+            early_fail: !start.anchored && !start.disabled && !program::skip_in_lookbehind(&prog.code),
+            utf: parsed.options & opt::UTF != 0,
+            ucp: parsed.options & opt::UCP != 0,
+        };
+        prog.jit = program::JitLayout::new(&prog.code, prog.top_bracket, &prog.group_start, &jit_options);
         let mut names = vec![None; prog.top_bracket as usize + 1];
         for (name, number) in &prog.names {
             names[*number as usize] = Some(name.clone());
         }
         let name_count = prog.names.len();
         let jit = !contains_no_jit(pattern);
-        let start = study::study(&prog, parsed.options);
         Ok(Regex {
             options: parsed.options,
             php_utf: false,
@@ -799,7 +809,21 @@ pub struct MatchResult {
 
 /// `preg_match($pattern, $subject, $matches, $flags, $offset)`.
 pub fn preg_match(pattern: &[u8], subject: &[u8], flags: i64, offset: i64) -> Result<Preg<MatchResult>, ArgumentError> {
-    match_impl("preg_match", pattern, subject, false, flags, offset)
+    match_impl("preg_match", pattern, subject, false, true, flags, offset)
+}
+
+/// `preg_match($pattern, $subject)`: `preg_match()` without `$matches`.
+/// PHP then treats an empty match like the next match of
+/// `preg_match_all()`: it retries at the same position with
+/// `PCRE2_NOTEMPTY_ATSTART | PCRE2_ANCHORED`, and an error there (a limit)
+/// makes the result `false`. Passing `flags:` or `offset:` by name gives
+/// `preg_match()` a `$matches` to fill, so that is [`preg_match`].
+pub fn preg_match_bare(pattern: &[u8], subject: &[u8]) -> Result<Preg<Value>, ArgumentError> {
+    match_impl("preg_match", pattern, subject, false, false, 0, 0).map(|p| Preg {
+        value: p.value.result,
+        error: p.error,
+        warning: p.warning,
+    })
 }
 
 /// `preg_match_all($pattern, $subject, $matches, $flags, $offset)`.
@@ -809,7 +833,7 @@ pub fn preg_match_all(
     flags: i64,
     offset: i64,
 ) -> Result<Preg<MatchResult>, ArgumentError> {
-    match_impl("preg_match_all", pattern, subject, true, flags, offset)
+    match_impl("preg_match_all", pattern, subject, true, true, flags, offset)
 }
 
 /// `php_do_pcre_match()` and `php_pcre_match_impl()`.
@@ -818,6 +842,7 @@ fn match_impl(
     pattern: &[u8],
     subject: &[u8],
     global: bool,
+    subpats: bool,
     flags: i64,
     start_offset: i64,
 ) -> Result<Preg<MatchResult>, ArgumentError> {
@@ -882,44 +907,51 @@ fn match_impl(
             Ok(Some(md)) => {
                 matched += 1;
                 let ov = &md.ovector;
-                if ov[1] < ov[0] {
-                    let warning = Some(format!("{func}(): Get subpatterns list failed").into_bytes());
-                    return done(Value::Bool(false), matches, error, warning);
-                }
-                if global {
-                    if let Some(sets) = match_sets.as_mut() {
-                        for (i, set) in sets.iter_mut().enumerate().take(md.count) {
-                            if offset_capture {
-                                add_offset_pair(set, subject, ov[2 * i], ov[2 * i + 1], None, unmatched_as_null);
-                            } else {
-                                set.push(match_value(subject, ov[2 * i], ov[2 * i + 1], unmatched_as_null));
+                // Without `$matches` nothing is recorded, and a single
+                // match goes on to the empty-match retry below.
+                if subpats {
+                    if ov[1] < ov[0] {
+                        let warning = Some(format!("{func}(): Get subpatterns list failed").into_bytes());
+                        return done(Value::Bool(false), matches, error, warning);
+                    }
+                    if global {
+                        if let Some(sets) = match_sets.as_mut() {
+                            for (i, set) in sets.iter_mut().enumerate().take(md.count) {
+                                if offset_capture {
+                                    add_offset_pair(set, subject, ov[2 * i], ov[2 * i + 1], None, unmatched_as_null);
+                                } else {
+                                    set.push(match_value(subject, ov[2 * i], ov[2 * i + 1], unmatched_as_null));
+                                }
                             }
-                        }
-                        if let Some(mark) = re.mark_value(md.mark) {
-                            marks.get_or_insert_with(Array::new).add(Key::Int(matched - 1), Value::Str(mark));
-                        }
-                        for set in sets.iter_mut().take(num_subpats).skip(md.count) {
-                            if offset_capture {
-                                add_offset_pair(set, subject, UNSET, UNSET, None, unmatched_as_null);
-                            } else if unmatched_as_null {
-                                set.push(Value::Null);
-                            } else {
-                                set.push(Value::Str(Vec::new()));
+                            if let Some(mark) = re.mark_value(md.mark) {
+                                marks.get_or_insert_with(Array::new).add(Key::Int(matched - 1), Value::Str(mark));
                             }
+                            for set in sets.iter_mut().take(num_subpats).skip(md.count) {
+                                if offset_capture {
+                                    add_offset_pair(set, subject, UNSET, UNSET, None, unmatched_as_null);
+                                } else if unmatched_as_null {
+                                    set.push(Value::Null);
+                                } else {
+                                    set.push(Value::Str(Vec::new()));
+                                }
+                            }
+                        } else {
+                            let mut set = Array::new();
+                            re.populate_subpat_array(&mut set, subject, &md, flags);
+                            matches.push(Value::Array(set));
                         }
                     } else {
-                        let mut set = Array::new();
-                        re.populate_subpat_array(&mut set, subject, &md, flags);
-                        matches.push(Value::Array(set));
+                        re.populate_subpat_array(&mut matches, subject, &md, flags);
+                        break;
                     }
-                } else {
-                    re.populate_subpat_array(&mut matches, subject, &md, flags);
-                    break;
                 }
                 start_offset2 = ov[1];
                 if start_offset2 == ov[0] {
                     match re.call(subject, start_offset2, Call::Retry) {
                         Ok(Some(md)) => {
+                            if !global {
+                                break;
+                            }
                             pending = Some(Ok(Some(md)));
                             continue;
                         }
@@ -1527,6 +1559,22 @@ mod tests {
         let r = preg_split(b"/\\s*/", b"a b", -1, PREG_SPLIT_NO_EMPTY);
         assert_eq!(strs(&r.value), ["a", "b"]);
         assert_eq!(preg_quote(b"a.b*c/\0", Some(b"/")), b"a\\.b\\*c\\/\\000".to_vec());
+    }
+
+    #[test]
+    fn jit_start_search() {
+        use forward::Forward;
+        let plan = |p: &str| Regex::compile(p.as_bytes(), 0, 0).unwrap().start.forward;
+        // Positions {a,x} {a} {a}: no pair without a common unit.
+        assert_eq!(plan("x?(?:a){3}"), Some(Forward::Char { offset: 1, chars: *b"aa" }));
+        assert_eq!(plan("abc"), Some(Forward::Pair { offs1: 1, chars1: *b"bb", offs2: 0, chars2: *b"aa" }));
+        assert_eq!(plan("\\d+a"), None);
+        let pair = Forward::Pair { offs1: 1, chars1: *b"bb", offs2: 0, chars2: *b"aa" };
+        assert_eq!(pair.next(b"xaxab", 0, false), Some(3));
+        assert_eq!(pair.next(b"xaxa", 0, false), None);
+        // A limit of one step is enough: the JIT never tries "ab".
+        let r = preg_match(b"~(*LIMIT_MATCH=1)x?(?:a){3}~", b"abab", 0, 0).unwrap();
+        assert_eq!((r.value.result, r.error), (Value::Int(0), PregError::None));
     }
 
     #[test]

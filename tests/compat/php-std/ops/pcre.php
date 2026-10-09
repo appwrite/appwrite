@@ -4,12 +4,22 @@
 // preg_split, preg_quote, preg_grep. Each call reports its return value,
 // its by-reference outputs, preg_last_error() and the last warning emitted
 // (warnings are silenced with @ and read back with error_get_last()).
+// pcre.preg_match with "matches": false leaves $matches out of the call:
+// with only the pattern and subject, PHP handles an empty match like
+// preg_match_all(); flags or offset passed by name give it a $matches.
 
 $warning = static fn (): ?string => error_get_last()['message'] ?? null;
 
 return [
     'pcre.preg_match' => static function (array $a) use ($warning) {
         error_clear_last();
+        if (($a['matches'] ?? true) === false) {
+            $result = isset($a['flags']) || isset($a['offset'])
+                ? @preg_match($a['pattern'], $a['subject'], flags: $a['flags'] ?? 0, offset: $a['offset'] ?? 0)
+                : @preg_match($a['pattern'], $a['subject']);
+
+            return ['result' => $result, 'error' => preg_last_error(), 'warning' => $warning()];
+        }
         $matches = null;
         $result = @preg_match($a['pattern'], $a['subject'], $matches, $a['flags'] ?? 0, $a['offset'] ?? 0);
 
