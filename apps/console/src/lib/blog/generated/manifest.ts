@@ -44,6 +44,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "ai-data-analyst-appwrite-postgresql-read-only-role",
+    "href": "/blog/post/ai-data-analyst-appwrite-postgresql-read-only-role",
+    "title": "Build an AI data analyst on Appwrite PostgreSQL with a read-only role",
+    "description": "Build an ask-your-data agent that writes SQL with GPT-6 Luna and runs it on an Appwrite PostgreSQL database as a read-only login role, so PostgreSQL blocks writes, reads of hidden columns, and long queries.",
+    "date": "2026-10-05",
+    "lastUpdated": "2026-10-05",
+    "timeToRead": 15,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/ai-data-analyst-appwrite-postgresql-read-only-role/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "firewall-network-rules-premium-geo-db",
     "href": "/blog/post/firewall-network-rules-premium-geo-db",
     "title": "Stop IP-rotating bots with network-based Appwrite Firewall rules",
