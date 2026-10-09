@@ -1100,6 +1100,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "partners/guides/white-label",
+    "title": "Give every customer their own backend",
+    "description": "Run one Appwrite project per customer, deploy a single app into all of them, serve it from your own domain, and bill each customer from their project's usage.",
+    "excerpt": "Your customers sign up for your product and never create an Appwrite account or open the Console. Each customer still gets a backend of their own, with separate users, files, and database, in the region they picked. In this guide you build a platform that creates one project per customer and serves it under your own brand. The product you are building Studyhall sells a course platform to schools and training businesses. A school signs up, gets an address like…",
+    "breadcrumbs": [
+      "Guides",
+      "Give every customer a backend"
+    ]
+  },
+  {
     "slug": "partners/oauth-connect",
     "title": "OAuth connect",
     "description": "Connect your platform to users' Appwrite accounts with OAuth 2.0. Request consent to manage organizations and projects on their behalf.",
