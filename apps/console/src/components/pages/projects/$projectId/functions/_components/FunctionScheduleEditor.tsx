@@ -35,7 +35,7 @@ import { CronScheduleEditor } from '../CronScheduleEditor'
 const CUSTOM_PRESET = 'custom'
 
 const MODE_ITEM_CLASS =
-  'h-8 gap-1.5 px-3 text-[12px] font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground data-[state=on]:hover:bg-secondary data-[state=on]:hover:text-secondary-foreground'
+  'h-8 flex-none gap-1.5 px-3 text-[12px] font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground data-[state=on]:hover:bg-secondary data-[state=on]:hover:text-secondary-foreground'
 
 const INTERVAL_UNITS: IntervalUnit[] = ['minutes', 'hours', 'days']
 
@@ -158,11 +158,14 @@ export function FunctionScheduleEditor({
                 {t('Interval below your plan minimum')}
               </AlertTitle>
               <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                {t(
-                  'This function keeps running on its current interval. A new interval must be {minutes} minutes or longer.',
-                ).replace('{minutes}', String(intervalMinimum))}{' '}
-                <UpgradePlanLink orgId={orgId} />{' '}
-                {t('to use shorter intervals.')}
+                <p>
+                  {' '}
+                  {t(
+                    'This function keeps running on its current interval. A new interval must be {minutes} minutes or longer.',
+                  ).replace('{minutes}', String(intervalMinimum))}{' '}
+                  <UpgradePlanLink orgId={orgId} />{' '}
+                  {t('to use shorter intervals.')}
+                </p>
               </AlertDescription>
             </Alert>
           ) : intervalMinimum > 0 ? (
@@ -172,11 +175,14 @@ export function FunctionScheduleEditor({
             >
               <AlertCircle className="h-4 w-4 text-amber-500" />
               <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                {t(
-                  'Your plan supports intervals of {minutes} minutes or longer.',
-                ).replace('{minutes}', String(intervalMinimum))}{' '}
-                <UpgradePlanLink orgId={orgId} />{' '}
-                {t('to use shorter intervals.')}
+                <p>
+                  {' '}
+                  {t(
+                    'Your plan supports intervals of {minutes} minutes or longer.',
+                  ).replace('{minutes}', String(intervalMinimum))}{' '}
+                  <UpgradePlanLink orgId={orgId} />{' '}
+                  {t('to use shorter intervals.')}
+                </p>
               </AlertDescription>
             </Alert>
           ) : null}
