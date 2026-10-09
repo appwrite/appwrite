@@ -7,9 +7,39 @@ namespace Utopia\Messaging\Tests\Adapter\Push;
 use PHPUnit\Framework\TestCase;
 use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Messages\Push;
+use Utopia\Messaging\Priority;
 
 final class FCMTest extends TestCase
 {
+    /**
+     * A wake signal (no title/body, data + content-available) must render as a data-only message: no
+     * notification block, so FCM delivers it in the background and the app can reconnect and replay.
+     */
+    public function testSilentWakeIsDataOnly(): void
+    {
+        $stub = new FCMStub($this->serviceAccount());
+
+        $stub->send(new Push(
+            to: ['token'],
+            data: ['type' => 'wake', 'messageId' => 'msg1'],
+            contentAvailable: true,
+            priority: Priority::HIGH,
+        ));
+
+        $message = $stub->capturedBodies[0]['message'];
+
+        $this->assertArrayNotHasKey('notification', $message);
+        $this->assertSame(['type' => 'wake', 'messageId' => 'msg1'], $message['data']);
+        $this->assertSame(1, $message['apns']['payload']['aps']['content-available']);
+        $this->assertSame('token', $message['token']);
+
+        // Android keeps high priority; the APNs side must be a background push (type background,
+        // priority 5) or iOS drops the silent wake.
+        $this->assertSame('high', $message['android']['priority']);
+        $this->assertSame('background', $message['apns']['headers']['apns-push-type']);
+        $this->assertSame('5', $message['apns']['headers']['apns-priority']);
+    }
+
     public function testChannelIdIsSentOnTheAndroidNotification(): void
     {
         $stub = new FCMStub($this->serviceAccount());

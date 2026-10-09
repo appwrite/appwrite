@@ -239,14 +239,42 @@ class Messaging extends Action
 
         $deliveredTotal = 0;
         $failedTotal = 0;
+        $wakeSignals = 0;
         $deliveryErrors = [];
         $hasRecipients = false;
+
+        // Users who receive an MQTT (Appwrite-provider) delivery among the explicitly addressed
+        // recipients. Only such a target delivers on the reserved users/<userId> topic, so a user's
+        // native target is safe to demote to a silent wake only when the user is here. Discovered up
+        // front from the bounded recipient set, so the per-user split below is correct no matter the
+        // $sequence order a user's Appwrite and native targets stream in. Topic campaigns are unbounded,
+        // so their MQTT-reached users are resolved per page instead to keep memory O(page).
+        $mqttUsers = $providerType === MESSAGE_TYPE_PUSH
+            ? $this->mqttReachedUsers($dbForProject, $userIds, $targetIds, $providers, $default)
+            : [];
 
         foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as [$page, $perUser]) {
             /**
              * @var array<callable> $tasks
              */
             $tasks = [];
+
+            // A topic campaign's MQTT-reached users come from this page's Appwrite-provider recipients,
+            // resolved per page since a topic's subscribers are unbounded.
+            $pageMqttUsers = [];
+            if (!$perUser && $providerType === MESSAGE_TYPE_PUSH) {
+                foreach ($page as $providerId => $identifiers) {
+                    if ($this->resolveProvider($dbForProject, $providerId, $providers, $default)->getAttribute('provider') !== 'appwrite') {
+                        continue;
+                    }
+
+                    foreach ($identifiers as $userId) {
+                        if (!empty($userId)) {
+                            $pageMqttUsers[$userId] = true;
+                        }
+                    }
+                }
+            }
 
             foreach ($page as $providerId => $identifiers) {
                 $provider = $this->resolveProvider($dbForProject, $providerId, $providers, $default);
@@ -273,12 +301,23 @@ class Messaging extends Action
                     $recipients = \array_keys($userTopics);
                 }
 
-                $batches = \array_chunk(
-                    $recipients,
-                    $adapter->getMaxMessagesPerRequest()
-                );
+                // For a user-/target-addressed send, an MQTT-reached user's native targets are not pushed
+                // here: all their registered devices are woken once after the loop (see below), which also
+                // covers devices absent from the streamed pages, e.g. a native target not named in a
+                // targetId send. Only non-MQTT recipients get the full notification; everything else (MQTT
+                // itself, SMS, email, campaign native subscribers) is a single full group.
+                $recipientGroup = $recipients;
+                $isNativePush = $resolvedProviderType === MESSAGE_TYPE_PUSH && $provider->getAttribute('provider') !== 'appwrite';
+                if ($perUser && $isNativePush && $mqttUsers !== []) {
+                    $recipientGroup = [];
+                    foreach ($identifiers as $identifier => $userId) {
+                        if (empty($userId) || !isset($mqttUsers[$userId])) {
+                            $recipientGroup[] = $identifier;
+                        }
+                    }
+                }
 
-                foreach ($batches as $batch) {
+                foreach (\array_chunk($recipientGroup, $adapter->getMaxMessagesPerRequest()) as $batch) {
                     $tasks[] = fn (): array => $semaphore->withLock(
                         fn (): array => $this->sendBatch(
                             $batch,
@@ -289,9 +328,19 @@ class Messaging extends Action
                             $dbForProject,
                             $project,
                             $publisherForUsage,
-                            $attachments
+                            $attachments,
+                            false
                         )
                     );
+                }
+            }
+
+            // Topic campaign: wake the page's MQTT-reached users' registered native devices. Additive to
+            // any native subscribers, so a user reached only through a native target still gets a payload.
+            // User-/target-addressed sends are woken once after the loop instead (bounded recipient set).
+            if (!$perUser && $pageMqttUsers !== []) {
+                foreach ($this->wakeTasks($pageMqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore) as $task) {
+                    $tasks[] = $task;
                 }
             }
 
@@ -304,11 +353,19 @@ class Messaging extends Action
             $hasRecipients = true;
 
             /**
-             * @var array<array{delivered: int, recipients: int, errors: array<string>}> $results
+             * @var array<array{delivered: int, recipients: int, errors: array<string>, wake: bool}> $results
              */
             $results = batch($tasks);
 
             foreach ($results as $result) {
+                // A wake is auxiliary to the MQTT delivery: billed inside sendBatch, but kept out of the
+                // message's status so a stale token can't fail the message, leak into deliveryErrors, or
+                // double-count a recipient who was already delivered to over MQTT.
+                if ($result['wake']) {
+                    $wakeSignals += $result['delivered'];
+                    continue;
+                }
+
                 $deliveredTotal += $result['delivered'];
                 $failedTotal += $result['recipients'] - $result['delivered'];
 
@@ -332,6 +389,15 @@ class Messaging extends Action
             return;
         }
 
+        // Wake the MQTT-reached users' registered native devices for user-/target-addressed sends. Run
+        // once over the complete (bounded) set so a device absent from the streamed pages — such as a
+        // native target not named in a targetId send — is still woken, without re-querying per page.
+        if ($mqttUsers !== []) {
+            foreach (batch($this->wakeTasks($mqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore)) as $result) {
+                $wakeSignals += $result['delivered'];
+            }
+        }
+
         if (empty($deliveryErrors) && $deliveredTotal === 0) {
             $deliveryErrors[] = 'Unknown error';
         }
@@ -342,6 +408,7 @@ class Messaging extends Action
 
         Span::add('message.delivered_total', $deliveredTotal);
         Span::add('message.errors_total', $failedTotal);
+        Span::add('message.wake_signals', $wakeSignals);
 
         $message->removeAttribute('to');
 
@@ -620,6 +687,178 @@ class Messaging extends Action
     }
 
     /**
+     * The explicitly addressed users (via the `users` list or the `targets` list) who receive an MQTT
+     * delivery — i.e. hold an Appwrite-provider push target among the send's recipients. Resolved up front
+     * so the per-user wake/full split sees the complete set before any native page is dispatched, closing
+     * the gap where a user's native target streams on an earlier page than their Appwrite target. The
+     * recipient lists are bounded, so this set is bounded; topic campaigns are resolved per page instead.
+     *
+     * @param array<string> $userIds
+     * @param array<string> $targetIds
+     * @param array<string, Document> $providers  resolved-provider cache, shared with the send loop
+     * @return array<string, true>
+     */
+    private function mqttReachedUsers(
+        Database $dbForProject,
+        array $userIds,
+        array $targetIds,
+        array &$providers,
+        Document $default
+    ): array {
+        // A userId-addressed send reaches every one of a user's targets; a targetId-addressed send reaches
+        // only the listed targets. Either way an Appwrite-provider target among them means MQTT delivery.
+        $scopes = [];
+        if ($userIds !== []) {
+            $scopes[] = Query::equal('userId', $userIds);
+        }
+        if ($targetIds !== []) {
+            $scopes[] = Query::equal('$id', $targetIds);
+        }
+
+        $mqttUsers = [];
+
+        foreach ($scopes as $scope) {
+            $cursor = null;
+
+            do {
+                $queries = [
+                    $scope,
+                    Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                    Query::select(['$sequence', 'userId', 'providerId', 'expired']),
+                    Query::orderAsc('$sequence'),
+                    Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
+                ];
+
+                if ($cursor !== null) {
+                    $queries[] = Query::cursorAfter($cursor);
+                }
+
+                $targets = $dbForProject->find('targets', $queries);
+                $count = \count($targets);
+
+                if ($count === 0) {
+                    break;
+                }
+
+                $cursor = $targets[$count - 1];
+
+                foreach ($targets as $target) {
+                    // Expired targets are dropped before sending (see groupTargetsByProvider), so an
+                    // expired Appwrite target is not an MQTT delivery and must not demote a live native one.
+                    if ($target->getAttribute('expired')) {
+                        continue;
+                    }
+
+                    $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId') ?? '', $providers, $default);
+                    if ($provider->getAttribute('provider') === 'appwrite') {
+                        $mqttUsers[$target->getAttribute('userId')] = true;
+                    }
+                }
+            } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+        }
+
+        return $mqttUsers;
+    }
+
+    /**
+     * Build silent-wake tasks for the APNS/FCM devices of users a topic campaign reached over MQTT, so a
+     * backgrounded app reconnects and replays. Additive to any native subscribers of the campaign.
+     *
+     * @param array<string, true> $mqttUsers  set of user ids this page reached over MQTT
+     * @param array<string, Document> $providers  resolved-provider cache, shared with the send loop
+     * @return array<callable>
+     */
+    private function wakeTasks(
+        array $mqttUsers,
+        array &$providers,
+        Document $default,
+        Database $dbForProject,
+        Document $project,
+        Document $message,
+        UsagePublisher $publisherForUsage,
+        Semaphore $semaphore
+    ): array {
+        if ($mqttUsers === []) {
+            return [];
+        }
+
+        // Each target is classified by its resolved provider below, not by the query: a target with no
+        // provider id inherits the default, which is a wakeable device when that default is APNS/FCM but
+        // the MQTT channel itself (no token) when it is Appwrite.
+        /** @var array<string, array<string, true>> $tokens  provider id => (identifier => true) */
+        $tokens = [];
+        $cursor = null;
+
+        do {
+            $queries = [
+                Query::equal('userId', \array_keys($mqttUsers)),
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                Query::select(['$sequence', 'providerId', 'identifier', 'expired']),
+                Query::orderAsc('$sequence'),
+                Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
+            ];
+
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
+            }
+
+            $targets = $dbForProject->find('targets', $queries);
+            $count = \count($targets);
+
+            if ($count === 0) {
+                break;
+            }
+
+            $cursor = $targets[$count - 1];
+
+            foreach ($targets as $target) {
+                if ($target->getAttribute('expired')) {
+                    continue;
+                }
+
+                $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId') ?? '', $providers, $default);
+
+                // The Appwrite provider is the MQTT channel we are waking into; a disabled/missing one
+                // falls back to it. Only a real native push provider carries a wake.
+                if ($provider->getAttribute('type') !== MESSAGE_TYPE_PUSH || $provider->getAttribute('provider') === 'appwrite') {
+                    continue;
+                }
+
+                $tokens[$provider->getId()][$target->getAttribute('identifier')] = true;
+            }
+        } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+
+        $tasks = [];
+        foreach ($tokens as $providerId => $identifiers) {
+            $provider = $providers[$providerId];
+            $adapter = $this->getPushAdapter($provider, $dbForProject, $project, $message);
+
+            if ($adapter === null) {
+                continue;
+            }
+
+            foreach (\array_chunk(\array_keys($identifiers), $adapter->getMaxMessagesPerRequest()) as $batch) {
+                $tasks[] = fn (): array => $semaphore->withLock(
+                    fn (): array => $this->sendBatch(
+                        $batch,
+                        $message,
+                        $provider,
+                        MESSAGE_TYPE_PUSH,
+                        $adapter,
+                        $dbForProject,
+                        $project,
+                        $publisherForUsage,
+                        [],
+                        true
+                    )
+                );
+            }
+        }
+
+        return $tasks;
+    }
+
+    /**
      * Send a single adapter-sized batch and report delivery counts plus a bounded error list.
      *
      * Wraps the provider call in a backoff/retry loop that reacts to provider rate limiting and transient
@@ -627,9 +866,13 @@ class Messaging extends Action
      * retried, so `delivered` is summed across attempts without double-counting, and `recipients` always
      * reports the original batch size so the caller's `failed = recipients - delivered` holds.
      *
+     * A wake send is billed like any other (usage is still enqueued) but reports `wake: true` so the
+     * caller can keep it out of the message's own delivery status — a silent wake is auxiliary to the
+     * MQTT delivery, so its failure must not fail the message nor its success double-count the recipient.
+     *
      * @param array<string> $batch
      * @param array<Attachment> $attachments
-     * @return array{delivered: int, recipients: int, errors: array<string>}
+     * @return array{delivered: int, recipients: int, errors: array<string>, wake: bool}
      */
     private function sendBatch(
         array $batch,
@@ -640,14 +883,15 @@ class Messaging extends Action
         Database $dbForProject,
         Document $project,
         UsagePublisher $publisherForUsage,
-        array $attachments
+        array $attachments,
+        bool $wake = false
     ): array {
         $recipients = \count($batch);
 
         [
             'delivered' => $delivered,
             'errors' => $errors,
-        ] = $this->retrySend($batch, $message, $provider, $providerType, $adapter, $dbForProject, $attachments);
+        ] = $this->retrySend($batch, $message, $provider, $providerType, $adapter, $dbForProject, $attachments, $wake);
 
         $failed = $recipients - $delivered;
 
@@ -675,6 +919,7 @@ class Messaging extends Action
             'delivered' => $delivered,
             'recipients' => $recipients,
             'errors' => $errors,
+            'wake' => $wake,
         ];
     }
 
@@ -705,7 +950,8 @@ class Messaging extends Action
         string $providerType,
         EmailAdapter|SMSAdapter|PushAdapter $adapter,
         Database $dbForProject,
-        array $attachments
+        array $attachments,
+        bool $wake = false
     ): array {
         $delivered = 0;
         $errors = [];
@@ -724,7 +970,7 @@ class Messaging extends Action
             $data = null;
             while ($pending !== []) {
                 try {
-                    $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $attachments);
+                    $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $attachments, $wake);
                     break;
                 } catch (InvalidArgumentException $e) {
                     $recipient = $e->getValue();
@@ -896,14 +1142,15 @@ class Messaging extends Action
         Document $provider,
         string $providerType,
         Database $dbForProject,
-        array $attachments
+        array $attachments,
+        bool $wake = false
     ): Email|SMS|Push {
         $messageData = clone $message;
         $messageData->setAttribute('to', $to);
 
         $data = match ($providerType) {
             MESSAGE_TYPE_SMS => $this->buildSmsMessage($messageData, $provider),
-            MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
+            MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData, $wake),
             MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $attachments),
             default => throw new \Exception('Provider with the requested ID is of the incorrect type')
         };
@@ -1164,9 +1411,25 @@ class Messaging extends Action
         );
     }
 
-    private function buildPushMessage(Document $message): Push
+    private function buildPushMessage(Document $message, bool $wake = false): Push
     {
         $to = $message['to'];
+
+        // A wake signal carries no visible notification: title/body are dropped so the push is silent
+        // (content-available on iOS, data-only on Android), nudging a backgrounded device to reconnect
+        // and replay over MQTT. It carries only the wake marker and source message id for correlation.
+        if ($wake) {
+            return new Push(
+                to: $to,
+                data: [
+                    'type' => 'wake',
+                    'messageId' => $message->getId(),
+                ],
+                contentAvailable: true,
+                priority: Priority::HIGH,
+            );
+        }
+
         $title = $message['data']['title'] ?? null;
         $body = $message['data']['body'] ?? null;
         $data = $message['data']['data'] ?? null;

@@ -52,7 +52,9 @@ class APNS extends PushAdapter
             $payload['aps']['alert']['body'] = $message->getBody();
         }
         if (!\is_null($message->getData())) {
-            $payload['aps']['data'] = $message->getData();
+            // Custom data belongs beside the reserved `aps` dictionary at the payload root, not inside it,
+            // so iOS surfaces it as userInfo["data"].
+            $payload['data'] = $message->getData();
         }
         if (!\is_null($message->getAction())) {
             $payload['aps']['category'] = $message->getAction();
@@ -75,11 +77,28 @@ class APNS extends PushAdapter
         if (!\is_null($message->getContentAvailable())) {
             $payload['aps']['content-available'] = (int) $message->getContentAvailable();
         }
+
+        $priority = null;
         if (!\is_null($message->getPriority())) {
-            $payload['headers']['apns-priority'] = match ($message->getPriority()) {
+            $priority = match ($message->getPriority()) {
                 Priority::HIGH => '10',
                 Priority::NORMAL => '5',
             };
+        }
+
+        // A push with no user-facing content (no alert, sound, critical flag, or badge) is a background
+        // notification. Apple rejects an alert-type push that carries no alert, and requires a background
+        // push to use the background type, priority 5, and content-available — all set here so a silent
+        // or data-only push reaches a suspended app rather than being dropped.
+        $background = \is_null($message->getTitle())
+            && \is_null($message->getBody())
+            && \is_null($message->getSound())
+            && \is_null($message->getCritical())
+            && \is_null($message->getBadge());
+        $pushType = $background ? 'background' : 'alert';
+        if ($background) {
+            $priority = '5';
+            $payload['aps']['content-available'] = 1;
         }
 
         $claims = [
@@ -106,15 +125,20 @@ class APNS extends PushAdapter
             $urls[] = $endpoint . '/3/device/' . $token;
         }
 
+        $headers = [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $jwt,
+            'apns-topic: ' . $this->bundleId,
+            'apns-push-type: ' . $pushType,
+        ];
+        if (!\is_null($priority)) {
+            $headers[] = 'apns-priority: ' . $priority;
+        }
+
         $results = $this->requestMulti(
             method: 'POST',
             urls: $urls,
-            headers: [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $jwt,
-                'apns-topic: ' . $this->bundleId,
-                'apns-push-type: alert',
-            ],
+            headers: $headers,
             bodies: [$payload],
         );
 
