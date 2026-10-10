@@ -235,7 +235,7 @@ export function navigation(lib: Library) {
   return {
     library: lib.library,
     install: lib.install,
-    modules: lib.modules.map((m) => ({ ...m, doc: '', examples: [] as Example[] })),
+    modules: lib.modules.map((m) => ({ ...m, summary: summary(m.doc), doc: '', examples: [] as Example[] })),
     items: lib.items.map((i) => ({ ...i, doc: '', inherited_doc: null, signature: '', examples: [] as Example[] })),
     reexports: lib.reexports,
     phpClasses: [...new Set(lib.php_api.map((p) => p.class ?? p.namespace))].filter(Boolean) as string[],

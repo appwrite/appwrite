@@ -46,13 +46,21 @@ async function load(params: { lib: string; _splat?: string }) {
     const found = lib.items.find((i) => isTopLevel(i) && i.name === name)
     return found ? { splat: moduleSplat(found.module), hash: itemHash(found.name) } : null
   }
+  // A namespace page holds its whole subtree (the crate root only itself): own items first, then each sub-namespace's.
+  const inside = (m: string) => m === path || (!!path && m.startsWith(`${path}::`))
   const items = lib.items
-    .filter((i) => isTopLevel(i) && i.module === path)
-    .sort((a, b) => KIND_ORDER.indexOf(a.kind as never) - KIND_ORDER.indexOf(b.kind as never) || a.name.localeCompare(b.name))
+    .filter((i) => isTopLevel(i) && inside(i.module))
+    .sort(
+      (a, b) =>
+        (a.module === path ? -1 : 0) - (b.module === path ? -1 : 0) ||
+        a.module.localeCompare(b.module) ||
+        KIND_ORDER.indexOf(a.kind as never) - KIND_ORDER.indexOf(b.kind as never) ||
+        a.name.localeCompare(b.name),
+    )
     .map((item) => {
       const unique = lib.items.filter((i) => isTopLevel(i) && i.name === item.name).length === 1
       const methods = lib.items
-        .filter((i) => i.kind === 'method' && i.owner === item.name && (i.module === path || unique))
+        .filter((i) => i.kind === 'method' && i.owner === item.name && (i.module === item.module || unique))
         .map((m) => ({ ...m, phpSymbols: php(m.php) }))
       const traits = [...new Set(methods.map((m) => m.implements).filter((t): t is string => !!t))]
       return {
@@ -68,14 +76,17 @@ async function load(params: { lib: string; _splat?: string }) {
             : [],
       }
     })
-  const depth = path ? path.split('::').length + 1 : 1
-  return {
-    module,
-    items,
-    children: lib.modules
-      .filter((m) => m.path && (path ? m.path.startsWith(`${path}::`) : true) && m.path.split('::').length === depth)
-      .map((m) => ({ path: m.path, summary: summary(m.doc) })),
-  }
+  // Sub-namespaces with something to show: items, or words of their own.
+  const parts = lib.modules
+    .filter((m) => m.path !== path && inside(m.path))
+    .filter((m) => m.doc || items.some((e) => e.item.module === m.path))
+    .sort((a, b) => a.path.localeCompare(b.path))
+    .map((m) => ({ ...m, name: m.path.slice(path.length + 2) }))
+  // The crate root lists its top-level namespaces; the menu shows the same.
+  const children = path
+    ? []
+    : lib.modules.filter((m) => m.path && !m.path.includes('::')).map((m) => ({ path: m.path, summary: summary(m.doc) }))
+  return { module, items, parts, children }
 }
 
 type Data = Awaited<ReturnType<typeof load>>
@@ -133,14 +144,18 @@ function Method({ owner, m }: { owner: string; m: MethodData }) {
 }
 
 /** Methods under a heading that folds, so a long type stays scannable. It opens when a link targets one of its methods. */
-function Methods({ title, owner, methods, open: initial = true }: { title: ReactNode; owner: string; methods: MethodData[]; open?: boolean }) {
+function Methods({ title, owner, methods, open: initial = false }: { title: ReactNode; owner: string; methods: MethodData[]; open?: boolean }) {
   const [open, setOpen] = useState(initial)
   useEffect(() => {
     const reveal = () => {
       const target = decodeURIComponent(window.location.hash.slice(1))
       if (!methods.some((m) => methodHash(owner, m.name) === target)) return
       setOpen(true)
-      requestAnimationFrame(() => document.getElementById(target)?.scrollIntoView())
+      // Below the sticky header, as the method's scroll margin asks.
+      requestAnimationFrame(() => {
+        const el = document.getElementById(target)
+        if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 80 })
+      })
     }
     reveal()
     window.addEventListener('hashchange', reveal)
@@ -233,7 +248,7 @@ function useCurrent(ids: string[]) {
  * opening onto its methods (inherent, then one group per trait it
  * implements). Follows the scroll, filters, folds.
  */
-function Symbols({ items }: { items: Entry[] }) {
+function Symbols({ items, base }: { items: Entry[]; base: string }) {
   const [q, setQ] = useState('')
   const [open, setOpen] = useState<Set<string>>(() => new Set())
   const term = q.trim().toLowerCase()
@@ -243,6 +258,18 @@ function Symbols({ items }: { items: Entry[] }) {
     [items],
   )
   const current = useCurrent(ids)
+  // Grouped by sub-namespace when the page holds several, by kind otherwise.
+  const modules = [...new Set(items.map((e) => e.item.module))]
+  const sections =
+    modules.length > 1
+      ? modules.map((m) => ({
+          key: m,
+          title: m === base ? 'Defined here' : m.slice(base.length + 2),
+          mono: m !== base,
+          href: `#ns.${m.slice(base.length + 2)}`,
+          has: (e: Entry) => e.item.module === m,
+        }))
+      : KIND_ORDER.map((k) => ({ key: k, title: KIND_TITLE[k], mono: false, href: '', has: (e: Entry) => e.item.kind === k }))
   const expandable = items.filter((e) => groups(e).length).map((e) => e.item.name)
   const all = expandable.length > 0 && expandable.every((n) => open.has(n))
   const toggle = (name: string) =>
@@ -283,9 +310,9 @@ function Symbols({ items }: { items: Entry[] }) {
         />
       </label>
       <div className="grid content-start gap-2 overflow-y-auto overscroll-contain pb-4">
-        {KIND_ORDER.map((k) => {
+        {sections.map((sec) => {
           const entries = items
-            .filter((e) => e.item.kind === k)
+            .filter(sec.has)
             .map((e) => {
               const self = !term || e.item.name.toLowerCase().includes(term)
               const shown = groups(e)
@@ -296,8 +323,14 @@ function Symbols({ items }: { items: Entry[] }) {
             .filter((x) => x.visible)
           if (!entries.length) return null
           return (
-            <div key={k} className="grid gap-px">
-              <div className="px-1.5 pb-0.5 text-[10.5px] font-semibold tracking-wider text-muted-foreground uppercase">{KIND_TITLE[k]}</div>
+            <div key={sec.key} className="grid gap-px">
+              {sec.mono ? (
+                <a href={sec.href} className="truncate px-1.5 pb-0.5 font-mono text-[11.5px] font-medium text-sidebar-strong hover:underline">
+                  {sec.title}
+                </a>
+              ) : (
+                <div className="px-1.5 pb-0.5 text-[10.5px] font-semibold tracking-wider text-muted-foreground uppercase">{sec.title}</div>
+              )}
               {entries.map(({ e, shown }) => {
                 const id = itemHash(e.item.name)
                 const inside = current !== null && current.startsWith(`method.${e.item.name}.`)
@@ -392,7 +425,6 @@ function ItemSection({ entry }: { entry: Entry }) {
           key={t.name}
           owner={item.name}
           methods={t.methods}
-          open={false}
           title={
             <span>
               impl <span className="font-mono">{t.name}</span>
@@ -427,14 +459,19 @@ function ItemSection({ entry }: { entry: Entry }) {
 }
 
 function NamespacePage() {
-  const { module, items, children } = Route.useLoaderData()
+  const { module, items, parts: subs, children } = Route.useLoaderData()
   const nav = layout.useLoaderData()
   const slug = nav.library.slug
   const crate = nav.library.rust?.crate ?? slug
   const parts = module.path ? module.path.split('::') : []
   const kinds = KIND_ORDER.filter((k) => items.some((e) => e.item.kind === k))
+  const own = items.filter((e) => e.item.module === module.path)
+  const groups = [
+    ...(own.length ? [{ id: null as string | null, title: null as string | null, summary: '', entries: own }] : []),
+    ...subs.map((p) => ({ id: `ns.${p.name}`, title: p.name, summary: summary(p.doc), entries: items.filter((e) => e.item.module === p.path) })),
+  ]
   return (
-    <WithToc rail={<Symbols items={items} />}>
+    <WithToc rail={<Symbols items={items} base={module.path} />}>
       <div id="top" className="grid scroll-mt-20 gap-4">
         <PageHeader
           eyebrow={
@@ -481,7 +518,37 @@ function NamespacePage() {
         </Section>
       ) : null}
 
-      {items.length ? (
+      {items.length && subs.length ? (
+        <Section title="Contents" description={`${subs.length} parts${own.length ? ', and what the namespace defines itself' : ''}.`}>
+          <div className="grid gap-3 md:grid-cols-2">
+            {groups.map((g) => (
+              <div key={g.id ?? 'own'} className="grid content-start gap-1 rounded-lg border border-border p-3">
+                {g.title ? (
+                  <a href={`#${g.id}`} className="grid gap-0.5 hover:underline">
+                    <span className="font-mono text-[13px] font-medium">{g.title}</span>
+                    {g.summary ? <span className="line-clamp-2 text-[12.5px] text-muted-foreground">{g.summary}</span> : null}
+                  </a>
+                ) : (
+                  <span className="text-[12px] font-medium text-muted-foreground">Defined here</span>
+                )}
+                <div className="flex flex-wrap gap-1.5 pt-1.5">
+                  {g.entries.map((e) => (
+                    <a
+                      key={e.item.path + e.item.line}
+                      href={`#${itemHash(e.item.name)}`}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-border px-1.5 py-0.5 font-mono text-[12px] hover:border-ring"
+                      title={summary(e.item.doc || e.item.inherited_doc) || e.item.name}
+                    >
+                      <Badge kind={e.item.kind} />
+                      {e.item.name}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
+      ) : items.length ? (
         <Section title="Contents">
           <div className="grid gap-4 md:grid-cols-2">
             {kinds.map((k) => (
@@ -501,8 +568,26 @@ function NamespacePage() {
         </Section>
       ) : null}
 
-      {items.map((e) => (
-        <ItemSection key={e.item.path + e.item.line} entry={e} />
+      {groups.map((g) => (
+        <div key={g.id ?? 'own'} className="grid min-w-0 gap-9">
+          {g.title ? (
+            <div id={g.id ?? undefined} className="grid scroll-mt-20 gap-2 border-t-2 border-foreground/80 pt-5">
+              <div className="flex flex-wrap items-baseline gap-2.5">
+                <h2 className="font-mono text-[21px] font-medium tracking-tight">
+                  <span className="text-muted-foreground">{module.path ? `${module.path.split('::').pop()}::` : ''}</span>
+                  {g.title}
+                </h2>
+                <Link to="/$lib/$" params={{ lib: slug, _splat: moduleSplat(module.path ? `${module.path}::${g.title}` : g.title) }} className="text-[12px] text-muted-foreground hover:text-foreground">
+                  Own page
+                </Link>
+              </div>
+              {subs.find((p) => `ns.${p.name}` === g.id)?.doc ? <Doc doc={subs.find((p) => `ns.${p.name}` === g.id)?.doc ?? ''} /> : null}
+            </div>
+          ) : null}
+          {g.entries.map((e) => (
+            <ItemSection key={e.item.path + e.item.line} entry={e} />
+          ))}
+        </div>
       ))}
     </WithToc>
   )

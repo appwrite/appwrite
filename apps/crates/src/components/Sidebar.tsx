@@ -106,26 +106,35 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
       </>
     )
   } else {
-    // A flat list of namespaces; each page's outline lists its items and methods.
-    const modules = nav.modules.filter((m) => m.path && hit(m.path)).sort((a, b) => a.path.localeCompare(b.path))
-    const count = (path: string) => top.filter((i) => i.module === path).length
-    const rootCount = hit('crate root') ? count('') : 0
+    // The library's architecture: its top-level namespaces, each a page that
+    // holds its whole subtree. Sub-namespaces are sections of that page.
+    const modules = nav.modules.filter((m) => m.path && !m.path.includes('::'))
+    const below = (path: string) => nav.modules.filter((m) => m.path.startsWith(`${path}::`))
+    const shown = modules
+      .filter((m) => hit(m.path) || below(m.path).some((c) => hit(c.path)))
+      .sort((a, b) => a.path.localeCompare(b.path))
+    const hasRoot = top.some((i) => i.module === '') && hit('crate root')
     body = (
       <>
         <div className={heading}>Namespaces</div>
-        {rootCount ? (
+        {hasRoot ? (
           <Link to="/$lib/$" params={{ lib: slug, _splat: moduleSplat('') }} className={row}>
             <span className="truncate">Crate root</span>
-            <span className="ml-auto text-[11px] text-muted-foreground tabular-nums">{rootCount}</span>
           </Link>
         ) : null}
-        {modules.map((m) => (
-          <Link key={m.path} to="/$lib/$" params={{ lib: slug, _splat: moduleSplat(m.path) }} className={row}>
-            <span className="truncate font-mono text-[12.5px]">{m.path}</span>
-            <span className="ml-auto text-[11px] text-muted-foreground tabular-nums">{count(m.path) || ''}</span>
-          </Link>
-        ))}
-        {!rootCount && !modules.length ? <span className="px-2 py-1 text-[12.5px] text-muted-foreground">No namespace matches.</span> : null}
+        {shown.map((m) => {
+          const parts = below(m.path).length
+          return (
+            <Link key={m.path} to="/$lib/$" params={{ lib: slug, _splat: moduleSplat(m.path) }} className={`${row} items-start`} title={m.summary || m.path}>
+              <span className="grid min-w-0 gap-0.5">
+                <span className="truncate font-mono text-[12.5px]">{m.path}</span>
+                {m.summary ? <span className="line-clamp-1 text-[11.5px] text-muted-foreground">{m.summary}</span> : null}
+              </span>
+              {parts ? <span className="ml-auto pt-0.5 text-[10.5px] whitespace-nowrap text-muted-foreground">{parts} parts</span> : null}
+            </Link>
+          )
+        })}
+        {!hasRoot && !shown.length ? <span className="px-2 py-1 text-[12.5px] text-muted-foreground">No namespace matches.</span> : null}
       </>
     )
   }
