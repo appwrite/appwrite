@@ -9,6 +9,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
@@ -18,8 +19,11 @@ use Utopia\Database\Event\Document\Purged;
 use Utopia\Database\Event\Domain;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Hook\Lifecycle;
+use Utopia\Database\Hook\Relationships;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Relationship;
+use Utopia\Database\RelationshipDeleteAction;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -123,6 +127,38 @@ final class PendingLibraryParityTest extends TestCase
             'Movie a',
             $this->database->getAuthorization()->skip(fn () => $this->database->getDocument(self::COLLECTION, 'a'))->getAttribute('title'),
             self::PENDING . 'main purged inside the write transaction, so a failing purge listener rolled the write back',
+        );
+    }
+
+    public function testLinkingAChildThroughItsParentKeepsTheChildsUpdatedAtAsOnMain(): void
+    {
+        $authorization = new Authorization();
+        $database = (new Database(new Memory(), new Cache(new None())))
+            ->setAuthorization($authorization)
+            ->setDatabase('pending')
+            ->setNamespace('pending_' . \uniqid());
+        $database->addHook(new Relationships());
+        $stored = '2020-01-01T00:00:00.000+00:00';
+
+        $authorization->skip(function () use ($database, $stored): void {
+            $database->create();
+            $database->createCollection(Collection::create('authors', attributes: [Attribute::string('name', size: 64)]));
+            $database->createCollection(Collection::create('books', attributes: [Attribute::string('name', size: 64)]));
+            $database->createRelationship('authors', Relationship::oneToMany('books', 'books', twoWay: true, twoWayKey: 'author', onDelete: RelationshipDeleteAction::SetNull));
+            $database->withPreserveDates(true, function () use ($database, $stored): void {
+                $database->createDocument('authors', new Document(['$id' => 'author3', 'name' => 'Linus', '$createdAt' => $stored, '$updatedAt' => $stored]));
+                $database->createDocument('books', new Document(['$id' => 'book4', 'name' => 'Orphan', '$createdAt' => $stored, '$updatedAt' => $stored]));
+                $database->updateDocument('authors', 'author3', new Document(['books' => ['book4']]));
+            });
+        });
+
+        $book = $authorization->skip(fn () => $database->getDocument('books', 'book4'));
+
+        $this->assertSame('author3', $book->getAttribute('author')?->getId());
+        $this->assertSame(
+            $stored,
+            $book->getUpdatedAt(),
+            self::PENDING . "appwrite updates rows with preserved dates, and main's link wrote each child back with its own \$updatedAt",
         );
     }
 }
