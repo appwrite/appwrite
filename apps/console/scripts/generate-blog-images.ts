@@ -227,7 +227,7 @@ async function generateAnnouncingFunctionIntervalsCover(
     width,
     height,
     title: 'Run functions on an interval',
-    subtitle: 'Set how often a function runs, and Appwrite picks the minute',
+    subtitle: 'Set how often a function runs, and Appwrite picks the time',
     eyebrow: 'Product update',
   }
 

@@ -147,7 +147,7 @@ You can configure events triggers by navigating to your function > **Settings** 
 
 Appwrite can run your function on a recurring schedule. Configure it by navigating to your function > **Settings** > **Schedule**, and choose one of two options:
 
-- **Interval**: run every N minutes. It works like cron where Appwrite picks the minute for you: an hourly interval behaves like `37 * * * *`, with the 37 chosen for your function. Use it when the function needs to run regularly but not at an exact time, such as syncing data or cleaning up records.
+- **Interval**: run every N minutes. It works like cron where Appwrite picks the time for you: an hourly interval runs at the same point in every hour, such as 37 minutes and 21 seconds past, chosen for your function. Use it when the function needs to run regularly but not at an exact time, such as syncing data or cleaning up records.
 - **Cron**: run at the times in a [cron expression](https://en.wikipedia.org/wiki/Cron). Use it when the time of day matters, such as a report at 09:00 every Monday.
 
 A function uses an interval or a cron expression, not both. Both run as often as every minute, except intervals on the Appwrite Cloud Free and Education plans, which start at 60 minutes.

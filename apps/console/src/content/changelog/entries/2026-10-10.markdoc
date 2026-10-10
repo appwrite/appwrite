@@ -6,7 +6,7 @@ description: "Functions can now run every N minutes on an interval, as an altern
 tags: functions, console, sdk, cli
 ---
 
-Functions can now run on an **interval** as well as a cron expression. An interval works like cron where Appwrite picks the minute for you: an hourly interval behaves like `37 * * * *`, with the 37 chosen for your function, so functions with the same interval no longer all start at the same moment.
+Functions can now run on an **interval** as well as a cron expression. An interval works like cron where Appwrite picks the time for you: an hourly interval runs at the same point in every hour, such as 37 minutes and 21 seconds past, chosen for your function, so functions with the same interval no longer all start at the same moment.
 
 - **Interval**: every N minutes, for work that needs to run regularly but not at an exact time.
 - **Cron**: the times in a cron expression, for work tied to the clock, such as a report at 09:00 on Mondays.

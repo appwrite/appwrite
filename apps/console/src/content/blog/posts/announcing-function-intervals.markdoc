@@ -11,11 +11,11 @@ featured: false
 callToAction: true
 faqs:
   - question: "What is the difference between an interval and a cron schedule?"
-    answer: "A cron expression runs your function at the times you write, such as 09:00 every Monday. An interval is cron where Appwrite picks the minute for you: an hourly interval behaves like `37 * * * *`, with the 37 chosen for your function. Use cron when the time of day matters and an interval when only the frequency does."
+    answer: "A cron expression runs your function at the times you write, such as 09:00 every Monday. An interval is cron where Appwrite picks the time for you: an hourly interval runs at the same point in every hour, such as 37 minutes and 21 seconds past, chosen for your function. Use cron when the time of day matters and an interval when only the frequency does."
   - question: "I set an interval and nothing has run yet. Why?"
     answer: "Run times are fixed to the UTC clock, not counted from when you save the function. The first run happens at the function's next slot, which can be up to one full interval away: up to an hour for an hourly interval, or almost a day for a daily one."
   - question: "Can I choose the exact minute an interval runs?"
-    answer: "No. Appwrite picks the time within each interval and keeps it, so an hourly function runs at the same minute every hour, and a daily interval runs at one fixed UTC time of day. If you need a specific minute or time of day, use a cron expression instead."
+    answer: "No. Appwrite picks the time within each interval and keeps it, so an hourly function runs at the same time every hour, down to the second, and a daily interval runs at one fixed UTC time of day. If you need an exact minute or time of day, use a cron expression instead."
   - question: "What is the shortest interval I can set?"
     answer: "One minute on Appwrite Cloud paid plans and on self-hosted Appwrite. The Free and Education plans on Appwrite Cloud support intervals of 60 minutes or longer."
   - question: "Can a function use an interval and a cron expression at the same time?"
@@ -30,15 +30,15 @@ Appwrite Functions now support **intervals**. You set how often a function runs,
 
 # How intervals work
 
-An interval is a number of minutes. Think of it as cron where Appwrite picks the minute for you: an interval of 60 behaves like the cron expression `37 * * * *`, with the 37 chosen for your function.
+An interval is a number of minutes. Think of it as cron where Appwrite picks the time for you: an interval of 60 runs at the same point in every hour, such as 37 minutes and 21 seconds past, chosen for your function.
 
 ```text
-every 60 minutes  →  14:37, 15:37, 16:37, ...
+every 60 minutes  →  14:37:21, 15:37:21, 16:37:21, ...
 ```
 
 Each function gets its own time within the interval, so functions with the same interval spread out across it instead of all starting at once. Your scheduled work starts on time without queueing behind every other function scheduled for the top of the hour.
 
-Run times are fixed to the UTC clock, not counted from when you save the function. The first run can be up to one full interval away, and an interval that isn't a factor or multiple of 60, such as 90 minutes, doesn't run at the same minute every hour.
+Run times are fixed to the UTC clock, not counted from when you save the function. The first run can be up to one full interval away, and an interval that isn't a factor or multiple of 60, such as 90 minutes, doesn't run at the same time every hour.
 
 A function uses either an interval or a cron expression:
 
