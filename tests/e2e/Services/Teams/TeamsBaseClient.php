@@ -433,6 +433,104 @@ trait TeamsBaseClient
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    public function testCreateTeamMembershipCustomId(): void
+    {
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
+        $email = uniqid() . 'friend@localhost.test';
+        $name = 'Friend User';
+        $customId = 'member-' . uniqid();
+
+        /**
+         * Test for SUCCESS
+         */
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'membershipId' => ID::custom($customId),
+            'email' => $email,
+            'name' => $name,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(201, $membership['headers']['status-code']);
+        $this->assertEquals($customId, $membership['body']['$id']);
+        $this->assertEquals($email, $membership['body']['userEmail']);
+        $this->assertEquals($name, $membership['body']['userName']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships/' . $customId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($customId, $response['body']['$id']);
+
+        /**
+         * Test with unique() for SUCCESS
+         */
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'membershipId' => 'unique()',
+            'email' => uniqid() . 'foe@localhost.test',
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(201, $membership['headers']['status-code']);
+        $this->assertNotEmpty($membership['body']['$id']);
+        $this->assertNotEquals('unique()', $membership['body']['$id']);
+
+        /**
+         * Test for FAILURE
+         * A duplicate custom membership ID must be rejected
+         */
+        $duplicateEmail = uniqid() . 'friend@localhost.test';
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'membershipId' => ID::custom($customId),
+            'email' => $duplicateEmail,
+            'name' => $name,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(409, $membership['headers']['status-code']);
+        $this->assertEquals('membership_already_exists', $membership['body']['type']);
+
+        $users = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::equal('email', [$duplicateEmail])->toString()],
+        ]);
+        $this->assertEquals(200, $users['headers']['status-code']);
+        $this->assertEquals(0, $users['body']['total'], 'Invitee must not be persisted after a failed duplicate-ID membership creation');
+
+        /**
+         * Test for FAILURE
+         * An invalid custom membership ID must be rejected
+         */
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'membershipId' => '$invalid-id',
+            'email' => uniqid() . 'friend@localhost.test',
+            'name' => $name,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(400, $membership['headers']['status-code']);
+    }
+
     public function testListTeamMemberships(): void
     {
         $teamData = $this->createTeamHelper();
