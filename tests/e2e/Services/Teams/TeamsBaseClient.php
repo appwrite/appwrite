@@ -489,12 +489,13 @@ trait TeamsBaseClient
          * Test for FAILURE
          * A duplicate custom membership ID must be rejected
          */
+        $duplicateEmail = uniqid() . 'friend@localhost.test';
         $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'membershipId' => ID::custom($customId),
-            'email' => uniqid() . 'friend@localhost.test',
+            'email' => $duplicateEmail,
             'name' => $name,
             'roles' => ['developer'],
             'url' => 'http://localhost:5000/join-us#title'
@@ -502,6 +503,15 @@ trait TeamsBaseClient
 
         $this->assertEquals(409, $membership['headers']['status-code']);
         $this->assertEquals('membership_already_exists', $membership['body']['type']);
+
+        $users = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::equal('email', [$duplicateEmail])->toString()],
+        ]);
+        $this->assertEquals(200, $users['headers']['status-code']);
+        $this->assertEquals(0, $users['body']['total'], 'Invitee must not be persisted after a failed duplicate-ID membership creation');
 
         /**
          * Test for FAILURE

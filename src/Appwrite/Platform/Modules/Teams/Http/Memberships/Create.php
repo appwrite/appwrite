@@ -323,7 +323,14 @@ class Create extends Action
                     $dbForProject->createDocument('memberships', $membership);
             } catch (Duplicate $th) {
                 if ($inviteeCreated) {
-                    $authorization->skip(fn () => $dbForProject->deleteDocument('users', $invitee->getId()));
+                    $membershipCount = $authorization->skip(
+                        fn () => $dbForProject->count('memberships', [
+                            Query::equal('userInternalId', [$invitee->getSequence()]),
+                        ], 1)
+                    );
+                    if ($membershipCount === 0) {
+                        $authorization->skip(fn () => $dbForProject->deleteDocument('users', $invitee->getId()));
+                    }
                 }
                 throw new Exception(Exception::MEMBERSHIP_ALREADY_EXISTS);
             }
