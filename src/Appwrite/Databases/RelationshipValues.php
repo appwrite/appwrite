@@ -18,8 +18,6 @@ use Utopia\Database\Validator\Authorization;
  * the stored related document, so a caller can only grant roles it holds. API keys and privileged users pass none.
  *
  * Given a read-only filter, it runs on every nested related document, as main stripped them along relationships.
- *
- * Given the create gate, every nested related document must pass it before its own relationships are prepared.
  */
 final readonly class RelationshipValues
 {
@@ -29,7 +27,6 @@ final readonly class RelationshipValues
         private Authorization $authorization,
         private ?Database $dbForDatabases = null,
         private ?\Closure $strip = null,
-        private ?CreateAccess $access = null,
     ) {
     }
 
@@ -67,7 +64,6 @@ final readonly class RelationshipValues
                         (string) $relationship->getAttribute('relatedCollection', '')
                     ));
                     $this->validatePermissions($relation, $relatedCollection);
-                    $this->access?->assertRelated($relation, $relatedCollection);
                     $relation = $this->prepare($relation, $relatedCollection);
                 }
 

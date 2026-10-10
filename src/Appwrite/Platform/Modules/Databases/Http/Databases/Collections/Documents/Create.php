@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
-use Appwrite\Databases\CreateAccess;
 use Appwrite\Databases\RelationshipValues;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -21,7 +20,6 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
@@ -287,17 +285,9 @@ class Create extends Action
         };
 
         $dbForDatabases = $getDatabasesDB($database, $collection);
-        $access = new CreateAccess($authorization, $dbForDatabases, $database);
-        $relationshipValues = new RelationshipValues(
-            $dbForProject,
-            $database,
-            $authorization,
-            $isAPIKey || $isPrivilegedUser ? null : $dbForDatabases,
-            fn (array $relation): array => $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser),
-            $access,
-        );
+        $relationshipValues = new RelationshipValues($dbForProject, $database, $authorization, $isAPIKey || $isPrivilegedUser ? null : $dbForDatabases, fn (array $relation): array => $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser));
 
-        $documents = \array_map(function ($document) use ($collection, $permissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser, $relationshipValues, $access) {
+        $documents = \array_map(function ($document) use ($collection, $permissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser, $relationshipValues) {
             $document['$collection'] = $collection->getId();
 
             // Determine the source ID depending on whether it's a bulk operation.
@@ -315,12 +305,12 @@ class Create extends Action
 
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === CustomId::UNIQUE ? Id::unique() : $sourceId;
+            $document = $relationshipValues->prepare($document, $collection);
             $document = $this->removeReadonlyAttributes($document, $isAPIKey || $isPrivilegedUser);
             $document = new Document($document);
             $setPermissions($document, $permissions);
-            $access->assert($collection, PermissionType::Create);
 
-            return new Document($relationshipValues->prepare($document->getArrayCopy(), $collection));
+            return $document;
         }, $documents);
 
         // Handle transaction staging
@@ -433,8 +423,6 @@ class Create extends Action
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
-        } catch (AuthorizationException $e) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, $e->getMessage());
         }
 
         $queueForEvents
