@@ -1,7 +1,7 @@
 import { Link, getRouteApi, useMatch, useRouterState } from '@tanstack/react-router'
 import { ChevronRight, ChevronsDownUp, ChevronsUpDown, Search } from 'lucide-react'
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { isTopLevel, itemHash, methodHash, moduleSplat, type Navigation } from '@/lib/docs'
+import { isTopLevel, moduleSplat, type Navigation } from '@/lib/docs'
 import { StatusBadge, StatusDot } from './Status'
 import { MigrationOnly } from './Migration'
 import { useMigration } from '@/lib/prefs'
@@ -74,16 +74,6 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
   const top = nav.items.filter(isTopLevel)
   const hit = (text: string) => !term || text.toLowerCase().includes(term)
   const migration = useMigration()
-  // While filtering, every item and method that matches, linked to its place on its namespace page.
-  const matches = term
-    ? nav.items
-        .filter((i) => `${i.owner ? `${i.owner}::` : ''}${i.name}`.toLowerCase().includes(term))
-        .slice(0, 40)
-        .map((i) => {
-          const owner = i.kind === 'method' ? top.find((o) => o.name === i.owner) : undefined
-          return { key: i.path + i.line, label: i.owner ? `${i.owner}::${i.name}` : i.name, kind: i.kind, splat: moduleSplat((owner ?? i).module), hash: owner ? methodHash(owner.name, i.name) : itemHash(i.name) }
-        })
-    : []
   let body: ReactNode
   if (!nav.library.rust && !migration) {
     body = null
@@ -115,22 +105,11 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
         ))}
       </>
     )
-  } else if (term) {
-    body = matches.length ? (
-      matches.map((m) => (
-        <Link key={m.key} to="/$lib/$" params={{ lib: slug, _splat: m.splat }} hash={m.hash} className={row}>
-          <span className="truncate font-mono text-[12px]">{m.label}</span>
-          <span className="ml-auto text-[10px] text-muted-foreground/70">{m.kind}</span>
-        </Link>
-      ))
-    ) : (
-      <span className="px-2 py-1 text-[12.5px] text-muted-foreground">Nothing matches.</span>
-    )
   } else {
-    // Namespaces only: each page holds its types, functions and constants in full.
-    const modules = nav.modules.filter((m) => m.path).sort((a, b) => a.path.localeCompare(b.path))
+    // A flat list of namespaces; each page's outline lists its items and methods.
+    const modules = nav.modules.filter((m) => m.path && hit(m.path)).sort((a, b) => a.path.localeCompare(b.path))
     const count = (path: string) => top.filter((i) => i.module === path).length
-    const rootCount = count('')
+    const rootCount = hit('crate root') ? count('') : 0
     body = (
       <>
         <div className={heading}>Namespaces</div>
@@ -140,15 +119,13 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
             <span className="ml-auto text-[11px] text-muted-foreground tabular-nums">{rootCount}</span>
           </Link>
         ) : null}
-        {modules.map((m) => {
-          const depth = m.path.split('::').length - 1
-          return (
-            <Link key={m.path} to="/$lib/$" params={{ lib: slug, _splat: moduleSplat(m.path) }} className={row} style={{ paddingLeft: `${8 + depth * 14}px` }}>
-              <span className="truncate font-mono text-[12.5px]">{m.path.split('::').pop()}</span>
-              <span className="ml-auto text-[11px] text-muted-foreground tabular-nums">{count(m.path) || ''}</span>
-            </Link>
-          )
-        })}
+        {modules.map((m) => (
+          <Link key={m.path} to="/$lib/$" params={{ lib: slug, _splat: moduleSplat(m.path) }} className={row}>
+            <span className="truncate font-mono text-[12.5px]">{m.path}</span>
+            <span className="ml-auto text-[11px] text-muted-foreground tabular-nums">{count(m.path) || ''}</span>
+          </Link>
+        ))}
+        {!rootCount && !modules.length ? <span className="px-2 py-1 text-[12.5px] text-muted-foreground">No namespace matches.</span> : null}
       </>
     )
   }
@@ -172,8 +149,8 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder={`Filter ${nav.library.title}`}
-          aria-label={`Filter ${nav.library.title}`}
+          placeholder={nav.library.rust ? 'Filter namespaces' : 'Filter classes'}
+          aria-label={nav.library.rust ? 'Filter namespaces' : 'Filter classes'}
           className="min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
         />
       </label>
