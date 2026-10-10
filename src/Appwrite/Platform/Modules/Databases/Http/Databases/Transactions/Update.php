@@ -737,6 +737,11 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): void {
+        // upsertDocument reads `$id`. The staged id is the one permissions were checked against.
+        if ($documentId) {
+            $data['$id'] = $documentId;
+        }
+
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
