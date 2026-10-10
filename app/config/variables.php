@@ -1944,6 +1944,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_STATS_USAGE_QUEUE_MAX',
+                'description' => 'Maximum pending jobs in the usage queue before further metrics are dropped. The queue shares Redis with the cache, which evicts keys at 512mb, so an uncapped backlog pushes the cache out. Set to -1 to disable the cap. Default value is: 32768.',
+                'introduction' => '',
+                'default' => '32768',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_STATS_RESOURCES_QUEUE_NAME',
                 'description' => 'Queue name for usage resource gauge ingestion.',
                 'introduction' => '',

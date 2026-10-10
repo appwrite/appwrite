@@ -94,6 +94,7 @@ services:
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_STATS_USAGE_QUEUE_MAX
       - _APP_STATS_RESOURCES_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_EDITION
@@ -324,6 +325,7 @@ services:
       - _APP_ENV
       - _APP_USAGE_STATS
       - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_STATS_USAGE_QUEUE_MAX
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
@@ -405,6 +407,7 @@ services:
       - appwrite
     environment:
       - _APP_ENV
+      - _APP_STATS_USAGE_QUEUE_MAX
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
@@ -472,6 +475,7 @@ services:
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_STATS_USAGE_QUEUE_MAX
       - _APP_STATS_RESOURCES_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
@@ -627,6 +631,7 @@ services:
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_STATS_USAGE_QUEUE_MAX
       - _APP_STATS_RESOURCES_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_LOGGING_FORMAT
@@ -699,6 +704,7 @@ services:
       - _APP_DNS_EXTERNAL
       - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_STATS_USAGE_QUEUE_MAX
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -747,6 +753,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
+      - _APP_STATS_USAGE_QUEUE_MAX
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_CONNECTIONS_DB_EXECUTIONS
@@ -886,6 +893,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_STATS_USAGE_QUEUE_MAX
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -989,6 +997,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_STATS_USAGE_QUEUE_MAX
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -1211,6 +1220,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_STATS_USAGE_QUEUE_MAX
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -1351,6 +1361,7 @@ services:
       - _APP_DNS_EXTERNAL
       - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_STATS_USAGE_QUEUE_MAX
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
