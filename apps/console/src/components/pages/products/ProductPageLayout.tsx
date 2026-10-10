@@ -35,6 +35,7 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
     <div className="relative min-w-0 bg-background" {...productToneAttrs(theme)}>
       <ProductHero
         layout={theme.heroLayout}
+        name={productName}
         badge={<ProductHeroIcon icon={ProductIcon} name={productName} />}
         title={content.hero.title}
         description={content.hero.description}

@@ -9,7 +9,7 @@ type DeploymentRepositoryFields = {
   vcsProvider?: string | null
 }
 
-function getVcsProviderKind(
+export function getVcsProviderKind(
   deployment: DeploymentRepositoryFields,
 ): 'github' | 'gitlab' | 'bitbucket' | 'origin' | null {
   if (deployment.providerRepositoryUrl) {

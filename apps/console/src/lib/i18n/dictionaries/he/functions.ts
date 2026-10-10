@@ -404,6 +404,9 @@ export const heFunctionsDictionary: Record<string, string> = {
   'No domains yet': 'אין דומיינים עדיין',
   'No events configured': 'לא הוגדרו אירועים',
   'No executions yet': 'אין הרצות עדיין',
+  'No GB-hours yet': 'אין GB-hours עדיין',
+  'Invocations will show up here.': 'הרצות יופיעו כאן.',
+  'Compute usage will show up here.': 'שימוש במחשוב יופיע כאן.',
   'No files yet': 'אין קבצים עדיין',
   'No functions yet': 'אין פונקציות עדיין',
   'No headers': 'אין Headers',
@@ -714,4 +717,5 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Every {count} minutes': 'כל {count} דקות',
   'Every {count} hours': 'כל {count} שעות',
   'Every {count} days': 'כל {count} ימים',
+  'View executions': 'הצגת הרצות',
 }

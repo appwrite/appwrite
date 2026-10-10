@@ -203,9 +203,11 @@ export default defineConfig(async () => {
         '@tanstack/history',
         'sharp',
         // Pre-bundling inlines nested @radix-ui copies and can load a second React
-        // instance, breaking hooks (useState of null) in ScrollArea / Avatar.
+        // instance, breaking hooks (useState of null) in ScrollArea / Avatar / Drawer.
         '@radix-ui/react-scroll-area',
         '@radix-ui/react-avatar',
+        '@radix-ui/react-dialog',
+        'vaul',
       ],
     },
     ssr: {

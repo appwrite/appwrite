@@ -65,6 +65,13 @@ export const USAGE_CHART_INTERVAL_COARSEN_ORDER: UsageChartInterval[] = [
   '1d',
 ]
 
+const INTERVAL_DURATION_MS: Record<UsageChartInterval, number> = {
+  '1m': 60_000,
+  '15m': 15 * 60_000,
+  '1h': 60 * 60_000,
+  '1d': 24 * 60 * 60_000,
+}
+
 function resolveChartIntervalDateBounds(dateRange: DateRange | undefined): {
   from: Date
   to: Date
@@ -86,6 +93,12 @@ const INTERVAL_MAX_RANGE_HOURS: Partial<Record<UsageChartInterval, number>> = {
   '15m': 24,
 }
 
+export function getUsageChartIntervalDurationMs(
+  interval: UsageChartInterval,
+): number {
+  return INTERVAL_DURATION_MS[interval]
+}
+
 export function getUsageChartIntervalMaxRangeDays(
   interval: UsageChartInterval,
 ): number | null {
@@ -98,7 +111,8 @@ export function getUsageChartIntervalMaxRangeHours(
   return INTERVAL_MAX_RANGE_HOURS[interval] ?? null
 }
 
-export function isUsageChartIntervalValidForRange(
+/** Range is too wide for this interval's bucket size (too many points). */
+export function isUsageChartIntervalTooFineForRange(
   interval: UsageChartInterval,
   dateRange: DateRange | undefined,
 ): boolean {
@@ -109,23 +123,57 @@ export function isUsageChartIntervalValidForRange(
     const durationMs = to.getTime() - from.getTime()
     const maxDurationMs = maxHours * 60 * 60 * 1000
     const toleranceMs = 60_000
-    return durationMs <= maxDurationMs + toleranceMs
+    return durationMs > maxDurationMs + toleranceMs
   }
 
   const maxDays = getUsageChartIntervalMaxRangeDays(interval)
-  if (maxDays === null) return true
+  if (maxDays === null) return false
 
   const rangeDays = Math.max(1, differenceInCalendarDays(to, from) + 1)
-  return rangeDays <= maxDays
+  return rangeDays > maxDays
+}
+
+/** Interval is not strictly smaller than the selected range. */
+export function isUsageChartIntervalTooCoarseForRange(
+  interval: UsageChartInterval,
+  dateRange: DateRange | undefined,
+): boolean {
+  const { from, to } = resolveChartIntervalDateBounds(dateRange)
+  return getUsageChartIntervalDurationMs(interval) >= to.getTime() - from.getTime()
+}
+
+export function isUsageChartIntervalValidForRange(
+  interval: UsageChartInterval,
+  dateRange: DateRange | undefined,
+): boolean {
+  return (
+    !isUsageChartIntervalTooFineForRange(interval, dateRange) &&
+    !isUsageChartIntervalTooCoarseForRange(interval, dateRange)
+  )
+}
+
+function hasFinerUsageChartInterval(
+  interval: UsageChartInterval,
+  allowedIntervals?: readonly UsageChartInterval[],
+): boolean {
+  const options = allowedIntervals?.length
+    ? allowedIntervals
+    : USAGE_CHART_INTERVAL_COARSEN_ORDER
+  const durationMs = getUsageChartIntervalDurationMs(interval)
+  return options.some(
+    (option) => getUsageChartIntervalDurationMs(option) < durationMs,
+  )
 }
 
 export function getUsageChartIntervalDisabledReason(
   interval: UsageChartInterval,
   dateRange: DateRange | undefined,
+  allowedIntervals?: readonly UsageChartInterval[],
 ): string | undefined {
   const details = getUsageChartIntervalDisabledReasonDetails(
     interval,
     dateRange,
+    allowedIntervals,
   )
   if (!details) return undefined
 
@@ -133,37 +181,74 @@ export function getUsageChartIntervalDisabledReason(
     return `Use a date range of ${details.maxHours} hours or less for this interval.`
   }
 
-  return `Use a date range of ${details.maxDays} days or less for this interval.`
+  if (details.kind === 'days') {
+    return `Use a date range of ${details.maxDays} days or less for this interval.`
+  }
+
+  return 'This interval is larger than the selected date range.'
 }
 
 export type UsageChartIntervalDisabledReasonDetails =
   | { kind: 'hours'; maxHours: number }
   | { kind: 'days'; maxDays: number }
+  | { kind: 'largerThanRange' }
 
 export function getUsageChartIntervalDisabledReasonDetails(
   interval: UsageChartInterval,
   dateRange: DateRange | undefined,
+  allowedIntervals?: readonly UsageChartInterval[],
 ): UsageChartIntervalDisabledReasonDetails | undefined {
-  if (isUsageChartIntervalValidForRange(interval, dateRange)) {
+  if (isUsageChartIntervalTooFineForRange(interval, dateRange)) {
+    const maxHours = getUsageChartIntervalMaxRangeHours(interval)
+    if (maxHours !== null) {
+      return { kind: 'hours', maxHours }
+    }
+
+    const maxDays = getUsageChartIntervalMaxRangeDays(interval)
+    if (maxDays !== null) {
+      return { kind: 'days', maxDays }
+    }
+
     return undefined
   }
 
-  const maxHours = getUsageChartIntervalMaxRangeHours(interval)
-  if (maxHours !== null) {
-    return { kind: 'hours', maxHours }
+  if (!isUsageChartIntervalTooCoarseForRange(interval, dateRange)) {
+    return undefined
   }
 
-  const maxDays = getUsageChartIntervalMaxRangeDays(interval)
-  if (maxDays !== null) {
-    return { kind: 'days', maxDays }
+  // Keep this interval selectable when the plan has nothing smaller.
+  if (!hasFinerUsageChartInterval(interval, allowedIntervals)) {
+    return undefined
   }
 
-  return undefined
+  return { kind: 'largerThanRange' }
+}
+
+function pickFallbackUsageChartInterval(
+  allowed: UsageChartInterval[],
+  dateRange: DateRange | undefined,
+): UsageChartInterval {
+  const tooCoarse = allowed.filter(
+    (candidate) =>
+      isUsageChartIntervalTooCoarseForRange(candidate, dateRange) &&
+      !isUsageChartIntervalTooFineForRange(candidate, dateRange),
+  )
+  if (tooCoarse.length > 0) return tooCoarse[0]!
+
+  for (let index = allowed.length - 1; index >= 0; index -= 1) {
+    const candidate = allowed[index]!
+    if (isUsageChartIntervalTooFineForRange(candidate, dateRange)) {
+      return candidate
+    }
+  }
+
+  return allowed[allowed.length - 1] ?? '1d'
 }
 
 /**
- * Pick the finest plan-allowed interval still valid for the current range
- * (fallback when range widens).
+ * Keep the current interval when it still fits the range; otherwise step to
+ * the nearest valid neighbor (finer when the range shrinks, coarser when it
+ * widens).
  */
 export function resolveUsageChartIntervalForRange(
   interval: UsageChartInterval,
@@ -182,12 +267,15 @@ export function resolveUsageChartIntervalForRange(
   }
 
   const startIndex = USAGE_CHART_INTERVAL_COARSEN_ORDER.indexOf(planInterval)
-  const candidates =
-    startIndex >= 0
-      ? USAGE_CHART_INTERVAL_COARSEN_ORDER.slice(startIndex + 1)
-      : USAGE_CHART_INTERVAL_COARSEN_ORDER.slice(1)
+  const walk =
+    startIndex >= 0 &&
+    isUsageChartIntervalTooCoarseForRange(planInterval, dateRange)
+      ? USAGE_CHART_INTERVAL_COARSEN_ORDER.slice(0, startIndex).reverse()
+      : startIndex >= 0
+        ? USAGE_CHART_INTERVAL_COARSEN_ORDER.slice(startIndex + 1)
+        : USAGE_CHART_INTERVAL_COARSEN_ORDER.slice(1)
 
-  for (const candidate of candidates) {
+  for (const candidate of walk) {
     if (!allowedSet.has(candidate)) continue
     if (isUsageChartIntervalValidForRange(candidate, dateRange)) {
       return candidate
@@ -201,7 +289,7 @@ export function resolveUsageChartIntervalForRange(
     }
   }
 
-  return allowed[allowed.length - 1] ?? '1d'
+  return pickFallbackUsageChartInterval(allowed, dateRange)
 }
 
 /**

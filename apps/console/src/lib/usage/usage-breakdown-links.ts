@@ -76,19 +76,28 @@ export function getOverviewResourceBreakdownFilters(
   return getUsageResourceFilterEntries(resourceId, resources)
 }
 
-export function getOverviewBreakdownUsageLinkProps(
+export function getUsageCategoryLinkProps(
   projectId: string,
-  metric: OverviewBreakdownMetric,
+  categoryId: string,
   filters: UsageBreakdownFilterEntry[],
 ) {
   const query = buildUsageBreakdownFilterQueryParam(filters)
 
   return {
     to: '/projects/$projectId/usage/$categoryId' as const,
-    params: {
-      projectId,
-      categoryId: getOverviewBreakdownUsageCategoryId(metric),
-    },
+    params: { projectId, categoryId },
     search: query ? { query } : undefined,
   }
+}
+
+export function getOverviewBreakdownUsageLinkProps(
+  projectId: string,
+  metric: OverviewBreakdownMetric,
+  filters: UsageBreakdownFilterEntry[],
+) {
+  return getUsageCategoryLinkProps(
+    projectId,
+    getOverviewBreakdownUsageCategoryId(metric),
+    filters,
+  )
 }
