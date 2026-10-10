@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\Schedule;
 
 use Utopia\Schedule\Clock\System as SystemClock;
+use Utopia\Schedule\Source\Entry;
 use Utopia\Schedule\Source\Row;
 use Utopia\Schedule\Store\Memory as MemoryStore;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -283,6 +284,11 @@ final class Scheduler
                 $entry = $this->source->make($row);
             } catch (\Throwable $error) {
                 $this->report($error, 'make', $row);
+                continue;
+            }
+
+            if (!$entry instanceof Entry) {
+                unset($this->entries[$id]);
                 continue;
             }
 
