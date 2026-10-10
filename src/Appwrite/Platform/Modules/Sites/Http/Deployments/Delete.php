@@ -18,7 +18,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Storage\Device;
 
 class Delete extends Action
 {
@@ -64,7 +63,6 @@ class Delete extends Action
             ->inject('dbForProject')
             ->inject('publisherForDeletes')
             ->inject('queueForEvents')
-            ->inject('deviceForSites')
             ->callback($this->action(...));
     }
 
@@ -74,8 +72,7 @@ class Delete extends Action
         Response $response,
         Database $dbForProject,
         DeletePublisher $publisherForDeletes,
-        Event $queueForEvents,
-        Device $deviceForSites
+        Event $queueForEvents
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
         if ($site->isEmpty()) {
@@ -103,12 +100,6 @@ class Delete extends Action
 
             if ($deploymentExists && !$dbForProject->deleteDocument('deployments', $deployment->getId())) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
-            }
-        }
-
-        if (!empty($deployment->getAttribute('sourcePath', ''))) {
-            if (!($deviceForSites->delete($deployment->getAttribute('sourcePath', '')))) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
             }
         }
 
