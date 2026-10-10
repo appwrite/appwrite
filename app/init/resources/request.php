@@ -992,8 +992,10 @@ return function (Container $context): void {
     }, ['request']);
 
     $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath) {
+        $teamId = '';
         $teamInternalId = '';
         if ($project->getId() !== 'console') {
+            $teamId = $project->getAttribute('teamId', '');
             $teamInternalId = $project->getAttribute('teamInternalId', '');
         } else {
             $route = $utopia->match($request)?->route;
@@ -1001,6 +1003,7 @@ return function (Container $context): void {
             $orgHeader = $request->getHeaderLine('x-appwrite-organization', '');
             if (str_starts_with($path, '/v1/projects/:projectId')) {
                 $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectIdFromPath));
+                $teamId = $p->getAttribute('teamId', '');
                 $teamInternalId = $p->getAttribute('teamInternalId', '');
             } elseif ($path === '/v1/projects') {
                 $teamId = $request->getParam('teamId', '');
@@ -1019,17 +1022,20 @@ return function (Container $context): void {
             }
         }
 
-        // if teamInternalId is empty, return an empty document
+        // if teamId is empty, return an empty document
 
-        if (empty($teamInternalId)) {
+        if (empty($teamId)) {
             return new Document([]);
         }
 
-        $team = $authorization->skip(function () use ($dbForPlatform, $teamInternalId) {
-            return $dbForPlatform->findOne('teams', [
-                Query::equal('$sequence', [$teamInternalId]),
-            ]);
-        });
+        // Read by ID so the team comes from the cache. Its organization keys are cached with it,
+        // so creating, updating or deleting one has to purge the team.
+        $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
+
+        // A team re-created under the same ID is not the project's team.
+        if ($team->getSequence() !== $teamInternalId) {
+            return new Document([]);
+        }
 
         return $team;
     }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath']);
