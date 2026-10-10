@@ -174,6 +174,23 @@ fn upstream(root: &Path, slug: &str) -> Option<Value> {
     Some(json!({ "ref": main, "head": fetched, "commits": count, "list": commits }))
 }
 
+/// Whether a commit changes something a port must follow: the library's
+/// source, or its manifest beyond `extra` (metadata for tooling, such as
+/// the docs category, which the crate does not implement).
+fn ports(root: &Path, hash: &str, src: &str, manifest: &str) -> bool {
+    let touched =
+        git(root, &["diff-tree", "--no-commit-id", "--name-only", "-r", hash, "--", src, manifest]).unwrap_or_default();
+    if touched.lines().any(|f| f != manifest) {
+        return true;
+    }
+    let read = |rev: String| -> Option<Value> {
+        let mut json: Value = serde_json::from_str(&git(root, &["show", &format!("{rev}:{manifest}")])?).ok()?;
+        json.as_object_mut()?.remove("extra");
+        Some(json)
+    };
+    read(format!("{hash}^")) != read(hash.to_owned())
+}
+
 /// The sync status of a library for `compat crates`. `crate_dir` is its Rust
 /// crate, if any; libraries outside `packages/` (Composer dependencies) have
 /// no history here and report only what is known.
@@ -202,15 +219,19 @@ pub fn status(root: &Path, slug: &str, crate_dir: Option<&str>, monorepo: bool) 
     let hash = base["hash"].as_str().unwrap_or_default().to_owned();
     let [src, manifest_path] = tracked(slug);
     let range = format!("{hash}..HEAD");
-    let count: usize = git(root, &["rev-list", "--count", &range, "--", &src, &manifest_path])
-        .and_then(|c| c.parse().ok())
-        .unwrap_or(0);
-    let commits: Vec<Value> = git(root, &["log", "--max-count=50", FORMAT, &range, "--", &src, &manifest_path])
+    let all: Vec<Value> = git(root, &["log", FORMAT, &range, "--", &src, &manifest_path])
         .unwrap_or_default()
         .lines()
         .filter_map(commit)
+        .filter(|c| ports(root, c["hash"].as_str().unwrap_or_default(), &src, &manifest_path))
         .collect();
-    let stat = git(root, &["diff", "--shortstat", &hash, "HEAD", "--", &src, &manifest_path]).unwrap_or_default();
+    let count = all.len();
+    let commits: Vec<Value> = all.into_iter().take(50).collect();
+    let stat = if count == 0 {
+        String::new()
+    } else {
+        git(root, &["diff", "--shortstat", &hash, "HEAD", "--", &src, &manifest_path]).unwrap_or_default()
+    };
     let number = |word: &str| -> usize {
         stat.split(',')
             .find(|p| p.contains(word))

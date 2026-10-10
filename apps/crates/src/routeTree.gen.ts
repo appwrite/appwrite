@@ -14,7 +14,7 @@ import { Route as LibRouteImport } from './routes/$lib'
 import { Route as LibIndexRouteImport } from './routes/$lib/index'
 import { Route as LibSplatRouteImport } from './routes/$lib/$'
 import { Route as CategoriesCategoryRouteImport } from './routes/categories/$category'
-import { Route as LibPhpSplatRouteImport } from './routes/$lib/php/$'
+import { Route as LibPhpApiSplatRouteImport } from './routes/$lib/php-api/$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,9 +41,9 @@ const CategoriesCategoryRoute = CategoriesCategoryRouteImport.update({
   path: '/categories/$category',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LibPhpSplatRoute = LibPhpSplatRouteImport.update({
-  id: '/php/$',
-  path: '/php/$',
+const LibPhpApiSplatRoute = LibPhpApiSplatRouteImport.update({
+  id: '/php-api/$',
+  path: '/php-api/$',
   getParentRoute: () => LibRoute,
 } as any)
 
@@ -53,14 +53,14 @@ export interface FileRoutesByFullPath {
   '/$lib/$': typeof LibSplatRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/$lib/': typeof LibIndexRoute
-  '/$lib/php/$': typeof LibPhpSplatRoute
+  '/$lib/php-api/$': typeof LibPhpApiSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$lib/$': typeof LibSplatRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/$lib': typeof LibIndexRoute
-  '/$lib/php/$': typeof LibPhpSplatRoute
+  '/$lib/php-api/$': typeof LibPhpApiSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -69,7 +69,7 @@ export interface FileRoutesById {
   '/$lib/$': typeof LibSplatRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/$lib/': typeof LibIndexRoute
-  '/$lib/php/$': typeof LibPhpSplatRoute
+  '/$lib/php-api/$': typeof LibPhpApiSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -79,9 +79,9 @@ export interface FileRouteTypes {
     | '/$lib/$'
     | '/categories/$category'
     | '/$lib/'
-    | '/$lib/php/$'
+    | '/$lib/php-api/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$lib/$' | '/categories/$category' | '/$lib' | '/$lib/php/$'
+  to: '/' | '/$lib/$' | '/categories/$category' | '/$lib' | '/$lib/php-api/$'
   id:
     | '__root__'
     | '/'
@@ -89,7 +89,7 @@ export interface FileRouteTypes {
     | '/$lib/$'
     | '/categories/$category'
     | '/$lib/'
-    | '/$lib/php/$'
+    | '/$lib/php-api/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -135,11 +135,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoriesCategoryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$lib/php/$': {
-      id: '/$lib/php/$'
-      path: '/php/$'
-      fullPath: '/$lib/php/$'
-      preLoaderRoute: typeof LibPhpSplatRouteImport
+    '/$lib/php-api/$': {
+      id: '/$lib/php-api/$'
+      path: '/php-api/$'
+      fullPath: '/$lib/php-api/$'
+      preLoaderRoute: typeof LibPhpApiSplatRouteImport
       parentRoute: typeof LibRoute
     }
   }
@@ -148,13 +148,13 @@ declare module '@tanstack/react-router' {
 interface LibRouteChildren {
   LibSplatRoute: typeof LibSplatRoute
   LibIndexRoute: typeof LibIndexRoute
-  LibPhpSplatRoute: typeof LibPhpSplatRoute
+  LibPhpApiSplatRoute: typeof LibPhpApiSplatRoute
 }
 
 const LibRouteChildren: LibRouteChildren = {
   LibSplatRoute: LibSplatRoute,
   LibIndexRoute: LibIndexRoute,
-  LibPhpSplatRoute: LibPhpSplatRoute,
+  LibPhpApiSplatRoute: LibPhpApiSplatRoute,
 }
 
 const LibRouteWithChildren = LibRoute._addFileChildren(LibRouteChildren)

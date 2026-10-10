@@ -8,7 +8,7 @@ import { useMigration } from '@/lib/prefs'
 const root = getRouteApi('__root__')
 const layout = getRouteApi('/$lib')
 
-export const Route = createFileRoute('/$lib/php/$')({
+export const Route = createFileRoute('/$lib/php-api/$')({
   loader: async ({ params }) => {
     const lib = await loadLibrary(params.lib)
     if (!lib) throw notFound()

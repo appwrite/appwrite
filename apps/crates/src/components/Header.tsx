@@ -18,7 +18,7 @@ function Crumbs() {
     const category = index.categories.find((c) => c.id === lib?.category)
     if (category) crumbs.push({ label: category.title, to: '/categories/$category', params: { category: category.id } })
     if (lib) crumbs.push({ label: lib.title, to: '/$lib', params: { lib: lib.slug } })
-    for (const p of parts.slice(1)) crumbs.push({ label: p === 'php' ? 'PHP' : p === 'root' ? 'Crate root' : p })
+    for (const p of parts.slice(1)) crumbs.push({ label: p === 'php-api' ? 'PHP API' : p === 'root' ? 'Crate root' : p })
   }
   return (
     <div className="flex min-w-0 items-center gap-1.5 text-[13px]">

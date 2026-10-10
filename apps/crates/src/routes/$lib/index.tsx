@@ -206,7 +206,7 @@ function LibraryPage() {
           <p className="m-0 text-[13px] text-muted-foreground">The PHP library's public classes, read from its source. Each will get a Rust counterpart when the library is converted.</p>
           <div className="overflow-hidden rounded-lg border border-border">
             {d.classes.map((c) => (
-              <Link key={c.name} to="/$lib/php/$" params={{ lib: l.slug, _splat: c.name.split('\\').join('/') }} className="grid gap-x-4 border-b border-border px-3.5 py-2.5 transition-colors last:border-b-0 hover:bg-accent/40 md:grid-cols-[minmax(12rem,20rem)_minmax(0,1fr)_auto]">
+              <Link key={c.name} to="/$lib/php-api/$" params={{ lib: l.slug, _splat: c.name.split('\\').join('/') }} className="grid gap-x-4 border-b border-border px-3.5 py-2.5 transition-colors last:border-b-0 hover:bg-accent/40 md:grid-cols-[minmax(12rem,20rem)_minmax(0,1fr)_auto]">
                 <span className="font-mono text-[12.5px] font-medium [overflow-wrap:anywhere]">{c.name}</span>
                 <span className="text-[13px] text-muted-foreground">{c.doc || 'Undocumented.'}</span>
                 <span className="text-[11px] text-muted-foreground tabular-nums">{c.methods} methods</span>

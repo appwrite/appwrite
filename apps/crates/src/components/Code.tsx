@@ -1,4 +1,4 @@
-import Prism from 'prismjs'
+import Prism from '@/lib/prism'
 import 'prismjs/components/prism-rust'
 import 'prismjs/components/prism-markup-templating'
 import 'prismjs/components/prism-php'

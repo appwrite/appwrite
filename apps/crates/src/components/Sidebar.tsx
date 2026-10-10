@@ -94,10 +94,10 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
             key={ns}
             depth={1}
             label={<span className="font-mono text-[12px]">{ns === base ? (base.split('\\').pop() ?? 'global') : ns.slice(base.length + 1)}</span>}
-            open={!!term || byNamespace.size === 1 || classes.some((c) => path.endsWith(`/php/${c.split('\\').join('/')}`))}
+            open={!!term || byNamespace.size === 1 || classes.some((c) => path.endsWith(`/php-api/${c.split('\\').join('/')}`))}
           >
             {classes.map((c) => (
-              <Link key={c} to="/$lib/php/$" params={{ lib: slug, _splat: c.split('\\').join('/') }} className={row}>
+              <Link key={c} to="/$lib/php-api/$" params={{ lib: slug, _splat: c.split('\\').join('/') }} className={row}>
                 <span className="truncate font-mono text-[12px]">{c.split('\\').pop()}</span>
               </Link>
             ))}
