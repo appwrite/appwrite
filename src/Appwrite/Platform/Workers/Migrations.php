@@ -45,6 +45,7 @@ use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\JSON;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
+use Utopia\Migration\Target;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -344,6 +345,8 @@ class Migrations extends Action
                 ->setEndpoint('http://' . System::getEnv('_APP_MIGRATION_HOST') . '/v1')
                 ->setProject($projectId)
                 ->setKey($key)
+                ->setConnectTimeout(Target::CONNECT_TIMEOUT)
+                ->setTimeout(Target::REQUEST_TIMEOUT)
         );
 
         try {
