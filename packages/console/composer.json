@@ -33,7 +33,7 @@
     "minimum-stability": "dev",
     "extra": {
         "utopia": {
-            "category": "runtime"
+            "category": "platform"
         }
     }
 }

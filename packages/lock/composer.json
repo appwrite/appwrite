@@ -45,7 +45,7 @@
     "prefer-stable": true,
     "extra": {
         "utopia": {
-            "category": "runtime"
+            "category": "platform"
         }
     }
 }

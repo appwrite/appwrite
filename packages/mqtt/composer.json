@@ -38,7 +38,7 @@
     },
     "extra": {
         "utopia": {
-            "category": "networking"
+            "category": "transport"
         }
     }
 }

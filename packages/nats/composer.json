@@ -40,7 +40,7 @@
     "prefer-stable": true,
     "extra": {
         "utopia": {
-            "category": "networking"
+            "category": "transport"
         }
     }
 }

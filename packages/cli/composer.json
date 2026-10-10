@@ -34,7 +34,7 @@
     },
     "extra": {
         "utopia": {
-            "category": "runtime"
+            "category": "platform"
         }
     }
 }

@@ -26,5 +26,4 @@ utopia-validators.workspace = true
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
 
 [package.metadata.utopia]
-category = "networking"
 php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"

@@ -46,7 +46,7 @@
     "minimum-stability": "stable",
     "extra": {
         "utopia": {
-            "category": "messaging"
+            "category": "servers"
         }
     }
 }

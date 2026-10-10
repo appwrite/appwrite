@@ -1,54 +1,44 @@
 {
   "categories": [
     {
-      "id": "web",
-      "title": "HTTP and servers",
-      "description": "Building and calling web services: routing requests to actions, the request and response values, server runtimes, HTTP clients, WebSockets and API descriptions."
+      "id": "servers",
+      "title": "Servers",
+      "description": "Serving requests and running work: the HTTP framework and its request and response values, WebSockets, DNS servers, job queues and schedules, and the base for building servers."
     },
     {
-      "id": "networking",
-      "title": "Networking and protocols",
-      "description": "Protocols beyond HTTP and the names behind them: DNS servers, domain parsing, mail transport, MQTT and NATS, and choosing between endpoints."
+      "id": "transport",
+      "title": "Transport",
+      "description": "Reaching other services and the addresses behind them: HTTP clients, mail transport, MQTT and NATS, connection strings, domain names and email addresses."
     },
     {
       "id": "data",
-      "title": "Data and storage",
-      "description": "Keeping data: databases and the queries over them, caches, files and the images and archives stored in them, and moving data between services."
-    },
-    {
-      "id": "messaging",
-      "title": "Messaging and jobs",
-      "description": "Work that happens outside the request: task queues, in-process events, notifications to users, and schedules that dispatch jobs."
+      "title": "Data",
+      "description": "Keeping data: databases and the queries over them, migrations, caches, file storage, configuration and compression."
     },
     {
       "id": "security",
-      "title": "Security and identity",
-      "description": "Who is calling and how often: password hashing, sessions, tokens, OAuth2 and passkeys, and limits that keep usage within bounds."
-    },
-    {
-      "id": "input",
-      "title": "Parsing and validation",
-      "description": "Turning untrusted input into values an application can trust: request parameters, connection strings, email addresses, user agents and translations."
-    },
-    {
-      "id": "runtime",
-      "title": "Runtime and infrastructure",
-      "description": "What every service runs on: configuration, dependency injection, command line tools, locks and connection pools, the host system, containers and resilience."
+      "title": "Security",
+      "description": "Who is calling and how often: password hashing, sessions, tokens, OAuth2 and passkeys, and abuse limits."
     },
     {
       "id": "observability",
       "title": "Observability",
-      "description": "Knowing what a service did: audit logs, usage metrics, spans and telemetry exporters."
+      "description": "Seeing what a service does: audit trails, telemetry, tracing spans and usage metrics."
+    },
+    {
+      "id": "platform",
+      "title": "Platform",
+      "description": "The ground a service runs on: CLIs and consoles, dependency injection and registries, system information, locks, pools, circuit breakers, events, and the PHP engine semantics the Rust crates share."
+    },
+    {
+      "id": "utilities",
+      "title": "Utilities",
+      "description": "Focused helpers: input validation, translations, user-agent and device detection, load balancing and image processing."
     },
     {
       "id": "integrations",
-      "title": "Integrations and AI",
-      "description": "Connecting to the outside world: version control providers and their webhooks, and AI agents."
-    },
-    {
-      "id": "support",
-      "title": "Engine support",
-      "description": "Foundations the Rust crates share to behave exactly like PHP: the engine's value model, string and number semantics, regular expressions, JSON and dates."
+      "title": "Integrations",
+      "description": "Third-party services: AI agents, version control, orchestration, CDNs, and messaging providers for email, SMS and push."
     }
   ],
   "external": {

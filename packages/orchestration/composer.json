@@ -37,7 +37,7 @@
     },
     "extra": {
         "utopia": {
-            "category": "runtime"
+            "category": "integrations"
         }
     }
 }

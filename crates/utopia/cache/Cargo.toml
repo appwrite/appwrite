@@ -36,5 +36,4 @@ tracing.workspace = true
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "time", "sync", "net", "io-util"] }
 
 [package.metadata.utopia]
-category = "data"
 php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"

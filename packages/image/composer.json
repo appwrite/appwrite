@@ -34,7 +34,7 @@
     "minimum-stability": "dev",
     "extra": {
         "utopia": {
-            "category": "data"
+            "category": "utilities"
         }
     }
 }
