@@ -392,6 +392,7 @@ dependencies = [
  "utopia-auth",
  "utopia-cache",
  "utopia-database",
+ "utopia-domains",
  "utopia-dsn",
  "utopia-emails",
  "utopia-http",
@@ -2315,8 +2316,19 @@ dependencies = [
 name = "utopia-domains"
 version = "0.1.0"
 dependencies = [
+ "bytes",
+ "getrandom 0.3.4",
+ "http-body-util",
+ "hyper",
+ "hyper-rustls",
+ "hyper-util",
+ "indexmap",
  "php-std",
+ "rustls",
+ "serde_json",
  "thiserror",
+ "tokio",
+ "utopia-validators",
 ]
 
 [[package]]

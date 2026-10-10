@@ -15,6 +15,11 @@
       "php": "postgres://${_APP_DB_USER}:${_APP_DB_PASS}@postgresql:5432/${_APP_DB_SCHEMA}",
       "rust": "postgres://${_APP_DB_USER}:${_APP_DB_PASS}@localhost:9512/${_APP_DB_SCHEMA}",
       "runner": "postgres://${_APP_DB_USER}:${_APP_DB_PASS}@localhost:9512/${_APP_DB_SCHEMA}"
+    },
+    "domains-http": {
+      "php": "http://compat-domains-http:8080",
+      "rust": "http://localhost:9590",
+      "runner": "http://localhost:9590"
     }
   }
 }
