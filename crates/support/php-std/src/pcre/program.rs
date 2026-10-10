@@ -584,13 +584,13 @@ fn then_offsets(code: &[Op], bra: usize, current: Option<usize>, marked: &mut [b
 }
 
 /// `charpos_enabled` in `compile_iterator_matchingpath()`: a greedy
-/// unlimited or `{n,m}` (m - n >= 2) repeat of something other than a
-/// literal character (and not `\R`, `\X` or a dot-all `.*`), directly
-/// followed by a one-unit character whose other case, if any, differs in
-/// one bit.
+/// `OP_STAR` or `OP_UPTO` (not `OP_QUERY`, see [`query_tail`]) of
+/// something other than a literal character (and not `\R`, `\X` or a
+/// dot-all `.*`), directly followed by a one-unit character whose other
+/// case, if any, differs in one bit.
 fn charpos(code: &[Op], pc: usize, options: &JitOptions) -> Option<(u8, u8)> {
     let Op::Rep { lit, min, max, kind: RepKind::Greedy } = &code[pc] else { return None };
-    if min == max || (*max != UNLIMITED && max - min < 2) {
+    if min == max || query_tail(lit, *min, *max) {
         return None;
     }
     if matches!(lit, Lit::Char(_) | Lit::CharI(_) | Lit::AnyNl | Lit::ExtUni)
@@ -1144,13 +1144,19 @@ fn recurse_data_length(
     (length, accept)
 }
 
+/// Whether the variable part of a repeat is `OP_QUERY` (`OP_CRQUERY`, or
+/// `OP_CRRANGE` one apart for a class) rather than `OP_UPTO`
+/// (`compile_branch()`, `get_iterator_parameters()`): `x?` and `x{n,n+1}`
+/// with n >= 2 (`OP_EXACT` and then `OP_QUERY`), but not `x{1,2}`, which
+/// is the item once and then `OP_UPTO` with a maximum of one.
+fn query_tail(lit: &Lit, min: u32, max: u32) -> bool {
+    max != UNLIMITED && max - min == 1 && (min != 1 || matches!(lit, Lit::Class(_)))
+}
+
 /// A greedy `\R` or `\X` repeat other than `?`: the JIT keeps where each
 /// iteration ended on its stack, after a start and an end mark.
 pub fn stacked_iterator(lit: &Lit, min: u32, max: u32, kind: RepKind) -> bool {
-    matches!(lit, Lit::AnyNl | Lit::ExtUni)
-        && kind == RepKind::Greedy
-        && min != max
-        && (max == UNLIMITED || max - min >= 2)
+    matches!(lit, Lit::AnyNl | Lit::ExtUni) && kind == RepKind::Greedy && min != max && !query_tail(lit, min, max)
 }
 
 /// The fixed slot of an iterator outside repeated groups
@@ -1158,7 +1164,7 @@ pub fn stacked_iterator(lit: &Lit, min: u32, max: u32, kind: RepKind) -> bool {
 /// `\R` or `\X` repeat other than `?` keeps none.
 fn private_words(lit: &Lit, min: u32, max: u32, kind: RepKind) -> u32 {
     if matches!(lit, Lit::AnyNl | Lit::ExtUni) && kind == RepKind::Greedy && min != max {
-        return u32::from(max != UNLIMITED && max - min == 1);
+        return u32::from(query_tail(lit, min, max));
     }
     u32::from(iterator_words(lit, min, max, kind))
 }
@@ -1207,7 +1213,7 @@ fn iterator_words(lit: &Lit, min: u32, max: u32, kind: RepKind) -> u8 {
     }
     if max == UNLIMITED {
         if lazy { 1 } else { 2 }
-    } else if (min == 0 && max == 1) || (min >= 2 && max - min == 1) {
+    } else if query_tail(lit, min, max) {
         1
     } else {
         2

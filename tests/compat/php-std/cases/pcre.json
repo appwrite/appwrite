@@ -1005,6 +1005,100 @@
       }
     },
     {
+      "name": "JIT runs x{1,2} as the item and OP_UPTO, which stops only before the character after it",
+      "op": "pcre.preg_grep",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=3)t?(?:.{1,2}E|[a]*]a]|)?+~n",
+        "array": [
+          "b",
+          ""
+        ],
+        "flags": 0
+      },
+      "expect": {
+        "result": [
+          "b",
+          ""
+        ],
+        "error": 0,
+        "warning": null
+      }
+    },
+    {
+      "name": "JIT stops .{1,2} only before the character after it",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=1)(?:.{1,2}E|)~",
+        "subject": "bx"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          ""
+        ],
+        "error": 0,
+        "warning": null
+      }
+    },
+    {
+      "name": "JIT stops [^a]{1,2} only before the character after it",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=1)(?:[^a]{1,2}E|)~",
+        "subject": "bx"
+      },
+      "expect": {
+        "result": 1,
+        "matches": [
+          ""
+        ],
+        "error": 0,
+        "warning": null
+      }
+    },
+    {
+      "name": "JIT runs a class {1,2} as OP_QUERY, tried at every position",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=1)(?:[ab]{1,2}E|)~",
+        "subject": "bx"
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 2,
+        "warning": null
+      }
+    },
+    {
+      "name": "JIT runs .? as OP_QUERY, tried at every position",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=2)(?:.?E|)~",
+        "subject": "bx"
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 2,
+        "warning": null
+      }
+    },
+    {
+      "name": "JIT runs .{2,3} as OP_EXACT and OP_QUERY, tried at every position",
+      "op": "pcre.preg_match",
+      "args": {
+        "pattern": "~(*LIMIT_MATCH=2)(?:.{2,3}E|)~",
+        "subject": "bx"
+      },
+      "expect": {
+        "result": false,
+        "matches": [],
+        "error": 2,
+        "warning": null
+      }
+    },
+    {
       "name": "JIT stack after leaving a repeated group",
       "op": "pcre.preg_match",
       "args": {
