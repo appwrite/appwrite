@@ -35,7 +35,7 @@ Asynchronous executions are added to a queue and processed by the function worke
 Asynchronous executions are created via:
 - The [Create execution](/docs/references/cloud/client-web/functions#createExecution) endpoint where the `async` parameter is `true`
 - Event triggers (when functions are triggered by [platform events](/docs/apis/events))
-- Scheduled executions (cron jobs or delayed executions)
+- Scheduled executions (intervals, cron jobs, or delayed executions)
 
 Asynchronous executions:
 - Have no timeout limitations beyond your function's configured timeout
@@ -550,9 +550,80 @@ You can use one of the following events.
 
 # Schedule {% #schedule %}
 
-Appwrite supports scheduled function executions. You can schedule executions using [cron expressions](https://en.wikipedia.org/wiki/Cron) in the settings of your function. Cron supports recurring executions as frequently as **every minute**.
+Appwrite supports recurring function executions. Set a schedule in your function's settings, or with a [Server SDK](/docs/sdks#server) using either the `interval` parameter (minutes) or the `schedule` parameter (a cron expression). A function uses one or the other, not both.
 
-Here are some cron expressions for common intervals:
+## Interval {% #interval %}
+
+An interval runs your function every N minutes. Think of it as cron where Appwrite picks the time for you: an hourly interval runs at the same point in every hour, such as 37 minutes and 21 seconds past, chosen for your function.
+
+```text
+every 60 minutes  →  14:37:21, 15:37:21, 16:37:21, ...
+```
+
+Each function gets its own time within the interval, so functions with the same interval don't all start at the same moment.
+
+The interval is a whole number of minutes, as low as **1**. On Appwrite Cloud, the Free and Education plans support intervals of **60 minutes or longer**.
+
+Run times are fixed to the UTC clock, not counted from when you save the function:
+
+- The first run can be up to one full interval away. A daily interval may first run almost 24 hours after you set it.
+- A daily interval (1440 minutes) runs at one fixed UTC time of day, which you can't choose. Use cron if the time of day matters.
+- An interval that isn't a factor or multiple of 60, such as 45 or 90 minutes, doesn't run at the same time every hour.
+- Changing the interval can move the time Appwrite picks.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+    .setKey('<API_KEY>'); // Your secret API key
+
+const functions = new sdk.Functions(client);
+
+// Run the function every 6 hours
+await functions.update({
+    functionId: '<FUNCTION_ID>',
+    name: '<NAME>', // name is required by update
+    interval: 360
+});
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.functions import Functions
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<PROJECT_ID>') # Your project ID
+client.set_key('<API_KEY>') # Your secret API key
+
+functions = Functions(client)
+
+# Run the function every 6 hours
+functions.update(
+    function_id='<FUNCTION_ID>',
+    name='<NAME>',  # name is required by update
+    interval=360
+)
+```
+{% /multicode %}
+
+With the [Appwrite CLI](/docs/tooling/command-line/installation) 28.3.0 or later, pass `--interval`:
+
+```bash
+appwrite functions update --function-id <FUNCTION_ID> --name <NAME> --interval 360
+```
+
+To keep an interval in `appwrite.config.json`, set `"interval"` on the function and run `appwrite push functions`.
+
+Set `interval` to `0` to stop running on an interval. An update that leaves out `interval` keeps the current one, but an update that leaves out `schedule` clears the cron expression, so pass `schedule` again whenever you update a function that uses cron.
+
+## Cron {% #cron %}
+
+A [cron expression](https://en.wikipedia.org/wiki/Cron), set with the `schedule` parameter, runs your function at the times it describes, as frequently as **every minute**. Use cron when the time of day matters. On the Appwrite Cloud Free and Education plans, cron runs can start up to 5 minutes after the scheduled time.
+
+Here are some cron expressions for common schedules:
 
 | Cron Expression  | Schedule              |
 | ---------------- | --------------------- |
@@ -560,6 +631,10 @@ Here are some cron expressions for common intervals:
 | `0 * * * *`      | Every Hour            |
 | `0 0 * * *`      | Every day at 00:00    |
 | `0 0 * * 1`      | Every Monday at 00:00 |
+
+Setting a cron expression with the `schedule` parameter clears the function's interval.
+
+Scheduled executions, from an interval or a cron expression, show `schedule` as their trigger in the execution logs.
 
 # Delayed executions {% #delayed-executions %}
 
