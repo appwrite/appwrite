@@ -991,9 +991,32 @@ return function (Container $context): void {
         return $requestTimestamp;
     }, ['request']);
 
-    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath) {
+    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath, string $mode) {
+        $teamId = '';
         $teamInternalId = '';
+        $apiKey = $request->getHeaderLine('x-appwrite-key');
+        $organizationKey = \str_starts_with($apiKey, API_KEY_ORGANIZATION . '_');
+
         if ($project->getId() !== 'console') {
+            $route = $utopia->match($request)?->route;
+            // This resource is resolved once per request. GraphQL dispatches every
+            // field through it, so those requests keep the project team.
+            $graphql = $request->getHeaderLine('x-appwrite-source') === 'graphql';
+            $listsProjects = $route !== null
+                && $route->getPath() === '/v1/projects'
+                && \in_array(Http::REQUEST_METHOD_GET, $route->getMethods(), true);
+            if (
+                ! $graphql
+                && $route !== null
+                && $mode !== APP_MODE_ADMIN
+                && ! $organizationKey
+                && ! \in_array('organization', $route->getGroups(), true)
+                && ! $listsProjects
+            ) {
+                return new Document([]);
+            }
+
+            $teamId = $project->getAttribute('teamId', '');
             $teamInternalId = $project->getAttribute('teamInternalId', '');
         } else {
             $route = $utopia->match($request)?->route;
@@ -1001,6 +1024,7 @@ return function (Container $context): void {
             $orgHeader = $request->getHeaderLine('x-appwrite-organization', '');
             if (str_starts_with($path, '/v1/projects/:projectId')) {
                 $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectIdFromPath));
+                $teamId = $p->getAttribute('teamId', '');
                 $teamInternalId = $p->getAttribute('teamInternalId', '');
             } elseif ($path === '/v1/projects') {
                 $teamId = $request->getParam('teamId', '');
@@ -1019,20 +1043,29 @@ return function (Container $context): void {
             }
         }
 
-        // if teamInternalId is empty, return an empty document
-
-        if (empty($teamInternalId)) {
+        // "0" is a valid custom id. empty() would treat it as missing.
+        if ($teamId === '' || empty($teamInternalId)) {
             return new Document([]);
         }
 
-        $team = $authorization->skip(function () use ($dbForPlatform, $teamInternalId) {
-            return $dbForPlatform->findOne('teams', [
-                Query::equal('$sequence', [$teamInternalId]),
-            ]);
-        });
+        $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
+
+        // A team re-created under the same ID has a new sequence.
+        if ($team->isEmpty() || (string) $team->getSequence() !== (string) $teamInternalId) {
+            return new Document([]);
+        }
+
+        if ($organizationKey) {
+            // Same lookup as subQueryOrganizationKeys. The cached team can hold older keys.
+            $team->setAttribute('keys', $authorization->skip(fn () => $dbForPlatform->find('keys', [
+                Query::equal('resourceType', ['teams']),
+                Query::equal('resourceInternalId', [$team->getSequence()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ])));
+        }
 
         return $team;
-    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath']);
+    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath', 'mode']);
 
     $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
         $allowed = false;
