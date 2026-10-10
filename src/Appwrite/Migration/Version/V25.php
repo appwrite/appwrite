@@ -21,6 +21,9 @@ class V25 extends Migration
         Console::info('Migrating collections');
         $this->migrateCollections();
 
+        Console::info('Migrating buckets');
+        $this->migrateBuckets();
+
         Console::info('Migrating documents');
         $this->forEachDocument($this->migrateDocument(...));
     }
@@ -344,6 +347,31 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'sessions':
+                    // Added in 2.0.0: the GeoIP record stored on every session.
+                    $attributes = [
+                        'continentCode',
+                        'latitude',
+                        'longitude',
+                        'timeZone',
+                        'weatherCode',
+                        'postalCode',
+                        'autonomousSystemNumber',
+                        'autonomousSystemOrganization',
+                        'connectionType',
+                        'connectionUsageType',
+                        'connectionOrganization',
+                        'isp',
+                    ];
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'pushLedger':
                     // Added in 2.3.0 for every project; an install upgraded from 2.2.0
                     // has no table yet, and migrating its documents fails without one.
@@ -367,6 +395,35 @@ class V25 extends Migration
                     break;
             }
         }
+    }
+
+    /**
+     * Added in 2.0.0: the virtual folder a file lives in. A bucket created
+     * before then has no column, so every upload into it drops "folder".
+     */
+    private function migrateBuckets(): void
+    {
+        $this->dbForProject->foreach('buckets', function (Document $bucket) {
+            $id = "bucket_{$bucket->getSequence()}";
+            Console::log("Migrating bucket \"{$bucket->getId()}\" ({$bucket->getAttribute('name')})");
+
+            $this->dbForProject->purgeCachedCollection($id);
+
+            try {
+                $this->createAttributesFromCollection($this->dbForProject, $id, ['folder'], 'files');
+            } catch (Throwable $th) {
+                Console::warning("Failed to create attribute \"folder\" in collection {$id}: {$th->getMessage()}");
+            }
+
+            try {
+                $this->createIndexFromCollection($this->dbForProject, $id, '_key_folder', 'files');
+            } catch (Throwable $th) {
+                Console::warning("Failed to create index \"_key_folder\" from {$id}: {$th->getMessage()}");
+            }
+
+            $this->dbForProject->purgeCachedCollection($id);
+            $this->dbForProject->purgeCachedDocument(Database::METADATA, $id);
+        });
     }
 
     protected function migrateDocument(Document $document): Document
