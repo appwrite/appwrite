@@ -4259,6 +4259,122 @@ trait TransactionsBase
     }
 
     /**
+     * Staged operations without a request-side max/min must still honor the
+     * column schema bounds stored in formatOptions on getCollection() (#14143).
+     */
+    public function testIncrementOperationsRespectColumnBounds(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'BoundedIncrementOpsDB'
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'BoundedCounterCollection',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'integer', null), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'sm',
+            'required' => false,
+            'min' => 0,
+            'max' => 100,
+            'default' => 0,
+        ]);
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($databaseId, $collectionId);
+
+        $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordIdParam() => 'bounded_doc',
+            'data' => ['sm' => 99],
+        ]);
+        $this->assertEquals(201, $doc['headers']['status-code']);
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'increment',
+                    $this->getRecordIdParam() => 'bounded_doc',
+                    'data' => [
+                        $this->getSchemaParam() => 'sm',
+                        'value' => 500,
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(201, $staged['headers']['status-code']);
+
+        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true,
+        ]);
+        $this->assertEquals(400, $commit['headers']['status-code']);
+
+        $failed = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        $this->assertEquals(200, $failed['headers']['status-code']);
+        $this->assertEquals('failed', $failed['body']['status']);
+
+        $get = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, 'bounded_doc'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertEquals(99, $get['body']['sm']);
+    }
+
+    /**
      * Test individual increment/decrement endpoints with transactions for Legacy Collections API
      * This test ensures that:
      * 1. Transaction logs store the correct attribute key ('attribute' for Collections API)

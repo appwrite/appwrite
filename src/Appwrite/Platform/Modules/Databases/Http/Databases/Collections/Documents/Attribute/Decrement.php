@@ -107,6 +107,8 @@ class Decrement extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
+        $min = $this->resolveNumericBound($collection, $attribute, 'min', $min);
+
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = ($isAPIKey || $isPrivilegedUser)

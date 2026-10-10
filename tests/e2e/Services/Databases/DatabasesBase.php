@@ -8875,6 +8875,121 @@ trait DatabasesBase
         $this->assertEquals(400, $inc3['headers']['status-code']);
     }
 
+    /**
+     * Column min/max must be enforced on increment/decrement even when the
+     * request omits the optional max/min clamp (#14143).
+     *
+     * @throws \Exception
+     */
+    public function testIncrementDecrementRespectColumnBounds(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'BoundedCounterDatabase'
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'BoundedCounterCollection',
+            $this->getSecurityParam() => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'sm',
+            'required' => false,
+            'min' => 0,
+            'max' => 100,
+            'default' => 0,
+        ]);
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $collectionId, 'sm');
+
+        $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['sm' => 99],
+        ]);
+        $this->assertEquals(201, $doc['headers']['status-code']);
+        $docId = $doc['body']['$id'];
+
+        // Column max=100 must reject an increment that would store 599 without a
+        // request-side max clamp.
+        $overMax = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $docId) . '/sm/increment', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'value' => 500,
+        ]);
+        $this->assertEquals(400, $overMax['headers']['status-code']);
+
+        $get = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $docId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertEquals(99, $get['body']['sm']);
+
+        $doc2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['sm' => 5],
+        ]);
+        $this->assertEquals(201, $doc2['headers']['status-code']);
+        $doc2Id = $doc2['body']['$id'];
+
+        // Column min=0 must reject a decrement that would store -495.
+        $underMin = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $doc2Id) . '/sm/decrement', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'value' => 500,
+        ]);
+        $this->assertEquals(400, $underMin['headers']['status-code']);
+
+        $get2 = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $doc2Id), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        $this->assertEquals(200, $get2['headers']['status-code']);
+        $this->assertEquals(5, $get2['body']['sm']);
+    }
+
     public function testDecrementAttribute(): void
     {
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [

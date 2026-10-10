@@ -298,10 +298,10 @@ class Update extends Action
                                 $this->handleDeleteOperation($dbForDatabases, $collectionId, $documentId, $createdAt, $state);
                                 break;
                             case 'increment':
-                                $this->handleIncrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleIncrementOperation($dbForDatabases, $collection, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'decrement':
-                                $this->handleDecrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleDecrementOperation($dbForDatabases, $collection, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'bulkCreate':
                                 $count = $this->handleBulkCreateOperation($dbForDatabases, $collectionId, $data, $createdAt, $state);
@@ -828,6 +828,7 @@ class Update extends Action
      * Handle increment operation
      *
      * @param Database $dbForDatabases
+     * @param Document $collection
      * @param string $collectionId
      * @param string $documentId
      * @param array $data
@@ -839,6 +840,7 @@ class Update extends Action
      */
     private function handleIncrementOperation(
         Database $dbForDatabases,
+        Document $collection,
         string $collectionId,
         string $documentId,
         array $data,
@@ -847,6 +849,12 @@ class Update extends Action
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
         $attribute = $this->getAttributeNameFromData($data);
+        $max = $this->resolveNumericBound(
+            $collection,
+            $attribute,
+            'max',
+            $data['max'] ?? null
+        );
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute(
@@ -854,18 +862,18 @@ class Update extends Action
                 id: $documentId,
                 attribute: $attribute,
                 value: $data['value'] ?? 1,
-                max: $data['max'] ?? null
+                max: $max
             );
             return;
         }
 
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
+        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute, $max) {
             $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
                 value: $data['value'] ?? 1,
-                max: $data['max'] ?? null
+                max: $max
             );
         });
     }
@@ -874,6 +882,7 @@ class Update extends Action
      * Handle decrement operation
      *
      * @param Database $dbForDatabases
+     * @param Document $collection
      * @param string $collectionId
      * @param string $documentId
      * @param array $data
@@ -885,6 +894,7 @@ class Update extends Action
      */
     private function handleDecrementOperation(
         Database $dbForDatabases,
+        Document $collection,
         string $collectionId,
         string $documentId,
         array $data,
@@ -893,6 +903,12 @@ class Update extends Action
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
         $attribute = $this->getAttributeNameFromData($data);
+        $min = $this->resolveNumericBound(
+            $collection,
+            $attribute,
+            'min',
+            $data['min'] ?? null
+        );
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute(
@@ -900,18 +916,18 @@ class Update extends Action
                 id: $documentId,
                 attribute: $attribute,
                 value: $data['value'] ?? 1,
-                min: $data['min'] ?? null
+                min: $min
             );
             return;
         }
 
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
+        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute, $min) {
             $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
                 value: $data['value'] ?? 1,
-                min: $data['min'] ?? null
+                min: $min
             );
         });
     }
