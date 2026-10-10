@@ -486,8 +486,11 @@ class Response extends SwooleResponse
             $document->setAttribute('impersonatorUserId', $this->impersonatorUser->getId());
         }
 
-        $output = $this->output(clone $document, $model);
-        $output = $this->applyFilters($output, $model, raw: clone $document);
+        // output() clones the document itself, filters get their own copy as raw content
+        $output = $this->output($document, $model);
+        if ($this->hasFilters()) {
+            $output = $this->applyFilters($output, $model, raw: clone $document);
+        }
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
