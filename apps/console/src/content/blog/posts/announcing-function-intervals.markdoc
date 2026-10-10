@@ -2,7 +2,7 @@
 layout: post
 title: "Announcing function intervals: run functions every N minutes"
 description: Appwrite Functions can now run on an interval as an alternative to cron. Set how often a function runs, and Appwrite picks when within each interval it starts.
-date: 2026-10-09
+date: 2026-10-10
 cover: /images/blog/announcing-function-intervals/cover.avif
 timeToRead: 4
 author: chirag-aggarwal

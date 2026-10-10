@@ -1,7 +1,7 @@
 ---
 layout: changelog
 title: "Run functions on an interval"
-date: 2026-10-09
+date: 2026-10-10
 description: "Functions can now run every N minutes on an interval, as an alternative to cron expressions. Appwrite picks when within each interval the function runs."
 tags: functions, console, sdk, cli
 ---
