@@ -20,6 +20,51 @@
       "php": "http://compat-domains-http:8080",
       "rust": "http://localhost:9590",
       "runner": "http://localhost:9590"
+    },
+    "cache-redis": {
+      "php": "redis://redis:6379/11",
+      "rust": "redis://localhost:9513/6",
+      "runner": "redis://localhost:9513"
+    },
+    "cache-memcached": {
+      "php": "memcached://compat-cache-memcached:11211",
+      "rust": "memcached://localhost:16392",
+      "runner": "memcached://localhost:16392"
+    },
+    "cache-hazelcast": {
+      "php": "memcached://compat-cache-hazelcast:5701",
+      "rust": "memcached://localhost:16393",
+      "runner": "memcached://localhost:16393"
+    },
+    "cache-redis-mux": {
+      "php": "redis://redis:6379/10",
+      "rust": "redis://localhost:9513/15",
+      "runner": "redis://localhost:9513"
+    },
+    "cache-cluster": {
+      "php": "redis-cluster://compat-cache-cluster-php:17000,compat-cache-cluster-php:17001,compat-cache-cluster-php:17002",
+      "rust": "redis-cluster://127.0.0.1:17100,127.0.0.1:17101,127.0.0.1:17102",
+      "runner": "redis-cluster://127.0.0.1:17100,127.0.0.1:17101,127.0.0.1:17102"
+    },
+    "cache-redis-shared": {
+      "php": "redis://redis:6379/11",
+      "rust": "redis://localhost:9513/11",
+      "runner": "redis://localhost:9513/11"
+    },
+    "cache-shard-a": {
+      "php": "redis://redis:6379/12",
+      "rust": "redis://localhost:9513/7",
+      "runner": "redis://localhost:9513"
+    },
+    "cache-shard-b": {
+      "php": "redis://redis:6379/13",
+      "rust": "redis://localhost:9513/8",
+      "runner": "redis://localhost:9513"
+    },
+    "cache-shard-c": {
+      "php": "redis://redis:6379/14",
+      "rust": "redis://localhost:9513/9",
+      "runner": "redis://localhost:9513"
     }
   }
 }

@@ -1,0 +1,997 @@
+{
+  "source": "packages/cache/tests/FilesystemTest.php",
+  "cases": [
+    {
+      "name": "testCacheSave, testNotEmptyCacheKey, testCachePurge",
+      "steps": [
+        {
+          "op": "filesystem.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/data"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "test-key-for-cache",
+            "data": [
+              "test",
+              "data",
+              "string"
+            ],
+            "hash": "test-key-for-cache"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "test-key-for-cache",
+            "data": "test data string",
+            "hash": "test-key-for-cache"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "test-key-for-cache",
+            "ttl": 7776000,
+            "hash": "test-key-for-cache"
+          },
+          "expect": "test data string"
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "test-key-for-cache"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "test-key-for-cache",
+            "ttl": 7776000,
+            "hash": "test-key-for-cache"
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "files"
+      ]
+    },
+    {
+      "name": "testPing",
+      "steps": [
+        {
+          "op": "filesystem.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/data"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.ping",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "files"
+      ]
+    },
+    {
+      "name": "testCacheTouch",
+      "steps": [
+        {
+          "op": "filesystem.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/data"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-key",
+            "data": "touch data",
+            "hash": "touch-key"
+          },
+          "expect": true
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "seconds": 3
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-key",
+            "ttl": 2,
+            "hash": "touch-key"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-key",
+            "hash": "touch-key"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-key",
+            "ttl": 2,
+            "hash": "touch-key"
+          },
+          "expect": "touch data"
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "missing-touch-key",
+            "hash": "missing-touch-key"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-key"
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "files"
+      ]
+    },
+    {
+      "name": "testCaseInsensitivity",
+      "steps": [
+        {
+          "op": "filesystem.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/data"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "planet",
+            "data": "Earth",
+            "hash": "planet"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "planet",
+            "ttl": 7776000,
+            "hash": "planet"
+          },
+          "expect": "Earth"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "PLANET",
+            "ttl": 7776000,
+            "hash": "PLANET"
+          },
+          "expect": "Earth"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "PlAnEt",
+            "ttl": 7776000,
+            "hash": "PlAnEt"
+          },
+          "expect": "Earth"
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "PLaNEt"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "planet",
+            "ttl": 7776000,
+            "hash": "planet"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "PLANET",
+            "ttl": 7776000,
+            "hash": "PLANET"
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "files"
+      ]
+    },
+    {
+      "name": "testCaseSensitivity",
+      "steps": [
+        {
+          "op": "filesystem.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/data"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.set_case_sensitivity",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "value": true
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "color",
+            "data": "pink",
+            "hash": "color"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "color",
+            "ttl": 7776000,
+            "hash": "color"
+          },
+          "expect": "pink"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "COLOR",
+            "ttl": 7776000,
+            "hash": "COLOR"
+          },
+          "expect": "pink"
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "color"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.set_case_sensitivity",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "value": false
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.case_sensitive",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "files"
+      ]
+    },
+    {
+      "name": "testFlush",
+      "steps": [
+        {
+          "op": "filesystem.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/data"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "x",
+            "data": "x",
+            "hash": "x"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "y",
+            "data": "y",
+            "hash": "y"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "x",
+            "ttl": 100,
+            "hash": "x"
+          },
+          "expect": "x"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "y",
+            "ttl": 100,
+            "hash": "y"
+          },
+          "expect": "y"
+        },
+        {
+          "op": "cache.flush",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "x",
+            "ttl": 100,
+            "hash": "x"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "y",
+            "ttl": 100,
+            "hash": "y"
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "files"
+      ]
+    },
+    {
+      "name": "testGetSize",
+      "steps": [
+        {
+          "op": "filesystem.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/data"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "test",
+            "data": "test"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.size",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": 4
+        }
+      ],
+      "state": [
+        "files"
+      ]
+    },
+    {
+      "name": "testStreamingLoad, testStreamingLoadMissingKey",
+      "steps": [
+        {
+          "op": "filesystem.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/data"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "stream-test",
+            "data": "stream data"
+          },
+          "expect": true
+        },
+        {
+          "op": "filesystem.stream",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/data",
+            "key": "stream-test",
+            "ttl": 60
+          },
+          "expect": "stream data"
+        },
+        {
+          "op": "filesystem.stream",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/data",
+            "key": "missing-stream-test",
+            "ttl": 60
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "files"
+      ]
+    },
+    {
+      "name": "paths, nested keys, arrays and edge cases",
+      "steps": [
+        {
+          "op": "filesystem.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/data"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "filesystem.path",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/data",
+            "key": "a/b"
+          },
+          "expect": "/tmp/compat-fs/${ns}/data/a/b"
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "dir/nested/key",
+            "data": "nested"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "dir/nested/key",
+            "ttl": 60
+          },
+          "expect": "nested"
+        },
+        {
+          "op": "cache.size",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": 6
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "list",
+            "data": [
+              "a",
+              "b",
+              [
+                "c"
+              ],
+              1,
+              2.5,
+              true,
+              null
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "list",
+            "ttl": 60
+          },
+          "expect": "abArray12.51"
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "blank",
+            "data": [
+              ""
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "blank",
+            "ttl": 60
+          },
+          "expect": ""
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "dir"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "missing"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.list",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "list"
+          },
+          "expect": []
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "list",
+            "ttl": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "missing"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "list"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "filesystem"
+        },
+        {
+          "op": "cache.flush",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.ping",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.size",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": 0
+        }
+      ],
+      "state": [
+        "files"
+      ]
+    },
+    {
+      "name": "flushing an empty or missing directory fails",
+      "steps": [
+        {
+          "op": "filesystem.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/missing"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.flush",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "/tmp/compat-fs/${ns}/missing must be a directory"
+            }
+          }
+        },
+        {
+          "op": "cache.ping",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.size",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "k",
+            "data": "v"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "k"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.flush",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Error happened during glob"
+            }
+          }
+        }
+      ],
+      "state": [
+        "files"
+      ]
+    }
+  ]
+}

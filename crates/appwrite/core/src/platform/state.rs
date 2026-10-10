@@ -43,7 +43,7 @@ impl State {
         for _ in 0..config.redis_connections.max(1) {
             redis.push(ConnectionManager::new(client.clone()).await?);
         }
-        let cache = Arc::new(Cache::new(vec![redis[0].clone()]));
+        let cache = Arc::new(Cache::from_dyn(Arc::new(utopia_cache::Redis::new(redis[0].clone()))));
         let publisher = Publisher::new(redis[redis.len() - 1].clone());
         let lock = crate::locking::Locking::new(redis[0].clone());
 

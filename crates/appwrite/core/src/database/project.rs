@@ -317,8 +317,8 @@ fn map_platform_type(kind: &str) -> String {
     .to_owned()
 }
 
-const CACHE_FIELD: &str = "rust:project:v1";
-const CACHE_TTL_SECS: u64 = 86_400;
+const CACHE_FIELD: &str = "rust:project:v2";
+const CACHE_TTL_SECS: i64 = 86_400;
 const L1_MAX_AGE: Duration = Duration::from_secs(30);
 const L1_MAX_ENTRIES: usize = 10_000;
 
@@ -349,22 +349,28 @@ impl ProjectStore {
             return Ok(load(platform, id).await?.map(Arc::new));
         };
         let (collection_key, document_key) = platform.cache_keys("projects", id);
-        let lookup = match cache.lookup(&document_key, CACHE_FIELD, CACHE_TTL_SECS).await {
-            Ok(l) => Some(l),
+        // The generation is read before the database, so a purge in between
+        // makes the lease reject the save below.
+        let lookup = match cache.generation(&document_key).await {
+            Ok(generation) => match cache.load(&document_key, CACHE_TTL_SECS, CACHE_FIELD).await {
+                Ok(value) => Some((generation, value)),
+                Err(e) => {
+                    tracing::warn!(error = %e, "project cache lookup failed");
+                    None
+                }
+            },
             Err(e) => {
                 tracing::warn!(error = %e, "project cache lookup failed");
                 None
             }
         };
-        if let Some(lookup) = &lookup
-            && let Some(bytes) = &lookup.value
-        {
-            if let Some(hit) = self.l1_get(id, &lookup.generation) {
+        if let Some((generation, Some(php_std::Value::Str(json)))) = &lookup {
+            if let Some(hit) = self.l1_get(id, generation) {
                 return Ok(Some(hit));
             }
-            if let Ok(project) = serde_json::from_slice::<Project>(bytes) {
+            if let Ok(project) = serde_json::from_slice::<Project>(json.as_bytes()) {
                 let project = Arc::new(project);
-                self.l1_put(id, &lookup.generation, project.clone());
+                self.l1_put(id, generation, project.clone());
                 return Ok(Some(project));
             }
         }
@@ -372,13 +378,14 @@ impl ProjectStore {
             return Ok(None);
         };
         let project = Arc::new(project);
-        if let Some(lookup) = lookup
+        if let Some((generation, _)) = lookup
             && let Ok(bytes) = serde_json::to_vec(&*project)
         {
-            match cache.save_with_lease(&document_key, CACHE_FIELD, &bytes, &lookup.generation).await {
+            let json = php_std::Value::Str(bytes.into());
+            match cache.save_with_lease(&document_key, &json, CACHE_FIELD, &generation).await {
                 Ok(true) => {
-                    let _ = cache.save(&collection_key, &document_key, b"empty").await;
-                    self.l1_put(id, &lookup.generation, project.clone());
+                    let _ = cache.save(&collection_key, &php_std::Value::from("empty"), &document_key, 0).await;
+                    self.l1_put(id, &generation, project.clone());
                 }
                 Ok(false) => {}
                 Err(e) => tracing::warn!(error = %e, "project cache save failed"),

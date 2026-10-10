@@ -1,0 +1,686 @@
+{
+  "source": "packages/cache/tests/RedisClientTest.php",
+  "cases": [
+    {
+      "name": "testEncodeBuildsRespArrayOfBulkStrings",
+      "steps": [
+        {
+          "op": "resp.encode",
+          "args": {
+            "args": [
+              "PING"
+            ]
+          },
+          "expect": "*1\r\n$4\r\nPING\r\n"
+        },
+        {
+          "op": "resp.encode",
+          "args": {
+            "args": [
+              "SET",
+              "foo",
+              "bar"
+            ]
+          },
+          "expect": "*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"
+        }
+      ]
+    },
+    {
+      "name": "testEncodeCoercesIntegersToStrings",
+      "steps": [
+        {
+          "op": "resp.encode",
+          "args": {
+            "args": [
+              "SELECT",
+              3
+            ]
+          },
+          "expect": "*2\r\n$6\r\nSELECT\r\n$1\r\n3\r\n"
+        }
+      ]
+    },
+    {
+      "name": "testEncodePreservesBinaryPayloadByByteLength",
+      "steps": [
+        {
+          "op": "resp.encode",
+          "args": {
+            "args": [
+              "SET",
+              "k",
+              "café\n\u0000bytes"
+            ]
+          },
+          "expect": "*3\r\n$3\r\nSET\r\n$1\r\nk\r\n$12\r\ncafé\n\u0000bytes\r\n"
+        }
+      ]
+    },
+    {
+      "name": "testParseSimpleString",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "+OK\r\n"
+          },
+          "expect": {
+            "value": "OK",
+            "offset": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseInteger",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": ":42\r\n"
+          },
+          "expect": {
+            "value": 42,
+            "offset": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseNegativeInteger",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": ":-7\r\n"
+          },
+          "expect": {
+            "value": -7,
+            "offset": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseBulkString",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "$5\r\nhello\r\n"
+          },
+          "expect": {
+            "value": "hello",
+            "offset": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseBulkStringWithEmbeddedCrlf",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "$12\r\nline1\r\nline2\r\n"
+          },
+          "expect": {
+            "value": "line1\r\nline2",
+            "offset": 19
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseEmptyBulkString",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "$0\r\n\r\n"
+          },
+          "expect": {
+            "value": "",
+            "offset": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseNullBulkString",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "$-1\r\n"
+          },
+          "expect": {
+            "value": null,
+            "offset": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseArrayOfMixedTypes",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "*3\r\n$3\r\nfoo\r\n:42\r\n+OK\r\n"
+          },
+          "expect": {
+            "value": [
+              "foo",
+              42,
+              "OK"
+            ],
+            "offset": 23
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseEmptyArray",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "*0\r\n"
+          },
+          "expect": {
+            "value": [],
+            "offset": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseNullArray",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "*-1\r\n"
+          },
+          "expect": {
+            "value": null,
+            "offset": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseNestedArrays",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "*2\r\n*2\r\n:1\r\n:2\r\n*1\r\n$1\r\nx\r\n"
+          },
+          "expect": {
+            "value": [
+              [
+                1,
+                2
+              ],
+              [
+                "x"
+              ]
+            ],
+            "offset": 27
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseRedisErrorIsWrappedNotThrown",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "-WRONGTYPE wrong kind\r\n"
+          },
+          "expect": {
+            "value": {
+              "$redis_error": "WRONGTYPE wrong kind"
+            },
+            "offset": 23
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseReturnsIncompleteWhenBufferEmpty",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": ""
+          },
+          "expect": {
+            "value": {
+              "$incomplete": true
+            },
+            "offset": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseReturnsIncompleteWhenLineUnterminated",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "+OK"
+          },
+          "expect": {
+            "value": {
+              "$incomplete": true
+            },
+            "offset": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseReturnsIncompleteForTruncatedBulkString",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "$5\r\nhel"
+          },
+          "expect": {
+            "value": {
+              "$incomplete": true
+            },
+            "offset": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseReturnsIncompleteForBulkStringMissingTrailingCrlf",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "$5\r\nhello"
+          },
+          "expect": {
+            "value": {
+              "$incomplete": true
+            },
+            "offset": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseReturnsIncompleteForPartiallyDeliveredArrayElement",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "*2\r\n:1\r\n:"
+          },
+          "expect": {
+            "value": {
+              "$incomplete": true
+            },
+            "offset": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseAdvancesOffsetExactlyOneFrame",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "+OK\r\n+SECOND\r\n"
+          },
+          "expect": {
+            "value": "OK",
+            "offset": 5
+          }
+        },
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "+OK\r\n+SECOND\r\n",
+            "offset": 5
+          },
+          "expect": {
+            "value": "SECOND",
+            "offset": 14
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseUnknownTypeThrows",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "?nope\r\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "Unknown RESP type: ?"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testEncodeAndParseRoundTripFlattenedToServerEcho",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": ":1\r\n"
+          },
+          "expect": {
+            "value": 1,
+            "offset": 4
+          }
+        },
+        {
+          "op": "resp.encode",
+          "args": {
+            "args": [
+              "HSET",
+              "k",
+              "f",
+              "v"
+            ]
+          },
+          "expect": "*4\r\n$4\r\nHSET\r\n$1\r\nk\r\n$1\r\nf\r\n$1\r\nv\r\n"
+        }
+      ]
+    },
+    {
+      "name": "testUnwrapPassesThroughScalars",
+      "steps": [
+        {
+          "op": "resp.unwrap",
+          "args": {
+            "value": "OK"
+          },
+          "expect": "OK"
+        },
+        {
+          "op": "resp.unwrap",
+          "args": {
+            "value": 42
+          },
+          "expect": 42
+        },
+        {
+          "op": "resp.unwrap",
+          "args": {
+            "value": null
+          },
+          "expect": null
+        },
+        {
+          "op": "resp.unwrap",
+          "args": {
+            "value": ""
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "testUnwrapPassesThroughArraysOfScalars",
+      "steps": [
+        {
+          "op": "resp.unwrap",
+          "args": {
+            "value": [
+              "a",
+              1,
+              null
+            ]
+          },
+          "expect": [
+            "a",
+            1,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testUnwrapThrowsRedisErrorAtTopLevel",
+      "steps": [
+        {
+          "op": "resp.unwrap",
+          "args": {
+            "value": {
+              "$redis_error": "WRONGTYPE"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "WRONGTYPE"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUnwrapThrowsConnectionErrorAtTopLevel",
+      "steps": [
+        {
+          "op": "resp.unwrap",
+          "args": {
+            "value": {
+              "$connection_error": "connection lost"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Adapter\\Redis\\ConnectionException",
+              "message": "connection lost"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUnwrapThrowsRedisErrorNestedInArray",
+      "steps": [
+        {
+          "op": "resp.unwrap",
+          "args": {
+            "value": [
+              "ok",
+              {
+                "$redis_error": "NOAUTH"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "NOAUTH"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUnwrapThrowsErrorNestedInsideNestedArray",
+      "steps": [
+        {
+          "op": "resp.unwrap",
+          "args": {
+            "value": [
+              [
+                "nested",
+                [
+                  "deeper",
+                  {
+                    "$redis_error": "deep"
+                  }
+                ]
+              ]
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "deep"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUnwrapReturnsArrayUnchangedWhenNoErrors",
+      "steps": [
+        {
+          "op": "resp.unwrap",
+          "args": {
+            "value": [
+              [
+                "a",
+                1
+              ],
+              [
+                "b",
+                null
+              ],
+              "c"
+            ]
+          },
+          "expect": [
+            [
+              "a",
+              1
+            ],
+            [
+              "b",
+              null
+            ],
+            "c"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testUnwrapHandlesEmptyArray",
+      "steps": [
+        {
+          "op": "resp.unwrap",
+          "args": {
+            "value": []
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "odd frames",
+      "steps": [
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": ":12abc\r\n"
+          },
+          "expect": {
+            "value": 12,
+            "offset": 8
+          }
+        },
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": ":99999999999999999999\r\n"
+          },
+          "expect": {
+            "value": 9223372036854775807,
+            "offset": 23
+          }
+        },
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "$-3\r\nabcdef\r\n"
+          },
+          "expect": {
+            "value": "abcde",
+            "offset": 4
+          }
+        },
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "*-2\r\n"
+          },
+          "expect": {
+            "value": [],
+            "offset": 5
+          }
+        },
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "$x\r\n\r\n"
+          },
+          "expect": {
+            "value": "",
+            "offset": 6
+          }
+        },
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "*1\r\n-ERR inside\r\n"
+          },
+          "expect": {
+            "value": [
+              {
+                "$redis_error": "ERR inside"
+              }
+            ],
+            "offset": 17
+          }
+        },
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "$3\r\nabc\r\n:1",
+            "offset": 0
+          },
+          "expect": {
+            "value": "abc",
+            "offset": 9
+          }
+        },
+        {
+          "op": "resp.parse",
+          "args": {
+            "buffer": "\r\n"
+          },
+          "expect": {
+            "value": {
+              "$incomplete": true
+            },
+            "offset": 0
+          }
+        }
+      ]
+    }
+  ]
+}

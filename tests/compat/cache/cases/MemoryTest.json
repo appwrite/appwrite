@@ -1,0 +1,1450 @@
+{
+  "source": "packages/cache/tests/MemoryTest.php",
+  "cases": [
+    {
+      "name": "testCacheSave, testNotEmptyCacheKey, testCachePurge",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "test-key-for-cache",
+            "data": [
+              "test",
+              "data",
+              "string"
+            ],
+            "hash": "test-key-for-cache"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "test-key-for-cache",
+            "data": "test data string",
+            "hash": "test-key-for-cache"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "test-key-for-cache",
+            "ttl": 7776000,
+            "hash": "test-key-for-cache"
+          },
+          "expect": "test data string"
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "test-key-for-cache"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "test-key-for-cache",
+            "ttl": 7776000,
+            "hash": "test-key-for-cache"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testPing",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.ping",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testCacheTouch",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-key",
+            "data": "touch data",
+            "hash": "touch-key"
+          },
+          "expect": true
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "seconds": 3
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-key",
+            "ttl": 2,
+            "hash": "touch-key"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-key",
+            "hash": "touch-key"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-key",
+            "ttl": 2,
+            "hash": "touch-key"
+          },
+          "expect": "touch data"
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "missing-touch-key",
+            "hash": "missing-touch-key"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-key"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testCaseInsensitivity",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "planet",
+            "data": "Earth",
+            "hash": "planet"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "planet",
+            "ttl": 7776000,
+            "hash": "planet"
+          },
+          "expect": "Earth"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "PLANET",
+            "ttl": 7776000,
+            "hash": "PLANET"
+          },
+          "expect": "Earth"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "PlAnEt",
+            "ttl": 7776000,
+            "hash": "PlAnEt"
+          },
+          "expect": "Earth"
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "PLaNEt"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "planet",
+            "ttl": 7776000,
+            "hash": "planet"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "PLANET",
+            "ttl": 7776000,
+            "hash": "PLANET"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCaseSensitivity",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.set_case_sensitivity",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "value": true
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "color",
+            "data": "pink",
+            "hash": "color"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "color",
+            "ttl": 7776000,
+            "hash": "color"
+          },
+          "expect": "pink"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "COLOR",
+            "ttl": 7776000,
+            "hash": "COLOR"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "color"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.set_case_sensitivity",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "value": false
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.case_sensitive",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testFlush",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "x",
+            "data": "x",
+            "hash": "x"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "y",
+            "data": "y",
+            "hash": "y"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "x",
+            "ttl": 100,
+            "hash": "x"
+          },
+          "expect": "x"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "y",
+            "ttl": 100,
+            "hash": "y"
+          },
+          "expect": "y"
+        },
+        {
+          "op": "cache.flush",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "x",
+            "ttl": 100,
+            "hash": "x"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "y",
+            "ttl": 100,
+            "hash": "y"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testGetSize",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "test:file33",
+            "data": "file33"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "test:file34",
+            "data": "file34"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "test:file35",
+            "data": "file35"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "test:file36",
+            "data": "file36"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.size",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": 4
+        }
+      ]
+    },
+    {
+      "name": "blank keys and empty data are not stored",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "",
+            "data": "x"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "0",
+            "data": "x"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "k",
+            "data": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "k",
+            "data": "0"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "k",
+            "data": []
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "0",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "0"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.size",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "adapter.save",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "key": "Mixed",
+            "data": {
+              "a": [
+                1,
+                2.5,
+                true,
+                null
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.load",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "key": "Mixed",
+            "ttl": 60
+          },
+          "expect": {
+            "$array": [
+              [
+                "a",
+                [
+                  1,
+                  2.5,
+                  true,
+                  null
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "adapter.load",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "key": "Mixed",
+            "ttl": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.list",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "key": "Mixed"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "memory"
+        },
+        {
+          "op": "adapter.load_many",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "key": "Mixed",
+            "ttl": 60
+          },
+          "expect": {}
+        },
+        {
+          "op": "adapter.save_many",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "key": "Mixed",
+            "data": [
+              [
+                "f",
+                "v"
+              ]
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.generation",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "key": "Mixed"
+          },
+          "expect": "0"
+        },
+        {
+          "op": "adapter.save_with_lease",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "key": "Lease",
+            "data": "v",
+            "hash": "Lease",
+            "generation": "7"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.load",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "key": "Lease",
+            "ttl": 60
+          },
+          "expect": "v"
+        }
+      ]
+    },
+    {
+      "name": "the facade without fields or leases",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.load_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "k",
+            "ttl": 60,
+            "fields": [
+              "a"
+            ]
+          },
+          "expect": {}
+        },
+        {
+          "op": "cache.save_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "K",
+            "data": [
+              [
+                "A",
+                1
+              ]
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.generation",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "K"
+          },
+          "expect": "0"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "Lease",
+            "data": "v",
+            "hash": "h",
+            "generation": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "lease",
+            "ttl": 60
+          },
+          "expect": "v"
+        }
+      ]
+    },
+    {
+      "name": "fuzz.roundtrip over memory (key)",
+      "steps": [
+        {
+          "op": "fuzz.roundtrip",
+          "args": {
+            "adapter": "memory",
+            "key": "Mixed:Key",
+            "hash": "",
+            "data": "text"
+          },
+          "expect": [
+            true,
+            "text",
+            true,
+            "text",
+            [],
+            true,
+            false
+          ]
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "fuzz.roundtrip over memory (field)",
+      "steps": [
+        {
+          "op": "fuzz.roundtrip",
+          "args": {
+            "adapter": "memory",
+            "key": "Mixed:Key",
+            "hash": "Field",
+            "data": {
+              "list": [
+                1,
+                {}
+              ],
+              "unicode": "café 🚀"
+            }
+          },
+          "expect": [
+            true,
+            {
+              "$array": [
+                [
+                  "list",
+                  [
+                    1,
+                    {
+                      "$object": []
+                    }
+                  ]
+                ],
+                [
+                  "unicode",
+                  "café 🚀"
+                ]
+              ]
+            },
+            true,
+            {
+              "$array": [
+                [
+                  "list",
+                  [
+                    1,
+                    {
+                      "$object": []
+                    }
+                  ]
+                ],
+                [
+                  "unicode",
+                  "café 🚀"
+                ]
+              ]
+            },
+            [],
+            true,
+            false
+          ]
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "fuzz.roundtrip over redis (key)",
+      "steps": [
+        {
+          "op": "fuzz.roundtrip",
+          "args": {
+            "adapter": "redis",
+            "key": "Mixed:Key",
+            "hash": "",
+            "data": "text"
+          },
+          "expect": [
+            true,
+            "text",
+            true,
+            "text",
+            [
+              "${ns}:mixed:key"
+            ],
+            true,
+            false
+          ]
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "fuzz.roundtrip over redis (field)",
+      "steps": [
+        {
+          "op": "fuzz.roundtrip",
+          "args": {
+            "adapter": "redis",
+            "key": "Mixed:Key",
+            "hash": "Field",
+            "data": {
+              "list": [
+                1,
+                {}
+              ],
+              "unicode": "café 🚀"
+            }
+          },
+          "expect": [
+            true,
+            {
+              "$array": [
+                [
+                  "list",
+                  [
+                    1,
+                    {
+                      "$object": []
+                    }
+                  ]
+                ],
+                [
+                  "unicode",
+                  "café 🚀"
+                ]
+              ]
+            },
+            true,
+            {
+              "$array": [
+                [
+                  "list",
+                  [
+                    1,
+                    {
+                      "$object": []
+                    }
+                  ]
+                ],
+                [
+                  "unicode",
+                  "café 🚀"
+                ]
+              ]
+            },
+            [
+              "field"
+            ],
+            true,
+            false
+          ]
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "fuzz.roundtrip over redis-igbinary (key)",
+      "steps": [
+        {
+          "op": "fuzz.roundtrip",
+          "args": {
+            "adapter": "redis-igbinary",
+            "key": "Mixed:Key",
+            "hash": "",
+            "data": "text"
+          },
+          "expect": [
+            true,
+            "text",
+            true,
+            "text",
+            [
+              "${ns}:mixed:key"
+            ],
+            true,
+            false
+          ]
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "fuzz.roundtrip over redis-igbinary (field)",
+      "steps": [
+        {
+          "op": "fuzz.roundtrip",
+          "args": {
+            "adapter": "redis-igbinary",
+            "key": "Mixed:Key",
+            "hash": "Field",
+            "data": {
+              "list": [
+                1,
+                {}
+              ],
+              "unicode": "café 🚀"
+            }
+          },
+          "expect": [
+            true,
+            {
+              "$array": [
+                [
+                  "list",
+                  [
+                    1,
+                    {
+                      "$object": []
+                    }
+                  ]
+                ],
+                [
+                  "unicode",
+                  "café 🚀"
+                ]
+              ]
+            },
+            true,
+            {
+              "$array": [
+                [
+                  "list",
+                  [
+                    1,
+                    {
+                      "$object": []
+                    }
+                  ]
+                ],
+                [
+                  "unicode",
+                  "café 🚀"
+                ]
+              ]
+            },
+            [
+              "field"
+            ],
+            true,
+            false
+          ]
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "fuzz.roundtrip over filesystem (key)",
+      "steps": [
+        {
+          "op": "fuzz.roundtrip",
+          "args": {
+            "adapter": "filesystem",
+            "key": "Mixed:Key",
+            "hash": "",
+            "data": "text"
+          },
+          "expect": [
+            true,
+            "text",
+            true,
+            "text",
+            [],
+            true,
+            false
+          ]
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "fuzz.roundtrip over filesystem (field)",
+      "steps": [
+        {
+          "op": "fuzz.roundtrip",
+          "args": {
+            "adapter": "filesystem",
+            "key": "Mixed:Key",
+            "hash": "Field",
+            "data": {
+              "list": [
+                1,
+                {}
+              ],
+              "unicode": "café 🚀"
+            }
+          },
+          "expect": [
+            true,
+            "Arraycafé 🚀",
+            true,
+            "Arraycafé 🚀",
+            [],
+            true,
+            false
+          ]
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "fuzz.roundtrip over memcached (key)",
+      "steps": [
+        {
+          "op": "fuzz.roundtrip",
+          "args": {
+            "adapter": "memcached",
+            "key": "Mixed:Key",
+            "hash": "",
+            "data": "text"
+          },
+          "expect": [
+            true,
+            "text",
+            true,
+            "text",
+            [],
+            true,
+            false
+          ]
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "fuzz.roundtrip over memcached (field)",
+      "steps": [
+        {
+          "op": "fuzz.roundtrip",
+          "args": {
+            "adapter": "memcached",
+            "key": "Mixed:Key",
+            "hash": "Field",
+            "data": {
+              "list": [
+                1,
+                {}
+              ],
+              "unicode": "café 🚀"
+            }
+          },
+          "expect": [
+            true,
+            {
+              "$array": [
+                [
+                  "list",
+                  [
+                    1,
+                    {
+                      "$object": []
+                    }
+                  ]
+                ],
+                [
+                  "unicode",
+                  "café 🚀"
+                ]
+              ]
+            },
+            true,
+            {
+              "$array": [
+                [
+                  "list",
+                  [
+                    1,
+                    {
+                      "$object": []
+                    }
+                  ]
+                ],
+                [
+                  "unicode",
+                  "café 🚀"
+                ]
+              ]
+            },
+            [],
+            true,
+            false
+          ]
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "fuzz.roundtrip over hazelcast (key)",
+      "steps": [
+        {
+          "op": "fuzz.roundtrip",
+          "args": {
+            "adapter": "hazelcast",
+            "key": "Mixed:Key",
+            "hash": "",
+            "data": "text"
+          },
+          "expect": [
+            true,
+            "text",
+            true,
+            "text",
+            [],
+            true,
+            false
+          ]
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "fuzz.roundtrip over hazelcast (field)",
+      "steps": [
+        {
+          "op": "fuzz.roundtrip",
+          "args": {
+            "adapter": "hazelcast",
+            "key": "Mixed:Key",
+            "hash": "Field",
+            "data": {
+              "list": [
+                1,
+                {}
+              ],
+              "unicode": "café 🚀"
+            }
+          },
+          "expect": [
+            true,
+            {
+              "$array": [
+                [
+                  "list",
+                  [
+                    1,
+                    {
+                      "$object": []
+                    }
+                  ]
+                ],
+                [
+                  "unicode",
+                  "café 🚀"
+                ]
+              ]
+            },
+            true,
+            {
+              "$array": [
+                [
+                  "list",
+                  [
+                    1,
+                    {
+                      "$object": []
+                    }
+                  ]
+                ],
+                [
+                  "unicode",
+                  "café 🚀"
+                ]
+              ]
+            },
+            [],
+            true,
+            false
+          ]
+        }
+      ],
+      "state": []
+    }
+  ]
+}
