@@ -115,6 +115,7 @@ class Create extends Action
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
         $invitee = new Document();
         $hash = '';
+        $inviteeCreated = false;
 
         if (empty($url)) {
             if (! $isAppUser && ! $isPrivilegedUser) {
@@ -273,6 +274,7 @@ class Create extends Action
 
             try {
                 $invitee = $authorization->skip(fn () => $dbForProject->createDocument('users', $userDocument));
+                $inviteeCreated = true;
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
@@ -293,7 +295,7 @@ class Create extends Action
 
         $secret = $proofForToken->generate();
         if ($membership->isEmpty()) {
-            $membershipId = empty($membershipId) || $membershipId == 'unique()' ? ID::unique() : $membershipId;
+            $membershipId = ($membershipId === '' || $membershipId == 'unique()') ? ID::unique() : $membershipId;
             $membership = new Document([
                 '$id' => $membershipId,
                 '$permissions' => [
@@ -320,6 +322,9 @@ class Create extends Action
                     $authorization->skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
                     $dbForProject->createDocument('memberships', $membership);
             } catch (Duplicate $th) {
+                if ($inviteeCreated) {
+                    $authorization->skip(fn () => $dbForProject->deleteDocument('users', $invitee->getId()));
+                }
                 throw new Exception(Exception::MEMBERSHIP_ALREADY_EXISTS);
             }
 
