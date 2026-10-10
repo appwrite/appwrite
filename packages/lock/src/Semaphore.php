@@ -28,7 +28,11 @@ final class Semaphore implements Lock
     public function acquire(float $timeout = 0.0): bool
     {
         if (! $this->inCoroutine()) {
-            if ($this->syncHeld >= $this->permits) {
+            if ($timeout < 0.0) {
+                while ($this->syncHeld >= $this->permits) {
+                    usleep(10_000);
+                }
+            } elseif ($this->syncHeld >= $this->permits) {
                 return false;
             }
             $this->syncHeld++;

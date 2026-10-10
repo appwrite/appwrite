@@ -23,7 +23,11 @@ final class Mutex implements Lock
     public function acquire(float $timeout = 0.0): bool
     {
         if (! $this->inCoroutine()) {
-            if ($this->syncHeld) {
+            if ($timeout < 0.0) {
+                while ($this->syncHeld) {
+                    usleep(10_000);
+                }
+            } elseif ($this->syncHeld) {
                 return false;
             }
             $this->syncHeld = true;
