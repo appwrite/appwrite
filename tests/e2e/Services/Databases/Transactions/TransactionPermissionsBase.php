@@ -1734,6 +1734,8 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(200, $ownRead['headers']['status-code']);
         $this->assertEquals('Staged secret', $ownRead['body']['title']);
+        $this->assertSame($this->getPermissionsDatabase(), $ownRead['body']['$databaseId'], 'Main stamped a staged record with its database');
+        $this->assertSame($collectionId, $ownRead['body']['$' . $this->getContainerIdParam()], 'Main stamped a staged record with its container');
 
         /**
          * Test for FAILURE

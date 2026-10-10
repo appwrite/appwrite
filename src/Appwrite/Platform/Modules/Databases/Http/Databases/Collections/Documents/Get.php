@@ -114,7 +114,11 @@ class Get extends Action
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
             if ($transactionId !== null) {
-                $document = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId, $queries);
+                $document = $this->stampTransactionRead(
+                    $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId, $queries),
+                    $databaseId,
+                    $collectionId,
+                );
             } elseif (! empty($selects)) {
                 $document = $dbForDatabases->getDocument($collectionTableId, $documentId, $queries);
             } else {

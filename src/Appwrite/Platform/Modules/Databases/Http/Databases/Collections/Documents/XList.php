@@ -162,7 +162,10 @@ class XList extends Action
             };
 
             if ($transactionId !== null) {
-                $documents = $transactionState->listDocuments($database, $collectionTableId, $transactionId, $queries);
+                $documents = \array_map(
+                    fn (Document $document): Document => $this->stampTransactionRead($document, $databaseId, $collectionId),
+                    $transactionState->listDocuments($database, $collectionTableId, $transactionId, $queries),
+                );
                 $total = $includeTotal ? $transactionState->countDocuments($database, $collectionTableId, $transactionId, $queries) : 0;
             } elseif ((int)$ttl > 0) {
                 $cache = new ListCache(

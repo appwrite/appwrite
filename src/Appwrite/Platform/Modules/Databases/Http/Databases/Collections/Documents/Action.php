@@ -285,6 +285,21 @@ abstract class Action extends DatabasesAction
     /**
      * Get the correct collections context for Events queue.
      */
+    /**
+     * A document staged in a transaction is read from its log, not through the metadata decorator; main stamped
+     * every document it read.
+     */
+    protected function stampTransactionRead(Document $document, string $databaseId, string $collectionId): Document
+    {
+        if ($document->isEmpty()) {
+            return $document;
+        }
+
+        return $document
+            ->setAttribute('$databaseId', $databaseId)
+            ->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
+    }
+
     protected function getCollectionsEventsContext(): string
     {
         return $this->isCollectionsAPI() ? 'collection' : 'table';
