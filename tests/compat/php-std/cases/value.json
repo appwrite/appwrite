@@ -1,0 +1,268 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "numeric with whitespace",
+      "op": "value.is_numeric",
+      "args": {
+        "v": " 1 "
+      },
+      "expect": true
+    },
+    {
+      "name": "hex is not numeric",
+      "op": "value.is_numeric",
+      "args": {
+        "v": "0x1A"
+      },
+      "expect": false
+    },
+    {
+      "name": "integer overflow becomes float",
+      "op": "value.to_number",
+      "args": {
+        "v": "9223372036854775808"
+      },
+      "expect": 9.223372036854776e+18
+    },
+    {
+      "name": "float string",
+      "op": "value.to_string",
+      "args": {
+        "v": 1e+25
+      },
+      "expect": "1.0E+25"
+    },
+    {
+      "name": "precision 14",
+      "op": "value.to_string",
+      "args": {
+        "v": 0.30000000000000004
+      },
+      "expect": "0.3"
+    },
+    {
+      "name": "negative zero",
+      "op": "value.to_string",
+      "args": {
+        "v": -0.0
+      },
+      "expect": "-0"
+    },
+    {
+      "name": "stdClass is truthy",
+      "op": "value.truthy",
+      "args": {
+        "v": {}
+      },
+      "expect": true
+    },
+    {
+      "name": "string zero is empty",
+      "op": "value.empty",
+      "args": {
+        "v": "0"
+      },
+      "expect": true
+    },
+    {
+      "name": "stdClass is not an array",
+      "op": "value.is_array",
+      "args": {
+        "v": {}
+      },
+      "expect": false
+    },
+    {
+      "name": "numeric strings compare numerically",
+      "op": "value.loose_eq",
+      "args": {
+        "a": "1e3",
+        "b": "1000"
+      },
+      "expect": true
+    },
+    {
+      "name": "overflowed integers compare as strings",
+      "op": "value.loose_eq",
+      "args": {
+        "a": "9223372036854775808",
+        "b": "9223372036854775809"
+      },
+      "expect": false
+    },
+    {
+      "name": "non-numeric string vs zero",
+      "op": "value.loose_eq",
+      "args": {
+        "a": "abc",
+        "b": 0
+      },
+      "expect": false
+    },
+    {
+      "name": "object key 0 equals list index 0",
+      "op": "value.loose_eq",
+      "args": {
+        "a": {
+          "0": 1
+        },
+        "b": [
+          1
+        ]
+      },
+      "expect": true
+    },
+    {
+      "name": "stdClass vs empty array",
+      "op": "value.loose_eq",
+      "args": {
+        "a": {},
+        "b": []
+      },
+      "expect": false
+    },
+    {
+      "name": "numeric strings compare as numbers",
+      "op": "value.loose_str_eq",
+      "args": {
+        "a": "1e3",
+        "b": "1000"
+      },
+      "expect": true
+    },
+    {
+      "name": "overflowing integer strings compare as strings",
+      "op": "value.loose_str_eq",
+      "args": {
+        "a": "9223372036854775808",
+        "b": "9223372036854775809"
+      },
+      "expect": false
+    },
+    {
+      "name": "a binary string equals only itself",
+      "op": "value.loose_str_eq",
+      "args": {
+        "a": {
+          "$bytes": "Mf8="
+        },
+        "b": "1"
+      },
+      "expect": false
+    },
+    {
+      "name": "whitespace around numeric strings",
+      "op": "value.loose_str_eq",
+      "args": {
+        "a": " 1",
+        "b": "1 "
+      },
+      "expect": true
+    },
+    {
+      "name": "NAN is never smaller or equal",
+      "op": "value.le_numbers",
+      "args": {
+        "a": {
+          "$float": "NAN"
+        },
+        "b": {
+          "$float": "NAN"
+        }
+      },
+      "expect": false
+    },
+    {
+      "name": "integers compare exactly",
+      "op": "value.le_numbers",
+      "args": {
+        "a": 9223372036854775807,
+        "b": 9223372036854775806
+      },
+      "expect": false
+    },
+    {
+      "name": "an integer and a float compare as floats",
+      "op": "value.le_numbers",
+      "args": {
+        "a": 9223372036854775807,
+        "b": 9.223372036854776e+18
+      },
+      "expect": true
+    },
+    {
+      "name": "sort_strings: numeric and non-numeric strings",
+      "steps": [
+        {
+          "op": "value.sort_strings",
+          "args": {
+            "v": [
+              "10",
+              "9",
+              "a",
+              "1e1",
+              "5'",
+              "11"
+            ]
+          },
+          "expect": [
+            "9",
+            "10",
+            "1e1",
+            "11",
+            "5'",
+            "a"
+          ]
+        },
+        {
+          "op": "value.sort_strings",
+          "args": {
+            "v": [
+              "b",
+              "a",
+              "10",
+              "9",
+              "1.0",
+              "1",
+              "x",
+              "y",
+              "z",
+              "07",
+              "7",
+              "6F",
+              "0",
+              "-0",
+              " 1",
+              "1 ",
+              "a",
+              "B",
+              "c"
+            ]
+          },
+          "expect": [
+            "0",
+            "-0",
+            "1.0",
+            "1",
+            " 1",
+            "1 ",
+            "07",
+            "6F",
+            "7",
+            "9",
+            "10",
+            "B",
+            "a",
+            "a",
+            "b",
+            "c",
+            "x",
+            "y",
+            "z"
+          ]
+        }
+      ]
+    }
+  ]
+}

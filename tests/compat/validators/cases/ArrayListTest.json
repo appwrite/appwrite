@@ -1,0 +1,412 @@
+{
+  "source": "packages/validators/tests/ArrayListTest.php",
+  "cases": [
+    {
+      "name": "testDescription",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Integer",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "ArrayList",
+            "args": {
+              "validator": {
+                "$ref": "v1"
+              }
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": [
+              "text"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            }
+          },
+          "expect": "Value must a valid array and Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647"
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Integer",
+            "args": {}
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "ArrayList",
+            "args": {
+              "validator": {
+                "$ref": "v3"
+              },
+              "length": 3
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            }
+          },
+          "expect": "Value must a valid array no longer than 3 items and Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647"
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateTextValues",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Text",
+            "args": {
+              "length": 100
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "ArrayList",
+            "args": {
+              "validator": {
+                "$ref": "v1"
+              }
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": [
+              "string",
+              "string"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": [
+              "string",
+              "string"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": [
+              "string",
+              "string",
+              3
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "string"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "string"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "property": "validator"
+          },
+          "expect": {
+            "description": "Value must be a valid string and at least 1 chars and no longer than 100 chars",
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateNumericValues",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Numeric",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "ArrayList",
+            "args": {
+              "validator": {
+                "$ref": "v1"
+              }
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": [
+              1,
+              2,
+              3
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": 1
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "string"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            }
+          },
+          "expect": "mixed"
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "property": "validator"
+          },
+          "expect": {
+            "description": "Value must be a valid number",
+            "type": "mixed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateNumericValuesWithBoundaries",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Numeric",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "ArrayList",
+            "args": {
+              "validator": {
+                "$ref": "v1"
+              },
+              "length": 2
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": [
+              1
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": [
+              1,
+              2
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": [
+              1,
+              2,
+              3
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            }
+          },
+          "expect": "mixed"
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "property": "validator"
+          },
+          "expect": {
+            "description": "Value must be a valid number",
+            "type": "mixed"
+          }
+        }
+      ]
+    }
+  ]
+}

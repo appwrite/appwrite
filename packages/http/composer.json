@@ -51,5 +51,10 @@
     },
     "require-dev": {
         "swoole/ide-helper": "4.8.3"
+    },
+    "extra": {
+        "utopia": {
+            "category": "web"
+        }
     }
 }

@@ -1,0 +1,1751 @@
+{
+  "lib": "http",
+  "description": "utopia-php/http: routing, hooks, params with validators and injection, request parsing (Swoole adapter semantics), responses, static files, views.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/http/src"
+    ],
+    "tests": [
+      "packages/http/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/http"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "http.run": {
+      "doc": "Builds an application from `app` (mode, allow_override, compression, resources, files, init/shutdown/options/error/start/request hooks, routes with methods, aliases, groups, params, injections and action statements, wildcard) and dispatches each of `requests` (parsed by Swoole on PHP) through run() or execute(). Returns route registration results and, per request, what the server adapter was asked to send (status, headers, cookies as Set-Cookie lines, body), the values actions emitted and the error run() raised. With `telemetry`, the server metrics run() recorded through a test telemetry adapter (counts for the time-dependent ones).",
+      "covers": [
+        "Utopia\\Http\\Http::__construct",
+        "Utopia\\Http\\Http::get",
+        "Utopia\\Http\\Http::post",
+        "Utopia\\Http\\Http::put",
+        "Utopia\\Http\\Http::patch",
+        "Utopia\\Http\\Http::delete",
+        "Utopia\\Http\\Http::routes",
+        "Utopia\\Http\\Http::addRoute",
+        "Utopia\\Http\\Http::wildcard",
+        "Utopia\\Http\\Http::init",
+        "Utopia\\Http\\Http::shutdown",
+        "Utopia\\Http\\Http::options",
+        "Utopia\\Http\\Http::error",
+        "Utopia\\Http\\Http::onRequest",
+        "Utopia\\Http\\Http::setAllowOverride",
+        "Utopia\\Http\\Http::resources",
+        "Utopia\\Http\\Http::context",
+        "Utopia\\Http\\Http::loadFiles",
+        "Utopia\\Http\\Http::match",
+        "Utopia\\Http\\Http::execute",
+        "Utopia\\Http\\Http::run",
+        "Utopia\\Http\\Http::reset",
+        "Utopia\\Http\\Http::setCompression",
+        "Utopia\\Http\\Http::setCompressionMinSize",
+        "Utopia\\Http\\Http::setCompressionSupported",
+        "Utopia\\Http\\Route::alias",
+        "Utopia\\Http\\Route::hook",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::__construct",
+        "Utopia\\Http\\Http::setTelemetry",
+        "Utopia\\Http\\Adapter::setTelemetry"
+      ],
+      "mask": {
+        "paths": [
+          "/responses/*/wire/headers/x-debug-speed",
+          "/responses/*/wire/headers/expires"
+        ],
+        "reason": "X-Debug-Speed is the elapsed time; a static file's Expires header is the current time plus two years"
+      },
+      "fuzz": [
+        {
+          "name": "params",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "app": {
+                "gen": "const",
+                "value": {
+                  "error": [
+                    {
+                      "inject": [
+                        "error"
+                      ],
+                      "action": [
+                        {
+                          "emit": {
+                            "inject": "error"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "routes": [
+                    {
+                      "path": "/p/:id",
+                      "params": [
+                        {
+                          "key": "id",
+                          "default": "",
+                          "validator": {
+                            "text": [
+                              3,
+                              1
+                            ]
+                          },
+                          "optional": false
+                        },
+                        {
+                          "key": "t",
+                          "default": "t-def",
+                          "validator": {
+                            "text": [
+                              4,
+                              0
+                            ]
+                          },
+                          "optional": true,
+                          "aliases": [
+                            "alias"
+                          ]
+                        },
+                        {
+                          "key": "n",
+                          "default": 7,
+                          "validator": {
+                            "integer": true
+                          },
+                          "optional": true
+                        },
+                        {
+                          "key": "w",
+                          "default": "a",
+                          "validator": {
+                            "whitelist": [
+                              [
+                                "a",
+                                "1",
+                                "x"
+                              ],
+                              true
+                            ]
+                          },
+                          "optional": true
+                        },
+                        {
+                          "key": "b",
+                          "default": null,
+                          "validator": {
+                            "nullable": {
+                              "boolean": true
+                            }
+                          },
+                          "optional": true
+                        }
+                      ],
+                      "action": [
+                        {
+                          "emit": {
+                            "param": "id"
+                          }
+                        },
+                        {
+                          "emit": {
+                            "param": "t"
+                          }
+                        },
+                        {
+                          "emit": {
+                            "param": "n"
+                          }
+                        },
+                        {
+                          "emit": {
+                            "param": "w"
+                          }
+                        },
+                        {
+                          "emit": {
+                            "param": "b"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "requests": {
+                "gen": "array",
+                "min": 1,
+                "max": 1,
+                "items": {
+                  "gen": "object",
+                  "fields": {
+                    "method": {
+                      "gen": "const",
+                      "value": "GET"
+                    },
+                    "uri": {
+                      "gen": "concat",
+                      "parts": [
+                        {
+                          "gen": "const",
+                          "value": "/p/"
+                        },
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "pick",
+                            "from": [
+                              "a",
+                              "b",
+                              "1",
+                              "%20",
+                              "-"
+                            ]
+                          },
+                          "sep": "",
+                          "min": 0,
+                          "max": 4
+                        },
+                        {
+                          "gen": "const",
+                          "value": "?"
+                        },
+                        {
+                          "gen": "ref",
+                          "name": "param_query"
+                        }
+                      ]
+                    },
+                    "via": {
+                      "gen": "const",
+                      "value": "execute"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "http.start": {
+      "doc": "Builds an application and runs start(): start hooks in order, the error hooks when one fails.",
+      "covers": [
+        "Utopia\\Http\\Http::start",
+        "Utopia\\Http\\Http::onStart"
+      ]
+    },
+    "http.mode": {
+      "doc": "Http::setMode(set), then getMode/isProduction/isDevelopment/isStage.",
+      "covers": [
+        "Utopia\\Http\\Http::getMode",
+        "Utopia\\Http\\Http::setMode",
+        "Utopia\\Http\\Http::isProduction",
+        "Utopia\\Http\\Http::isDevelopment",
+        "Utopia\\Http\\Http::isStage"
+      ]
+    },
+    "http.env": {
+      "doc": "Http::getEnv(key, default) for a key the process does not define.",
+      "covers": [
+        "Utopia\\Http\\Http::getEnv"
+      ]
+    },
+    "request.inspect": {
+      "doc": "A request parsed by Swoole from its parts (method, uri, protocol, headers, body or body_json, remote_addr, trusted), mutated and read by `steps` (get, set_header, add_header, remove_header, set_query, set_payload, set_cookies, set_server, set_method, set_uri). Uploaded files report their content in place of tmp_name.",
+      "covers": [
+        "Utopia\\Http\\Request::getParam",
+        "Utopia\\Http\\Request::getParams",
+        "Utopia\\Http\\Request::getQuery",
+        "Utopia\\Http\\Request::getPayload",
+        "Utopia\\Http\\Request::getURI",
+        "Utopia\\Http\\Request::getCookie",
+        "Utopia\\Http\\Request::getCookieParams",
+        "Utopia\\Http\\Request::setCookieParams",
+        "Utopia\\Http\\Request::hasHeader",
+        "Utopia\\Http\\Request::getHeader",
+        "Utopia\\Http\\Request::getHeaderLine",
+        "Utopia\\Http\\Request::getHeaders",
+        "Utopia\\Http\\Request::setHeader",
+        "Utopia\\Http\\Request::addHeader",
+        "Utopia\\Http\\Request::removeHeader",
+        "Utopia\\Http\\Request::getSize",
+        "Utopia\\Http\\Request::getContentRangeStart",
+        "Utopia\\Http\\Request::getContentRangeEnd",
+        "Utopia\\Http\\Request::getContentRangeSize",
+        "Utopia\\Http\\Request::getContentRangeUnit",
+        "Utopia\\Http\\Request::getRangeStart",
+        "Utopia\\Http\\Request::getRangeEnd",
+        "Utopia\\Http\\Request::getRangeUnit",
+        "Utopia\\Http\\Request::setQueryString",
+        "Utopia\\Http\\Request::setPayload",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::getRawPayload",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::getServer",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::setServer",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::getIP",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::getProtocol",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::getPort",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::getHostname",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::getMethod",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::setMethod",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::getURI",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::setURI",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::getReferer",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::getOrigin",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::getUserAgent",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::getAccept",
+        "Utopia\\Http\\Adapter\\Swoole\\Request::getFiles"
+      ],
+      "fuzz": [
+        {
+          "name": "query strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "request": {
+                "gen": "object",
+                "fields": {
+                  "method": {
+                    "gen": "pick",
+                    "from": [
+                      "GET",
+                      "POST"
+                    ]
+                  },
+                  "uri": {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "const",
+                        "value": "/p?"
+                      },
+                      {
+                        "gen": "ref",
+                        "name": "query_uri"
+                      }
+                    ]
+                  },
+                  "headers": {
+                    "gen": "const",
+                    "value": [
+                      [
+                        "Content-Type",
+                        "application/x-www-form-urlencoded"
+                      ]
+                    ]
+                  },
+                  "body": {
+                    "gen": "ref",
+                    "name": "query"
+                  }
+                }
+              },
+              "steps": {
+                "gen": "const",
+                "value": [
+                  {
+                    "get": "params"
+                  },
+                  {
+                    "get": [
+                      "query",
+                      "a"
+                    ]
+                  },
+                  {
+                    "get": [
+                      "payload",
+                      "a",
+                      "none"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "cookies and headers",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "request": {
+                "gen": "object",
+                "fields": {
+                  "uri": {
+                    "gen": "const",
+                    "value": "/"
+                  },
+                  "headers": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "header"
+                    },
+                    "min": 0,
+                    "max": 6
+                  },
+                  "remote_addr": {
+                    "gen": "pick",
+                    "from": [
+                      "10.0.0.1",
+                      "::1"
+                    ]
+                  },
+                  "trusted": {
+                    "gen": "const",
+                    "value": {
+                      "ip": [
+                        "x-forwarded-for",
+                        "X-Real-IP"
+                      ],
+                      "proto": [
+                        "x-forwarded-proto",
+                        "x-cdn"
+                      ]
+                    }
+                  }
+                }
+              },
+              "steps": {
+                "gen": "const",
+                "value": [
+                  {
+                    "get": "cookies"
+                  },
+                  {
+                    "get": "headers"
+                  },
+                  {
+                    "get": [
+                      "cookie",
+                      "a",
+                      "none"
+                    ]
+                  },
+                  {
+                    "get": [
+                      "header_line",
+                      "x-a",
+                      "none"
+                    ]
+                  },
+                  {
+                    "get": "ip"
+                  },
+                  {
+                    "get": "protocol"
+                  },
+                  {
+                    "get": "hostname"
+                  },
+                  {
+                    "get": "port"
+                  },
+                  {
+                    "get": "size"
+                  },
+                  {
+                    "get": "range_unit"
+                  },
+                  {
+                    "get": "range_start"
+                  },
+                  {
+                    "get": "range_end"
+                  },
+                  {
+                    "get": "content_range_unit"
+                  },
+                  {
+                    "get": "content_range_start"
+                  },
+                  {
+                    "get": "content_range_end"
+                  },
+                  {
+                    "get": "content_range_size"
+                  },
+                  {
+                    "get": [
+                      "referer",
+                      "none"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "json bodies",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "request": {
+                "gen": "object",
+                "fields": {
+                  "method": {
+                    "gen": "pick",
+                    "from": [
+                      "POST",
+                      "PATCH",
+                      "DELETE"
+                    ]
+                  },
+                  "uri": {
+                    "gen": "const",
+                    "value": "/"
+                  },
+                  "headers": {
+                    "gen": "pick",
+                    "from": [
+                      [
+                        [
+                          "Content-Type",
+                          "application/json"
+                        ]
+                      ],
+                      [
+                        [
+                          "Content-Type",
+                          "application/json; charset=utf-8"
+                        ]
+                      ]
+                    ]
+                  },
+                  "body": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "string",
+                        "alphabet": "{}[]\":, \n\t0a1",
+                        "min": 0,
+                        "max": 24
+                      },
+                      {
+                        "gen": "ref",
+                        "name": "json_text"
+                      }
+                    ]
+                  }
+                }
+              },
+              "steps": {
+                "gen": "const",
+                "value": [
+                  {
+                    "get": "params"
+                  },
+                  {
+                    "get": "raw_payload"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "multipart bodies",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "request": {
+                "gen": "object",
+                "fields": {
+                  "method": {
+                    "gen": "const",
+                    "value": "POST"
+                  },
+                  "uri": {
+                    "gen": "const",
+                    "value": "/up"
+                  },
+                  "headers": {
+                    "gen": "const",
+                    "value": [
+                      [
+                        "Content-Type",
+                        "multipart/form-data; boundary=XB"
+                      ]
+                    ]
+                  },
+                  "body": {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "repeat",
+                        "part": {
+                          "gen": "ref",
+                          "name": "multipart_part"
+                        },
+                        "sep": "",
+                        "min": 0,
+                        "max": 4
+                      },
+                      {
+                        "gen": "const",
+                        "value": "--XB--\r\n"
+                      }
+                    ]
+                  }
+                }
+              },
+              "steps": {
+                "gen": "const",
+                "value": [
+                  {
+                    "get": "params"
+                  },
+                  {
+                    "get": [
+                      "files",
+                      "f"
+                    ]
+                  },
+                  {
+                    "get": [
+                      "files",
+                      "g"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "response.run": {
+      "doc": "A response driven by statements (status, content_type, headers, cookies, payload switches, compression settings, send/text/html/json/jsonp/iframe/redirect/no_content/chunk) and read by `get` steps; returns what was sent.",
+      "covers": [
+        "Utopia\\Http\\Response::__construct",
+        "Utopia\\Http\\Response::setAcceptEncoding",
+        "Utopia\\Http\\Response::setCompressionMinSize",
+        "Utopia\\Http\\Response::setCompressionSupported",
+        "Utopia\\Http\\Response::setContentType",
+        "Utopia\\Http\\Response::getContentType",
+        "Utopia\\Http\\Response::isSent",
+        "Utopia\\Http\\Response::setStatusCode",
+        "Utopia\\Http\\Response::getStatusCode",
+        "Utopia\\Http\\Response::getSize",
+        "Utopia\\Http\\Response::disablePayload",
+        "Utopia\\Http\\Response::enablePayload",
+        "Utopia\\Http\\Response::setHeader",
+        "Utopia\\Http\\Response::addHeader",
+        "Utopia\\Http\\Response::removeHeader",
+        "Utopia\\Http\\Response::hasHeader",
+        "Utopia\\Http\\Response::getHeader",
+        "Utopia\\Http\\Response::getHeaderLine",
+        "Utopia\\Http\\Response::getHeaders",
+        "Utopia\\Http\\Response::addCookie",
+        "Utopia\\Http\\Response::removeCookie",
+        "Utopia\\Http\\Response::getCookies",
+        "Utopia\\Http\\Response::send",
+        "Utopia\\Http\\Response::chunk",
+        "Utopia\\Http\\Response::redirect",
+        "Utopia\\Http\\Response::html",
+        "Utopia\\Http\\Response::text",
+        "Utopia\\Http\\Response::json",
+        "Utopia\\Http\\Response::jsonp",
+        "Utopia\\Http\\Response::iframe",
+        "Utopia\\Http\\Response::noContent"
+      ],
+      "mask": {
+        "paths": [
+          "/wire/headers/x-debug-speed",
+          "/out/*/x-debug-speed"
+        ],
+        "reason": "X-Debug-Speed is the elapsed time"
+      },
+      "fuzz": [
+        {
+          "name": "cookies and headers",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "steps": {
+                "gen": "array",
+                "min": 1,
+                "max": 4,
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "add_cookie": {
+                          "gen": "object",
+                          "fields": {
+                            "name": {
+                              "gen": "repeat",
+                              "part": {
+                                "gen": "pick",
+                                "from": [
+                                  "a",
+                                  "B",
+                                  " ",
+                                  ";",
+                                  "=",
+                                  ",",
+                                  "é",
+                                  "%",
+                                  "+",
+                                  "0",
+                                  "/",
+                                  "\"",
+                                  "\t"
+                                ]
+                              },
+                              "sep": "",
+                              "min": 0,
+                              "max": 5
+                            },
+                            "value": {
+                              "gen": "one_of",
+                              "of": [
+                                {
+                                  "gen": "null"
+                                },
+                                {
+                                  "gen": "repeat",
+                                  "part": {
+                                    "gen": "pick",
+                                    "from": [
+                                      "a",
+                                      "B",
+                                      " ",
+                                      ";",
+                                      "=",
+                                      ",",
+                                      "é",
+                                      "%",
+                                      "+",
+                                      "0",
+                                      "/",
+                                      "\"",
+                                      "\t"
+                                    ]
+                                  },
+                                  "sep": "",
+                                  "min": 0,
+                                  "max": 5
+                                }
+                              ]
+                            },
+                            "expire": {
+                              "gen": "pick",
+                              "from": [
+                                null,
+                                0,
+                                1000,
+                                -5
+                              ]
+                            },
+                            "path": {
+                              "gen": "pick",
+                              "from": [
+                                null,
+                                "",
+                                "/",
+                                "/a b"
+                              ]
+                            },
+                            "domain": {
+                              "gen": "pick",
+                              "from": [
+                                null,
+                                "",
+                                "example.com"
+                              ]
+                            },
+                            "secure": {
+                              "gen": "pick",
+                              "from": [
+                                null,
+                                true,
+                                false
+                              ]
+                            },
+                            "httponly": {
+                              "gen": "pick",
+                              "from": [
+                                null,
+                                true,
+                                false
+                              ]
+                            },
+                            "samesite": {
+                              "gen": "pick",
+                              "from": [
+                                null,
+                                "",
+                                "Lax",
+                                "None",
+                                "strict"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "add_header": {
+                          "gen": "array",
+                          "min": 2,
+                          "max": 2,
+                          "items": {
+                            "gen": "pick",
+                            "from": [
+                              "X-A",
+                              "x-a",
+                              "Content-Type",
+                              "Vary",
+                              "a",
+                              "b"
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "remove_cookie": {
+                          "gen": "pick",
+                          "from": [
+                            "a",
+                            "B",
+                            "b",
+                            ""
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "status": {
+                          "gen": "pick",
+                          "from": [
+                            200,
+                            204,
+                            299,
+                            418,
+                            0,
+                            600,
+                            306
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "content_type": {
+                          "gen": "array",
+                          "min": 1,
+                          "max": 2,
+                          "items": {
+                            "gen": "pick",
+                            "from": [
+                              "text/plain",
+                              "",
+                              "0",
+                              "UTF-8",
+                              "application/json"
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "gen": "const",
+                      "value": {
+                        "get": "cookies"
+                      }
+                    },
+                    {
+                      "gen": "const",
+                      "value": {
+                        "get": "headers"
+                      }
+                    },
+                    {
+                      "gen": "const",
+                      "value": {
+                        "send": "body"
+                      }
+                    },
+                    {
+                      "gen": "const",
+                      "value": {
+                        "chunk": [
+                          "c",
+                          false
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "compression.negotiate": {
+      "doc": "Compression::fromAcceptEncoding(accept, supported): the content encoding Response::send() picks, or null.",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "accept": {
+                "gen": "repeat",
+                "part": {
+                  "gen": "concat",
+                  "parts": [
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "gzip",
+                        "br",
+                        "BR",
+                        "zstd",
+                        "deflate",
+                        "identity",
+                        "none",
+                        "*",
+                        "x",
+                        " gzip "
+                      ]
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "",
+                        ";q=0",
+                        ";q=0.5",
+                        "; q=0.9",
+                        ";q=1",
+                        ";q=x",
+                        ";level=1"
+                      ]
+                    }
+                  ]
+                },
+                "sep": ",",
+                "min": 0,
+                "max": 4
+              },
+              "supported": {
+                "gen": "pick",
+                "from": [
+                  [],
+                  [
+                    "gzip",
+                    "brotli"
+                  ],
+                  [
+                    "deflate"
+                  ]
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "router.run": {
+      "doc": "Router::reset(), setAllowOverride, routes added (new Route + Router::addRoute, or Http::routes) with aliases, an optional wildcard; then Router::match for each [method, path], preparePath for each path, and the registered templates by method.",
+      "covers": [
+        "Utopia\\Http\\Router::getRoutes",
+        "Utopia\\Http\\Router::getAllowOverride",
+        "Utopia\\Http\\Router::setAllowOverride",
+        "Utopia\\Http\\Router::addRoute",
+        "Utopia\\Http\\Router::addRouteAlias",
+        "Utopia\\Http\\Router::setWildcard",
+        "Utopia\\Http\\Router::match",
+        "Utopia\\Http\\Router::preparePath",
+        "Utopia\\Http\\Router::reset",
+        "Utopia\\Http\\Http::getRoutes",
+        "Utopia\\Http\\Http::getAllowOverride",
+        "Utopia\\Http\\Route::__construct",
+        "Utopia\\Http\\Route::setPathParam",
+        "Utopia\\Http\\Route::resolveParams",
+        "Utopia\\Http\\RouteMatch::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "paths",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "routes": {
+                "gen": "const",
+                "value": [
+                  {
+                    "path": "/v1/users/:userId"
+                  },
+                  {
+                    "path": "/v1/users/identities"
+                  },
+                  {
+                    "path": "/v1/users/:userId/sessions/:sessionId"
+                  },
+                  {
+                    "path": "/v1/:a/b"
+                  },
+                  {
+                    "path": "/files/*"
+                  },
+                  {
+                    "path": "/0/x"
+                  },
+                  {
+                    "methods": [
+                      "GET",
+                      "POST"
+                    ],
+                    "path": "/x/:y",
+                    "aliases": [
+                      "/z/:w/q"
+                    ]
+                  }
+                ]
+              },
+              "wildcard": {
+                "gen": "bool"
+              },
+              "paths": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "path"
+                },
+                "min": 1,
+                "max": 4
+              },
+              "methods": {
+                "gen": "const",
+                "value": [
+                  "GET",
+                  "POST",
+                  "PUT"
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "route.inspect": {
+      "doc": "new Route(methods, path) configured and read by steps (desc, groups, label, path, hook, param, inject; get: path, method, methods, groups, desc, hook, label, params, injections, order).",
+      "covers": [
+        "Utopia\\Http\\Route::getOrder",
+        "Utopia\\Http\\Route::path",
+        "Utopia\\Http\\Route::getMethod",
+        "Utopia\\Http\\Route::getPath",
+        "Utopia\\Http\\Route::getHook",
+        "Utopia\\Http\\Route::getMethods"
+      ]
+    },
+    "view.run": {
+      "doc": "Views created by name and driven by steps (new, set_param, get_param, set_path, set_rendered, is_rendered, print, render, exec, set_parent, parent). Templates are files without PHP code.",
+      "covers": [
+        "Utopia\\Http\\View::__construct",
+        "Utopia\\Http\\View::setParam",
+        "Utopia\\Http\\View::setParent",
+        "Utopia\\Http\\View::getParent",
+        "Utopia\\Http\\View::getParam",
+        "Utopia\\Http\\View::setPath",
+        "Utopia\\Http\\View::setRendered",
+        "Utopia\\Http\\View::isRendered",
+        "Utopia\\Http\\View::addFilter",
+        "Utopia\\Http\\View::print",
+        "Utopia\\Http\\View::render",
+        "Utopia\\Http\\View::exec"
+      ]
+    },
+    "files.run": {
+      "doc": "A Files store driven by steps (load, count, is_loaded, contents, mime, add_mime_type, remove_mime_type, mime_types, reset).",
+      "covers": [
+        "Utopia\\Http\\Files::addMimeType",
+        "Utopia\\Http\\Files::removeMimeType",
+        "Utopia\\Http\\Files::getMimeTypes",
+        "Utopia\\Http\\Files::getCount",
+        "Utopia\\Http\\Files::load",
+        "Utopia\\Http\\Files::isFileLoaded",
+        "Utopia\\Http\\Files::getFileContents",
+        "Utopia\\Http\\Files::getFileMimeType",
+        "Utopia\\Http\\Files::reset"
+      ]
+    },
+    "trusted.new": {
+      "doc": "new TrustedHeaders(ip, proto): the normalized lists.",
+      "covers": [
+        "Utopia\\Http\\TrustedHeaders::__construct"
+      ],
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "ip": {
+                "gen": "array",
+                "items": {
+                  "gen": "string",
+                  "alphabet": "Xa- \t0",
+                  "min": 0,
+                  "max": 5
+                },
+                "min": 0,
+                "max": 3
+              },
+              "proto": {
+                "gen": "array",
+                "items": {
+                  "gen": "string",
+                  "alphabet": "Xa- \t0",
+                  "min": 0,
+                  "max": 5
+                },
+                "min": 0,
+                "max": 3
+              }
+            }
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "mode.settings": {
+      "doc": "Mode::HYPERLOOP_A/B->settings(): the settings with a meaning outside Swoole, and the relations ModeTest checks between worker and reactor counts.",
+      "covers": [
+        "Utopia\\Http\\Adapter\\Swoole\\Mode::settings",
+        "Utopia\\Http\\Adapter\\Swoole\\Mode::defaults"
+      ]
+    }
+  },
+  "generators": {
+    "query": {
+      "gen": "repeat",
+      "part": {
+        "gen": "one_of",
+        "of": [
+          {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "ref",
+                "name": "qname"
+              },
+              {
+                "gen": "const",
+                "value": "="
+              },
+              {
+                "gen": "repeat",
+                "part": {
+                  "gen": "pick",
+                  "from": [
+                    "a",
+                    "%2B",
+                    "+",
+                    "=",
+                    "%5B",
+                    ".",
+                    "é",
+                    "%20",
+                    "%00",
+                    "%41",
+                    "&"
+                  ]
+                },
+                "sep": "",
+                "min": 0,
+                "max": 5
+              }
+            ]
+          },
+          {
+            "gen": "ref",
+            "name": "qname"
+          }
+        ]
+      },
+      "sep": "&",
+      "min": 0,
+      "max": 6
+    },
+    "qname": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "pick",
+            "from": [
+              "a",
+              "b",
+              "[",
+              "]",
+              ".",
+              "+",
+              "_",
+              "%5B",
+              "%5D",
+              "0",
+              "%20",
+              "%00",
+              "%2E",
+              "é"
+            ]
+          },
+          "sep": "",
+          "min": 0,
+          "max": 6
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "a",
+            "a[]",
+            "a[b]",
+            "a[b][]",
+            "a[0]",
+            "a[ b]",
+            "a.b",
+            " a",
+            "a[",
+            "a[b",
+            "a]",
+            "%61",
+            "a%5Bb%5D",
+            "a[1]",
+            "a[-1]",
+            "a[01]"
+          ]
+        }
+      ]
+    },
+    "header": {
+      "gen": "ref",
+      "name": "header_pair"
+    },
+    "header_pair": {
+      "gen": "object",
+      "fields": {
+        "n": {
+          "gen": "pick",
+          "from": [
+            "Cookie",
+            "cookie",
+            "X-A",
+            "x-a",
+            "Host",
+            "X-Forwarded-For",
+            "X-Real-IP",
+            "X-Forwarded-Proto",
+            "X-CDN",
+            "X-Forwarded-Host",
+            "X-Forwarded-Port",
+            "Range",
+            "Content-Range",
+            "Referer"
+          ]
+        },
+        "v": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "pick",
+                "from": [
+                  "a",
+                  "=",
+                  ";",
+                  "[",
+                  "]",
+                  ".",
+                  "%2B",
+                  "%20",
+                  "+",
+                  ",",
+                  "\"",
+                  "0",
+                  "b",
+                  " b",
+                  "%41",
+                  "%E2%82%AC"
+                ]
+              },
+              "sep": "",
+              "min": 0,
+              "max": 8
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "203.0.113.7, 10.0.0.1",
+                "::1",
+                "2001:db8::1",
+                "999.1.1.1",
+                "https",
+                "HTTPS, http",
+                "gopher",
+                "example.com:8080",
+                "[::1]:9000",
+                "bytes=0-499",
+                "bytes=5-4",
+                "bytes=0-",
+                "bytes 0-499/2000",
+                "bytes 0-49.9/200",
+                "Ex.COM",
+                "0",
+                "a=1; b=2",
+                "k=v=w; k=x",
+                "a[x]=1; a[y]=2",
+                "x = y",
+                "q=\"z\"; =v; u"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "json_text": {
+      "gen": "pick",
+      "from": [
+        "{\"data\":{}}",
+        "{\"data\":{\"inner\":{}}}",
+        "{\"data\":{\"a\":{},\"b\":1}}",
+        "{\"data\":{\"arr\":[{},{\"x\":1}]}}",
+        "{\"data\":{\"note\":\"braces {} in text\"}}",
+        "{\"data\":{\"a\":{ }}}",
+        "{\"0\":\"a\",\"1\":\"b\"}",
+        "{\"a\":{\"0\":\"x\"},\"e\":{}}",
+        "[1,2,3]",
+        "{\"big\":12345678901234567890,\"f\":1.5,\"e\":1e2}",
+        "{\"a\":null,\"b\":true}",
+        "{\"\":1}",
+        "{\"a\":1,\"a\":2}",
+        "{\"u\":\"\\u00e9\\ud83d\\ude00\"}",
+        "{\"a\":[]}",
+        "{}"
+      ]
+    },
+    "multipart_part": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "const",
+          "value": "--XB\r\nContent-Disposition: form-data; name=\""
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "a",
+            "a[]",
+            "a[b]",
+            "f",
+            "f[]",
+            "g[x]",
+            "b.c",
+            "F"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "\"",
+            "\"; filename=\"x.txt\"",
+            "\"; filename=\"\"",
+            "\"; filename=\"y.json\"\r\nContent-Type: application/json"
+          ]
+        },
+        {
+          "gen": "const",
+          "value": "\r\n\r\n"
+        },
+        {
+          "gen": "string",
+          "alphabet": "ab {}\n",
+          "min": 0,
+          "max": 6
+        },
+        {
+          "gen": "const",
+          "value": "\r\n"
+        }
+      ]
+    },
+    "path": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "/"
+          ]
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "pick",
+            "from": [
+              "v1",
+              "users",
+              "identities",
+              "abc",
+              "sessions",
+              "",
+              "0",
+              "b",
+              "files",
+              "x",
+              "z",
+              "q",
+              "a%20b"
+            ]
+          },
+          "sep": "/",
+          "min": 0,
+          "max": 5
+        }
+      ]
+    },
+    "qname_uri": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "pick",
+            "from": [
+              "a",
+              "b",
+              "[",
+              "]",
+              ".",
+              "+",
+              "_",
+              "%5B",
+              "%5D",
+              "0",
+              "%20",
+              "%00",
+              "%2E",
+              "%C3%A9"
+            ]
+          },
+          "sep": "",
+          "min": 0,
+          "max": 6
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "a",
+            "a[]",
+            "a[b]",
+            "a[b][]",
+            "a[0]",
+            "a[%20b]",
+            "a.b",
+            "%20a",
+            "a[",
+            "a[b",
+            "a]",
+            "%61",
+            "a%5Bb%5D",
+            "a[1]",
+            "a[-1]",
+            "a[01]"
+          ]
+        }
+      ]
+    },
+    "query_uri": {
+      "gen": "repeat",
+      "part": {
+        "gen": "one_of",
+        "of": [
+          {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "ref",
+                "name": "qname_uri"
+              },
+              {
+                "gen": "const",
+                "value": "="
+              },
+              {
+                "gen": "repeat",
+                "part": {
+                  "gen": "pick",
+                  "from": [
+                    "a",
+                    "%2B",
+                    "+",
+                    "=",
+                    "%5B",
+                    ".",
+                    "%C3%A9",
+                    "%20",
+                    "%00",
+                    "%41",
+                    "&"
+                  ]
+                },
+                "sep": "",
+                "min": 0,
+                "max": 5
+              }
+            ]
+          },
+          {
+            "gen": "ref",
+            "name": "qname_uri"
+          }
+        ]
+      },
+      "sep": "&",
+      "min": 0,
+      "max": 6
+    },
+    "param_value": {
+      "gen": "repeat",
+      "part": {
+        "gen": "pick",
+        "from": [
+          "a",
+          "1",
+          "-",
+          "0",
+          "%20",
+          "x",
+          "9",
+          "B",
+          ".",
+          "%00",
+          "%C3%A9"
+        ]
+      },
+      "sep": "",
+      "min": 0,
+      "max": 6
+    },
+    "param_query": {
+      "gen": "repeat",
+      "part": {
+        "gen": "one_of",
+        "of": [
+          {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "const",
+                "value": "t="
+              },
+              {
+                "gen": "ref",
+                "name": "param_value"
+              }
+            ]
+          },
+          {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "const",
+                "value": "n="
+              },
+              {
+                "gen": "ref",
+                "name": "param_value"
+              }
+            ]
+          },
+          {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "const",
+                "value": "w="
+              },
+              {
+                "gen": "ref",
+                "name": "param_value"
+              }
+            ]
+          },
+          {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "const",
+                "value": "alias="
+              },
+              {
+                "gen": "ref",
+                "name": "param_value"
+              }
+            ]
+          },
+          {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "const",
+                "value": "b="
+              },
+              {
+                "gen": "ref",
+                "name": "param_value"
+              }
+            ]
+          },
+          {
+            "gen": "pick",
+            "from": [
+              "t",
+              "n[]=1",
+              "t[]=x",
+              "w",
+              "b[k]=v"
+            ]
+          }
+        ]
+      },
+      "sep": "&",
+      "min": 0,
+      "max": 4
+    }
+  },
+  "waivers": {
+    "Utopia\\Http\\Adapter\\FPM\\*": "PHP-FPM server adapter (superglobals, header(), setcookie(), echo): runtime plumbing with no Rust counterpart; requests follow the Swoole adapter, which Appwrite serves with, and utopia_http::serve replaces the server (CONVERSION.md section 6).",
+    "Utopia\\Http\\Adapter\\SwooleCoroutine\\*": "Swoole coroutine server adapter: runtime plumbing; its request and response are the Swoole adapter's (covered), and utopia_http::serve with App replaces the server.",
+    "Utopia\\Http\\Adapter\\Swoole\\Server::*": "Swoole server adapter (process/coroutine context slots, Swoole worker and coroutine gauges): runtime plumbing; the per-request context, start hooks, max_concurrency and max_wait_time are in utopia_http::serve and App.",
+    "Utopia\\Http\\Adapter\\Swoole\\Request::getSwooleRequest": "Returns the Swoole request object: runtime plumbing.",
+    "Utopia\\Http\\Adapter\\Swoole\\Response::getSwooleResponse": "Returns the Swoole response object: runtime plumbing.",
+    "Utopia\\Http\\Adapter\\Swoole\\Response::__construct": "Wraps a Swoole response object: runtime plumbing; Response::__construct is covered.",
+    "Utopia\\Http\\Adapter\\Swoole\\Response::write": "Output primitive of the Swoole adapter: the PHP side records it in tests/compat/http/Capture.php and utopia_http::Wire is its counterpart; every op's output is compared through it.",
+    "Utopia\\Http\\Adapter\\Swoole\\Response::end": "Output primitive of the Swoole adapter: recorded by Capture.php, counterpart utopia_http::Wire.",
+    "Utopia\\Http\\Adapter\\Swoole\\Response::sendHeader": "Output primitive of the Swoole adapter: recorded by Capture.php, counterpart utopia_http::Wire."
+  },
+  "tests_waived": {
+    "packages/http/tests/SwooleServerTelemetryTest.php": "Asserts which Swoole worker, coroutine and reactor gauges Adapter\\Swoole\\Server::setTelemetry registers outside worker 0: Swoole runtime statistics with no Rust counterpart (the server adapter is waived as runtime plumbing). The HTTP server metrics Http::setTelemetry records are compared in cases/telemetry.json."
+  },
+  "quirks": [
+    {
+      "symbol": "Utopia\\Http\\Router::preparePath",
+      "description": "Route paths go through array_filter(), which drops '0' segments as well as empty ones: '/a/0/b' registers as 'a/b', so '/a/0/b' does not match it and '/a/b' does.",
+      "case": "RouterTest.json#zero segments are dropped from templates"
+    },
+    {
+      "symbol": "Utopia\\Http\\Route::resolveParams",
+      "description": "Path params are read from the URL split on '/' without dropping empty segments, while matching drops them: '/c//d' matches '/c/:id' with id ''.",
+      "case": "RouterTest.json#zero segments are dropped from templates"
+    },
+    {
+      "symbol": "Utopia\\Http\\Adapter\\Swoole\\Request::getRawPayload",
+      "description": "rawContent() ?: '' turns a body of exactly '0' into ''.",
+      "case": "SwooleRequestTest.json#raw payload of exactly 0"
+    },
+    {
+      "symbol": "Utopia\\Http\\Adapter\\Swoole\\Request::getFiles",
+      "description": "The field name is lowercased before the lookup, so uploads under a field with capitals are unreachable.",
+      "case": "SwooleRequestTest.json#multipart fields and files"
+    },
+    {
+      "symbol": "Utopia\\Http\\Request::getSize",
+      "description": "Under Swoole php://input is empty, so the size counts header lines only.",
+      "case": "RequestTest.json#size with array headers"
+    },
+    {
+      "symbol": "Utopia\\Http\\Adapter\\Swoole\\Request::getProtocol",
+      "description": "Without a trusted header, only an HTTP/1.1 request line reads as 'http'; HTTP/1.0 reads as 'https'.",
+      "case": "RequestTest.json#protocol from an HTTP/1.0 request line"
+    },
+    {
+      "symbol": "Utopia\\Http\\Response::removeCookie",
+      "description": "array_filter() keeps the keys of the remaining cookies (getCookies() has gaps), and names are compared as given while addCookie() lowercases them.",
+      "case": "FPMResponseTest.json#remove cookie leaves a gap"
+    },
+    {
+      "symbol": "Utopia\\Http\\Http::execute",
+      "description": "Error hooks of an unmatched request (and of OPTIONS) are not guarded: their failure propagates as is, not as 'Error handler had an error'.",
+      "case": "HttpTest.json#a failing 404 error hook propagates"
+    },
+    {
+      "symbol": "Utopia\\Http\\Request::getHeaders",
+      "description": "Swoole parses the Cookie header into cookies and leaves it out of the headers, so getHeader('cookie') is empty.",
+      "case": "RequestTest.json#cookie params"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Http\\Request::getParams",
+      "php": "Query, form, cookie and JSON values are PHP strings: bytes, possibly not UTF-8 (%FF decodes to the byte 0xFF).",
+      "reason": "utopia_http::Params is serde_json (the model validators and Appwrite consume): bytes that are not UTF-8 are replaced with U+FFFD. Fuzz generators keep percent-encodings below 0x80."
+    },
+    {
+      "symbol": "Utopia\\Http\\Request::getCookie",
+      "php": "A cookie sent as an array (a[]=1) makes getCookie() raise TypeError (its return type is string).",
+      "reason": "Request::cookie() returns Option<&str>: None for arrays (the compat adapter reports the TypeError PHP raises)."
+    },
+    {
+      "symbol": "Utopia\\Http\\Http::execute",
+      "php": "A param validator that is not a Utopia\\Validator\\Validator fails with 'Validator object is not an instance of the Validator class' (500); a request value that is a PHP callable array (['Class', 'method']) is called like a default factory.",
+      "reason": "Validators are utopia_validators::Validator values and request values are data: neither case can be expressed."
+    },
+    {
+      "symbol": "Utopia\\Http\\Http::execute",
+      "php": "In a sub-request dispatched with execute() from an action, the 'request' and 'response' injections resolve to the outer request's objects (the context is shared).",
+      "reason": "A Rust Scope always carries the request and response being executed."
+    },
+    {
+      "symbol": "Utopia\\Http\\View::render",
+      "php": "Templates are .phtml files executed with the view as $this.",
+      "reason": "A Rust view renders a Template function, or the file content as is (a template without PHP code); compared with such templates."
+    },
+    {
+      "symbol": "Utopia\\Http\\Files::load",
+      "php": "MIME types not in Files::EXTENSIONS come from libmagic (mime_content_type); a given root is used as is while the directory is resolved with realpath().",
+      "reason": "utopia_http::files::sniff recognises the formats static assets use (images, PDF, archives, HTML, JSON, text); the root is resolved too, so keys stay relative behind symlinks."
+    },
+    {
+      "symbol": "Utopia\\Http\\Response::send",
+      "php": "Bodies are compressed by zlib (gzencode, gzdeflate), libbrotli and libzstd.",
+      "reason": "flate2 and the brotli crate produce other (valid) byte streams: the compat cases compare the decoded body and mask the compressed bytes and their Content-Length."
+    },
+    {
+      "symbol": "Utopia\\Http\\Adapter\\Swoole\\Request::getFiles",
+      "php": "Uploads are written to /tmp/swoole.upfile.* and deleted with the request.",
+      "reason": "Rust writes them to the temporary directory as utopia.upfile.*; the compat cases compare the file content in place of tmp_name."
+    },
+    {
+      "symbol": "Utopia\\Http\\Adapter\\Swoole\\Request::__construct",
+      "php": "Swoole trims the whitespace before a header value only; hyper trims it on both sides and rejects request targets with spaces or non-ASCII bytes, which Swoole cuts short.",
+      "reason": "Requests reach Rust through hyper; compat requests use valid targets and header values without surrounding whitespace."
+    }
+  ]
+}

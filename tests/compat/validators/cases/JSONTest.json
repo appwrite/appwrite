@@ -1,0 +1,163 @@
+{
+  "source": "packages/validators/tests/JSONTest.php",
+  "cases": [
+    {
+      "name": "testCanValidateJson",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "{}"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": []
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": [
+              "test"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "test": "demo"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "{\"test\": \"demo\"}"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": false
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": null
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "string"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 1
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 1.2
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "{'test': 'demo'}"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "object"
+        }
+      ]
+    }
+  ]
+}

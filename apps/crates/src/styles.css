@@ -1,0 +1,233 @@
+@import 'tailwindcss';
+
+/* The Utopia.php design system: shadcn zinc neutrals, near-black primary,
+   Poppins headings (500, tight tracking), the OS system stack for body text,
+   source-code-pro for code, and dark code panels with Monokai tokens.
+   Periwinkle belongs to the wordmark; colour otherwise comes only from the
+   callout triplets (status, and the yellow migration cards). */
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --zinc-0: oklch(1 0 0);
+  --zinc-50: oklch(0.985 0 0);
+  --zinc-100: oklch(0.967 0.001 286.375);
+  --zinc-200: oklch(0.92 0.004 286.32);
+  --zinc-300: oklch(0.871 0.006 286.286);
+  --zinc-400: oklch(0.705 0.015 286.067);
+  --zinc-500: oklch(0.552 0.016 285.938);
+  --zinc-600: oklch(0.442 0.017 285.786);
+  --zinc-700: oklch(0.274 0.006 286.033);
+  --zinc-800: oklch(0.21 0.006 285.885);
+  --zinc-900: oklch(0.141 0.005 285.823);
+
+  --background: var(--zinc-0);
+  --foreground: var(--zinc-900);
+  --card: var(--zinc-0);
+  --muted: var(--zinc-100);
+  --muted-foreground: var(--zinc-500);
+  --accent: var(--zinc-100);
+  --accent-foreground: var(--zinc-800);
+  --primary: var(--zinc-800);
+  --primary-foreground: var(--zinc-50);
+  --border: var(--zinc-200);
+  --ring: var(--zinc-300);
+  --sidebar: var(--background);
+  --sidebar-accent: var(--zinc-100);
+  /* Menu text sits in a narrow band, so headings and links read as one list. */
+  --sidebar-ink: var(--zinc-600);
+  --sidebar-strong: var(--zinc-700);
+  --brand: #6474ce;
+
+  /* Code panels stay dark in both themes: the code block is this brand's image. */
+  --code-bg: var(--zinc-900);
+  --code-header: #18181b;
+  --code-border: rgba(75, 85, 99, 0.3);
+  --code-header-fg: #d1d5db;
+  --code-plain: #f8f8f2;
+  --code-module-keyword: #a6e22e;
+  --code-function: #a6e22e;
+  --code-keyword: #66d9ef;
+  --code-comment: #75715e;
+  --code-property: #f92672;
+  --code-string: #e6db74;
+  --code-number: #ae81ff;
+
+  /* Callout triplets: success, warning, info; planned is neutral. */
+  --ok: #22c55e;
+  --ok-soft: #f0fdf4;
+  --ok-ink: #14532d;
+  --progress: #eab308;
+  --progress-soft: #fefce8;
+  --progress-ink: #713f12;
+  --started: #3b82f6;
+  --started-soft: #eff6ff;
+  --started-ink: #1e3a8a;
+  --planned: var(--zinc-400);
+  --planned-soft: var(--zinc-100);
+  --planned-ink: var(--zinc-600);
+  /* Migration cards: the design system's warning callout. */
+  --migration: #fefce8;
+  --migration-border: #fef08a;
+  --migration-ink: #713f12;
+
+  --font-display: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-code: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.dark {
+  --background: var(--zinc-900);
+  --foreground: var(--zinc-50);
+  --card: var(--zinc-900);
+  --muted: var(--zinc-700);
+  --muted-foreground: var(--zinc-400);
+  --accent: var(--zinc-700);
+  --accent-foreground: var(--zinc-50);
+  --primary: var(--zinc-50);
+  --primary-foreground: var(--zinc-800);
+  --border: var(--zinc-700);
+  --ring: var(--zinc-600);
+  --sidebar: var(--background);
+  --sidebar-accent: var(--zinc-800);
+  --sidebar-ink: var(--zinc-400);
+  --sidebar-strong: var(--zinc-300);
+  --code-bg: #0c0c0e;
+  --code-header: #131316;
+  --ok-soft: rgba(5, 46, 22, 0.3);
+  --ok-ink: #dcfce7;
+  --progress-soft: rgba(66, 32, 6, 0.3);
+  --progress-ink: #fef9c3;
+  --started-soft: rgba(23, 37, 84, 0.3);
+  --started-ink: #dbeafe;
+  --planned-soft: var(--zinc-700);
+  --planned-ink: var(--zinc-400);
+  --migration: rgba(66, 32, 6, 0.3);
+  --migration-border: #713f12;
+  --migration-ink: #fef9c3;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-ink: var(--sidebar-ink);
+  --color-sidebar-strong: var(--sidebar-strong);
+  --color-brand: var(--brand);
+  --color-code: var(--code-bg);
+  --color-code-header: var(--code-header);
+  --color-code-header-fg: var(--code-header-fg);
+  --color-code-border: var(--code-border);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-ok-ink: var(--ok-ink);
+  --color-progress: var(--progress);
+  --color-progress-soft: var(--progress-soft);
+  --color-progress-ink: var(--progress-ink);
+  --color-started: var(--started);
+  --color-started-soft: var(--started-soft);
+  --color-started-ink: var(--started-ink);
+  --color-planned: var(--planned);
+  --color-planned-soft: var(--planned-soft);
+  --color-planned-ink: var(--planned-ink);
+  --color-migration: var(--migration);
+  --color-migration-border: var(--migration-border);
+  --color-migration-ink: var(--migration-ink);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-code);
+}
+
+@layer base {
+  /* No rubber-band bounce past the page edges, in the page or its menus. */
+  html,
+  body {
+    background: var(--background);
+    overscroll-behavior: none;
+  }
+  aside,
+  nav {
+    overscroll-behavior: contain;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 14px;
+    line-height: 1.625;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display font-medium;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+    }
+  }
+}
+
+/* Prism tokens in the console's palette. Tokens stay inline: their class
+   names (a TOML `table`) must not pick up Tailwind utilities of the same name. */
+.code .token {
+  display: inline;
+}
+
+.code .token.comment,
+.code .token.prolog,
+.code .token.doctype {
+  color: var(--code-comment);
+  font-style: italic;
+}
+.code .token.keyword,
+.code .token.boolean,
+.code .token.important {
+  color: var(--code-keyword);
+}
+.code .token.string,
+.code .token.char,
+.code .token.attr-value,
+.code .token.regex {
+  color: var(--code-string);
+}
+.code .token.function,
+.code .token.function-definition,
+.code .token.macro {
+  color: var(--code-function);
+}
+.code .token.class-name,
+.code .token.namespace,
+.code .token.module,
+.code .token.lifetime-annotation {
+  color: var(--code-module-keyword);
+}
+.code .token.property,
+.code .token.tag,
+.code .token.attr-name {
+  color: var(--code-property);
+}
+.code .token.number,
+.code .token.constant,
+.code .token.boolean {
+  color: var(--code-number);
+}
+.code {
+  color: var(--code-plain);
+}

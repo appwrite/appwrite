@@ -1,0 +1,4752 @@
+{
+  "lib": "auth",
+  "description": "utopia-php/auth: password hashes, proofs, session store, JWT issuers and verifiers, OAuth2 server values, WebAuthn passkeys. Remaining before complete: JWT issuer/verifier key inputs given as file:// paths and EC private keys on curves other than P-256 (PHP accepts both through openssl_*); CBOR RationalNumberTag (30) values whose numerator or denominator exceed 128 bits are not reduced (PHP reduces them with brick/math).",
+  "complete": false,
+  "php": {
+    "src": [
+      "packages/auth/src"
+    ],
+    "tests": [
+      "packages/auth/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/auth"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "hash.new": {
+      "doc": "new <Hash>() for algo argon2|bcrypt|md5|phpass|plaintext|scrypt|scryptMod|sha",
+      "covers": [
+        "Utopia\\Auth\\Hashes\\Argon2::__construct",
+        "Utopia\\Auth\\Hashes\\Bcrypt::__construct",
+        "Utopia\\Auth\\Hashes\\MD5::__construct",
+        "Utopia\\Auth\\Hashes\\PHPass::__construct",
+        "Utopia\\Auth\\Hashes\\Plaintext::__construct",
+        "Utopia\\Auth\\Hashes\\Scrypt::__construct",
+        "Utopia\\Auth\\Hashes\\ScryptModified::__construct",
+        "Utopia\\Auth\\Hashes\\Sha::__construct"
+      ]
+    },
+    "hash.name": {
+      "doc": "$hash->getName()",
+      "covers": [
+        "Utopia\\Auth\\Hashes\\Argon2::getName",
+        "Utopia\\Auth\\Hashes\\Bcrypt::getName",
+        "Utopia\\Auth\\Hashes\\MD5::getName",
+        "Utopia\\Auth\\Hashes\\PHPass::getName",
+        "Utopia\\Auth\\Hashes\\Plaintext::getName",
+        "Utopia\\Auth\\Hashes\\Scrypt::getName",
+        "Utopia\\Auth\\Hashes\\ScryptModified::getName",
+        "Utopia\\Auth\\Hashes\\Sha::getName"
+      ]
+    },
+    "hash.options": {
+      "doc": "$hash->getOptions()",
+      "covers": [
+        "Utopia\\Auth\\Hash::getOptions"
+      ]
+    },
+    "hash.get_option": {
+      "doc": "$hash->getOption(key, default?)",
+      "covers": [
+        "Utopia\\Auth\\Hash::getOption"
+      ]
+    },
+    "hash.set_option": {
+      "doc": "$hash->setOption(key, value)",
+      "covers": [
+        "Utopia\\Auth\\Hash::setOption"
+      ]
+    },
+    "hash.set_options": {
+      "doc": "$hash->setOptions(options)",
+      "covers": [
+        "Utopia\\Auth\\Hash::setOptions"
+      ]
+    },
+    "hash.setter": {
+      "doc": "$hash->{method}(value) for the algorithm setters",
+      "covers": [
+        "Utopia\\Auth\\Hashes\\Argon2::setMemoryCost",
+        "Utopia\\Auth\\Hashes\\Argon2::setTimeCost",
+        "Utopia\\Auth\\Hashes\\Argon2::setThreads",
+        "Utopia\\Auth\\Hashes\\Bcrypt::setCost",
+        "Utopia\\Auth\\Hashes\\PHPass::setIterationCount",
+        "Utopia\\Auth\\Hashes\\PHPass::setPortableHashes",
+        "Utopia\\Auth\\Hashes\\Scrypt::setCpuCost",
+        "Utopia\\Auth\\Hashes\\Scrypt::setMemoryCost",
+        "Utopia\\Auth\\Hashes\\Scrypt::setParallelCost",
+        "Utopia\\Auth\\Hashes\\Scrypt::setLength",
+        "Utopia\\Auth\\Hashes\\Scrypt::setSalt",
+        "Utopia\\Auth\\Hashes\\ScryptModified::setSalt",
+        "Utopia\\Auth\\Hashes\\ScryptModified::setSaltSeparator",
+        "Utopia\\Auth\\Hashes\\ScryptModified::setSignerKey",
+        "Utopia\\Auth\\Hashes\\Sha::setVersion"
+      ]
+    },
+    "hash.hash": {
+      "doc": "$hash->hash(value); salted algorithms are masked per step and cross-verified",
+      "covers": [
+        "Utopia\\Auth\\Hashes\\Argon2::hash",
+        "Utopia\\Auth\\Hashes\\Bcrypt::hash",
+        "Utopia\\Auth\\Hashes\\MD5::hash",
+        "Utopia\\Auth\\Hashes\\PHPass::hash",
+        "Utopia\\Auth\\Hashes\\Plaintext::hash",
+        "Utopia\\Auth\\Hashes\\Scrypt::hash",
+        "Utopia\\Auth\\Hashes\\ScryptModified::hash",
+        "Utopia\\Auth\\Hashes\\Sha::hash"
+      ]
+    },
+    "hash.once": {
+      "doc": "new <Hash>(), setOptions(options), then verify(value, hash_value) or hash(value): one call, for fuzzing",
+      "fuzz": [
+        {
+          "name": "digests",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algo": {
+                "gen": "pick",
+                "from": [
+                  "md5",
+                  "plaintext",
+                  "sha"
+                ]
+              },
+              "options": {
+                "gen": "object",
+                "fields": {
+                  "version": {
+                    "gen": "pick",
+                    "from": [
+                      "sha1",
+                      "sha224",
+                      "sha256",
+                      "sha384",
+                      "sha512",
+                      "sha3-224",
+                      "sha3-256",
+                      "sha3-384",
+                      "sha3-512",
+                      "md5",
+                      "SHA256",
+                      "sha512/224",
+                      "sha512/256",
+                      "nope",
+                      5,
+                      null,
+                      "md4",
+                      "crc32",
+                      "crc32b",
+                      "crc32c",
+                      "adler32",
+                      "fnv132",
+                      "fnv1a32",
+                      "fnv164",
+                      "fnv1a64",
+                      "joaat",
+                      "murmur3a",
+                      "murmur3c",
+                      "murmur3f",
+                      "xxh32",
+                      "xxh64",
+                      "XXH32",
+                      "md2",
+                      "ripemd160",
+                      "ripemd320",
+                      "whirlpool",
+                      "tiger192,3",
+                      "tiger128,4",
+                      "snefru",
+                      "gost",
+                      "gost-crypto",
+                      "haval160,4",
+                      "haval256,5",
+                      "xxh3",
+                      "xxh128"
+                    ]
+                  }
+                },
+                "optional": [
+                  "version"
+                ]
+              },
+              "value": {
+                "gen": "string",
+                "alphabet": "unicode",
+                "min": 0,
+                "max": 16,
+                "tricky": 0.4
+              },
+              "hash_value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "hex",
+                    "min": 0,
+                    "max": 64,
+                    "tricky": 0.2
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "min": 0,
+                    "max": 10,
+                    "tricky": 0.5
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "options",
+              "hash_value"
+            ]
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "bcrypt verify",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algo": {
+                "gen": "pick",
+                "from": [
+                  "bcrypt"
+                ]
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "min": 0,
+                    "max": 10,
+                    "tricky": 0.4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "x",
+                      "x\u0000y"
+                    ]
+                  }
+                ]
+              },
+              "hash_value": {
+                "gen": "ref",
+                "name": "bcrypt_hash"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "phpass verify",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algo": {
+                "gen": "pick",
+                "from": [
+                  "phpass"
+                ]
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "min": 0,
+                    "max": 10,
+                    "tricky": 0.4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "appwrite",
+                      "x"
+                    ]
+                  }
+                ]
+              },
+              "hash_value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "phpass_hash"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "bcrypt_hash"
+                  }
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "argon2 verify",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algo": {
+                "gen": "pick",
+                "from": [
+                  "argon2"
+                ]
+              },
+              "value": {
+                "gen": "pick",
+                "from": [
+                  "appwrite",
+                  "x",
+                  ""
+                ]
+              },
+              "hash_value": {
+                "gen": "ref",
+                "name": "argon2_hash"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "scrypt modified",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algo": {
+                "gen": "pick",
+                "from": [
+                  "scryptMod"
+                ]
+              },
+              "options": {
+                "gen": "object",
+                "fields": {
+                  "salt": {
+                    "gen": "ref",
+                    "name": "b64ish"
+                  },
+                  "saltSeparator": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "ref",
+                        "name": "b64ish"
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          null
+                        ]
+                      }
+                    ]
+                  },
+                  "signerKey": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "ref",
+                        "name": "b64ish"
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          5,
+                          null
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "optional": []
+              },
+              "value": {
+                "gen": "string",
+                "alphabet": "unicode",
+                "min": 0,
+                "max": 8,
+                "tricky": 0.4
+              }
+            },
+            "optional": []
+          },
+          "iterations": 150
+        },
+        {
+          "name": "scrypt",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algo": {
+                "gen": "pick",
+                "from": [
+                  "scrypt"
+                ]
+              },
+              "options": {
+                "gen": "object",
+                "fields": {
+                  "salt": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "string",
+                        "alphabet": "ascii",
+                        "min": 0,
+                        "max": 8,
+                        "tricky": 0.4
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          5,
+                          null
+                        ]
+                      }
+                    ]
+                  },
+                  "costCpu": {
+                    "gen": "pick",
+                    "from": [
+                      2,
+                      4,
+                      16,
+                      3,
+                      0,
+                      1,
+                      "8",
+                      -2
+                    ]
+                  },
+                  "costMemory": {
+                    "gen": "pick",
+                    "from": [
+                      1,
+                      2,
+                      0,
+                      -1
+                    ]
+                  },
+                  "costParallel": {
+                    "gen": "pick",
+                    "from": [
+                      1,
+                      2,
+                      0
+                    ]
+                  },
+                  "length": {
+                    "gen": "pick",
+                    "from": [
+                      16,
+                      17,
+                      64,
+                      15,
+                      0,
+                      100
+                    ]
+                  }
+                },
+                "optional": [
+                  "costCpu",
+                  "costMemory",
+                  "costParallel",
+                  "length"
+                ]
+              },
+              "value": {
+                "gen": "string",
+                "alphabet": "ascii",
+                "min": 0,
+                "max": 8,
+                "tricky": 0.4
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "phpass options",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algo": {
+                "gen": "pick",
+                "from": [
+                  "phpass"
+                ]
+              },
+              "options": {
+                "gen": "object",
+                "fields": {
+                  "iteration_count_log2": {
+                    "gen": "pick",
+                    "from": [
+                      7,
+                      8,
+                      3,
+                      0,
+                      -3,
+                      12,
+                      "8",
+                      "9abc",
+                      "abc",
+                      8.5,
+                      true,
+                      null,
+                      [
+                        1
+                      ]
+                    ]
+                  },
+                  "portable_hashes": {
+                    "gen": "pick",
+                    "from": [
+                      true,
+                      false,
+                      1,
+                      0,
+                      "",
+                      "0",
+                      null
+                    ]
+                  }
+                },
+                "optional": [
+                  "iteration_count_log2",
+                  "portable_hashes"
+                ]
+              },
+              "value": {
+                "gen": "pick",
+                "from": [
+                  "x",
+                  "appwrite"
+                ]
+              },
+              "hash_value": {
+                "gen": "pick",
+                "from": [
+                  "$P$Br387rwferoKN7uwHZqNMu98q3U8RO.",
+                  "*0",
+                  "$2a$04$abcdefghijklmnopqrstuuPp7HPfoAs8I2dCQCQ/fW7zEJv8I8C8e"
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 300
+        }
+      ]
+    },
+    "store.decode_once": {
+      "doc": "(new Store())->decode(data)->encode(): one call, for fuzzing",
+      "fuzz": [
+        {
+          "name": "data",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+                    "min": 0,
+                    "max": 40,
+                    "tricky": 0.2
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "eyJpZCI6InUiLCJzZWNyZXQiOiJzIn0=",
+                      "WzEsMl0=",
+                      "eyIwIjoxLCIxIjoyfQ==",
+                      "eyJhIjp7fX0=",
+                      "e30=",
+                      "W10=",
+                      "bnVsbA==",
+                      " e30= ",
+                      "e30"
+                    ]
+                  }
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "verifier.check": {
+      "doc": "new Verifiers\\Symmetric(secret, ...)->verify(token ?? an HS256 JWS of header and claims) at `now`: one call, for fuzzing",
+      "fuzz": [
+        {
+          "name": "claims",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "secret": {
+                "gen": "pick",
+                "from": [
+                  "s3cret"
+                ]
+              },
+              "header": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      {
+                        "typ": "JWT",
+                        "alg": "HS256"
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "header"
+                  }
+                ]
+              },
+              "claims": {
+                "gen": "ref",
+                "name": "claims"
+              },
+              "now": {
+                "gen": "pick",
+                "from": [
+                  1700000000
+                ]
+              },
+              "issuer": {
+                "gen": "pick",
+                "from": [
+                  "https://example.com",
+                  null
+                ]
+              },
+              "audience": {
+                "gen": "pick",
+                "from": [
+                  "a",
+                  [
+                    "a",
+                    "b"
+                  ],
+                  [
+                    5
+                  ],
+                  null
+                ]
+              },
+              "type": {
+                "gen": "pick",
+                "from": [
+                  "JWT",
+                  null
+                ]
+              },
+              "allow_expired": {
+                "gen": "bool"
+              },
+              "leeway": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  5,
+                  100,
+                  -1
+                ]
+              }
+            },
+            "optional": [
+              "issuer",
+              "audience",
+              "type",
+              "allow_expired",
+              "leeway"
+            ]
+          },
+          "iterations": 5000
+        },
+        {
+          "name": "tokens",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "secret": {
+                "gen": "pick",
+                "from": [
+                  "s3cret",
+                  "0",
+                  ""
+                ]
+              },
+              "token": {
+                "gen": "ref",
+                "name": "token"
+              },
+              "now": {
+                "gen": "pick",
+                "from": [
+                  1700000000
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "hash.verify": {
+      "doc": "$hash->verify(value, hash_value)",
+      "covers": [
+        "Utopia\\Auth\\Hashes\\Argon2::verify",
+        "Utopia\\Auth\\Hashes\\Bcrypt::verify",
+        "Utopia\\Auth\\Hashes\\MD5::verify",
+        "Utopia\\Auth\\Hashes\\PHPass::verify",
+        "Utopia\\Auth\\Hashes\\Plaintext::verify",
+        "Utopia\\Auth\\Hashes\\Scrypt::verify",
+        "Utopia\\Auth\\Hashes\\ScryptModified::verify",
+        "Utopia\\Auth\\Hashes\\Sha::verify"
+      ]
+    },
+    "proof.new": {
+      "doc": "new Code(length?) | Token(length?) | Phrase() | Password(hashes: {name: hash handle})",
+      "covers": [
+        "Utopia\\Auth\\Proof::__construct",
+        "Utopia\\Auth\\Proofs\\Code::__construct",
+        "Utopia\\Auth\\Proofs\\Token::__construct",
+        "Utopia\\Auth\\Proofs\\Password::__construct"
+      ]
+    },
+    "proof.generate": {
+      "doc": "$proof->generate() (random: masked, checked with fixtures)",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Code::generate",
+        "Utopia\\Auth\\Proofs\\Token::generate",
+        "Utopia\\Auth\\Proofs\\Phrase::generate",
+        "Utopia\\Auth\\Proofs\\Password::generate"
+      ],
+      "mask": {
+        "paths": [
+          ""
+        ],
+        "reason": "generated secrets are random; cases check them with fixture.matches / fixture.strlen"
+      }
+    },
+    "proof.hash": {
+      "doc": "$proof->hash(value)",
+      "covers": [
+        "Utopia\\Auth\\Proof::hash"
+      ]
+    },
+    "proof.verify": {
+      "doc": "$proof->verify(value, hash_value)",
+      "covers": [
+        "Utopia\\Auth\\Proof::verify"
+      ]
+    },
+    "proof.hash_name": {
+      "doc": "$proof->getHash()->getName()",
+      "covers": [
+        "Utopia\\Auth\\Proof::getHash"
+      ]
+    },
+    "proof.hash_options": {
+      "doc": "$proof->getHash()->getOptions()"
+    },
+    "proof.hash_setter": {
+      "doc": "$proof->getHash()->{method}(value)"
+    },
+    "proof.hash_set_option": {
+      "doc": "$proof->getHash()->setOption(key, value)"
+    },
+    "proof.set_hash": {
+      "doc": "$proof->setHash(hash handle)",
+      "covers": [
+        "Utopia\\Auth\\Proof::setHash"
+      ]
+    },
+    "proof.length": {
+      "doc": "$proof->getLength() (Code, Token)",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Code::getLength",
+        "Utopia\\Auth\\Proofs\\Token::getLength"
+      ]
+    },
+    "proof.set_length": {
+      "doc": "$proof->setLength(length) (Code, Token, Password)",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Code::setLength",
+        "Utopia\\Auth\\Proofs\\Token::setLength",
+        "Utopia\\Auth\\Proofs\\Password::setLength"
+      ]
+    },
+    "password.set_charset": {
+      "doc": "$password->setCharset(charset)",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Password::setCharset"
+      ]
+    },
+    "password.add_hash": {
+      "doc": "$password->addHash(name, hash handle)",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Password::addHash"
+      ]
+    },
+    "password.remove_hash": {
+      "doc": "$password->removeHash(name)",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Password::removeHash"
+      ]
+    },
+    "password.hash_by_name": {
+      "doc": "$password->getHashByName(name)->getName()",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Password::getHashByName"
+      ]
+    },
+    "password.use_hash": {
+      "doc": "$password->setHash($password->getHashByName(name))"
+    },
+    "password.create_hash": {
+      "doc": "Password::createHash(type, options) as a hash handle",
+      "covers": [
+        "Utopia\\Auth\\Proofs\\Password::createHash"
+      ]
+    },
+    "store.new": {
+      "doc": "new Store()"
+    },
+    "store.set_property": {
+      "doc": "$store->setProperty(key, value)",
+      "covers": [
+        "Utopia\\Auth\\Store::setProperty"
+      ]
+    },
+    "store.get_property": {
+      "doc": "$store->getProperty(key, default?)",
+      "covers": [
+        "Utopia\\Auth\\Store::getProperty"
+      ]
+    },
+    "store.set_key": {
+      "doc": "$store->setKey(key|null)",
+      "covers": [
+        "Utopia\\Auth\\Store::setKey"
+      ]
+    },
+    "store.get_key": {
+      "doc": "$store->getKey()",
+      "covers": [
+        "Utopia\\Auth\\Store::getKey"
+      ]
+    },
+    "store.encode": {
+      "doc": "$store->encode()",
+      "covers": [
+        "Utopia\\Auth\\Store::encode"
+      ]
+    },
+    "store.decode": {
+      "doc": "$store->decode(data)",
+      "covers": [
+        "Utopia\\Auth\\Store::decode"
+      ]
+    },
+    "issuer.new": {
+      "doc": "new Jwt|RefreshToken(secret, issuer, key_id?) or AccessToken|IdToken(private_key, public_key, issuer, key_id?)",
+      "covers": [
+        "Utopia\\Auth\\Issuer::__construct",
+        "Utopia\\Auth\\Issuers\\Symmetric::__construct",
+        "Utopia\\Auth\\Issuers\\Asymmetric::__construct"
+      ]
+    },
+    "issuer.issue": {
+      "doc": "$issuer->issue(...) at the fixed clock `now`",
+      "covers": [
+        "Utopia\\Auth\\Issuers\\Symmetric\\Jwt::issue",
+        "Utopia\\Auth\\Issuers\\Symmetric\\RefreshToken::issue",
+        "Utopia\\Auth\\Issuers\\Asymmetric\\AccessToken::issue",
+        "Utopia\\Auth\\Issuers\\Asymmetric\\IdToken::issue"
+      ]
+    },
+    "issuer.key_id": {
+      "doc": "$issuer->getKeyId()",
+      "covers": [
+        "Utopia\\Auth\\Issuers\\Symmetric::getKeyId",
+        "Utopia\\Auth\\Issuers\\Asymmetric::getKeyId"
+      ]
+    },
+    "issuer.public_jwk": {
+      "doc": "$issuer->getPublicJwk()",
+      "covers": [
+        "Utopia\\Auth\\Issuers\\Asymmetric::getPublicJwk"
+      ]
+    },
+    "issuer.generate_secret": {
+      "doc": "Symmetric::generateSecret(bytes?)",
+      "covers": [
+        "Utopia\\Auth\\Issuers\\Symmetric::generateSecret"
+      ],
+      "mask": {
+        "paths": [
+          ""
+        ],
+        "reason": "random; cases check its shape with fixtures"
+      }
+    },
+    "issuer.generate_key_pair": {
+      "doc": "Asymmetric::generateKeyPair(bits?) as {private, public}",
+      "covers": [
+        "Utopia\\Auth\\Issuers\\Asymmetric::generateKeyPair"
+      ],
+      "mask": {
+        "paths": [
+          "/private",
+          "/public"
+        ],
+        "reason": "fresh RSA keys; cases sign and verify with them across runtimes"
+      }
+    },
+    "verifier.new": {
+      "doc": "new Verifiers\\Symmetric(secret, ...) | Verifiers\\Asymmetric(public_key, ...) with issuer, audience, type, allow_expired, leeway",
+      "covers": [
+        "Utopia\\Auth\\Verifier::__construct",
+        "Utopia\\Auth\\Verifiers\\Symmetric::__construct",
+        "Utopia\\Auth\\Verifiers\\Asymmetric::__construct"
+      ]
+    },
+    "verifier.verify": {
+      "doc": "$verifier->verify(token) at the fixed clock `now`",
+      "covers": [
+        "Utopia\\Auth\\Verifier::verify"
+      ]
+    },
+    "verifier.key_id": {
+      "doc": "$verifier->getKeyId() (asymmetric)",
+      "covers": [
+        "Utopia\\Auth\\Verifiers\\Asymmetric::getKeyId"
+      ]
+    },
+    "par.from_id": {
+      "doc": "PAR::fromId(prefix, id) as {id, requestUri}",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\PAR::fromId",
+        "Utopia\\Auth\\OAuth2\\PAR::id",
+        "Utopia\\Auth\\OAuth2\\PAR::requestUri"
+      ],
+      "fuzz": [
+        {
+          "name": "parts",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "prefix": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "urn:appwrite:oauth2:request:",
+                      "",
+                      "0"
+                    ]
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "min": 0,
+                    "max": 8,
+                    "tricky": 0.4
+                  }
+                ]
+              },
+              "id": {
+                "gen": "string",
+                "alphabet": "ascii",
+                "min": 0,
+                "max": 8,
+                "tricky": 0.4
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "par.from_request_uri": {
+      "doc": "PAR::fromRequestUri(prefix, request_uri) as {id, requestUri}",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\PAR::fromRequestUri"
+      ],
+      "fuzz": [
+        {
+          "name": "uri",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "prefix": {
+                "gen": "pick",
+                "from": [
+                  "urn:appwrite:oauth2:request:",
+                  "",
+                  "urn:",
+                  "0"
+                ]
+              },
+              "request_uri": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "urn:appwrite:oauth2:request:",
+                          "urn:",
+                          ""
+                        ]
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "ascii",
+                        "min": 0,
+                        "max": 8,
+                        "tricky": 0.4
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "min": 0,
+                    "max": 30,
+                    "tricky": 0.5
+                  }
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "prompts.from_string": {
+      "doc": "Prompts::fromString(prompt) as {array, string, contains: {prompt: bool}}",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\Prompts::fromString",
+        "Utopia\\Auth\\OAuth2\\Prompts::toArray",
+        "Utopia\\Auth\\OAuth2\\Prompts::toString",
+        "Utopia\\Auth\\OAuth2\\Prompts::contains"
+      ],
+      "fuzz": [
+        {
+          "name": "prompt",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "prompt": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "prompt"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "min": 0,
+                    "max": 20,
+                    "tricky": 0.5
+                  }
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "redirect_uris.from": {
+      "doc": "RedirectUris::from(uris)->toArray()",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\RedirectUris::from",
+        "Utopia\\Auth\\OAuth2\\RedirectUris::toArray"
+      ],
+      "fuzz": [
+        {
+          "name": "stored",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "uris": {
+                "gen": "ref",
+                "name": "uris"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "redirect_uris.matches": {
+      "doc": "RedirectUris::from(uris)->matches(presented, allow_loopback)",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\RedirectUris::matches"
+      ],
+      "fuzz": [
+        {
+          "name": "matching",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "uris": {
+                "gen": "ref",
+                "name": "uris"
+              },
+              "presented": {
+                "gen": "ref",
+                "name": "uri"
+              },
+              "allow_loopback": {
+                "gen": "bool"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "resources.from": {
+      "doc": "ResourceIndicators::from(value, audience?)->toArray()",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ResourceIndicators::from",
+        "Utopia\\Auth\\OAuth2\\ResourceIndicators::toArray"
+      ],
+      "fuzz": [
+        {
+          "name": "resources",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "uri"
+                  },
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "ref",
+                          "name": "uri"
+                        },
+                        {
+                          "gen": "pick",
+                          "from": [
+                            42,
+                            null,
+                            ""
+                          ]
+                        }
+                      ]
+                    },
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      null,
+                      ""
+                    ]
+                  }
+                ]
+              },
+              "audience": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "uri"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      null,
+                      ""
+                    ]
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "audience"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "resources.audience": {
+      "doc": "ResourceIndicators::from(value, audience?)->audience(default)",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ResourceIndicators::audience"
+      ],
+      "fuzz": [
+        {
+          "name": "audience",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "uri"
+                    },
+                    "min": 0,
+                    "max": 3
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      null
+                    ]
+                  }
+                ]
+              },
+              "default": {
+                "gen": "ref",
+                "name": "uri"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "resources.is_subset_of": {
+      "doc": "from(value)->isSubsetOf(from(granted))",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ResourceIndicators::isSubsetOf"
+      ],
+      "fuzz": [
+        {
+          "name": "subset",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "https://a.example/",
+                    "https://b.example/",
+                    "http://localhost/"
+                  ]
+                },
+                "min": 0,
+                "max": 3
+              },
+              "granted": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "https://a.example/",
+                    "https://b.example/",
+                    "http://localhost/"
+                  ]
+                },
+                "min": 0,
+                "max": 3
+              }
+            },
+            "optional": []
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "resources.equals": {
+      "doc": "from(value)->equals(from(other))",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ResourceIndicators::equals"
+      ],
+      "fuzz": [
+        {
+          "name": "equals",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "https://a.example/",
+                    "https://b.example/",
+                    "http://localhost/"
+                  ]
+                },
+                "min": 0,
+                "max": 3
+              },
+              "other": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "https://a.example/",
+                    "https://b.example/",
+                    "http://localhost/"
+                  ]
+                },
+                "min": 0,
+                "max": 3
+              }
+            },
+            "optional": []
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "authorization_details.new": {
+      "doc": "(new AuthorizationDetails(value))->toArray()",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\AuthorizationDetails::__construct",
+        "Utopia\\Auth\\OAuth2\\AuthorizationDetails::toArray"
+      ],
+      "fuzz": [
+        {
+          "name": "entries",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "details"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "authorization_details.grants": {
+      "doc": "(new AuthorizationDetails(details))->grants(type, value, field, wildcard?)",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\AuthorizationDetails::grants"
+      ],
+      "fuzz": [
+        {
+          "name": "grants",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "details": {
+                "gen": "ref",
+                "name": "details"
+              },
+              "type": {
+                "gen": "ref",
+                "name": "word"
+              },
+              "value": {
+                "gen": "ref",
+                "name": "word"
+              },
+              "field": {
+                "gen": "ref",
+                "name": "word"
+              },
+              "wildcard": {
+                "gen": "pick",
+                "from": [
+                  "*",
+                  null
+                ]
+              }
+            },
+            "optional": [
+              "wildcard"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "authorization_details.restrict": {
+      "doc": "restrict(field, fn(type, values) => allow[type] ?? null, wildcard?) as {details, calls}",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\AuthorizationDetails::restrict"
+      ],
+      "fuzz": [
+        {
+          "name": "restrict",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "details": {
+                "gen": "ref",
+                "name": "details"
+              },
+              "field": {
+                "gen": "ref",
+                "name": "word"
+              },
+              "allow": {
+                "gen": "object",
+                "fields": {
+                  "project": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "array",
+                        "items": {
+                          "gen": "one_of",
+                          "of": [
+                            {
+                              "gen": "ref",
+                              "name": "word"
+                            },
+                            {
+                              "gen": "pick",
+                              "from": [
+                                1
+                              ]
+                            }
+                          ]
+                        },
+                        "min": 0,
+                        "max": 3
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          null
+                        ]
+                      }
+                    ]
+                  },
+                  "organization": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "word"
+                    },
+                    "min": 0,
+                    "max": 2
+                  }
+                },
+                "optional": [
+                  "project",
+                  "organization"
+                ]
+              },
+              "wildcard": {
+                "gen": "pick",
+                "from": [
+                  "*",
+                  null
+                ]
+              }
+            },
+            "optional": [
+              "wildcard"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "client_id_url.is_candidate": {
+      "doc": "ClientIdentifierUrl::isCandidate(value)",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ClientIdentifierUrl::isCandidate"
+      ],
+      "fuzz": [
+        {
+          "name": "candidate",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "uri"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "client_id_url.from_string": {
+      "doc": "ClientIdentifierUrl::fromString(value, allow_http) as {string, host}",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ClientIdentifierUrl::fromString",
+        "Utopia\\Auth\\OAuth2\\ClientIdentifierUrl::toString",
+        "Utopia\\Auth\\OAuth2\\ClientIdentifierUrl::host"
+      ],
+      "fuzz": [
+        {
+          "name": "url",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "uri"
+              },
+              "allow_http": {
+                "gen": "bool"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "client_metadata.from_json": {
+      "doc": "ClientIdMetadataDocument::fromJson(fromString(client_id), json) as its accessors (+ get(get, default))",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::fromJson",
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::clientId",
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::tokenEndpointAuthMethod",
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::grantTypes",
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::responseTypes",
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::redirectUris",
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::toArray",
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::get"
+      ],
+      "fuzz": [
+        {
+          "name": "json",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "client_id": {
+                "gen": "pick",
+                "from": [
+                  "https://client.example/metadata"
+                ]
+              },
+              "json": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "min": 0,
+                    "max": 20,
+                    "tricky": 0.5
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "{",
+                      "[]",
+                      "true",
+                      "{}",
+                      "{\"client_id\":\"https://client.example/metadata\",\"token_endpoint_auth_method\":\"none\",\"0\":1,\"x\":{\"1\":[]}}",
+                      "{\"client_id\":\"https://client.example/metadata\",\"token_endpoint_auth_method\":\"none\",\"jwks\":{\"keys\":[{}]}}"
+                    ]
+                  }
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "client_metadata.from_array": {
+      "doc": "ClientIdMetadataDocument::fromArray(fromString(client_id), metadata) as its accessors",
+      "covers": [
+        "Utopia\\Auth\\OAuth2\\ClientIdMetadataDocument::fromArray"
+      ],
+      "fuzz": [
+        {
+          "name": "metadata",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "client_id": {
+                "gen": "pick",
+                "from": [
+                  "https://client.example/metadata"
+                ]
+              },
+              "metadata": {
+                "gen": "ref",
+                "name": "metadata"
+              },
+              "get": {
+                "gen": "pick",
+                "from": [
+                  "client_name",
+                  "extra",
+                  "missing",
+                  "jwks"
+                ]
+              },
+              "default": {
+                "gen": "pick",
+                "from": [
+                  "fallback",
+                  null
+                ]
+              }
+            },
+            "optional": [
+              "get",
+              "default"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "passkeys.ceremony": {
+      "doc": "new Ceremony(new RelyingParty(id, name, origins))",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Ceremony::__construct",
+        "Utopia\\Auth\\Passkeys\\RelyingParty::__construct"
+      ]
+    },
+    "passkeys.fingerprint": {
+      "doc": "(new RelyingParty(id, name, origins))->getFingerprint()",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\RelyingParty::getFingerprint"
+      ],
+      "fuzz": [
+        {
+          "name": "rp",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "id": {
+                "gen": "string",
+                "alphabet": "hostname",
+                "min": 0,
+                "max": 12,
+                "tricky": 0.3
+              },
+              "name": {
+                "gen": "string",
+                "alphabet": "ascii",
+                "min": 0,
+                "max": 6,
+                "tricky": 0.2
+              },
+              "origins": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "uri"
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "10",
+                        "9",
+                        "1e1",
+                        "1.0",
+                        " 1",
+                        "x",
+                        "https://a"
+                      ]
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 4
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "passkeys.origin_normalize": {
+      "doc": "(new Origin(rp_id))->normalize(origin)",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Origin::__construct",
+        "Utopia\\Auth\\Passkeys\\Origin::normalize"
+      ],
+      "fuzz": [
+        {
+          "name": "origin",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "rp_id": {
+                "gen": "pick",
+                "from": [
+                  "example.com",
+                  "localhost",
+                  "",
+                  "EXAMPLE.com",
+                  "a.example.com"
+                ]
+              },
+              "origin": {
+                "gen": "ref",
+                "name": "uri"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "passkeys.origin_description": {
+      "doc": "(new Origin(rp_id))->getDescription()",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Origin::getDescription"
+      ],
+      "fuzz": [
+        {
+          "name": "rp",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "rp_id": {
+                "gen": "string",
+                "alphabet": "ascii",
+                "min": 0,
+                "max": 12,
+                "tricky": 0.5
+              }
+            },
+            "optional": []
+          },
+          "iterations": 200
+        }
+      ]
+    },
+    "passkeys.register": {
+      "doc": "$ceremony->register(name, display_name, records) as {options, state}",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Ceremony::register",
+        "Utopia\\Auth\\Passkeys\\Challenge::__construct"
+      ],
+      "mask": {
+        "paths": [
+          "/options/challenge",
+          "/options/user/id",
+          "/state"
+        ],
+        "reason": "the challenge and a new user handle are random; cases answer them and compare handles with $equal"
+      }
+    },
+    "passkeys.authenticate": {
+      "doc": "$ceremony->authenticate() as {options, state}",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Ceremony::authenticate"
+      ],
+      "mask": {
+        "paths": [
+          "/options/challenge",
+          "/state"
+        ],
+        "reason": "the challenge is 32 random bytes; cases answer it and verify across runtimes"
+      }
+    },
+    "passkeys.identify": {
+      "doc": "$ceremony->identify(credential)",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Ceremony::identify"
+      ]
+    },
+    "passkeys.verify_registration": {
+      "doc": "$ceremony->verifyRegistration(state, credential) as {identifier, record}",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Ceremony::verifyRegistration",
+        "Utopia\\Auth\\Passkeys\\Credential::__construct"
+      ],
+      "mask": {
+        "paths": [
+          "/record/userHandle"
+        ],
+        "reason": "the user handle register() drew at random"
+      }
+    },
+    "passkeys.verify_authentication": {
+      "doc": "$ceremony->verifyAuthentication(state, credential, record) as {identifier, record}",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Ceremony::verifyAuthentication",
+        "Utopia\\Auth\\Passkeys\\Counter::check"
+      ],
+      "mask": {
+        "paths": [
+          "/record/userHandle"
+        ],
+        "reason": "the user handle register() drew at random"
+      }
+    },
+    "passkeys.authenticator": {
+      "doc": "fixture: a software ES256 authenticator (port of tests/Passkeys/Authenticator.php) answering options for one key and credential id",
+      "mask": {
+        "paths": [
+          "/response/clientDataJSON",
+          "/response/signature",
+          "/response/userHandle"
+        ],
+        "reason": "client data quotes the random challenge; OpenSSL's ECDSA nonce is random (Rust's is RFC 6979); the user handle is random"
+      }
+    },
+    "fixture.matches": {
+      "doc": "fixture: preg_match(pattern, value)"
+    },
+    "fixture.strlen": {
+      "doc": "fixture: strlen(value)"
+    },
+    "fixture.substr": {
+      "doc": "fixture: substr(value, start, length?)"
+    },
+    "fixture.jwt": {
+      "doc": "fixture: a token's header and claims, decoded without verification"
+    },
+    "fixture.jws": {
+      "doc": "fixture: a compact JWS of json_encode(header).json_encode(claims) (or raw_header/raw_claims) signed HS256 or RS256 with key"
+    },
+    "passkeys.ceremony_once": {
+      "doc": "new Ceremony on localhost (or `rp_id`, with `origins`; the authenticator answers from `origin`, and from `sign_in_origin` when signing in), register(), the test authenticator's response with hex-encoded overrides, then verifyRegistration() (phase register) or a sign-in through verifyAuthentication() (phase sign-in): one call, for fuzzing; CBOR declaring a string of 64 MiB or more returns a fixed 'skipped' string on both sides (webauthn-lib's fread() of the declared length exhausts PHP's memory)",
+      "covers": [
+        "Utopia\\Auth\\Passkeys\\Ceremony::verifyRegistration",
+        "Utopia\\Auth\\Passkeys\\Ceremony::verifyAuthentication"
+      ],
+      "mask": {
+        "paths": [
+          "/record/userHandle"
+        ],
+        "reason": "the user handle register() drew at random"
+      },
+      "fuzz": [
+        {
+          "name": "attestation",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "key": {
+                "gen": "const",
+                "value": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n"
+              },
+              "phase": {
+                "gen": "const",
+                "value": "register"
+              },
+              "attestation": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "hex",
+                    "min": 0,
+                    "max": 80
+                  },
+                  {
+                    "gen": "repeat",
+                    "part": {
+                      "gen": "pick",
+                      "from": [
+                        "a1",
+                        "a2",
+                        "a3",
+                        "a4",
+                        "a5",
+                        "bf",
+                        "b8",
+                        "b9",
+                        "ff",
+                        "00",
+                        "01",
+                        "02",
+                        "03",
+                        "05",
+                        "07",
+                        "17",
+                        "18",
+                        "1820",
+                        "19",
+                        "1a",
+                        "1b",
+                        "20",
+                        "21",
+                        "22",
+                        "26",
+                        "38",
+                        "3818",
+                        "390100",
+                        "3b",
+                        "63666d74",
+                        "646e6f6e65",
+                        "6761747453746d74",
+                        "6861757468446174",
+                        "6861757468446174615825",
+                        "68617574684461746140",
+                        "40",
+                        "41",
+                        "4100",
+                        "42",
+                        "58",
+                        "5820",
+                        "5f",
+                        "5f4100ff",
+                        "60",
+                        "61",
+                        "6131",
+                        "6178",
+                        "7f",
+                        "7f6131ff",
+                        "80",
+                        "81",
+                        "82",
+                        "9f",
+                        "c0",
+                        "c1",
+                        "c2",
+                        "c3",
+                        "c4",
+                        "d818",
+                        "d820",
+                        "d822",
+                        "d825",
+                        "d9d9f7",
+                        "c6",
+                        "da",
+                        "f4",
+                        "f5",
+                        "f6",
+                        "f7",
+                        "f810",
+                        "f820",
+                        "f93c00",
+                        "f97c00",
+                        "f97e00",
+                        "fa3f800000",
+                        "fb3ff0000000000000",
+                        "f0",
+                        "e0",
+                        "fc",
+                        "1c",
+                        "1111111111111111111111111111111111111111111111111111111111111111",
+                        "2222222222222222222222222222222222222222222222222222222222222222",
+                        "d810",
+                        "d811",
+                        "d812",
+                        "d815",
+                        "d816",
+                        "d817",
+                        "d819",
+                        "d81a",
+                        "d81b",
+                        "d81c",
+                        "d81d",
+                        "d81e",
+                        "d821",
+                        "d823",
+                        "d824",
+                        "d826",
+                        "d827",
+                        "d828",
+                        "d829",
+                        "d82a",
+                        "d834",
+                        "d836",
+                        "d83d",
+                        "d83f",
+                        "d840",
+                        "d841",
+                        "d842",
+                        "d843",
+                        "d844",
+                        "d845",
+                        "d846",
+                        "d847",
+                        "d848",
+                        "d849",
+                        "d84a",
+                        "d84b",
+                        "d84c",
+                        "d84d",
+                        "d84e",
+                        "d84f",
+                        "d850",
+                        "d851",
+                        "d852",
+                        "d853",
+                        "d854",
+                        "d855",
+                        "d856",
+                        "d857",
+                        "d860",
+                        "d861",
+                        "d862",
+                        "d864",
+                        "d90100",
+                        "d90101",
+                        "d90102",
+                        "d90103",
+                        "d90104",
+                        "d90105",
+                        "d903e9",
+                        "d903ea",
+                        "d903eb",
+                        "d903ec",
+                        "d90410",
+                        "c5"
+                      ]
+                    },
+                    "min": 1,
+                    "max": 14
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "repeat",
+                        "part": {
+                          "gen": "pick",
+                          "from": [
+                            "a1",
+                            "a2",
+                            "a3",
+                            "a4",
+                            "a5",
+                            "bf",
+                            "b8",
+                            "b9",
+                            "ff",
+                            "00",
+                            "01",
+                            "02",
+                            "03",
+                            "05",
+                            "07",
+                            "17",
+                            "18",
+                            "1820",
+                            "19",
+                            "1a",
+                            "1b",
+                            "20",
+                            "21",
+                            "22",
+                            "26",
+                            "38",
+                            "3818",
+                            "390100",
+                            "3b",
+                            "63666d74",
+                            "646e6f6e65",
+                            "6761747453746d74",
+                            "6861757468446174",
+                            "6861757468446174615825",
+                            "68617574684461746140",
+                            "40",
+                            "41",
+                            "4100",
+                            "42",
+                            "58",
+                            "5820",
+                            "5f",
+                            "5f4100ff",
+                            "60",
+                            "61",
+                            "6131",
+                            "6178",
+                            "7f",
+                            "7f6131ff",
+                            "80",
+                            "81",
+                            "82",
+                            "9f",
+                            "c0",
+                            "c1",
+                            "c2",
+                            "c3",
+                            "c4",
+                            "d818",
+                            "d820",
+                            "d822",
+                            "d825",
+                            "d9d9f7",
+                            "c6",
+                            "da",
+                            "f4",
+                            "f5",
+                            "f6",
+                            "f7",
+                            "f810",
+                            "f820",
+                            "f93c00",
+                            "f97c00",
+                            "f97e00",
+                            "fa3f800000",
+                            "fb3ff0000000000000",
+                            "f0",
+                            "e0",
+                            "fc",
+                            "1c",
+                            "1111111111111111111111111111111111111111111111111111111111111111",
+                            "2222222222222222222222222222222222222222222222222222222222222222",
+                            "d810",
+                            "d811",
+                            "d812",
+                            "d815",
+                            "d816",
+                            "d817",
+                            "d819",
+                            "d81a",
+                            "d81b",
+                            "d81c",
+                            "d81d",
+                            "d81e",
+                            "d821",
+                            "d823",
+                            "d824",
+                            "d826",
+                            "d827",
+                            "d828",
+                            "d829",
+                            "d82a",
+                            "d834",
+                            "d836",
+                            "d83d",
+                            "d83f",
+                            "d840",
+                            "d841",
+                            "d842",
+                            "d843",
+                            "d844",
+                            "d845",
+                            "d846",
+                            "d847",
+                            "d848",
+                            "d849",
+                            "d84a",
+                            "d84b",
+                            "d84c",
+                            "d84d",
+                            "d84e",
+                            "d84f",
+                            "d850",
+                            "d851",
+                            "d852",
+                            "d853",
+                            "d854",
+                            "d855",
+                            "d856",
+                            "d857",
+                            "d860",
+                            "d861",
+                            "d862",
+                            "d864",
+                            "d90100",
+                            "d90101",
+                            "d90102",
+                            "d90103",
+                            "d90104",
+                            "d90105",
+                            "d903e9",
+                            "d903ea",
+                            "d903eb",
+                            "d903ec",
+                            "d90410",
+                            "c5"
+                          ]
+                        },
+                        "min": 1,
+                        "max": 8
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "hex",
+                        "min": 0,
+                        "max": 12
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "cose",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "key": {
+                "gen": "const",
+                "value": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n"
+              },
+              "phase": {
+                "gen": "const",
+                "value": "register"
+              },
+              "cose": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "string",
+                        "alphabet": "hex",
+                        "min": 0,
+                        "max": 80
+                      },
+                      {
+                        "gen": "repeat",
+                        "part": {
+                          "gen": "pick",
+                          "from": [
+                            "a1",
+                            "a2",
+                            "a3",
+                            "a4",
+                            "a5",
+                            "bf",
+                            "b8",
+                            "b9",
+                            "ff",
+                            "00",
+                            "01",
+                            "02",
+                            "03",
+                            "05",
+                            "07",
+                            "17",
+                            "18",
+                            "1820",
+                            "19",
+                            "1a",
+                            "1b",
+                            "20",
+                            "21",
+                            "22",
+                            "26",
+                            "38",
+                            "3818",
+                            "390100",
+                            "3b",
+                            "63666d74",
+                            "646e6f6e65",
+                            "6761747453746d74",
+                            "6861757468446174",
+                            "6861757468446174615825",
+                            "68617574684461746140",
+                            "40",
+                            "41",
+                            "4100",
+                            "42",
+                            "58",
+                            "5820",
+                            "5f",
+                            "5f4100ff",
+                            "60",
+                            "61",
+                            "6131",
+                            "6178",
+                            "7f",
+                            "7f6131ff",
+                            "80",
+                            "81",
+                            "82",
+                            "9f",
+                            "c0",
+                            "c1",
+                            "c2",
+                            "c3",
+                            "c4",
+                            "d818",
+                            "d820",
+                            "d822",
+                            "d825",
+                            "d9d9f7",
+                            "c6",
+                            "da",
+                            "f4",
+                            "f5",
+                            "f6",
+                            "f7",
+                            "f810",
+                            "f820",
+                            "f93c00",
+                            "f97c00",
+                            "f97e00",
+                            "fa3f800000",
+                            "fb3ff0000000000000",
+                            "f0",
+                            "e0",
+                            "fc",
+                            "1c",
+                            "1111111111111111111111111111111111111111111111111111111111111111",
+                            "2222222222222222222222222222222222222222222222222222222222222222",
+                            "d810",
+                            "d811",
+                            "d812",
+                            "d815",
+                            "d816",
+                            "d817",
+                            "d819",
+                            "d81a",
+                            "d81b",
+                            "d81c",
+                            "d81d",
+                            "d81e",
+                            "d821",
+                            "d823",
+                            "d824",
+                            "d826",
+                            "d827",
+                            "d828",
+                            "d829",
+                            "d82a",
+                            "d834",
+                            "d836",
+                            "d83d",
+                            "d83f",
+                            "d840",
+                            "d841",
+                            "d842",
+                            "d843",
+                            "d844",
+                            "d845",
+                            "d846",
+                            "d847",
+                            "d848",
+                            "d849",
+                            "d84a",
+                            "d84b",
+                            "d84c",
+                            "d84d",
+                            "d84e",
+                            "d84f",
+                            "d850",
+                            "d851",
+                            "d852",
+                            "d853",
+                            "d854",
+                            "d855",
+                            "d856",
+                            "d857",
+                            "d860",
+                            "d861",
+                            "d862",
+                            "d864",
+                            "d90100",
+                            "d90101",
+                            "d90102",
+                            "d90103",
+                            "d90104",
+                            "d90105",
+                            "d903e9",
+                            "d903ea",
+                            "d903eb",
+                            "d903ec",
+                            "d90410",
+                            "c5"
+                          ]
+                        },
+                        "min": 1,
+                        "max": 14
+                      },
+                      {
+                        "gen": "concat",
+                        "parts": [
+                          {
+                            "gen": "repeat",
+                            "part": {
+                              "gen": "pick",
+                              "from": [
+                                "a1",
+                                "a2",
+                                "a3",
+                                "a4",
+                                "a5",
+                                "bf",
+                                "b8",
+                                "b9",
+                                "ff",
+                                "00",
+                                "01",
+                                "02",
+                                "03",
+                                "05",
+                                "07",
+                                "17",
+                                "18",
+                                "1820",
+                                "19",
+                                "1a",
+                                "1b",
+                                "20",
+                                "21",
+                                "22",
+                                "26",
+                                "38",
+                                "3818",
+                                "390100",
+                                "3b",
+                                "63666d74",
+                                "646e6f6e65",
+                                "6761747453746d74",
+                                "6861757468446174",
+                                "6861757468446174615825",
+                                "68617574684461746140",
+                                "40",
+                                "41",
+                                "4100",
+                                "42",
+                                "58",
+                                "5820",
+                                "5f",
+                                "5f4100ff",
+                                "60",
+                                "61",
+                                "6131",
+                                "6178",
+                                "7f",
+                                "7f6131ff",
+                                "80",
+                                "81",
+                                "82",
+                                "9f",
+                                "c0",
+                                "c1",
+                                "c2",
+                                "c3",
+                                "c4",
+                                "d818",
+                                "d820",
+                                "d822",
+                                "d825",
+                                "d9d9f7",
+                                "c6",
+                                "da",
+                                "f4",
+                                "f5",
+                                "f6",
+                                "f7",
+                                "f810",
+                                "f820",
+                                "f93c00",
+                                "f97c00",
+                                "f97e00",
+                                "fa3f800000",
+                                "fb3ff0000000000000",
+                                "f0",
+                                "e0",
+                                "fc",
+                                "1c",
+                                "1111111111111111111111111111111111111111111111111111111111111111",
+                                "2222222222222222222222222222222222222222222222222222222222222222",
+                                "d810",
+                                "d811",
+                                "d812",
+                                "d815",
+                                "d816",
+                                "d817",
+                                "d819",
+                                "d81a",
+                                "d81b",
+                                "d81c",
+                                "d81d",
+                                "d81e",
+                                "d821",
+                                "d823",
+                                "d824",
+                                "d826",
+                                "d827",
+                                "d828",
+                                "d829",
+                                "d82a",
+                                "d834",
+                                "d836",
+                                "d83d",
+                                "d83f",
+                                "d840",
+                                "d841",
+                                "d842",
+                                "d843",
+                                "d844",
+                                "d845",
+                                "d846",
+                                "d847",
+                                "d848",
+                                "d849",
+                                "d84a",
+                                "d84b",
+                                "d84c",
+                                "d84d",
+                                "d84e",
+                                "d84f",
+                                "d850",
+                                "d851",
+                                "d852",
+                                "d853",
+                                "d854",
+                                "d855",
+                                "d856",
+                                "d857",
+                                "d860",
+                                "d861",
+                                "d862",
+                                "d864",
+                                "d90100",
+                                "d90101",
+                                "d90102",
+                                "d90103",
+                                "d90104",
+                                "d90105",
+                                "d903e9",
+                                "d903ea",
+                                "d903eb",
+                                "d903ec",
+                                "d90410",
+                                "c5"
+                              ]
+                            },
+                            "min": 1,
+                            "max": 8
+                          },
+                          {
+                            "gen": "string",
+                            "alphabet": "hex",
+                            "min": 0,
+                            "max": 12
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "a5",
+                          "a4",
+                          "a6",
+                          "bf",
+                          "a3"
+                        ]
+                      },
+                      {
+                        "gen": "repeat",
+                        "part": {
+                          "gen": "pick",
+                          "from": [
+                            "0102",
+                            "0103",
+                            "0101",
+                            "0126",
+                            "03390100",
+                            "0326",
+                            "0327",
+                            "032e",
+                            "2001",
+                            "2002",
+                            "2158201111111111111111111111111111111111111111111111111111111111111111",
+                            "2258202222222222222222222222222222222222222222222222222222222222222222",
+                            "2158201111111111111111111111111111111111111111111111111111111111111111",
+                            "21582011111111111111111111111111111111111111111111111111111111111111",
+                            "2140",
+                            "20590100",
+                            "214101",
+                            "2201",
+                            "2240",
+                            "613102",
+                            "0102",
+                            "f93c0001",
+                            "c10501",
+                            "c2410105",
+                            "0420",
+                            "20590100",
+                            "2143010001"
+                          ]
+                        },
+                        "min": 2,
+                        "max": 7
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "registration extensions",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "key": {
+                "gen": "const",
+                "value": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n"
+              },
+              "phase": {
+                "gen": "const",
+                "value": "register"
+              },
+              "extensions": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "hex",
+                    "min": 0,
+                    "max": 80
+                  },
+                  {
+                    "gen": "repeat",
+                    "part": {
+                      "gen": "pick",
+                      "from": [
+                        "a1",
+                        "a2",
+                        "a3",
+                        "a4",
+                        "a5",
+                        "bf",
+                        "b8",
+                        "b9",
+                        "ff",
+                        "00",
+                        "01",
+                        "02",
+                        "03",
+                        "05",
+                        "07",
+                        "17",
+                        "18",
+                        "1820",
+                        "19",
+                        "1a",
+                        "1b",
+                        "20",
+                        "21",
+                        "22",
+                        "26",
+                        "38",
+                        "3818",
+                        "390100",
+                        "3b",
+                        "63666d74",
+                        "646e6f6e65",
+                        "6761747453746d74",
+                        "6861757468446174",
+                        "6861757468446174615825",
+                        "68617574684461746140",
+                        "40",
+                        "41",
+                        "4100",
+                        "42",
+                        "58",
+                        "5820",
+                        "5f",
+                        "5f4100ff",
+                        "60",
+                        "61",
+                        "6131",
+                        "6178",
+                        "7f",
+                        "7f6131ff",
+                        "80",
+                        "81",
+                        "82",
+                        "9f",
+                        "c0",
+                        "c1",
+                        "c2",
+                        "c3",
+                        "c4",
+                        "d818",
+                        "d820",
+                        "d822",
+                        "d825",
+                        "d9d9f7",
+                        "c6",
+                        "da",
+                        "f4",
+                        "f5",
+                        "f6",
+                        "f7",
+                        "f810",
+                        "f820",
+                        "f93c00",
+                        "f97c00",
+                        "f97e00",
+                        "fa3f800000",
+                        "fb3ff0000000000000",
+                        "f0",
+                        "e0",
+                        "fc",
+                        "1c",
+                        "1111111111111111111111111111111111111111111111111111111111111111",
+                        "2222222222222222222222222222222222222222222222222222222222222222",
+                        "d810",
+                        "d811",
+                        "d812",
+                        "d815",
+                        "d816",
+                        "d817",
+                        "d819",
+                        "d81a",
+                        "d81b",
+                        "d81c",
+                        "d81d",
+                        "d81e",
+                        "d821",
+                        "d823",
+                        "d824",
+                        "d826",
+                        "d827",
+                        "d828",
+                        "d829",
+                        "d82a",
+                        "d834",
+                        "d836",
+                        "d83d",
+                        "d83f",
+                        "d840",
+                        "d841",
+                        "d842",
+                        "d843",
+                        "d844",
+                        "d845",
+                        "d846",
+                        "d847",
+                        "d848",
+                        "d849",
+                        "d84a",
+                        "d84b",
+                        "d84c",
+                        "d84d",
+                        "d84e",
+                        "d84f",
+                        "d850",
+                        "d851",
+                        "d852",
+                        "d853",
+                        "d854",
+                        "d855",
+                        "d856",
+                        "d857",
+                        "d860",
+                        "d861",
+                        "d862",
+                        "d864",
+                        "d90100",
+                        "d90101",
+                        "d90102",
+                        "d90103",
+                        "d90104",
+                        "d90105",
+                        "d903e9",
+                        "d903ea",
+                        "d903eb",
+                        "d903ec",
+                        "d90410",
+                        "c5"
+                      ]
+                    },
+                    "min": 1,
+                    "max": 14
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "repeat",
+                        "part": {
+                          "gen": "pick",
+                          "from": [
+                            "a1",
+                            "a2",
+                            "a3",
+                            "a4",
+                            "a5",
+                            "bf",
+                            "b8",
+                            "b9",
+                            "ff",
+                            "00",
+                            "01",
+                            "02",
+                            "03",
+                            "05",
+                            "07",
+                            "17",
+                            "18",
+                            "1820",
+                            "19",
+                            "1a",
+                            "1b",
+                            "20",
+                            "21",
+                            "22",
+                            "26",
+                            "38",
+                            "3818",
+                            "390100",
+                            "3b",
+                            "63666d74",
+                            "646e6f6e65",
+                            "6761747453746d74",
+                            "6861757468446174",
+                            "6861757468446174615825",
+                            "68617574684461746140",
+                            "40",
+                            "41",
+                            "4100",
+                            "42",
+                            "58",
+                            "5820",
+                            "5f",
+                            "5f4100ff",
+                            "60",
+                            "61",
+                            "6131",
+                            "6178",
+                            "7f",
+                            "7f6131ff",
+                            "80",
+                            "81",
+                            "82",
+                            "9f",
+                            "c0",
+                            "c1",
+                            "c2",
+                            "c3",
+                            "c4",
+                            "d818",
+                            "d820",
+                            "d822",
+                            "d825",
+                            "d9d9f7",
+                            "c6",
+                            "da",
+                            "f4",
+                            "f5",
+                            "f6",
+                            "f7",
+                            "f810",
+                            "f820",
+                            "f93c00",
+                            "f97c00",
+                            "f97e00",
+                            "fa3f800000",
+                            "fb3ff0000000000000",
+                            "f0",
+                            "e0",
+                            "fc",
+                            "1c",
+                            "1111111111111111111111111111111111111111111111111111111111111111",
+                            "2222222222222222222222222222222222222222222222222222222222222222",
+                            "d810",
+                            "d811",
+                            "d812",
+                            "d815",
+                            "d816",
+                            "d817",
+                            "d819",
+                            "d81a",
+                            "d81b",
+                            "d81c",
+                            "d81d",
+                            "d81e",
+                            "d821",
+                            "d823",
+                            "d824",
+                            "d826",
+                            "d827",
+                            "d828",
+                            "d829",
+                            "d82a",
+                            "d834",
+                            "d836",
+                            "d83d",
+                            "d83f",
+                            "d840",
+                            "d841",
+                            "d842",
+                            "d843",
+                            "d844",
+                            "d845",
+                            "d846",
+                            "d847",
+                            "d848",
+                            "d849",
+                            "d84a",
+                            "d84b",
+                            "d84c",
+                            "d84d",
+                            "d84e",
+                            "d84f",
+                            "d850",
+                            "d851",
+                            "d852",
+                            "d853",
+                            "d854",
+                            "d855",
+                            "d856",
+                            "d857",
+                            "d860",
+                            "d861",
+                            "d862",
+                            "d864",
+                            "d90100",
+                            "d90101",
+                            "d90102",
+                            "d90103",
+                            "d90104",
+                            "d90105",
+                            "d903e9",
+                            "d903ea",
+                            "d903eb",
+                            "d903ec",
+                            "d90410",
+                            "c5"
+                          ]
+                        },
+                        "min": 1,
+                        "max": 8
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "hex",
+                        "min": 0,
+                        "max": 12
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "sign-in extensions",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "key": {
+                "gen": "const",
+                "value": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n"
+              },
+              "phase": {
+                "gen": "const",
+                "value": "sign-in"
+              },
+              "extensions": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "hex",
+                    "min": 0,
+                    "max": 80
+                  },
+                  {
+                    "gen": "repeat",
+                    "part": {
+                      "gen": "pick",
+                      "from": [
+                        "a1",
+                        "a2",
+                        "a3",
+                        "a4",
+                        "a5",
+                        "bf",
+                        "b8",
+                        "b9",
+                        "ff",
+                        "00",
+                        "01",
+                        "02",
+                        "03",
+                        "05",
+                        "07",
+                        "17",
+                        "18",
+                        "1820",
+                        "19",
+                        "1a",
+                        "1b",
+                        "20",
+                        "21",
+                        "22",
+                        "26",
+                        "38",
+                        "3818",
+                        "390100",
+                        "3b",
+                        "63666d74",
+                        "646e6f6e65",
+                        "6761747453746d74",
+                        "6861757468446174",
+                        "6861757468446174615825",
+                        "68617574684461746140",
+                        "40",
+                        "41",
+                        "4100",
+                        "42",
+                        "58",
+                        "5820",
+                        "5f",
+                        "5f4100ff",
+                        "60",
+                        "61",
+                        "6131",
+                        "6178",
+                        "7f",
+                        "7f6131ff",
+                        "80",
+                        "81",
+                        "82",
+                        "9f",
+                        "c0",
+                        "c1",
+                        "c2",
+                        "c3",
+                        "c4",
+                        "d818",
+                        "d820",
+                        "d822",
+                        "d825",
+                        "d9d9f7",
+                        "c6",
+                        "da",
+                        "f4",
+                        "f5",
+                        "f6",
+                        "f7",
+                        "f810",
+                        "f820",
+                        "f93c00",
+                        "f97c00",
+                        "f97e00",
+                        "fa3f800000",
+                        "fb3ff0000000000000",
+                        "f0",
+                        "e0",
+                        "fc",
+                        "1c",
+                        "1111111111111111111111111111111111111111111111111111111111111111",
+                        "2222222222222222222222222222222222222222222222222222222222222222",
+                        "d810",
+                        "d811",
+                        "d812",
+                        "d815",
+                        "d816",
+                        "d817",
+                        "d819",
+                        "d81a",
+                        "d81b",
+                        "d81c",
+                        "d81d",
+                        "d81e",
+                        "d821",
+                        "d823",
+                        "d824",
+                        "d826",
+                        "d827",
+                        "d828",
+                        "d829",
+                        "d82a",
+                        "d834",
+                        "d836",
+                        "d83d",
+                        "d83f",
+                        "d840",
+                        "d841",
+                        "d842",
+                        "d843",
+                        "d844",
+                        "d845",
+                        "d846",
+                        "d847",
+                        "d848",
+                        "d849",
+                        "d84a",
+                        "d84b",
+                        "d84c",
+                        "d84d",
+                        "d84e",
+                        "d84f",
+                        "d850",
+                        "d851",
+                        "d852",
+                        "d853",
+                        "d854",
+                        "d855",
+                        "d856",
+                        "d857",
+                        "d860",
+                        "d861",
+                        "d862",
+                        "d864",
+                        "d90100",
+                        "d90101",
+                        "d90102",
+                        "d90103",
+                        "d90104",
+                        "d90105",
+                        "d903e9",
+                        "d903ea",
+                        "d903eb",
+                        "d903ec",
+                        "d90410",
+                        "c5"
+                      ]
+                    },
+                    "min": 1,
+                    "max": 14
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "repeat",
+                        "part": {
+                          "gen": "pick",
+                          "from": [
+                            "a1",
+                            "a2",
+                            "a3",
+                            "a4",
+                            "a5",
+                            "bf",
+                            "b8",
+                            "b9",
+                            "ff",
+                            "00",
+                            "01",
+                            "02",
+                            "03",
+                            "05",
+                            "07",
+                            "17",
+                            "18",
+                            "1820",
+                            "19",
+                            "1a",
+                            "1b",
+                            "20",
+                            "21",
+                            "22",
+                            "26",
+                            "38",
+                            "3818",
+                            "390100",
+                            "3b",
+                            "63666d74",
+                            "646e6f6e65",
+                            "6761747453746d74",
+                            "6861757468446174",
+                            "6861757468446174615825",
+                            "68617574684461746140",
+                            "40",
+                            "41",
+                            "4100",
+                            "42",
+                            "58",
+                            "5820",
+                            "5f",
+                            "5f4100ff",
+                            "60",
+                            "61",
+                            "6131",
+                            "6178",
+                            "7f",
+                            "7f6131ff",
+                            "80",
+                            "81",
+                            "82",
+                            "9f",
+                            "c0",
+                            "c1",
+                            "c2",
+                            "c3",
+                            "c4",
+                            "d818",
+                            "d820",
+                            "d822",
+                            "d825",
+                            "d9d9f7",
+                            "c6",
+                            "da",
+                            "f4",
+                            "f5",
+                            "f6",
+                            "f7",
+                            "f810",
+                            "f820",
+                            "f93c00",
+                            "f97c00",
+                            "f97e00",
+                            "fa3f800000",
+                            "fb3ff0000000000000",
+                            "f0",
+                            "e0",
+                            "fc",
+                            "1c",
+                            "1111111111111111111111111111111111111111111111111111111111111111",
+                            "2222222222222222222222222222222222222222222222222222222222222222",
+                            "d810",
+                            "d811",
+                            "d812",
+                            "d815",
+                            "d816",
+                            "d817",
+                            "d819",
+                            "d81a",
+                            "d81b",
+                            "d81c",
+                            "d81d",
+                            "d81e",
+                            "d821",
+                            "d823",
+                            "d824",
+                            "d826",
+                            "d827",
+                            "d828",
+                            "d829",
+                            "d82a",
+                            "d834",
+                            "d836",
+                            "d83d",
+                            "d83f",
+                            "d840",
+                            "d841",
+                            "d842",
+                            "d843",
+                            "d844",
+                            "d845",
+                            "d846",
+                            "d847",
+                            "d848",
+                            "d849",
+                            "d84a",
+                            "d84b",
+                            "d84c",
+                            "d84d",
+                            "d84e",
+                            "d84f",
+                            "d850",
+                            "d851",
+                            "d852",
+                            "d853",
+                            "d854",
+                            "d855",
+                            "d856",
+                            "d857",
+                            "d860",
+                            "d861",
+                            "d862",
+                            "d864",
+                            "d90100",
+                            "d90101",
+                            "d90102",
+                            "d90103",
+                            "d90104",
+                            "d90105",
+                            "d903e9",
+                            "d903ea",
+                            "d903eb",
+                            "d903ec",
+                            "d90410",
+                            "c5"
+                          ]
+                        },
+                        "min": 1,
+                        "max": 8
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "hex",
+                        "min": 0,
+                        "max": 12
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 1000
+        },
+        {
+          "name": "signature",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "key": {
+                "gen": "const",
+                "value": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n"
+              },
+              "phase": {
+                "gen": "const",
+                "value": "sign-in"
+              },
+              "signature": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "hex",
+                    "min": 0,
+                    "max": 160
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "30",
+                          "3044",
+                          "3045",
+                          "3046",
+                          "3006",
+                          "3081",
+                          "308146",
+                          "3082",
+                          "31",
+                          "02",
+                          ""
+                        ]
+                      },
+                      {
+                        "gen": "repeat",
+                        "part": {
+                          "gen": "pick",
+                          "from": [
+                            "0220",
+                            "0221",
+                            "022100",
+                            "0201",
+                            "020100",
+                            "020181",
+                            "0200",
+                            "02",
+                            "0281",
+                            "028121",
+                            "11111111111111111111111111111111",
+                            "ff",
+                            "00",
+                            "0101010101010101",
+                            "80"
+                          ]
+                        },
+                        "min": 0,
+                        "max": 8
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "aaguid",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "key": {
+                "gen": "const",
+                "value": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n"
+              },
+              "phase": {
+                "gen": "const",
+                "value": "register"
+              },
+              "aaguid": {
+                "gen": "string",
+                "alphabet": "hex",
+                "min": 32,
+                "max": 32
+              }
+            }
+          },
+          "iterations": 500
+        },
+        {
+          "name": "origins",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "key": {
+                "gen": "const",
+                "value": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n"
+              },
+              "phase": {
+                "gen": "pick",
+                "from": [
+                  "register",
+                  "sign-in"
+                ]
+              },
+              "rp_id": {
+                "gen": "pick",
+                "from": [
+                  "localhost",
+                  "example.com"
+                ]
+              },
+              "origins": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "passkey_origin"
+                },
+                "min": 0,
+                "max": 3
+              },
+              "origin": {
+                "gen": "ref",
+                "name": "passkey_origin"
+              },
+              "sign_in_origin": {
+                "gen": "ref",
+                "name": "passkey_origin"
+              }
+            },
+            "optional": [
+              "sign_in_origin"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "uri": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "url",
+          "min": 0,
+          "max": 30,
+          "tricky": 0.3
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "http://",
+                "https://",
+                "HTTP://",
+                "HtTpS://",
+                "myapp://",
+                "",
+                "//",
+                "http:",
+                "https:///",
+                "urn:x:",
+                "javascript:"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "localhost",
+                "127.0.0.1",
+                "[::1]",
+                "example.com",
+                "a.example.com",
+                "LOCALHOST",
+                "",
+                "user:pw@localhost",
+                "0",
+                "localhost.evil.com",
+                "exa mple.com"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                ":80",
+                ":443",
+                ":3000",
+                ":0",
+                ":99999",
+                ":",
+                ":8443"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "/",
+                "/cb",
+                "/callback",
+                "/a/../b",
+                "/./x",
+                "/a/.",
+                "?q=1",
+                "#f",
+                "/cb?x#y",
+                "/a path",
+                "/cb?",
+                "/cb#",
+                "/%2e%2e/x"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "uris": {
+      "gen": "array",
+      "items": {
+        "gen": "one_of",
+        "of": [
+          {
+            "gen": "ref",
+            "name": "uri"
+          },
+          {
+            "gen": "pick",
+            "from": [
+              null,
+              42,
+              "",
+              [
+                "x"
+              ]
+            ]
+          }
+        ]
+      },
+      "min": 0,
+      "max": 4
+    },
+    "prompt": {
+      "gen": "repeat",
+      "part": {
+        "gen": "pick",
+        "from": [
+          "none",
+          "login",
+          "consent",
+          "select_account",
+          "x",
+          "",
+          "Login",
+          "\t"
+        ]
+      },
+      "sep": " ",
+      "min": 0,
+      "max": 4
+    },
+    "word": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "alnum",
+          "min": 0,
+          "max": 6,
+          "tricky": 0.3
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "project",
+            "organization",
+            "p1",
+            "p2",
+            "*",
+            "read",
+            "1",
+            "identifiers",
+            "actions",
+            "type",
+            "0"
+          ]
+        }
+      ]
+    },
+    "values": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "array",
+          "items": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "ref",
+                "name": "word"
+              },
+              {
+                "gen": "pick",
+                "from": [
+                  1,
+                  null,
+                  true
+                ]
+              }
+            ]
+          },
+          "min": 0,
+          "max": 4
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "k": {
+              "gen": "ref",
+              "name": "word"
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "pick",
+          "from": [
+            null,
+            "x",
+            5
+          ]
+        }
+      ]
+    },
+    "entry": {
+      "gen": "object",
+      "fields": {
+        "type": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "word"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                5,
+                null
+              ]
+            }
+          ]
+        },
+        "identifiers": {
+          "gen": "ref",
+          "name": "values"
+        },
+        "actions": {
+          "gen": "ref",
+          "name": "values"
+        }
+      },
+      "optional": [
+        "type",
+        "identifiers",
+        "actions"
+      ]
+    },
+    "details": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "array",
+          "items": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "ref",
+                "name": "entry"
+              },
+              {
+                "gen": "pick",
+                "from": [
+                  "scalar",
+                  5,
+                  null
+                ]
+              }
+            ]
+          },
+          "min": 0,
+          "max": 4
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "named": {
+              "gen": "ref",
+              "name": "entry"
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "pick",
+          "from": [
+            null,
+            "x",
+            3
+          ]
+        }
+      ]
+    },
+    "metadata": {
+      "gen": "object",
+      "fields": {
+        "client_id": {
+          "gen": "pick",
+          "from": [
+            "https://client.example/metadata",
+            "https://other.example/metadata",
+            null,
+            5
+          ]
+        },
+        "token_endpoint_auth_method": {
+          "gen": "pick",
+          "from": [
+            "none",
+            "private_key_jwt",
+            "",
+            "client_secret_basic",
+            "client_secret_x",
+            null,
+            1
+          ]
+        },
+        "grant_types": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "array",
+              "items": {
+                "gen": "pick",
+                "from": [
+                  "authorization_code",
+                  "refresh_token",
+                  "",
+                  1
+                ]
+              },
+              "min": 0,
+              "max": 3
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "x",
+                null
+              ]
+            }
+          ]
+        },
+        "response_types": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "array",
+              "items": {
+                "gen": "pick",
+                "from": [
+                  "code",
+                  "",
+                  null
+                ]
+              },
+              "min": 0,
+              "max": 2
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "code"
+              ]
+            }
+          ]
+        },
+        "redirect_uris": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "uri"
+              },
+              "min": 0,
+              "max": 3
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "x"
+              ]
+            }
+          ]
+        },
+        "post_logout_redirect_uris": {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "uri"
+          },
+          "min": 0,
+          "max": 2
+        },
+        "contacts": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "array",
+              "items": {
+                "gen": "pick",
+                "from": [
+                  "a@b.c",
+                  "",
+                  5
+                ]
+              },
+              "min": 0,
+              "max": 2
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "a@b.c"
+              ]
+            }
+          ]
+        },
+        "client_name": {
+          "gen": "pick",
+          "from": [
+            "Example",
+            null,
+            [
+              "x"
+            ],
+            5
+          ]
+        },
+        "scope": {
+          "gen": "pick",
+          "from": [
+            "openid",
+            null,
+            1
+          ]
+        },
+        "jwks": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "object",
+              "fields": {
+                "keys": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "array",
+                      "items": {
+                        "gen": "one_of",
+                        "of": [
+                          {
+                            "gen": "object",
+                            "fields": {
+                              "kty": {
+                                "gen": "pick",
+                                "from": [
+                                  "RSA",
+                                  "oct"
+                                ]
+                              },
+                              "n": {
+                                "gen": "pick",
+                                "from": [
+                                  "n"
+                                ]
+                              },
+                              "e": {
+                                "gen": "pick",
+                                "from": [
+                                  "AQAB"
+                                ]
+                              },
+                              "d": {
+                                "gen": "pick",
+                                "from": [
+                                  "x"
+                                ]
+                              },
+                              "k": {
+                                "gen": "pick",
+                                "from": [
+                                  "s"
+                                ]
+                              }
+                            },
+                            "optional": [
+                              "n",
+                              "e",
+                              "d",
+                              "k"
+                            ]
+                          },
+                          {
+                            "gen": "pick",
+                            "from": [
+                              [],
+                              [
+                                "kty"
+                              ],
+                              "x"
+                            ]
+                          }
+                        ]
+                      },
+                      "min": 0,
+                      "max": 3
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "x",
+                        null
+                      ]
+                    }
+                  ]
+                }
+              },
+              "optional": [
+                "keys"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                null,
+                "x"
+              ]
+            }
+          ]
+        },
+        "jwks_uri": {
+          "gen": "pick",
+          "from": [
+            "https://client.example/jwks.json",
+            null
+          ]
+        },
+        "client_secret": {
+          "gen": "pick",
+          "from": [
+            "s"
+          ]
+        },
+        "extra": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "values"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                {}
+              ]
+            }
+          ]
+        }
+      },
+      "optional": [
+        "client_id",
+        "token_endpoint_auth_method",
+        "grant_types",
+        "response_types",
+        "redirect_uris",
+        "post_logout_redirect_uris",
+        "contacts",
+        "client_name",
+        "scope",
+        "jwks",
+        "jwks_uri",
+        "client_secret",
+        "extra"
+      ]
+    },
+    "claim_time": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": 1699999900,
+          "max": 1700000100
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "1700000010",
+            " 1700000010 ",
+            "1.7e9",
+            "1e30",
+            "x",
+            "",
+            null,
+            true,
+            [
+              1
+            ],
+            1700000010.5,
+            1.5e+300,
+            -1,
+            0,
+            "0x10",
+            "1700000010abc"
+          ]
+        }
+      ]
+    },
+    "claims": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "exp": {
+              "gen": "ref",
+              "name": "claim_time"
+            },
+            "nbf": {
+              "gen": "ref",
+              "name": "claim_time"
+            },
+            "iat": {
+              "gen": "ref",
+              "name": "claim_time"
+            },
+            "iss": {
+              "gen": "pick",
+              "from": [
+                "https://example.com",
+                "https://evil",
+                5,
+                null
+              ]
+            },
+            "aud": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "pick",
+                  "from": [
+                    "a",
+                    "b",
+                    5,
+                    null,
+                    [
+                      "a",
+                      "b"
+                    ],
+                    [
+                      "x",
+                      5
+                    ],
+                    {
+                      "k": "a"
+                    }
+                  ]
+                },
+                {
+                  "gen": "array",
+                  "items": {
+                    "gen": "pick",
+                    "from": [
+                      "a",
+                      "b",
+                      "c",
+                      1
+                    ]
+                  },
+                  "min": 0,
+                  "max": 3
+                }
+              ]
+            },
+            "sub": {
+              "gen": "pick",
+              "from": [
+                "u",
+                1
+              ]
+            }
+          },
+          "optional": [
+            "exp",
+            "nbf",
+            "iat",
+            "iss",
+            "aud",
+            "sub"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            [],
+            [
+              1,
+              2
+            ],
+            "x",
+            5,
+            null,
+            {}
+          ]
+        }
+      ]
+    },
+    "header": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "typ": {
+              "gen": "pick",
+              "from": [
+                "JWT",
+                "at+jwt",
+                null,
+                5
+              ]
+            },
+            "alg": {
+              "gen": "pick",
+              "from": [
+                "HS256",
+                "RS256",
+                "none",
+                "hs256",
+                null
+              ]
+            },
+            "kid": {
+              "gen": "pick",
+              "from": [
+                "k"
+              ]
+            }
+          },
+          "optional": [
+            "typ",
+            "alg",
+            "kid"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            [],
+            [
+              1
+            ],
+            "x",
+            null
+          ]
+        }
+      ]
+    },
+    "segment": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/-_=!",
+          "min": 0,
+          "max": 16,
+          "tricky": 0.2
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "eyJhbGciOiJIUzI1NiJ9",
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9",
+            "W10",
+            "WzFd",
+            "MQ",
+            "ew",
+            "eyJleHAiOjE3MDAwMDAwMTB9",
+            "",
+            "e30",
+            "e30=",
+            "e3"
+          ]
+        }
+      ]
+    },
+    "token": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "ref",
+              "name": "segment"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ".",
+                "",
+                ".."
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "segment"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ".",
+                "",
+                ".."
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "segment"
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 20,
+          "tricky": 0.5
+        }
+      ]
+    },
+    "bcrypt_hash": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "$2y$",
+                "$2a$",
+                "$2b$",
+                "$2x$",
+                "$2z$",
+                "$3a$",
+                "2y$"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "04",
+                "05",
+                "03",
+                "32",
+                "4",
+                "0a"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "$",
+                "",
+                "#"
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+              "min": 0,
+              "max": 54,
+              "tricky": 0.1
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "$2a$04$abcdefghijklmnopqrstuuPp7HPfoAs8I2dCQCQ/fW7zEJv8I8C8e",
+            "$2y$04$abcdefghijklmnopqrstuuPp7HPfoAs8I2dCQCQ/fW7zEJv8I8C8e"
+          ]
+        }
+      ]
+    },
+    "phpass_hash": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "$P$",
+                "$H$",
+                "$Q$",
+                "*0",
+                "$2a$04$"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "7",
+                "8",
+                "9",
+                "A",
+                "B",
+                "6",
+                "z",
+                "/"
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+              "min": 0,
+              "max": 30,
+              "tricky": 0.0
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "$P$Br387rwferoKN7uwHZqNMu98q3U8RO.",
+            "$P$9IQRaTwmfeRo7ud9Fh4E2PdI0S3r.L0"
+          ]
+        }
+      ]
+    },
+    "argon2_hash": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "$argon2id",
+                "$argon2i",
+                "$argon2d",
+                "argon2id",
+                "$argon2id$v=16",
+                "$argon2i$v=19",
+                "$argon2id$v=19",
+                "$argon2id$v=019"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "$m=",
+                "$m=0",
+                "$"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "8",
+                "16",
+                "64",
+                "08",
+                "7",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ",t=1",
+                ",t=2",
+                ",t=0",
+                ",t=01",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ",p=1",
+                ",p=2",
+                ",p=0",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "$",
+                "$$"
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+              "min": 0,
+              "max": 24,
+              "tricky": 0.0
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "$",
+                ""
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+              "min": 0,
+              "max": 44,
+              "tricky": 0.0
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "$argon2i$v=19$m=20,t=3,p=2$YXBwd3JpdGU$A/54i238ed09ZR4NwlACU5XnkjNBZU9QeOEuhjLiexI"
+          ]
+        }
+      ]
+    },
+    "b64ish": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+          "min": 0,
+          "max": 24,
+          "tricky": 0.1
+        },
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 10,
+          "tricky": 0.5
+        }
+      ]
+    },
+    "passkey_origin": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "https",
+                "http",
+                "http",
+                "HTTPS",
+                "ftp",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "://",
+                "://",
+                "://",
+                "://",
+                ":",
+                ":/"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "user@",
+                ":pw@"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "localhost",
+                "localhost",
+                "localhost",
+                "example.com",
+                "app.example.com",
+                "eu.app.example.com",
+                "evilexample.com",
+                ".example.com",
+                "*.example.com",
+                "*.localhost",
+                "*",
+                "LOCALHOST",
+                "App.Example.com",
+                "[::1]",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                "",
+                ":3000",
+                ":5173",
+                ":443",
+                ":80",
+                ":8443",
+                ":0",
+                ":",
+                ":99999"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                "",
+                "",
+                "",
+                "/",
+                "/login",
+                "?",
+                "#f"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "http",
+                "http",
+                "https"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "://localhost",
+                "://localhost",
+                "://*.example.com",
+                "://app.example.com",
+                "://example.com"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                ":3000",
+                ":5173",
+                ":443",
+                ":80"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                "",
+                "/"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "http://localhost",
+            "http://localhost",
+            "https://localhost",
+            "http://localhost:3000",
+            "https://*.example.com",
+            "https://*.example.com",
+            "https://example.com",
+            "android:apk-key-hash:abc",
+            "http:///bad",
+            "*",
+            "",
+            "http://localhost/"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "url",
+          "min": 0,
+          "max": 24
+        }
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Auth\\Store::encode",
+      "description": "Properties set under the keys \"0\", \"1\", ... in order make a PHP list, so the store encodes as a JSON array instead of an object.",
+      "case": "StoreTest.json#a list of properties encodes as a JSON array"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Hashes\\Sha::hash",
+      "description": "setVersion() accepts only the nine lowercase SHA names, but hash() passes the stored `version` option to PHP's hash(), which takes any case and other algorithms (md5, sha512/256).",
+      "case": "ShaTest.json#the version option goes to hash()"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Proofs\\Password::createHash",
+      "description": "Integer option keys (a JSON object with numeric keys) reach Hash::setOption(string $key) under strict types and raise a TypeError whose message quotes the PHP file and line.",
+      "case": "PasswordTest.json#create hash from stored options"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Hashes\\PHPass::hash",
+      "description": "`iteration_count_log2` goes through PHP arithmetic: numeric strings work, other strings and arrays raise \"Unsupported operand types\".",
+      "case": "PHPassTest.json#iteration counts from options are juggled"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Verifier::verify",
+      "description": "A JSON `[]` header or claims segment decodes to an empty PHP array and passes the \"must be a JSON object\" check.",
+      "case": "AsymmetricTest.json#empty claims object"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Issuers\\Asymmetric\\AccessToken::issue",
+      "description": "Only empty-string audience identifiers are rejected; integers and other non-strings are accepted and signed.",
+      "case": "AccessTokenTest.json#non-string audience identifiers pass"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Issuers\\Asymmetric\\IdToken::issue",
+      "description": "A nonce, access token or code of \"0\" counts as absent (in_array against [null, '', '0']).",
+      "case": "IdTokenTest.json#empty and zero nonce, access token and code are absent"
+    },
+    {
+      "symbol": "Utopia\\Auth\\OAuth2\\ResourceIndicators::from",
+      "description": "`!empty($parts['host'])` treats a host of \"0\" as missing, so https://0/x is not an absolute URI.",
+      "case": "ResourceIndicatorsTest.json#rejects invalid resources (host zero)"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Hashes\\Bcrypt::verify",
+      "description": "password_verify() recomputes with a canonicalised 22nd salt character, so a stored $2a$ hash with a non-canonical one never verifies.",
+      "case": "BcryptTest.json#verifies PHP fixtures"
+    },
+    {
+      "symbol": "Utopia\\Auth\\Hashes\\Scrypt::setSalt",
+      "description": "The salt \"0\" is rejected as empty (PHP's falsy string).",
+      "case": "ScryptTest.json#setter validation"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Auth\\Proofs\\Password::setHash",
+      "php": "The hash in use is found by object identity: the instance returned by getHashByName() can be passed to setHash(), and one instance can be registered under several names, each then guarded as current by removeHash().",
+      "reason": "Rust's registry owns its hashes: Password::use_hash(name) selects a registered one (removeHash() guards that name) and set_hash() takes an unregistered copy; one value cannot be registered twice."
+    },
+    {
+      "symbol": "Utopia\\Auth\\Proof::getHash",
+      "php": "Returns the shared instance, so setters called on it change the hash the proof (and a Password registry) uses.",
+      "reason": "Rust returns a borrow: Proof::hasher_mut() (and Password::hash_by_name_mut()) change it in place instead."
+    },
+    {
+      "symbol": "Utopia\\Auth\\Passkeys\\Ceremony::verifyRegistration",
+      "php": "webauthn-lib's StringStream fread()s a CBOR byte or text string's declared length before checking it, so a credential declaring a string larger than PHP's memory_limit ends the process with a fatal \"Allowed memory size exhausted\" error.",
+      "reason": "Rust reads only the bytes present and reports the same \"Out of range. Expected: N, read: M.\" error webauthn-lib raises for lengths that fit in memory."
+    }
+  ]
+}

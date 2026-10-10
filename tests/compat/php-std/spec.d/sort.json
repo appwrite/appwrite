@@ -1,0 +1,505 @@
+{
+  "ops": {
+    "sort.sort": {
+      "doc": "sort($a, $flags): the sorted array (stable zend_sort, PHP 8 comparisons), or the Error",
+      "fuzz": [
+        {
+          "name": "mixed",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "st_array"
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "st_flags"
+              }
+            },
+            "optional": [
+              "flags"
+            ]
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "large",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "st_scalar"
+                },
+                "min": 1025,
+                "max": 1040
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "st_flags"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 20
+        }
+      ]
+    },
+    "sort.rsort": {
+      "doc": "rsort($a, $flags): the sorted array (stable zend_sort, PHP 8 comparisons), or the Error",
+      "fuzz": [
+        {
+          "name": "mixed",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "st_array"
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "st_flags"
+              }
+            },
+            "optional": [
+              "flags"
+            ]
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "large",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "st_scalar"
+                },
+                "min": 1025,
+                "max": 1040
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "st_flags"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 20
+        }
+      ]
+    },
+    "sort.asort": {
+      "doc": "asort($a, $flags): the sorted array (stable zend_sort, PHP 8 comparisons), or the Error",
+      "fuzz": [
+        {
+          "name": "mixed",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "st_array"
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "st_flags"
+              }
+            },
+            "optional": [
+              "flags"
+            ]
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "large",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "st_scalar"
+                },
+                "min": 1025,
+                "max": 1040
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "st_flags"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 20
+        }
+      ]
+    },
+    "sort.arsort": {
+      "doc": "arsort($a, $flags): the sorted array (stable zend_sort, PHP 8 comparisons), or the Error",
+      "fuzz": [
+        {
+          "name": "mixed",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "st_array"
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "st_flags"
+              }
+            },
+            "optional": [
+              "flags"
+            ]
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "large",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "st_scalar"
+                },
+                "min": 1025,
+                "max": 1040
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "st_flags"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 20
+        }
+      ]
+    },
+    "sort.ksort": {
+      "doc": "ksort($a, $flags): the sorted array (stable zend_sort, PHP 8 comparisons), or the Error",
+      "fuzz": [
+        {
+          "name": "mixed",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "st_array"
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "st_flags"
+              }
+            },
+            "optional": [
+              "flags"
+            ]
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "large",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "st_scalar"
+                },
+                "min": 1025,
+                "max": 1040
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "st_flags"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 20
+        }
+      ]
+    },
+    "sort.krsort": {
+      "doc": "krsort($a, $flags): the sorted array (stable zend_sort, PHP 8 comparisons), or the Error",
+      "fuzz": [
+        {
+          "name": "mixed",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "st_array"
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "st_flags"
+              }
+            },
+            "optional": [
+              "flags"
+            ]
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "large",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "st_scalar"
+                },
+                "min": 1025,
+                "max": 1040
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "st_flags"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 20
+        }
+      ]
+    },
+    "sort.array_unique": {
+      "doc": "array_unique($a, $flags) (default SORT_STRING)",
+      "fuzz": [
+        {
+          "name": "mixed",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "st_array"
+              },
+              "flags": {
+                "gen": "ref",
+                "name": "st_flags"
+              }
+            },
+            "optional": [
+              "flags"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "sort.array_diff": {
+      "doc": "array_diff($a, ...$others)",
+      "fuzz": [
+        {
+          "name": "mixed",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "st_array"
+              },
+              "others": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "st_scalar_array"
+                },
+                "min": 0,
+                "max": 3
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "sort.array_diff_key": {
+      "doc": "array_diff_key($a, ...$others)",
+      "fuzz": [
+        {
+          "name": "mixed",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "st_array"
+              },
+              "others": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "st_array"
+                },
+                "min": 0,
+                "max": 3
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "sort.array_intersect": {
+      "doc": "array_intersect($a, ...$others)",
+      "fuzz": [
+        {
+          "name": "mixed",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "st_array"
+              },
+              "others": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "st_scalar_array"
+                },
+                "min": 1,
+                "max": 3
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "objects",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "st_value"
+                },
+                "min": 0,
+                "max": 3
+              },
+              "others": {
+                "gen": "array",
+                "items": {
+                  "gen": "array",
+                  "items": {
+                    "gen": "ref",
+                    "name": "st_value"
+                  },
+                  "min": 0,
+                  "max": 2
+                },
+                "min": 1,
+                "max": 2
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "sort.in_array": {
+      "doc": "in_array($needle, $haystack, $strict)",
+      "fuzz": [
+        {
+          "name": "mixed",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "needle": {
+                "gen": "ref",
+                "name": "st_value"
+              },
+              "haystack": {
+                "gen": "ref",
+                "name": "st_array"
+              },
+              "strict": {
+                "gen": "bool"
+              }
+            },
+            "optional": [
+              "strict"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "sort.array_search": {
+      "doc": "array_search($needle, $haystack, $strict)",
+      "fuzz": [
+        {
+          "name": "mixed",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "needle": {
+                "gen": "ref",
+                "name": "st_value"
+              },
+              "haystack": {
+                "gen": "ref",
+                "name": "st_array"
+              },
+              "strict": {
+                "gen": "bool"
+              }
+            },
+            "optional": [
+              "strict"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    }
+  },
+  "generators": {},
+  "deviations": [
+    {
+      "symbol": "SORT_LOCALE_STRING",
+      "php": "Compares with strcoll() under the current LC_COLLATE.",
+      "reason": "SortFlags::Locale compares the bytes up to the first NUL, which is strcoll() in the C locale; Appwrite never calls setlocale()."
+    }
+  ],
+  "quirks": [
+    {
+      "symbol": "sort",
+      "description": "PHP 8 comparisons are not transitive across types (null == 0 and null == \"\", but 0 > \"\"), so the order of mixed arrays depends on zend_sort's exact comparison sequence; php_std::sort::zend_sort reproduces it.",
+      "case": "sort.json#sort: non-transitive values, quicksort path"
+    }
+  ]
+}

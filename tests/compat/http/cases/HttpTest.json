@@ -1,0 +1,5669 @@
+{
+  "source": "packages/http/tests/HttpTest.php",
+  "cases": [
+    {
+      "name": "modes: unset",
+      "op": "http.mode",
+      "args": {},
+      "expect": {
+        "mode": "",
+        "production": false,
+        "development": false,
+        "stage": false
+      }
+    },
+    {
+      "name": "modes: production",
+      "op": "http.mode",
+      "args": {
+        "set": "production"
+      },
+      "expect": {
+        "mode": "production",
+        "production": true,
+        "development": false,
+        "stage": false
+      }
+    },
+    {
+      "name": "modes: development",
+      "op": "http.mode",
+      "args": {
+        "set": "development"
+      },
+      "expect": {
+        "mode": "development",
+        "production": false,
+        "development": true,
+        "stage": false
+      }
+    },
+    {
+      "name": "modes: stage",
+      "op": "http.mode",
+      "args": {
+        "set": "stage"
+      },
+      "expect": {
+        "mode": "stage",
+        "production": false,
+        "development": false,
+        "stage": true
+      }
+    },
+    {
+      "name": "env falls back to the default",
+      "op": "http.env",
+      "args": {
+        "key": "COMPAT_HTTP_UNDEFINED_VARIABLE",
+        "default": "test"
+      },
+      "expect": "test"
+    },
+    {
+      "name": "execute route: default params",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "allow_override": true,
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/path",
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true
+                },
+                {
+                  "key": "y",
+                  "default": "y-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "x"
+                      },
+                      "-",
+                      {
+                        "param": "y"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "x-def-y-def"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "execute route: params and a validator factory with an injection",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "allow_override": true,
+          "resources": {
+            "rand": 4242
+          },
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/path",
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true
+                },
+                {
+                  "key": "y",
+                  "default": "y-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true
+                },
+                {
+                  "key": "z",
+                  "default": "z-def",
+                  "validator": {
+                    "factory": {
+                      "text": [
+                        200
+                      ]
+                    }
+                  },
+                  "optional": true,
+                  "injections": [
+                    "rand"
+                  ]
+                }
+              ],
+              "inject": [
+                "rand"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "x"
+                      },
+                      "-",
+                      {
+                        "param": "y"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path?x=param-x&y=param-y&z=param-z",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              4242,
+              "param-x-param-y"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "execute route: invalid param",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "allow_override": true,
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/path",
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "text": [
+                      1,
+                      0
+                    ]
+                  },
+                  "optional": false
+                },
+                {
+                  "key": "y",
+                  "default": "y-def",
+                  "validator": {
+                    "text": [
+                      1,
+                      0
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "x"
+                      },
+                      "-",
+                      {
+                        "param": "y"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path?x=param-x&y=param-y",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Utopia\\Http\\Exception",
+                "message": "Invalid `x` param: Value must be a valid string and no longer than 1 chars",
+                "code": 400,
+                "previous": null
+              }
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "execute route: global and group hooks",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "resources": {
+            "rand": 777
+          },
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "init": [
+            {
+              "inject": [
+                "rand"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "init-",
+                      {
+                        "inject": "rand"
+                      },
+                      "-"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "groups": [
+                "api"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "(init-api)-"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "groups": [
+                "homepage"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "(init-homepage)-"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "shutdown": [
+            {
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "-shutdown"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "groups": [
+                "api"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "-(shutdown-api)"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "groups": [
+                "homepage"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "-(shutdown-homepage)"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/api",
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": false
+                },
+                {
+                  "key": "y",
+                  "default": "y-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "x"
+                      },
+                      "-",
+                      {
+                        "param": "y"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "groups": [
+                "api"
+              ]
+            },
+            {
+              "path": "/homepage",
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": false
+                },
+                {
+                  "key": "y",
+                  "default": "y-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "x"
+                      },
+                      "*",
+                      {
+                        "param": "y"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "groups": [
+                "homepage"
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/api?x=param-x&y=param-y",
+            "via": "execute"
+          },
+          {
+            "method": "GET",
+            "uri": "/homepage?x=param-x&y=param-y",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "init-777-",
+              "(init-api)-",
+              "param-x-param-y",
+              "-(shutdown-api)",
+              "-shutdown"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "init-777-",
+              "(init-homepage)-",
+              "param-x*param-y",
+              "-(shutdown-homepage)",
+              "-shutdown"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "route with multiple methods",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/v1/oauth/userinfo",
+              "methods": [
+                "GET",
+                "POST"
+              ],
+              "inject": [
+                "request"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "userinfo:",
+                      {
+                        "request": "method"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/v1/oauth/userinfo"
+          },
+          {
+            "method": "POST",
+            "uri": "/v1/oauth/userinfo"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "userinfo:GET"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "userinfo:POST"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "hooks run around the route",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "init": [
+            {
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "(init)-"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "shutdown": [
+            {
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "-(shutdown)"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/path",
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "x"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "(init)-",
+              "x-def",
+              "-(shutdown)"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "hook(false) skips global hooks",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "init": [
+            {
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "(init)-"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "shutdown": [
+            {
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "-(shutdown)"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/path",
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "x"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "hook": false
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "x-def"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "param aliases: alias resolves from the query",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "error-",
+                      {
+                        "concat": []
+                      }
+                    ]
+                  }
+                },
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/path",
+              "methods": [
+                "GET"
+              ],
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true,
+                  "aliases": [
+                    "xAlias",
+                    "xLegacy"
+                  ]
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "x"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path?xAlias=from-alias",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "from-alias"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "param aliases: canonical key wins",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "error-",
+                      {
+                        "concat": []
+                      }
+                    ]
+                  }
+                },
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/path",
+              "methods": [
+                "GET"
+              ],
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true,
+                  "aliases": [
+                    "xAlias"
+                  ]
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "x"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path?x=canonical&xAlias=aliased",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "canonical"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "param aliases: first matching alias wins",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "error-",
+                      {
+                        "concat": []
+                      }
+                    ]
+                  }
+                },
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/path",
+              "methods": [
+                "GET"
+              ],
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true,
+                  "aliases": [
+                    "xAlias1",
+                    "xAlias2"
+                  ]
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "x"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path?xAlias2=second&xAlias1=first",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "first"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "param aliases: default when nothing matches",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "error-",
+                      {
+                        "concat": []
+                      }
+                    ]
+                  }
+                },
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/path",
+              "methods": [
+                "GET"
+              ],
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true,
+                  "aliases": [
+                    "xAlias"
+                  ]
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "x"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path?unrelated=value",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "x-def"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "param aliases: required param without a match",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "error-",
+                      {
+                        "concat": []
+                      }
+                    ]
+                  }
+                },
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/path",
+              "methods": [
+                "GET"
+              ],
+              "params": [
+                {
+                  "key": "x",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": false,
+                  "aliases": [
+                    "xAlias"
+                  ]
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "x"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path?unrelated=value",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "error-",
+              {
+                "class": "Utopia\\Http\\Exception",
+                "message": "Param \"x\" is not optional.",
+                "code": 400,
+                "previous": null
+              }
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "param aliases: validation reports the canonical key",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "error-",
+                      {
+                        "concat": []
+                      }
+                    ]
+                  }
+                },
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/path",
+              "methods": [
+                "GET"
+              ],
+              "params": [
+                {
+                  "key": "x",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      1,
+                      0
+                    ]
+                  },
+                  "optional": false,
+                  "aliases": [
+                    "xAlias"
+                  ]
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "x"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path?xAlias=too-long",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "error-",
+              {
+                "class": "Utopia\\Http\\Exception",
+                "message": "Invalid `x` param: Value must be a valid string and no longer than 1 chars",
+                "code": 400,
+                "previous": null
+              }
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "param aliases: alias from a form body",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "error-",
+                      {
+                        "concat": []
+                      }
+                    ]
+                  }
+                },
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/path",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true,
+                  "aliases": [
+                    "xAlias"
+                  ]
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "x"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "POST",
+            "uri": "/path",
+            "headers": [
+              [
+                "Content-Type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body": "xAlias=posted-alias",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "posted-alias"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "param aliases: path placeholder resolves to the canonical key",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/users/:userId",
+              "params": [
+                {
+                  "key": "user_id",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": false,
+                  "aliases": [
+                    "userId"
+                  ]
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "user_id"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/users/abc-123",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "abc-123"
+            ],
+            "error": null,
+            "match": "/users/:userId"
+          }
+        ]
+      }
+    },
+    {
+      "name": "param aliases: path value beats the query",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/users-2/:userId",
+              "params": [
+                {
+                  "key": "user_id",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": false,
+                  "aliases": [
+                    "userId"
+                  ]
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "user_id"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/users-2/from-path?user_id=from-query",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "from-path"
+            ],
+            "error": null,
+            "match": "/users-2/:userId"
+          }
+        ]
+      }
+    },
+    {
+      "name": "route overrides: refused by default",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/",
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "Hello first"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/",
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "Hello second"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          {
+            "class": "Exception",
+            "message": "Route for (GET:) already registered.",
+            "code": 0,
+            "previous": null
+          }
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "Hello first"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "route overrides: allowed",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "allow_override": true,
+          "routes": [
+            {
+              "path": "/",
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "Hello first"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/",
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "Hello second"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "Hello second"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "hook params and errors",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "init": [
+            {
+              "params": [
+                {
+                  "key": "y",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      5
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "(init)-",
+                      {
+                        "param": "y"
+                      },
+                      "-"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "error-"
+                    ]
+                  }
+                },
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "shutdown": [
+            {
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "-(shutdown)"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/path",
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      {
+                        "param": "x"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path",
+            "via": "execute"
+          },
+          {
+            "method": "GET",
+            "uri": "/path?y=y-def",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "error-",
+              {
+                "class": "Utopia\\Http\\Exception",
+                "message": "Param \"y\" is not optional.",
+                "code": 400,
+                "previous": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "(init)-y-def-",
+              "x-def",
+              "-(shutdown)"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "match route #0 GET /path1 /path1",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/path1",
+              "methods": [
+                "GET"
+              ],
+              "action": []
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path1",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "match route #1 GET /path2 /path2",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/path2",
+              "methods": [
+                "GET"
+              ],
+              "action": []
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path2",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path2"
+          }
+        ]
+      }
+    },
+    {
+      "name": "match route #2 GET /path3 /path3/",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/path3",
+              "methods": [
+                "GET"
+              ],
+              "action": []
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path3/",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path3"
+          }
+        ]
+      }
+    },
+    {
+      "name": "match route #3 GET /path3/ /path3/",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/path3/",
+              "methods": [
+                "GET"
+              ],
+              "action": []
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path3/",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path3/"
+          }
+        ]
+      }
+    },
+    {
+      "name": "match route #4 GET /path3/ /path3",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/path3/",
+              "methods": [
+                "GET"
+              ],
+              "action": []
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path3",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path3/"
+          }
+        ]
+      }
+    },
+    {
+      "name": "match route #5 POST /path1 /path1",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/path1",
+              "methods": [
+                "POST"
+              ],
+              "action": []
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "POST",
+            "uri": "/path1",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "match route #6 PUT /path1 /path1",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/path1",
+              "methods": [
+                "PUT"
+              ],
+              "action": []
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "PUT",
+            "uri": "/path1",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "match route #7 PATCH /path1 /path1",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/path1",
+              "methods": [
+                "PATCH"
+              ],
+              "action": []
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "PATCH",
+            "uri": "/path1",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "match route #8 DELETE /path1 /path1",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/path1",
+              "methods": [
+                "DELETE"
+              ],
+              "action": []
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "DELETE",
+            "uri": "/path1",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "match route #9 GET /a/ /a/",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/a/",
+              "methods": [
+                "GET"
+              ],
+              "action": []
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/a/",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/a/"
+          }
+        ]
+      }
+    },
+    {
+      "name": "match route #10 GET /a/b /a/b",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/a/b",
+              "methods": [
+                "GET"
+              ],
+              "action": []
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/a/b",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/a/b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "match route #11 GET /a/b/c /a/b/c",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/a/b/c",
+              "methods": [
+                "GET"
+              ],
+              "action": []
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/a/b/c",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/a/b/c"
+          }
+        ]
+      }
+    },
+    {
+      "name": "no mismatch on missing params",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/d/:id",
+              "action": []
+            },
+            {
+              "path": "/d/:id/e/:id2",
+              "action": []
+            },
+            {
+              "path": "/d/:id/e/:id2/f/:id3",
+              "action": []
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/d/",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "/d/123/e/",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "/d/123/e/456/f/",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "match reflects the current request (HEAD)",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/path1",
+              "action": []
+            },
+            {
+              "path": "/path2",
+              "action": []
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "HEAD",
+            "uri": "/path1",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "HEAD",
+            "uri": "/path2",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path1"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": "/path2"
+          }
+        ]
+      }
+    },
+    {
+      "name": "root route when the URI has no path",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/",
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "root"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "https://example.com?x=1",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "root"
+            ],
+            "error": null,
+            "match": "/"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HEAD runs GET without a body",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/path",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "HELLO"
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "HEAD",
+            "uri": "/path"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "sub-request restores the outer route",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "shutdown": [
+            {
+              "inject": [
+                "route"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "inject": "route"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/inner",
+              "action": []
+            },
+            {
+              "path": "/outer",
+              "action": [
+                {
+                  "execute": {
+                    "method": "GET",
+                    "uri": "/inner"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/outer",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "/inner",
+              "",
+              "/outer"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "params injection",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/users/:id/posts/:postId",
+              "inject": [
+                "params"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "inject": "params"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/users/abc-123/posts/42",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "id": "abc-123",
+                "postId": "42"
+              }
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "params injection is empty for a static route",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/static",
+              "inject": [
+                "params"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "inject": "params"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/static",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              []
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "wildcard route",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "init": [
+            {
+              "inject": [
+                "route"
+              ],
+              "action": [
+                {
+                  "set_resource": [
+                    "myRoute",
+                    {
+                      "inject": "route"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "wildcard": {
+            "inject": [
+              "myRoute",
+              "response"
+            ],
+            "action": [
+              {
+                "emit": {
+                  "inject": "myRoute"
+                }
+              },
+              {
+                "send": "HELLO"
+              }
+            ]
+          }
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/unknown_path"
+          },
+          {
+            "method": "OPTIONS",
+            "uri": "/unknown_path"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "HELLO",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [
+              ""
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "wildcard route when the URI has no path",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "wildcard": {
+            "inject": [
+              "response"
+            ],
+            "action": [
+              {
+                "send": "HELLO"
+              }
+            ]
+          }
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "https://example.com?x=1"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "HELLO",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "callable strings are not executed",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/test-callable-string",
+              "params": [
+                {
+                  "key": "callback",
+                  "default": "phpinfo",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "callback-value: ",
+                      {
+                        "param": "callback"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/test-callable-string-param",
+              "params": [
+                {
+                  "key": "func",
+                  "default": "default",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "func-value: ",
+                      {
+                        "param": "func"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/test-callable-closure",
+              "params": [
+                {
+                  "key": "generated",
+                  "default": "generated-value",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true,
+                  "default_fn": true
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "generated: ",
+                      {
+                        "param": "generated"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/test-callable-string",
+            "via": "execute"
+          },
+          {
+            "method": "GET",
+            "uri": "/test-callable-string-param?func=system",
+            "via": "execute"
+          },
+          {
+            "method": "GET",
+            "uri": "/test-callable-closure",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "callback-value: phpinfo"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "func-value: system"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "generated: generated-value"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "explicit null falls back to the default",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/typed",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "image",
+                  "default": "",
+                  "validator": {
+                    "whitelist": [
+                      [
+                        "a",
+                        "b"
+                      ]
+                    ]
+                  },
+                  "optional": true
+                },
+                {
+                  "key": "badge",
+                  "default": -1,
+                  "validator": {
+                    "integer": false
+                  },
+                  "optional": true
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "param": "image"
+                  }
+                },
+                {
+                  "emit": {
+                    "param": "badge"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/nullable",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "nullable": {
+                      "text": [
+                        200
+                      ]
+                    }
+                  },
+                  "optional": true
+                },
+                {
+                  "key": "y",
+                  "default": "y-def",
+                  "validator": {
+                    "factory": {
+                      "nullable": {
+                        "text": [
+                          200
+                        ]
+                      }
+                    }
+                  },
+                  "optional": true
+                },
+                {
+                  "key": "z",
+                  "default": "z-def",
+                  "validator": {
+                    "any_of": [
+                      {
+                        "nullable": {
+                          "text": [
+                            200
+                          ]
+                        }
+                      },
+                      {
+                        "integer": false
+                      }
+                    ]
+                  },
+                  "optional": true
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "param": "x"
+                  }
+                },
+                {
+                  "emit": {
+                    "param": "y"
+                  }
+                },
+                {
+                  "emit": {
+                    "param": "z"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/null-default",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "x",
+                  "default": null,
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "param": "x"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/skip-validation",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true,
+                  "skip_validation": true
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "param": "x"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/items/:x",
+              "methods": [
+                "POST"
+              ],
+              "params": [
+                {
+                  "key": "x",
+                  "default": "x-def",
+                  "validator": {
+                    "text": [
+                      200
+                    ]
+                  },
+                  "optional": true
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "param": "x"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "POST",
+            "uri": "/typed",
+            "headers": [
+              [
+                "Content-Type",
+                "application/json"
+              ]
+            ],
+            "body": "{}",
+            "via": "execute"
+          },
+          {
+            "method": "POST",
+            "uri": "/typed",
+            "headers": [
+              [
+                "Content-Type",
+                "application/json"
+              ]
+            ],
+            "body": "{\"image\":null,\"badge\":null}",
+            "via": "execute"
+          },
+          {
+            "method": "POST",
+            "uri": "/nullable",
+            "headers": [
+              [
+                "Content-Type",
+                "application/json"
+              ]
+            ],
+            "body": "{\"x\":null,\"y\":null,\"z\":null}",
+            "via": "execute"
+          },
+          {
+            "method": "POST",
+            "uri": "/null-default",
+            "headers": [
+              [
+                "Content-Type",
+                "application/json"
+              ]
+            ],
+            "body": "{\"x\":null}",
+            "via": "execute"
+          },
+          {
+            "method": "POST",
+            "uri": "/skip-validation",
+            "headers": [
+              [
+                "Content-Type",
+                "application/json"
+              ]
+            ],
+            "body": "{\"x\":null}",
+            "via": "execute"
+          },
+          {
+            "method": "POST",
+            "uri": "/items/abc",
+            "headers": [
+              [
+                "Content-Type",
+                "application/json"
+              ]
+            ],
+            "body": "{\"x\":null}",
+            "via": "execute"
+          },
+          {
+            "method": "POST",
+            "uri": "/typed",
+            "headers": [
+              [
+                "Content-Type",
+                "application/json"
+              ]
+            ],
+            "body": "{\"image\":\"c\",\"badge\":null}",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "",
+              -1
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "",
+              -1
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              null,
+              null,
+              null
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              null
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              null
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "abc"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Utopia\\Http\\Exception",
+                "message": "Invalid `image` param: Value must be one of (a, b)",
+                "code": 400,
+                "previous": null
+              }
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "resource and param with the same name",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "resources": {
+            "locale": "en"
+          },
+          "routes": [
+            {
+              "path": "/path",
+              "params": [
+                {
+                  "key": "locale",
+                  "default": "en-default",
+                  "validator": {
+                    "text": [
+                      10
+                    ]
+                  },
+                  "optional": false
+                }
+              ],
+              "inject": [
+                "locale"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "param": "locale"
+                  }
+                },
+                {
+                  "emit": {
+                    "inject": "locale"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path?locale=es",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "es",
+              "en"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "start hooks run in order with the server",
+      "op": "http.start",
+      "args": {
+        "app": {
+          "start": [
+            {
+              "inject": [
+                "server"
+              ],
+              "action": [
+                {
+                  "emit": "first"
+                }
+              ]
+            },
+            {
+              "action": [
+                {
+                  "emit": "second"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expect": {
+        "setup": [],
+        "out": [
+          "first",
+          "second"
+        ],
+        "error": null
+      }
+    },
+    {
+      "name": "failing start hook runs the error hooks",
+      "op": "http.start",
+      "args": {
+        "app": {
+          "start": [
+            {
+              "action": [
+                {
+                  "throw": {
+                    "class": "DomainException",
+                    "message": "config file is unreadable",
+                    "code": 17
+                  }
+                }
+              ]
+            }
+          ],
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expect": {
+        "setup": [],
+        "out": [
+          {
+            "class": "DomainException",
+            "message": "config file is unreadable",
+            "code": 17,
+            "previous": null
+          }
+        ],
+        "error": null
+      }
+    },
+    {
+      "name": "failing start hook is kept when the error hook cannot run",
+      "op": "http.start",
+      "args": {
+        "app": {
+          "start": [
+            {
+              "action": [
+                {
+                  "throw": {
+                    "class": "DomainException",
+                    "message": "config file is unreadable",
+                    "code": 17
+                  }
+                }
+              ]
+            }
+          ],
+          "error": [
+            {
+              "inject": [
+                "request"
+              ],
+              "action": [
+                {
+                  "emit": "dispatched"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expect": {
+        "setup": [],
+        "out": [],
+        "error": {
+          "class": "Utopia\\Http\\Exception",
+          "message": "Error handler had an error: Utopia\\DI\\Exceptions\\NotFoundException: Dependency request not found",
+          "code": 500,
+          "previous": {
+            "class": "DomainException",
+            "message": "config file is unreadable",
+            "code": 17,
+            "previous": null
+          }
+        }
+      }
+    },
+    {
+      "name": "failing hook is kept when the error hook throws",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/path",
+              "action": []
+            }
+          ],
+          "init": [
+            {
+              "action": [
+                {
+                  "throw": {
+                    "class": "DomainException",
+                    "message": "init hook failed",
+                    "code": 17
+                  }
+                }
+              ]
+            }
+          ],
+          "error": [
+            {
+              "action": [
+                {
+                  "throw": {
+                    "class": "LogicException",
+                    "message": "error hook failed"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/path",
+            "via": "execute"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": {
+              "class": "Utopia\\Http\\Exception",
+              "message": "Error handler had an error: LogicException: error hook failed",
+              "code": 500,
+              "previous": {
+                "class": "DomainException",
+                "message": "init hook failed",
+                "code": 17,
+                "previous": null
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "options hooks by group, then global",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "options": [
+            {
+              "groups": [
+                "api"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "options-api"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "options-*"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "groups": [
+                "other"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "options-other"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/x",
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "route"
+                    ]
+                  }
+                }
+              ],
+              "groups": [
+                "api"
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "OPTIONS",
+            "uri": "/x"
+          },
+          {
+            "method": "OPTIONS",
+            "uri": "/nothing"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "options-*"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "options-*"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "failing options hook runs the global error hooks",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "options": [
+            {
+              "action": [
+                {
+                  "throw": {
+                    "message": "nope",
+                    "code": 3
+                  }
+                }
+              ]
+            }
+          ],
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "OPTIONS",
+            "uri": "/x"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Exception",
+                "message": "nope",
+                "code": 3,
+                "previous": null
+              }
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "error hooks: group hooks before global ones",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "global:"
+                    ]
+                  }
+                },
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            },
+            {
+              "groups": [
+                "api"
+              ],
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "api:"
+                    ]
+                  }
+                },
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/x",
+              "action": [
+                {
+                  "throw": {
+                    "class": "RuntimeException",
+                    "message": "boom",
+                    "code": 5
+                  }
+                }
+              ],
+              "groups": [
+                "api"
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/x"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "api:",
+              {
+                "class": "RuntimeException",
+                "message": "boom",
+                "code": 5,
+                "previous": null
+              },
+              "global:",
+              {
+                "class": "RuntimeException",
+                "message": "boom",
+                "code": 5,
+                "previous": null
+              }
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "a failing 404 error hook propagates",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "error": [
+            {
+              "action": [
+                {
+                  "throw": {
+                    "class": "LogicException",
+                    "message": "raw"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/missing"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": {
+              "class": "LogicException",
+              "message": "raw",
+              "code": 0,
+              "previous": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "request hooks run before routing",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "request": [
+            {
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "request-hook"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/x",
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "route"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/x"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "request-hook",
+              "route"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "failing request hook runs the error hooks and continues",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "request": [
+            {
+              "action": [
+                {
+                  "throw": {
+                    "message": "request hook failed"
+                  }
+                }
+              ]
+            }
+          ],
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/x",
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "route"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/x"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Exception",
+                "message": "request hook failed",
+                "code": 0,
+                "previous": null
+              },
+              "route"
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "injection that is not registered",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/x",
+              "inject": [
+                "missing"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "route"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/x"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Utopia\\DI\\Exceptions\\NotFoundException",
+                "message": "Dependency missing not found",
+                "code": 0,
+                "previous": null
+              }
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "response injected only by run()",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/x",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "ok"
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/x",
+            "via": "execute"
+          },
+          {
+            "method": "GET",
+            "uri": "/x"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Utopia\\DI\\Exceptions\\NotFoundException",
+                "message": "Dependency response not found",
+                "code": 0,
+                "previous": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "ok",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "send skips the action once sent",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "init": [
+            {
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "send": "from init"
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/x",
+              "action": [
+                {
+                  "emit": {
+                    "concat": [
+                      "route ran"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/x"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "from init",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "response helpers in actions",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/json",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "status": 201
+                },
+                {
+                  "json": {
+                    "lit": {
+                      "a": 1,
+                      "b": [
+                        1,
+                        2
+                      ],
+                      "c": {},
+                      "u": "é/"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/redirect",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "redirect": [
+                    "/to",
+                    302
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/chunked",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "chunk": [
+                    "Hello ",
+                    false
+                  ]
+                },
+                {
+                  "chunk": [
+                    "World!",
+                    true
+                  ]
+                }
+              ]
+            },
+            {
+              "path": "/cookie",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "add_cookie": {
+                    "name": "Session",
+                    "value": "a b;c",
+                    "expire": 1000,
+                    "path": "/",
+                    "domain": "example.com",
+                    "secure": true,
+                    "httponly": true,
+                    "samesite": "Strict"
+                  }
+                },
+                {
+                  "add_cookie": {
+                    "name": "empty"
+                  }
+                },
+                {
+                  "text": "ok"
+                }
+              ]
+            },
+            {
+              "path": "/nocontent",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "no_content": true
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/json"
+          },
+          {
+            "method": "GET",
+            "uri": "/redirect"
+          },
+          {
+            "method": "GET",
+            "uri": "/chunked"
+          },
+          {
+            "method": "GET",
+            "uri": "/cookie"
+          },
+          {
+            "method": "GET",
+            "uri": "/nocontent"
+          },
+          {
+            "method": "HEAD",
+            "uri": "/chunked"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 201,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "application/json; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "{\"a\":1,\"b\":[1,2],\"c\":{},\"u\":\"é\\/\"}",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 302,
+              "headers": {
+                "location": [
+                  "/to"
+                ],
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "location",
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "Hello World!",
+              "writes": 2,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "text/plain; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [
+                "session=a+b%3Bc; expires=Thu, 01-Jan-1970 00:16:40 GMT; Max-Age=0; path=/; domain=example.com; secure; HttpOnly; SameSite=Strict",
+                "empty=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0"
+              ],
+              "body": "ok",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 204,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "compression",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "compression": {
+            "min_size": 1024
+          },
+          "routes": [
+            {
+              "path": "/text",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              ]
+            },
+            {
+              "path": "/small",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "text": "small"
+                }
+              ]
+            },
+            {
+              "path": "/png",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "content_type": [
+                    "image/png"
+                  ]
+                },
+                {
+                  "send": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/text",
+            "headers": [
+              [
+                "Accept-Encoding",
+                "identity"
+              ]
+            ]
+          },
+          {
+            "method": "GET",
+            "uri": "/small",
+            "headers": [
+              [
+                "Accept-Encoding",
+                "gzip"
+              ]
+            ]
+          },
+          {
+            "method": "GET",
+            "uri": "/png",
+            "headers": [
+              [
+                "Accept-Encoding",
+                "gzip"
+              ]
+            ]
+          },
+          {
+            "method": "GET",
+            "uri": "/text"
+          }
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/responses/3/wire/body",
+          "/responses/3/wire/headers/content-length"
+        ],
+        "reason": "compressed bytes depend on the compressor implementation (zlib, libbrotli vs the Rust encoders); the decoded body is compared"
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "text/plain; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "text/plain; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "small",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "image/png"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-debug-speed": "<masked>",
+                "content-type": [
+                  "text/plain; charset=UTF-8"
+                ]
+              },
+              "order": [
+                "x-debug-speed",
+                "content-type"
+              ],
+              "cookies": [],
+              "body": "<masked>",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "request size and response size",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/x",
+              "inject": [
+                "response"
+              ],
+              "action": [
+                {
+                  "add_header": [
+                    "X-A",
+                    "b"
+                  ]
+                },
+                {
+                  "send": "hello"
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/x",
+            "headers": [
+              [
+                "Host",
+                "h"
+              ],
+              [
+                "X-Multi",
+                "a"
+              ],
+              [
+                "X-Multi",
+                "b"
+              ]
+            ],
+            "size": true
+          }
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/responses/0/size"
+        ],
+        "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time"
+      },
+      "expect": {
+        "setup": [
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": 200,
+              "headers": {
+                "x-a": [
+                  "b"
+                ],
+                "x-debug-speed": "<masked>"
+              },
+              "order": [
+                "x-a",
+                "x-debug-speed"
+              ],
+              "cookies": [],
+              "body": "hello",
+              "writes": 0,
+              "ended": true
+            },
+            "out": [],
+            "error": null,
+            "size": "<masked>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "param validators and defaults",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "error": [
+            {
+              "inject": [
+                "error"
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "inject": "error"
+                  }
+                }
+              ]
+            }
+          ],
+          "routes": [
+            {
+              "path": "/int",
+              "params": [
+                {
+                  "key": "n",
+                  "default": 0,
+                  "validator": {
+                    "integer": true
+                  },
+                  "optional": true
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "param": "n"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/bool",
+              "params": [
+                {
+                  "key": "b",
+                  "default": false,
+                  "validator": {
+                    "boolean": true
+                  },
+                  "optional": true
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "param": "b"
+                  }
+                }
+              ]
+            },
+            {
+              "path": "/list",
+              "params": [
+                {
+                  "key": "w",
+                  "default": "a",
+                  "validator": {
+                    "whitelist": [
+                      [
+                        "a",
+                        "B"
+                      ],
+                      false
+                    ]
+                  },
+                  "optional": true
+                }
+              ],
+              "action": [
+                {
+                  "emit": {
+                    "param": "w"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "/int?n=12"
+          },
+          {
+            "method": "GET",
+            "uri": "/int?n=x"
+          },
+          {
+            "method": "GET",
+            "uri": "/bool?b=true"
+          },
+          {
+            "method": "GET",
+            "uri": "/list?w=b"
+          },
+          {
+            "method": "GET",
+            "uri": "/list?w=c"
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "12"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Utopia\\Http\\Exception",
+                "message": "Invalid `n` param: Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647",
+                "code": 400,
+                "previous": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "true"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "b"
+            ],
+            "error": null
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              {
+                "class": "Utopia\\Http\\Exception",
+                "message": "Invalid `w` param: Value must be one of (a, b)",
+                "code": 400,
+                "previous": null
+              }
+            ],
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "match uses the URL path of the target",
+      "op": "http.run",
+      "args": {
+        "app": {
+          "routes": [
+            {
+              "path": "/users",
+              "action": [
+                {
+                  "emit": "users"
+                }
+              ]
+            },
+            {
+              "path": "/v1/users",
+              "action": [
+                {
+                  "emit": "v1"
+                }
+              ]
+            },
+            {
+              "path": "/",
+              "action": [
+                {
+                  "emit": "root"
+                }
+              ]
+            }
+          ]
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "uri": "//v1//users",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "/v1//users",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "///users",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "//users",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "/v1/users#frag",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "http://example.com/v1/users",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "/v1:80/users",
+            "via": "execute",
+            "match": true
+          },
+          {
+            "method": "GET",
+            "uri": "/v1/users;x",
+            "via": "execute",
+            "match": true
+          }
+        ]
+      },
+      "expect": {
+        "setup": [
+          true,
+          true,
+          true
+        ],
+        "responses": [
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "users"
+            ],
+            "error": null,
+            "match": "/users"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "v1"
+            ],
+            "error": null,
+            "match": "/v1/users"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "root"
+            ],
+            "error": null,
+            "match": "/"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "root"
+            ],
+            "error": null,
+            "match": "/"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "v1"
+            ],
+            "error": null,
+            "match": "/v1/users"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "v1"
+            ],
+            "error": null,
+            "match": "/v1/users"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [
+              "root"
+            ],
+            "error": null,
+            "match": "/"
+          },
+          {
+            "wire": {
+              "status": null,
+              "headers": [],
+              "order": [],
+              "cookies": [],
+              "body": "",
+              "writes": 0,
+              "ended": false
+            },
+            "out": [],
+            "error": null,
+            "match": null
+          }
+        ]
+      }
+    }
+  ]
+}

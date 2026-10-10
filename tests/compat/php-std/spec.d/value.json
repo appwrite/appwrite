@@ -1,0 +1,397 @@
+{
+  "ops": {
+    "value.is_numeric": {
+      "doc": "is_numeric($v)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "scalar"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "value.to_number": {
+      "doc": "is_numeric($v) ? $v + 0 : null",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "scalar"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "value.to_string": {
+      "doc": "(string) $v for scalars, null for arrays",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "scalar"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "value.truthy": {
+      "doc": "(bool) $v",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "any",
+                "depth": 2
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "value.empty": {
+      "doc": "empty($v)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "any",
+                "depth": 2
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "value.is_array": {
+      "doc": "is_array($v)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "any",
+                "depth": 2
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "value.loose_eq": {
+      "doc": "$a == $b",
+      "fuzz": [
+        {
+          "name": "scalars",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "scalar"
+              },
+              "b": {
+                "gen": "ref",
+                "name": "scalar"
+              }
+            }
+          },
+          "iterations": 5000
+        },
+        {
+          "name": "any",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "any",
+                "depth": 2
+              },
+              "b": {
+                "gen": "any",
+                "depth": 2
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "value.loose_str_eq": {
+      "doc": "$a == $b for two strings (zendi_smart_str_equals), on bytes",
+      "fuzz": [
+        {
+          "name": "strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "numeric_string"
+              },
+              "b": {
+                "gen": "ref",
+                "name": "numeric_string"
+              }
+            }
+          },
+          "iterations": 5000
+        }
+      ]
+    },
+    "value.le_numbers": {
+      "doc": "$a <= $b for two numbers (NAN compares false)",
+      "fuzz": [
+        {
+          "name": "numbers",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "number"
+              },
+              "b": {
+                "gen": "ref",
+                "name": "number"
+              }
+            }
+          },
+          "iterations": 5000
+        }
+      ]
+    },
+    "value.sort_strings": {
+      "doc": "sort($strings) (SORT_REGULAR): zend_sort with PHP 8's string <=>, stable",
+      "fuzz": [
+        {
+          "name": "strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "10",
+                        "9",
+                        "1e1",
+                        "1.0",
+                        " 1",
+                        "1 ",
+                        "01",
+                        "0x1A",
+                        "-1",
+                        "+1",
+                        ".5",
+                        "5.",
+                        "1e999",
+                        "-1e999",
+                        "9223372036854775807",
+                        "9223372036854775808",
+                        "-9223372036854775809",
+                        "18446744073709551616",
+                        "6F",
+                        "5'",
+                        "a",
+                        "A",
+                        "",
+                        " ",
+                        "abc",
+                        "10abc",
+                        "INF",
+                        "NAN",
+                        "1_000",
+                        "١"
+                      ]
+                    },
+                    {
+                      "gen": "string",
+                      "alphabet": "0123456789.e+- aZ",
+                      "min": 0,
+                      "max": 5,
+                      "tricky": 0.2
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 40
+              }
+            }
+          },
+          "iterations": 5000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "max": 12,
+          "tricky": 0.6
+        },
+        {
+          "gen": "string",
+          "alphabet": " +-.0123456789eE",
+          "max": 8
+        },
+        {
+          "gen": "int"
+        },
+        {
+          "gen": "float"
+        },
+        {
+          "gen": "float",
+          "min": -1e+300,
+          "max": 1e+300
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0.1,
+            0.30000000000000004,
+            1e+25,
+            1e-07,
+            1.2345678901234568e+17,
+            -0.0,
+            9223372036854775807,
+            -9223372036854775808,
+            9223372036854775808,
+            18446744073709551616
+          ]
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        }
+      ]
+    },
+    "numeric_string": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "0",
+            "00",
+            "1",
+            "01",
+            "1.0",
+            "1e0",
+            "1E0",
+            " 1",
+            "1 ",
+            "\t1\n",
+            "-0",
+            "+0",
+            "0.0",
+            ".0",
+            "0x1",
+            "1e3",
+            "1000",
+            "9223372036854775807",
+            "9223372036854775808",
+            "9223372036854775807.0",
+            "-9223372036854775808",
+            "-9223372036854775809",
+            "1e309",
+            "INF",
+            "NAN",
+            "abc",
+            "",
+            "é",
+            {
+              "$bytes": "Mf8="
+            },
+            {
+              "$bytes": "/w=="
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "max": 6,
+          "alphabet": "0123456789.eE+- \t"
+        }
+      ]
+    },
+    "number": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -9223372036854775808,
+          "max": 9223372036854775807
+        },
+        {
+          "gen": "int",
+          "min": -3,
+          "max": 3
+        },
+        {
+          "gen": "float",
+          "min": -3.0,
+          "max": 3.0
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$float": "INF"
+            },
+            {
+              "$float": "-INF"
+            },
+            {
+              "$float": "NAN"
+            },
+            0.0,
+            -0.0,
+            1.0,
+            9.223372036854776e+18,
+            -9.223372036854776e+18,
+            9223372036854775807,
+            -9223372036854775808,
+            9007199254740993,
+            9007199254740992.0
+          ]
+        }
+      ]
+    }
+  }
+}

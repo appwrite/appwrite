@@ -27,5 +27,10 @@
     },
     "require": {
         "php": ">=8.5"
+    },
+    "extra": {
+        "utopia": {
+            "category": "input"
+        }
     }
 }

@@ -1,0 +1,15 @@
+[package]
+name = "utopia-dsn"
+description = "Data source names (connection strings), parsed into scheme, credentials, host, port, path and options."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+php-std.workspace = true
+thiserror.workspace = true
+
+[package.metadata.utopia]
+php-sync = "b85cf6c95b416fbf393216a07e16d48c162cac1c"

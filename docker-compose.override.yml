@@ -521,6 +521,98 @@ services:
       - 9509:3000
     environment:
       - SERVER_URL=http://localhost:9520/v1/graphql
+  # Rust API (see rfc/rust.md). Serves the services migrated to Rust; Traefik
+  # routes their paths here and everything else keeps going to the PHP API.
+  # Opt in with `COMPOSE_PROFILES=rust` (or `--profile rust`).
+  appwrite-rust:
+    profiles:
+      - rust
+    build:
+      context: .
+      dockerfile: Dockerfile.rust
+    image: appwrite-rust-dev
+    container_name: appwrite-rust
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    networks:
+      - appwrite
+    ports:
+      - 9530:8080
+    depends_on:
+      - redis
+      - ${_APP_DB_HOST:-postgresql}
+    healthcheck:
+      test:
+        - CMD
+        - /usr/local/bin/appwrite-rust
+        - health
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
+      - traefik.docker.network=appwrite
+      - traefik.http.services.appwrite_rust.loadbalancer.server.port=8080
+      - traefik.http.routers.appwrite_rust_http.entrypoints=appwrite_web
+      - traefik.http.routers.appwrite_rust_http.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`) || Host(`localhost`)) && (Path(`/v1/users`) || PathPrefix(`/v1/users/`)) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
+      - traefik.http.routers.appwrite_rust_http.priority=1000
+      - traefik.http.routers.appwrite_rust_http.service=appwrite_rust
+      - traefik.http.routers.appwrite_rust_https.entrypoints=appwrite_websecure
+      - traefik.http.routers.appwrite_rust_https.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`) || Host(`localhost`)) && (Path(`/v1/users`) || PathPrefix(`/v1/users/`)) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
+      - traefik.http.routers.appwrite_rust_https.priority=1000
+      - traefik.http.routers.appwrite_rust_https.service=appwrite_rust
+      - traefik.http.routers.appwrite_rust_https.tls=true
+    environment:
+      - _APP_ENV
+      - _APP_EDITION
+      - _APP_LOCALE
+      - _APP_REGION
+      - _APP_OPENSSL_KEY_V1
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL
+      - _APP_CONSOLE_SCHEMA
+      - _APP_CONSOLE_TRUSTED_PROJECTS
+      - _APP_MIGRATION_HOST
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_OPTIONS_ABUSE
+      - _APP_TRUSTED_HEADERS
+      - _APP_TRUSTED_PROXIES
+      - _APP_COMPRESSION_ENABLED
+      - _APP_COMPRESSION_MIN_SIZE_BYTES
+      - _APP_SYSTEM_RESPONSE_FORMAT
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_SHARED_TABLES
+      - _APP_DATABASE_SHARED_NAMESPACE
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_LOCKING_ENABLED
+      - _APP_USAGE_STATS
+      - _APP_PWNED_PASSWORDS_DSN
+      - _APP_GEO_ENDPOINT
+      - _APP_GEO_SECRET
+      - _APP_FUNCTIONS_QUEUE_NAME
+      - _APP_WEBHOOK_QUEUE_NAME
+      - _APP_DELETE_QUEUE_NAME
+      - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_AUDITS_QUEUE_NAME
+      - _APP_RUST_LOG
+      - _APP_RUST_WORKERS
+      - _APP_RUST_DB_POOL
   traefik:
     command:
       - --providers.file.directory=/storage/config

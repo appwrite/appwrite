@@ -44,5 +44,10 @@
         "platform": {
             "php": "8.5"
         }
+    },
+    "extra": {
+        "utopia": {
+            "category": "web"
+        }
     }
 }

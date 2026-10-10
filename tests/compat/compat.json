@@ -1,0 +1,20 @@
+{
+  "drivers": {
+    "php": [
+      "bin/compat-php"
+    ],
+    "rust": []
+  },
+  "services": {
+    "redis": {
+      "php": "redis://redis:6379",
+      "rust": "redis://localhost:9513",
+      "runner": "redis://localhost:9513"
+    },
+    "postgres": {
+      "php": "postgres://${_APP_DB_USER}:${_APP_DB_PASS}@postgresql:5432/${_APP_DB_SCHEMA}",
+      "rust": "postgres://${_APP_DB_USER}:${_APP_DB_PASS}@localhost:9512/${_APP_DB_SCHEMA}",
+      "runner": "postgres://${_APP_DB_USER}:${_APP_DB_PASS}@localhost:9512/${_APP_DB_SCHEMA}"
+    }
+  }
+}

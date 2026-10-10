@@ -1,0 +1,4328 @@
+{
+  "source": "edge",
+  "cases": [
+    {
+      "name": "WhiteList casts a stdClass to string (Error)",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "a"
+                ]
+              }
+            },
+            "value": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Object of class stdClass could not be converted to string"
+            }
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "a"
+                ]
+              }
+            },
+            "value": "A"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be one of (a)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "a"
+                ]
+              }
+            },
+            "value": []
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be one of (a)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "a"
+                ]
+              }
+            },
+            "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be one of (a)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "a"
+                ]
+              }
+            },
+            "value": 1.0
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be one of (a)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "a"
+                ]
+              }
+            },
+            "value": true
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be one of (a)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "WhiteList strict compares by identity",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1",
+                  1,
+                  1.0,
+                  true,
+                  null,
+                  [
+                    1
+                  ]
+                ],
+                "strict": true
+              }
+            },
+            "value": "1"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be one of (1, 1, 1, 1, , Array)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1",
+                  1,
+                  1.0,
+                  true,
+                  null,
+                  [
+                    1
+                  ]
+                ],
+                "strict": true
+              }
+            },
+            "value": 1
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be one of (1, 1, 1, 1, , Array)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1",
+                  1,
+                  1.0,
+                  true,
+                  null,
+                  [
+                    1
+                  ]
+                ],
+                "strict": true
+              }
+            },
+            "value": 1.0
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be one of (1, 1, 1, 1, , Array)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1",
+                  1,
+                  1.0,
+                  true,
+                  null,
+                  [
+                    1
+                  ]
+                ],
+                "strict": true
+              }
+            },
+            "value": true
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be one of (1, 1, 1, 1, , Array)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1",
+                  1,
+                  1.0,
+                  true,
+                  null,
+                  [
+                    1
+                  ]
+                ],
+                "strict": true
+              }
+            },
+            "value": null
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be one of (1, 1, 1, 1, , Array)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1",
+                  1,
+                  1.0,
+                  true,
+                  null,
+                  [
+                    1
+                  ]
+                ],
+                "strict": true
+              }
+            },
+            "value": [
+              1
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be one of (1, 1, 1, 1, , Array)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1",
+                  1,
+                  1.0,
+                  true,
+                  null,
+                  [
+                    1
+                  ]
+                ],
+                "strict": true
+              }
+            },
+            "value": {}
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be one of (1, 1, 1, 1, , Array)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1",
+                  1,
+                  1.0,
+                  true,
+                  null,
+                  [
+                    1
+                  ]
+                ],
+                "strict": true
+              }
+            },
+            "value": "01"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be one of (1, 1, 1, 1, , Array)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1",
+                  1,
+                  1.0,
+                  true,
+                  null,
+                  [
+                    1
+                  ]
+                ],
+                "strict": true
+              }
+            },
+            "value": 0
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be one of (1, 1, 1, 1, , Array)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1",
+                  1,
+                  1.0,
+                  true,
+                  null,
+                  [
+                    1
+                  ]
+                ],
+                "strict": true
+              }
+            },
+            "value": false
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be one of (1, 1, 1, 1, , Array)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "WhiteList loose list holding a stdClass (Error)",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "WhiteList",
+            "args": {
+              "list": [
+                "a",
+                {}
+              ]
+            }
+          },
+          "bind": "w",
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Object of class stdClass could not be converted to string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "WhiteList loose list of mixed values",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "WhiteList",
+            "args": {
+              "list": [
+                "A",
+                1,
+                1.5,
+                true,
+                null,
+                false,
+                "ÄB"
+              ]
+            }
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "w"
+            },
+            "property": "list"
+          },
+          "expect": [
+            "a",
+            "1",
+            "1.5",
+            "1",
+            "",
+            "",
+            "Äb"
+          ]
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "w"
+            }
+          },
+          "expect": "Value must be one of (a, 1, 1.5, 1, , , Äb)"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "w"
+            },
+            "value": "äb"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "w"
+            },
+            "value": "ÄB"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "w"
+            },
+            "value": ""
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "w"
+            },
+            "value": "1.50"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "IP rejects an unknown type (Exception)",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "IP",
+            "args": {
+              "type": "ipv5"
+            }
+          },
+          "bind": "ip",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unsupported IP type"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Domain levels overflow (TypeError)",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Domain",
+              "args": {
+                "restrictions": [
+                  {
+                    "hostname": "io",
+                    "levels": 9223372036854775807,
+                    "prefixDenyList": []
+                  }
+                ]
+              }
+            },
+            "value": "a.io"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "explode(): Argument #3 ($limit) must be of type int, float given"
+            }
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Domain",
+              "args": {
+                "restrictions": [
+                  {
+                    "hostname": "io",
+                    "levels": 9223372036854775807,
+                    "prefixDenyList": []
+                  }
+                ]
+              }
+            },
+            "value": "a.com"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid domain"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Domain restriction edge levels",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Domain",
+              "args": {
+                "restrictions": [
+                  {
+                    "hostname": "com",
+                    "levels": 0,
+                    "prefixDenyList": []
+                  },
+                  {
+                    "hostname": "io",
+                    "levels": -1,
+                    "prefixDenyList": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            },
+            "value": "a.com"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid domain"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Domain",
+              "args": {
+                "restrictions": [
+                  {
+                    "hostname": "com",
+                    "levels": 0,
+                    "prefixDenyList": []
+                  },
+                  {
+                    "hostname": "io",
+                    "levels": -1,
+                    "prefixDenyList": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            },
+            "value": "com"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid domain"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Domain",
+              "args": {
+                "restrictions": [
+                  {
+                    "hostname": "com",
+                    "levels": 0,
+                    "prefixDenyList": []
+                  },
+                  {
+                    "hostname": "io",
+                    "levels": -1,
+                    "prefixDenyList": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            },
+            "value": "a.io"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid domain"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Domain",
+              "args": {
+                "restrictions": [
+                  {
+                    "hostname": "com",
+                    "levels": 0,
+                    "prefixDenyList": []
+                  },
+                  {
+                    "hostname": "io",
+                    "levels": -1,
+                    "prefixDenyList": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            },
+            "value": "b.c.io"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid domain"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Domain",
+              "args": {
+                "restrictions": [
+                  {
+                    "hostname": "com",
+                    "levels": 0,
+                    "prefixDenyList": []
+                  },
+                  {
+                    "hostname": "io",
+                    "levels": -1,
+                    "prefixDenyList": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            },
+            "value": "0"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid domain"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Domain",
+              "args": {
+                "restrictions": [
+                  {
+                    "hostname": "com",
+                    "levels": 0,
+                    "prefixDenyList": []
+                  },
+                  {
+                    "hostname": "io",
+                    "levels": -1,
+                    "prefixDenyList": [
+                      ""
+                    ]
+                  }
+                ]
+              }
+            },
+            "value": "x.org"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid domain"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contains needs strings",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Contains",
+              "args": {
+                "patterns": [
+                  "é",
+                  "SS",
+                  "İ"
+                ]
+              }
+            },
+            "value": "É"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must contain one of (é, SS, İ) (case-insensitive)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Contains",
+              "args": {
+                "patterns": [
+                  "é",
+                  "SS",
+                  "İ"
+                ]
+              }
+            },
+            "value": "ß"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must contain one of (é, SS, İ) (case-insensitive)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Contains",
+              "args": {
+                "patterns": [
+                  "é",
+                  "SS",
+                  "İ"
+                ]
+              }
+            },
+            "value": "i̇"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must contain one of (é, SS, İ) (case-insensitive)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Contains",
+              "args": {
+                "patterns": [
+                  "é",
+                  "SS",
+                  "İ"
+                ]
+              }
+            },
+            "value": "İ"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must contain one of (é, SS, İ) (case-insensitive)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Contains",
+              "args": {
+                "patterns": [
+                  "é",
+                  "SS",
+                  "İ"
+                ]
+              }
+            },
+            "value": "ss"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must contain one of (é, SS, İ) (case-insensitive)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Contains",
+              "args": {
+                "patterns": [
+                  "é",
+                  "SS",
+                  "İ"
+                ]
+              }
+            },
+            "value": {
+              "$bytes": "YQBi/w=="
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must contain one of (é, SS, İ) (case-insensitive)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Contains",
+              "args": {
+                "patterns": [
+                  "é",
+                  "SS",
+                  "İ"
+                ]
+              }
+            },
+            "value": {}
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must contain one of (é, SS, İ) (case-insensitive)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Contains",
+              "args": {
+                "patterns": [
+                  "é",
+                  "SS",
+                  "İ"
+                ]
+              }
+            },
+            "value": 1
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must contain one of (é, SS, İ) (case-insensitive)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Text counts invalid UTF-8 like mb_strlen",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Text",
+              "args": {
+                "length": 3
+              }
+            },
+            "value": {
+              "$bytes": "YQBi/w=="
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string and at least 1 chars and no longer than 3 chars"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Text",
+              "args": {
+                "length": 3
+              }
+            },
+            "value": {
+              "$bytes": "/w=="
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid string and at least 1 chars and no longer than 3 chars"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Text",
+              "args": {
+                "length": 3
+              }
+            },
+            "value": {
+              "$bytes": "4oKs/w=="
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid string and at least 1 chars and no longer than 3 chars"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Text requireNonBlank",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Text",
+              "args": {
+                "length": 0,
+                "min": 0,
+                "requireNonBlank": true
+              }
+            },
+            "value": ""
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string and exactly 0 chars and not be blank"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Text",
+              "args": {
+                "length": 0,
+                "min": 0,
+                "requireNonBlank": true
+              }
+            },
+            "value": " "
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string and exactly 0 chars and not be blank"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Text",
+              "args": {
+                "length": 0,
+                "min": 0,
+                "requireNonBlank": true
+              }
+            },
+            "value": "​"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string and exactly 0 chars and not be blank"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Text",
+              "args": {
+                "length": 0,
+                "min": 0,
+                "requireNonBlank": true
+              }
+            },
+            "value": "  "
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string and exactly 0 chars and not be blank"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Text",
+              "args": {
+                "length": 0,
+                "min": 0,
+                "requireNonBlank": true
+              }
+            },
+            "value": "﻿"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string and exactly 0 chars and not be blank"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Text",
+              "args": {
+                "length": 0,
+                "min": 0,
+                "requireNonBlank": true
+              }
+            },
+            "value": " a "
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid string and exactly 0 chars and not be blank"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Text",
+              "args": {
+                "length": 0,
+                "min": 0,
+                "requireNonBlank": true
+              }
+            },
+            "value": {
+              "$bytes": "YQBi/w=="
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string and exactly 0 chars and not be blank"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Text",
+              "args": {
+                "length": 0,
+                "min": 0,
+                "requireNonBlank": true
+              }
+            },
+            "value": "\t\n"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string and exactly 0 chars and not be blank"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hostname with invalid UTF-8",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Hostname",
+              "args": {}
+            },
+            "value": {
+              "$bytes": "YQBi/w=="
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid hostname without path, port and protocol."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Hostname",
+              "args": {}
+            },
+            "value": {
+              "$bytes": "/w=="
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid hostname without path, port and protocol."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Numbers with INF and NAN",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "FloatValidator",
+              "args": {}
+            },
+            "value": {
+              "$float": "INF"
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid float"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "FloatValidator",
+              "args": {}
+            },
+            "value": {
+              "$float": "NAN"
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid float"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "FloatValidator",
+              "args": {}
+            },
+            "value": {
+              "$float": "-INF"
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid float"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "FloatValidator",
+              "args": {}
+            },
+            "value": "INF"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid float"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Loose float with INF",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "FloatValidator",
+              "args": {
+                "loose": true
+              }
+            },
+            "value": {
+              "$float": "INF"
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid float"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "FloatValidator",
+              "args": {
+                "loose": true
+              }
+            },
+            "value": {
+              "$float": "NAN"
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid float"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "FloatValidator",
+              "args": {
+                "loose": true
+              }
+            },
+            "value": "1e999"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid float"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "FloatValidator",
+              "args": {
+                "loose": true
+              }
+            },
+            "value": " 1"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid float"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "FloatValidator",
+              "args": {
+                "loose": true
+              }
+            },
+            "value": "1 "
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid float"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "FloatValidator",
+              "args": {
+                "loose": true
+              }
+            },
+            "value": "0x1A"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid float"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Integer with INF and big numbers",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Integer",
+              "args": {
+                "loose": true,
+                "bits": 64
+              }
+            },
+            "value": {
+              "$float": "INF"
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,808"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Integer",
+              "args": {
+                "loose": true,
+                "bits": 64
+              }
+            },
+            "value": {
+              "$float": "NAN"
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,808"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Integer",
+              "args": {
+                "loose": true,
+                "bits": 64
+              }
+            },
+            "value": "9223372036854775807"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,808"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Integer",
+              "args": {
+                "loose": true,
+                "bits": 64
+              }
+            },
+            "value": "9223372036854775808"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,808"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Integer",
+              "args": {
+                "loose": true,
+                "bits": 64
+              }
+            },
+            "value": 9.223372036854776e+18
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,808"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Integer",
+              "args": {
+                "loose": true,
+                "bits": 64
+              }
+            },
+            "value": -9223372036854775808
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,808"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Numeric with INF and NAN",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Numeric",
+              "args": {}
+            },
+            "value": {
+              "$float": "INF"
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid number"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Numeric",
+              "args": {}
+            },
+            "value": {
+              "$float": "NAN"
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid number"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Numeric",
+              "args": {}
+            },
+            "value": "NAN"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid number"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Numeric",
+              "args": {}
+            },
+            "value": " 1"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid number"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Numeric",
+              "args": {}
+            },
+            "value": "1 "
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid number"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Numeric",
+              "args": {}
+            },
+            "value": ".5"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid number"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Numeric",
+              "args": {}
+            },
+            "value": "5."
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid number"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Range accepts INF as an integer",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Range",
+              "args": {
+                "min": 0,
+                "max": {
+                  "$float": "INF"
+                }
+              }
+            },
+            "value": {
+              "$float": "INF"
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid range between 0 and inf"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Range",
+              "args": {
+                "min": 0,
+                "max": {
+                  "$float": "INF"
+                }
+              }
+            },
+            "value": {
+              "$float": "-INF"
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid range between 0 and inf"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Range",
+              "args": {
+                "min": 0,
+                "max": {
+                  "$float": "INF"
+                }
+              }
+            },
+            "value": {
+              "$float": "NAN"
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid range between 0 and inf"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Range",
+              "args": {
+                "min": 0,
+                "max": {
+                  "$float": "INF"
+                }
+              }
+            },
+            "value": 5
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid range between 0 and inf"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Range",
+              "args": {
+                "min": 0,
+                "max": {
+                  "$float": "INF"
+                }
+              }
+            },
+            "value": "5"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid range between 0 and inf"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Range",
+              "args": {
+                "min": 0,
+                "max": {
+                  "$float": "INF"
+                }
+              }
+            },
+            "value": 5.0
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid range between 0 and inf"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Range",
+              "args": {
+                "min": 0,
+                "max": {
+                  "$float": "INF"
+                }
+              }
+            },
+            "value": "5.0"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid range between 0 and inf"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Range",
+              "args": {
+                "min": 0,
+                "max": {
+                  "$float": "INF"
+                }
+              }
+            },
+            "value": "1e3"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid range between 0 and inf"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Range of floats with NAN",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Range",
+              "args": {
+                "min": {
+                  "$float": "NAN"
+                },
+                "max": 10.5,
+                "format": "double"
+              }
+            },
+            "value": 1
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid range between nan and 11"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Range",
+              "args": {
+                "min": {
+                  "$float": "NAN"
+                },
+                "max": 10.5,
+                "format": "double"
+              }
+            },
+            "value": 1.5
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid range between nan and 11"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Range",
+              "args": {
+                "min": {
+                  "$float": "NAN"
+                },
+                "max": 10.5,
+                "format": "double"
+              }
+            },
+            "value": {
+              "$float": "NAN"
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid range between nan and 11"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Range with another format rejects everything",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Range",
+              "args": {
+                "min": 0,
+                "max": 10,
+                "format": "string"
+              }
+            },
+            "value": 1
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid range between 0 and 10"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Range",
+              "args": {
+                "min": 0,
+                "max": 10,
+                "format": "string"
+              }
+            },
+            "value": "1"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid range between 0 and 10"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Assoc counts a failed json_encode as 0 bytes",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Assoc",
+              "args": {
+                "length": 1
+              }
+            },
+            "value": {
+              "a": {
+                "$float": "INF"
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Assoc",
+              "args": {
+                "length": 1
+              }
+            },
+            "value": {
+              "a": {
+                "$bytes": "YQBi/w=="
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Assoc",
+              "args": {
+                "length": 1
+              }
+            },
+            "value": {
+              "a": "b"
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid object."
+          }
+        }
+      ]
+    },
+    {
+      "name": "JSON validators with failed encodings",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON\\ArrayValidator",
+              "args": {
+                "length": 100
+              }
+            },
+            "value": [
+              {
+                "$float": "INF"
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid JSON array no longer than 100 characters when encoded"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON\\ArrayValidator",
+              "args": {
+                "length": 100
+              }
+            },
+            "value": [
+              {
+                "$bytes": "YQBi/w=="
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid JSON array no longer than 100 characters when encoded"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON\\ArrayValidator",
+              "args": {
+                "length": 100
+              }
+            },
+            "value": [
+              1
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid JSON array no longer than 100 characters when encoded"
+          }
+        }
+      ]
+    },
+    {
+      "name": "JSON object validator with stdClass",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON\\ObjectValidator",
+              "args": {
+                "length": 10
+              }
+            },
+            "value": {
+              "$object": {
+                "a": 1
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid JSON object no longer than 10 characters when encoded"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON\\ObjectValidator",
+              "args": {
+                "length": 10
+              }
+            },
+            "value": {
+              "$object": {
+                "a": "a long string"
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid JSON object no longer than 10 characters when encoded"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON\\ObjectValidator",
+              "args": {
+                "length": 10
+              }
+            },
+            "value": {}
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid JSON object no longer than 10 characters when encoded"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON\\ObjectValidator",
+              "args": {
+                "length": 10
+              }
+            },
+            "value": {
+              "$object": {
+                "0": 1
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid JSON object no longer than 10 characters when encoded"
+          }
+        }
+      ]
+    },
+    {
+      "name": "JSON with invalid UTF-8 and NUL property names",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON",
+              "args": {}
+            },
+            "value": {
+              "$bytes": "YQBi/w=="
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid JSON string"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON",
+              "args": {}
+            },
+            "value": "{\"\\u0000a\":1}"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid JSON string"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON",
+              "args": {}
+            },
+            "value": "[\"\\ud800\"]"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid JSON string"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON",
+              "args": {}
+            },
+            "value": {
+              "$bytes": "WyL/Il0="
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid JSON string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "FCM as stdClass",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON\\FCM",
+              "args": {}
+            },
+            "value": {
+              "$object": {
+                "type": "service_account",
+                "project_id": "p",
+                "private_key": "-----BEGIN PRIVATE KEY-----\nk\n-----END PRIVATE KEY-----\n",
+                "client_email": "svc@p.iam.gserviceaccount.com",
+                "token_uri": "https://oauth2.googleapis.com/token"
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be valid Google service account JSON for FCM"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON\\FCM",
+              "args": {}
+            },
+            "value": {
+              "$object": {
+                "type": {
+                  "$object": {
+                    "a": 1
+                  }
+                },
+                "project_id": "p",
+                "private_key": "-----BEGIN PRIVATE KEY-----\nk\n-----END PRIVATE KEY-----\n",
+                "client_email": "svc@p.iam.gserviceaccount.com",
+                "token_uri": "https://oauth2.googleapis.com/token"
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "FCM service account JSON must include a non-empty 'type' field, which identifies the credentials as a Google service account."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON\\FCM",
+              "args": {}
+            },
+            "value": {
+              "$object": {}
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "FCM service account JSON must include a non-empty 'type' field, which identifies the credentials as a Google service account."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON\\FCM",
+              "args": {}
+            },
+            "value": {}
+          },
+          "expect": {
+            "valid": false,
+            "description": "FCM service account JSON must include a non-empty 'type' field, which identifies the credentials as a Google service account."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON\\FCM",
+              "args": {}
+            },
+            "value": "{\"type\": \"service_account\", \"project_id\": \"p\", \"private_key\": \"-----BEGIN PRIVATE KEY-----\\nk\\n-----END PRIVATE KEY-----\\n\", \"client_email\": \"svc@p.iam.gserviceaccount.com\", \"token_uri\": \"https://oauth2.googleapis.com/token\"}"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be valid Google service account JSON for FCM"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "JSON\\FCM",
+              "args": {}
+            },
+            "value": "{\"type\": \"service_account\", \"project_id\": \"p\", \"private_key\": \"-----BEGIN PRIVATE KEY-----\\nk\\n-----END PRIVATE KEY-----\\n\", \"client_email\": \"svc@p.iam.gserviceaccount.com\", \"token_uri\": \"https://oauth2.googleapis.com/token\", \"auth_uri\": null}"
+          },
+          "expect": {
+            "valid": false,
+            "description": "FCM service account JSON field 'auth_uri' must be a non-empty string when provided."
+          }
+        }
+      ]
+    },
+    {
+      "name": "URL and Host with stdClass and arrays",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "URL",
+              "args": {}
+            },
+            "value": {}
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid URL"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "URL",
+              "args": {}
+            },
+            "value": [
+              "http://a.b"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid URL"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "URL",
+              "args": {}
+            },
+            "value": {
+              "$bytes": "YQBi/w=="
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid URL"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "URL",
+              "args": {}
+            },
+            "value": "http://a.b/ÿ"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid URL"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Host with stdClass",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Host",
+              "args": {
+                "whitelist": [
+                  "a.b"
+                ]
+              }
+            },
+            "value": {}
+          },
+          "expect": {
+            "valid": false,
+            "description": "URL host must be one of: a.b"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Host",
+              "args": {
+                "whitelist": [
+                  "a.b"
+                ]
+              }
+            },
+            "value": "http://a.b"
+          },
+          "expect": {
+            "valid": true,
+            "description": "URL host must be one of: a.b"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Host",
+              "args": {
+                "whitelist": [
+                  "a.b"
+                ]
+              }
+            },
+            "value": "http://A.B"
+          },
+          "expect": {
+            "valid": false,
+            "description": "URL host must be one of: a.b"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ArrayList describes a failing FCM",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "ArrayList",
+              "args": {
+                "validator": {
+                  "class": "JSON\\FCM",
+                  "args": {}
+                }
+              }
+            },
+            "value": [
+              {}
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must a valid array and FCM service account JSON must include a non-empty 'type' field, which identifies the credentials as a Google service account."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "ArrayList",
+              "args": {
+                "validator": {
+                  "class": "JSON\\FCM",
+                  "args": {}
+                }
+              }
+            },
+            "value": [
+              {
+                "type": "service_account",
+                "project_id": "p",
+                "private_key": "-----BEGIN PRIVATE KEY-----\nk\n-----END PRIVATE KEY-----\n",
+                "client_email": "svc@p.iam.gserviceaccount.com",
+                "token_uri": "https://oauth2.googleapis.com/token"
+              },
+              {
+                "type": "x"
+              }
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must a valid array and FCM service account JSON must include a non-empty 'project_id' field, which identifies the Firebase project receiving messages."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "ArrayList",
+              "args": {
+                "validator": {
+                  "class": "JSON\\FCM",
+                  "args": {}
+                }
+              }
+            },
+            "value": []
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must a valid array and Value must be valid Google service account JSON for FCM"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nullable describes a failing FCM",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Nullable",
+              "args": {
+                "validator": {
+                  "class": "JSON\\FCM",
+                  "args": {}
+                }
+              }
+            },
+            "value": {
+              "type": "service_account"
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "FCM service account JSON must include a non-empty 'project_id' field, which identifies the Firebase project receiving messages. or null"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Nullable",
+              "args": {
+                "validator": {
+                  "class": "JSON\\FCM",
+                  "args": {}
+                }
+              }
+            },
+            "value": null
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be valid Google service account JSON for FCM or null"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Multiple describes a failing FCM",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Multiple",
+              "args": {
+                "rules": [
+                  {
+                    "class": "Text",
+                    "args": {
+                      "length": 0,
+                      "min": 0
+                    }
+                  },
+                  {
+                    "class": "JSON\\FCM",
+                    "args": {}
+                  }
+                ]
+              }
+            },
+            "value": "{}"
+          },
+          "expect": {
+            "valid": false,
+            "description": "1. Value must be a valid string and exactly 0 chars \n2. FCM service account JSON must include a non-empty 'type' field, which identifies the credentials as a Google service account. \n"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Multiple",
+              "args": {
+                "rules": [
+                  {
+                    "class": "Text",
+                    "args": {
+                      "length": 0,
+                      "min": 0
+                    }
+                  },
+                  {
+                    "class": "JSON\\FCM",
+                    "args": {}
+                  }
+                ]
+              }
+            },
+            "value": 1
+          },
+          "expect": {
+            "valid": false,
+            "description": "1. Value must be a valid string and exactly 0 chars \n2. Value must be valid Google service account JSON for FCM \n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "AnyOf describes the rule tried last",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "AnyOf",
+              "args": {
+                "validators": [
+                  {
+                    "class": "Integer",
+                    "args": {}
+                  },
+                  {
+                    "class": "Text",
+                    "args": {
+                      "length": 2
+                    }
+                  }
+                ]
+              }
+            },
+            "value": 1
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "AnyOf",
+              "args": {
+                "validators": [
+                  {
+                    "class": "Integer",
+                    "args": {}
+                  },
+                  {
+                    "class": "Text",
+                    "args": {
+                      "length": 2
+                    }
+                  }
+                ]
+              }
+            },
+            "value": "ab"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid string and at least 1 chars and no longer than 2 chars"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "AnyOf",
+              "args": {
+                "validators": [
+                  {
+                    "class": "Integer",
+                    "args": {}
+                  },
+                  {
+                    "class": "Text",
+                    "args": {
+                      "length": 2
+                    }
+                  }
+                ]
+              }
+            },
+            "value": "abc"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string and at least 1 chars and no longer than 2 chars"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "AnyOf",
+              "args": {
+                "validators": [
+                  {
+                    "class": "Integer",
+                    "args": {}
+                  },
+                  {
+                    "class": "Text",
+                    "args": {
+                      "length": 2
+                    }
+                  }
+                ]
+              }
+            },
+            "value": []
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string and at least 1 chars and no longer than 2 chars"
+          }
+        }
+      ]
+    },
+    {
+      "name": "NoneOf describes the rule that passed",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "NoneOf",
+              "args": {
+                "validators": [
+                  {
+                    "class": "Integer",
+                    "args": {}
+                  },
+                  {
+                    "class": "Text",
+                    "args": {
+                      "length": 2
+                    }
+                  }
+                ]
+              }
+            },
+            "value": 1
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "NoneOf",
+              "args": {
+                "validators": [
+                  {
+                    "class": "Integer",
+                    "args": {}
+                  },
+                  {
+                    "class": "Text",
+                    "args": {
+                      "length": 2
+                    }
+                  }
+                ]
+              }
+            },
+            "value": "ab"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string and at least 1 chars and no longer than 2 chars"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "NoneOf",
+              "args": {
+                "validators": [
+                  {
+                    "class": "Integer",
+                    "args": {}
+                  },
+                  {
+                    "class": "Text",
+                    "args": {
+                      "length": 2
+                    }
+                  }
+                ]
+              }
+            },
+            "value": "abc"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Empty composites cannot be described",
+      "steps": [
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "class": "AllOf",
+              "args": {
+                "validators": []
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function getDescription() on null"
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "class": "AnyOf",
+              "args": {
+                "validators": []
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function getDescription() on null"
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "class": "NoneOf",
+              "args": {
+                "validators": []
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function getDescription() on null"
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "class": "ArrayList",
+              "args": {
+                "validator": {
+                  "class": "AllOf",
+                  "args": {
+                    "validators": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function getDescription() on null"
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "class": "Nullable",
+              "args": {
+                "validator": {
+                  "class": "AnyOf",
+                  "args": {
+                    "validators": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function getDescription() on null"
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "class": "Multiple",
+              "args": {
+                "rules": [
+                  {
+                    "class": "NoneOf",
+                    "args": {
+                      "validators": []
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function getDescription() on null"
+            }
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "AnyOf",
+              "args": {
+                "validators": []
+              }
+            },
+            "value": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function getDescription() on null"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "AllOf",
+            "args": {
+              "validators": []
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            },
+            "value": 1
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function getDescription() on null"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "WhiteList strict list holding a stdClass cannot be described",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "a",
+                  {}
+                ],
+                "strict": true
+              }
+            },
+            "value": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Object of class stdClass could not be converted to string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Empty composites validate",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "class": "AllOf",
+              "args": {
+                "validators": []
+              }
+            },
+            "value": 1
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "class": "AnyOf",
+              "args": {
+                "validators": []
+              }
+            },
+            "value": 1
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "class": "NoneOf",
+              "args": {
+                "validators": []
+              }
+            },
+            "value": 1
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "class": "Multiple",
+              "args": {
+                "rules": []
+              }
+            },
+            "value": 1
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "class": "Multiple",
+              "args": {
+                "rules": []
+              }
+            }
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "AllOf keeps the failed rule across calls",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Text",
+            "args": {
+              "length": 3
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "HexColor",
+            "args": {}
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "AllOf",
+            "args": {
+              "validators": [
+                {
+                  "$ref": "t"
+                },
+                {
+                  "$ref": "h"
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            }
+          },
+          "expect": "Value must be a valid string and at least 1 chars and no longer than 3 chars"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            },
+            "value": "abcd"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            }
+          },
+          "expect": "Value must be a valid string and at least 1 chars and no longer than 3 chars"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            },
+            "value": "fff"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            }
+          },
+          "expect": "Value must be a valid string and at least 1 chars and no longer than 3 chars"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            },
+            "value": "ggg"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            }
+          },
+          "expect": "Value must be a valid Hex color code"
+        }
+      ]
+    },
+    {
+      "name": "Sequences replay the decisions",
+      "steps": [
+        {
+          "op": "validator.sequence",
+          "args": {
+            "validator": {
+              "class": "NoneOf",
+              "args": {
+                "validators": [
+                  {
+                    "class": "Boolean",
+                    "args": {
+                      "loose": true
+                    }
+                  },
+                  {
+                    "class": "Text",
+                    "args": {
+                      "length": 2
+                    }
+                  }
+                ]
+              }
+            },
+            "values": [
+              true,
+              "abc",
+              "x",
+              5,
+              "1"
+            ]
+          },
+          "expect": [
+            {
+              "valid": false,
+              "description": "Value must be a valid boolean"
+            },
+            {
+              "valid": true,
+              "description": "Value must be a valid boolean"
+            },
+            {
+              "valid": false,
+              "description": "Value must be a valid string and at least 1 chars and no longer than 2 chars"
+            },
+            {
+              "valid": true,
+              "description": "Value must be a valid string and at least 1 chars and no longer than 2 chars"
+            },
+            {
+              "valid": false,
+              "description": "Value must be a valid boolean"
+            }
+          ]
+        },
+        {
+          "op": "validator.sequence",
+          "args": {
+            "validator": {
+              "class": "AnyOf",
+              "args": {
+                "validators": [
+                  {
+                    "class": "Integer",
+                    "args": {}
+                  },
+                  {
+                    "class": "HexColor",
+                    "args": {}
+                  }
+                ]
+              }
+            },
+            "values": [
+              "fff",
+              1,
+              "x"
+            ]
+          },
+          "expect": [
+            {
+              "valid": true,
+              "description": "Value must be a valid Hex color code"
+            },
+            {
+              "valid": true,
+              "description": "Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647"
+            },
+            {
+              "valid": false,
+              "description": "Value must be a valid Hex color code"
+            }
+          ]
+        },
+        {
+          "op": "validator.sequence",
+          "args": {
+            "validator": {
+              "class": "ArrayList",
+              "args": {
+                "validator": {
+                  "class": "JSON\\FCM",
+                  "args": {}
+                }
+              }
+            },
+            "values": [
+              [
+                {}
+              ],
+              [],
+              [
+                {
+                  "type": "service_account",
+                  "project_id": "p",
+                  "private_key": "-----BEGIN PRIVATE KEY-----\nk\n-----END PRIVATE KEY-----\n",
+                  "client_email": "svc@p.iam.gserviceaccount.com",
+                  "token_uri": "https://oauth2.googleapis.com/token"
+                }
+              ],
+              [
+                {
+                  "type": "x"
+                }
+              ],
+              "x"
+            ]
+          },
+          "expect": [
+            {
+              "valid": false,
+              "description": "Value must a valid array and FCM service account JSON must include a non-empty 'type' field, which identifies the credentials as a Google service account."
+            },
+            {
+              "valid": true,
+              "description": "Value must a valid array and FCM service account JSON must include a non-empty 'type' field, which identifies the credentials as a Google service account."
+            },
+            {
+              "valid": true,
+              "description": "Value must a valid array and Value must be valid Google service account JSON for FCM"
+            },
+            {
+              "valid": false,
+              "description": "Value must a valid array and FCM service account JSON must include a non-empty 'project_id' field, which identifies the Firebase project receiving messages."
+            },
+            {
+              "valid": false,
+              "description": "Value must a valid array and FCM service account JSON must include a non-empty 'project_id' field, which identifies the Firebase project receiving messages."
+            }
+          ]
+        },
+        {
+          "op": "validator.sequence",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "a"
+                ]
+              }
+            },
+            "values": [
+              "a",
+              {}
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Object of class stdClass could not be converted to string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FCM resets its description",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "f"
+            },
+            "value": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "f"
+            }
+          },
+          "expect": "FCM service account JSON must include a non-empty 'type' field, which identifies the credentials as a Google service account."
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "f"
+            },
+            "value": {
+              "type": "service_account",
+              "project_id": "p",
+              "private_key": "-----BEGIN PRIVATE KEY-----\nk\n-----END PRIVATE KEY-----\n",
+              "client_email": "svc@p.iam.gserviceaccount.com",
+              "token_uri": "https://oauth2.googleapis.com/token"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "f"
+            }
+          },
+          "expect": "Value must be valid Google service account JSON for FCM"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "f"
+            },
+            "value": "not json"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "f"
+            }
+          },
+          "expect": "Value must be valid Google service account JSON for FCM"
+        }
+      ]
+    },
+    {
+      "name": "Multiple adds rules",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Text",
+            "args": {
+              "length": 3
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Multiple",
+            "args": {
+              "rules": [
+                {
+                  "$ref": "t"
+                }
+              ],
+              "type": "string"
+            }
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            }
+          },
+          "expect": "1. Value must be a valid string and at least 1 chars and no longer than 3 chars \n"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            },
+            "value": "abc"
+          },
+          "expect": true
+        },
+        {
+          "op": "multiple.add_rule",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            },
+            "rule": {
+              "class": "HexColor",
+              "args": {}
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            }
+          },
+          "expect": "1. Value must be a valid string and at least 1 chars and no longer than 3 chars \n2. Value must be a valid Hex color code \n"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            },
+            "value": "abc"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            },
+            "value": "fff"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AnyOf lists its validators",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "AnyOf",
+            "args": {
+              "validators": [
+                {
+                  "class": "Text",
+                  "args": {
+                    "length": 3
+                  }
+                },
+                {
+                  "class": "Integer",
+                  "args": {
+                    "bits": 8,
+                    "unsigned": true
+                  }
+                }
+              ],
+              "type": "integer"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            },
+            "property": "validators"
+          },
+          "expect": [
+            {
+              "description": "Value must be a valid string and at least 1 chars and no longer than 3 chars",
+              "type": "string"
+            },
+            {
+              "description": "Value must be a valid unsigned 8-bit integer between 0 and 255",
+              "type": "integer"
+            }
+          ]
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            }
+          },
+          "expect": "integer"
+        }
+      ]
+    },
+    {
+      "name": "Getters",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Range",
+            "args": {
+              "min": 1.5,
+              "max": {
+                "$float": "INF"
+              },
+              "format": "double"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "property": "min"
+          },
+          "expect": 1.5
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "property": "max"
+          },
+          "expect": {
+            "$float": "INF"
+          }
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "property": "format"
+          },
+          "expect": "double"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            }
+          },
+          "expect": "Value must be a valid range between 2 and inf"
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Integer",
+            "args": {
+              "bits": 16,
+              "unsigned": true
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "i"
+            },
+            "property": "format"
+          },
+          "expect": "uint16"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "i"
+            }
+          },
+          "expect": "Value must be a valid unsigned 16-bit integer between 0 and 65,535"
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Integer",
+            "args": {
+              "bits": 64
+            }
+          },
+          "bind": "j",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "j"
+            }
+          },
+          "expect": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,808"
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Nullable",
+            "args": {
+              "validator": {
+                "class": "ArrayList",
+                "args": {
+                  "validator": {
+                    "class": "Text",
+                    "args": {
+                      "length": 0
+                    }
+                  },
+                  "length": 2
+                }
+              }
+            }
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "n"
+            },
+            "property": "validator"
+          },
+          "expect": {
+            "description": "Value must a valid array no longer than 2 items and Value must be a valid string and at least 1 chars",
+            "type": "string"
+          }
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "n"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "n"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "Phone normalize decodes bytes",
+      "steps": [
+        {
+          "op": "phone.normalize",
+          "args": {
+            "value": "%FF1234567"
+          },
+          "expect": {
+            "$bytes": "/zEyMzQ1Njc="
+          }
+        },
+        {
+          "op": "phone.normalize",
+          "args": {
+            "value": "%201234567"
+          },
+          "expect": "+1234567"
+        },
+        {
+          "op": "phone.normalize",
+          "args": {
+            "value": "1234567\n"
+          },
+          "expect": "+1234567\n"
+        },
+        {
+          "op": "phone.normalize",
+          "args": {
+            "value": {
+              "$bytes": "YQBi/w=="
+            }
+          },
+          "expect": {
+            "$bytes": "YQBi/w=="
+          }
+        }
+      ]
+    },
+    {
+      "name": "Domain restriction defaults",
+      "steps": [
+        {
+          "op": "domain.restriction",
+          "args": {
+            "hostname": "a.b"
+          },
+          "expect": {
+            "hostname": "a.b",
+            "levels": null,
+            "prefixDenyList": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Globstar with broken classes",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Globstar",
+              "args": {
+                "patterns": [
+                  "[z-a]",
+                  "a[",
+                  "[!]x",
+                  "[^]",
+                  "\\*",
+                  "**/b",
+                  "a/**"
+                ]
+              }
+            },
+            "value": "a["
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Globstar",
+              "args": {
+                "patterns": [
+                  "[z-a]",
+                  "a[",
+                  "[!]x",
+                  "[^]",
+                  "\\*",
+                  "**/b",
+                  "a/**"
+                ]
+              }
+            },
+            "value": "!x"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Globstar",
+              "args": {
+                "patterns": [
+                  "[z-a]",
+                  "a[",
+                  "[!]x",
+                  "[^]",
+                  "\\*",
+                  "**/b",
+                  "a/**"
+                ]
+              }
+            },
+            "value": "^"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Globstar",
+              "args": {
+                "patterns": [
+                  "[z-a]",
+                  "a[",
+                  "[!]x",
+                  "[^]",
+                  "\\*",
+                  "**/b",
+                  "a/**"
+                ]
+              }
+            },
+            "value": "*"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Globstar",
+              "args": {
+                "patterns": [
+                  "[z-a]",
+                  "a[",
+                  "[!]x",
+                  "[^]",
+                  "\\*",
+                  "**/b",
+                  "a/**"
+                ]
+              }
+            },
+            "value": "x/b"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Globstar",
+              "args": {
+                "patterns": [
+                  "[z-a]",
+                  "a[",
+                  "[!]x",
+                  "[^]",
+                  "\\*",
+                  "**/b",
+                  "a/**"
+                ]
+              }
+            },
+            "value": "b"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Globstar",
+              "args": {
+                "patterns": [
+                  "[z-a]",
+                  "a[",
+                  "[!]x",
+                  "[^]",
+                  "\\*",
+                  "**/b",
+                  "a/**"
+                ]
+              }
+            },
+            "value": "a/x/y"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Globstar",
+              "args": {
+                "patterns": [
+                  "[z-a]",
+                  "a[",
+                  "[!]x",
+                  "[^]",
+                  "\\*",
+                  "**/b",
+                  "a/**"
+                ]
+              }
+            },
+            "value": "[z-a]"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Globstar",
+              "args": {
+                "patterns": [
+                  "[z-a]",
+                  "a[",
+                  "[!]x",
+                  "[^]",
+                  "\\*",
+                  "**/b",
+                  "a/**"
+                ]
+              }
+            },
+            "value": {
+              "$bytes": "YQBi/w=="
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Text allow list compares loosely (quirk)",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Text",
+              "args": {
+                "length": 0,
+                "allowList": [
+                  "01",
+                  " 2",
+                  "1e0"
+                ]
+              }
+            },
+            "value": "1"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid string and at least 1 chars and only consist of '01,  2, 1e0' chars"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Text",
+              "args": {
+                "length": 0,
+                "allowList": [
+                  "01",
+                  " 2",
+                  "1e0"
+                ]
+              }
+            },
+            "value": "2"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid string and at least 1 chars and only consist of '01,  2, 1e0' chars"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Text",
+              "args": {
+                "length": 0,
+                "allowList": [
+                  "01",
+                  " 2",
+                  "1e0"
+                ]
+              }
+            },
+            "value": "12"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid string and at least 1 chars and only consist of '01,  2, 1e0' chars"
+          }
+        }
+      ]
+    },
+    {
+      "name": "WhiteList compares loosely (quirk)",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1e3",
+                  "0.0"
+                ]
+              }
+            },
+            "value": "1000"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be one of (1e3, 0.0)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1e3",
+                  "0.0"
+                ]
+              }
+            },
+            "value": 1000
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be one of (1e3, 0.0)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1e3",
+                  "0.0"
+                ]
+              }
+            },
+            "value": "0"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be one of (1e3, 0.0)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1e3",
+                  "0.0"
+                ]
+              }
+            },
+            "value": 0
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be one of (1e3, 0.0)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1e3",
+                  "0.0"
+                ]
+              }
+            },
+            "value": false
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be one of (1e3, 0.0)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "WhiteList",
+              "args": {
+                "list": [
+                  "1e3",
+                  "0.0"
+                ]
+              }
+            },
+            "value": "1E3"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be one of (1e3, 0.0)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patterns without D accept a final newline (quirk)",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "HexColor",
+              "args": {}
+            },
+            "value": "fff\n"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid Hex color code"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "HexColor",
+              "args": {}
+            },
+            "value": "fff\n\n"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid Hex color code"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phone without D accepts a final newline (quirk)",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Phone",
+              "args": {}
+            },
+            "value": "+1234567\n"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Phone number must start with a '+' and contain between 7 and 15 digits."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Domain rejects '0' as empty (quirk)",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Domain",
+              "args": {
+                "allowEmpty": true
+              }
+            },
+            "value": "0"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid domain"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Domain",
+              "args": {
+                "allowEmpty": true
+              }
+            },
+            "value": ""
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid domain"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "Domain",
+              "args": {
+                "allowEmpty": true
+              }
+            },
+            "value": "00"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid domain"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ArrayList description lacks 'be' (quirk)",
+      "steps": [
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "class": "ArrayList",
+              "args": {
+                "validator": {
+                  "class": "Text",
+                  "args": {
+                    "length": 0,
+                    "min": 0
+                  }
+                }
+              }
+            }
+          },
+          "expect": "Value must a valid array and Value must be a valid string and exactly 0 chars"
+        }
+      ]
+    },
+    {
+      "name": "URL compares schemes loosely (quirk)",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": {
+              "class": "URL",
+              "args": {
+                "allowedSchemes": [
+                  ""
+                ]
+              }
+            },
+            "value": "http://a.b"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid URL with following schemes ()"
+          }
+        }
+      ]
+    }
+  ]
+}

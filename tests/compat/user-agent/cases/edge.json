@@ -1,0 +1,3642 @@
+{
+  "source": "edge cases",
+  "cases": [
+    {
+      "name": "model with invalid UTF-8 is the input's bytes",
+      "op": "agent.inspect",
+      "args": {
+        "value": {
+          "$bytes": "TW96aWxsYS81LjAgKExpbnV4OyBBbmRyb2lkIDEzOyBQaXhlbP8gNyBCdWlsZC9YKQ=="
+        }
+      },
+      "expect": {
+        "raw": {
+          "$bytes": "TW96aWxsYS81LjAgKExpbnV4OyBBbmRyb2lkIDEzOyBQaXhlbP8gNyBCdWlsZC9YKQ=="
+        },
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Google",
+            "model": {
+              "$bytes": "UGl4ZWz/IDc="
+            }
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "app name with invalid UTF-8 is the input's bytes",
+      "op": "agent.inspect",
+      "args": {
+        "value": {
+          "$bytes": "Y29tLmV4/2FtcGxlLzEuMCBpUGhvbmUgaU9TLzE4LjE="
+        }
+      },
+      "expect": {
+        "raw": {
+          "$bytes": "Y29tLmV4/2FtcGxlLzEuMCBpUGhvbmUgaU9TLzE4LjE="
+        },
+        "array": {
+          "os": {
+            "code": "IOS",
+            "name": "iOS",
+            "version": "18"
+          },
+          "client": {
+            "type": "mobile app",
+            "code": null,
+            "name": {
+              "$bytes": "Y29tLmV4/2FtcGxl"
+            },
+            "version": "1.0",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Apple",
+            "model": "iPhone"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "lone continuation byte",
+      "op": "agent.inspect",
+      "args": {
+        "value": {
+          "$bytes": "gA=="
+        }
+      },
+      "expect": {
+        "raw": {
+          "$bytes": "gA=="
+        },
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "NUL bytes",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0\u0000(Linux; Android 13;\u0000SM-A536B)\u0000Chrome/120.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0\u0000(Linux; Android 13;\u0000SM-A536B)\u0000Chrome/120.0",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "120.0",
+            "engine": "Blink",
+            "engineVersion": "120.0"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Samsung",
+            "model": "SM-A536B"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Latin-1 model",
+      "op": "agent.inspect",
+      "args": {
+        "value": {
+          "$bytes": "TW96aWxsYS81LjAgKExpbnV4OyBBbmRyb2lkIDEzOyBTTS3pQTUzNkI7IHd2KSBBcHBsZVdlYktpdC81MzcuMzYgVmVyc2lvbi80LjAgQ2hyb21lLzEyMC4wIE1vYmlsZSBTYWZhcmkvNTM3LjM2"
+        }
+      },
+      "expect": {
+        "raw": {
+          "$bytes": "TW96aWxsYS81LjAgKExpbnV4OyBBbmRyb2lkIDEzOyBTTS3pQTUzNkI7IHd2KSBBcHBsZVdlYktpdC81MzcuMzYgVmVyc2lvbi80LjAgQ2hyb21lLzEyMC4wIE1vYmlsZSBTYWZhcmkvNTM3LjM2"
+        },
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CV",
+            "name": "Chrome Webview",
+            "version": "120.0",
+            "engine": "Blink",
+            "engineVersion": "120.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": null,
+            "model": {
+              "$bytes": "U00t6UE1MzZC"
+            }
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "version underscores become dots",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 4.4_2_; GT-P5210) Chrome/1_2.3"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 4.4_2_; GT-P5210) Chrome/1_2.3",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "4.4.2"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "1",
+            "engine": "Blink",
+            "engineVersion": "1"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": null,
+            "model": "GT-P5210"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "display version keeps an empty second part",
+      "op": "agent.inspect",
+      "args": {
+        "value": "curl/1..2"
+      },
+      "expect": {
+        "raw": "curl/1..2",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "library",
+            "code": null,
+            "name": "curl",
+            "version": "1.",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "version made of dots",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0) Firefox/..."
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 10.0) Firefox/...",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "",
+            "engine": "Gecko",
+            "engineVersion": ""
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Python urllib without version",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Python-urllib"
+      },
+      "expect": {
+        "raw": "Python-urllib",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "library",
+            "code": null,
+            "name": "Python urllib",
+            "version": "",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Java version with underscore",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Java/1.8.0_292"
+      },
+      "expect": {
+        "raw": "Java/1.8.0_292",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "library",
+            "code": null,
+            "name": "Java",
+            "version": "1.8",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Windows NT version without mapping",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 7.5; Win64)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 7.5; Win64)",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "7.5"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Windows NT with slash",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT/6.2)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT/6.2)",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "8"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Windows Phone OS",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)",
+        "array": {
+          "os": {
+            "code": "WPH",
+            "name": "Windows Phone",
+            "version": "7.5"
+          },
+          "client": {
+            "type": "browser",
+            "code": "IE",
+            "name": "Internet Explorer",
+            "version": "9.0",
+            "engine": "Trident",
+            "engineVersion": "5.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Microsoft",
+            "model": "IEMobile/9.0"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "HarmonyOS version",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; HarmonyOS 4.0; ALN-AL00) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; HarmonyOS 4.0; ALN-AL00) AppleWebKit/537.36 Chrome/114.0.0.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "HAR",
+            "name": "HarmonyOS",
+            "version": "4.0"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "114.0",
+            "engine": "Blink",
+            "engineVersion": "114.0.0.0"
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "tvOS",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Apple TV; CPU OS 17_0 like Mac OS X) tvOS/17.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Apple TV; CPU OS 17_0 like Mac OS X) tvOS/17.0",
+        "array": {
+          "os": {
+            "code": "ATV",
+            "name": "tvOS",
+            "version": "17.0"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "AppleTV without tvOS token",
+      "op": "agent.inspect",
+      "args": {
+        "value": "AppleTV11,1/11.1"
+      },
+      "expect": {
+        "raw": "AppleTV11,1/11.1",
+        "array": {
+          "os": {
+            "code": "ATV",
+            "name": "tvOS",
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tv",
+            "brand": "Apple",
+            "model": "Apple TV"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "watchOS spaced token",
+      "op": "agent.inspect",
+      "args": {
+        "value": "server-bag [Watch OS,10.4,21T216,Watch6,2]"
+      },
+      "expect": {
+        "raw": "server-bag [Watch OS,10.4,21T216,Watch6,2]",
+        "array": {
+          "os": {
+            "code": "WAS",
+            "name": "watchOS",
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "WatchOS token",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Apple Watch; WatchOS/10_1)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Apple Watch; WatchOS/10_1)",
+        "array": {
+          "os": {
+            "code": "WAS",
+            "name": "watchOS",
+            "version": "10.1"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "wearable",
+            "brand": "Apple",
+            "model": "Apple Watch"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "iPod touch",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (iPod touch; CPU iPhone OS 12_5_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.2 Mobile/15E148 Safari/604.1"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (iPod touch; CPU iPhone OS 12_5_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.2 Mobile/15E148 Safari/604.1",
+        "array": {
+          "os": {
+            "code": "IOS",
+            "name": "iOS",
+            "version": "12.5.7"
+          },
+          "client": {
+            "type": "browser",
+            "code": "MF",
+            "name": "Mobile Safari",
+            "version": "12.1.2",
+            "engine": "WebKit",
+            "engineVersion": "605.1.15"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Apple",
+            "model": "iPhone"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "bare CPU OS is iOS",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (CPU OS 9_3 like Mac OS X)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (CPU OS 9_3 like Mac OS X)",
+        "array": {
+          "os": {
+            "code": "IOS",
+            "name": "iOS",
+            "version": "9.3"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Fire TV",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 11; AFTKA) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 11; AFTKA) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "FIR",
+            "name": "Fire OS",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "108.0",
+            "engine": "Blink",
+            "engineVersion": "108.0.0.0"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": null,
+            "model": "AFTKA"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Android without version",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android; K) Chrome/120.0 Mobile"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android; K) Chrome/120.0 Mobile",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "120.0",
+            "engine": "Blink",
+            "engineVersion": "120.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": null,
+            "model": "K"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Android version with dash",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android/9-1; X) Chrome/120.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android/9-1; X) Chrome/120.0",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "9-1"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "120.0",
+            "engine": "Blink",
+            "engineVersion": "120.0"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": null,
+            "model": "X"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "KaiOS",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Mobile; Nokia_8110_4G; rv:48.0) Gecko/48.0 Firefox/48.0 KAIOS/2.5.2"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Mobile; Nokia_8110_4G; rv:48.0) Gecko/48.0 Firefox/48.0 KAIOS/2.5.2",
+        "array": {
+          "os": {
+            "code": "KOS",
+            "name": "KaiOS",
+            "version": "2.5.2"
+          },
+          "client": {
+            "type": "browser",
+            "code": "FM",
+            "name": "Firefox Mobile",
+            "version": "48.0",
+            "engine": "Gecko",
+            "engineVersion": "48.0"
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Tizen phone",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Tizen 2.3; SAMSUNG SM-Z130H) AppleWebKit/537.3 (KHTML, like Gecko) SamsungBrowser/1.0 Mobile Safari/537.3"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Tizen 2.3; SAMSUNG SM-Z130H) AppleWebKit/537.3 (KHTML, like Gecko) SamsungBrowser/1.0 Mobile Safari/537.3",
+        "array": {
+          "os": {
+            "code": "TIZ",
+            "name": "Tizen",
+            "version": "2.3"
+          },
+          "client": {
+            "type": "browser",
+            "code": "SB",
+            "name": "Samsung Browser",
+            "version": "1.0",
+            "engine": "Blink",
+            "engineVersion": "1.0"
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "webOS phone",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; webOS/2.2.4; U; en-US) AppleWebKit/534.6 (KHTML, like Gecko) webOSBrowser/221.56 Safari/534.6 Pre/3.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; webOS/2.2.4; U; en-US) AppleWebKit/534.6 (KHTML, like Gecko) webOSBrowser/221.56 Safari/534.6 Pre/3.0",
+        "array": {
+          "os": {
+            "code": "WOS",
+            "name": "webOS",
+            "version": "2.2.4"
+          },
+          "client": {
+            "type": "browser",
+            "code": "SF",
+            "name": "Safari",
+            "version": null,
+            "engine": "WebKit",
+            "engineVersion": "534.6"
+          },
+          "device": {
+            "type": "tv",
+            "brand": "LG",
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "RIM Tablet OS",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (PlayBook; U; RIM Tablet OS 2.1.0; en-US) AppleWebKit/536.2+ (KHTML like Gecko) Version/7.2.1.0 Safari/536.2+"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (PlayBook; U; RIM Tablet OS 2.1.0; en-US) AppleWebKit/536.2+ (KHTML like Gecko) Version/7.2.1.0 Safari/536.2+",
+        "array": {
+          "os": {
+            "code": "BLB",
+            "name": "BlackBerry OS",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "SF",
+            "name": "Safari",
+            "version": "7.2.1.0",
+            "engine": "WebKit",
+            "engineVersion": "536.2"
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "BlackBerry model",
+      "op": "agent.inspect",
+      "args": {
+        "value": "BlackBerry9700/5.0.0.862 Profile/MIDP-2.1 Configuration/CLDC-1.1 VendorID/331"
+      },
+      "expect": {
+        "raw": "BlackBerry9700/5.0.0.862 Profile/MIDP-2.1 Configuration/CLDC-1.1 VendorID/331",
+        "array": {
+          "os": {
+            "code": "BLB",
+            "name": "BlackBerry OS",
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "BlackBerry",
+            "model": "5"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Nintendo Wii U OS rule and device rule differ",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Nintendo Wii U) AppleWebKit/536.30"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Nintendo Wii U) AppleWebKit/536.30",
+        "array": {
+          "os": {
+            "code": "WII",
+            "name": "Nintendo",
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "console",
+            "brand": "Nintendo",
+            "model": "Nintendo Wii"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "PlayStation 4",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (PlayStation; PlayStation 4/11.00) AppleWebKit/605.1.15 (KHTML, like Gecko)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (PlayStation; PlayStation 4/11.00) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+        "array": {
+          "os": {
+            "code": "PS3",
+            "name": "PlayStation",
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "console",
+            "brand": "Sony",
+            "model": "PlayStation 4"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "PlayStation Vita with Silk",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (PlayStation Vita 3.74) AppleWebKit/537.73 (KHTML, like Gecko) Silk/3.2"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (PlayStation Vita 3.74) AppleWebKit/537.73 (KHTML, like Gecko) Silk/3.2",
+        "array": {
+          "os": {
+            "code": "PS3",
+            "name": "PlayStation",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "MS",
+            "name": "Mobile Silk",
+            "version": "3.2",
+            "engine": "WebKit",
+            "engineVersion": "537.73"
+          },
+          "device": {
+            "type": "console",
+            "brand": "Sony",
+            "model": "PlayStation Vita"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Xbox Series X with Edge",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox Series X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.82 Safari/537.36 Edge/20.02"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox Series X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.82 Safari/537.36 Edge/20.02",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "PS",
+            "name": "Microsoft Edge",
+            "version": "20.02",
+            "engine": "Blink",
+            "engineVersion": "48.0.2564.82"
+          },
+          "device": {
+            "type": "console",
+            "brand": "Microsoft",
+            "model": "Xbox"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Ubuntu with version",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.3) Gecko/2008092416 Firefox/3.0.3 Ubuntu/8.10 (intrepid)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.3) Gecko/2008092416 Firefox/3.0.3 Ubuntu/8.10 (intrepid)",
+        "array": {
+          "os": {
+            "code": "UBT",
+            "name": "Ubuntu",
+            "version": "8.10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "3.0",
+            "engine": "Gecko",
+            "engineVersion": "3.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Kubuntu wins over Ubuntu word",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0 Kubuntu/22.04"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0 Kubuntu/22.04",
+        "array": {
+          "os": {
+            "code": "KBT",
+            "name": "Kubuntu",
+            "version": "22.04"
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "115.0",
+            "engine": "Gecko",
+            "engineVersion": "115.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Red Hat with version",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0 Red Hat/78.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0 Red Hat/78.0",
+        "array": {
+          "os": {
+            "code": "RHT",
+            "name": "Red Hat",
+            "version": "78.0"
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "78.0",
+            "engine": "Gecko",
+            "engineVersion": "78.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Rocky Linux",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; Linux x86_64; Rocky Linux 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; Linux x86_64; Rocky Linux 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "ROC",
+            "name": "Rocky Linux",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "CH",
+            "name": "Chrome",
+            "version": "120.0",
+            "engine": "Blink",
+            "engineVersion": "120.0.0.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Raspbian",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; Linux armv7l) AppleWebKit/537.36 (KHTML, like Gecko) Raspbian Chromium/78.0.3904.108 Chrome/78.0.3904.108 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; Linux armv7l) AppleWebKit/537.36 (KHTML, like Gecko) Raspbian Chromium/78.0.3904.108 Chrome/78.0.3904.108 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "RAS",
+            "name": "Raspbian",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "CH",
+            "name": "Chrome",
+            "version": "78.0",
+            "engine": "Blink",
+            "engineVersion": "78.0.3904.108"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "distribution word needs boundaries",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; Linux x86_64) Archer/1.0 Debianish"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; Linux x86_64) Archer/1.0 Debianish",
+        "array": {
+          "os": {
+            "code": "LIN",
+            "name": "GNU/Linux",
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "FreeBSD on X11 is GNU/Linux",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; FreeBSD amd64; rv:122.0) Gecko/20100101 Firefox/122.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; FreeBSD amd64; rv:122.0) Gecko/20100101 Firefox/122.0",
+        "array": {
+          "os": {
+            "code": "LIN",
+            "name": "GNU/Linux",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "122.0",
+            "engine": "Gecko",
+            "engineVersion": "122.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Mac OS X with dots",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13",
+        "array": {
+          "os": {
+            "code": "MAC",
+            "name": "Mac",
+            "version": "10.6"
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "3.6",
+            "engine": "Gecko",
+            "engineVersion": "3.6"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": "Apple",
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Mac OS X without version",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/605.1.15"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/605.1.15",
+        "array": {
+          "os": {
+            "code": "MAC",
+            "name": "Mac",
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "desktop",
+            "brand": "Apple",
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Edge legacy",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.19045"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.19045",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "PS",
+            "name": "Microsoft Edge",
+            "version": "18.19045",
+            "engine": "Blink",
+            "engineVersion": "70.0.3538.102"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Edge without Chrome token",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) EdgiOS/124.2478.50 Mobile/15E148"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) EdgiOS/124.2478.50 Mobile/15E148",
+        "array": {
+          "os": {
+            "code": "IOS",
+            "name": "iOS",
+            "version": "17.4"
+          },
+          "client": {
+            "type": "browser",
+            "code": "PS",
+            "name": "Microsoft Edge",
+            "version": "124.2478",
+            "engine": "Blink",
+            "engineVersion": "124.2478.50"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Apple",
+            "model": "iPhone"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Opera Presto",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Opera/9.80 (Windows NT 6.1; WOW64) Presto/2.12.388 Version/12.18"
+      },
+      "expect": {
+        "raw": "Opera/9.80 (Windows NT 6.1; WOW64) Presto/2.12.388 Version/12.18",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "7"
+          },
+          "client": {
+            "type": "browser",
+            "code": "OP",
+            "name": "Opera",
+            "version": "9.80",
+            "engine": "Blink",
+            "engineVersion": "9.80"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Opera Mobi",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Opera/9.80 (Android 2.3.3; Linux; Opera Mobi/ADR-1111101157; U; es-ES) Presto/2.9.201 Version/11.50"
+      },
+      "expect": {
+        "raw": "Opera/9.80 (Android 2.3.3; Linux; Opera Mobi/ADR-1111101157; U; es-ES) Presto/2.9.201 Version/11.50",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "2.3.3"
+          },
+          "client": {
+            "type": "browser",
+            "code": "OM",
+            "name": "Opera Mobile",
+            "version": "9.80",
+            "engine": "Blink",
+            "engineVersion": "9.80"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": null,
+            "model": "Linux"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Opera Mini without Presto",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Opera Mini/8.0"
+      },
+      "expect": {
+        "raw": "Opera Mini/8.0",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "OI",
+            "name": "Opera Mini",
+            "version": "8.0",
+            "engine": "Presto",
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Samsung without Chrome token",
+      "op": "agent.inspect",
+      "args": {
+        "value": "SamsungBrowser/1.0 Mobile"
+      },
+      "expect": {
+        "raw": "SamsungBrowser/1.0 Mobile",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "SB",
+            "name": "Samsung Browser",
+            "version": "1.0",
+            "engine": "Blink",
+            "engineVersion": "1.0"
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Focus without Chrome is not a derivative",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 13) Focus/125.0 Firefox/125.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 13) Focus/125.0 Firefox/125.0",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "FM",
+            "name": "Firefox Mobile",
+            "version": "125.0",
+            "engine": "Gecko",
+            "engineVersion": "125.0"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Huawei Browser desktop",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0) Chrome/99.0 HuaweiBrowser/13.0.5.303"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 10.0) Chrome/99.0 HuaweiBrowser/13.0.5.303",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "HP",
+            "name": "Huawei Browser",
+            "version": "13.0",
+            "engine": "Blink",
+            "engineVersion": "99.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "derivative without any engine token",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Vivaldi/6.2"
+      },
+      "expect": {
+        "raw": "Vivaldi/6.2",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "VI",
+            "name": "Vivaldi",
+            "version": "6.2",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "WebView marker without Chrome token falls through",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 5.0; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 5.0; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "5.0"
+          },
+          "client": {
+            "type": "browser",
+            "code": "SF",
+            "name": "Safari",
+            "version": "4.0",
+            "engine": "WebKit",
+            "engineVersion": "537.36"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Chromium",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chromium/119.0.6045.199 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chromium/119.0.6045.199 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "LIN",
+            "name": "GNU/Linux",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "CH",
+            "name": "Chrome",
+            "version": "119.0",
+            "engine": "Blink",
+            "engineVersion": "119.0.6045.199"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Firefox on Android tablet",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Android 14; Tablet; rv:125.0) Gecko/125.0 Firefox/125.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Android 14; Tablet; rv:125.0) Gecko/125.0 Firefox/125.0",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "14"
+          },
+          "client": {
+            "type": "browser",
+            "code": "FM",
+            "name": "Firefox Mobile",
+            "version": "125.0",
+            "engine": "Gecko",
+            "engineVersion": "125.0"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": null,
+            "model": "Tablet"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Safari without Version",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Safari/605.1.15"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Safari/605.1.15",
+        "array": {
+          "os": {
+            "code": "MAC",
+            "name": "Mac",
+            "version": "10.15"
+          },
+          "client": {
+            "type": "browser",
+            "code": "SF",
+            "name": "Safari",
+            "version": null,
+            "engine": "WebKit",
+            "engineVersion": "605.1.15"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": "Apple",
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "MSIE 6",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)"
+      },
+      "expect": {
+        "raw": "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "XP"
+          },
+          "client": {
+            "type": "browser",
+            "code": "IE",
+            "name": "Internet Explorer",
+            "version": "6.0",
+            "engine": "Trident",
+            "engineVersion": null
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "mobile app with two dots in version",
+      "op": "agent.inspect",
+      "args": {
+        "value": "com.x/1..2 iPhone iOS/1"
+      },
+      "expect": {
+        "raw": "com.x/1..2 iPhone iOS/1",
+        "array": {
+          "os": {
+            "code": "IOS",
+            "name": "iOS",
+            "version": "1"
+          },
+          "client": {
+            "type": "mobile app",
+            "code": null,
+            "name": "com.x",
+            "version": "1.",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Apple",
+            "model": "iPhone"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "mobile app name without dot",
+      "op": "agent.inspect",
+      "args": {
+        "value": "app/1.0 iPhone iOS/1"
+      },
+      "expect": {
+        "raw": "app/1.0 iPhone iOS/1",
+        "array": {
+          "os": {
+            "code": "IOS",
+            "name": "iOS",
+            "version": "1"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Apple",
+            "model": "iPhone"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "mobile app version with letters",
+      "op": "agent.inspect",
+      "args": {
+        "value": "com.x/1.0a iPhone iOS/1"
+      },
+      "expect": {
+        "raw": "com.x/1.0a iPhone iOS/1",
+        "array": {
+          "os": {
+            "code": "IOS",
+            "name": "iOS",
+            "version": "1"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Apple",
+            "model": "iPhone"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "mobile app with empty version",
+      "op": "agent.inspect",
+      "args": {
+        "value": "com.x/ iPhone iOS/1"
+      },
+      "expect": {
+        "raw": "com.x/ iPhone iOS/1",
+        "array": {
+          "os": {
+            "code": "IOS",
+            "name": "iOS",
+            "version": "1"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Apple",
+            "model": "iPhone"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "mobile app with double space",
+      "op": "agent.inspect",
+      "args": {
+        "value": "a.b/1  iOS/1"
+      },
+      "expect": {
+        "raw": "a.b/1  iOS/1",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "mobile app",
+            "code": null,
+            "name": "a.b",
+            "version": "1",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "mobile app with lowercase ios",
+      "op": "agent.inspect",
+      "args": {
+        "value": "a.b/1 c ios/1"
+      },
+      "expect": {
+        "raw": "a.b/1 c ios/1",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Appwrite CLI is not a known client",
+      "op": "agent.inspect",
+      "args": {
+        "value": "AppwriteCLI/6.1.0 (Darwin 23.4.0; arm64)"
+      },
+      "expect": {
+        "raw": "AppwriteCLI/6.1.0 (Darwin 23.4.0; arm64)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "TV brand from Sony BRAVIA",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 9; BRAVIA 4K UR2 Build/PTT1.190515.001.S52) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 9; BRAVIA 4K UR2 Build/PTT1.190515.001.S52) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "9"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "80.0",
+            "engine": "Blink",
+            "engineVersion": "80.0.3987.162"
+          },
+          "device": {
+            "type": "tv",
+            "brand": "Sony",
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "TV brand from the brand table",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 10; Android TV; Xiaomi MiTV) AppleWebKit/537.36 Chrome/88.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 10; Android TV; Xiaomi MiTV) AppleWebKit/537.36 Chrome/88.0",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "88.0",
+            "engine": "Blink",
+            "engineVersion": "88.0"
+          },
+          "device": {
+            "type": "tv",
+            "brand": "Xiaomi",
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "HbbTV Samsung Tizen",
+      "op": "agent.inspect",
+      "args": {
+        "value": "HbbTV/1.5.1 (+DRM; Samsung; SmartTV2021:UAU8000;) Tizen/6.0 Chrome/76"
+      },
+      "expect": {
+        "raw": "HbbTV/1.5.1 (+DRM; Samsung; SmartTV2021:UAU8000;) Tizen/6.0 Chrome/76",
+        "array": {
+          "os": {
+            "code": "TIZ",
+            "name": "Tizen",
+            "version": "6.0"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CH",
+            "name": "Chrome",
+            "version": "76",
+            "engine": "Blink",
+            "engineVersion": "76"
+          },
+          "device": {
+            "type": "tv",
+            "brand": "Samsung",
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Apple Watch device",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Watch OS/10.0 (Apple Watch)"
+      },
+      "expect": {
+        "raw": "Watch OS/10.0 (Apple Watch)",
+        "array": {
+          "os": {
+            "code": "WAS",
+            "name": "watchOS",
+            "version": "10.0"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "wearable",
+            "brand": "Apple",
+            "model": "Apple Watch"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Kindle model",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; U; Android 4.0.3; en-us; KFTT Build/IML74K) AppleWebKit/535.19 (KHTML, like Gecko) Silk/3.68 Mobile Safari/535.19"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; U; Android 4.0.3; en-us; KFTT Build/IML74K) AppleWebKit/535.19 (KHTML, like Gecko) Silk/3.68 Mobile Safari/535.19",
+        "array": {
+          "os": {
+            "code": "FIR",
+            "name": "Fire OS",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "MS",
+            "name": "Mobile Silk",
+            "version": "3.68",
+            "engine": "WebKit",
+            "engineVersion": "535.19"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Amazon",
+            "model": "KFTT"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Windows Phone model",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows Phone 8.1; ARM; Trident/7.0; Touch; rv:11.0; IEMobile/11.0; NOKIA; Lumia 635) like Gecko"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows Phone 8.1; ARM; Trident/7.0; Touch; rv:11.0; IEMobile/11.0; NOKIA; Lumia 635) like Gecko",
+        "array": {
+          "os": {
+            "code": "WPH",
+            "name": "Windows Phone",
+            "version": "8.1"
+          },
+          "client": {
+            "type": "browser",
+            "code": "IE",
+            "name": "Internet Explorer",
+            "version": "11.0",
+            "engine": "Trident",
+            "engineVersion": "7.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Microsoft",
+            "model": "Trident/7.0"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "locale before the model",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; U; Android 4.1.2; zh-cn; GT-I9300 Build/JZO54K) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; U; Android 4.1.2; zh-cn; GT-I9300 Build/JZO54K) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "4.1.2"
+          },
+          "client": {
+            "type": "browser",
+            "code": "SF",
+            "name": "Safari",
+            "version": "4.0",
+            "engine": "WebKit",
+            "engineVersion": "534.30"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": null,
+            "model": "GT-I9300"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "wv instead of a model",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 13; WV) Chrome/120.0 Mobile"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 13; WV) Chrome/120.0 Mobile",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "120.0",
+            "engine": "Blink",
+            "engineVersion": "120.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "tablet models",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 13; Xiaomi Pad 6) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 13; Xiaomi Pad 6) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "120.0",
+            "engine": "Blink",
+            "engineVersion": "120.0.0.0"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Xiaomi",
+            "model": "Xiaomi Pad 6"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Lenovo Tab",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 13; Lenovo Tab M10) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 13; Lenovo Tab M10) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "120.0",
+            "engine": "Blink",
+            "engineVersion": "120.0.0.0"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Lenovo",
+            "model": "Lenovo Tab M10"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Mi brand crosses into the user agent",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 10; Mi) AppleWebKit/537.36 Chrome/118.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 10; Mi) AppleWebKit/537.36 Chrome/118.0.0.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "118.0",
+            "engine": "Blink",
+            "engineVersion": "118.0.0.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Xiaomi",
+            "model": "Mi"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Linux i686 desktop",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; Linux i686; rv:109.0) Gecko/20100101 Firefox/115.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; Linux i686; rv:109.0) Gecko/20100101 Firefox/115.0",
+        "array": {
+          "os": {
+            "code": "LIN",
+            "name": "GNU/Linux",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "115.0",
+            "engine": "Gecko",
+            "engineVersion": "115.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Headless Chrome is a bot and a browser",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.71 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.71 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CH",
+            "name": "Chrome",
+            "version": "120.0",
+            "engine": "Blink",
+            "engineVersion": "120.0.6099.71"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "Headless Chrome",
+            "category": "automation"
+          }
+        },
+        "isBot": true,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Applebot Extended before Applebot",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (compatible; Applebot-Extended/0.1)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (compatible; Applebot-Extended/0.1)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "Applebot Extended",
+            "category": "ai crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "generic bot after a separator",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (compatible; _my-SuperBot_; +http://x)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (compatible; _my-SuperBot_; +http://x)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "my-SuperBot",
+            "category": "crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "generic bot trimmed of dashes",
+      "op": "agent.inspect",
+      "args": {
+        "value": "x -_-Robot- y"
+      },
+      "expect": {
+        "raw": "x -_-Robot- y",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "Robot",
+            "category": "crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "generic bot needs a boundary after",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 Acme-Botanist/1.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 Acme-Botanist/1.0",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "generic spider at the end",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Acme spider"
+      },
+      "expect": {
+        "raw": "Acme spider",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "spider",
+            "category": "crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "generic scraper",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (compatible; data-scraper/2.0)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (compatible; data-scraper/2.0)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "data-scraper",
+            "category": "crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "generic bot with non-UTF-8 before",
+      "op": "agent.inspect",
+      "args": {
+        "value": {
+          "$bytes": "TW96aWxsYS81LjAgKGNvbXBhdGlibGU7IP9ib3QvMS4wKQ=="
+        }
+      },
+      "expect": {
+        "raw": {
+          "$bytes": "TW96aWxsYS81LjAgKGNvbXBhdGlibGU7IP9ib3QvMS4wKQ=="
+        },
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "uppercase bot needle",
+      "op": "agent.inspect",
+      "args": {
+        "value": "MOZILLA/5.0 (COMPATIBLE; GOOGLEBOT/2.1)"
+      },
+      "expect": {
+        "raw": "MOZILLA/5.0 (COMPATIBLE; GOOGLEBOT/2.1)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "Googlebot",
+            "category": "search crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "long repeated tokens",
+      "op": "agent.inspect",
+      "args": {
+        "value": "-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a. Xbot/1"
+      },
+      "expect": {
+        "raw": "-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a. Xbot/1",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "Xbot",
+            "category": "crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "long Trident run",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Trident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/rv:1.0"
+      },
+      "expect": {
+        "raw": "Trident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTrident/rv:1.0",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "IE",
+            "name": "Internet Explorer",
+            "version": "1.0",
+            "engine": "Trident",
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "operating system detector alone",
+      "op": "detect.operating_system",
+      "args": {
+        "value": "Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0"
+      },
+      "expect": {
+        "code": "FED",
+        "name": "Fedora",
+        "version": null
+      }
+    },
+    {
+      "name": "operating system detector on empty",
+      "op": "detect.operating_system",
+      "args": {
+        "value": ""
+      },
+      "expect": {
+        "code": null,
+        "name": null,
+        "version": null
+      }
+    },
+    {
+      "name": "client detector alone",
+      "op": "detect.client",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/113.0.0.0 Mobile Safari/537.36 Focus/125.0"
+      },
+      "expect": {
+        "type": "browser",
+        "code": "FK",
+        "name": "Firefox Focus",
+        "version": "125.0",
+        "engine": "Blink",
+        "engineVersion": "113.0.0.0"
+      }
+    },
+    {
+      "name": "client detector on empty",
+      "op": "detect.client",
+      "args": {
+        "value": ""
+      },
+      "expect": {
+        "type": null,
+        "code": null,
+        "name": null,
+        "version": null,
+        "engine": null,
+        "engineVersion": null
+      }
+    },
+    {
+      "name": "device detector alone",
+      "op": "detect.device",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 12; HONOR WKG-LX9) AppleWebKit/537.36 Chrome/104.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "type": "smartphone",
+        "brand": "Honor",
+        "model": "HONOR WKG-LX9"
+      }
+    },
+    {
+      "name": "device detector on empty",
+      "op": "detect.device",
+      "args": {
+        "value": ""
+      },
+      "expect": {
+        "type": null,
+        "brand": null,
+        "model": null
+      }
+    },
+    {
+      "name": "bot detector alone",
+      "op": "detect.bot",
+      "args": {
+        "value": "Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)"
+      },
+      "expect": {
+        "name": "YandexBot",
+        "category": "search crawler"
+      }
+    },
+    {
+      "name": "bot detector on a human",
+      "op": "detect.bot",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0.0.0 Safari/537.36"
+      },
+      "expect": null
+    },
+    {
+      "name": "bot detector on empty",
+      "op": "detect.bot",
+      "args": {
+        "value": ""
+      },
+      "expect": null
+    },
+    {
+      "name": "operating system values",
+      "steps": [
+        {
+          "op": "os.new",
+          "args": {},
+          "expect": {
+            "array": {
+              "code": null,
+              "name": null,
+              "version": null
+            },
+            "known": false
+          }
+        },
+        {
+          "op": "os.new",
+          "args": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "7"
+          },
+          "expect": {
+            "array": {
+              "code": "WIN",
+              "name": "Windows",
+              "version": "7"
+            },
+            "known": true
+          }
+        },
+        {
+          "op": "os.new",
+          "args": {
+            "code": "X"
+          },
+          "expect": {
+            "array": {
+              "code": "X",
+              "name": null,
+              "version": null
+            },
+            "known": false
+          }
+        },
+        {
+          "op": "os.new",
+          "args": {
+            "name": ""
+          },
+          "expect": {
+            "array": {
+              "code": null,
+              "name": "",
+              "version": null
+            },
+            "known": true
+          }
+        },
+        {
+          "op": "os.new",
+          "args": {
+            "version": {
+              "$bytes": "/w=="
+            }
+          },
+          "expect": {
+            "array": {
+              "code": null,
+              "name": null,
+              "version": {
+                "$bytes": "/w=="
+              }
+            },
+            "known": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "client values",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {},
+          "expect": {
+            "array": {
+              "type": null,
+              "code": null,
+              "name": null,
+              "version": null,
+              "engine": null,
+              "engineVersion": null
+            },
+            "known": false,
+            "browser": false
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "type": "browser"
+          },
+          "expect": {
+            "array": {
+              "type": "browser",
+              "code": null,
+              "name": null,
+              "version": null,
+              "engine": null,
+              "engineVersion": null
+            },
+            "known": false,
+            "browser": true
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "type": "Browser",
+            "name": "X"
+          },
+          "expect": {
+            "array": {
+              "type": "Browser",
+              "code": null,
+              "name": "X",
+              "version": null,
+              "engine": null,
+              "engineVersion": null
+            },
+            "known": true,
+            "browser": false
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "type": "library",
+            "name": "curl",
+            "version": "8.7"
+          },
+          "expect": {
+            "array": {
+              "type": "library",
+              "code": null,
+              "name": "curl",
+              "version": "8.7",
+              "engine": null,
+              "engineVersion": null
+            },
+            "known": true,
+            "browser": false
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "type": "browser",
+            "code": "CH",
+            "name": "Chrome",
+            "version": "1",
+            "engine": "Blink",
+            "engineVersion": "1.0"
+          },
+          "expect": {
+            "array": {
+              "type": "browser",
+              "code": "CH",
+              "name": "Chrome",
+              "version": "1",
+              "engine": "Blink",
+              "engineVersion": "1.0"
+            },
+            "known": true,
+            "browser": true
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "name": {
+              "$bytes": "/3g="
+            }
+          },
+          "expect": {
+            "array": {
+              "type": null,
+              "code": null,
+              "name": {
+                "$bytes": "/3g="
+              },
+              "version": null,
+              "engine": null,
+              "engineVersion": null
+            },
+            "known": true,
+            "browser": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "device values",
+      "steps": [
+        {
+          "op": "device.new",
+          "args": {},
+          "expect": {
+            "array": {
+              "type": null,
+              "brand": null,
+              "model": null
+            },
+            "known": false
+          }
+        },
+        {
+          "op": "device.new",
+          "args": {
+            "type": "tv"
+          },
+          "expect": {
+            "array": {
+              "type": "tv",
+              "brand": null,
+              "model": null
+            },
+            "known": true
+          }
+        },
+        {
+          "op": "device.new",
+          "args": {
+            "brand": "Apple"
+          },
+          "expect": {
+            "array": {
+              "type": null,
+              "brand": "Apple",
+              "model": null
+            },
+            "known": true
+          }
+        },
+        {
+          "op": "device.new",
+          "args": {
+            "model": ""
+          },
+          "expect": {
+            "array": {
+              "type": null,
+              "brand": null,
+              "model": ""
+            },
+            "known": true
+          }
+        },
+        {
+          "op": "device.new",
+          "args": {
+            "type": "smartphone",
+            "brand": "Samsung",
+            "model": {
+              "$bytes": "U00t/w=="
+            }
+          },
+          "expect": {
+            "array": {
+              "type": "smartphone",
+              "brand": "Samsung",
+              "model": {
+                "$bytes": "U00t/w=="
+              }
+            },
+            "known": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "bot values",
+      "steps": [
+        {
+          "op": "bot.new",
+          "args": {
+            "name": "X"
+          },
+          "expect": {
+            "name": "X",
+            "category": "crawler"
+          }
+        },
+        {
+          "op": "bot.new",
+          "args": {
+            "name": "X",
+            "category": "ai crawler"
+          },
+          "expect": {
+            "name": "X",
+            "category": "ai crawler"
+          }
+        },
+        {
+          "op": "bot.new",
+          "args": {
+            "name": "",
+            "category": ""
+          },
+          "expect": {
+            "name": "",
+            "category": ""
+          }
+        },
+        {
+          "op": "bot.new",
+          "args": {
+            "name": {
+              "$bytes": "/w=="
+            },
+            "category": {
+              "$bytes": "/g=="
+            }
+          },
+          "expect": {
+            "name": {
+              "$bytes": "/w=="
+            },
+            "category": {
+              "$bytes": "/g=="
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

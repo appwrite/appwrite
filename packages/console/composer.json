@@ -30,5 +30,10 @@
         "php": ">=8.5",
         "utopia-php/validators": "^2.0"
     },
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "extra": {
+        "utopia": {
+            "category": "runtime"
+        }
+    }
 }

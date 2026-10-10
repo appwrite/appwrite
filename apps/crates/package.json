@@ -1,0 +1,34 @@
+{
+  "name": "crates",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "cd ../.. && bin/compat crates",
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "vite preview",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tanstack/react-router": "1.170.41",
+    "@tanstack/react-start": "1.168.60",
+    "lucide-react": "^0.544.0",
+    "prismjs": "^1.30.0",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.6",
+    "@types/node": "^22.12.0",
+    "@types/prismjs": "^1.26.6",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "5.2.0",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.7.2",
+    "vite": "npm:rolldown-vite@7.3.1",
+    "vite-tsconfig-paths": "^5.1.4"
+  }
+}

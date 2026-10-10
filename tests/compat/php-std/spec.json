@@ -1,0 +1,17 @@
+{
+  "lib": "php-std",
+  "description": "PHP engine functions reimplemented in crates/support/php-std, checked against the real functions. There is no PHP library to cover: every operation calls a built-in.",
+  "complete": true,
+  "php": {
+    "src": [],
+    "tests": []
+  },
+  "rust": {
+    "crate": "crates/support/php-std"
+  },
+  "ops": {},
+  "generators": {},
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": []
+}

@@ -1,0 +1,7502 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "parse: \"12/25/2024\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "12/25/2024"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"12/25\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "12/25"
+      },
+      "expect": {
+        "year": false,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"1/2/3\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "1/2/3"
+      },
+      "expect": {
+        "year": 2003,
+        "month": 1,
+        "day": 2,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"12/25/24\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "12/25/24"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024-12-25\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-12-25"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024/12/25\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024/12/25"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024/1/2\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024/1/2"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 1,
+        "day": 2,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"24-12-25\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "24-12-25"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"+2024-12-25\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "+2024-12-25"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"-0044-03-15\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "-0044-03-15"
+      },
+      "expect": {
+        "year": -44,
+        "month": 3,
+        "day": 15,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"+12345-01-01\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "+12345-01-01"
+      },
+      "expect": {
+        "year": 12345,
+        "month": 1,
+        "day": 1,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"-12345-12-31\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "-12345-12-31"
+      },
+      "expect": {
+        "year": -12345,
+        "month": 12,
+        "day": 31,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"+1234567890123456789-01-01\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "+1234567890123456789-01-01"
+      },
+      "expect": {
+        "year": 1234567890123456789,
+        "month": 1,
+        "day": 1,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024-12\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-12"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 1,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"25.12.2024\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "25.12.2024"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"25.12.24\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "25.12.24"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"25-12-2024\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "25-12-2024"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"25\\t12.2024\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "25\t12.2024"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"20241225\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "20241225"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"20241225T10:30:00\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "20241225T10:30:00"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"20241225t103000\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "20241225t103000"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024-12-25T10:30:00.123+02:00\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-12-25T10:30:00.123+02:00"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.123,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 1,
+        "zone": 7200,
+        "is_dst": false
+      }
+    },
+    {
+      "name": "parse: \"2024-12-25T10:30:00.123\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-12-25T10:30:00.123"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.123,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024-12-25T10:30:00\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-12-25T10:30:00"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024-1-2T3:4:5\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-1-2T3:4:5"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 1,
+        "day": 2,
+        "hour": 3,
+        "minute": 4,
+        "second": 5,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024:12:25 10:30:00\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024:12:25 10:30:00"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024.360\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024.360"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 1,
+        "day": 360,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 1,
+        "warnings": {
+          "9": "The parsed date was invalid"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024360\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024360"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 1,
+        "day": 360,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 1,
+        "warnings": {
+          "8": "The parsed date was invalid"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024-366\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-366"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 1,
+        "day": 366,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 1,
+        "warnings": {
+          "9": "The parsed date was invalid"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024W52\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024W52"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 1,
+        "day": 1,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 357,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"2024-W52-3\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-W52-3"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 1,
+        "day": 1,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 359,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"2024W527\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024W527"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 1,
+        "day": 1,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 363,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"2024-W01\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-W01"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 1,
+        "day": 1,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"dec-25-2024\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "dec-25-2024"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024-dec-25\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-dec-25"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"25/Dec/2024:10:30:00 +0100\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "25/Dec/2024:10:30:00 +0100"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 1,
+        "zone": 3600,
+        "is_dst": false
+      }
+    },
+    {
+      "name": "parse: \"10:30:00.123AM\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "10:30:00.123AM"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.123,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"10:30:00:5pm\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "10:30:00:5pm"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 22,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.5,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"1030\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "1030"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"103000\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "103000"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"t1030\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "t1030"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"T10:30\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "T10:30"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"t10\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "t10"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 10,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"T24\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "T24"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 24,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 1,
+        "warnings": {
+          "4": "The parsed time was invalid"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 20,
+        "minute": 24,
+        "second": 0,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"0000-00-00 00:00:00\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "0000-00-00 00:00:00"
+      },
+      "expect": {
+        "year": 0,
+        "month": 0,
+        "day": 0,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 1,
+        "warnings": {
+          "20": "The parsed date was invalid"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"9999-12-31 23:59:59\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "9999-12-31 23:59:59"
+      },
+      "expect": {
+        "year": 9999,
+        "month": 12,
+        "day": 31,
+        "hour": 23,
+        "minute": 59,
+        "second": 59,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"0001-01-01\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "0001-01-01"
+      },
+      "expect": {
+        "year": 1,
+        "month": 1,
+        "day": 1,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"1970-01-01 00:00:00\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "1970-01-01 00:00:00"
+      },
+      "expect": {
+        "year": 1970,
+        "month": 1,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2038-01-19 03:14:07\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2038-01-19 03:14:07"
+      },
+      "expect": {
+        "year": 2038,
+        "month": 1,
+        "day": 19,
+        "hour": 3,
+        "minute": 14,
+        "second": 7,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"1900-02-29\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "1900-02-29"
+      },
+      "expect": {
+        "year": 1900,
+        "month": 2,
+        "day": 29,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 1,
+        "warnings": {
+          "11": "The parsed date was invalid"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2000-02-29\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2000-02-29"
+      },
+      "expect": {
+        "year": 2000,
+        "month": 2,
+        "day": 29,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2023-02-29\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2023-02-29"
+      },
+      "expect": {
+        "year": 2023,
+        "month": 2,
+        "day": 29,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 1,
+        "warnings": {
+          "11": "The parsed date was invalid"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024-02-30\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-02-30"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 2,
+        "day": 30,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 1,
+        "warnings": {
+          "11": "The parsed date was invalid"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024-13-01\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-13-01"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 1,
+        "day": 1,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": {
+          "6": "Unexpected character"
+        },
+        "is_localtime": true,
+        "zone_type": 1,
+        "zone": -3600,
+        "is_dst": false
+      }
+    },
+    {
+      "name": "parse: \"2024-00-10\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-00-10"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 0,
+        "day": 10,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 1,
+        "warnings": {
+          "11": "The parsed date was invalid"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"24:00\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "24:00"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 24,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 1,
+        "warnings": {
+          "6": "The parsed time was invalid"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"23:60\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "23:60"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 23,
+        "minute": 6,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": {
+          "4": "Unexpected character"
+        },
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"23:59:60\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "23:59:60"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 23,
+        "minute": 59,
+        "second": 60,
+        "fraction": 0.0,
+        "warning_count": 1,
+        "warnings": {
+          "9": "The parsed time was invalid"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"12:60:60\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "12:60:60"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 12,
+        "minute": 6,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 2,
+        "errors": {
+          "4": "Double time specification",
+          "7": "Unexpected character"
+        },
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"25 December 2024\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "25 December 2024"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"December 25, 2024\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "December 25, 2024"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"December 25th, 2024 10am\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "December 25th, 2024 10am"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"Dec 25\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "Dec 25"
+      },
+      "expect": {
+        "year": false,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"Dec 25 10:30\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "Dec 25 10:30"
+      },
+      "expect": {
+        "year": false,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"Dec 25 10:30pm\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "Dec 25 10:30pm"
+      },
+      "expect": {
+        "year": false,
+        "month": 12,
+        "day": 25,
+        "hour": 22,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"Dec 25 10:30:15.5 +01:00\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "Dec 25 10:30:15.5 +01:00"
+      },
+      "expect": {
+        "year": false,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 15,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": {
+          "16": "Unexpected character"
+        },
+        "is_localtime": true,
+        "zone_type": 1,
+        "zone": 3600,
+        "is_dst": false
+      }
+    },
+    {
+      "name": "parse: \"25 Dec\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "25 Dec"
+      },
+      "expect": {
+        "year": false,
+        "month": 12,
+        "day": 25,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"25 dec 2024 10:30:15\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "25 dec 2024 10:30:15"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 15,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"Dec 2024\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "Dec 2024"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 1,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024 Dec\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024 Dec"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 1,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"Wed, 25 Dec 2024 10:30:00 GMT\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "Wed, 25 Dec 2024 10:30:00 GMT"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 2,
+        "zone": 0,
+        "is_dst": false,
+        "tz_abbr": "GMT",
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 3
+        }
+      }
+    },
+    {
+      "name": "parse: \"Wednesday, 25-Dec-24 10:30:00 UTC\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "Wednesday, 25-Dec-24 10:30:00 UTC"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 3,
+        "tz_abbr": "UTC",
+        "tz_id": "UTC",
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 3
+        }
+      }
+    },
+    {
+      "name": "parse: \"2024-12-25 10:30:00 Europe/Paris\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-12-25 10:30:00 Europe/Paris"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 3,
+        "tz_id": "Europe/Paris"
+      }
+    },
+    {
+      "name": "parse: \"2024-12-25 10:30:00 europe/paris\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-12-25 10:30:00 europe/paris"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 1,
+        "warnings": {
+          "27": "Double timezone specification"
+        },
+        "error_count": 2,
+        "errors": {
+          "20": "The timezone could not be found in the database",
+          "26": "Unexpected character"
+        },
+        "is_localtime": true,
+        "zone_type": 0
+      }
+    },
+    {
+      "name": "parse: \"2024-12-25 10:30:00 EST\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-12-25 10:30:00 EST"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 2,
+        "zone": -18000,
+        "is_dst": false,
+        "tz_abbr": "EST"
+      }
+    },
+    {
+      "name": "parse: \"2024-12-25 10:30 +05:30\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-12-25 10:30 +05:30"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 1,
+        "zone": 19800,
+        "is_dst": false
+      }
+    },
+    {
+      "name": "parse: \"10am tomorrow\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "10am tomorrow"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"noon tomorrow\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "noon tomorrow"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"tomorrow noon\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "tomorrow noon"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 12,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"midnight yesterday\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "midnight yesterday"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": -1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"2024-07-01 12:00:00.5 +05:30 foo bar\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-07-01 12:00:00.5 +05:30 foo bar"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 7,
+        "day": 1,
+        "hour": 12,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.5,
+        "warning_count": 1,
+        "warnings": {
+          "29": "Double timezone specification"
+        },
+        "error_count": 1,
+        "errors": {
+          "33": "Double timezone specification"
+        },
+        "is_localtime": true,
+        "zone_type": 1,
+        "zone": 19800,
+        "is_dst": false
+      }
+    },
+    {
+      "name": "parse: \"2024-07-01 2024-07-02\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-07-01 2024-07-02"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 7,
+        "day": 1,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": {
+          "11": "Double date specification"
+        },
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"10:00 11:00\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "10:00 11:00"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 10,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": {
+          "6": "Double time specification"
+        },
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"10:00 +01:00 EST CET\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "10:00 +01:00 EST CET"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 10,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 1,
+        "warnings": {
+          "13": "Double timezone specification"
+        },
+        "error_count": 1,
+        "errors": {
+          "17": "Double timezone specification"
+        },
+        "is_localtime": true,
+        "zone_type": 1,
+        "zone": 3600,
+        "is_dst": false
+      }
+    },
+    {
+      "name": "parse: \"@1700000000 UTC\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "@1700000000 UTC"
+      },
+      "expect": {
+        "year": 1970,
+        "month": 1,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 1,
+        "warnings": {
+          "12": "Double timezone specification"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 1,
+        "zone": 0,
+        "is_dst": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 1700000000
+        }
+      }
+    },
+    {
+      "name": "parse: \"now foo\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "now foo"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": {
+          "4": "The timezone could not be found in the database"
+        },
+        "is_localtime": true,
+        "zone_type": 0
+      }
+    },
+    {
+      "name": "parse: \"10:00 chadt\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "10:00 chadt"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 10,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": {
+          "6": "The timezone could not be found in the database"
+        },
+        "is_localtime": true,
+        "zone_type": 0
+      }
+    },
+    {
+      "name": "parse: \" 10:00 am\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": " 10:00 am"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 10,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"1e3\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "1e3"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 2,
+        "errors": {
+          "0": "Unexpected character",
+          "2": "Unexpected character"
+        },
+        "is_localtime": true,
+        "zone_type": 2,
+        "zone": 18000,
+        "is_dst": false,
+        "tz_abbr": "E"
+      }
+    },
+    {
+      "name": "parse: \"2024-12-25 10:30:00.123456789\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-12-25 10:30:00.123456789"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.123456,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"10.30\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "10.30"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"10.30.15\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "10.30.15"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 10,
+        "minute": 30,
+        "second": 15,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"10.30pm\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "10.30pm"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 22,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"back of 7pm\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "back of 7pm"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 19,
+        "minute": 15,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"8 am\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "8 am"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 8,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"8am\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "8am"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 8,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"8a.m.\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "8a.m."
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 8,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"12am\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "12am"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"12pm\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "12pm"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 12,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"0am\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "0am"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 2,
+        "errors": [
+          "Unexpected character",
+          "The timezone could not be found in the database"
+        ],
+        "is_localtime": true,
+        "zone_type": 0
+      }
+    },
+    {
+      "name": "parse: \"13pm\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "13pm"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 15,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": [
+          "Unexpected character"
+        ],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2024-12-25 00:00:00 +14:00\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-12-25 00:00:00 +14:00"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 12,
+        "day": 25,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 1,
+        "zone": 50400,
+        "is_dst": false
+      }
+    },
+    {
+      "name": "parse: \"2024-03-31 02:30:00 Europe/Paris\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-03-31 02:30:00 Europe/Paris"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 3,
+        "day": 31,
+        "hour": 2,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 3,
+        "tz_id": "Europe/Paris"
+      }
+    },
+    {
+      "name": "parse: \"2024-10-27 02:30:00 Europe/Paris\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-10-27 02:30:00 Europe/Paris"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 10,
+        "day": 27,
+        "hour": 2,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 3,
+        "tz_id": "Europe/Paris"
+      }
+    },
+    {
+      "name": "parse: \"2024-03-10 02:30:00 America/New_York\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-03-10 02:30:00 America/New_York"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 3,
+        "day": 10,
+        "hour": 2,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 3,
+        "tz_id": "America/New_York"
+      }
+    },
+    {
+      "name": "parse: \"2024-11-03 01:30:00 America/New_York\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-11-03 01:30:00 America/New_York"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 11,
+        "day": 3,
+        "hour": 1,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 3,
+        "tz_id": "America/New_York"
+      }
+    },
+    {
+      "name": "parse: \"2024-11-03 01:30:00 EDT\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-11-03 01:30:00 EDT"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 11,
+        "day": 3,
+        "hour": 1,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 2,
+        "zone": -18000,
+        "is_dst": true,
+        "tz_abbr": "EDT"
+      }
+    },
+    {
+      "name": "parse: \"2024-11-03 01:30:00 EST\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-11-03 01:30:00 EST"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 11,
+        "day": 3,
+        "hour": 1,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 2,
+        "zone": -18000,
+        "is_dst": false,
+        "tz_abbr": "EST"
+      }
+    },
+    {
+      "name": "parse: \"2024-04-07 02:30:00 Australia/Lord_Howe\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2024-04-07 02:30:00 Australia/Lord_Howe"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 4,
+        "day": 7,
+        "hour": 2,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 3,
+        "tz_id": "Australia/Lord_Howe"
+      }
+    },
+    {
+      "name": "parse: \"now\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "now"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"today\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "today"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"midnight\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "midnight"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"noon\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "noon"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 12,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"tomorrow\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "tomorrow"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"yesterday\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "yesterday"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": -1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"+1 day\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "+1 day"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"-2 weeks\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "-2 weeks"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": -14,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"+1 week 2 days\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "+1 week 2 days"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 9,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"3 months ago\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "3 months ago"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": -3,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"next monday\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "next monday"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 1
+        }
+      }
+    },
+    {
+      "name": "parse: \"last friday\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "last friday"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": -7,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 5
+        }
+      }
+    },
+    {
+      "name": "parse: \"this sunday\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "this sunday"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"first day of next month\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "first day of next month"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 1,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "first_day_of_month": true
+        }
+      }
+    },
+    {
+      "name": "parse: \"last day of previous month\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "last day of previous month"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": -1,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "last_day_of_month": true
+        }
+      }
+    },
+    {
+      "name": "parse: \"first monday of january 2024\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "first monday of january 2024"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 1,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 1
+        }
+      }
+    },
+    {
+      "name": "parse: \"last sat of this month\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "last sat of this month"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": -7,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 6
+        }
+      }
+    },
+    {
+      "name": "parse: \"second wednesday of next month\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "second wednesday of next month"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 1,
+          "day": 7,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 3
+        }
+      }
+    },
+    {
+      "name": "parse: \"+5 weekdays\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "+5 weekdays"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekdays": 5
+        }
+      }
+    },
+    {
+      "name": "parse: \"-3 weekdays\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "-3 weekdays"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekdays": -3
+        }
+      }
+    },
+    {
+      "name": "parse: \"weekday\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "weekday"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 1
+        }
+      }
+    },
+    {
+      "name": "parse: \"front of 19\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "front of 19"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 18,
+        "minute": 45,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"back of 0\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "back of 0"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 15,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"Back of 7\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "Back of 7"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 6,
+        "minute": 45,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"+1 fortnight\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "+1 fortnight"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 14,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"-10 msec\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "-10 msec"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"+250 ms\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "+250 ms"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"+1 µs\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "+1 µs"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"+3 usec\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "+3 usec"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"next week\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "next week"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 7,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 1
+        }
+      }
+    },
+    {
+      "name": "parse: \"last week\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "last week"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": -7,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 1
+        }
+      }
+    },
+    {
+      "name": "parse: \"this week\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "this week"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 1
+        }
+      }
+    },
+    {
+      "name": "parse: \"previous week\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "previous week"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": -7,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 1
+        }
+      }
+    },
+    {
+      "name": "parse: \"+1 year 2 months 3 days 4 hours 5 minutes 6 seconds\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "+1 year 2 months 3 days 4 hours 5 minutes 6 seconds"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 1,
+          "month": 2,
+          "day": 3,
+          "hour": 4,
+          "minute": 5,
+          "second": 6
+        }
+      }
+    },
+    {
+      "name": "parse: \"1 hour ago\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "1 hour ago"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": -1,
+          "minute": 0,
+          "second": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"monday next week\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "monday next week"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 7,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 1
+        }
+      }
+    },
+    {
+      "name": "parse: \"sunday this week\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "sunday this week"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 0
+        }
+      }
+    },
+    {
+      "name": "parse: \"@1700000000\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "@1700000000"
+      },
+      "expect": {
+        "year": 1970,
+        "month": 1,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 1,
+        "zone": 0,
+        "is_dst": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 1700000000
+        }
+      }
+    },
+    {
+      "name": "parse: \"@-1\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "@-1"
+      },
+      "expect": {
+        "year": 1970,
+        "month": 1,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 1,
+        "zone": 0,
+        "is_dst": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": -1
+        }
+      }
+    },
+    {
+      "name": "parse: \"\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": ""
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": [
+          "Empty string"
+        ],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \" \"",
+      "op": "datetime.parse",
+      "args": {
+        "s": " "
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"  2024-01-01  \"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "  2024-01-01  "
+      },
+      "expect": {
+        "year": 2024,
+        "month": 1,
+        "day": 1,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"2021-02-30\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "2021-02-30"
+      },
+      "expect": {
+        "year": 2021,
+        "month": 2,
+        "day": 30,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 1,
+        "warnings": {
+          "11": "The parsed date was invalid"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"10:00 25:00\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "10:00 25:00"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": 10,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 2,
+        "errors": {
+          "6": "Unexpected character",
+          "7": "Double time specification"
+        },
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse: \"a\\u0000b\"",
+      "op": "datetime.parse",
+      "args": {
+        "s": "a\u0000b"
+      },
+      "expect": {
+        "year": false,
+        "month": false,
+        "day": false,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 1,
+        "warnings": {
+          "2": "Double timezone specification"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 2,
+        "zone": 3600,
+        "is_dst": false,
+        "tz_abbr": "A"
+      }
+    },
+    {
+      "name": "strtotime: \"+1 week 2 days\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "+1 week 2 days",
+        "base": 1791544240
+      },
+      "expect": 1792321840
+    },
+    {
+      "name": "strtotime: \"next monday\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "next monday",
+        "base": 1791544240
+      },
+      "expect": 1791763200
+    },
+    {
+      "name": "strtotime: \"last day of next month\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "last day of next month",
+        "base": 1791544240
+      },
+      "expect": 1796037040
+    },
+    {
+      "name": "strtotime: \"first monday of january 2024\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "first monday of january 2024",
+        "base": 1791544240
+      },
+      "expect": 1704067200
+    },
+    {
+      "name": "strtotime: \"tomorrow noon\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "tomorrow noon",
+        "base": 1791544240
+      },
+      "expect": 1791633600
+    },
+    {
+      "name": "strtotime: \"yesterday 14:00\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "yesterday 14:00",
+        "base": 1791544240
+      },
+      "expect": 1791468000
+    },
+    {
+      "name": "strtotime: \"last sat of this month\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "last sat of this month",
+        "base": 1791544240
+      },
+      "expect": 1793404800
+    },
+    {
+      "name": "strtotime: \"+5 weekdays\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "+5 weekdays",
+        "base": 1791544240
+      },
+      "expect": 1792149040
+    },
+    {
+      "name": "strtotime: \"monday next week\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "monday next week",
+        "base": 1791544240
+      },
+      "expect": 1791763200
+    },
+    {
+      "name": "strtotime: \"2024-02-29 +1 year\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "2024-02-29 +1 year",
+        "base": 1791544240
+      },
+      "expect": 1740787200
+    },
+    {
+      "name": "strtotime: \"2024-01-31 +1 month\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "2024-01-31 +1 month",
+        "base": 1791544240
+      },
+      "expect": 1709337600
+    },
+    {
+      "name": "strtotime: \"first day of\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "first day of",
+        "base": 1791544240
+      },
+      "expect": 1790853040
+    },
+    {
+      "name": "strtotime: \"Europe/Paris\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "Europe/Paris",
+        "base": 1791544240
+      },
+      "expect": 1791537040
+    },
+    {
+      "name": "strtotime: \"10:00 Europe/Paris\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "10:00 Europe/Paris",
+        "base": 1791544240
+      },
+      "expect": 1791532800
+    },
+    {
+      "name": "strtotime: \"@1700000000.5\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "@1700000000.5",
+        "base": 1791544240
+      },
+      "expect": 1700000000
+    },
+    {
+      "name": "strtotime: \"foo\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "foo",
+        "base": 1791544240
+      },
+      "expect": false
+    },
+    {
+      "name": "strtotime: \"\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "",
+        "base": 1791544240
+      },
+      "expect": false
+    },
+    {
+      "name": "strtotime: \"now\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "now",
+        "base": 1791544240
+      },
+      "expect": 1791544240
+    },
+    {
+      "name": "strtotime: \"NOW\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "NOW",
+        "base": 1791544240
+      },
+      "expect": 1791544240
+    },
+    {
+      "name": "strtotime: \"back of 7pm\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "back of 7pm",
+        "base": 1791544240
+      },
+      "expect": 1791573300
+    },
+    {
+      "name": "strtotime: \"Back of 7pm\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "Back of 7pm",
+        "base": 1791544240
+      },
+      "expect": 1791571500
+    },
+    {
+      "name": "strtotime: \"weekday\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "weekday",
+        "base": 1791544240
+      },
+      "expect": 1791763200
+    },
+    {
+      "name": "strtotime: \"+1 weekday\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "+1 weekday",
+        "base": 1791544240
+      },
+      "expect": 1791803440
+    },
+    {
+      "name": "strtotime: \"-1 weekday\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "-1 weekday",
+        "base": 1791544240
+      },
+      "expect": 1791457840
+    },
+    {
+      "name": "strtotime: \"this week\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "this week",
+        "base": 1791544240
+      },
+      "expect": 1791198640
+    },
+    {
+      "name": "strtotime: \"sunday this week\"",
+      "op": "datetime.strtotime",
+      "args": {
+        "s": "sunday this week",
+        "base": 1791544240
+      },
+      "expect": 1791676800
+    },
+    {
+      "name": "date: Y-m-d H:i:s.v at 0",
+      "op": "datetime.date",
+      "args": {
+        "format": "Y-m-d H:i:s.v",
+        "ts": 0
+      },
+      "expect": "1970-01-01 00:00:00.000"
+    },
+    {
+      "name": "date: Y-m-d H:i:s.v at -124334438400",
+      "op": "datetime.date",
+      "args": {
+        "format": "Y-m-d H:i:s.v",
+        "ts": -124334438400
+      },
+      "expect": "-1971-12-31 00:00:00.000"
+    },
+    {
+      "name": "date: Y-m-d H:i:s.v at 1719835200",
+      "op": "datetime.date",
+      "args": {
+        "format": "Y-m-d H:i:s.v",
+        "ts": 1719835200
+      },
+      "expect": "2024-07-01 12:00:00.000"
+    },
+    {
+      "name": "date: Y-m-d H:i:s.v at -1",
+      "op": "datetime.date",
+      "args": {
+        "format": "Y-m-d H:i:s.v",
+        "ts": -1
+      },
+      "expect": "1969-12-31 23:59:59.000"
+    },
+    {
+      "name": "date: Y-m-d H:i:s.v at 253402300800",
+      "op": "datetime.date",
+      "args": {
+        "format": "Y-m-d H:i:s.v",
+        "ts": 253402300800
+      },
+      "expect": "10000-01-01 00:00:00.000"
+    },
+    {
+      "name": "date: Y-m-d\\TH:i:s.vP at 0",
+      "op": "datetime.date",
+      "args": {
+        "format": "Y-m-d\\TH:i:s.vP",
+        "ts": 0
+      },
+      "expect": "1970-01-01T00:00:00.000+00:00"
+    },
+    {
+      "name": "date: Y-m-d\\TH:i:s.vP at -124334438400",
+      "op": "datetime.date",
+      "args": {
+        "format": "Y-m-d\\TH:i:s.vP",
+        "ts": -124334438400
+      },
+      "expect": "-1971-12-31T00:00:00.000+00:00"
+    },
+    {
+      "name": "date: Y-m-d\\TH:i:s.vP at 1719835200",
+      "op": "datetime.date",
+      "args": {
+        "format": "Y-m-d\\TH:i:s.vP",
+        "ts": 1719835200
+      },
+      "expect": "2024-07-01T12:00:00.000+00:00"
+    },
+    {
+      "name": "date: Y-m-d\\TH:i:s.vP at -1",
+      "op": "datetime.date",
+      "args": {
+        "format": "Y-m-d\\TH:i:s.vP",
+        "ts": -1
+      },
+      "expect": "1969-12-31T23:59:59.000+00:00"
+    },
+    {
+      "name": "date: Y-m-d\\TH:i:s.vP at 253402300800",
+      "op": "datetime.date",
+      "args": {
+        "format": "Y-m-d\\TH:i:s.vP",
+        "ts": 253402300800
+      },
+      "expect": "10000-01-01T00:00:00.000+00:00"
+    },
+    {
+      "name": "date: D, d M Y H:i:s at 0",
+      "op": "datetime.date",
+      "args": {
+        "format": "D, d M Y H:i:s",
+        "ts": 0
+      },
+      "expect": "Thu, 01 Jan 1970 00:00:00"
+    },
+    {
+      "name": "date: D, d M Y H:i:s at -124334438400",
+      "op": "datetime.date",
+      "args": {
+        "format": "D, d M Y H:i:s",
+        "ts": -124334438400
+      },
+      "expect": "Mon, 31 Dec -1971 00:00:00"
+    },
+    {
+      "name": "date: D, d M Y H:i:s at 1719835200",
+      "op": "datetime.date",
+      "args": {
+        "format": "D, d M Y H:i:s",
+        "ts": 1719835200
+      },
+      "expect": "Mon, 01 Jul 2024 12:00:00"
+    },
+    {
+      "name": "date: D, d M Y H:i:s at -1",
+      "op": "datetime.date",
+      "args": {
+        "format": "D, d M Y H:i:s",
+        "ts": -1
+      },
+      "expect": "Wed, 31 Dec 1969 23:59:59"
+    },
+    {
+      "name": "date: D, d M Y H:i:s at 253402300800",
+      "op": "datetime.date",
+      "args": {
+        "format": "D, d M Y H:i:s",
+        "ts": 253402300800
+      },
+      "expect": "Sat, 01 Jan 10000 00:00:00"
+    },
+    {
+      "name": "date: c at 0",
+      "op": "datetime.date",
+      "args": {
+        "format": "c",
+        "ts": 0
+      },
+      "expect": "1970-01-01T00:00:00+00:00"
+    },
+    {
+      "name": "date: c at -124334438400",
+      "op": "datetime.date",
+      "args": {
+        "format": "c",
+        "ts": -124334438400
+      },
+      "expect": "-1971-12-31T00:00:00+00:00"
+    },
+    {
+      "name": "date: c at 1719835200",
+      "op": "datetime.date",
+      "args": {
+        "format": "c",
+        "ts": 1719835200
+      },
+      "expect": "2024-07-01T12:00:00+00:00"
+    },
+    {
+      "name": "date: c at -1",
+      "op": "datetime.date",
+      "args": {
+        "format": "c",
+        "ts": -1
+      },
+      "expect": "1969-12-31T23:59:59+00:00"
+    },
+    {
+      "name": "date: c at 253402300800",
+      "op": "datetime.date",
+      "args": {
+        "format": "c",
+        "ts": 253402300800
+      },
+      "expect": "10000-01-01T00:00:00+00:00"
+    },
+    {
+      "name": "date: r at 0",
+      "op": "datetime.date",
+      "args": {
+        "format": "r",
+        "ts": 0
+      },
+      "expect": "Thu, 01 Jan 1970 00:00:00 +0000"
+    },
+    {
+      "name": "date: r at -124334438400",
+      "op": "datetime.date",
+      "args": {
+        "format": "r",
+        "ts": -124334438400
+      },
+      "expect": "Mon, 31 Dec -1971 00:00:00 +0000"
+    },
+    {
+      "name": "date: r at 1719835200",
+      "op": "datetime.date",
+      "args": {
+        "format": "r",
+        "ts": 1719835200
+      },
+      "expect": "Mon, 01 Jul 2024 12:00:00 +0000"
+    },
+    {
+      "name": "date: r at -1",
+      "op": "datetime.date",
+      "args": {
+        "format": "r",
+        "ts": -1
+      },
+      "expect": "Wed, 31 Dec 1969 23:59:59 +0000"
+    },
+    {
+      "name": "date: r at 253402300800",
+      "op": "datetime.date",
+      "args": {
+        "format": "r",
+        "ts": 253402300800
+      },
+      "expect": "Sat, 01 Jan 10000 00:00:00 +0000"
+    },
+    {
+      "name": "date: U at 0",
+      "op": "datetime.date",
+      "args": {
+        "format": "U",
+        "ts": 0
+      },
+      "expect": "0"
+    },
+    {
+      "name": "date: U at -124334438400",
+      "op": "datetime.date",
+      "args": {
+        "format": "U",
+        "ts": -124334438400
+      },
+      "expect": "-124334438400"
+    },
+    {
+      "name": "date: U at 1719835200",
+      "op": "datetime.date",
+      "args": {
+        "format": "U",
+        "ts": 1719835200
+      },
+      "expect": "1719835200"
+    },
+    {
+      "name": "date: U at -1",
+      "op": "datetime.date",
+      "args": {
+        "format": "U",
+        "ts": -1
+      },
+      "expect": "-1"
+    },
+    {
+      "name": "date: U at 253402300800",
+      "op": "datetime.date",
+      "args": {
+        "format": "U",
+        "ts": 253402300800
+      },
+      "expect": "253402300800"
+    },
+    {
+      "name": "date: e T P O p Z I at 0",
+      "op": "datetime.date",
+      "args": {
+        "format": "e T P O p Z I",
+        "ts": 0
+      },
+      "expect": "UTC UTC +00:00 +0000 Z 0 0"
+    },
+    {
+      "name": "date: e T P O p Z I at -124334438400",
+      "op": "datetime.date",
+      "args": {
+        "format": "e T P O p Z I",
+        "ts": -124334438400
+      },
+      "expect": "UTC UTC +00:00 +0000 Z 0 0"
+    },
+    {
+      "name": "date: e T P O p Z I at 1719835200",
+      "op": "datetime.date",
+      "args": {
+        "format": "e T P O p Z I",
+        "ts": 1719835200
+      },
+      "expect": "UTC UTC +00:00 +0000 Z 0 0"
+    },
+    {
+      "name": "date: e T P O p Z I at -1",
+      "op": "datetime.date",
+      "args": {
+        "format": "e T P O p Z I",
+        "ts": -1
+      },
+      "expect": "UTC UTC +00:00 +0000 Z 0 0"
+    },
+    {
+      "name": "date: e T P O p Z I at 253402300800",
+      "op": "datetime.date",
+      "args": {
+        "format": "e T P O p Z I",
+        "ts": 253402300800
+      },
+      "expect": "UTC UTC +00:00 +0000 Z 0 0"
+    },
+    {
+      "name": "date: L N w z t W o at 0",
+      "op": "datetime.date",
+      "args": {
+        "format": "L N w z t W o",
+        "ts": 0
+      },
+      "expect": "0 4 4 0 31 01 1970"
+    },
+    {
+      "name": "date: L N w z t W o at -124334438400",
+      "op": "datetime.date",
+      "args": {
+        "format": "L N w z t W o",
+        "ts": -124334438400
+      },
+      "expect": "0 1 1 364 31 01 -1970"
+    },
+    {
+      "name": "date: L N w z t W o at 1719835200",
+      "op": "datetime.date",
+      "args": {
+        "format": "L N w z t W o",
+        "ts": 1719835200
+      },
+      "expect": "1 1 1 182 31 27 2024"
+    },
+    {
+      "name": "date: L N w z t W o at -1",
+      "op": "datetime.date",
+      "args": {
+        "format": "L N w z t W o",
+        "ts": -1
+      },
+      "expect": "0 3 3 364 31 01 1970"
+    },
+    {
+      "name": "date: L N w z t W o at 253402300800",
+      "op": "datetime.date",
+      "args": {
+        "format": "L N w z t W o",
+        "ts": 253402300800
+      },
+      "expect": "1 6 6 0 31 52 9999"
+    },
+    {
+      "name": "date: x X y Y at 0",
+      "op": "datetime.date",
+      "args": {
+        "format": "x X y Y",
+        "ts": 0
+      },
+      "expect": "1970 +1970 70 1970"
+    },
+    {
+      "name": "date: x X y Y at -124334438400",
+      "op": "datetime.date",
+      "args": {
+        "format": "x X y Y",
+        "ts": -124334438400
+      },
+      "expect": "-1971 -1971 -71 -1971"
+    },
+    {
+      "name": "date: x X y Y at 1719835200",
+      "op": "datetime.date",
+      "args": {
+        "format": "x X y Y",
+        "ts": 1719835200
+      },
+      "expect": "2024 +2024 24 2024"
+    },
+    {
+      "name": "date: x X y Y at -1",
+      "op": "datetime.date",
+      "args": {
+        "format": "x X y Y",
+        "ts": -1
+      },
+      "expect": "1969 +1969 69 1969"
+    },
+    {
+      "name": "date: x X y Y at 253402300800",
+      "op": "datetime.date",
+      "args": {
+        "format": "x X y Y",
+        "ts": 253402300800
+      },
+      "expect": "+10000 +10000 00 10000"
+    },
+    {
+      "name": "date: a A B g G h H at 0",
+      "op": "datetime.date",
+      "args": {
+        "format": "a A B g G h H",
+        "ts": 0
+      },
+      "expect": "am AM 041 12 0 12 00"
+    },
+    {
+      "name": "date: a A B g G h H at -124334438400",
+      "op": "datetime.date",
+      "args": {
+        "format": "a A B g G h H",
+        "ts": -124334438400
+      },
+      "expect": "am AM 041 12 0 12 00"
+    },
+    {
+      "name": "date: a A B g G h H at 1719835200",
+      "op": "datetime.date",
+      "args": {
+        "format": "a A B g G h H",
+        "ts": 1719835200
+      },
+      "expect": "pm PM 541 12 12 12 12"
+    },
+    {
+      "name": "date: a A B g G h H at -1",
+      "op": "datetime.date",
+      "args": {
+        "format": "a A B g G h H",
+        "ts": -1
+      },
+      "expect": "pm PM 041 11 23 11 23"
+    },
+    {
+      "name": "date: a A B g G h H at 253402300800",
+      "op": "datetime.date",
+      "args": {
+        "format": "a A B g G h H",
+        "ts": 253402300800
+      },
+      "expect": "am AM 041 12 0 12 00"
+    },
+    {
+      "name": "date: u v at 0",
+      "op": "datetime.date",
+      "args": {
+        "format": "u v",
+        "ts": 0
+      },
+      "expect": "000000 000"
+    },
+    {
+      "name": "date: u v at -124334438400",
+      "op": "datetime.date",
+      "args": {
+        "format": "u v",
+        "ts": -124334438400
+      },
+      "expect": "000000 000"
+    },
+    {
+      "name": "date: u v at 1719835200",
+      "op": "datetime.date",
+      "args": {
+        "format": "u v",
+        "ts": 1719835200
+      },
+      "expect": "000000 000"
+    },
+    {
+      "name": "date: u v at -1",
+      "op": "datetime.date",
+      "args": {
+        "format": "u v",
+        "ts": -1
+      },
+      "expect": "000000 000"
+    },
+    {
+      "name": "date: u v at 253402300800",
+      "op": "datetime.date",
+      "args": {
+        "format": "u v",
+        "ts": 253402300800
+      },
+      "expect": "000000 000"
+    },
+    {
+      "name": "date: jS F Y at 0",
+      "op": "datetime.date",
+      "args": {
+        "format": "jS F Y",
+        "ts": 0
+      },
+      "expect": "1st January 1970"
+    },
+    {
+      "name": "date: jS F Y at -124334438400",
+      "op": "datetime.date",
+      "args": {
+        "format": "jS F Y",
+        "ts": -124334438400
+      },
+      "expect": "31st December -1971"
+    },
+    {
+      "name": "date: jS F Y at 1719835200",
+      "op": "datetime.date",
+      "args": {
+        "format": "jS F Y",
+        "ts": 1719835200
+      },
+      "expect": "1st July 2024"
+    },
+    {
+      "name": "date: jS F Y at -1",
+      "op": "datetime.date",
+      "args": {
+        "format": "jS F Y",
+        "ts": -1
+      },
+      "expect": "31st December 1969"
+    },
+    {
+      "name": "date: jS F Y at 253402300800",
+      "op": "datetime.date",
+      "args": {
+        "format": "jS F Y",
+        "ts": 253402300800
+      },
+      "expect": "1st January 10000"
+    },
+    {
+      "name": "date: \\ at 0",
+      "op": "datetime.date",
+      "args": {
+        "format": "\\",
+        "ts": 0
+      },
+      "expect": "\u0000"
+    },
+    {
+      "name": "date: \\ at -124334438400",
+      "op": "datetime.date",
+      "args": {
+        "format": "\\",
+        "ts": -124334438400
+      },
+      "expect": "\u0000"
+    },
+    {
+      "name": "date: \\ at 1719835200",
+      "op": "datetime.date",
+      "args": {
+        "format": "\\",
+        "ts": 1719835200
+      },
+      "expect": "\u0000"
+    },
+    {
+      "name": "date: \\ at -1",
+      "op": "datetime.date",
+      "args": {
+        "format": "\\",
+        "ts": -1
+      },
+      "expect": "\u0000"
+    },
+    {
+      "name": "date: \\ at 253402300800",
+      "op": "datetime.date",
+      "args": {
+        "format": "\\",
+        "ts": 253402300800
+      },
+      "expect": "\u0000"
+    },
+    {
+      "name": "date: Y\\ at 0",
+      "op": "datetime.date",
+      "args": {
+        "format": "Y\\",
+        "ts": 0
+      },
+      "expect": "1970\u0000"
+    },
+    {
+      "name": "date: Y\\ at -124334438400",
+      "op": "datetime.date",
+      "args": {
+        "format": "Y\\",
+        "ts": -124334438400
+      },
+      "expect": "-1971\u0000"
+    },
+    {
+      "name": "date: Y\\ at 1719835200",
+      "op": "datetime.date",
+      "args": {
+        "format": "Y\\",
+        "ts": 1719835200
+      },
+      "expect": "2024\u0000"
+    },
+    {
+      "name": "date: Y\\ at -1",
+      "op": "datetime.date",
+      "args": {
+        "format": "Y\\",
+        "ts": -1
+      },
+      "expect": "1969\u0000"
+    },
+    {
+      "name": "date: Y\\ at 253402300800",
+      "op": "datetime.date",
+      "args": {
+        "format": "Y\\",
+        "ts": 253402300800
+      },
+      "expect": "10000\u0000"
+    },
+    {
+      "name": "date: S at 0",
+      "op": "datetime.date",
+      "args": {
+        "format": "S",
+        "ts": 0
+      },
+      "expect": "st"
+    },
+    {
+      "name": "date: S at -124334438400",
+      "op": "datetime.date",
+      "args": {
+        "format": "S",
+        "ts": -124334438400
+      },
+      "expect": "st"
+    },
+    {
+      "name": "date: S at 1719835200",
+      "op": "datetime.date",
+      "args": {
+        "format": "S",
+        "ts": 1719835200
+      },
+      "expect": "st"
+    },
+    {
+      "name": "date: S at -1",
+      "op": "datetime.date",
+      "args": {
+        "format": "S",
+        "ts": -1
+      },
+      "expect": "st"
+    },
+    {
+      "name": "date: S at 253402300800",
+      "op": "datetime.date",
+      "args": {
+        "format": "S",
+        "ts": 253402300800
+      },
+      "expect": "st"
+    },
+    {
+      "name": "gmdate: gmdate",
+      "op": "datetime.gmdate",
+      "args": {
+        "format": "D, d M Y H:i:s \\G\\M\\T",
+        "ts": 1719835200
+      },
+      "expect": "Mon, 01 Jul 2024 12:00:00 GMT"
+    },
+    {
+      "name": "format: zone europe/paris",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "europe/paris",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 14:00:00 europe/paris CEST +02:00 +0200 +02:00 7200 1 1719835200 2024-07-01T14:00:00+02:00"
+    },
+    {
+      "name": "timezone: zone europe/paris",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "europe/paris",
+        "ts": 1719835200
+      },
+      "expect": [
+        "europe/paris",
+        7200
+      ]
+    },
+    {
+      "name": "format: zone EUROPE/PARIS",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "EUROPE/PARIS",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 14:00:00 EUROPE/PARIS CEST +02:00 +0200 +02:00 7200 1 1719835200 2024-07-01T14:00:00+02:00"
+    },
+    {
+      "name": "timezone: zone EUROPE/PARIS",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "EUROPE/PARIS",
+        "ts": 1719835200
+      },
+      "expect": [
+        "EUROPE/PARIS",
+        7200
+      ]
+    },
+    {
+      "name": "format: zone Europe/Paris",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "Europe/Paris",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 14:00:00 Europe/Paris CEST +02:00 +0200 +02:00 7200 1 1719835200 2024-07-01T14:00:00+02:00"
+    },
+    {
+      "name": "timezone: zone Europe/Paris",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "Europe/Paris",
+        "ts": 1719835200
+      },
+      "expect": [
+        "Europe/Paris",
+        7200
+      ]
+    },
+    {
+      "name": "format: zone utc",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "utc",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 12:00:00 UTC UTC +00:00 +0000 Z 0 0 1719835200 2024-07-01T12:00:00+00:00"
+    },
+    {
+      "name": "timezone: zone utc",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "utc",
+        "ts": 1719835200
+      },
+      "expect": [
+        "UTC",
+        0
+      ]
+    },
+    {
+      "name": "format: zone UTC",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "UTC",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 12:00:00 UTC UTC +00:00 +0000 Z 0 0 1719835200 2024-07-01T12:00:00+00:00"
+    },
+    {
+      "name": "timezone: zone UTC",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "UTC",
+        "ts": 1719835200
+      },
+      "expect": [
+        "UTC",
+        0
+      ]
+    },
+    {
+      "name": "format: zone Z",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "Z",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 12:00:00 Z Z +00:00 +0000 Z 0 0 1719835200 2024-07-01T12:00:00+00:00"
+    },
+    {
+      "name": "timezone: zone Z",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "Z",
+        "ts": 1719835200
+      },
+      "expect": [
+        "Z",
+        0
+      ]
+    },
+    {
+      "name": "format: zone +05:30",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "+05:30",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 17:30:00 +05:30 GMT+0530 +05:30 +0530 +05:30 19800 0 1719835200 2024-07-01T17:30:00+05:30"
+    },
+    {
+      "name": "timezone: zone +05:30",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "+05:30",
+        "ts": 1719835200
+      },
+      "expect": [
+        "+05:30",
+        19800
+      ]
+    },
+    {
+      "name": "format: zone EST",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "EST",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 07:00:00 EST EST -05:00 -0500 -05:00 -18000 0 1719835200 2024-07-01T07:00:00-05:00"
+    },
+    {
+      "name": "timezone: zone EST",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "EST",
+        "ts": 1719835200
+      },
+      "expect": [
+        "EST",
+        -18000
+      ]
+    },
+    {
+      "name": "format: zone est",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "est",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 07:00:00 EST EST -05:00 -0500 -05:00 -18000 0 1719835200 2024-07-01T07:00:00-05:00"
+    },
+    {
+      "name": "timezone: zone est",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "est",
+        "ts": 1719835200
+      },
+      "expect": [
+        "EST",
+        -18000
+      ]
+    },
+    {
+      "name": "format: zone CEST",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "CEST",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 14:00:00 CEST CEST +02:00 +0200 +02:00 7200 1 1719835200 2024-07-01T14:00:00+02:00"
+    },
+    {
+      "name": "timezone: zone CEST",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "CEST",
+        "ts": 1719835200
+      },
+      "expect": [
+        "CEST",
+        7200
+      ]
+    },
+    {
+      "name": "format: zone GMT+2",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "GMT+2",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 14:00:00 +02:00 GMT+0200 +02:00 +0200 +02:00 7200 0 1719835200 2024-07-01T14:00:00+02:00"
+    },
+    {
+      "name": "timezone: zone GMT+2",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "GMT+2",
+        "ts": 1719835200
+      },
+      "expect": [
+        "+02:00",
+        7200
+      ]
+    },
+    {
+      "name": "format: zone xyz",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "xyz",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": {
+        "exception": "DateInvalidTimeZoneException",
+        "message": "DateTimeZone::__construct(): Unknown or bad timezone (xyz)"
+      }
+    },
+    {
+      "name": "timezone: zone xyz",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "xyz",
+        "ts": 1719835200
+      },
+      "expect": {
+        "exception": "DateInvalidTimeZoneException",
+        "message": "DateTimeZone::__construct(): Unknown or bad timezone (xyz)"
+      }
+    },
+    {
+      "name": "format: zone Europe/Pariss",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "Europe/Pariss",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": {
+        "exception": "DateInvalidTimeZoneException",
+        "message": "DateTimeZone::__construct(): Unknown or bad timezone (Europe/Pariss)"
+      }
+    },
+    {
+      "name": "timezone: zone Europe/Pariss",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "Europe/Pariss",
+        "ts": 1719835200
+      },
+      "expect": {
+        "exception": "DateInvalidTimeZoneException",
+        "message": "DateTimeZone::__construct(): Unknown or bad timezone (Europe/Pariss)"
+      }
+    },
+    {
+      "name": "format: zone +99:00",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "+99:00",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-05 15:00:00 +99:00 GMT+9900 +99:00 +9900 +99:00 356400 0 1719835200 2024-07-05T15:00:00+99:00"
+    },
+    {
+      "name": "timezone: zone +99:00",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "+99:00",
+        "ts": 1719835200
+      },
+      "expect": [
+        "+99:00",
+        356400
+      ]
+    },
+    {
+      "name": "format: zone +100:00",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "+100:00",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 12:01:00 +00:01 GMT+0001 +00:01 +0001 +00:01 60 0 1719835200 2024-07-01T12:01:00+00:01"
+    },
+    {
+      "name": "timezone: zone +100:00",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "+100:00",
+        "ts": 1719835200
+      },
+      "expect": [
+        "+00:01",
+        60
+      ]
+    },
+    {
+      "name": "format: zone +00:00:01",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "+00:00:01",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 12:00:01 +00:00:01 GMT+0000 +00:00 +0000 Z 1 0 1719835200 2024-07-01T12:00:01+00:00"
+    },
+    {
+      "name": "timezone: zone +00:00:01",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "+00:00:01",
+        "ts": 1719835200
+      },
+      "expect": [
+        "+00:00:01",
+        1
+      ]
+    },
+    {
+      "name": "format: zone -00:00:30",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "-00:00:30",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 11:59:30 -00:00:30 GMT-0000 -00:00 -0000 -00:00 -30 0 1719835200 2024-07-01T11:59:30-00:00"
+    },
+    {
+      "name": "timezone: zone -00:00:30",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "-00:00:30",
+        "ts": 1719835200
+      },
+      "expect": [
+        "-00:00:30",
+        -30
+      ]
+    },
+    {
+      "name": "format: zone (UTC)",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "(UTC)",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 12:00:00 UTC UTC +00:00 +0000 Z 0 0 1719835200 2024-07-01T12:00:00+00:00"
+    },
+    {
+      "name": "timezone: zone (UTC)",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "(UTC)",
+        "ts": 1719835200
+      },
+      "expect": [
+        "UTC",
+        0
+      ]
+    },
+    {
+      "name": "format: zone UTC+1",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "UTC+1",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": {
+        "exception": "DateInvalidTimeZoneException",
+        "message": "DateTimeZone::__construct(): Unknown or bad timezone (UTC+1)"
+      }
+    },
+    {
+      "name": "timezone: zone UTC+1",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "UTC+1",
+        "ts": 1719835200
+      },
+      "expect": {
+        "exception": "DateInvalidTimeZoneException",
+        "message": "DateTimeZone::__construct(): Unknown or bad timezone (UTC+1)"
+      }
+    },
+    {
+      "name": "format: zone Etc/GMT+12",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "Etc/GMT+12",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 00:00:00 Etc/GMT+12 -12 -12:00 -1200 -12:00 -43200 0 1719835200 2024-07-01T00:00:00-12:00"
+    },
+    {
+      "name": "timezone: zone Etc/GMT+12",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "Etc/GMT+12",
+        "ts": 1719835200
+      },
+      "expect": [
+        "Etc/GMT+12",
+        -43200
+      ]
+    },
+    {
+      "name": "format: zone Australia/Lord_Howe",
+      "op": "datetime.format",
+      "args": {
+        "at": "@1719835200",
+        "tz": "Australia/Lord_Howe",
+        "format": "Y-m-d H:i:s e T P O p Z I U c"
+      },
+      "expect": "2024-07-01 22:30:00 Australia/Lord_Howe +1030 +10:30 +1030 +10:30 37800 0 1719835200 2024-07-01T22:30:00+10:30"
+    },
+    {
+      "name": "timezone: zone Australia/Lord_Howe",
+      "op": "datetime.timezone",
+      "args": {
+        "tz": "Australia/Lord_Howe",
+        "ts": 1719835200
+      },
+      "expect": [
+        "Australia/Lord_Howe",
+        37800
+      ]
+    },
+    {
+      "name": "create: 2024-07-01 12:00:00 europe/paris",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-07-01 12:00:00 europe/paris",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": {
+        "exception": "DateMalformedStringException",
+        "message": "Failed to parse time string (2024-07-01 12:00:00 europe/paris) at position 20 (e): The timezone could not be found in the database"
+      }
+    },
+    {
+      "name": "info: 2024-07-01 12:00:00 europe/paris",
+      "op": "datetime.info",
+      "args": {
+        "s": "2024-07-01 12:00:00 europe/paris"
+      },
+      "expect": {
+        "exception": "DateMalformedStringException",
+        "message": "Failed to parse time string (2024-07-01 12:00:00 europe/paris) at position 20 (e): The timezone could not be found in the database"
+      }
+    },
+    {
+      "name": "create: 2024-07-01 12:00 +05:30",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-07-01 12:00 +05:30",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-07-01 12:00:00.000000 +05:30 GMT+0530 +05:30 1719815400"
+    },
+    {
+      "name": "info: 2024-07-01 12:00 +05:30",
+      "op": "datetime.info",
+      "args": {
+        "s": "2024-07-01 12:00 +05:30"
+      },
+      "expect": [
+        1719815400,
+        19800,
+        0,
+        "+05:30"
+      ]
+    },
+    {
+      "name": "create: 2024-07-01 12:00 EST",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-07-01 12:00 EST",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-07-01 12:00:00.000000 EST EST -05:00 1719853200"
+    },
+    {
+      "name": "info: 2024-07-01 12:00 EST",
+      "op": "datetime.info",
+      "args": {
+        "s": "2024-07-01 12:00 EST"
+      },
+      "expect": [
+        1719853200,
+        -18000,
+        0,
+        "EST"
+      ]
+    },
+    {
+      "name": "create: 2021-02-30",
+      "op": "datetime.create",
+      "args": {
+        "s": "2021-02-30",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2021-03-02 00:00:00.000000 UTC UTC +00:00 1614643200"
+    },
+    {
+      "name": "info: 2021-02-30",
+      "op": "datetime.info",
+      "args": {
+        "s": "2021-02-30"
+      },
+      "expect": [
+        1614643200,
+        0,
+        0,
+        "UTC"
+      ]
+    },
+    {
+      "name": "create: 2024-01-01 foo",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-01-01 foo",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": {
+        "exception": "DateMalformedStringException",
+        "message": "Failed to parse time string (2024-01-01 foo) at position 11 (f): The timezone could not be found in the database"
+      }
+    },
+    {
+      "name": "info: 2024-01-01 foo",
+      "op": "datetime.info",
+      "args": {
+        "s": "2024-01-01 foo"
+      },
+      "expect": {
+        "exception": "DateMalformedStringException",
+        "message": "Failed to parse time string (2024-01-01 foo) at position 11 (f): The timezone could not be found in the database"
+      }
+    },
+    {
+      "name": "create: 2024-01-01 2024-01-02",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-01-01 2024-01-02",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": {
+        "exception": "DateMalformedStringException",
+        "message": "Failed to parse time string (2024-01-01 2024-01-02) at position 11 (2): Double date specification"
+      }
+    },
+    {
+      "name": "info: 2024-01-01 2024-01-02",
+      "op": "datetime.info",
+      "args": {
+        "s": "2024-01-01 2024-01-02"
+      },
+      "expect": {
+        "exception": "DateMalformedStringException",
+        "message": "Failed to parse time string (2024-01-01 2024-01-02) at position 11 (2): Double date specification"
+      }
+    },
+    {
+      "name": "create: 2024-07-01T12:00:00.123456Z",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-07-01T12:00:00.123456Z",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-07-01 12:00:00.123456 Z Z +00:00 1719835200"
+    },
+    {
+      "name": "info: 2024-07-01T12:00:00.123456Z",
+      "op": "datetime.info",
+      "args": {
+        "s": "2024-07-01T12:00:00.123456Z"
+      },
+      "expect": [
+        1719835200,
+        0,
+        123456,
+        "Z"
+      ]
+    },
+    {
+      "name": "create: @1700000000.5",
+      "op": "datetime.create",
+      "args": {
+        "s": "@1700000000.5",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2023-11-14 22:13:20.500000 +00:00 GMT+0000 +00:00 1700000000"
+    },
+    {
+      "name": "info: @1700000000.5",
+      "op": "datetime.info",
+      "args": {
+        "s": "@1700000000.5"
+      },
+      "expect": [
+        1700000000,
+        0,
+        500000,
+        "+00:00"
+      ]
+    },
+    {
+      "name": "create: 2024-07-01 a\u0000b",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-07-01 a\u0000b",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-07-01 00:00:00.000000 A A +01:00 1719788400"
+    },
+    {
+      "name": "info: 2024-07-01 a\u0000b",
+      "op": "datetime.info",
+      "args": {
+        "s": "2024-07-01 a\u0000b"
+      },
+      "expect": [
+        1719788400,
+        3600,
+        0,
+        "A"
+      ]
+    },
+    {
+      "name": "create: 2024-03-31 02:30:00 Europe/Paris",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-03-31 02:30:00 Europe/Paris",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-03-31 03:30:00.000000 Europe/Paris CEST +02:00 1711848600"
+    },
+    {
+      "name": "info: 2024-03-31 02:30:00 Europe/Paris",
+      "op": "datetime.info",
+      "args": {
+        "s": "2024-03-31 02:30:00 Europe/Paris"
+      },
+      "expect": [
+        1711848600,
+        7200,
+        0,
+        "Europe/Paris"
+      ]
+    },
+    {
+      "name": "create: 2024-10-27 02:30:00 Europe/Paris",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-10-27 02:30:00 Europe/Paris",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-10-27 02:30:00.000000 Europe/Paris CEST +02:00 1729989000"
+    },
+    {
+      "name": "info: 2024-10-27 02:30:00 Europe/Paris",
+      "op": "datetime.info",
+      "args": {
+        "s": "2024-10-27 02:30:00 Europe/Paris"
+      },
+      "expect": [
+        1729989000,
+        7200,
+        0,
+        "Europe/Paris"
+      ]
+    },
+    {
+      "name": "create: 2024-11-03 01:30:00 America/New_York",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-11-03 01:30:00 America/New_York",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-11-03 01:30:00.000000 America/New_York EDT -04:00 1730611800"
+    },
+    {
+      "name": "info: 2024-11-03 01:30:00 America/New_York",
+      "op": "datetime.info",
+      "args": {
+        "s": "2024-11-03 01:30:00 America/New_York"
+      },
+      "expect": [
+        1730611800,
+        -14400,
+        0,
+        "America/New_York"
+      ]
+    },
+    {
+      "name": "create: 2024-11-03 01:30:00 EDT",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-11-03 01:30:00 EDT",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-11-03 01:30:00.000000 EDT EDT -04:00 1730611800"
+    },
+    {
+      "name": "info: 2024-11-03 01:30:00 EDT",
+      "op": "datetime.info",
+      "args": {
+        "s": "2024-11-03 01:30:00 EDT"
+      },
+      "expect": [
+        1730611800,
+        -14400,
+        0,
+        "EDT"
+      ]
+    },
+    {
+      "name": "create: 2024-11-03 01:30:00 EST",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-11-03 01:30:00 EST",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-11-03 01:30:00.000000 EST EST -05:00 1730615400"
+    },
+    {
+      "name": "info: 2024-11-03 01:30:00 EST",
+      "op": "datetime.info",
+      "args": {
+        "s": "2024-11-03 01:30:00 EST"
+      },
+      "expect": [
+        1730615400,
+        -18000,
+        0,
+        "EST"
+      ]
+    },
+    {
+      "name": "create: 2024-07-01 25:00:00",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-07-01 25:00:00",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": {
+        "exception": "DateMalformedStringException",
+        "message": "Failed to parse time string (2024-07-01 25:00:00) at position 11 (2): Unexpected character"
+      }
+    },
+    {
+      "name": "info: 2024-07-01 25:00:00",
+      "op": "datetime.info",
+      "args": {
+        "s": "2024-07-01 25:00:00"
+      },
+      "expect": {
+        "exception": "DateMalformedStringException",
+        "message": "Failed to parse time string (2024-07-01 25:00:00) at position 11 (2): Unexpected character"
+      }
+    },
+    {
+      "name": "create: 0000-01-01",
+      "op": "datetime.create",
+      "args": {
+        "s": "0000-01-01",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "0000-01-01 00:00:00.000000 UTC UTC +00:00 -62167219200"
+    },
+    {
+      "name": "info: 0000-01-01",
+      "op": "datetime.info",
+      "args": {
+        "s": "0000-01-01"
+      },
+      "expect": [
+        -62167219200,
+        0,
+        0,
+        "UTC"
+      ]
+    },
+    {
+      "name": "create: 9999-12-31",
+      "op": "datetime.create",
+      "args": {
+        "s": "9999-12-31",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "9999-12-31 00:00:00.000000 UTC UTC +00:00 253402214400"
+    },
+    {
+      "name": "info: 9999-12-31",
+      "op": "datetime.info",
+      "args": {
+        "s": "9999-12-31"
+      },
+      "expect": [
+        253402214400,
+        0,
+        0,
+        "UTC"
+      ]
+    },
+    {
+      "name": "create: -4713-01-01 00:00:00",
+      "op": "datetime.create",
+      "args": {
+        "s": "-4713-01-01 00:00:00",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "-4713-01-01 00:00:00.000000 UTC UTC +00:00 -210895056000"
+    },
+    {
+      "name": "info: -4713-01-01 00:00:00",
+      "op": "datetime.info",
+      "args": {
+        "s": "-4713-01-01 00:00:00"
+      },
+      "expect": [
+        -210895056000,
+        0,
+        0,
+        "UTC"
+      ]
+    },
+    {
+      "name": "create: -9999-01-01 00:00:00",
+      "op": "datetime.create",
+      "args": {
+        "s": "-9999-01-01 00:00:00",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "-9999-01-01 00:00:00.000000 UTC UTC +00:00 -377705116800"
+    },
+    {
+      "name": "info: -9999-01-01 00:00:00",
+      "op": "datetime.info",
+      "args": {
+        "s": "-9999-01-01 00:00:00"
+      },
+      "expect": [
+        -377705116800,
+        0,
+        0,
+        "UTC"
+      ]
+    },
+    {
+      "name": "create: database validator minimum",
+      "op": "datetime.create",
+      "args": {
+        "s": "0000-01-01",
+        "format": "Y-m-d H:i:s"
+      },
+      "expect": "0000-01-01 00:00:00"
+    },
+    {
+      "name": "create: database validator maximum",
+      "op": "datetime.create",
+      "args": {
+        "s": "9999-12-31",
+        "format": "Y-m-d H:i:s"
+      },
+      "expect": "9999-12-31 00:00:00"
+    },
+    {
+      "name": "create: explicit zone object",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-07-01 12:00:00",
+        "tz": "Europe/Paris",
+        "format": "c e T"
+      },
+      "expect": "2024-07-01T12:00:00+02:00 Europe/Paris CEST"
+    },
+    {
+      "name": "create: string zone wins over the object",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-07-01 12:00:00 +01:00",
+        "tz": "Europe/Paris",
+        "format": "c e T"
+      },
+      "expect": "2024-07-01T12:00:00+01:00 +01:00 GMT+0100"
+    },
+    {
+      "name": "create: invalid zone object",
+      "op": "datetime.create",
+      "args": {
+        "s": "2024-07-01",
+        "tz": "Mars/Olympus",
+        "format": "c"
+      },
+      "expect": {
+        "exception": "DateInvalidTimeZoneException",
+        "message": "DateTimeZone::__construct(): Unknown or bad timezone (Mars/Olympus)"
+      }
+    },
+    {
+      "name": "modify: \"+1 day\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "+1 day",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-02-01 10:20:30.123456 Europe/Paris CET +01:00 1706779230"
+    },
+    {
+      "name": "modify: \"foo\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "foo",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": {
+        "exception": "DateMalformedStringException",
+        "message": "DateTimeImmutable::modify(): Failed to parse time string (foo) at position 0 (f): The timezone could not be found in the database"
+      }
+    },
+    {
+      "name": "modify: \"\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": {
+        "exception": "DateMalformedStringException",
+        "message": "DateTimeImmutable::modify(): Failed to parse time string () at position 0 ( ): Empty string"
+      }
+    },
+    {
+      "name": "modify: \"10:00\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "10:00",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-01-31 10:00:00.000000 Europe/Paris CET +01:00 1706691600"
+    },
+    {
+      "name": "modify: \"first day of next month\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "first day of next month",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-02-01 10:20:30.123456 Europe/Paris CET +01:00 1706779230"
+    },
+    {
+      "name": "modify: \"@0\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "@0",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "1970-01-01 00:00:00.000000 +00:00 GMT+0000 +00:00 0"
+    },
+    {
+      "name": "modify: \"@1700000000\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "@1700000000",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2023-11-14 22:13:20.000000 +00:00 GMT+0000 +00:00 1700000000"
+    },
+    {
+      "name": "modify: \"Europe/Paris\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "Europe/Paris",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-01-31 10:20:30.123456 Europe/Paris CET +01:00 1706692830"
+    },
+    {
+      "name": "modify: \"+1 month\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "+1 month",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-03-02 10:20:30.123456 Europe/Paris CET +01:00 1709371230"
+    },
+    {
+      "name": "modify: \"-1 month\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "-1 month",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2023-12-31 10:20:30.123456 Europe/Paris CET +01:00 1704014430"
+    },
+    {
+      "name": "modify: \"last day of\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "last day of",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-01-31 10:20:30.123456 Europe/Paris CET +01:00 1706692830"
+    },
+    {
+      "name": "modify: \"midnight\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "midnight",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-01-31 00:00:00.000000 Europe/Paris CET +01:00 1706655600"
+    },
+    {
+      "name": "modify: \"noon\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "noon",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-01-31 12:00:00.000000 Europe/Paris CET +01:00 1706698800"
+    },
+    {
+      "name": "modify: \"+90 minutes\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "+90 minutes",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-01-31 11:50:30.123456 Europe/Paris CET +01:00 1706698230"
+    },
+    {
+      "name": "modify: \"next sunday\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "next sunday",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-02-04 00:00:00.000000 Europe/Paris CET +01:00 1707001200"
+    },
+    {
+      "name": "modify: \"+1 weekday\"",
+      "op": "datetime.modify",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "s": "+1 weekday",
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-02-01 10:20:30.123456 Europe/Paris CET +01:00 1706779230"
+    },
+    {
+      "name": "modify_mutable: mutable",
+      "op": "datetime.modify_mutable",
+      "args": {
+        "base": "2024-01-31 10:20:30",
+        "s": "+1 month",
+        "format": "Y-m-d H:i:s"
+      },
+      "expect": "2024-03-02 10:20:30"
+    },
+    {
+      "name": "modify_mutable: mutable error",
+      "op": "datetime.modify_mutable",
+      "args": {
+        "base": "2024-01-31 10:20:30",
+        "s": "foo",
+        "format": "Y-m-d H:i:s"
+      },
+      "expect": {
+        "exception": "DateMalformedStringException",
+        "message": "DateTime::modify(): Failed to parse time string (foo) at position 0 (f): The timezone could not be found in the database"
+      }
+    },
+    {
+      "name": "add: +10 seconds",
+      "op": "datetime.add",
+      "args": {
+        "base": "2024-01-31 10:20:30.5",
+        "interval": "+10 seconds",
+        "format": "Y-m-d H:i:s.u e"
+      },
+      "expect": "2024-01-31 10:20:40.500000 UTC"
+    },
+    {
+      "name": "add: -10 seconds",
+      "op": "datetime.add",
+      "args": {
+        "base": "2024-01-31 10:20:30.5",
+        "interval": "-10 seconds",
+        "format": "Y-m-d H:i:s.u e"
+      },
+      "expect": "2024-01-31 10:20:20.500000 UTC"
+    },
+    {
+      "name": "add: 1 day",
+      "op": "datetime.add",
+      "args": {
+        "base": "2024-01-31 10:20:30.5",
+        "interval": "1 day",
+        "format": "Y-m-d H:i:s.u e"
+      },
+      "expect": "2024-02-01 10:20:30.500000 UTC"
+    },
+    {
+      "name": "add: last day of next month",
+      "op": "datetime.add",
+      "args": {
+        "base": "2024-01-31 10:20:30.5",
+        "interval": "last day of next month",
+        "format": "Y-m-d H:i:s.u e"
+      },
+      "expect": "2024-03-02 10:20:30.500000 UTC"
+    },
+    {
+      "name": "add: next monday",
+      "op": "datetime.add",
+      "args": {
+        "base": "2024-01-31 10:20:30.5",
+        "interval": "next monday",
+        "format": "Y-m-d H:i:s.u e"
+      },
+      "expect": "2024-02-05 10:20:30.500000 UTC"
+    },
+    {
+      "name": "add: +1 weekday",
+      "op": "datetime.add",
+      "args": {
+        "base": "2024-01-31 10:20:30.5",
+        "interval": "+1 weekday",
+        "format": "Y-m-d H:i:s.u e"
+      },
+      "expect": "2024-02-01 10:20:30.500000 UTC"
+    },
+    {
+      "name": "add: 2024-01-01",
+      "op": "datetime.add",
+      "args": {
+        "base": "2024-01-31 10:20:30.5",
+        "interval": "2024-01-01",
+        "format": "Y-m-d H:i:s.u e"
+      },
+      "expect": {
+        "exception": "DateMalformedIntervalStringException",
+        "message": "String '2024-01-01' contains non-relative elements"
+      }
+    },
+    {
+      "name": "add: 10:00",
+      "op": "datetime.add",
+      "args": {
+        "base": "2024-01-31 10:20:30.5",
+        "interval": "10:00",
+        "format": "Y-m-d H:i:s.u e"
+      },
+      "expect": {
+        "exception": "DateMalformedIntervalStringException",
+        "message": "String '10:00' contains non-relative elements"
+      }
+    },
+    {
+      "name": "add: foo",
+      "op": "datetime.add",
+      "args": {
+        "base": "2024-01-31 10:20:30.5",
+        "interval": "foo",
+        "format": "Y-m-d H:i:s.u e"
+      },
+      "expect": {
+        "exception": "DateMalformedIntervalStringException",
+        "message": "Unknown or bad format (foo) at position 0 (f): The timezone could not be found in the database"
+      }
+    },
+    {
+      "name": "add: +1 month +2 days",
+      "op": "datetime.add",
+      "args": {
+        "base": "2024-01-31 10:20:30.5",
+        "interval": "+1 month +2 days",
+        "format": "Y-m-d H:i:s.u e"
+      },
+      "expect": "2024-03-04 10:20:30.500000 UTC"
+    },
+    {
+      "name": "add: 3600 seconds",
+      "op": "datetime.add",
+      "args": {
+        "base": "2024-01-31 10:20:30.5",
+        "interval": "3600 seconds",
+        "format": "Y-m-d H:i:s.u e"
+      },
+      "expect": "2024-01-31 11:20:30.500000 UTC"
+    },
+    {
+      "name": "create_from_format: !Y-m-d 2024-07-01",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "!Y-m-d",
+        "s": "2024-07-01",
+        "out": "Y-m-d H:i:s.u e T U"
+      },
+      "expect": "2024-07-01 00:00:00.000000 UTC UTC 1719792000"
+    },
+    {
+      "name": "parse_from_format: !Y-m-d 2024-07-01",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "!Y-m-d",
+        "s": "2024-07-01"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 7,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "create_from_format: Y-m-d| 2024-07-01",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "Y-m-d|",
+        "s": "2024-07-01",
+        "out": "Y-m-d H:i:s.u e T U"
+      },
+      "expect": "2024-07-01 00:00:00.000000 UTC UTC 1719792000"
+    },
+    {
+      "name": "parse_from_format: Y-m-d| 2024-07-01",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "Y-m-d|",
+        "s": "2024-07-01"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 7,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "create_from_format: !U.u 1700000000.123456",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "!U.u",
+        "s": "1700000000.123456",
+        "out": "Y-m-d H:i:s.u e T U"
+      },
+      "expect": "2023-11-14 22:13:20.123456 +00:00 GMT+0000 1700000000"
+    },
+    {
+      "name": "parse_from_format: !U.u 1700000000.123456",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "!U.u",
+        "s": "1700000000.123456"
+      },
+      "expect": {
+        "year": 2023,
+        "month": 11,
+        "day": 14,
+        "hour": 22,
+        "minute": 13,
+        "second": 20,
+        "fraction": 0.123456,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 1,
+        "zone": 0,
+        "is_dst": false
+      }
+    },
+    {
+      "name": "create_from_format: !Y-m-d 2024-7-1x",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "!Y-m-d",
+        "s": "2024-7-1x",
+        "out": "Y-m-d H:i:s.u e T U"
+      },
+      "expect": {
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": {
+          "8": "Trailing data"
+        }
+      }
+    },
+    {
+      "name": "parse_from_format: !Y-m-d 2024-7-1x",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "!Y-m-d",
+        "s": "2024-7-1x"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 7,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": {
+          "8": "Trailing data"
+        },
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "create_from_format: !d/m/Y 31/02/2024",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "!d/m/Y",
+        "s": "31/02/2024",
+        "out": "Y-m-d H:i:s.u e T U"
+      },
+      "expect": "2024-03-02 00:00:00.000000 UTC UTC 1709337600"
+    },
+    {
+      "name": "parse_from_format: !d/m/Y 31/02/2024",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "!d/m/Y",
+        "s": "31/02/2024"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 2,
+        "day": 31,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 1,
+        "warnings": {
+          "10": "The parsed date was invalid"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "create_from_format: !H\\h i\\m 10h 30m",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "!H\\h i\\m",
+        "s": "10h 30m",
+        "out": "Y-m-d H:i:s.u e T U"
+      },
+      "expect": "1970-01-01 10:30:00.000000 UTC UTC 37800"
+    },
+    {
+      "name": "parse_from_format: !H\\h i\\m 10h 30m",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "!H\\h i\\m",
+        "s": "10h 30m"
+      },
+      "expect": {
+        "year": 1970,
+        "month": 1,
+        "day": 1,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "create_from_format: !Y-m-d ",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "!Y-m-d",
+        "s": "",
+        "out": "Y-m-d H:i:s.u e T U"
+      },
+      "expect": {
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": [
+          "Not enough data available to satisfy format"
+        ]
+      }
+    },
+    {
+      "name": "parse_from_format: !Y-m-d ",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "!Y-m-d",
+        "s": ""
+      },
+      "expect": {
+        "year": 1970,
+        "month": 1,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": [
+          "Not enough data available to satisfy format"
+        ],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "create_from_format: !Y-m-d H:i:s 2024-07-01",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "!Y-m-d H:i:s",
+        "s": "2024-07-01",
+        "out": "Y-m-d H:i:s.u e T U"
+      },
+      "expect": {
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": {
+          "10": "Not enough data available to satisfy format"
+        }
+      }
+    },
+    {
+      "name": "parse_from_format: !Y-m-d H:i:s 2024-07-01",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "!Y-m-d H:i:s",
+        "s": "2024-07-01"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 7,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": {
+          "10": "Not enough data available to satisfy format"
+        },
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "parse_from_format: +Y-m-d 2024-07-01 trailing",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "+Y-m-d",
+        "s": "2024-07-01 trailing"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 7,
+        "day": 1,
+        "hour": false,
+        "minute": false,
+        "second": false,
+        "fraction": false,
+        "warning_count": 1,
+        "warnings": {
+          "10": "Trailing data"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "create_from_format: !+Y-m-d 2024-07-01 trailing",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "!+Y-m-d",
+        "s": "2024-07-01 trailing",
+        "out": "Y-m-d H:i:s.u e T U"
+      },
+      "expect": "2024-07-01 00:00:00.000000 UTC UTC 1719792000"
+    },
+    {
+      "name": "parse_from_format: !+Y-m-d 2024-07-01 trailing",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "!+Y-m-d",
+        "s": "2024-07-01 trailing"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 7,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 1,
+        "warnings": {
+          "10": "Trailing data"
+        },
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "create_from_format: !D, d M Y H:i:s O Mon, 01 Jul 2024 12:00:00 +0200",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "!D, d M Y H:i:s O",
+        "s": "Mon, 01 Jul 2024 12:00:00 +0200",
+        "out": "Y-m-d H:i:s.u e T U"
+      },
+      "expect": "2024-07-01 12:00:00.000000 +02:00 GMT+0200 1719828000"
+    },
+    {
+      "name": "parse_from_format: !D, d M Y H:i:s O Mon, 01 Jul 2024 12:00:00 +0200",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "!D, d M Y H:i:s O",
+        "s": "Mon, 01 Jul 2024 12:00:00 +0200"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 7,
+        "day": 1,
+        "hour": 12,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 1,
+        "zone": 7200,
+        "is_dst": false,
+        "relative": {
+          "year": 0,
+          "month": 0,
+          "day": 0,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "weekday": 1
+        }
+      }
+    },
+    {
+      "name": "create_from_format: !h:i a 13:00 pm",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "!h:i a",
+        "s": "13:00 pm",
+        "out": "Y-m-d H:i:s.u e T U"
+      },
+      "expect": {
+        "warning_count": 1,
+        "warnings": {
+          "8": "The parsed time was invalid"
+        },
+        "error_count": 1,
+        "errors": [
+          "Hour cannot be higher than 12"
+        ]
+      }
+    },
+    {
+      "name": "parse_from_format: !h:i a 13:00 pm",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "!h:i a",
+        "s": "13:00 pm"
+      },
+      "expect": {
+        "year": 1970,
+        "month": 1,
+        "day": 1,
+        "hour": 25,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 1,
+        "warnings": {
+          "8": "The parsed time was invalid"
+        },
+        "error_count": 1,
+        "errors": [
+          "Hour cannot be higher than 12"
+        ],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "create_from_format: !z Y 100 2024",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "!z Y",
+        "s": "100 2024",
+        "out": "Y-m-d H:i:s.u e T U"
+      },
+      "expect": "2024-04-11 00:00:00.000000 UTC UTC 1712793600"
+    },
+    {
+      "name": "parse_from_format: !z Y 100 2024",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "!z Y",
+        "s": "100 2024"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 4,
+        "day": 11,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "create_from_format: !Y z 2024 100",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "!Y z",
+        "s": "2024 100",
+        "out": "Y-m-d H:i:s.u e T U"
+      },
+      "expect": "2024-04-10 00:00:00.000000 UTC UTC 1712707200"
+    },
+    {
+      "name": "parse_from_format: !Y z 2024 100",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "!Y z",
+        "s": "2024 100"
+      },
+      "expect": {
+        "year": 2024,
+        "month": 4,
+        "day": 10,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": false
+      }
+    },
+    {
+      "name": "create_from_format: !e Europe/Paris",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "!e",
+        "s": "Europe/Paris",
+        "out": "Y-m-d H:i:s.u e T U"
+      },
+      "expect": "1970-01-01 00:00:00.000000 Europe/Paris CET -3600"
+    },
+    {
+      "name": "parse_from_format: !e Europe/Paris",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "!e",
+        "s": "Europe/Paris"
+      },
+      "expect": {
+        "year": 1970,
+        "month": 1,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 0,
+        "errors": [],
+        "is_localtime": true,
+        "zone_type": 3,
+        "tz_id": "Europe/Paris"
+      }
+    },
+    {
+      "name": "create_from_format: !e Nowhere/Zone",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "!e",
+        "s": "Nowhere/Zone",
+        "out": "Y-m-d H:i:s.u e T U"
+      },
+      "expect": {
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": [
+          "The timezone could not be found in the database"
+        ]
+      }
+    },
+    {
+      "name": "parse_from_format: !e Nowhere/Zone",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "!e",
+        "s": "Nowhere/Zone"
+      },
+      "expect": {
+        "year": 1970,
+        "month": 1,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "fraction": 0.0,
+        "warning_count": 0,
+        "warnings": [],
+        "error_count": 1,
+        "errors": [
+          "The timezone could not be found in the database"
+        ],
+        "is_localtime": true,
+        "zone_type": 0
+      }
+    },
+    {
+      "name": "create_from_format: NUL in the date",
+      "op": "datetime.create_from_format",
+      "args": {
+        "format": "!Y",
+        "s": "2024\u0000",
+        "out": "Y"
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "DateTime::createFromFormat(): Argument #2 ($datetime) must not contain any null bytes"
+        }
+      }
+    },
+    {
+      "name": "parse_from_format: NUL in the date",
+      "op": "datetime.parse_from_format",
+      "args": {
+        "format": "Y",
+        "s": "2024\u0000"
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "date_parse_from_format(): Argument #2 ($datetime) must not contain any null bytes"
+        }
+      }
+    },
+    {
+      "name": "compare: earlier",
+      "op": "datetime.compare",
+      "args": {
+        "a": "2024-01-01 00:00:00.1",
+        "b": "2024-01-01 00:00:00.2"
+      },
+      "expect": -1
+    },
+    {
+      "name": "compare: same instant",
+      "op": "datetime.compare",
+      "args": {
+        "a": "2024-01-01 01:00:00 +01:00",
+        "b": "2024-01-01 00:00:00 UTC"
+      },
+      "expect": 0
+    },
+    {
+      "name": "timezone_name_from_abbr: EST None None",
+      "op": "datetime.timezone_name_from_abbr",
+      "args": {
+        "abbr": "EST"
+      },
+      "expect": "America/New_York"
+    },
+    {
+      "name": "timezone_name_from_abbr: est -18000 None",
+      "op": "datetime.timezone_name_from_abbr",
+      "args": {
+        "abbr": "est",
+        "offset": -18000
+      },
+      "expect": "America/New_York"
+    },
+    {
+      "name": "timezone_name_from_abbr: cst -21600 0",
+      "op": "datetime.timezone_name_from_abbr",
+      "args": {
+        "abbr": "cst",
+        "offset": -21600,
+        "isdst": 0
+      },
+      "expect": "America/Chicago"
+    },
+    {
+      "name": "timezone_name_from_abbr: cst 28800 None",
+      "op": "datetime.timezone_name_from_abbr",
+      "args": {
+        "abbr": "cst",
+        "offset": 28800
+      },
+      "expect": "Asia/Chongqing"
+    },
+    {
+      "name": "timezone_name_from_abbr:  3600 0",
+      "op": "datetime.timezone_name_from_abbr",
+      "args": {
+        "abbr": "",
+        "offset": 3600,
+        "isdst": 0
+      },
+      "expect": "Europe/Paris"
+    },
+    {
+      "name": "timezone_name_from_abbr:  3600 1",
+      "op": "datetime.timezone_name_from_abbr",
+      "args": {
+        "abbr": "",
+        "offset": 3600,
+        "isdst": 1
+      },
+      "expect": "Europe/London"
+    },
+    {
+      "name": "timezone_name_from_abbr: foo 19800 0",
+      "op": "datetime.timezone_name_from_abbr",
+      "args": {
+        "abbr": "foo",
+        "offset": 19800,
+        "isdst": 0
+      },
+      "expect": "Asia/Kolkata"
+    },
+    {
+      "name": "timezone_name_from_abbr: utc None None",
+      "op": "datetime.timezone_name_from_abbr",
+      "args": {
+        "abbr": "utc"
+      },
+      "expect": "UTC"
+    },
+    {
+      "name": "timezone_name_from_abbr:  -1 -1",
+      "op": "datetime.timezone_name_from_abbr",
+      "args": {
+        "abbr": "",
+        "offset": -1,
+        "isdst": -1
+      },
+      "expect": false
+    },
+    {
+      "name": "microtime: shapes",
+      "op": "datetime.microtime",
+      "args": {},
+      "expect": [
+        21,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "name": "parse_from_format: UTC offsets read past a short run (strtol)",
+      "steps": [
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+14:+5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50700,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+14:+5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50700,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+14:+5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50700,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+14:-5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50100,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+14:-5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50100,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+14:-5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50100,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+14: 5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50700,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+14: 5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50700,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+14: 5"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50700,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+1:+30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "3": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 3600,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+1:+30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "3": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 3600,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+1:+30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "3": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 3600,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+1:-30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "3": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 3600,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+1:-30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "3": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 3600,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+1:-30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "3": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 3600,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+14:+"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50400,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+14:+"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50400,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+14:+"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50400,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "-02:\t7"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": -7620,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "-02:\t7"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": -7620,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "-02:\t7"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": -7620,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+14:+99999999999999999999"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50340,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+14:+99999999999999999999"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50340,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+14:+99999999999999999999"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 1,
+            "errors": {
+              "4": "Trailing data"
+            },
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 50340,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+05:30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 19800,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+05:30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 19800,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+05:30"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 19800,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "+5:3"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 18180,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "+5:3"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 18180,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "+5:3"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": 18180,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "e",
+            "s": "-0130"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": -5400,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "P",
+            "s": "-0130"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": -5400,
+            "is_dst": false
+          }
+        },
+        {
+          "op": "datetime.parse_from_format",
+          "args": {
+            "format": "O",
+            "s": "-0130"
+          },
+          "expect": {
+            "year": false,
+            "month": false,
+            "day": false,
+            "hour": false,
+            "minute": false,
+            "second": false,
+            "fraction": false,
+            "warning_count": 0,
+            "warnings": [],
+            "error_count": 0,
+            "errors": [],
+            "is_localtime": true,
+            "zone_type": 1,
+            "zone": -5400,
+            "is_dst": false
+          }
+        }
+      ]
+    }
+  ]
+}

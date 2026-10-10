@@ -1,0 +1,188 @@
+{
+  "ops": {
+    "url.parse_url": {
+      "doc": "parse_url($url): the component array, or false",
+      "covers": ["parse_url()"],
+      "fuzz": [
+        {
+          "name": "structured",
+          "args": { "gen": "object", "fields": { "url": { "gen": "ref", "name": "url_structured" } } },
+          "iterations": 4000
+        },
+        {
+          "name": "noise",
+          "args": { "gen": "object", "fields": { "url": { "gen": "ref", "name": "url_noise" } } },
+          "iterations": 4000
+        }
+      ]
+    },
+    "url.parse_url_component": {
+      "doc": "parse_url($url, PHP_URL_*)",
+      "covers": ["parse_url()"],
+      "fuzz": [
+        {
+          "name": "structured",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "url": { "gen": "ref", "name": "url_structured" },
+              "component": { "gen": "int", "min": 0, "max": 7 }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "noise",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "url": { "gen": "ref", "name": "url_noise" },
+              "component": { "gen": "int", "min": 0, "max": 7 }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "url.rfc3986_parse": {
+      "doc": "Uri\\Rfc3986\\Uri::parse($uri): every getter (raw and normalized) and both string forms, or null",
+      "covers": [
+        "Uri\\Rfc3986\\Uri::parse",
+        "Uri\\Rfc3986\\Uri::getScheme",
+        "Uri\\Rfc3986\\Uri::getRawScheme",
+        "Uri\\Rfc3986\\Uri::getUserInfo",
+        "Uri\\Rfc3986\\Uri::getRawUserInfo",
+        "Uri\\Rfc3986\\Uri::getUsername",
+        "Uri\\Rfc3986\\Uri::getRawUsername",
+        "Uri\\Rfc3986\\Uri::getPassword",
+        "Uri\\Rfc3986\\Uri::getRawPassword",
+        "Uri\\Rfc3986\\Uri::getHost",
+        "Uri\\Rfc3986\\Uri::getRawHost",
+        "Uri\\Rfc3986\\Uri::getPort",
+        "Uri\\Rfc3986\\Uri::getPath",
+        "Uri\\Rfc3986\\Uri::getRawPath",
+        "Uri\\Rfc3986\\Uri::getQuery",
+        "Uri\\Rfc3986\\Uri::getRawQuery",
+        "Uri\\Rfc3986\\Uri::getFragment",
+        "Uri\\Rfc3986\\Uri::getRawFragment",
+        "Uri\\Rfc3986\\Uri::toString",
+        "Uri\\Rfc3986\\Uri::toRawString"
+      ],
+      "fuzz": [
+        {
+          "name": "structured",
+          "args": { "gen": "object", "fields": { "uri": { "gen": "ref", "name": "url_structured" } } },
+          "iterations": 5000
+        },
+        {
+          "name": "noise",
+          "args": { "gen": "object", "fields": { "uri": { "gen": "ref", "name": "url_noise" } } },
+          "iterations": 4000
+        },
+        {
+          "name": "ipv6",
+          "args": { "gen": "object", "fields": { "uri": { "gen": "ref", "name": "url_ipv6_literal" } } },
+          "iterations": 3000
+        },
+        {
+          "name": "paths",
+          "args": { "gen": "object", "fields": { "uri": { "gen": "ref", "name": "url_dot_paths" } } },
+          "iterations": 3000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "url_structured": {
+      "gen": "concat",
+      "parts": [
+        { "gen": "pick", "from": ["http", "https", "HTTP", "HtTpS", "file", "FILE", "mailto", "news", "a+b.c-d", "com.example.app", "1a", "", "", "x"] },
+        { "gen": "pick", "from": ["://", "://", ":", ":/", ":///", "////", "//", "", ":\\\\"] },
+        { "gen": "pick", "from": ["", "", "", "u@", "u:p@", "@", ":@", "u:@", "%41b@", "a@b@", "us%3Aer:pa%2fss@", "u!$&'()*+,;=:x@", "ü@", "u p@"] },
+        {
+          "gen": "one_of",
+          "of": [
+            { "gen": "pick", "from": ["example.com", "EXAMPLE.Com", "localhost", "127.0.0.1", "10.0.0.256", "01.2.3.4", "h", "", "a.b-c_d~e", "%41%62", "%4a%4B", "AB%41", "x%2", "ex ample.com", "bücher.de", "a[b]", "a:b"] },
+            { "gen": "ref", "name": "url_ipv6_host" },
+            { "gen": "string", "alphabet": "url", "max": 8 }
+          ]
+        },
+        { "gen": "pick", "from": ["", "", "", ":", ":80", ":0", ":00080", ":65535", ":65536", ":99999", ":123456", ":abc", ":8a", ":-1", ": 80", ":+80", ":99999999999999999999", ":9223372036854775807", ":9223372036854775808", "::80"] },
+        { "gen": "ref", "name": "url_path" },
+        { "gen": "pick", "from": ["", "", "?", "?a=1&b=2", "?%41%7e%2F", "??x", "?a b", "?/x?y", "?#"] },
+        { "gen": "pick", "from": ["", "", "#", "#f", "#%61%2f", "##", "#a b", "#/?"] }
+      ]
+    },
+    "url_path": {
+      "gen": "one_of",
+      "of": [
+        { "gen": "pick", "from": ["", "", "/", "/a/b", "/./a/../b", "//x", "/%7e%41%2e%2E", "a:b", "/a b", "/\u007fx", "/é", "/..", "/.", "/a/./", "/a/../", "./x", "../x", "a/../..", "/C:/x", "/a//b"] },
+        { "gen": "ref", "name": "url_dot_segments" }
+      ]
+    },
+    "url_dot_segments": {
+      "gen": "repeat",
+      "part": { "gen": "pick", "from": [".", "..", "a", "b%2E", "%2e", "%2E%2e", "", "c:d", "E"] },
+      "sep": "/",
+      "min": 1,
+      "max": 5
+    },
+    "url_dot_paths": {
+      "gen": "concat",
+      "parts": [
+        { "gen": "pick", "from": ["", "", "/", "s:", "s:/", "//h", "//h/", "S://H"] },
+        { "gen": "ref", "name": "url_dot_segments" },
+        { "gen": "pick", "from": ["", "/", "?q", "#f"] }
+      ]
+    },
+    "url_ipv6_host": {
+      "gen": "concat",
+      "parts": [
+        { "gen": "const", "value": "[" },
+        { "gen": "ref", "name": "url_ipv6_body" },
+        { "gen": "pick", "from": ["]", "]", "]", "", "]]"] }
+      ]
+    },
+    "url_ipv6_body": {
+      "gen": "one_of",
+      "of": [
+        { "gen": "pick", "from": ["::1", "::", "1::", "::ffff:1.2.3.4", "1:2:3:4:5:6:7:8", "1:2:3:4:5:6:7::", "::2:3:4:5:6:7:8", "1:2:3:4:5:6:1.2.3.4", "fe80::1%25eth0", "v1.abc", "V7.a:b", "vz.x", "v1.", "AbCd::EF01", "1:2:3:4:5:6:7", "1:2:3:4:5:6:7:8:9", ":1:2", "1:::2", "::1.2.3.04", "::256.1.1.1", "12345::"] },
+        { "gen": "repeat", "part": { "gen": "string", "alphabet": "0123456789abcdefABCDEF", "min": 0, "max": 5 }, "sep": ":", "min": 1, "max": 9 },
+        { "gen": "string", "alphabet": "0123456789abcdef:.v]", "max": 14 }
+      ]
+    },
+    "url_ipv6_literal": {
+      "gen": "concat",
+      "parts": [
+        { "gen": "pick", "from": ["http://", "//", "x://u@"] },
+        { "gen": "ref", "name": "url_ipv6_host" },
+        { "gen": "pick", "from": ["", ":8080", "/p", ":/"] }
+      ]
+    },
+    "url_noise": {
+      "gen": "one_of",
+      "of": [
+        { "gen": "string", "alphabet": "url", "max": 24, "tricky": 0.2 },
+        { "gen": "string", "alphabet": ":/@?#[]0123456789ab.%x ", "max": 16 },
+        { "gen": "string", "alphabet": "unicode", "max": 10, "tricky": 0.3 },
+        {
+          "gen": "pick",
+          "from": [
+            { "$bytes": "aHR0cDovL2V4YW1wbGUuY29tL/8=" },
+            { "$bytes": "aHR0cDovL2V4YW1wbGXALmNvbQ==" },
+            { "$bytes": "/w==" },
+            { "$bytes": "aHR0cDovL3U6cEBoAC9wYXRo" },
+            { "$bytes": "Ly9ob3N0OjgwAA==" }
+          ]
+        }
+      ]
+    }
+  },
+  "deviations": [
+    {
+      "symbol": "parse_url()",
+      "php": "Any $component other than -1 and PHP_URL_SCHEME..PHP_URL_FRAGMENT (0..7) throws ValueError: parse_url(): Argument #2 ($component) must be a valid URL component identifier, <n> given",
+      "reason": "php_std::url::Component is an enum, so an invalid selector cannot be expressed; -1 (the whole array) is parse_url() itself"
+    }
+  ]
+}

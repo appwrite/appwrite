@@ -1,0 +1,529 @@
+{
+  "source": "packages/validators/tests/IntegerTest.php",
+  "cases": [
+    {
+      "name": "testCanValidateStrictly",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Integer",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 23
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "23"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 23.5
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "23.5"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": null
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": true
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": false
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "integer"
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateLoosely",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Integer",
+            "args": {
+              "loose": true
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 23
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "23"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 23.5
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "23.5"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": null
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": true
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": false
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "integer"
+        }
+      ]
+    },
+    {
+      "name": "testBitSizeAndSignedness",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Integer",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "property": "bits"
+          },
+          "expect": 32
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "property": "unsigned"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "property": "format"
+          },
+          "expect": "int32"
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Integer",
+            "args": {
+              "loose": false,
+              "bits": 8
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "property": "format"
+          },
+          "expect": "int8"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": -128
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": 127
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": -129
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": 128
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Integer",
+            "args": {
+              "loose": false,
+              "bits": 8,
+              "unsigned": true
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "property": "format"
+          },
+          "expect": "uint8"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": 0
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": 255
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": -1
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": 256
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Integer",
+            "args": {
+              "loose": false,
+              "bits": 16,
+              "unsigned": true
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "property": "format"
+          },
+          "expect": "uint16"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": 65535
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": 65536
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Integer",
+            "args": {
+              "loose": false,
+              "bits": 32,
+              "unsigned": true
+            }
+          },
+          "bind": "v5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v5"
+            },
+            "property": "format"
+          },
+          "expect": "uint32"
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Integer",
+            "args": {
+              "loose": false,
+              "bits": 64
+            }
+          },
+          "bind": "v6",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v6"
+            },
+            "property": "format"
+          },
+          "expect": "int64"
+        }
+      ]
+    },
+    {
+      "name": "testInvalidBitSize",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Integer",
+            "args": {
+              "loose": false,
+              "bits": 128
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Bits must be 8, 16, 32, or 64"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "test64BitUnsignedNotSupported",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Integer",
+            "args": {
+              "loose": false,
+              "bits": 64,
+              "unsigned": true
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "64-bit unsigned integers are not supported due to PHP integer limitations"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

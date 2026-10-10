@@ -1,0 +1,58 @@
+{
+  "categories": [
+    {
+      "id": "web",
+      "title": "HTTP and servers",
+      "description": "Building and calling web services: routing requests to actions, the request and response values, server runtimes, HTTP clients, WebSockets and API descriptions."
+    },
+    {
+      "id": "networking",
+      "title": "Networking and protocols",
+      "description": "Protocols beyond HTTP and the names behind them: DNS servers, domain parsing, mail transport, MQTT and NATS, and choosing between endpoints."
+    },
+    {
+      "id": "data",
+      "title": "Data and storage",
+      "description": "Keeping data: databases and the queries over them, caches, files and the images and archives stored in them, and moving data between services."
+    },
+    {
+      "id": "messaging",
+      "title": "Messaging and jobs",
+      "description": "Work that happens outside the request: task queues, in-process events, notifications to users, and schedules that dispatch jobs."
+    },
+    {
+      "id": "security",
+      "title": "Security and identity",
+      "description": "Who is calling and how often: password hashing, sessions, tokens, OAuth2 and passkeys, and limits that keep usage within bounds."
+    },
+    {
+      "id": "input",
+      "title": "Parsing and validation",
+      "description": "Turning untrusted input into values an application can trust: request parameters, connection strings, email addresses, user agents and translations."
+    },
+    {
+      "id": "runtime",
+      "title": "Runtime and infrastructure",
+      "description": "What every service runs on: configuration, dependency injection, command line tools, locks and connection pools, the host system, containers and resilience."
+    },
+    {
+      "id": "observability",
+      "title": "Observability",
+      "description": "Knowing what a service did: audit logs, usage metrics, spans and telemetry exporters."
+    },
+    {
+      "id": "integrations",
+      "title": "Integrations and AI",
+      "description": "Connecting to the outside world: version control providers and their webhooks, and AI agents."
+    },
+    {
+      "id": "support",
+      "title": "Engine support",
+      "description": "Foundations the Rust crates share to behave exactly like PHP: the engine's value model, string and number semantics, regular expressions, JSON and dates."
+    }
+  ],
+  "external": {
+    "migration": "data",
+    "mongo": "data"
+  }
+}

@@ -1,0 +1,1564 @@
+{
+  "ops": {
+    "types.value": {
+      "doc": "Typed::dump(Typed::decode($v)): the value model holds every PHP value of the wire (key types and order, stdClass, binary strings, -0.0)",
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "tv_v3"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "types.from_json": {
+      "doc": "the request model of JSON: Utopia\\Http\\Request decoding (Value::from_json)",
+      "fuzz": [
+        {
+          "name": "json",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "json_pv3"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "types.to_json": {
+      "doc": "json_decode(json_encode($v, JSON_PRESERVE_ZERO_FRACTION)) for UTF-8 strings and finite floats (Value::to_json)",
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "tv_p3"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "types.juggle": {
+      "doc": "gettype($v), (bool) $v, (string) $v (or the Error), (float) $v",
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "tv_v2"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "types.compare": {
+      "doc": "$a == $b, $a === $b, $a <=> $b, $b <=> $a, $a < $b, $a > $b (PHP 8 rules, arrays and stdClass included)",
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "tv_v2"
+              },
+              "b": {
+                "gen": "ref",
+                "name": "tv_v2"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 4000
+        },
+        {
+          "name": "scalars",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "ref",
+                "name": "st_value"
+              },
+              "b": {
+                "gen": "ref",
+                "name": "st_value"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 4000
+        },
+        {
+          "name": "arrays",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "st_scalar"
+                },
+                "max": 3
+              },
+              "b": {
+                "gen": "object",
+                "fields": {
+                  "$array": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "object",
+                      "fields": {
+                        "k": {
+                          "gen": "ref",
+                          "name": "st_key"
+                        },
+                        "v": {
+                          "gen": "ref",
+                          "name": "st_scalar"
+                        }
+                      },
+                      "optional": []
+                    },
+                    "min": 0,
+                    "max": 3
+                  }
+                },
+                "optional": []
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "types.array_ops": {
+      "doc": "$a[$k] = $v, $a[] = $v (the key it used, or the Error), unset($a[$k]), $a[$k] ?? null, array_key_exists: next free index, unset then set appends, numeric string keys",
+      "fuzz": [
+        {
+          "name": "steps",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "tv_scalar"
+                    },
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "$array": {
+                        "gen": "array",
+                        "items": {
+                          "gen": "object",
+                          "fields": {
+                            "k": {
+                              "gen": "ref",
+                              "name": "st_key"
+                            },
+                            "v": {
+                              "gen": "ref",
+                              "name": "tv_scalar"
+                            }
+                          },
+                          "optional": []
+                        },
+                        "min": 0,
+                        "max": 4
+                      }
+                    },
+                    "optional": []
+                  },
+                  {
+                    "gen": "const",
+                    "value": []
+                  }
+                ]
+              },
+              "ops": {
+                "gen": "array",
+                "items": {
+                  "gen": "object",
+                  "fields": {
+                    "op": {
+                      "gen": "pick",
+                      "from": [
+                        "set",
+                        "set",
+                        "push",
+                        "push",
+                        "unset",
+                        "get",
+                        "exists"
+                      ]
+                    },
+                    "k": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "int",
+                          "min": -3,
+                          "max": 6
+                        },
+                        {
+                          "gen": "pick",
+                          "from": [
+                            9223372036854775807,
+                            -9223372036854775808,
+                            9223372036854775806
+                          ]
+                        },
+                        {
+                          "gen": "pick",
+                          "from": [
+                            "a",
+                            "b",
+                            "0",
+                            "1",
+                            "2",
+                            "-1",
+                            "01",
+                            "",
+                            "9223372036854775807"
+                          ]
+                        }
+                      ]
+                    },
+                    "v": {
+                      "gen": "ref",
+                      "name": "tv_scalar"
+                    }
+                  },
+                  "optional": [
+                    "k",
+                    "v"
+                  ]
+                },
+                "min": 1,
+                "max": 12
+              }
+            },
+            "optional": []
+          },
+          "iterations": 4000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "tv_bytes": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "json_bytes"
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$bytes": {
+              "gen": "repeat",
+              "part": {
+                "gen": "string",
+                "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+                "min": 4,
+                "max": 4
+              },
+              "min": 1,
+              "max": 4
+            }
+          },
+          "optional": []
+        }
+      ]
+    },
+    "tv_str": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "json_str"
+        },
+        {
+          "gen": "ref",
+          "name": "json_str"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_bytes"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "a",
+            "b",
+            "stdClass",
+            "abc",
+            "k",
+            "0",
+            "1",
+            "10",
+            "9",
+            "1e1",
+            " 1",
+            "1 ",
+            "-1",
+            "01",
+            "",
+            "A",
+            "B",
+            "img12",
+            "img10",
+            "IMG2",
+            "x9",
+            "x10",
+            "Array"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "ab",
+          "min": 250,
+          "max": 300
+        }
+      ]
+    },
+    "tv_int": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int"
+        },
+        {
+          "gen": "int",
+          "min": -300,
+          "max": 300
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            1,
+            -1,
+            255,
+            256,
+            -255,
+            -256,
+            65535,
+            65536,
+            -65535,
+            -65536,
+            4294967295,
+            4294967296,
+            -4294967295,
+            -4294967296,
+            9223372036854775807,
+            -9223372036854775808
+          ]
+        }
+      ]
+    },
+    "tv_scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "tv_str"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_str"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_int"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_int"
+        },
+        {
+          "gen": "ref",
+          "name": "json_float"
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        }
+      ]
+    },
+    "tv_key": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -3,
+          "max": 12
+        },
+        {
+          "gen": "int"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "a",
+            "b",
+            "0",
+            "1",
+            "-1",
+            "01",
+            "-0",
+            " 1",
+            "1.5",
+            "9223372036854775807",
+            "9223372036854775808",
+            "-9223372036854775808",
+            "stdClass",
+            "é",
+            "k",
+            "\u0000a"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "alnum",
+          "max": 6
+        },
+        {
+          "gen": "ref",
+          "name": "tv_bytes"
+        }
+      ]
+    },
+    "tv_plain_key": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -3,
+          "max": 12
+        },
+        {
+          "gen": "int"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "a",
+            "b",
+            "0",
+            "1",
+            "-1",
+            "01",
+            "-0",
+            " 1",
+            "1.5",
+            "9223372036854775808",
+            "stdClass",
+            "é",
+            "k"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "alnum",
+          "max": 6
+        }
+      ]
+    },
+    "tv_v0": {
+      "gen": "ref",
+      "name": "tv_scalar"
+    },
+    "tv_v1": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "tv_v0"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_v0"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_v0"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "tv_v0"
+          },
+          "min": 0,
+          "max": 4
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$array": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "tv_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "tv_v0"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 4
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$object": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "tv_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "tv_v0"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 3
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "a": {
+              "gen": "ref",
+              "name": "tv_v0"
+            },
+            "b": {
+              "gen": "ref",
+              "name": "tv_v0"
+            },
+            "1": {
+              "gen": "ref",
+              "name": "tv_v0"
+            },
+            "": {
+              "gen": "ref",
+              "name": "tv_v0"
+            }
+          },
+          "optional": [
+            "a",
+            "b",
+            "1",
+            ""
+          ]
+        },
+        {
+          "gen": "const",
+          "value": {}
+        },
+        {
+          "gen": "const",
+          "value": []
+        }
+      ]
+    },
+    "tv_v2": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "tv_v1"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_v1"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_v1"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "tv_v1"
+          },
+          "min": 0,
+          "max": 4
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$array": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "tv_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "tv_v1"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 4
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$object": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "tv_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "tv_v1"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 3
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "a": {
+              "gen": "ref",
+              "name": "tv_v1"
+            },
+            "b": {
+              "gen": "ref",
+              "name": "tv_v1"
+            },
+            "1": {
+              "gen": "ref",
+              "name": "tv_v1"
+            },
+            "": {
+              "gen": "ref",
+              "name": "tv_v1"
+            }
+          },
+          "optional": [
+            "a",
+            "b",
+            "1",
+            ""
+          ]
+        },
+        {
+          "gen": "const",
+          "value": {}
+        },
+        {
+          "gen": "const",
+          "value": []
+        }
+      ]
+    },
+    "tv_v3": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "tv_v2"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_v2"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_v2"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "tv_v2"
+          },
+          "min": 0,
+          "max": 4
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$array": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "tv_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "tv_v2"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 4
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$object": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "tv_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "tv_v2"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 3
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "a": {
+              "gen": "ref",
+              "name": "tv_v2"
+            },
+            "b": {
+              "gen": "ref",
+              "name": "tv_v2"
+            },
+            "1": {
+              "gen": "ref",
+              "name": "tv_v2"
+            },
+            "": {
+              "gen": "ref",
+              "name": "tv_v2"
+            }
+          },
+          "optional": [
+            "a",
+            "b",
+            "1",
+            ""
+          ]
+        },
+        {
+          "gen": "const",
+          "value": {}
+        },
+        {
+          "gen": "const",
+          "value": []
+        }
+      ]
+    },
+    "tv_p0": {
+      "gen": "ref",
+      "name": "json_plain_scalar"
+    },
+    "tv_p1": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "tv_p0"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_p0"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_p0"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "tv_p0"
+          },
+          "min": 0,
+          "max": 4
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$array": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "tv_plain_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "tv_p0"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 4
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$object": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "tv_plain_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "tv_p0"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 3
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "a": {
+              "gen": "ref",
+              "name": "tv_p0"
+            },
+            "b": {
+              "gen": "ref",
+              "name": "tv_p0"
+            },
+            "1": {
+              "gen": "ref",
+              "name": "tv_p0"
+            },
+            "": {
+              "gen": "ref",
+              "name": "tv_p0"
+            }
+          },
+          "optional": [
+            "a",
+            "b",
+            "1",
+            ""
+          ]
+        },
+        {
+          "gen": "const",
+          "value": {}
+        },
+        {
+          "gen": "const",
+          "value": []
+        }
+      ]
+    },
+    "tv_p2": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "tv_p1"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_p1"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_p1"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "tv_p1"
+          },
+          "min": 0,
+          "max": 4
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$array": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "tv_plain_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "tv_p1"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 4
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$object": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "tv_plain_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "tv_p1"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 3
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "a": {
+              "gen": "ref",
+              "name": "tv_p1"
+            },
+            "b": {
+              "gen": "ref",
+              "name": "tv_p1"
+            },
+            "1": {
+              "gen": "ref",
+              "name": "tv_p1"
+            },
+            "": {
+              "gen": "ref",
+              "name": "tv_p1"
+            }
+          },
+          "optional": [
+            "a",
+            "b",
+            "1",
+            ""
+          ]
+        },
+        {
+          "gen": "const",
+          "value": {}
+        },
+        {
+          "gen": "const",
+          "value": []
+        }
+      ]
+    },
+    "tv_p3": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "tv_p2"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_p2"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_p2"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "tv_p2"
+          },
+          "min": 0,
+          "max": 4
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$array": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "tv_plain_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "tv_p2"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 4
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$object": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "tv_plain_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "tv_p2"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 3
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "a": {
+              "gen": "ref",
+              "name": "tv_p2"
+            },
+            "b": {
+              "gen": "ref",
+              "name": "tv_p2"
+            },
+            "1": {
+              "gen": "ref",
+              "name": "tv_p2"
+            },
+            "": {
+              "gen": "ref",
+              "name": "tv_p2"
+            }
+          },
+          "optional": [
+            "a",
+            "b",
+            "1",
+            ""
+          ]
+        },
+        {
+          "gen": "const",
+          "value": {}
+        },
+        {
+          "gen": "const",
+          "value": []
+        }
+      ]
+    },
+    "st_scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "json_str"
+        },
+        {
+          "gen": "int",
+          "min": -20,
+          "max": 20
+        },
+        {
+          "gen": "int"
+        },
+        {
+          "gen": "ref",
+          "name": "json_float"
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "0",
+            "1",
+            "10",
+            "9",
+            "1e1",
+            "1.0",
+            " 1",
+            "1 ",
+            "-1",
+            "01",
+            "abc",
+            "ABC",
+            "a",
+            "b",
+            "B",
+            "img12",
+            "img10",
+            "IMG2",
+            "img1",
+            "x9",
+            "x10",
+            "0x1A",
+            "1e3",
+            "9223372036854775808",
+            "-0",
+            ".5",
+            "Array",
+            " ",
+            "\u0000"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            1,
+            -1,
+            10,
+            0.0,
+            -0.0,
+            1.0,
+            1.5,
+            0.5,
+            null,
+            true,
+            false
+          ]
+        }
+      ]
+    },
+    "st_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "st_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "st_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "st_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "st_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "st_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "st_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "st_scalar"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "st_scalar"
+          },
+          "min": 0,
+          "max": 3
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$array": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "tv_plain_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "st_scalar"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 3
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "const",
+          "value": {}
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$object": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "tv_plain_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "st_scalar"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 2
+            }
+          },
+          "optional": []
+        }
+      ]
+    },
+    "st_key": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -5,
+          "max": 30
+        },
+        {
+          "gen": "int"
+        },
+        {
+          "gen": "ref",
+          "name": "tv_plain_key"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "10",
+            "9",
+            "a",
+            "B",
+            "img12",
+            "img10",
+            "1e1",
+            " 1",
+            "1.0",
+            "0x1"
+          ]
+        }
+      ]
+    },
+    "st_array": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "st_value"
+          },
+          "min": 0,
+          "max": 8
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "st_value"
+          },
+          "min": 0,
+          "max": 8
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "st_value"
+          },
+          "min": 17,
+          "max": 60
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$array": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "st_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "st_value"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 12
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$array": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "st_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "st_value"
+                  }
+                },
+                "optional": []
+              },
+              "min": 17,
+              "max": 40
+            }
+          },
+          "optional": []
+        }
+      ]
+    },
+    "st_scalar_array": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "st_scalar"
+          },
+          "min": 0,
+          "max": 10
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "st_scalar"
+          },
+          "min": 17,
+          "max": 80
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$array": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "k": {
+                    "gen": "ref",
+                    "name": "st_key"
+                  },
+                  "v": {
+                    "gen": "ref",
+                    "name": "st_scalar"
+                  }
+                },
+                "optional": []
+              },
+              "min": 0,
+              "max": 30
+            }
+          },
+          "optional": []
+        }
+      ]
+    },
+    "st_flags": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            1,
+            2,
+            10,
+            5,
+            6,
+            14,
+            0,
+            2,
+            6
+          ]
+        },
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 20
+        }
+      ]
+    }
+  },
+  "quirks": [],
+  "deviations": [
+    {
+      "symbol": "===",
+      "php": "Objects are identical only to the same instance: $o === $o is true, two separately created stdClass objects with the same properties are not.",
+      "reason": "php_std::Value has no identity (values, not handles). Value::strict_eq treats object values as distinct instances, which is what decoding produces (every decoded object is a new instance); in_array/array_search strict follow it."
+    },
+    {
+      "symbol": "nNextFreeElement",
+      "php": "A packed array that appends an integer key sets the next free index to one past it, which lowers it after trailing elements were unset; whether an array is packed, and its table size, depends on how it was built.",
+      "reason": "php_std::Array tracks the engine's packed state (nNumUsed, nTableSize) for arrays built by assignment and pushes, and assumes the table size max(8, 2^k >= n) an array of n elements is created with (array_init_size, json_decode, unserialize, literals). An array PHP built differently (array_map over a hash, which is how Utopia\\Http\\Request decodes {\"0\": .., \"1\": ..}) is a hash in PHP and packed here; the difference only shows through $a[] after trailing elements were unset and a key was assigned beyond them."
+    },
+    {
+      "symbol": "Value::to_json",
+      "php": "json_encode fails (or substitutes) on invalid UTF-8 and non-finite floats.",
+      "reason": "Value::to_json is a lossy convenience (invalid UTF-8 becomes U+FFFD per the maximal-subpart rule, non-finite floats null); json::encode is the exact json_encode. types.to_json is fuzzed with UTF-8 strings and finite floats only."
+    }
+  ]
+}

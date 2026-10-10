@@ -1,0 +1,235 @@
+{
+  "source": "packages/validators/tests/FloatValidatorTest.php",
+  "cases": [
+    {
+      "name": "testCanValidateStrictly",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "FloatValidator",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 27.25
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 23
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 23.5
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 10000000.0
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "abc"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": true
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "23.5"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "23"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "double"
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateLoosely",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "FloatValidator",
+            "args": {
+              "loose": true
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 27.25
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 23
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 23.5
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 10000000.0
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "23.5"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "23"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "abc"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": true
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "double"
+        }
+      ]
+    }
+  ]
+}

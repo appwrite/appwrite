@@ -39,5 +39,10 @@
             "php-http/discovery": true,
             "tbachert/spi": true
         }
+    },
+    "extra": {
+        "utopia": {
+            "category": "web"
+        }
     }
 }

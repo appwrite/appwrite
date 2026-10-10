@@ -1,0 +1,1887 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "ctype_alnum empty",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum letters and digits",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": "abc123"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_alnum space",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": "a b"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum newline",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": "\n"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum upper",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": "ABC"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_alnum lower",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": "abc"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_alnum tab and text",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": "\tA"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum non-ascii",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": "é"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum del",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl empty",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl letters and digits",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": "abc123"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl space",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": "a b"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl newline",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": "\n"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_cntrl upper",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": "ABC"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl lower",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": "abc"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl tab and text",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": "\tA"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl non-ascii",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": "é"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl del",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": ""
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_graph empty",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph letters and digits",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": "abc123"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_graph space",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": "a b"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph newline",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": "\n"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph upper",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": "ABC"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_graph lower",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": "abc"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_graph tab and text",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": "\tA"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph non-ascii",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": "é"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph del",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower empty",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower letters and digits",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": "abc123"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower space",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": "a b"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower newline",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": "\n"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower upper",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": "ABC"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower lower",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": "abc"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_lower tab and text",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": "\tA"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower non-ascii",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": "é"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower del",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print empty",
+      "op": "string.ctype_print",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print letters and digits",
+      "op": "string.ctype_print",
+      "args": {
+        "text": "abc123"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_print space",
+      "op": "string.ctype_print",
+      "args": {
+        "text": "a b"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_print newline",
+      "op": "string.ctype_print",
+      "args": {
+        "text": "\n"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print upper",
+      "op": "string.ctype_print",
+      "args": {
+        "text": "ABC"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_print lower",
+      "op": "string.ctype_print",
+      "args": {
+        "text": "abc"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_print tab and text",
+      "op": "string.ctype_print",
+      "args": {
+        "text": "\tA"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print non-ascii",
+      "op": "string.ctype_print",
+      "args": {
+        "text": "é"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print del",
+      "op": "string.ctype_print",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper empty",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper letters and digits",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": "abc123"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper space",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": "a b"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper newline",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": "\n"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper upper",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": "ABC"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_upper lower",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": "abc"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper tab and text",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": "\tA"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper non-ascii",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": "é"
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper del",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "str_starts_with match",
+      "op": "string.str_starts_with",
+      "args": {
+        "haystack": "prefix-body-suffix",
+        "needle": "prefix"
+      },
+      "expect": true
+    },
+    {
+      "name": "str_starts_with empty needle",
+      "op": "string.str_starts_with",
+      "args": {
+        "haystack": "abc",
+        "needle": ""
+      },
+      "expect": true
+    },
+    {
+      "name": "str_starts_with empty haystack",
+      "op": "string.str_starts_with",
+      "args": {
+        "haystack": "",
+        "needle": "a"
+      },
+      "expect": false
+    },
+    {
+      "name": "str_starts_with longer needle",
+      "op": "string.str_starts_with",
+      "args": {
+        "haystack": "ab",
+        "needle": "abc"
+      },
+      "expect": false
+    },
+    {
+      "name": "str_starts_with case differs",
+      "op": "string.str_starts_with",
+      "args": {
+        "haystack": "Hello",
+        "needle": "he"
+      },
+      "expect": false
+    },
+    {
+      "name": "str_starts_with multibyte",
+      "op": "string.str_starts_with",
+      "args": {
+        "haystack": "éa",
+        "needle": "é"
+      },
+      "expect": true
+    },
+    {
+      "name": "str_ends_with match",
+      "op": "string.str_ends_with",
+      "args": {
+        "haystack": "prefix-body-suffix",
+        "needle": "suffix"
+      },
+      "expect": true
+    },
+    {
+      "name": "str_ends_with empty needle",
+      "op": "string.str_ends_with",
+      "args": {
+        "haystack": "abc",
+        "needle": ""
+      },
+      "expect": true
+    },
+    {
+      "name": "str_ends_with empty haystack",
+      "op": "string.str_ends_with",
+      "args": {
+        "haystack": "",
+        "needle": "a"
+      },
+      "expect": false
+    },
+    {
+      "name": "str_ends_with longer needle",
+      "op": "string.str_ends_with",
+      "args": {
+        "haystack": "ab",
+        "needle": "abc"
+      },
+      "expect": false
+    },
+    {
+      "name": "str_ends_with case differs",
+      "op": "string.str_ends_with",
+      "args": {
+        "haystack": "Hello",
+        "needle": "LO"
+      },
+      "expect": false
+    },
+    {
+      "name": "str_ends_with multibyte",
+      "op": "string.str_ends_with",
+      "args": {
+        "haystack": "éa",
+        "needle": "a"
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_alnum int letter",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": 65
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_alnum int above a byte",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": 256
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_alnum int negative code",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": -5
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum int below -128",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": -129
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum int tab",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": 9
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum int 255",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": 255
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum int zero",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": 0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum int -191",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": -191
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum int large",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": 9223372036854775807
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_alnum int smallest",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": -9223372036854775808
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum float",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": 1.0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum null",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": null
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum true",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": true
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum list",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": [
+          65
+        ]
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alnum stdClass",
+      "op": "string.ctype_alnum",
+      "args": {
+        "text": {}
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alpha int letter",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": 65
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_alpha int above a byte",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": 256
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alpha int negative code",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": -5
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alpha int below -128",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": -129
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alpha int tab",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": 9
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alpha int 255",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": 255
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alpha int zero",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": 0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alpha int -191",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": -191
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alpha int large",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": 9223372036854775807
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alpha int smallest",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": -9223372036854775808
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alpha float",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": 1.0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alpha null",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": null
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alpha true",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": true
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alpha list",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": [
+          65
+        ]
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_alpha stdClass",
+      "op": "string.ctype_alpha",
+      "args": {
+        "text": {}
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl int letter",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": 65
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl int above a byte",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": 256
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl int negative code",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": -5
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl int below -128",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": -129
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl int tab",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": 9
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_cntrl int 255",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": 255
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl int zero",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": 0
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_cntrl int -191",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": -191
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl int large",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": 9223372036854775807
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl int smallest",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": -9223372036854775808
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl float",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": 1.0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl null",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": null
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl true",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": true
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl list",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": [
+          65
+        ]
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_cntrl stdClass",
+      "op": "string.ctype_cntrl",
+      "args": {
+        "text": {}
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_digit int letter",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": 65
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_digit int above a byte",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": 256
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_digit int negative code",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": -5
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_digit int below -128",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": -129
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_digit int tab",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": 9
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_digit int 255",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": 255
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_digit int zero",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": 0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_digit int -191",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": -191
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_digit int large",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": 9223372036854775807
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_digit int smallest",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": -9223372036854775808
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_digit float",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": 1.0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_digit null",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": null
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_digit true",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": true
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_digit list",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": [
+          65
+        ]
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_digit stdClass",
+      "op": "string.ctype_digit",
+      "args": {
+        "text": {}
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph int letter",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": 65
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_graph int above a byte",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": 256
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_graph int negative code",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": -5
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph int below -128",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": -129
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_graph int tab",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": 9
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph int 255",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": 255
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph int zero",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": 0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph int -191",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": -191
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_graph int large",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": 9223372036854775807
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_graph int smallest",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": -9223372036854775808
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_graph float",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": 1.0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph null",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": null
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph true",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": true
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph list",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": [
+          65
+        ]
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_graph stdClass",
+      "op": "string.ctype_graph",
+      "args": {
+        "text": {}
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower int letter",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": 65
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower int above a byte",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": 256
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower int negative code",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": -5
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower int below -128",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": -129
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower int tab",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": 9
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower int 255",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": 255
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower int zero",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": 0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower int -191",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": -191
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower int large",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": 9223372036854775807
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower int smallest",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": -9223372036854775808
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower float",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": 1.0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower null",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": null
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower true",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": true
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower list",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": [
+          65
+        ]
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_lower stdClass",
+      "op": "string.ctype_lower",
+      "args": {
+        "text": {}
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print int letter",
+      "op": "string.ctype_print",
+      "args": {
+        "text": 65
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_print int above a byte",
+      "op": "string.ctype_print",
+      "args": {
+        "text": 256
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_print int negative code",
+      "op": "string.ctype_print",
+      "args": {
+        "text": -5
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print int below -128",
+      "op": "string.ctype_print",
+      "args": {
+        "text": -129
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_print int tab",
+      "op": "string.ctype_print",
+      "args": {
+        "text": 9
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print int 255",
+      "op": "string.ctype_print",
+      "args": {
+        "text": 255
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print int zero",
+      "op": "string.ctype_print",
+      "args": {
+        "text": 0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print int -191",
+      "op": "string.ctype_print",
+      "args": {
+        "text": -191
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_print int large",
+      "op": "string.ctype_print",
+      "args": {
+        "text": 9223372036854775807
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_print int smallest",
+      "op": "string.ctype_print",
+      "args": {
+        "text": -9223372036854775808
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_print float",
+      "op": "string.ctype_print",
+      "args": {
+        "text": 1.0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print null",
+      "op": "string.ctype_print",
+      "args": {
+        "text": null
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print true",
+      "op": "string.ctype_print",
+      "args": {
+        "text": true
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print list",
+      "op": "string.ctype_print",
+      "args": {
+        "text": [
+          65
+        ]
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_print stdClass",
+      "op": "string.ctype_print",
+      "args": {
+        "text": {}
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_punct int letter",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": 65
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_punct int above a byte",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": 256
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_punct int negative code",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": -5
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_punct int below -128",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": -129
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_punct int tab",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": 9
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_punct int 255",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": 255
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_punct int zero",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": 0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_punct int -191",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": -191
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_punct int large",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": 9223372036854775807
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_punct int smallest",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": -9223372036854775808
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_punct float",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": 1.0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_punct null",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": null
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_punct true",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": true
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_punct list",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": [
+          65
+        ]
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_punct stdClass",
+      "op": "string.ctype_punct",
+      "args": {
+        "text": {}
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_space int letter",
+      "op": "string.ctype_space",
+      "args": {
+        "text": 65
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_space int above a byte",
+      "op": "string.ctype_space",
+      "args": {
+        "text": 256
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_space int negative code",
+      "op": "string.ctype_space",
+      "args": {
+        "text": -5
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_space int below -128",
+      "op": "string.ctype_space",
+      "args": {
+        "text": -129
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_space int tab",
+      "op": "string.ctype_space",
+      "args": {
+        "text": 9
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_space int 255",
+      "op": "string.ctype_space",
+      "args": {
+        "text": 255
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_space int zero",
+      "op": "string.ctype_space",
+      "args": {
+        "text": 0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_space int -191",
+      "op": "string.ctype_space",
+      "args": {
+        "text": -191
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_space int large",
+      "op": "string.ctype_space",
+      "args": {
+        "text": 9223372036854775807
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_space int smallest",
+      "op": "string.ctype_space",
+      "args": {
+        "text": -9223372036854775808
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_space float",
+      "op": "string.ctype_space",
+      "args": {
+        "text": 1.0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_space null",
+      "op": "string.ctype_space",
+      "args": {
+        "text": null
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_space true",
+      "op": "string.ctype_space",
+      "args": {
+        "text": true
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_space list",
+      "op": "string.ctype_space",
+      "args": {
+        "text": [
+          65
+        ]
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_space stdClass",
+      "op": "string.ctype_space",
+      "args": {
+        "text": {}
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper int letter",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": 65
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_upper int above a byte",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": 256
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper int negative code",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": -5
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper int below -128",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": -129
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper int tab",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": 9
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper int 255",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": 255
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper int zero",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": 0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper int -191",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": -191
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper int large",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": 9223372036854775807
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper int smallest",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": -9223372036854775808
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper float",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": 1.0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper null",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": null
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper true",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": true
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper list",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": [
+          65
+        ]
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_upper stdClass",
+      "op": "string.ctype_upper",
+      "args": {
+        "text": {}
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_xdigit int letter",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": 65
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_xdigit int above a byte",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": 256
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_xdigit int negative code",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": -5
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_xdigit int below -128",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": -129
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_xdigit int tab",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": 9
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_xdigit int 255",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": 255
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_xdigit int zero",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": 0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_xdigit int -191",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": -191
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_xdigit int large",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": 9223372036854775807
+      },
+      "expect": true
+    },
+    {
+      "name": "ctype_xdigit int smallest",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": -9223372036854775808
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_xdigit float",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": 1.0
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_xdigit null",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": null
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_xdigit true",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": true
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_xdigit list",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": [
+          65
+        ]
+      },
+      "expect": false
+    },
+    {
+      "name": "ctype_xdigit stdClass",
+      "op": "string.ctype_xdigit",
+      "args": {
+        "text": {}
+      },
+      "expect": false
+    }
+  ]
+}

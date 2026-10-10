@@ -1,0 +1,616 @@
+{
+  "lib": "dsn",
+  "description": "utopia-php/dsn: scheme://user:password@host:port/path?query parsing (PHP parse_url and parse_str).",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/dsn/src"
+    ],
+    "tests": [
+      "packages/dsn/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/dsn"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "dsn.new": {
+      "doc": "new DSN(dsn) as a handle",
+      "covers": [
+        "Utopia\\DSN\\DSN::__construct"
+      ]
+    },
+    "dsn.get": {
+      "doc": "every getter of a DSN handle: {scheme, user, password, host, port, path, query}",
+      "covers": [
+        "Utopia\\DSN\\DSN::getScheme",
+        "Utopia\\DSN\\DSN::getUser",
+        "Utopia\\DSN\\DSN::getPassword",
+        "Utopia\\DSN\\DSN::getHost",
+        "Utopia\\DSN\\DSN::getPort",
+        "Utopia\\DSN\\DSN::getPath",
+        "Utopia\\DSN\\DSN::getQuery"
+      ]
+    },
+    "dsn.param": {
+      "doc": "$dsn->getParam(key, default?)",
+      "covers": [
+        "Utopia\\DSN\\DSN::getParam"
+      ]
+    },
+    "dsn.parse": {
+      "doc": "new DSN(dsn), every getter, and getParam(key) for each of `params` (a TypeError is reported in place)",
+      "covers": [
+        "Utopia\\DSN\\DSN::__construct",
+        "Utopia\\DSN\\DSN::getParam",
+        "Utopia\\DSN\\DSN::getScheme",
+        "Utopia\\DSN\\DSN::getUser",
+        "Utopia\\DSN\\DSN::getPassword",
+        "Utopia\\DSN\\DSN::getHost",
+        "Utopia\\DSN\\DSN::getPort",
+        "Utopia\\DSN\\DSN::getPath",
+        "Utopia\\DSN\\DSN::getQuery"
+      ],
+      "fuzz": [
+        {
+          "name": "structured",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "dsn": {
+                "gen": "ref",
+                "name": "dsn"
+              },
+              "params": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "param_key"
+                },
+                "min": 0,
+                "max": 4
+              }
+            }
+          },
+          "iterations": 4000
+        },
+        {
+          "name": "free text",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "dsn": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "url",
+                    "min": 0,
+                    "max": 40
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "min": 0,
+                    "max": 30,
+                    "tricky": 0.2
+                  }
+                ]
+              },
+              "params": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "param_key"
+                },
+                "min": 0,
+                "max": 2
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "dsn.refusal_printed": {
+      "doc": "DSNTest::testUncaughtRefusalPrintsNoCredentials: whether the refused DSN's exception, printed with its trace (Rust: Display and Debug), contains none of `secrets`; false when the DSN is accepted"
+    }
+  },
+  "generators": {
+    "dsn_scheme": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "mariadb",
+            "mysql",
+            "postgresql",
+            "redis",
+            "s3",
+            "sms",
+            "appwrite",
+            "0",
+            "",
+            "a+b.c-d",
+            "1x",
+            "x_y"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "lower",
+          "min": 1,
+          "max": 6
+        }
+      ]
+    },
+    "dsn_text": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "alnum",
+          "min": 0,
+          "max": 8
+        },
+        {
+          "gen": "string",
+          "alphabet": "%2F40AZaz+ :@!$&'()*,;=.-_~",
+          "min": 0,
+          "max": 8
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "0",
+            "%40",
+            "%3A",
+            "%2F",
+            "%FF",
+            "%E2%82%AC",
+            "sl%2Fsh%2B%24%40no%3Aher",
+            "a+b",
+            "%",
+            "%4",
+            "é",
+            "\u0001"
+          ]
+        }
+      ]
+    },
+    "dsn_userinfo": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "const",
+          "value": ""
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "ref",
+              "name": "dsn_text"
+            },
+            {
+              "gen": "const",
+              "value": "@"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "ref",
+              "name": "dsn_text"
+            },
+            {
+              "gen": "const",
+              "value": ":"
+            },
+            {
+              "gen": "ref",
+              "name": "dsn_text"
+            },
+            {
+              "gen": "const",
+              "value": "@"
+            }
+          ]
+        }
+      ]
+    },
+    "dsn_host": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "localhost",
+            "database_db_main",
+            "0",
+            "",
+            "127.0.0.1",
+            "[::1]",
+            "host.example",
+            "a b",
+            "h@x"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "hostname",
+          "min": 0,
+          "max": 10
+        }
+      ]
+    },
+    "dsn_port": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "const",
+          "value": ""
+        },
+        {
+          "gen": "pick",
+          "from": [
+            ":3306",
+            ":0",
+            ":65535",
+            ":65536",
+            ":",
+            ":-1",
+            ":80a",
+            ":00080"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": ":"
+            },
+            {
+              "gen": "int",
+              "min": 0,
+              "max": 70000
+            }
+          ]
+        }
+      ]
+    },
+    "dsn_path": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "const",
+          "value": ""
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "/",
+            "/database",
+            "//double",
+            "/a/b/",
+            "/%41",
+            "/0"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "/"
+            },
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 6
+            }
+          ]
+        }
+      ]
+    },
+    "dsn_query": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "const",
+          "value": ""
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "?",
+            "?0",
+            "?charset=utf8&timezone=UTC",
+            "?a[b]=1&c=2",
+            "?region=us-east-1",
+            "?a.b=1&a b=2",
+            "?value=I+am+100%25+value%3D%3Ccomplex%3E%2C+%22right%22%3F%21",
+            "?x=1#frag",
+            "?t[]=1&t[]=2"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "?"
+            },
+            {
+              "gen": "ref",
+              "name": "encoding_parse_str"
+            }
+          ]
+        }
+      ]
+    },
+    "dsn": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "ref",
+          "name": "dsn_scheme"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "://",
+            "://",
+            "://",
+            ":/",
+            ":",
+            "//",
+            ""
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "dsn_userinfo"
+        },
+        {
+          "gen": "ref",
+          "name": "dsn_host"
+        },
+        {
+          "gen": "ref",
+          "name": "dsn_port"
+        },
+        {
+          "gen": "ref",
+          "name": "dsn_path"
+        },
+        {
+          "gen": "ref",
+          "name": "dsn_query"
+        }
+      ]
+    },
+    "param_key": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "charset",
+            "timezone",
+            "region",
+            "a",
+            "b",
+            "c",
+            "t",
+            "x",
+            "0",
+            "1",
+            "a.b",
+            "a_b",
+            "a b",
+            "doesNotExist",
+            "",
+            "value"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "ab01 ._",
+          "min": 0,
+          "max": 3
+        }
+      ]
+    },
+    "encoding_parse_str_name": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "ab01 .[]%+_-",
+          "min": 0,
+          "max": 12
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "string",
+              "alphabet": "ab .",
+              "min": 0,
+              "max": 3
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "const",
+                    "value": "["
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "ab01 .-[",
+                    "min": 0,
+                    "max": 3
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "]",
+                      "]",
+                      "]",
+                      ""
+                    ]
+                  }
+                ]
+              },
+              "sep": "",
+              "min": 0,
+              "max": 4
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "x",
+                "[",
+                "]",
+                " "
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "a",
+            "0",
+            "1",
+            "-1",
+            "01",
+            "9223372036854775807",
+            "9223372036854775808",
+            "%41",
+            "%00a",
+            "a%00",
+            "%20a",
+            "a%5Bb%5D",
+            "[a]",
+            " [a]",
+            "a[",
+            "a[]",
+            "a[][]",
+            "a[b]c",
+            "a[b c.d]",
+            "a.b c[",
+            "this",
+            "GLOBALS",
+            "%E2%82%AC",
+            "%FF"
+          ]
+        }
+      ]
+    },
+    "encoding_parse_str_pair": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "ref",
+          "name": "encoding_parse_str_name"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "=",
+            "=",
+            "=="
+          ]
+        },
+        {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "ab1%+= 2F.",
+              "min": 0,
+              "max": 6
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "%00",
+                "%FF",
+                "a+b",
+                "%2",
+                "%zz"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "encoding_parse_str": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "encoding_parse_str_pair"
+          },
+          "sep": "&",
+          "min": 0,
+          "max": 6
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "encoding_parse_str_pair"
+          },
+          "sep": "&&",
+          "min": 1,
+          "max": 3
+        },
+        {
+          "gen": "string",
+          "alphabet": "url",
+          "min": 0,
+          "max": 24
+        }
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\DSN\\DSN::__construct",
+      "description": "a scheme or host of \"0\" is refused as missing (PHP's empty() treats \"0\" as empty)",
+      "case": "DSNTest.json#scheme or host 0 is missing"
+    },
+    {
+      "symbol": "Utopia\\DSN\\DSN::getParam",
+      "description": "a query of \"0\" is ignored like an empty one (`! $this->query`), so every key returns the default",
+      "case": "DSNTest.json#query 0 is ignored"
+    },
+    {
+      "symbol": "Utopia\\DSN\\DSN::getParam",
+      "description": "a key the query holds as an array (a[b]=c) raises a TypeError: getParam's return type is string",
+      "case": "DSNTest.json#array parameter is a TypeError"
+    }
+  ],
+  "deviations": []
+}

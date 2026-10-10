@@ -36,5 +36,10 @@
         "psr-4": {
             "Utopia\\System\\Tests\\": "tests/"
         }
+    },
+    "extra": {
+        "utopia": {
+            "category": "runtime"
+        }
     }
 }

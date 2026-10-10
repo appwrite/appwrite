@@ -1,0 +1,164 @@
+{
+  "source": "packages/lock/tests/LockTest.php",
+  "cases": [
+    {
+      "name": "every implementation constructs",
+      "steps": [
+        {
+          "op": "mutex.new",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "semaphore.new",
+          "args": {
+            "permits": 2
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "file.new",
+          "args": {
+            "path": "/tmp/${ns}-iface.lock"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        }
+      ]
+    },
+    {
+      "name": "contention is a lock exception",
+      "steps": [
+        {
+          "op": "mutex.new",
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.with_lock",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            },
+            "result": "never"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Lock\\Exception\\Contention",
+              "message": "Failed to acquire mutex within timeout"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "withLock returns the callback result",
+      "steps": [
+        {
+          "op": "mutex.new",
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.with_lock",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            },
+            "result": "ok"
+          },
+          "expect": "ok"
+        }
+      ]
+    },
+    {
+      "name": "withLock releases on exception",
+      "steps": [
+        {
+          "op": "mutex.new",
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.with_lock",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            },
+            "throw": "inner"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "inner"
+            }
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "withLock passes structured results through",
+      "steps": [
+        {
+          "op": "mutex.new",
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.with_lock",
+          "args": {
+            "lock": {
+              "$ref": "m"
+            },
+            "result": {
+              "a": [
+                1,
+                2.5,
+                null
+              ],
+              "b": true
+            }
+          },
+          "expect": {
+            "a": [
+              1,
+              2.5,
+              null
+            ],
+            "b": true
+          }
+        }
+      ]
+    }
+  ]
+}

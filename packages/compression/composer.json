@@ -35,5 +35,10 @@
         "ext-snappy": "Required for the Snappy algorithm",
         "ext-xz": "Required for the XZ algorithm",
         "ext-zlib": "Required for the GZIP and Deflate algorithms"
+    },
+    "extra": {
+        "utopia": {
+            "category": "data"
+        }
     }
 }

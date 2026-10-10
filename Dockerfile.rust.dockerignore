@@ -1,0 +1,12 @@
+# Build context for Dockerfile.rust: only the Rust workspace and the static
+# data files the Rust API shares with PHP.
+*
+!Cargo.toml
+!Cargo.lock
+!rustfmt.toml
+!crates
+!packages/emails/data/free-domains.php
+!packages/emails/data/disposable-domains.php
+!app/config/locale/translations
+!app/assets/security/10k-common-passwords
+**/target
