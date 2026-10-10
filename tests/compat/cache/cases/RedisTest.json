@@ -1,0 +1,1874 @@
+{
+  "source": "packages/cache/tests/E2E/RedisTest.php",
+  "cases": [
+    {
+      "name": "testCacheSave, testNotEmptyCacheKey, testCachePurge",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:test-key-for-cache",
+            "data": [
+              "test",
+              "data",
+              "string"
+            ],
+            "hash": "${ns}:test-key-for-cache"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:test-key-for-cache",
+            "data": "test data string",
+            "hash": "${ns}:test-key-for-cache"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:test-key-for-cache",
+            "ttl": 7776000,
+            "hash": "${ns}:test-key-for-cache"
+          },
+          "expect": "test data string"
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:test-key-for-cache"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:test-key-for-cache",
+            "ttl": 7776000,
+            "hash": "${ns}:test-key-for-cache"
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testPing",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.ping",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testCacheTouch",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:touch-key",
+            "data": "touch data",
+            "hash": "${ns}:touch-key"
+          },
+          "expect": true
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "seconds": 3
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:touch-key",
+            "ttl": 2,
+            "hash": "${ns}:touch-key"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:touch-key",
+            "hash": "${ns}:touch-key"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:touch-key",
+            "ttl": 2,
+            "hash": "${ns}:touch-key"
+          },
+          "expect": "touch data"
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:missing-touch-key",
+            "hash": "${ns}:missing-touch-key"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:touch-key"
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testCaseInsensitivity",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:planet",
+            "data": "Earth",
+            "hash": "${ns}:planet"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:planet",
+            "ttl": 7776000,
+            "hash": "${ns}:planet"
+          },
+          "expect": "Earth"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:PLANET",
+            "ttl": 7776000,
+            "hash": "${ns}:PLANET"
+          },
+          "expect": "Earth"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:PlAnEt",
+            "ttl": 7776000,
+            "hash": "${ns}:PlAnEt"
+          },
+          "expect": "Earth"
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:PLaNEt"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:planet",
+            "ttl": 7776000,
+            "hash": "${ns}:planet"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:PLANET",
+            "ttl": 7776000,
+            "hash": "${ns}:PLANET"
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testCaseSensitivity",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.set_case_sensitivity",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "value": true
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:color",
+            "data": "pink",
+            "hash": "${ns}:color"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:color",
+            "ttl": 7776000,
+            "hash": "${ns}:color"
+          },
+          "expect": "pink"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:COLOR",
+            "ttl": 7776000,
+            "hash": "${ns}:COLOR"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:color"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.set_case_sensitivity",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "value": false
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.case_sensitive",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testFlush",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:x",
+            "data": "x",
+            "hash": "${ns}:x"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:y",
+            "data": "y",
+            "hash": "${ns}:y"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:x",
+            "ttl": 100,
+            "hash": "${ns}:x"
+          },
+          "expect": "x"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:y",
+            "ttl": 100,
+            "hash": "${ns}:y"
+          },
+          "expect": "y"
+        },
+        {
+          "op": "cache.flush",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:x",
+            "ttl": 100,
+            "hash": "${ns}:x"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:y",
+            "ttl": 100,
+            "hash": "${ns}:y"
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testEmptyObjectFidelity",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-object-fidelity",
+            "data": {
+              "empty": {},
+              "nested": {
+                "empty": {}
+              },
+              "list": [
+                {},
+                {
+                  "x": 1
+                }
+              ],
+              "emptyArray": []
+            },
+            "hash": "${ns}:empty-object-fidelity"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-object-fidelity",
+            "ttl": 60,
+            "hash": "${ns}:empty-object-fidelity"
+          },
+          "expect": {
+            "$array": [
+              [
+                "empty",
+                {
+                  "$object": []
+                }
+              ],
+              [
+                "nested",
+                {
+                  "$array": [
+                    [
+                      "empty",
+                      {
+                        "$object": []
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                "list",
+                [
+                  {
+                    "$object": []
+                  },
+                  {
+                    "$array": [
+                      [
+                        "x",
+                        1
+                      ]
+                    ]
+                  }
+                ]
+              ],
+              [
+                "emptyArray",
+                []
+              ]
+            ]
+          }
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-object-fidelity",
+            "hash": "${ns}:empty-object-fidelity"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-object-fidelity",
+            "ttl": 60,
+            "hash": "${ns}:empty-object-fidelity"
+          },
+          "expect": {
+            "$array": [
+              [
+                "empty",
+                {
+                  "$object": []
+                }
+              ],
+              [
+                "nested",
+                {
+                  "$array": [
+                    [
+                      "empty",
+                      {
+                        "$object": []
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                "list",
+                [
+                  {
+                    "$object": []
+                  },
+                  {
+                    "$array": [
+                      [
+                        "x",
+                        1
+                      ]
+                    ]
+                  }
+                ]
+              ],
+              [
+                "emptyArray",
+                []
+              ]
+            ]
+          }
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-object-fidelity"
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testGetSize",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.flush",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:test:file33",
+            "data": "file33",
+            "hash": "${ns}:test:file33"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:test:file34",
+            "data": "file34",
+            "hash": "${ns}:test:file34"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:test:file35",
+            "data": "file35",
+            "hash": "${ns}:test:file35"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.size",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": 3
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testIgbinaryCodec",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {
+            "codec": "igbinary"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "ig",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "ig"
+            },
+            "key": "${ns}:igbinary",
+            "data": {
+              "nested": {
+                "x": 1
+              },
+              "empty": {}
+            },
+            "hash": "${ns}:igbinary"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "ig"
+            },
+            "key": "${ns}:igbinary",
+            "ttl": 60,
+            "hash": "${ns}:igbinary"
+          },
+          "expect": {
+            "$array": [
+              [
+                "nested",
+                {
+                  "$array": [
+                    [
+                      "x",
+                      1
+                    ]
+                  ]
+                }
+              ],
+              [
+                "empty",
+                {
+                  "$object": []
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "ig"
+            },
+            "key": "${ns}:igbinary",
+            "hash": "${ns}:igbinary"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "ig"
+            },
+            "key": "${ns}:igbinary",
+            "ttl": 60,
+            "hash": "${ns}:igbinary"
+          },
+          "expect": {
+            "$array": [
+              [
+                "nested",
+                {
+                  "$array": [
+                    [
+                      "x",
+                      1
+                    ]
+                  ]
+                }
+              ],
+              [
+                "empty",
+                {
+                  "$object": []
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "op": "raw.hget",
+          "args": {
+            "key": "${ns}:igbinary",
+            "field": "${ns}:igbinary"
+          },
+          "bind": "raw",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the stored envelope carries the second it was written"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "raw.json_decodes",
+          "args": {
+            "bytes": {
+              "$ref": "raw"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:igbinary",
+            "ttl": 60,
+            "hash": "${ns}:igbinary"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "ig"
+            },
+            "key": "${ns}:igbinary"
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testLoadFieldsBatch",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.set_case_sensitivity",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "value": true
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:batch",
+            "data": {
+              "sequence": 5
+            },
+            "hash": "topicA"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:batch",
+            "data": {
+              "sequence": 9
+            },
+            "hash": "topicB"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:batch",
+            "data": {
+              "sequence": 1
+            },
+            "hash": "topicC"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:batch",
+            "ttl": 3600,
+            "fields": [
+              "topicA",
+              "topicC",
+              "missing"
+            ]
+          },
+          "expect": {
+            "topicA": {
+              "$array": [
+                [
+                  "sequence",
+                  5
+                ]
+              ]
+            },
+            "topicC": {
+              "$array": [
+                [
+                  "sequence",
+                  1
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "cache.load_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:batch",
+            "ttl": 3600
+          },
+          "expect": {
+            "topicA": {
+              "$array": [
+                [
+                  "sequence",
+                  5
+                ]
+              ]
+            },
+            "topicB": {
+              "$array": [
+                [
+                  "sequence",
+                  9
+                ]
+              ]
+            },
+            "topicC": {
+              "$array": [
+                [
+                  "sequence",
+                  1
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:batch",
+            "ttl": 3600,
+            "hash": "topicB"
+          },
+          "expect": {
+            "$array": [
+              [
+                "sequence",
+                9
+              ]
+            ]
+          }
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testSaveManyBatch",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.set_case_sensitivity",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "value": true
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:batchsave",
+            "data": [
+              [
+                "topicA",
+                {
+                  "sequence": 5
+                }
+              ],
+              [
+                "topicB",
+                {
+                  "sequence": 9
+                }
+              ],
+              [
+                "topicC",
+                {
+                  "sequence": 1
+                }
+              ]
+            ],
+            "ttl": 300
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:batchsave",
+            "ttl": 3600
+          },
+          "expect": {
+            "topicA": {
+              "$array": [
+                [
+                  "sequence",
+                  5
+                ]
+              ]
+            },
+            "topicB": {
+              "$array": [
+                [
+                  "sequence",
+                  9
+                ]
+              ]
+            },
+            "topicC": {
+              "$array": [
+                [
+                  "sequence",
+                  1
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "raw.ttl",
+          "args": {
+            "key": "${ns}:batchsave",
+            "at_most": 300
+          },
+          "expect": "positive"
+        },
+        {
+          "op": "cache.save_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:batchsave",
+            "data": [
+              [
+                "topicA",
+                {
+                  "sequence": 50
+                }
+              ],
+              [
+                "topicD",
+                {
+                  "sequence": 7
+                }
+              ]
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:batchsave",
+            "ttl": 3600,
+            "hash": "topicA"
+          },
+          "expect": {
+            "$array": [
+              [
+                "sequence",
+                50
+              ]
+            ]
+          }
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:batchsave",
+            "ttl": 3600,
+            "hash": "topicD"
+          },
+          "expect": {
+            "$array": [
+              [
+                "sequence",
+                7
+              ]
+            ]
+          }
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:batchsave",
+            "ttl": 3600,
+            "hash": "topicB"
+          },
+          "expect": {
+            "$array": [
+              [
+                "sequence",
+                9
+              ]
+            ]
+          }
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testLoadManyExcludesExpired",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.set_case_sensitivity",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "value": true
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:ttl",
+            "data": "fresh",
+            "hash": "topicA"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:ttl",
+            "ttl": 0,
+            "fields": [
+              "topicA"
+            ]
+          },
+          "expect": {}
+        },
+        {
+          "op": "cache.load_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:ttl",
+            "ttl": 3600,
+            "fields": [
+              "topicA"
+            ]
+          },
+          "expect": {
+            "topicA": "fresh"
+          }
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testSaveWithTtlArmsKeyExpiry",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.set_case_sensitivity",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "value": true
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:expire",
+            "data": "a",
+            "hash": "topicA"
+          },
+          "expect": true
+        },
+        {
+          "op": "raw.ttl",
+          "args": {
+            "key": "${ns}:expire"
+          },
+          "expect": -1
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:expire",
+            "data": "b",
+            "hash": "topicB",
+            "ttl": 120
+          },
+          "expect": true
+        },
+        {
+          "op": "raw.ttl",
+          "args": {
+            "key": "${ns}:expire",
+            "at_most": 120
+          },
+          "expect": "positive"
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "retries, names, folded batch fields, reserved fields and odd values",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {
+            "retries": 3,
+            "delay": 10
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.retry",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "max": 3,
+            "delay": 10
+          }
+        },
+        {
+          "op": "adapter.name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "redis"
+        },
+        {
+          "op": "adapter.grace",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "cache.save_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:Fold",
+            "data": [
+              [
+                "Topic",
+                1
+              ],
+              [
+                "topic",
+                2
+              ],
+              [
+                "__utopia_gen__",
+                3
+              ]
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:fold",
+            "ttl": 60,
+            "fields": [
+              "TOPIC",
+              "topic",
+              "missing"
+            ]
+          },
+          "expect": {
+            "topic": "2"
+          }
+        },
+        {
+          "op": "cache.save_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:fold",
+            "data": [
+              [
+                "__utopia_gen__",
+                3
+              ]
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:bin",
+            "data": {
+              "$bytes": "/wA="
+            },
+            "hash": "b"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:bin",
+            "ttl": 60,
+            "hash": "b"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:n",
+            "data": {
+              "7": "seven",
+              "x": [
+                1.5,
+                -0.0,
+                true,
+                null,
+                {
+                  "$bytes": "AA=="
+                }
+              ]
+            },
+            "hash": "n"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:n",
+            "ttl": 60,
+            "hash": "n"
+          },
+          "expect": {
+            "$array": [
+              [
+                7,
+                "seven"
+              ],
+              [
+                "x",
+                [
+                  1.5,
+                  0,
+                  true,
+                  null,
+                  "\u0000"
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "cache.list",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:n"
+          },
+          "expect": [
+            "n"
+          ]
+        },
+        {
+          "op": "cache.list",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:missing"
+          },
+          "expect": []
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "",
+            "data": "x"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:e",
+            "data": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:missing",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "raw.hset",
+          "args": {
+            "key": "${ns}:corrupt",
+            "field": "${ns}:corrupt",
+            "value": "not json"
+          },
+          "expect": 1
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:corrupt",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:corrupt"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:corrupt",
+            "ttl": 60
+          },
+          "expect": {}
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "retries are clamped",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {
+            "retries": 99,
+            "delay": -5
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.retry",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "max": 10,
+            "delay": -5
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {
+            "retries": -3
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.retry",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "max": 0,
+            "delay": 1000
+          }
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    }
+  ]
+}

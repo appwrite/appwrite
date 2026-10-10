@@ -1,13 +1,40 @@
 [package]
 name = "utopia-cache"
-description = "A Redis-backed cache with leases and purges."
+description = "Key-value caching with expiring entries over memory, files, Redis, Redis Cluster, Memcached and Hazelcast, with sharding, pooling, circuit breaking and purge-safe leases."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
 
+[features]
+default = ["redis", "filesystem"]
+# Redis (redis-rs connections) and the multiplexed Redis adapter.
+redis = ["dep:redis", "tokio/net", "tokio/io-util"]
+# Redis Cluster (redis-rs cluster client).
+redis-cluster = ["redis", "redis/cluster-async"]
+# Memcached and Hazelcast (Memcached text protocol).
+memcached = ["tokio/net", "tokio/io-util"]
+# Files under a directory.
+filesystem = ["tokio/fs"]
+
 [dependencies]
+bytes.workspace = true
 crc32fast.workspace = true
-redis.workspace = true
+flate2.workspace = true
+hex.workspace = true
+indexmap.workspace = true
+php-std.workspace = true
+redis = { workspace = true, optional = true }
+rustix.workspace = true
+sha1.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["sync", "time", "rt"] }
 tracing.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "time", "sync", "net", "io-util"] }
+
+[package.metadata.utopia]
+category = "data"
+php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"

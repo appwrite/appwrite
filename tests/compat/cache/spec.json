@@ -1,0 +1,1057 @@
+{
+  "lib": "cache",
+  "description": "utopia-php/cache: the Cache facade over Memory, None, Filesystem, Redis (leases, multiplexing), Redis Cluster, Memcached, Hazelcast, Sharding, Pool and CircuitBreaker adapters; codecs, envelopes and RESP.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/cache/src"
+    ],
+    "tests": [
+      "packages/cache/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/cache"
+  },
+  "services": [
+    "cache-redis",
+    "cache-redis-shared",
+    "cache-redis-mux",
+    "cache-shard-a",
+    "cache-shard-b",
+    "cache-shard-c",
+    "cache-memcached",
+    "cache-hazelcast",
+    "cache-cluster"
+  ],
+  "state": [
+    "redis@cache-redis/11,6",
+    "files"
+  ],
+  "ops": {
+    "memory.new": {
+      "doc": "new Memory()"
+    },
+    "none.new": {
+      "doc": "new None()"
+    },
+    "filesystem.new": {
+      "doc": "new Filesystem(path)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Filesystem::__construct"
+      ]
+    },
+    "filesystem.path": {
+      "doc": "new Filesystem(path)->getPath(key)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Filesystem::getPath"
+      ]
+    },
+    "filesystem.stream": {
+      "doc": "new Filesystem(path, streaming: true)->load(key, ttl), read to the end (false on a miss)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Filesystem::load"
+      ]
+    },
+    "redis.new": {
+      "doc": "new Redis(phpredis on service/db, codec?) with setMaxRetries(retries?), setRetryDelay(delay?), setLeaseGraceWindow(grace?)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Redis::__construct",
+        "Utopia\\Cache\\Adapter\\Redis::setMaxRetries",
+        "Utopia\\Cache\\Adapter\\Redis::setRetryDelay",
+        "Utopia\\Cache\\Adapter\\Redis\\Leasable::__construct",
+        "Utopia\\Cache\\Adapter\\Redis\\Leasable::setLeaseGraceWindow"
+      ]
+    },
+    "memcached.new": {
+      "doc": "new Memcached(client of service) with setMaxRetries(retries?), setRetryDelay(delay?)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Memcached::__construct",
+        "Utopia\\Cache\\Adapter\\Memcached::setMaxRetries",
+        "Utopia\\Cache\\Adapter\\Memcached::setRetryDelay"
+      ]
+    },
+    "hazelcast.new": {
+      "doc": "new Hazelcast(client of service, codec?) with setMaxRetries(retries?), setRetryDelay(delay?)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Hazelcast::__construct",
+        "Utopia\\Cache\\Adapter\\Hazelcast::setMaxRetries",
+        "Utopia\\Cache\\Adapter\\Hazelcast::setRetryDelay"
+      ]
+    },
+    "cluster.new": {
+      "doc": "new RedisCluster(new \\RedisCluster(seeds of cache-cluster), seeds, name?, codec?) with setMaxRetries(retries?), setRetryDelay(delay?)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\RedisCluster::__construct",
+        "Utopia\\Cache\\Adapter\\RedisCluster::setMaxRetries",
+        "Utopia\\Cache\\Adapter\\RedisCluster::setRetryDelay"
+      ]
+    },
+    "cluster.info": {
+      "doc": "{name: getClusterName(), seeds: getSeeds()}",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\RedisCluster::getClusterName",
+        "Utopia\\Cache\\Adapter\\RedisCluster::getSeeds"
+      ]
+    },
+    "sharding.new": {
+      "doc": "new Sharding([adapters])",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Sharding::__construct"
+      ]
+    },
+    "pool.new": {
+      "doc": "new Pool(new UtopiaPool(new Stack(), size, fn => new Filesystem(path)))",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Pool::__construct"
+      ]
+    },
+    "circuit_breaker.new": {
+      "doc": "new CircuitBreaker(adapter, new UtopiaCircuitBreaker(minimumThroughput?))",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::__construct"
+      ]
+    },
+    "failing.new": {
+      "doc": "fixture: CircuitBreakerTest's FailingAdapter (every operation throws)"
+    },
+    "counting_failing.new": {
+      "doc": "fixture: CircuitBreakerTest's CountingFailingAdapter"
+    },
+    "counting_failing.loads": {
+      "doc": "fixture: loads that reached a CountingFailingAdapter"
+    },
+    "probe.new": {
+      "doc": "fixture: TelemetryTest's Memory adapter recording setTelemetry calls"
+    },
+    "probe.calls": {
+      "doc": "fixture: {calls, same}: setTelemetry calls on a probe and whether it holds `telemetry`"
+    },
+    "null_load.new": {
+      "doc": "fixture: LoadResultsTelemetryTest's Memory adapter whose load returns null"
+    },
+    "telemetry.new": {
+      "doc": "fixture: a Test telemetry adapter recording every data point's attributes"
+    },
+    "telemetry.dump": {
+      "doc": "fixture: recorded data points by \"kind:name\" (histogram values zeroed)"
+    },
+    "cache.new": {
+      "doc": "new Cache(adapter)",
+      "covers": [
+        "Utopia\\Cache\\Cache::__construct"
+      ]
+    },
+    "cache.set_case_sensitivity": {
+      "doc": "$cache->setCaseSensitivity(value)",
+      "covers": [
+        "Utopia\\Cache\\Cache::setCaseSensitivity"
+      ]
+    },
+    "cache.case_sensitive": {
+      "doc": "$cache->caseSensitive"
+    },
+    "cache.set_telemetry": {
+      "doc": "$cache->setTelemetry(telemetry)",
+      "covers": [
+        "Utopia\\Cache\\Cache::setTelemetry"
+      ]
+    },
+    "adapter.set_telemetry": {
+      "doc": "$adapter->setTelemetry(telemetry)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::setTelemetry"
+      ]
+    },
+    "adapter.name": {
+      "doc": "$adapter->getName(key?)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Memory::getName",
+        "Utopia\\Cache\\Adapter\\None::getName",
+        "Utopia\\Cache\\Adapter\\Filesystem::getName",
+        "Utopia\\Cache\\Adapter\\Redis::getName",
+        "Utopia\\Cache\\Adapter\\Hazelcast::getName",
+        "Utopia\\Cache\\Adapter\\Memcached::getName",
+        "Utopia\\Cache\\Adapter\\Sharding::getName",
+        "Utopia\\Cache\\Adapter\\Pool::getName",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::getName",
+        "Utopia\\Cache\\Adapter\\RedisCluster::getName",
+        "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::getName"
+      ]
+    },
+    "adapter.retry": {
+      "doc": "{max: getMaxRetries(), delay: getRetryDelay()}",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Redis::getMaxRetries",
+        "Utopia\\Cache\\Adapter\\Redis::getRetryDelay",
+        "Utopia\\Cache\\Adapter\\Memcached::getMaxRetries",
+        "Utopia\\Cache\\Adapter\\Memcached::getRetryDelay",
+        "Utopia\\Cache\\Adapter\\Hazelcast::getMaxRetries",
+        "Utopia\\Cache\\Adapter\\Hazelcast::getRetryDelay",
+        "Utopia\\Cache\\Adapter\\RedisCluster::getMaxRetries",
+        "Utopia\\Cache\\Adapter\\RedisCluster::getRetryDelay"
+      ]
+    },
+    "adapter.grace": {
+      "doc": "$adapter->getLeaseGraceWindow()",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Redis\\Leasable::getLeaseGraceWindow"
+      ]
+    },
+    "multiplexing.run": {
+      "doc": "steps (cache methods, sleep, concurrent, load_equals: whether a load == data) on a Cache over a new Multiplexing(host, port, options) in one coroutine scheduler, then disconnect(); each step's result or error",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Redis\\Client::__construct",
+        "Utopia\\Cache\\Adapter\\Redis\\Client::close",
+        "Utopia\\Cache\\Adapter\\Redis\\Client::command",
+        "Utopia\\Cache\\Adapter\\Redis\\Client::recv",
+        "Utopia\\Cache\\Adapter\\Redis\\Client::send",
+        "Utopia\\Cache\\Adapter\\Redis\\Client::takeBuffer",
+        "Utopia\\Cache\\Adapter\\Redis\\Client::timedOut",
+        "Utopia\\Cache\\Adapter\\Redis\\ConnectionContext::__construct",
+        "Utopia\\Cache\\Adapter\\Redis\\ConnectionContext::idleFor",
+        "Utopia\\Cache\\Adapter\\Redis\\ConnectionContext::recordProgress",
+        "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::__construct",
+        "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::disconnect",
+        "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::flush",
+        "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::getName",
+        "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::getSize",
+        "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::list",
+        "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::load",
+        "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::loadMany",
+        "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::ping",
+        "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::save",
+        "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::saveMany",
+        "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::setTelemetry",
+        "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::touch"
+      ]
+    },
+    "codec.encode": {
+      "doc": "$codec->encode(value)",
+      "covers": [
+        "Utopia\\Cache\\Codec\\Json::encode",
+        "Utopia\\Cache\\Codec\\Igbinary::encode",
+        "Utopia\\Cache\\Codec\\Igbinary::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "values",
+          "iterations": 400,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "codec": {
+                "gen": "pick",
+                "from": [
+                  "json",
+                  "igbinary"
+                ]
+              },
+              "value": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "codec.decode": {
+      "doc": "$codec->decode(bytes)",
+      "covers": [
+        "Utopia\\Cache\\Codec\\Json::decode",
+        "Utopia\\Cache\\Codec\\Igbinary::decode"
+      ],
+      "fuzz": [
+        {
+          "name": "json text",
+          "iterations": 400,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "codec": {
+                "gen": "const",
+                "value": "json"
+              },
+              "bytes": {
+                "gen": "ref",
+                "name": "bytes"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "envelope.encode": {
+      "doc": "new Envelope(codec)->encode(data, time)",
+      "covers": [
+        "Utopia\\Cache\\Envelope::__construct",
+        "Utopia\\Cache\\Envelope::encode"
+      ],
+      "fuzz": [
+        {
+          "name": "values",
+          "iterations": 300,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "codec": {
+                "gen": "pick",
+                "from": [
+                  "json",
+                  "igbinary"
+                ]
+              },
+              "data": {
+                "gen": "ref",
+                "name": "value"
+              },
+              "time": {
+                "gen": "int",
+                "min": -10,
+                "max": 2000000000
+              }
+            }
+          }
+        }
+      ]
+    },
+    "envelope.decode": {
+      "doc": "new Envelope(codec)->decode(value, ttl, now)",
+      "covers": [
+        "Utopia\\Cache\\Envelope::decode"
+      ],
+      "fuzz": [
+        {
+          "name": "stored bytes",
+          "iterations": 400,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "bytes"
+              },
+              "ttl": {
+                "gen": "int",
+                "min": -5,
+                "max": 100
+              },
+              "now": {
+                "gen": "int",
+                "min": -5,
+                "max": 100
+              }
+            }
+          }
+        }
+      ]
+    },
+    "envelope.touch": {
+      "doc": "new Envelope(codec)->touch(value, time)",
+      "covers": [
+        "Utopia\\Cache\\Envelope::touch"
+      ]
+    },
+    "resp.encode": {
+      "doc": "Client::encode(args)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Redis\\Client::encode"
+      ],
+      "fuzz": [
+        {
+          "name": "commands",
+          "iterations": 200,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "args": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "text"
+                    },
+                    {
+                      "gen": "int",
+                      "min": -1000,
+                      "max": 1000
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 6
+              }
+            }
+          }
+        }
+      ]
+    },
+    "resp.parse": {
+      "doc": "Client::parse(buffer, offset): {value, offset} (INCOMPLETE as {\"$incomplete\": true}, error frames as {\"$redis_error\"})",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Redis\\Client::parse",
+        "Utopia\\Cache\\Adapter\\Redis\\RedisError::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "frames",
+          "iterations": 400,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "buffer": {
+                "gen": "ref",
+                "name": "frame"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "resp.unwrap": {
+      "doc": "Client::unwrap(value) ({\"$redis_error\"} / {\"$connection_error\"} build RedisError / ConnectionError)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Redis\\Client::unwrap",
+        "Utopia\\Cache\\Adapter\\Redis\\ConnectionError::__construct"
+      ]
+    },
+    "noscript.matches": {
+      "doc": "NoScript::matches(error)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Redis\\NoScript::matches"
+      ],
+      "fuzz": [
+        {
+          "name": "errors",
+          "iterations": 200,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "error": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "text"
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "NOSCRIPT",
+                          "NOSCRIPT ",
+                          " NOSCRIPT",
+                          "ERR "
+                        ]
+                      },
+                      {
+                        "gen": "ref",
+                        "name": "text"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "noscript.from": {
+      "doc": "NoScript::from(message or new RedisException(message)): {message, previous}",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Redis\\NoScript::from"
+      ]
+    },
+    "raw.hget": {
+      "doc": "fixture: HGET key field (false when missing)"
+    },
+    "raw.hset": {
+      "doc": "fixture: HSET key field value"
+    },
+    "raw.hexists": {
+      "doc": "fixture: HEXISTS key field"
+    },
+    "raw.ttl": {
+      "doc": "fixture: TTL key: \"positive\" when in (0, at_most], else the TTL"
+    },
+    "raw.script_flush": {
+      "doc": "fixture: SCRIPT FLUSH"
+    },
+    "raw.tomb": {
+      "doc": "fixture: HSET key __utopia_tomb__ (server TIME + seconds) in microseconds"
+    },
+    "raw.json_decodes": {
+      "doc": "fixture: json_decode(bytes) !== null"
+    },
+    "sleep": {
+      "doc": "fixture: sleep(seconds)"
+    },
+    "cache.load": {
+      "doc": "$cache->load(...)",
+      "covers": [
+        "Utopia\\Cache\\Cache::load"
+      ]
+    },
+    "adapter.load": {
+      "doc": "$adapter->load(...)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Memory::load",
+        "Utopia\\Cache\\Adapter\\None::load",
+        "Utopia\\Cache\\Adapter\\Filesystem::load",
+        "Utopia\\Cache\\Adapter\\Redis::load",
+        "Utopia\\Cache\\Adapter\\Hazelcast::load",
+        "Utopia\\Cache\\Adapter\\Memcached::load",
+        "Utopia\\Cache\\Adapter\\Sharding::load",
+        "Utopia\\Cache\\Adapter\\Pool::load",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::load",
+        "Utopia\\Cache\\Adapter\\RedisCluster::load",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::delegate",
+        "Utopia\\Cache\\Adapter\\Pool::delegate"
+      ]
+    },
+    "cache.save": {
+      "doc": "$cache->save(...)",
+      "covers": [
+        "Utopia\\Cache\\Cache::save"
+      ]
+    },
+    "adapter.save": {
+      "doc": "$adapter->save(...)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Memory::save",
+        "Utopia\\Cache\\Adapter\\None::save",
+        "Utopia\\Cache\\Adapter\\Filesystem::save",
+        "Utopia\\Cache\\Adapter\\Redis::save",
+        "Utopia\\Cache\\Adapter\\Hazelcast::save",
+        "Utopia\\Cache\\Adapter\\Memcached::save",
+        "Utopia\\Cache\\Adapter\\Sharding::save",
+        "Utopia\\Cache\\Adapter\\Pool::save",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::save",
+        "Utopia\\Cache\\Adapter\\RedisCluster::save"
+      ]
+    },
+    "cache.touch": {
+      "doc": "$cache->touch(...)",
+      "covers": [
+        "Utopia\\Cache\\Cache::touch"
+      ]
+    },
+    "adapter.touch": {
+      "doc": "$adapter->touch(...)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Memory::touch",
+        "Utopia\\Cache\\Adapter\\None::touch",
+        "Utopia\\Cache\\Adapter\\Filesystem::touch",
+        "Utopia\\Cache\\Adapter\\Redis::touch",
+        "Utopia\\Cache\\Adapter\\Hazelcast::touch",
+        "Utopia\\Cache\\Adapter\\Memcached::touch",
+        "Utopia\\Cache\\Adapter\\Sharding::touch",
+        "Utopia\\Cache\\Adapter\\Pool::touch",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::touch",
+        "Utopia\\Cache\\Adapter\\RedisCluster::touch"
+      ]
+    },
+    "cache.list": {
+      "doc": "$cache->list(...)",
+      "covers": [
+        "Utopia\\Cache\\Cache::list"
+      ]
+    },
+    "adapter.list": {
+      "doc": "$adapter->list(...)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Memory::list",
+        "Utopia\\Cache\\Adapter\\None::list",
+        "Utopia\\Cache\\Adapter\\Filesystem::list",
+        "Utopia\\Cache\\Adapter\\Redis::list",
+        "Utopia\\Cache\\Adapter\\Hazelcast::list",
+        "Utopia\\Cache\\Adapter\\Memcached::list",
+        "Utopia\\Cache\\Adapter\\Sharding::list",
+        "Utopia\\Cache\\Adapter\\Pool::list",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::list",
+        "Utopia\\Cache\\Adapter\\RedisCluster::list"
+      ]
+    },
+    "cache.purge": {
+      "doc": "$cache->purge(...)",
+      "covers": [
+        "Utopia\\Cache\\Cache::purge"
+      ]
+    },
+    "adapter.purge": {
+      "doc": "$adapter->purge(...)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Memory::purge",
+        "Utopia\\Cache\\Adapter\\None::purge",
+        "Utopia\\Cache\\Adapter\\Filesystem::purge",
+        "Utopia\\Cache\\Adapter\\Hazelcast::purge",
+        "Utopia\\Cache\\Adapter\\Memcached::purge",
+        "Utopia\\Cache\\Adapter\\Sharding::purge",
+        "Utopia\\Cache\\Adapter\\Pool::purge",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::purge",
+        "Utopia\\Cache\\Adapter\\RedisCluster::purge",
+        "Utopia\\Cache\\Adapter\\Redis\\Leasable::purge"
+      ]
+    },
+    "cache.flush": {
+      "doc": "$cache->flush(...)",
+      "covers": [
+        "Utopia\\Cache\\Cache::flush"
+      ]
+    },
+    "adapter.flush": {
+      "doc": "$adapter->flush(...)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Memory::flush",
+        "Utopia\\Cache\\Adapter\\None::flush",
+        "Utopia\\Cache\\Adapter\\Filesystem::flush",
+        "Utopia\\Cache\\Adapter\\Redis::flush",
+        "Utopia\\Cache\\Adapter\\Hazelcast::flush",
+        "Utopia\\Cache\\Adapter\\Memcached::flush",
+        "Utopia\\Cache\\Adapter\\Sharding::flush",
+        "Utopia\\Cache\\Adapter\\Pool::flush",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::flush",
+        "Utopia\\Cache\\Adapter\\RedisCluster::flush"
+      ]
+    },
+    "cache.ping": {
+      "doc": "$cache->ping(...)",
+      "covers": [
+        "Utopia\\Cache\\Cache::ping"
+      ]
+    },
+    "adapter.ping": {
+      "doc": "$adapter->ping(...)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Memory::ping",
+        "Utopia\\Cache\\Adapter\\None::ping",
+        "Utopia\\Cache\\Adapter\\Filesystem::ping",
+        "Utopia\\Cache\\Adapter\\Redis::ping",
+        "Utopia\\Cache\\Adapter\\Hazelcast::ping",
+        "Utopia\\Cache\\Adapter\\Memcached::ping",
+        "Utopia\\Cache\\Adapter\\Sharding::ping",
+        "Utopia\\Cache\\Adapter\\Pool::ping",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::ping",
+        "Utopia\\Cache\\Adapter\\RedisCluster::ping"
+      ]
+    },
+    "cache.size": {
+      "doc": "$cache->getSize(...)",
+      "covers": [
+        "Utopia\\Cache\\Cache::getSize"
+      ]
+    },
+    "adapter.size": {
+      "doc": "$adapter->getSize(...)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Memory::getSize",
+        "Utopia\\Cache\\Adapter\\None::getSize",
+        "Utopia\\Cache\\Adapter\\Filesystem::getSize",
+        "Utopia\\Cache\\Adapter\\Redis::getSize",
+        "Utopia\\Cache\\Adapter\\Hazelcast::getSize",
+        "Utopia\\Cache\\Adapter\\Memcached::getSize",
+        "Utopia\\Cache\\Adapter\\Sharding::getSize",
+        "Utopia\\Cache\\Adapter\\Pool::getSize",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::getSize",
+        "Utopia\\Cache\\Adapter\\RedisCluster::getSize"
+      ]
+    },
+    "cache.load_many": {
+      "doc": "$cache->loadMany(...)",
+      "covers": [
+        "Utopia\\Cache\\Cache::loadMany"
+      ]
+    },
+    "adapter.load_many": {
+      "doc": "$adapter->loadMany(...)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Redis::loadMany",
+        "Utopia\\Cache\\Adapter\\Sharding::loadMany",
+        "Utopia\\Cache\\Adapter\\Pool::loadMany",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::loadMany",
+        "Utopia\\Cache\\Adapter\\RedisCluster::loadMany"
+      ]
+    },
+    "cache.save_many": {
+      "doc": "$cache->saveMany(...)",
+      "covers": [
+        "Utopia\\Cache\\Cache::saveMany"
+      ]
+    },
+    "adapter.save_many": {
+      "doc": "$adapter->saveMany(...)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Redis::saveMany",
+        "Utopia\\Cache\\Adapter\\Sharding::saveMany",
+        "Utopia\\Cache\\Adapter\\Pool::saveMany",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::saveMany",
+        "Utopia\\Cache\\Adapter\\RedisCluster::saveMany"
+      ]
+    },
+    "cache.generation": {
+      "doc": "$cache->getGeneration(...)",
+      "covers": [
+        "Utopia\\Cache\\Cache::getGeneration"
+      ]
+    },
+    "adapter.generation": {
+      "doc": "$adapter->getGeneration(...)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Sharding::getGeneration",
+        "Utopia\\Cache\\Adapter\\Pool::getGeneration",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::getGeneration",
+        "Utopia\\Cache\\Adapter\\Redis\\Leasable::getGeneration"
+      ]
+    },
+    "cache.save_with_lease": {
+      "doc": "$cache->saveWithLease(...)",
+      "covers": [
+        "Utopia\\Cache\\Cache::saveWithLease"
+      ]
+    },
+    "adapter.save_with_lease": {
+      "doc": "$adapter->saveWithLease(...)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Sharding::saveWithLease",
+        "Utopia\\Cache\\Adapter\\Pool::saveWithLease",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::saveWithLease",
+        "Utopia\\Cache\\Adapter\\Redis\\Leasable::saveWithLease"
+      ]
+    },
+    "fuzz.roundtrip": {
+      "fuzz": [
+        {
+          "name": "every adapter",
+          "iterations": 120,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "adapter": {
+                "gen": "pick",
+                "from": [
+                  "memory",
+                  "redis",
+                  "redis-igbinary",
+                  "filesystem",
+                  "memcached",
+                  "hazelcast"
+                ]
+              },
+              "key": {
+                "gen": "ref",
+                "name": "key"
+              },
+              "hash": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": ""
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "key"
+                  }
+                ]
+              },
+              "data": {
+                "gen": "ref",
+                "name": "value"
+              }
+            }
+          }
+        }
+      ],
+      "doc": "fixture: a new adapter (memory, redis[-igbinary], filesystem, memcached, hazelcast) through a Cache: save, load, touch, load, list, purge, load of \"<ns>:<key>\"; every result"
+    }
+  },
+  "generators": {
+    "text": {
+      "gen": "string",
+      "min": 0,
+      "max": 40,
+      "alphabet": "unicode",
+      "tricky": 0.4
+    },
+    "bytes": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 30,
+          "alphabet": "unicode",
+          "tricky": 0.5
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "{",
+                "[",
+                "{\"time\":",
+                "{\"data\":",
+                "{\"time\":1,\"data\":",
+                "\"",
+                "{ }",
+                "{}"
+              ]
+            },
+            {
+              "gen": "string",
+              "min": 0,
+              "max": 12,
+              "alphabet": "{}[]\":,0123456789 truefalsnul\\u"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "}",
+                "]",
+                "",
+                "}}",
+                "\"}"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "key": {
+      "gen": "string",
+      "min": 1,
+      "max": 32,
+      "alphabet": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:-_."
+    },
+    "value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "text"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "any",
+            "depth": 3
+          },
+          "min": 0,
+          "max": 5
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "text"
+          },
+          "min": 0,
+          "max": 6
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "string",
+            "min": 1,
+            "max": 9,
+            "alphabet": "unicode"
+          },
+          "sep": "",
+          "min": 200,
+          "max": 900
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "nested": {
+              "gen": "any",
+              "depth": 4
+            },
+            "empty": {
+              "gen": "const",
+              "value": {}
+            },
+            "list": {
+              "gen": "array",
+              "items": {
+                "gen": "any",
+                "depth": 2
+              },
+              "min": 0,
+              "max": 4
+            }
+          }
+        }
+      ]
+    },
+    "frame": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "+",
+                "-",
+                ":",
+                "$",
+                "*"
+              ]
+            },
+            {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "int",
+                  "min": -3,
+                  "max": 12
+                },
+                {
+                  "gen": "string",
+                  "min": 0,
+                  "max": 6,
+                  "alphabet": "ascii"
+                }
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "\r\n",
+                "",
+                "\r"
+              ]
+            },
+            {
+              "gen": "string",
+              "min": 0,
+              "max": 10,
+              "alphabet": "abc\r\n:$*+-0123456789"
+            }
+          ]
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "pick",
+                "from": [
+                  "+OK\r\n",
+                  ":42\r\n",
+                  "$3\r\nabc\r\n",
+                  "$-1\r\n",
+                  "*2\r\n",
+                  "*0\r\n",
+                  "-ERR x\r\n",
+                  "$5\r\nhel",
+                  "*-1\r\n"
+                ]
+              }
+            ]
+          },
+          "sep": "",
+          "min": 1,
+          "max": 5
+        }
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Cache\\Cache::save",
+      "description": "Cache.php and the Redis-protocol adapters are not strict_types, so a value that is neither string nor array is coerced at the `array|string $data` boundary: integers, floats and booleans are stored as strings (`1` reads back as \"1\", `false` as \"\"), saveMany() field values included.",
+      "case": "RedisTest.json#retries, names, folded batch fields, reserved fields and odd values"
+    },
+    {
+      "symbol": "Utopia\\Cache\\Adapter\\Filesystem::flush",
+      "description": "flush() deletes the root directory itself, and throws \"Error happened during glob\" when the root (or any subdirectory) is empty, and \"<path> must be a directory\" when it is missing.",
+      "case": "FilesystemTest.json#flushing an empty or missing directory fails"
+    },
+    {
+      "symbol": "Utopia\\Cache\\Adapter\\Filesystem::save",
+      "description": "An array is written as its items' strings joined (nested arrays as \"Array\"); an object item makes file_put_contents write the rest and then throw Error; data whose string form is empty writes an empty file and reports false.",
+      "case": "FilesystemTest.json#paths, nested keys, arrays and edge cases"
+    },
+    {
+      "symbol": "Utopia\\Cache\\Adapter\\Memory::save",
+      "description": "The key \"0\" and data that is empty() (including the string \"0\") are never stored.",
+      "case": "MemoryTest.json#blank keys and empty data are not stored"
+    },
+    {
+      "symbol": "Utopia\\Cache\\Adapter\\Redis::load",
+      "description": "phpredis turns a server error reply into false, so the Redis adapter reads a wrongly typed key as a miss, while the multiplexing adapter raises the reply as RedisException.",
+      "case": "MultiplexingTest.json#wrong type replies raise"
+    },
+    {
+      "symbol": "Utopia\\Cache\\Envelope::decode",
+      "description": "Stored data that is false or null is a miss (isset() and the false return value cannot tell them apart).",
+      "case": "EnvelopeTest.json#false data, overflowing time, unencodable data"
+    },
+    {
+      "symbol": "Utopia\\Cache\\Adapter\\RedisCluster::list",
+      "description": "Unlike Redis, the cluster adapter has no leases and does not hide or protect the reserved __utopia_gen__/__utopia_tomb__ fields.",
+      "case": "RedisClusterTest.json#names, seeds, retries, batches and field purges"
+    }
+  ],
+  "state_mask": {
+    "redis@cache-redis/11,6": {
+      "paths": [
+        "/*/value/__utopia_tomb__"
+      ],
+      "reason": "tombstones are deadlines in microseconds of the Redis clock when the purge ran"
+    },
+    "redis@cache-redis-shared": {
+      "paths": [
+        "/*/value/__utopia_tomb__"
+      ],
+      "reason": "tombstones are deadlines in microseconds of the Redis clock when the purge ran"
+    },
+    "redis@cache-redis-mux/10,15": {
+      "paths": [
+        "/*/value/__utopia_tomb__"
+      ],
+      "reason": "tombstones are deadlines in microseconds of the Redis clock when the purge ran"
+    }
+  },
+  "deviations": [
+    {
+      "symbol": "Utopia\\Cache\\Adapter\\Filesystem::__construct",
+      "php": "`$streaming = true` makes load() return an open stream resource instead of the contents.",
+      "reason": "A load returns a value; Rust exposes the stream as Filesystem::open(), which the streaming cases use."
+    },
+    {
+      "symbol": "Utopia\\Cache\\Adapter\\Redis\\NoScript::from",
+      "php": "The signal keeps the RedisException it was made from as getPrevious().",
+      "reason": "utopia_cache::Error::NoScript carries the message only; the signal never leaves the lease dispatch."
+    },
+    {
+      "symbol": "Utopia\\Cache\\Cache::save",
+      "php": "A TypeError for null or object data names the calling file and line (\"called in ... on line N\").",
+      "reason": "Rust reports the same TypeError class and argument description without a PHP call site."
+    },
+    {
+      "symbol": "Utopia\\Cache\\Cache::load",
+      "php": "Keys and hashes are byte strings.",
+      "reason": "Rust keys are &str (UTF-8); every key PHP lower-cases stays UTF-8."
+    },
+    {
+      "symbol": "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::__construct",
+      "php": "`$idleGrace` bounds how long the reader coroutine stays parked on an idle connection before retiring (a Swoole worker cannot exit while it waits).",
+      "reason": "The Rust reader is a parked tokio task that costs nothing idle; it lives as long as the connection. idleGrace is validated the same way."
+    }
+  ]
+}

@@ -20,7 +20,7 @@ mod pcre;
 mod serialize;
 mod sort;
 mod string;
-mod typed;
+pub(crate) mod typed;
 mod types;
 mod url;
 mod value;

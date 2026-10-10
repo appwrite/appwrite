@@ -33,7 +33,7 @@ tokio = { workspace = true, features = ["io-std", "io-util", "rt", "macros"] }
 # Libraries under test (one adapter each in src/libs).
 php-std.workspace = true
 utopia-auth.workspace = true
-utopia-cache.workspace = true
+utopia-cache = { workspace = true, features = ["memcached", "redis-cluster"] }
 utopia-database.workspace = true
 utopia-dsn.workspace = true
 utopia-emails.workspace = true

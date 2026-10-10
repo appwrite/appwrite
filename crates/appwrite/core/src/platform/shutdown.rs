@@ -203,13 +203,16 @@ impl Job {
             db.tenant().map(|t| t.to_string()).unwrap_or_default(),
             self.project.id
         );
-        const FIELD: &str = "rust:functions:events:v1";
-        let lookup = self.state.cache.lookup(&key, FIELD, 3600).await.ok();
-        if let Some(bytes) = lookup.as_ref().and_then(|l| l.value.as_ref())
-            && let Ok(events) = serde_json::from_slice::<Vec<String>>(bytes)
-        {
-            return events;
+        const FIELD: &str = "rust:functions:events:v2";
+        if let Ok(Some(php_std::Value::Array(cached))) = self.state.cache.load(&key, 3600, FIELD).await {
+            return cached
+                .values()
+                .filter_map(|e| e.to_php_string().ok())
+                .map(|e| String::from_utf8_lossy(&e).into_owned())
+                .collect();
         }
+        // Read before the database, so a purge in between rejects the save.
+        let generation = self.state.cache.generation(&key).await.ok();
         let mut b = Builder::new();
         let tenant = db.tenant_condition(&mut b, "");
         let sql = format!(
@@ -223,10 +226,9 @@ impl Job {
                 return Vec::new();
             }
         };
-        if let Some(lookup) = lookup
-            && let Ok(bytes) = serde_json::to_vec(&events)
-        {
-            let _ = self.state.cache.save_with_lease(&key, FIELD, &bytes, &lookup.generation).await;
+        if let Some(generation) = generation {
+            let list = php_std::Value::Array(events.iter().map(|e| php_std::Value::from(e.as_str())).collect());
+            let _ = self.state.cache.save_with_lease(&key, &list, FIELD, &generation).await;
         }
         events
     }

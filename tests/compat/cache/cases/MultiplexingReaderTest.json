@@ -1,0 +1,445 @@
+{
+  "source": "packages/cache/tests/E2E/MultiplexingReaderTest.php",
+  "cases": [
+    {
+      "name": "testReaderRetiresOnceTheConnectionHasBeenIdle, testCommandLandingAsTheReaderRetiresIsStillAnswered",
+      "steps": [
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "idle_grace": 0.05
+            },
+            "steps": [
+              {
+                "op": "save",
+                "args": {
+                  "key": "${ns}:reader",
+                  "data": "value",
+                  "hash": "${ns}:reader"
+                }
+              },
+              {
+                "op": "sleep",
+                "args": {
+                  "seconds": 0.04
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:reader",
+                  "ttl": 60,
+                  "hash": "${ns}:reader"
+                }
+              },
+              {
+                "op": "sleep",
+                "args": {
+                  "seconds": 0.042
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:reader",
+                  "ttl": 60,
+                  "hash": "${ns}:reader"
+                }
+              },
+              {
+                "op": "sleep",
+                "args": {
+                  "seconds": 0.044
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:reader",
+                  "ttl": 60,
+                  "hash": "${ns}:reader"
+                }
+              },
+              {
+                "op": "sleep",
+                "args": {
+                  "seconds": 0.046
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:reader",
+                  "ttl": 60,
+                  "hash": "${ns}:reader"
+                }
+              },
+              {
+                "op": "sleep",
+                "args": {
+                  "seconds": 0.048
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:reader",
+                  "ttl": 60,
+                  "hash": "${ns}:reader"
+                }
+              },
+              {
+                "op": "sleep",
+                "args": {
+                  "seconds": 0.05
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:reader",
+                  "ttl": 60,
+                  "hash": "${ns}:reader"
+                }
+              },
+              {
+                "op": "sleep",
+                "args": {
+                  "seconds": 0.052000000000000005
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:reader",
+                  "ttl": 60,
+                  "hash": "${ns}:reader"
+                }
+              },
+              {
+                "op": "sleep",
+                "args": {
+                  "seconds": 0.054
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:reader",
+                  "ttl": 60,
+                  "hash": "${ns}:reader"
+                }
+              },
+              {
+                "op": "sleep",
+                "args": {
+                  "seconds": 0.056
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:reader",
+                  "ttl": 60,
+                  "hash": "${ns}:reader"
+                }
+              },
+              {
+                "op": "sleep",
+                "args": {
+                  "seconds": 0.058
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:reader",
+                  "ttl": 60,
+                  "hash": "${ns}:reader"
+                }
+              },
+              {
+                "op": "sleep",
+                "args": {
+                  "seconds": 0.06
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:reader",
+                  "ttl": 60,
+                  "hash": "${ns}:reader"
+                }
+              },
+              {
+                "op": "sleep",
+                "args": {
+                  "seconds": 0.062
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:reader",
+                  "ttl": 60,
+                  "hash": "${ns}:reader"
+                }
+              }
+            ]
+          },
+          "expect": [
+            true,
+            null,
+            "value",
+            null,
+            "value",
+            null,
+            "value",
+            null,
+            "value",
+            null,
+            "value",
+            null,
+            "value",
+            null,
+            "value",
+            null,
+            "value",
+            null,
+            "value",
+            null,
+            "value",
+            null,
+            "value",
+            null,
+            "value"
+          ]
+        }
+      ],
+      "state": [
+        "redis@cache-redis-mux/10,15"
+      ]
+    },
+    {
+      "name": "testCommandsWithinTheGraceShareOneReader, testConcurrentCallersShareOneReader",
+      "steps": [
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "idle_grace": 0.5
+            },
+            "steps": [
+              {
+                "op": "save",
+                "args": {
+                  "key": "${ns}:steady",
+                  "data": "value",
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:steady",
+                  "ttl": 60,
+                  "hash": "${ns}:steady"
+                }
+              },
+              {
+                "op": "concurrent",
+                "args": {
+                  "count": 20,
+                  "prefix": "${ns}:shared:"
+                }
+              }
+            ]
+          },
+          "expect": [
+            true,
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            "value",
+            20
+          ]
+        }
+      ],
+      "state": [
+        "redis@cache-redis-mux/10,15"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "source": "packages/cache/tests/E2E/MultiplexingDeadlineTest.php",
+  "cases": [
+    {
+      "name": "testLivenessTimeoutBelowReadTimeoutIsRejected",
+      "steps": [
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "read_timeout": 1.0,
+              "liveness_timeout": 0.5
+            },
+            "steps": []
+          },
+          "expect": [
+            {
+              "$error": {
+                "class": "InvalidArgumentException",
+                "message": "livenessTimeout must be greater than or equal to readTimeout"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "invalid options are rejected",
+      "steps": [
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "timeout": 0
+            },
+            "steps": []
+          },
+          "expect": [
+            {
+              "$error": {
+                "class": "InvalidArgumentException",
+                "message": "timeout must be greater than 0"
+              }
+            }
+          ]
+        },
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "read_timeout": 0
+            },
+            "steps": []
+          },
+          "expect": [
+            {
+              "$error": {
+                "class": "InvalidArgumentException",
+                "message": "readTimeout must be greater than 0"
+              }
+            }
+          ]
+        },
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "idle_grace": 0
+            },
+            "steps": []
+          },
+          "expect": [
+            {
+              "$error": {
+                "class": "InvalidArgumentException",
+                "message": "idleGrace must be greater than 0"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a slow reply fails the caller with a timeout and the connection keeps serving",
+      "steps": [
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "read_timeout": 0.05
+            },
+            "steps": [
+              {
+                "op": "save",
+                "args": {
+                  "key": "${ns}:slow",
+                  "data": "v",
+                  "hash": "${ns}:slow"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:slow",
+                  "data": "w",
+                  "hash": "${ns}:slow",
+                  "generation": "0"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:slow",
+                  "ttl": 60,
+                  "hash": "${ns}:slow"
+                }
+              },
+              {
+                "op": "ping",
+                "args": {}
+              }
+            ]
+          },
+          "expect": [
+            true,
+            true,
+            "w",
+            true
+          ]
+        }
+      ],
+      "state": [
+        "redis@cache-redis-mux/10,15"
+      ]
+    }
+  ]
+}

@@ -572,7 +572,13 @@ impl Database {
     pub async fn purge_cached_document(&self, collection: &str, id: &str) {
         let Some(cache) = &self.cache else { return };
         let (collection_key, document_key) = self.cache_keys(collection, id);
-        if let Err(e) = cache.purge_document(&collection_key, &document_key).await {
+        // `Database::purgeCachedDocumentInternal`: the document's field of the
+        // collection hash, then the document's own hash.
+        let purged = match cache.purge(&collection_key, &document_key).await {
+            Ok(_) => cache.purge(&document_key, "").await,
+            Err(e) => Err(e),
+        };
+        if let Err(e) = purged {
             tracing::warn!(error = %e, collection, id, "cache purge failed");
         }
     }

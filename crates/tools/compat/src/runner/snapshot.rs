@@ -6,6 +6,7 @@
 //! |---|---|
 //! | `redis` | every key containing the namespace: type, value, whether it expires |
 //! | `files` | every file under `/tmp/compat-fs/<namespace>/` (shared with the PHP driver's container): relative path and content |
+//! | `redis@<service>[/<db>[,<db>...]]` | like `redis`, on another Redis service of `compat.json` (its database, or the databases listed, merged into one snapshot); cache envelope timestamps are masked |
 //!
 //! Add a kind by adding a branch to [`snapshot`] and [`cleanup`]. A kind must
 //! only touch resources whose names contain the namespace.
@@ -20,8 +21,85 @@ pub fn snapshot(cfg: &Config, kind: &str, ns: &str) -> Result<Value, String> {
     match kind {
         "redis" => redis_snapshot(&cfg.runner_service("redis")?, ns),
         "files" => files_snapshot(ns),
+        other if other.starts_with("redis@") => {
+            // Several databases are one snapshot: where a key lands may
+            // depend on the namespace (sharding), what it holds may not.
+            let mut merged = std::collections::BTreeMap::new();
+            for url in service_urls(cfg, other)? {
+                if let Value::Object(keys) = redis_snapshot(&url, ns)? {
+                    merged.extend(keys);
+                }
+            }
+            let mut snapshot = Value::Object(merged.into_iter().collect());
+            mask_envelope_times(&mut snapshot);
+            Ok(snapshot)
+        }
         other => Err(no_kind(other)),
     }
+}
+
+/// Hides the timestamps of cache envelopes (`{"time":N,...}` in JSON, the
+/// `time` integer of an igbinary array): they record when a case ran, which
+/// differs between the runtimes by up to a second.
+fn mask_envelope_times(value: &mut Value) {
+    match value {
+        Value::Object(map) if map.len() == 1 && map.contains_key("$bytes") => {
+            let Some(mut raw) = map.get("$bytes").and_then(Value::as_str).and_then(|b| BASE64.decode(b).ok()) else {
+                return;
+            };
+            if mask_igbinary_time(&mut raw) {
+                map.insert("$bytes".into(), Value::String(BASE64.encode(raw)));
+            }
+        }
+        Value::Object(map) => map.values_mut().for_each(mask_envelope_times),
+        Value::String(s) if s.starts_with("{\"time\":") => {
+            let digits = s[8..].bytes().take_while(|b| b.is_ascii_digit() || *b == b'-').count();
+            if digits > 0 {
+                s.replace_range(8..8 + digits, "\"*\"");
+            }
+        }
+        Value::String(s) => {
+            // An igbinary payload that happens to be valid UTF-8.
+            let mut raw = s.as_bytes().to_vec();
+            if mask_igbinary_time(&mut raw)
+                && let Ok(masked) = String::from_utf8(raw)
+            {
+                *s = masked;
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Zeroes the integer after `time` in an igbinary array; whether it did.
+fn mask_igbinary_time(raw: &mut [u8]) -> bool {
+    let marker = b"\x11\x04time";
+    if !raw.starts_with(&[0, 0, 0, 2]) {
+        return false;
+    }
+    let Some(at) = raw.windows(marker.len()).position(|w| w == marker) else { return false };
+    let kind = at + marker.len();
+    let width = match raw.get(kind) {
+        Some(0x06 | 0x07) => 1,
+        Some(0x08 | 0x09) => 2,
+        Some(0x0a | 0x0b) => 4,
+        Some(0x20 | 0x21) => 8,
+        _ => return false,
+    };
+    for b in raw.iter_mut().skip(kind + 1).take(width) {
+        *b = 0;
+    }
+    true
+}
+
+/// The URLs of a `redis@<service>[/<db>[,<db>...]]` kind.
+fn service_urls(cfg: &Config, kind: &str) -> Result<Vec<String>, String> {
+    let spec = kind.trim_start_matches("redis@");
+    let Some((service, dbs)) = spec.split_once('/') else { return Ok(vec![cfg.runner_service(spec)?]) };
+    let base = cfg.runner_service(service)?;
+    let rest = base.strip_prefix("redis://").unwrap_or(&base);
+    let host = &base[..base.len() - rest.len() + rest.find('/').unwrap_or(rest.len())];
+    Ok(dbs.split(',').map(|db| format!("{host}/{db}")).collect())
 }
 
 pub fn cleanup(cfg: &Config, kind: &str, ns: &str) -> Result<(), String> {
@@ -31,6 +109,12 @@ pub fn cleanup(cfg: &Config, kind: &str, ns: &str) -> Result<(), String> {
             let dir = files_root().join(ns);
             if dir.exists() {
                 std::fs::remove_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+            }
+            Ok(())
+        }
+        other if other.starts_with("redis@") => {
+            for url in service_urls(cfg, other)? {
+                redis_cleanup(&url, ns)?;
             }
             Ok(())
         }

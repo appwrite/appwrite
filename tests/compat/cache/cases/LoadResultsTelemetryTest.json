@@ -1,0 +1,394 @@
+{
+  "source": "packages/cache/tests/LoadResultsTelemetryTest.php",
+  "cases": [
+    {
+      "name": "testLoadEmitsHitAndMissCounts, testHitMissAttributesAreRecorded",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {},
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.set_telemetry",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "missing",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "present",
+            "data": "value"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "present",
+            "ttl": 60
+          },
+          "expect": "value"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "present",
+            "ttl": 60
+          },
+          "expect": "value"
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "present"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.list",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "present"
+          },
+          "expect": []
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "present"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.flush",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.size",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "cache.ping",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "k",
+            "ttl": 1
+          },
+          "expect": {}
+        },
+        {
+          "op": "cache.save_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "k",
+            "data": [
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "k",
+            "data": "v",
+            "hash": "",
+            "generation": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counter:cache.load.total": [
+              {
+                "value": 1,
+                "attributes": {
+                  "adapter": "memory",
+                  "result": "miss"
+                }
+              },
+              {
+                "value": 1,
+                "attributes": {
+                  "adapter": "memory",
+                  "result": "hit"
+                }
+              },
+              {
+                "value": 1,
+                "attributes": {
+                  "adapter": "memory",
+                  "result": "hit"
+                }
+              }
+            ],
+            "histogram:cache.operation.duration": [
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "load",
+                  "adapter": "memory"
+                }
+              },
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "save",
+                  "adapter": "memory"
+                }
+              },
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "load",
+                  "adapter": "memory"
+                }
+              },
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "load",
+                  "adapter": "memory"
+                }
+              },
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "touch",
+                  "adapter": "memory"
+                }
+              },
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "list",
+                  "adapter": "memory"
+                }
+              },
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "purge",
+                  "adapter": "memory"
+                }
+              },
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "flush",
+                  "adapter": "memory"
+                }
+              },
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "size",
+                  "adapter": "memory"
+                }
+              },
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "loadMany",
+                  "adapter": "memory"
+                }
+              },
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "saveMany",
+                  "adapter": "memory"
+                }
+              },
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "saveWithLease",
+                  "adapter": "memory"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testNullReturnIsTreatedAsHit",
+      "steps": [
+        {
+          "op": "null_load.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {},
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.set_telemetry",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "any",
+            "ttl": 60
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counter:cache.load.total": [
+              {
+                "value": 1,
+                "attributes": {
+                  "adapter": "memory",
+                  "result": "hit"
+                }
+              }
+            ],
+            "histogram:cache.operation.duration": [
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "load",
+                  "adapter": "memory"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
