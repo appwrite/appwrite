@@ -243,20 +243,25 @@ Http::init()
                     }
                 }
 
-                $userClone = clone $user;
-                $userClone->setAttribute('type', match ($apiKey->getType()) {
-                    API_KEY_STANDARD => ACTOR_TYPE_KEY_PROJECT,
-                    API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
-                    default => ACTOR_TYPE_KEY_ORGANIZATION,
-                });
-
+                // Audit reads id, sequence, name, email and type. A clone copies every session.
+                $actorId = $user->getId();
+                $actorSequence = $user->getSequence();
                 if ($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_ORGANIZATION) {
-                    $userClone
-                        ->setAttribute('$id', $dbKey->getId())
-                        ->setAttribute('$sequence', $dbKey->getSequence());
+                    $actorId = $dbKey->getId();
+                    $actorSequence = $dbKey->getSequence();
                 }
 
-                $auditContext->user = $userClone;
+                $auditContext->user = new Document([
+                    '$id' => $actorId,
+                    '$sequence' => $actorSequence,
+                    'name' => $user->getAttribute('name'),
+                    'email' => $user->getAttribute('email'),
+                    'type' => match ($apiKey->getType()) {
+                        API_KEY_STANDARD => ACTOR_TYPE_KEY_PROJECT,
+                        API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
+                        default => ACTOR_TYPE_KEY_ORGANIZATION,
+                    },
+                ]);
             }
 
             // Apply permission
@@ -698,12 +703,18 @@ Http::init()
 
         /* If a session exists, use the target user (impersonated target or actor) for audit */
         if (! $targetUser->isEmpty()) {
-            $userClone = clone $targetUser;
-            // $user doesn't support `type` and can cause unintended effects.
-            if (empty($targetUser->getAttribute('type'))) {
-                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
+            // Audit reads id, sequence, name, email and type. A clone copies every session.
+            $type = $targetUser->getAttribute('type');
+            if (empty($type)) {
+                $type = $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER;
             }
-            $auditContext->user = $userClone;
+            $auditContext->user = new Document([
+                '$id' => $targetUser->getId(),
+                '$sequence' => $targetUser->getSequence(),
+                'name' => $targetUser->getAttribute('name'),
+                'email' => $targetUser->getAttribute('email'),
+                'type' => $type,
+            ]);
         }
 
         $rolesSource = $impersonatorUser->isEmpty() ? $user : $targetUser;
@@ -1031,12 +1042,18 @@ Http::shutdown()
         }
 
         if (! $targetUser->isEmpty()) {
-            $userClone = clone $targetUser;
-            // $user doesn't support `type` and can cause unintended effects.
-            if (empty($targetUser->getAttribute('type'))) {
-                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
+            // Audit reads id, sequence, name, email and type. A clone copies every session.
+            $type = $targetUser->getAttribute('type');
+            if (empty($type)) {
+                $type = $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER;
             }
-            $auditContext->user = $userClone;
+            $auditContext->user = new Document([
+                '$id' => $targetUser->getId(),
+                '$sequence' => $targetUser->getSequence(),
+                'name' => $targetUser->getAttribute('name'),
+                'email' => $targetUser->getAttribute('email'),
+                'type' => $type,
+            ]);
         } elseif ($auditContext->user === null || $auditContext->user->isEmpty()) {
             /**
              * User in the request is empty, and no user was set for auditing previously.

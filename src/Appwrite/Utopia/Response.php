@@ -482,12 +482,15 @@ class Response extends SwooleResponse
             && $this->user !== null
             && $document->getId() === $this->user->getId()
         ) {
-            $document = clone $document;
+            $document = $this->copyForOutput($document, $this->getModel($model));
             $document->setAttribute('impersonatorUserId', $this->impersonatorUser->getId());
         }
 
-        $output = $this->output(clone $document, $model);
-        $output = $this->applyFilters($output, $model, raw: clone $document);
+        // output() copies the document. Filters get a separate copy only when one is set.
+        $output = $this->output($document, $model);
+        if ($this->hasFilters()) {
+            $output = $this->applyFilters($output, $model, raw: $this->copyForOutput($document, $this->getModel($model)));
+        }
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
@@ -531,8 +534,8 @@ class Response extends SwooleResponse
      */
     public function output(Document $document, string $model): array
     {
-        $data       = clone $document;
         $model      = $this->getModel($model);
+        $data       = $this->copyForOutput($document, $model);
         $output     = [];
 
         $data = $model->filter($data);
@@ -630,6 +633,117 @@ class Response extends SwooleResponse
         $this->payload = $output;
 
         return $this->payload;
+    }
+
+    /**
+     * Relationship lists stored on the user. Omitted from a response copy when
+     * the model has no rule for that key. `sessions` is also a usage series and
+     * a password-policy flag; `tokens` and `memberships` are list keys.
+     *
+     * @var array<int, string>
+     */
+    private const array USER_RELATIONS = [
+        'sessions',
+        'tokens',
+        'challenges',
+        'memberships',
+        'authenticators',
+    ];
+
+    /**
+     * Copy for rendering. Filters mutate this copy. Relationship lists the model
+     * does not render are left off, including on nested documents, so they are
+     * not deep-cloned. The caller is unchanged.
+     */
+    private function copyForOutput(Document $document, Model $model): Document
+    {
+        if ($model->isAny()) {
+            return clone $document;
+        }
+
+        $rules = $model->getRules();
+        $skip = [];
+        foreach (self::USER_RELATIONS as $key) {
+            if (!isset($rules[$key]) && $document->isSet($key)) {
+                $skip[$key] = true;
+            }
+        }
+
+        if ($skip === [] && !$this->embedsUnrenderedRelation($document, $rules)) {
+            return clone $document;
+        }
+
+        $copy = new Document();
+        foreach ($document as $key => $value) {
+            if (isset($skip[$key])) {
+                continue;
+            }
+
+            if ($value instanceof Document) {
+                $copy->setAttribute($key, $this->copyNested($value, $rules[$key]['type'] ?? null));
+                continue;
+            }
+
+            if (\is_array($value)) {
+                $type = $rules[$key]['type'] ?? null;
+                $copy->setAttribute($key, \array_map(
+                    fn ($item) => $item instanceof Document ? $this->copyNested($item, $type) : $item,
+                    $value
+                ));
+                continue;
+            }
+
+            $copy->setAttribute($key, $value);
+        }
+
+        return $copy;
+    }
+
+    /**
+     * @param mixed $type Rule type. A string names a nested model.
+     */
+    private function copyNested(Document $document, mixed $type): Document
+    {
+        if (\is_string($type) && self::hasModel($type)) {
+            return $this->copyForOutput($document, $this->getModel($type));
+        }
+
+        return clone $document;
+    }
+
+    /**
+     * True when a nested document carries a relationship list its model does not render.
+     *
+     * @param array<string, array<string, mixed>> $rules
+     */
+    private function embedsUnrenderedRelation(Document $document, array $rules): bool
+    {
+        foreach ($document as $key => $value) {
+            if (!$value instanceof Document && !\is_array($value)) {
+                continue;
+            }
+
+            $type = $rules[$key]['type'] ?? null;
+            if (!\is_string($type) || !self::hasModel($type)) {
+                continue;
+            }
+
+            $childRules = $this->getModel($type)->getRules();
+            $children = $value instanceof Document ? [$value] : $value;
+            foreach ($children as $child) {
+                if (!$child instanceof Document) {
+                    continue;
+                }
+
+                foreach (self::USER_RELATIONS as $relation) {
+                    if (!isset($childRules[$relation]) && $child->isSet($relation)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

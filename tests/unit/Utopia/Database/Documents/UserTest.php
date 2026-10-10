@@ -6,6 +6,7 @@ namespace Tests\Unit\Utopia\Database\Documents;
 
 use Appwrite\Utopia\Database\Documents\User;
 use PHPUnit\Framework\TestCase;
+use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\DateTime;
@@ -96,6 +97,50 @@ final class UserTest extends TestCase
         $this->assertEquals(false, $user1->sessionVerify('false-secret', $proofForToken));
         $this->assertEquals(false, $user2->sessionVerify($secret, $proofForToken));
         $this->assertEquals(false, $user2->sessionVerify('false-secret', $proofForToken));
+    }
+
+    public function testSessionVerifyHashesOnceAcrossSessions(): void
+    {
+        $hash = new CountingSha();
+        $proof = new Token();
+        $proof->setHash($hash);
+
+        $secret = 'current-secret';
+        $sessions = [];
+        for ($i = 0; $i < 40; $i++) {
+            $sessions[] = new Document([
+                '$id' => ID::custom('other' . $i),
+                'secret' => $hash->hash('other' . $i),
+                'provider' => SESSION_PROVIDER_EMAIL,
+                'expire' => DateTime::addSeconds(new \DateTime(), 3600),
+            ]);
+        }
+        $sessions[] = new Document([
+            '$id' => ID::custom('expired'),
+            'secret' => $hash->hash($secret),
+            'provider' => SESSION_PROVIDER_EMAIL,
+            'expire' => DateTime::addSeconds(new \DateTime(), -3600),
+        ]);
+        $sessions[] = new Document([
+            '$id' => ID::custom('current'),
+            'secret' => $hash->hash($secret),
+            'provider' => SESSION_PROVIDER_EMAIL,
+            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
+        ]);
+
+        $user = new User([
+            '$id' => ID::custom('user'),
+            'sessions' => $sessions,
+        ]);
+
+        $hash->hashes = 0;
+
+        $this->assertSame('current', $user->sessionVerify($secret, $proof));
+        $this->assertSame(1, $hash->hashes);
+
+        $sessions[41]->setAttribute('expire', DateTime::addSeconds(new \DateTime(), -3600));
+        $this->assertFalse($user->sessionVerify($secret, $proof));
+        $this->assertSame(2, $hash->hashes);
     }
 
     public function testSessionActive(): void
@@ -518,5 +563,17 @@ final class UserTest extends TestCase
         $this->assertContains(Role::team(ID::custom('def'), 'guest')->toString(), $roles);
         $this->assertContains(Role::member(ID::custom('def'))->toString(), $roles);
         $this->assertContains(Role::member(ID::custom('abc'))->toString(), $roles);
+    }
+}
+
+final class CountingSha extends Sha
+{
+    public int $hashes = 0;
+
+    public function hash(string $value): string
+    {
+        $this->hashes++;
+
+        return parent::hash($value);
     }
 }
