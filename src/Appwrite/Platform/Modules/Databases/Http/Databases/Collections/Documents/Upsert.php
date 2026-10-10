@@ -12,6 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Operators;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -347,14 +348,30 @@ class Upsert extends Action
 
         $upserted = [];
         try {
-            $dbForDatabases->withPreserveDates(function () use (&$upserted, $dbForDatabases, $collectionTableId, $newDocument) {
-                return $dbForDatabases->upsertDocuments(
-                    $collectionTableId,
-                    [$newDocument],
-                    onNext: function (Document $document) use (&$upserted) {
-                        $upserted[] = $document;
-                    },
-                );
+            $dbForDatabases->withPreserveDates(function () use (&$upserted, $dbForDatabases, $collectionTableId, $documentId, $newDocument, $collection, $authorization, $data, $isAPIKey, $isPrivilegedUser) {
+                $write = function () use (&$upserted, $dbForDatabases, $collectionTableId, $newDocument) {
+                    return $dbForDatabases->upsertDocuments(
+                        $collectionTableId,
+                        [$newDocument],
+                        onNext: function (Document $document) use (&$upserted) {
+                            $upserted[] = $document;
+                        },
+                    );
+                };
+
+                if (!Operators::has($data)) {
+                    return $write();
+                }
+
+                return $dbForDatabases->withTransaction(function () use ($write, $dbForDatabases, $collectionTableId, $documentId, $collection, $authorization, $data, $isAPIKey, $isPrivilegedUser) {
+                    $locked = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId, forUpdate: true));
+                    if (!$locked->isEmpty()) {
+                        $this->authorizeUpdate($collection, $locked, $authorization, $isAPIKey || $isPrivilegedUser);
+                    }
+                    Operators::prepare($collection, $locked->isEmpty() ? new Document([]) : $locked, $data);
+
+                    return $write();
+                });
             });
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());

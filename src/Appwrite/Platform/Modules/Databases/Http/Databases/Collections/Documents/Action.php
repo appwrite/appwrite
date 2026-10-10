@@ -8,10 +8,13 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
+use Appwrite\Utopia\Database\Operators;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 
 abstract class Action extends DatabasesAction
 {
@@ -541,5 +544,51 @@ abstract class Action extends DatabasesAction
         $queueForEvents->reset();
         $queueForRealtime->reset();
         $queueForWebhooks->reset();
+    }
+
+    /**
+     * Column min/max and type rules for increment and decrement.
+     *
+     * A null column stays null in SQL, so only the operand is type-checked.
+     * Otherwise the result has to pass the same rules as a normal update, and
+     * the returned clamp is the stricter of the request and the column.
+     *
+     * @throws Exception
+     */
+    protected function applyColumnLimit(
+        Document $collection,
+        Document $row,
+        string $attribute,
+        int|float $value,
+        int|float|null $limit,
+        bool $increase,
+    ): int|float|null {
+        try {
+            return Operators::limit($collection, $row, $attribute, $value, $limit, $increase);
+        } catch (StructureException $e) {
+            throw new Exception($this->getStructureException(), $e->getMessage());
+        }
+    }
+
+    /**
+     * Update permission, before any check that depends on the row's current value.
+     * Keys and privileged users follow the same bypass as staged operations.
+     *
+     * @throws Exception
+     */
+    protected function authorizeUpdate(Document $collection, Document $row, Authorization $authorization, bool $privileged): void
+    {
+        if ($privileged) {
+            return;
+        }
+
+        $documentSecurity = (bool) $collection->getAttribute('documentSecurity', false);
+        $permissions = [
+            ...$collection->getUpdate(),
+            ...($documentSecurity && !$row->isEmpty() ? $row->getUpdate() : []),
+        ];
+        if (!$authorization->isValid(new Input(Database::PERMISSION_UPDATE, $permissions))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
     }
 }

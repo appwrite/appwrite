@@ -9010,6 +9010,170 @@ trait DatabasesBase
         $this->assertEquals(400, $inc3['headers']['status-code']);
     }
 
+    public function testOperatorColumnValidation(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'OperatorBounds',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Bounds',
+            $this->getSecurityParam() => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $this->assertEquals(202, $this->createAttribute($databaseId, $collectionId, 'integer', [
+            'key' => 'sm',
+            'required' => false,
+            'min' => 0,
+            'max' => 100,
+        ])['headers']['status-code']);
+        $this->assertEquals(202, $this->createAttribute($databaseId, $collectionId, 'integer', [
+            'key' => 'n',
+            'required' => false,
+        ])['headers']['status-code']);
+        $this->assertEquals(202, $this->createAttribute($databaseId, $collectionId, 'integer', [
+            'key' => 'big',
+            'required' => false,
+        ])['headers']['status-code']);
+        $this->assertEquals(202, $this->createAttribute($databaseId, $collectionId, 'string', [
+            'key' => 'arr',
+            'size' => 32,
+            'required' => false,
+            'array' => true,
+        ])['headers']['status-code']);
+        $this->assertEquals(202, $this->createAttribute($databaseId, $collectionId, 'string', [
+            'key' => 'note',
+            'size' => 16,
+            'required' => false,
+        ])['headers']['status-code']);
+        $this->waitForAllAttributes($databaseId, $collectionId);
+
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $row = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'sm' => 99,
+                'n' => null,
+                'big' => 5000000000,
+                'arr' => ['ok'],
+                'note' => 'keep',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $row['headers']['status-code']);
+        $rowId = $row['body']['$id'];
+
+        $low = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['sm' => 5],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $low['headers']['status-code']);
+        $lowId = $low['body']['$id'];
+
+        $increment = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $rowId) . '/sm/increment', $headers, [
+            'value' => 500,
+        ]);
+        $this->assertEquals(400, $increment['headers']['status-code']);
+        $this->assertStringContainsString('between 0 and 100', $increment['body']['message']);
+
+        $decrement = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $lowId) . '/sm/decrement', $headers, [
+            'value' => 500,
+        ]);
+        $this->assertEquals(400, $decrement['headers']['status-code']);
+        $this->assertStringContainsString('between 0 and 100', $decrement['body']['message']);
+
+        $multiply = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $rowId), $headers, [
+            'data' => [
+                'sm' => Operator::multiply(1000)->toString(),
+            ],
+        ]);
+        $this->assertEquals(400, $multiply['headers']['status-code']);
+        $this->assertStringContainsString('between 0 and 100', $multiply['body']['message']);
+
+        $append = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $rowId), $headers, [
+            'data' => [
+                'arr' => Operator::arrayAppend([str_repeat('a', 40)])->toString(),
+            ],
+        ]);
+        $this->assertEquals(400, $append['headers']['status-code']);
+        $this->assertStringContainsString('32', $append['body']['message']);
+
+        $fraction = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $rowId) . '/n/increment', $headers, [
+            'value' => 1.5,
+        ]);
+        $this->assertEquals(400, $fraction['headers']['status-code']);
+
+        $missing = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, 'missing-row') . '/n/increment', $headers, [
+            'value' => 1,
+        ]);
+        $this->assertEquals(404, $missing['headers']['status-code']);
+        $this->assertStringContainsString('missing-row', $missing['body']['message']);
+        $this->assertStringNotContainsString('%s', $missing['body']['message']);
+
+        $nullIncrement = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $rowId) . '/n/increment', $headers, [
+            'value' => 1,
+        ]);
+        $this->assertEquals(200, $nullIncrement['headers']['status-code']);
+        $this->assertNull($nullIncrement['body']['n']);
+
+        $wide = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $rowId), $headers, [
+            'data' => [
+                'big' => Operator::increment(1)->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $wide['headers']['status-code']);
+        $this->assertEquals(5000000001, $wide['body']['big']);
+
+        $stored = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $rowId), $headers);
+        $this->assertEquals(200, $stored['headers']['status-code']);
+        $this->assertEquals(99, $stored['body']['sm']);
+        $this->assertEquals(5, $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $lowId), $headers)['body']['sm']);
+        $this->assertNull($stored['body']['n']);
+        $this->assertEquals(['ok'], $stored['body']['arr']);
+        $this->assertEquals(5000000001, $stored['body']['big']);
+
+        $other = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $rowId), $headers, [
+            'data' => ['note' => 'still-valid'],
+        ]);
+        $this->assertEquals(200, $other['headers']['status-code']);
+        $this->assertEquals('still-valid', $other['body']['note']);
+    }
+
     public function testSpatialPointAttributes(): void
     {
 

@@ -17,6 +17,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Operators;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -289,19 +290,23 @@ class Update extends Action
                                 $this->handleCreateOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'update':
+                                $this->prepareOperators($dbForDatabases, $collection, $collectionId, $documentId, $data, $state, false);
                                 $this->handleUpdateOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'upsert':
+                                $this->prepareOperators($dbForDatabases, $collection, $collectionId, $documentId, $data, $state, true);
                                 $this->handleUpsertOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'delete':
                                 $this->handleDeleteOperation($dbForDatabases, $collectionId, $documentId, $createdAt, $state);
                                 break;
                             case 'increment':
-                                $this->handleIncrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->tightenNumeric($dbForDatabases, $collection, $collectionId, $documentId, $data, $state, true);
+                                $this->handleIncrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state, $authorization);
                                 break;
                             case 'decrement':
-                                $this->handleDecrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->tightenNumeric($dbForDatabases, $collection, $collectionId, $documentId, $data, $state, false);
+                                $this->handleDecrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state, $authorization);
                                 break;
                             case 'bulkCreate':
                                 $count = $this->handleBulkCreateOperation($dbForDatabases, $collectionId, $data, $createdAt, $state);
@@ -825,6 +830,82 @@ class Update extends Action
     }
 
     /**
+     * @param array<string, mixed> $data
+     * @param array<string, array<string, Document>> $state
+     * @throws StructureException
+     */
+    private function prepareOperators(
+        Database $dbForDatabases,
+        Document $collection,
+        string $collectionId,
+        ?string $documentId,
+        array $data,
+        array $state,
+        bool $creating,
+    ): void {
+        if (!Operators::has($data)) {
+            return;
+        }
+
+        $row = null;
+        if ($documentId !== null && isset($state[$collectionId][$documentId])) {
+            $row = $state[$collectionId][$documentId];
+        } elseif ($documentId !== null) {
+            $row = $dbForDatabases->getDocument($collectionId, $documentId, forUpdate: true);
+        }
+
+        if (!$row instanceof Document || $row->isEmpty()) {
+            if (!$creating) {
+                return;
+            }
+            $row = new Document([]);
+        }
+
+        Operators::prepare($collection, $row, $data);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @param array<string, array<string, Document>> $state
+     * @throws StructureException
+     */
+    private function tightenNumeric(
+        Database $dbForDatabases,
+        Document $collection,
+        string $collectionId,
+        string $documentId,
+        array &$data,
+        array $state,
+        bool $increase,
+    ): void {
+        $name = $this->getAttributeNameFromData($data);
+        if ($name === '') {
+            return;
+        }
+
+        $value = $data['value'] ?? 1;
+        if (\is_string($value) && \is_numeric($value)) {
+            $value += 0;
+        }
+        if (!\is_int($value) && !\is_float($value)) {
+            return;
+        }
+
+        $row = null;
+        if (isset($state[$collectionId][$documentId])) {
+            $row = $state[$collectionId][$documentId];
+        } else {
+            $row = $dbForDatabases->getDocument($collectionId, $documentId);
+        }
+        if ($row->isEmpty()) {
+            return;
+        }
+
+        $edge = $increase ? 'max' : 'min';
+        $data[$edge] = Operators::limit($collection, $row, $name, $value, $data[$edge] ?? null, $increase);
+    }
+
+    /**
      * Handle increment operation
      *
      * @param Database $dbForDatabases
@@ -843,31 +924,30 @@ class Update extends Action
         string $documentId,
         array $data,
         \DateTime $createdAt,
-        array &$state
+        array &$state,
+        Authorization $authorization,
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
         $attribute = $this->getAttributeNameFromData($data);
 
-        if ($dependent) {
-            $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute(
+        $apply = function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute, $authorization) {
+            $document = $dbForDatabases->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
                 value: $data['value'] ?? 1,
                 max: $data['max'] ?? null
             );
+            $this->keepStoredNull($dbForDatabases, $authorization, $collectionId, $documentId, $attribute, $document);
+            $state[$collectionId][$documentId] = $document;
+        };
+
+        if ($dependent) {
+            $apply();
             return;
         }
 
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
-            $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute(
-                collection: $collectionId,
-                id: $documentId,
-                attribute: $attribute,
-                value: $data['value'] ?? 1,
-                max: $data['max'] ?? null
-            );
-        });
+        $dbForDatabases->withRequestTimestamp($createdAt, $apply);
     }
 
     /**
@@ -889,31 +969,57 @@ class Update extends Action
         string $documentId,
         array $data,
         \DateTime $createdAt,
-        array &$state
+        array &$state,
+        Authorization $authorization,
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
         $attribute = $this->getAttributeNameFromData($data);
 
-        if ($dependent) {
-            $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute(
+        $apply = function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute, $authorization) {
+            $document = $dbForDatabases->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
                 value: $data['value'] ?? 1,
                 min: $data['min'] ?? null
             );
+            $this->keepStoredNull($dbForDatabases, $authorization, $collectionId, $documentId, $attribute, $document);
+            $state[$collectionId][$documentId] = $document;
+        };
+
+        if ($dependent) {
+            $apply();
             return;
         }
 
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
-            $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute(
-                collection: $collectionId,
-                id: $documentId,
-                attribute: $attribute,
-                value: $data['value'] ?? 1,
-                min: $data['min'] ?? null
-            );
-        });
+        $dbForDatabases->withRequestTimestamp($createdAt, $apply);
+    }
+
+    /**
+     * increase/decrease return the PHP sum. SQL leaves a null column null, so
+     * read that stored null back before the next operation in this commit
+     * validates against the sum.
+     */
+    private function keepStoredNull(
+        Database $dbForDatabases,
+        Authorization $authorization,
+        string $collectionId,
+        string $documentId,
+        string $attribute,
+        Document $document,
+    ): void {
+        if ($attribute === '') {
+            return;
+        }
+
+        $stored = $authorization->skip(
+            fn () => $dbForDatabases->getDocument($collectionId, $documentId, forUpdate: true)
+        );
+        if ($stored->isEmpty() || $stored->getAttribute($attribute) !== null) {
+            return;
+        }
+
+        $document->setAttribute($attribute, null);
     }
 
     /**
