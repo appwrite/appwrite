@@ -7,15 +7,19 @@ namespace Tests\Unit\Platform\Workers;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Workers\Migrations;
 use Appwrite\Usage\Context;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Source;
+use Utopia\Migration\Sources\Appwrite;
+use Utopia\Migration\Target;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
@@ -260,6 +264,65 @@ final class MigrationsTest extends TestCase
             'resourceId' => 'database-a:table-a',
             'resourceType' => Resource::TYPE_DATABASE,
         ])));
+    }
+
+    /**
+     * The scope probe used to wait forever on a local API that accepted the connection
+     * and never answered, and reporting the eventual failure as a bad key would send
+     * the user to the wrong place.
+     */
+    public function testSourceProbeThatGetsNoAnswerFailsAsProviderError(): void
+    {
+        // Connections complete from the listen backlog, but nothing ever reads or replies.
+        $server = \stream_socket_server('tcp://127.0.0.1:0', $errorCode, $errorMessage);
+        $this->assertNotFalse($server, $errorMessage);
+        $address = \stream_socket_get_name($server, false);
+
+        $platform = $this->createStub(Database::class);
+        $platform->method('getDocument')->willReturn(new Document([
+            '$id' => 'source',
+            '$sequence' => 2,
+        ]));
+        $platform->method('findOne')->willReturn(new Document());
+
+        $worker = new class ($platform) extends Migrations {
+            public function __construct(Database $platform)
+            {
+                $this->dbForPlatform = $platform;
+                $this->project = new Document(['$id' => 'project', '$sequence' => 1]);
+                $this->getProjectDB = fn () => throw new \LogicException('The probe must refuse first.');
+            }
+
+            public function source(Document $migration): Source
+            {
+                return $this->processSource($migration);
+            }
+        };
+
+        $host = \getenv('_APP_MIGRATION_HOST');
+        \putenv('_APP_MIGRATION_HOST=' . $address);
+        $started = \microtime(true);
+
+        try {
+            $worker->source(new Document([
+                'source' => Appwrite::getName(),
+                'destination' => Appwrite::getName(),
+                'resources' => [Resource::TYPE_TABLE],
+                'credentials' => [
+                    'projectId' => 'source',
+                    'endpoint' => 'http://' . $address . '/v1',
+                    'apiKey' => 'key',
+                ],
+            ]));
+            $this->fail('The probe returned although the API never answered.');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::MIGRATION_PROVIDER_ERROR, $error->getType());
+        } finally {
+            \putenv($host === false ? '_APP_MIGRATION_HOST' : '_APP_MIGRATION_HOST=' . $host);
+            \fclose($server);
+        }
+
+        $this->assertLessThan(Target::REQUEST_TIMEOUT + 10, \microtime(true) - $started);
     }
 
     private function createSourceMock(): Source&MockObject

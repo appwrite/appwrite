@@ -360,7 +360,12 @@ class Migrations extends Action
                 $this->probeScope(fn () => $tablesDB->listRows(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID));
             }
         } catch (AppwriteException $error) {
-            throw new Exception(Exception::MIGRATION_SOURCE_UNAUTHORIZED, previous: $error);
+            // No status means no response came back, which says nothing about the key.
+            $type = $error->getCode() === 0
+                ? Exception::MIGRATION_PROVIDER_ERROR
+                : Exception::MIGRATION_SOURCE_UNAUTHORIZED;
+
+            throw new Exception($type, previous: $error);
         }
     }
 
