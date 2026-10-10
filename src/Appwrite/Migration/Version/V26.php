@@ -7,9 +7,6 @@ namespace Appwrite\Migration\Version;
 use Exception;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Exception\Conflict;
-use Utopia\Database\Query;
 
 class V26 extends V25
 {
@@ -42,25 +39,6 @@ class V26 extends V25
             $this->createAttributesFromCollection($this->dbForProject, $collection, $attributes);
             $this->dbForProject->purgeCachedCollection($collection);
             $this->dbForProject->purgeCachedDocument(Database::METADATA, $collection);
-        }
-
-        foreach ($this->documentsIterator('migrations', [Query::equal('status', ['failed'])]) as $migration) {
-            if ($migration->getAttribute('stage') === 'finished') {
-                continue;
-            }
-
-            $readAt = $migration->getUpdatedAt();
-
-            try {
-                $this->dbForProject->withRequestTimestamp(
-                    $readAt === null ? null : new \DateTime($readAt),
-                    fn (): Document => $this->dbForProject->updateDocument('migrations', $migration->getId(), new Document([
-                        'stage' => 'finished',
-                    ])),
-                );
-            } catch (Conflict) {
-                // A retry claimed this migration after the iterator read it.
-            }
         }
     }
 }

@@ -7,7 +7,6 @@ namespace Tests\Unit\Migration;
 use Appwrite\Migration\Migration;
 use Appwrite\Migration\Version\V24;
 use Appwrite\Migration\Version\V25;
-use Appwrite\Migration\Version\V26;
 use Appwrite\Platform\Tasks\Migrate;
 use PHPUnit\Framework\TestCase;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
@@ -421,7 +420,7 @@ final class MigrationVersionsTest extends TestCase
             '$id' => 'database',
             'legacy' => 'database-preserved',
         ]));
-        $database->createDocument('migrations', new Document([
+        $failed = $database->createDocument('migrations', new Document([
             '$id' => 'migration',
             'legacy' => 'migration-preserved',
             'status' => 'failed',
@@ -442,7 +441,8 @@ final class MigrationVersionsTest extends TestCase
         $this->assertSame('database-preserved', $database->getDocument('databases', 'database')->getAttribute('legacy'));
         $this->assertSame('migration-preserved', $database->getDocument('migrations', 'migration')->getAttribute('legacy'));
         $this->assertSame('failed', $database->getDocument('migrations', 'migration')->getAttribute('status'));
-        $this->assertSame('finished', $database->getDocument('migrations', 'migration')->getAttribute('stage'));
+        $this->assertSame('processing', $database->getDocument('migrations', 'migration')->getAttribute('stage'), 'V26 must leave every client-visible migration field as main stored it');
+        $this->assertSame($failed->getUpdatedAt(), $database->getDocument('migrations', 'migration')->getUpdatedAt());
     }
 
     public function testMigrateRunsV26FromV25CompleteReleaseCandidateProject(): void
@@ -484,7 +484,7 @@ final class MigrationVersionsTest extends TestCase
             'status' => 'ready',
             'legacy' => 'database-preserved',
         ]));
-        $database->createDocument('migrations', new Document([
+        $failed = $database->createDocument('migrations', new Document([
             '$id' => 'migration',
             'resourceInternalId' => 'resource-internal',
             'legacy' => 'migration-preserved',
@@ -512,89 +512,10 @@ final class MigrationVersionsTest extends TestCase
         $this->assertSame('resource-internal', $database->getDocument('migrations', 'migration')->getAttribute('resourceInternalId'));
         $this->assertSame('migration-preserved', $database->getDocument('migrations', 'migration')->getAttribute('legacy'));
         $this->assertSame('failed', $database->getDocument('migrations', 'migration')->getAttribute('status'));
-        $this->assertSame('finished', $database->getDocument('migrations', 'migration')->getAttribute('stage'));
+        $this->assertSame('processing', $database->getDocument('migrations', 'migration')->getAttribute('stage'), 'V26 must leave every client-visible migration field as main stored it');
+        $this->assertSame($failed->getUpdatedAt(), $database->getDocument('migrations', 'migration')->getUpdatedAt());
         $this->assertSame('processing', $database->getDocument('migrations', 'migration-active')->getAttribute('status'));
         $this->assertSame('processing', $database->getDocument('migrations', 'migration-active')->getAttribute('stage'));
-    }
-
-    public function testV26DoesNotNormalizeConcurrentlyRetriedMigration(): void
-    {
-        require_once __DIR__ . '/../../../app/init.php';
-
-        $authorization = new Authorization(defaultStatus: false);
-        $database = new class (new Memory(), new Cache(new NoCache())) extends Database {
-            private bool $interleave = true;
-
-            private bool $timestamped = false;
-
-            #[\Override]
-            public function withRequestTimestamp(?\DateTime $requestTimestamp, callable $callback): mixed
-            {
-                $this->timestamped = $requestTimestamp !== null;
-                try {
-                    return parent::withRequestTimestamp($requestTimestamp, $callback);
-                } finally {
-                    $this->timestamped = false;
-                }
-            }
-
-            #[\Override]
-            public function updateDocument(string $collection, string $id, Document $document, ?int $expectedVersion = null): Document
-            {
-                if ($this->interleave && $collection === 'migrations' && $this->timestamped) {
-                    $this->interleave = false;
-                    parent::updateDocument($collection, $id, new Document([
-                        'attemptId' => 'attempt-retry',
-                        'status' => 'processing',
-                        'stage' => 'processing',
-                    ]));
-                }
-
-                return parent::updateDocument($collection, $id, $document);
-            }
-        };
-        $database
-            ->setAuthorization($authorization)
-            ->setDatabase('migrationV26Race')
-            ->setNamespace('migration_v26_race_' . \uniqid());
-        $database->create();
-
-        foreach (Config::getParam('collections', [])['projects'] as $collection) {
-            $database->createCollection(Collection::create(id: (string) $collection['$id']));
-        }
-        foreach ([Database::METADATA, 'audit'] as $id) {
-            if ($database->findCollection($id) === null) {
-                $database->createCollection(Collection::create(id: $id));
-            }
-        }
-        foreach (['status', 'stage'] as $attribute) {
-            $database->createAttribute('migrations', Attribute::string($attribute, size: 0));
-        }
-        $database->createDocument('migrations', new Document([
-            '$id' => 'migration-race',
-            'status' => 'failed',
-            'stage' => 'processing',
-        ]));
-
-        $migration = new V26();
-        $migration->setProject(
-            new Document(['$id' => 'project', '$sequence' => '1']),
-            $database,
-            $database,
-            $authorization,
-        );
-
-        \ob_start();
-        try {
-            $migration->execute();
-        } finally {
-            \ob_end_clean();
-        }
-
-        $stored = $database->getDocument('migrations', 'migration-race');
-        $this->assertSame('attempt-retry', $stored->getAttribute('attemptId'));
-        $this->assertSame('processing', $stored->getAttribute('status'));
-        $this->assertSame('processing', $stored->getAttribute('stage'));
     }
 
     /**
