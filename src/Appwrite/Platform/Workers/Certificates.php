@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
+use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -313,6 +314,11 @@ class Certificates extends Action
         $awaitingProvider = false;
 
         try {
+            // A missing account email fails issuance here, so the rule is not left generating.
+            if ($certificates instanceof LetsEncrypt) {
+                $certificates->assertCanIssue();
+            }
+
             $certificate->setAttribute('logs', $logs);
 
             // Persist ASAP so that logs are reset in retry flow and user can see the latest logs on Console.
@@ -373,6 +379,10 @@ class Certificates extends Action
             $logs .= \mb_strcut($e->getMessage(), 0, 500000); // Limit to 500kb
 
             $attempts = $certificate->getAttribute('attempts', 0) + 1; // Increase attempts count
+            if ($e->getMessage() === LetsEncrypt::EMAIL_REQUIRED) {
+                // Nothing to retry until an address is configured. Maintenance reschedules any certificate still under the attempt cap.
+                $attempts = self::MAX_GENERATION_ATTEMPTS;
+            }
 
             // Update attributes on certificate document
             $certificate->setAttributes([
@@ -397,7 +407,7 @@ class Certificates extends Action
         } finally {
             // Update certificate document with logs
             $certificate->setAttribute('logs', $logs);
-            $this->upsertCertificate($rule, $certificate, $dbForPlatform);
+            $certificate = $this->upsertCertificate($rule, $certificate, $dbForPlatform);
 
             // Update rule and emit events
             $rule->setAttribute('certificateId', $certificate->getId());
@@ -578,6 +588,11 @@ class Certificates extends Action
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
+        $recipient = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')) ?? '';
+        if ($recipient === '') {
+            return;
+        }
+
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
         $locale->setFallback('en');
 
@@ -606,7 +621,7 @@ class Certificates extends Action
 
         $publisherForMails->enqueue(new MailMessage(
             project: $console,
-            recipient: System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')),
+            recipient: $recipient,
             name: 'Appwrite Administrator',
             subject: $subject,
             template: MAIL_TEMPLATE_CERTIFICATE_FAILED,
