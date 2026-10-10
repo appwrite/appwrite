@@ -478,7 +478,7 @@ pub fn link(symbols: &[String], items: &[RustItem]) -> BTreeMap<String, Vec<(usi
         for s in &parsed {
             if s.class.is_some_and(|c| set.contains(c))
                 && same_name(s.member, &item.name)
-                && !links.get(s.full).is_some_and(|l| !l.is_empty())
+                && links.get(s.full).is_none_or(|l| l.is_empty())
             {
                 add(&mut links, s.full, index, "same name");
             }

@@ -11,6 +11,7 @@ use crate::adapter::{Fault, OpResult, Session};
 pub mod auth;
 pub mod cache;
 pub mod database;
+pub mod domains;
 pub mod dsn;
 pub mod emails;
 pub mod http;
@@ -28,6 +29,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("auth", auth::OPS),
     ("cache", cache::OPS),
     ("database", database::OPS),
+    ("domains", domains::OPS),
     ("dsn", dsn::OPS),
     ("emails", emails::OPS),
     ("http", http::OPS),
@@ -47,6 +49,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "auth" => auth::call(op, args, session).await,
         "cache" => cache::call(op, args, session).await,
         "database" => database::call(op, args, session).await,
+        "domains" => domains::call(op, args, session).await,
         "dsn" => dsn::call(op, args, session).await,
         "emails" => emails::call(op, args, session).await,
         "http" => http::call(op, args, session).await,

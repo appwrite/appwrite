@@ -1,0 +1,1285 @@
+{
+  "lib": "domains",
+  "description": "utopia-php/domains: domain names against the Public Suffix List, domain validators, the registrar cache, and the Mock, Name.com and OpenSRS registrar adapters (through recorded transports: no registrar is ever called).",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/domains/src"
+    ],
+    "tests": [
+      "packages/domains/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/domains"
+  },
+  "services": [
+    "domains-http"
+  ],
+  "state": [],
+  "ops": {
+    "domain.parse": {
+      "doc": "new Domain(domain) and every getter: {get, tld, suffix, rule, name, sub, apex, registerable, known, icann, private, test}",
+      "covers": [
+        "Utopia\\Domains\\Domain::__construct",
+        "Utopia\\Domains\\Domain::get",
+        "Utopia\\Domains\\Domain::getTLD",
+        "Utopia\\Domains\\Domain::getSuffix",
+        "Utopia\\Domains\\Domain::getRule",
+        "Utopia\\Domains\\Domain::getName",
+        "Utopia\\Domains\\Domain::getSub",
+        "Utopia\\Domains\\Domain::getApex",
+        "Utopia\\Domains\\Domain::getRegisterable",
+        "Utopia\\Domains\\Domain::isKnown",
+        "Utopia\\Domains\\Domain::isICANN",
+        "Utopia\\Domains\\Domain::isPrivate",
+        "Utopia\\Domains\\Domain::isTest"
+      ],
+      "fuzz": [
+        {
+          "name": "structured",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "domain": {
+                "gen": "ref",
+                "name": "domain"
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "free text",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "domain": {
+                "gen": "string",
+                "alphabet": "unicode",
+                "max": 24,
+                "tricky": 0.2
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "validator.is_valid": {
+      "doc": "isValid(value) of PublicDomain, ApexDomain or RegistrableDomain (`validator`: public, apex, registrable)",
+      "covers": [
+        "Utopia\\Domains\\Validator\\PublicDomain::isValid",
+        "Utopia\\Domains\\Validator\\ApexDomain::isValid",
+        "Utopia\\Domains\\Validator\\RegistrableDomain::isValid"
+      ],
+      "fuzz": [
+        {
+          "name": "domains",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "pick",
+                "from": [
+                  "public",
+                  "apex",
+                  "registrable"
+                ]
+              },
+              "value": {
+                "gen": "ref",
+                "name": "domain_or_url"
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "scalars",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "pick",
+                "from": [
+                  "public",
+                  "apex",
+                  "registrable"
+                ]
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -1000,
+                    "max": 1000
+                  },
+                  {
+                    "gen": "bool"
+                  },
+                  {
+                    "gen": "float",
+                    "min": -100,
+                    "max": 100
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "abcdefghijklmnopqrstuvwxyz0123456789.-_/ ",
+                    "max": 20,
+                    "tricky": 0
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "validator.describe": {
+      "doc": "{description: getDescription(), type: getType(), array: isArray()} of a validator",
+      "covers": [
+        "Utopia\\Domains\\Validator\\PublicDomain::getDescription",
+        "Utopia\\Domains\\Validator\\PublicDomain::getType",
+        "Utopia\\Domains\\Validator\\PublicDomain::isArray",
+        "Utopia\\Domains\\Validator\\ApexDomain::getDescription",
+        "Utopia\\Domains\\Validator\\RegistrableDomain::getDescription",
+        "Utopia\\Domains\\Validator\\RegistrableDomain::getType",
+        "Utopia\\Domains\\Validator\\RegistrableDomain::isArray"
+      ]
+    },
+    "validator.allow": {
+      "doc": "PublicDomain::allow(domains): process-wide, as PHP's static list",
+      "covers": [
+        "Utopia\\Domains\\Validator\\PublicDomain::allow"
+      ]
+    },
+    "cache.new": {
+      "doc": "new Cache(new Utopia\\Cache\\Cache(new Memory() | new None())) as a handle (`store`: memory, none)",
+      "covers": [
+        "Utopia\\Domains\\Cache::__construct"
+      ]
+    },
+    "cache.load": {
+      "doc": "$cache->load(domain, ttl)",
+      "covers": [
+        "Utopia\\Domains\\Cache::load"
+      ]
+    },
+    "cache.save": {
+      "doc": "$cache->save(domain, data)",
+      "covers": [
+        "Utopia\\Domains\\Cache::save"
+      ]
+    },
+    "cache.purge": {
+      "doc": "$cache->purge(domain)",
+      "covers": [
+        "Utopia\\Domains\\Cache::purge"
+      ]
+    },
+    "contact.to_array": {
+      "doc": "(new Contact(...fields))->toArray()",
+      "covers": [
+        "Utopia\\Domains\\Registrar\\Contact::__construct",
+        "Utopia\\Domains\\Registrar\\Contact::toArray"
+      ]
+    },
+    "registrar.new": {
+      "doc": "new Registrar(adapter, nameservers, cache, connectTimeout, timeout) as a handle; `adapter`: {type: mock, taken, tlds, price} | {type: namecom, username, token, endpoint} | {type: opensrs, key, username, password, endpoint}, the API adapters on a recorded transport",
+      "covers": [
+        "Utopia\\Domains\\Registrar::__construct",
+        "Utopia\\Domains\\Registrar\\Adapter::setDefaultNameservers",
+        "Utopia\\Domains\\Registrar\\Adapter::setCache",
+        "Utopia\\Domains\\Registrar\\Adapter::setConnectTimeout",
+        "Utopia\\Domains\\Registrar\\Adapter::setTimeout",
+        "Utopia\\Domains\\Registrar\\Adapter\\Mock::__construct",
+        "Utopia\\Domains\\Registrar\\Adapter\\NameCom::__construct",
+        "Utopia\\Domains\\Registrar\\Adapter\\OpenSRS::__construct"
+      ]
+    },
+    "registrar.call": {
+      "doc": "one Registrar method (or a Mock method) with `args`, after queueing recorded `responses`: {result | error: {class, message, code}, requests: [{method, url, headers, body}]} (no requests for Mock)",
+      "covers": [
+        "Utopia\\Domains\\Registrar::getName",
+        "Utopia\\Domains\\Registrar::available",
+        "Utopia\\Domains\\Registrar::purchase",
+        "Utopia\\Domains\\Registrar::suggest",
+        "Utopia\\Domains\\Registrar::tlds",
+        "Utopia\\Domains\\Registrar::getDomain",
+        "Utopia\\Domains\\Registrar::updateDomain",
+        "Utopia\\Domains\\Registrar::updateNameservers",
+        "Utopia\\Domains\\Registrar::getPrice",
+        "Utopia\\Domains\\Registrar::renew",
+        "Utopia\\Domains\\Registrar::transfer",
+        "Utopia\\Domains\\Registrar::getAuthCode",
+        "Utopia\\Domains\\Registrar::cancelPurchase",
+        "Utopia\\Domains\\Registrar::checkTransferStatus",
+        "Utopia\\Domains\\Registrar\\Adapter\\Mock::*",
+        "Utopia\\Domains\\Registrar\\Adapter\\NameCom::*",
+        "Utopia\\Domains\\Registrar\\Adapter\\OpenSRS::*",
+        "Utopia\\Domains\\Registrar\\Domain::__construct",
+        "Utopia\\Domains\\Registrar\\Price::__construct",
+        "Utopia\\Domains\\Registrar\\Renewal::__construct",
+        "Utopia\\Domains\\Registrar\\TransferStatus::__construct",
+        "Utopia\\Domains\\Registrar\\UpdateDetails::__construct"
+      ]
+    },
+    "registrar.bare_update_nameservers": {
+      "doc": "updateNameservers() of an adapter that does not override it",
+      "covers": [
+        "Utopia\\Domains\\Registrar\\Adapter::updateNameservers"
+      ]
+    },
+    "api.call": {
+      "doc": "call(method, path, params, headers) of a Utopia\\Domains\\Adapter on the `domains-http` fixture server (tests/compat/domains/fixtures/server.php), which echoes the request",
+      "covers": [
+        "Utopia\\Domains\\Adapter::__construct",
+        "Utopia\\Domains\\Adapter::call"
+      ]
+    },
+    "registrar.once": {
+      "doc": "registrar.new and one registrar.call on it, in one operation (for fuzzing answers)",
+      "covers": [
+        "Utopia\\Domains\\Registrar::__construct",
+        "Utopia\\Domains\\Registrar::getPrice",
+        "Utopia\\Domains\\Registrar::suggest",
+        "Utopia\\Domains\\Registrar::available",
+        "Utopia\\Domains\\Registrar::getDomain",
+        "Utopia\\Domains\\Registrar::checkTransferStatus",
+        "Utopia\\Domains\\Registrar::getAuthCode",
+        "Utopia\\Domains\\Registrar::renew"
+      ],
+      "mask": {
+        "paths": [
+          "/result/createdAt",
+          "/result/expiresAt",
+          "/result/timestamp"
+        ],
+        "reason": "generated texts such as `a` (a time zone) are read relative to the current time"
+      },
+      "fuzz": [
+        {
+          "name": "namecom prices",
+          "iterations": 1500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "adapter": {
+                "gen": "const",
+                "value": {
+                  "type": "namecom",
+                  "username": "u",
+                  "token": "t"
+                }
+              },
+              "method": {
+                "gen": "const",
+                "value": "getPrice"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "domain": {
+                    "gen": "const",
+                    "value": "shop.dev"
+                  },
+                  "regType": {
+                    "gen": "pick",
+                    "from": [
+                      "new",
+                      "renewal",
+                      "transfer",
+                      "trade"
+                    ]
+                  },
+                  "periodYears": {
+                    "gen": "pick",
+                    "from": [
+                      1,
+                      2
+                    ]
+                  }
+                }
+              },
+              "responses": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "namecom_response"
+                },
+                "min": 0,
+                "max": 2
+              }
+            }
+          }
+        },
+        {
+          "name": "namecom availability",
+          "iterations": 800,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "adapter": {
+                "gen": "const",
+                "value": {
+                  "type": "namecom",
+                  "username": "u",
+                  "token": "t"
+                }
+              },
+              "method": {
+                "gen": "const",
+                "value": "getAuthCode"
+              },
+              "args": {
+                "gen": "const",
+                "value": {
+                  "domain": "shop.dev"
+                }
+              },
+              "responses": {
+                "gen": "array",
+                "items": {
+                  "gen": "object",
+                  "fields": {
+                    "status": {
+                      "gen": "ref",
+                      "name": "status"
+                    },
+                    "body": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "concat",
+                          "parts": [
+                            {
+                              "gen": "const",
+                              "value": "{\"authCode\":"
+                            },
+                            {
+                              "gen": "ref",
+                              "name": "json_scalar"
+                            },
+                            {
+                              "gen": "const",
+                              "value": "}"
+                            }
+                          ]
+                        },
+                        {
+                          "gen": "ref",
+                          "name": "namecom_pricing"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "min": 1,
+                "max": 1
+              }
+            }
+          }
+        },
+        {
+          "name": "namecom suggestions",
+          "iterations": 1500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "adapter": {
+                "gen": "const",
+                "value": {
+                  "type": "namecom",
+                  "username": "u",
+                  "token": "t"
+                }
+              },
+              "method": {
+                "gen": "const",
+                "value": "suggest"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "query": {
+                    "gen": "pick",
+                    "from": [
+                      "x",
+                      "my app"
+                    ]
+                  },
+                  "limit": {
+                    "gen": "pick",
+                    "from": [
+                      null,
+                      0,
+                      1,
+                      2,
+                      5
+                    ]
+                  },
+                  "filterType": {
+                    "gen": "pick",
+                    "from": [
+                      null,
+                      "premium",
+                      "suggestion"
+                    ]
+                  },
+                  "priceMin": {
+                    "gen": "pick",
+                    "from": [
+                      null,
+                      0,
+                      10,
+                      1000
+                    ]
+                  },
+                  "priceMax": {
+                    "gen": "pick",
+                    "from": [
+                      null,
+                      0,
+                      100,
+                      5000
+                    ]
+                  }
+                }
+              },
+              "responses": {
+                "gen": "array",
+                "min": 1,
+                "max": 1,
+                "items": {
+                  "gen": "object",
+                  "fields": {
+                    "status": {
+                      "gen": "pick",
+                      "from": [
+                        200,
+                        200,
+                        200,
+                        500
+                      ]
+                    },
+                    "body": {
+                      "gen": "concat",
+                      "parts": [
+                        {
+                          "gen": "const",
+                          "value": "{\"results\":["
+                        },
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "ref",
+                            "name": "namecom_suggestion"
+                          },
+                          "sep": ",",
+                          "min": 0,
+                          "max": 5
+                        },
+                        {
+                          "gen": "const",
+                          "value": "]}"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "opensrs answers",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "adapter": {
+                "gen": "const",
+                "value": {
+                  "type": "opensrs",
+                  "key": "k",
+                  "username": "u",
+                  "password": "p"
+                }
+              },
+              "method": {
+                "gen": "pick",
+                "from": [
+                  "getPrice",
+                  "available",
+                  "checkTransferStatus",
+                  "getDomain",
+                  "getAuthCode",
+                  "renew",
+                  "transfer",
+                  "updateDomain"
+                ]
+              },
+              "args": {
+                "gen": "const",
+                "value": {
+                  "domain": "shop.net",
+                  "domains": [
+                    "shop.net"
+                  ],
+                  "periodYears": 1,
+                  "authCode": "c",
+                  "autoRenew": true
+                }
+              },
+              "responses": {
+                "gen": "array",
+                "min": 1,
+                "max": 1,
+                "items": {
+                  "gen": "object",
+                  "fields": {
+                    "status": {
+                      "gen": "const",
+                      "value": 200
+                    },
+                    "body": {
+                      "gen": "ref",
+                      "name": "opensrs_body"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "generators": {
+    "label": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "abcdefghijklmnopqrstuvwxyz0123456789-",
+          "min": 1,
+          "max": 12
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "www",
+            "blog",
+            "co",
+            "com",
+            "uk",
+            "city",
+            "kawasaki",
+            "jp",
+            "ck",
+            "nom",
+            "br",
+            "github",
+            "io",
+            "dev",
+            "adobeaemcloud",
+            "localhost",
+            "test",
+            "xn--p1ai",
+            "xn--80ak6aa92e",
+            "קום",
+            "אשקלון",
+            "рф",
+            "公司",
+            "香港",
+            "Example",
+            "WWW",
+            "0",
+            "",
+            "*",
+            "!",
+            "127",
+            "1"
+          ]
+        }
+      ]
+    },
+    "suffix": {
+      "gen": "pick",
+      "from": [
+        "com",
+        "co.uk",
+        "github.io",
+        "ck",
+        "www.ck",
+        "kawasaki.jp",
+        "city.kawasaki.jp",
+        "com.nom.br",
+        "dev.adobeaemcloud.com",
+        "adobeaemcloud.net",
+        "localhost",
+        "test",
+        "xn--p1ai",
+        "рф",
+        "公司.香港",
+        "notatld",
+        "com.",
+        "co.uk.",
+        "",
+        "0"
+      ]
+    },
+    "domain": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "ref",
+                "name": "label"
+              },
+              "sep": ".",
+              "min": 0,
+              "max": 3
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ".",
+                ""
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "suffix"
+            }
+          ]
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "label"
+          },
+          "sep": ".",
+          "min": 1,
+          "max": 5
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "127.0.0.1",
+            "::1",
+            "[::1]",
+            "192.168.0.1.nip.io",
+            "10.0.0.1",
+            "example.com:443",
+            "example.com/login",
+            "..",
+            ".",
+            "a..b.com",
+            "-example.com",
+            "example-.com",
+            "exa_mple.com",
+            "http://example.com",
+            "https://example.com",
+            "HTTP://example.com",
+            "httpmydomain.com"
+          ]
+        }
+      ]
+    },
+    "domain_or_url": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "domain"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "http://",
+                "https://",
+                "ftp://",
+                "HTTPS://",
+                "http://user:pass@",
+                "//"
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "domain"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "/",
+                "/path?q=1",
+                ":8080",
+                "#frag",
+                " "
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "json_scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -5,
+          "max": 20000
+        },
+        {
+          "gen": "float",
+          "min": -10,
+          "max": 20000
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "true",
+            "false",
+            "null",
+            "\"12.99\"",
+            "\"0\"",
+            "\"\"",
+            "\"abc\"",
+            "\" 7\"",
+            "\"1e3\"",
+            "\"12abc\"",
+            "\"registration\"",
+            "\"aftermarket\"",
+            "\"true\"",
+            "[]",
+            "{}",
+            "[1]",
+            "{\"a\":1}",
+            "0.0",
+            "-0",
+            "1e2"
+          ]
+        }
+      ]
+    },
+    "json_flag": {
+      "gen": "pick",
+      "from": [
+        "true",
+        "false",
+        "null"
+      ]
+    },
+    "json_type": {
+      "gen": "pick",
+      "from": [
+        "\"registration\"",
+        "\"aftermarket\"",
+        "\"\"",
+        "\"Registration\"",
+        "null"
+      ]
+    },
+    "namecom_pricing": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "{\"purchasePrice\":"
+            },
+            {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            {
+              "gen": "const",
+              "value": ",\"renewalPrice\":"
+            },
+            {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            {
+              "gen": "const",
+              "value": ",\"transferPrice\":"
+            },
+            {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            {
+              "gen": "const",
+              "value": ",\"premium\":"
+            },
+            {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "{\"renewalPrice\":"
+            },
+            {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "{}",
+            "[]",
+            "null",
+            "",
+            "not json",
+            "{\"message\":\"Not Found\"}",
+            "{\"message\":\"Invalid value for years\",\"details\":\"x\"}",
+            "{\"message\":\"Unsupported TLD\"}",
+            "{\"message\":\"TLD not supported\"}",
+            "{\"message\":\"rate limit exceeded\"}"
+          ]
+        }
+      ]
+    },
+    "namecom_availability": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "{\"results\":[{\"domainName\":\"shop.dev\",\"purchasable\":"
+            },
+            {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            {
+              "gen": "const",
+              "value": ",\"purchasePrice\":"
+            },
+            {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            {
+              "gen": "const",
+              "value": ",\"renewalPrice\":"
+            },
+            {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            {
+              "gen": "const",
+              "value": ",\"purchaseType\":"
+            },
+            {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            {
+              "gen": "const",
+              "value": ",\"premium\":"
+            },
+            {
+              "gen": "ref",
+              "name": "json_scalar"
+            },
+            {
+              "gen": "const",
+              "value": "}]}"
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "{\"results\":[]}",
+            "{}",
+            "null",
+            "{\"message\":\"None of the submitted domains are valid\"}"
+          ]
+        }
+      ]
+    },
+    "status": {
+      "gen": "pick",
+      "from": [
+        200,
+        200,
+        200,
+        200,
+        400,
+        401,
+        404,
+        422,
+        429,
+        500
+      ]
+    },
+    "namecom_response": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "status": {
+              "gen": "ref",
+              "name": "status"
+            },
+            "body": {
+              "gen": "ref",
+              "name": "namecom_pricing"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "status": {
+              "gen": "ref",
+              "name": "status"
+            },
+            "body": {
+              "gen": "ref",
+              "name": "namecom_availability"
+            }
+          }
+        }
+      ]
+    },
+    "namecom_suggestion": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "const",
+          "value": "{\"domainName\":"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "\"a.com\"",
+            "\"b.net\"",
+            "\"\"",
+            "\"0\"",
+            "1",
+            "null",
+            "\"a.com\""
+          ]
+        },
+        {
+          "gen": "const",
+          "value": ",\"purchasable\":"
+        },
+        {
+          "gen": "ref",
+          "name": "json_flag"
+        },
+        {
+          "gen": "const",
+          "value": ",\"purchasePrice\":"
+        },
+        {
+          "gen": "ref",
+          "name": "json_scalar"
+        },
+        {
+          "gen": "const",
+          "value": ",\"renewalPrice\":"
+        },
+        {
+          "gen": "ref",
+          "name": "json_scalar"
+        },
+        {
+          "gen": "const",
+          "value": ",\"purchaseType\":"
+        },
+        {
+          "gen": "ref",
+          "name": "json_type"
+        },
+        {
+          "gen": "const",
+          "value": ",\"premium\":"
+        },
+        {
+          "gen": "ref",
+          "name": "json_scalar"
+        },
+        {
+          "gen": "const",
+          "value": "}"
+        }
+      ]
+    },
+    "xml_text": {
+      "gen": "pick",
+      "from": [
+        "200",
+        "210",
+        "211",
+        "1",
+        "0",
+        " 1",
+        "1.9",
+        "",
+        "abc",
+        "2.5e2",
+        "13.50",
+        "27",
+        "1e3",
+        " 5",
+        "-1",
+        "0x1A",
+        " 12abc",
+        "pending_owner",
+        "pending_admin",
+        "pending_registry",
+        "completed",
+        "cancelled",
+        "a &amp; b",
+        "<![CDATA[x<y]]>",
+        "2024-01-01",
+        "2024-01-01 10:00:00",
+        "@86400",
+        "bad date",
+        "2024-02-30 25:00:00",
+        "Domain not transferable\nDomain not registered"
+      ]
+    },
+    "xml_code": {
+      "gen": "pick",
+      "from": [
+        "200",
+        "210",
+        "211",
+        "220",
+        "299",
+        "300",
+        "400",
+        "465",
+        "485",
+        "487",
+        " 210",
+        "21x",
+        "",
+        "abc",
+        "2.5e2"
+      ]
+    },
+    "xml_key": {
+      "gen": "pick",
+      "from": [
+        "price",
+        "transferrable",
+        "noservice",
+        "reason",
+        "status",
+        "timestamp",
+        "registry_createdate",
+        "registry_expiredate",
+        "auto_renew",
+        "domain_auth_info",
+        "order_id",
+        "registration expiration date",
+        "id"
+      ]
+    },
+    "xml_item": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "const",
+          "value": "<item key=\""
+        },
+        {
+          "gen": "ref",
+          "name": "xml_key"
+        },
+        {
+          "gen": "const",
+          "value": "\">"
+        },
+        {
+          "gen": "ref",
+          "name": "xml_text"
+        },
+        {
+          "gen": "const",
+          "value": "</item>"
+        }
+      ]
+    },
+    "opensrs_body": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "<?xml version=\"1.0\"?><OPS_envelope><body><data_block><dt_assoc><item key=\"response_code\">"
+            },
+            {
+              "gen": "ref",
+              "name": "xml_code"
+            },
+            {
+              "gen": "const",
+              "value": "</item><item key=\"response_text\">"
+            },
+            {
+              "gen": "ref",
+              "name": "xml_text"
+            },
+            {
+              "gen": "const",
+              "value": "</item><item key=\"is_success\">"
+            },
+            {
+              "gen": "ref",
+              "name": "xml_text"
+            },
+            {
+              "gen": "const",
+              "value": "</item><item key=\"attributes\"><dt_assoc>"
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "ref",
+                "name": "xml_item"
+              },
+              "sep": "",
+              "min": 0,
+              "max": 4
+            },
+            {
+              "gen": "const",
+              "value": "</dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "not xml",
+            "<a/>",
+            "<OPS_envelope/>",
+            "<a><b></a>"
+          ]
+        }
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "deviations": [
+    {
+      "symbol": "Utopia\\Domains\\Registrar::getPrice",
+      "php": "`$regType` is any string: Mock prices an unknown type like a new registration, NameCom raises PriceNotFoundException, OpenSRS sends it to the API, which refuses it.",
+      "reason": "utopia_domains::registrar::RegType has the four REG_TYPE_* values only."
+    },
+    {
+      "symbol": "Utopia\\Domains\\Registrar::suggest",
+      "php": "`$filterType` is any string: OpenSRS throws `Invalid filter type`, Mock returns no suggestion, NameCom ignores it.",
+      "reason": "the filter is an Option<SuggestionKind> (premium or suggestion)."
+    },
+    {
+      "symbol": "Utopia\\Domains\\Registrar::purchase",
+      "php": "`$contacts` may hold values that are not Contact objects: Mock and NameCom throw InvalidContactException, OpenSRS fails with an Error on `toArray()`.",
+      "reason": "Contacts holds Contact values only."
+    },
+    {
+      "symbol": "Utopia\\Domains\\Registrar::__construct",
+      "php": "the default nameservers, cache and timeouts are set on the adapter, so two Registrars sharing one adapter share the settings of the last one built.",
+      "reason": "the settings are a Config owned by each Registrar and passed to the adapter on every call; one adapter serves registrars with different settings."
+    },
+    {
+      "symbol": "Utopia\\Domains\\Registrar\\Adapter\\NameCom::available",
+      "php": "available() and suggest() (`available`, `purchaseType`) return the answer's values as they are, even when the API sends something other than a boolean or a string.",
+      "reason": "Availability and Suggestion::available are bool (other values are read by PHP truthiness) and Suggestion::purchase_type a string (other values in their PHP string form)."
+    },
+    {
+      "symbol": "Utopia\\Domains\\Cache::save",
+      "php": "returns what the Utopia cache adapter returns: the data when stored, false otherwise.",
+      "reason": "Cache::save returns whether the data was stored (the data is the caller's own)."
+    }
+  ],
+  "quirks": [
+    {
+      "symbol": "Utopia\\Domains\\Domain::__construct",
+      "description": "only lower-case `http://` and `https://` prefixes are refused as URLs: `HTTP://example.com` is parsed as a domain",
+      "case": "edge.json#parse 'HTTP://example.com'"
+    },
+    {
+      "symbol": "Utopia\\Domains\\Validator\\PublicDomain::allow",
+      "description": "allowed domains are a static property: they apply to every PublicDomain and ApexDomain of the process, and are compared loosely (in_array)",
+      "case": "PublicDomainTest.json#allow domains"
+    },
+    {
+      "symbol": "Utopia\\Domains\\Adapter::call",
+      "description": "an answer is decoded only when its Content-Type is `application/json` followed by parameters (`; charset=utf-8`): a bare `application/json` answer is returned as text",
+      "case": "api.json#json without parameters is text"
+    },
+    {
+      "symbol": "Utopia\\Domains\\Registrar\\Adapter\\OpenSRS::transfer",
+      "description": "a premium price reaches the XCP envelope through a `string|int` parameter, so it is truncated to an integer (10.25 is sent as 10)",
+      "case": "OpenSRSTest.json#transfer"
+    },
+    {
+      "symbol": "Utopia\\Domains\\Registrar\\Adapter\\OpenSRS::purchase",
+      "description": "a single contact given under a role key (not position 0) fails with an Error (`Call to a member function toArray() on null`), which is not wrapped",
+      "case": "OpenSRSTest.json#purchase failure"
+    },
+    {
+      "symbol": "Utopia\\Domains\\Registrar\\Adapter\\OpenSRS::getPrice",
+      "description": "the cache key is the domain alone: a cached price is returned for any period and registration type",
+      "case": "OpenSRSTest.json#get price with cache"
+    },
+    {
+      "symbol": "Utopia\\Domains\\Registrar\\Adapter\\OpenSRS::suggest",
+      "description": "a limit of 0 stops the regular suggestions at none but leaves the premium ones unlimited",
+      "case": "OpenSRSTest.json#suggest"
+    },
+    {
+      "symbol": "Utopia\\Domains\\Registrar\\Adapter\\NameCom::getAuthCode",
+      "description": "a numeric auth code in the answer is returned as its decimal string",
+      "case": "NameComTest.json#get auth code"
+    }
+  ]
+}
