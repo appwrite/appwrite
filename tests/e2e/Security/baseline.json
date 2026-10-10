@@ -424,6 +424,7 @@
         "PATCH /v1/project/policies/password-history",
         "PATCH /v1/project/policies/password-personal-data",
         "PATCH /v1/project/policies/password-pwned",
+        "PATCH /v1/project/policies/password-rotation",
         "PATCH /v1/project/policies/password-strength",
         "PATCH /v1/project/policies/session-alert",
         "PATCH /v1/project/policies/session-duration",
