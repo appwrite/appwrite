@@ -46,6 +46,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Keycloak\Update as Upd
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kick\Update as UpdateOAuth2Kick;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linkedin\Update as UpdateOAuth2Linkedin;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Microsoft\Update as UpdateOAuth2Microsoft;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Naver\Update as UpdateOAuth2Naver;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Notion\Update as UpdateOAuth2Notion;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Oidc\Update as UpdateOAuth2Oidc;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Okta\Update as UpdateOAuth2Okta;
@@ -253,6 +254,7 @@ class Http extends Service
         $this->addAction(UpdateOAuth2Resend::getName(), new UpdateOAuth2Resend());
         $this->addAction(UpdateOAuth2TikTok::getName(), new UpdateOAuth2TikTok());
         $this->addAction(UpdateOAuth2Kakao::getName(), new UpdateOAuth2Kakao());
+        $this->addAction(UpdateOAuth2Naver::getName(), new UpdateOAuth2Naver());
         $this->addAction(UpdateOAuth2Cloudflare::getName(), new UpdateOAuth2Cloudflare());
     }
 }
