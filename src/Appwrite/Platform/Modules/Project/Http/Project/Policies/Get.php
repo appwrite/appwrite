@@ -81,6 +81,7 @@ class Get extends Action
             'password-strength' => Response::MODEL_POLICY_PASSWORD_STRENGTH,
             'password-personal-data' => Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
             'password-pwned' => Response::MODEL_POLICY_PASSWORD_PWNED,
+            'password-rotation' => Response::MODEL_POLICY_PASSWORD_ROTATION,
             'session-alert' => Response::MODEL_POLICY_SESSION_ALERT,
             'session-duration' => Response::MODEL_POLICY_SESSION_DURATION,
             'session-invalidation' => Response::MODEL_POLICY_SESSION_INVALIDATION,
@@ -146,6 +147,14 @@ class Get extends Action
                     '$id' => 'password-pwned',
                 ])),
                 Response::MODEL_POLICY_PASSWORD_PWNED,
+            ],
+            'password-rotation' => [
+                new Document([
+                    '$id' => 'password-rotation',
+                    'enabled' => $auths['passwordRotation']['enabled'] ?? false,
+                    'duration' => $auths['passwordRotation']['duration'] ?? 365,
+                ]),
+                Response::MODEL_POLICY_PASSWORD_ROTATION,
             ],
             'session-alert' => [
                 new Document([
