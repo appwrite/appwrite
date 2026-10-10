@@ -20,6 +20,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
@@ -423,6 +424,8 @@ class Create extends Action
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
+        } catch (AuthorizationException $e) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $e->getMessage());
         }
 
         $queueForEvents
