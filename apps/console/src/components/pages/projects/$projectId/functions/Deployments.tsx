@@ -23,6 +23,7 @@ import {
   XCircle,
   GitBranch,
   GitCommit,
+  CheckCircle2,
   Download,
   RefreshCw,
   Play,
@@ -94,6 +95,7 @@ import { toast } from 'sonner'
 import { useCreateDeployment } from '../shared/CreateDeploymentContext'
 import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
 import { DeploymentsToolbarContext } from './Layout'
+import { SERVICE_HEADER_CONTAINER } from '../shared/service-header-container'
 import { getQueryParam, queryParamToMap } from '@/lib/table-filters'
 import { useT } from '@/lib/i18n/translate'
 
@@ -516,15 +518,17 @@ export function View() {
 
   return (
     <div ref={scrollContainerRef} className="flex-1">
-      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
-        <div className={cn(deploymentsToolbar && 'space-y-4')}>
-          {deploymentsToolbar ? (
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              {deploymentsToolbar}
-            </div>
-          ) : null}
-
-          {/* Deployments Table */}
+      {deploymentsToolbar ? (
+        <div
+          className={cn(
+            SERVICE_HEADER_CONTAINER,
+            'mx-auto flex w-full max-w-7xl min-w-0 flex-nowrap items-center justify-between gap-2 px-4 py-4 sm:px-6',
+          )}
+        >
+          {deploymentsToolbar}
+        </div>
+      ) : null}
+      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
           {deployments.length > 0 ? (
             <>
               <div className="rounded-lg border border-border bg-card">
@@ -1195,7 +1199,6 @@ export function View() {
               }
             />
           )}
-        </div>
       </div>
 
       {/* Bulk Delete Action Bar */}

@@ -4,6 +4,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useContext,
 } from 'react'
 import {
   openDialogAfterOverlayCloses,
@@ -94,6 +95,8 @@ import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { useCreateDeployment } from '../shared/CreateDeploymentContext'
 import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
+import { DeploymentsToolbarContext } from './Layout'
+import { SERVICE_HEADER_CONTAINER } from '../shared/service-header-container'
 import { getQueryParam, queryParamToMap, getPage } from '@/lib/table-filters'
 import { useT } from '@/lib/i18n/translate'
 
@@ -539,15 +542,28 @@ export function View() {
   }
 
   const createDeployment = useCreateDeployment()
+  const deploymentsToolbar = useContext(DeploymentsToolbarContext)
 
   // Only show full loading state on initial load when there's no data
   if ((siteLoading || deploymentsLoading) && deployments.length === 0) {
     return (
-      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
-        <div className="rounded-lg border border-border bg-card py-12 text-center">
-          <p className="text-[13px] text-muted-foreground">
-            {t('Loading deployments...')}
-          </p>
+      <div className="flex-1">
+        {deploymentsToolbar ? (
+          <div
+            className={cn(
+              SERVICE_HEADER_CONTAINER,
+              'mx-auto flex w-full max-w-7xl min-w-0 flex-nowrap items-center justify-between gap-2 px-4 py-4 sm:px-6',
+            )}
+          >
+            {deploymentsToolbar}
+          </div>
+        ) : null}
+        <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
+          <div className="rounded-lg border border-border bg-card py-12 text-center">
+            <p className="text-[13px] text-muted-foreground">
+              {t('Loading deployments...')}
+            </p>
+          </div>
         </div>
       </div>
     )
@@ -555,7 +571,17 @@ export function View() {
 
   return (
     <div ref={scrollContainerRef} className="flex-1">
-      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
+      {deploymentsToolbar ? (
+        <div
+          className={cn(
+            SERVICE_HEADER_CONTAINER,
+            'mx-auto flex w-full max-w-7xl min-w-0 flex-nowrap items-center justify-between gap-2 px-4 py-4 sm:px-6',
+          )}
+        >
+          {deploymentsToolbar}
+        </div>
+      ) : null}
+      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
           {deployments.length > 0 ? (
             <>
               <div className="overflow-hidden rounded-lg border border-border bg-card">

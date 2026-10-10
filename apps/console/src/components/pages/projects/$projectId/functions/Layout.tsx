@@ -4,6 +4,7 @@ import {
   useLocation,
   Outlet,
   useNavigate,
+  useRouterState,
 } from '@tanstack/react-router'
 import { useMutation, useQueryClient, useIsFetching } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
@@ -80,6 +81,9 @@ function FunctionLayoutContent() {
   const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const location = useLocation()
+  const resolvedPathname = useRouterState({
+    select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
+  })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { triggerRefresh, hasRefreshHandler } = useRefresh()
@@ -89,7 +93,7 @@ function FunctionLayoutContent() {
     }) > 0
 
   const activeTab = useMemo(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean)
+    const pathParts = resolvedPathname.split('/').filter(Boolean)
     const functionIndex = pathParts.findIndex(
       (part, idx) =>
         part === 'functions' &&
@@ -117,7 +121,7 @@ function FunctionLayoutContent() {
     }
 
     return 'overview'
-  }, [location.pathname])
+  }, [resolvedPathname])
 
   const { data: func, isLoading } = useProjectFunction(projectId, functionId)
   const activeDeploymentId = getRedeploySourceDeploymentId(func)
@@ -143,16 +147,6 @@ function FunctionLayoutContent() {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showSecuritySettings = canShowFunctionSecuritySettings(access, features)
-
-  // Get search value from URL (location.search may be string or parsed object in TanStack Router)
-  const domainsSearchValue = (() => {
-    const search = location.search
-    if (typeof search === 'object' && search !== null && 'search' in search) {
-      return (search as { search?: string }).search ?? ''
-    }
-    const params = new URLSearchParams(typeof search === 'string' ? search : '')
-    return params.get('search') || ''
-  })()
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const functionFilterMap = useMemo(() => {
@@ -310,17 +304,6 @@ function FunctionLayoutContent() {
       })
     }
   }, [showSecuritySettings, activeTab, projectId, functionId, navigate])
-
-  const handleDomainsSearchChange = (value: string) => {
-    navigate({
-      to: location.pathname,
-      search: (prev) => ({
-        ...prev,
-        search: value || undefined,
-      }),
-      replace: true,
-    })
-  }
 
   const [gitDeployOpen, setGitDeployOpen] = useState(false)
   const [cliDeployOpen, setCliDeployOpen] = useState(false)
@@ -573,13 +556,6 @@ function FunctionLayoutContent() {
           fullWidthBorder
           fullWidth={activeTab === 'executions'}
           showToolbarBottomBorder={isExecutionsTabLayout}
-          searchPlaceholder={
-            activeTab === 'domains' ? t('Search domain...') : undefined
-          }
-          searchValue={activeTab === 'domains' ? domainsSearchValue : undefined}
-          onSearchChange={
-            activeTab === 'domains' ? handleDomainsSearchChange : undefined
-          }
           showFilters={activeTab === 'executions' || activeTab === 'domains'}
           filterTrigger={
             activeTab === 'executions' || activeTab === 'domains' ? (
@@ -657,40 +633,38 @@ function FunctionLayoutContent() {
         >
           <DeploymentsToolbarContext.Provider
             value={
-              activeTab === 'deployments' ? (
-                <>
-                  <FiltersPopover
-                    open={filtersOpen}
-                    onOpenChange={setFiltersOpen}
-                    columns={functionFilterColumns}
-                    filterMap={functionFilterMap}
-                    onRemoveFilter={removeFunctionFilter}
-                    onClearAll={clearAllFunctionFilters}
-                    onApplyFilter={applyFunctionFilter}
-                    resourceLabel="deployments"
-                    filterScope="functions.deployments"
-                    onApplyQuery={(queryParam) => {
-                      navigate({
-                        to: location.pathname,
-                        search: (prev) => ({
-                          ...(typeof prev === 'object' && prev !== null
-                            ? prev
-                            : {}),
-                          query: queryParam ?? undefined,
-                          page: 1,
-                        }),
-                        replace: true,
-                      })
-                    }}
-                    teamId={project?.teamId}
-                  />
-                  <CreateDeploymentDropdown
-                    onSelectGit={() => setGitDeployOpen(true)}
-                    onSelectCli={() => setCliDeployOpen(true)}
-                    onSelectManual={() => setManualDeployOpen(true)}
-                  />
-                </>
-              ) : null
+              <>
+                <FiltersPopover
+                  open={filtersOpen}
+                  onOpenChange={setFiltersOpen}
+                  columns={deploymentsFilterColumns}
+                  filterMap={functionFilterMap}
+                  onRemoveFilter={removeFunctionFilter}
+                  onClearAll={clearAllFunctionFilters}
+                  onApplyFilter={applyFunctionFilter}
+                  resourceLabel="deployments"
+                  filterScope="functions.deployments"
+                  onApplyQuery={(queryParam) => {
+                    navigate({
+                      to: location.pathname,
+                      search: (prev) => ({
+                        ...(typeof prev === 'object' && prev !== null
+                          ? prev
+                          : {}),
+                        query: queryParam ?? undefined,
+                        page: 1,
+                      }),
+                      replace: true,
+                    })
+                  }}
+                  teamId={project?.teamId}
+                />
+                <CreateDeploymentDropdown
+                  onSelectGit={() => setGitDeployOpen(true)}
+                  onSelectCli={() => setCliDeployOpen(true)}
+                  onSelectManual={() => setManualDeployOpen(true)}
+                />
+              </>
             }
           >
             <Outlet />

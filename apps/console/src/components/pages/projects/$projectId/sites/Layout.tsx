@@ -1,9 +1,10 @@
-import { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   Outlet,
   useParams,
   useNavigate,
   useLocation,
+  useRouterState,
 } from '@tanstack/react-router'
 import {
   useQueryClient,
@@ -67,6 +68,10 @@ import {
   useSettingsRedeployPending,
 } from '@/lib/utils/settings-redeploy-alert'
 
+/** When provided, Deployments view renders this below the header (filter + create). */
+export const DeploymentsToolbarContext =
+  React.createContext<React.ReactNode>(null)
+
 export function Layout() {
   return (
     <RefreshProvider>
@@ -79,6 +84,9 @@ function SiteLayoutContent() {
   const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const location = useLocation()
+  const resolvedPathname = useRouterState({
+    select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
+  })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { triggerRefresh, hasRefreshHandler } = useRefresh()
@@ -89,7 +97,7 @@ function SiteLayoutContent() {
   const { data: site } = useProjectSite(projectId, siteId)
 
   const activeTab = useMemo(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean)
+    const pathParts = resolvedPathname.split('/').filter(Boolean)
     const sitesIndex = pathParts.findIndex((part) => part === 'sites')
 
     if (sitesIndex >= 0 && pathParts[sitesIndex + 2]) {
@@ -109,7 +117,7 @@ function SiteLayoutContent() {
     }
 
     return 'overview'
-  }, [location.pathname])
+  }, [resolvedPathname])
 
   const activeDeploymentId = getRedeploySourceDeploymentId(site)
   const isLogsTab = activeTab === 'logs'
@@ -463,15 +471,9 @@ function SiteLayoutContent() {
             fullWidthBorder
             fullWidth={activeTab === 'logs'}
             showToolbarBottomBorder={isLogsTabLayout}
-            showFilters={
-              activeTab === 'deployments' ||
-              activeTab === 'logs' ||
-              activeTab === 'domains'
-            }
+            showFilters={activeTab === 'logs' || activeTab === 'domains'}
             filterTrigger={
-              activeTab === 'deployments' ||
-              activeTab === 'logs' ||
-              activeTab === 'domains' ? (
+              activeTab === 'logs' || activeTab === 'domains' ? (
                 <FiltersPopover
                   open={filtersOpen}
                   onOpenChange={setFiltersOpen}
@@ -481,11 +483,7 @@ function SiteLayoutContent() {
                   onClearAll={clearAllSiteFilters}
                   onApplyFilter={applySiteFilter}
                   resourceLabel={
-                    activeTab === 'deployments'
-                      ? t('deployments')
-                      : activeTab === 'logs'
-                        ? t('logs')
-                        : t('domains')
+                    activeTab === 'logs' ? t('logs') : t('domains')
                   }
                   filterScope={`sites.${activeTab}`}
                   onApplyQuery={(queryParam) => {
@@ -521,15 +519,6 @@ function SiteLayoutContent() {
                     })
                 : undefined
             }
-            beforeCreateButtons={
-              activeTab === 'deployments' ? (
-                <CreateDeploymentDropdown
-                  onSelectGit={() => setGitDeployOpen(true)}
-                  onSelectCli={() => setCliDeployOpen(true)}
-                  onSelectManual={() => setManualDeployOpen(true)}
-                />
-              ) : undefined
-            }
             contentAfterBorder={
               buildingAlert || configAlert ? (
                 <div>
@@ -543,7 +532,44 @@ function SiteLayoutContent() {
         <div
           className={cn('flex-1 min-h-0', isLogsTabLayout && 'flex flex-col')}
         >
-          <Outlet />
+          <DeploymentsToolbarContext.Provider
+            value={
+              <>
+                <FiltersPopover
+                  open={filtersOpen}
+                  onOpenChange={setFiltersOpen}
+                  columns={deploymentsFilterColumns}
+                  filterMap={siteFilterMap}
+                  onRemoveFilter={removeSiteFilter}
+                  onClearAll={clearAllSiteFilters}
+                  onApplyFilter={applySiteFilter}
+                  resourceLabel={t('deployments')}
+                  filterScope="sites.deployments"
+                  onApplyQuery={(queryParam) => {
+                    navigate({
+                      to: location.pathname,
+                      search: (prev) => ({
+                        ...(typeof prev === 'object' && prev !== null
+                          ? prev
+                          : {}),
+                        query: queryParam ?? undefined,
+                        page: 1,
+                      }),
+                      replace: true,
+                    })
+                  }}
+                  teamId={project?.teamId}
+                />
+                <CreateDeploymentDropdown
+                  onSelectGit={() => setGitDeployOpen(true)}
+                  onSelectCli={() => setCliDeployOpen(true)}
+                  onSelectManual={() => setManualDeployOpen(true)}
+                />
+              </>
+            }
+          >
+            <Outlet />
+          </DeploymentsToolbarContext.Provider>
         </div>
         {site && siteId && projectId && (
           <>
