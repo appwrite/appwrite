@@ -530,13 +530,18 @@ class Create extends Action
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
 
+        // Same memberships privacy policy as reading the membership back
+        $showDetails = $isPrivilegedUser || $isAppUser || $invitee->getId() === $user->getId();
+        $showUserName = $showDetails || ($project->getAttribute('auths', [])['membershipsUserName'] ?? true);
+        $showUserEmail = $showDetails || ($project->getAttribute('auths', [])['membershipsUserEmail'] ?? true);
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(
                 $membership
                     ->setAttribute('teamName', $team->getAttribute('name'))
-                    ->setAttribute('userName', $invitee->getAttribute('name'))
-                    ->setAttribute('userEmail', $invitee->getAttribute('email')),
+                    ->setAttribute('userName', $showUserName ? $invitee->getAttribute('name') : '')
+                    ->setAttribute('userEmail', $showUserEmail ? $invitee->getAttribute('email') : ''),
                 Response::MODEL_MEMBERSHIP
             );
     }
