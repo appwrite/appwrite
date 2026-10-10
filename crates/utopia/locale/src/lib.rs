@@ -33,6 +33,11 @@ use indexmap::IndexMap;
 use php_std::json::{self, Flags};
 use php_std::zval::{Key, Zval};
 
+/// The getting started guide (`guide.md`), compiled and run with the doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../guide.md")]
+pub struct GettingStarted;
+
 /// `Locale::DEFAULT_DYNAMIC_KEY`: as a [`Missing::Text`], it means
 /// [`Missing::Key`].
 pub const DEFAULT_DYNAMIC_KEY: &str = "[[defaultDynamicKey]]";

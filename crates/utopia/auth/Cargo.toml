@@ -1,6 +1,6 @@
 [package]
 name = "utopia-auth"
-description = "Password hashes, proofs, session stores, JWT issuers and verifiers, OAuth2 server values and WebAuthn passkeys with utopia-php/auth semantics."
+description = "Password hashing, proofs, session stores, JWT issuers and verifiers, OAuth2 server values and WebAuthn passkeys."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -21,3 +21,6 @@ php-std.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
+
+[package.metadata.utopia]
+php-sync = "53360097f4bfe774d041ea1e3cd97c24802ae840"

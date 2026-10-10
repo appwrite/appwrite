@@ -1,6 +1,6 @@
 [package]
 name = "utopia-emails"
-description = "Email parsing, canonical forms per provider, free / disposable / corporate classification and validators (utopia-php/emails)."
+description = "Email address parsing, canonical forms per provider, free, disposable and corporate classification, and validators."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -13,3 +13,6 @@ serde_json.workspace = true
 thiserror.workspace = true
 utopia-domains.workspace = true
 utopia-validators.workspace = true
+
+[package.metadata.utopia]
+php-sync = "927f3f7331b5030c5188304291941dd8a861bd29"

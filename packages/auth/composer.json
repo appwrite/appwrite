@@ -41,5 +41,10 @@
     },
     "suggest": {
         "web-auth/webauthn-lib": "Required for passkeys (Utopia\\Auth\\Passkeys\\Ceremony)."
+    },
+    "extra": {
+        "utopia": {
+            "category": "security"
+        }
     }
 }

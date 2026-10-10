@@ -27,5 +27,10 @@
     },
     "suggest": {
         "ext-swoole": "Required for coroutine-based storage"
+    },
+    "extra": {
+        "utopia": {
+            "category": "observability"
+        }
     }
 }

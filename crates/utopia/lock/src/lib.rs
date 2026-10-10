@@ -28,6 +28,11 @@ pub use error::Error;
 pub use file::{File, Mode};
 pub use semaphore::{Mutex, Semaphore};
 
+/// The getting started guide (`guide.md`), compiled and run with the doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../guide.md")]
+pub struct GettingStarted;
+
 /// How long [`Lock::acquire`] waits for a lock someone else holds.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Wait {

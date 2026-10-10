@@ -36,7 +36,13 @@ bin/compat ci                    # run + fuzz every library; check the complete 
 bin/compat status --write        # regenerate STATUS.md
 bin/compat call <lib> <op> '<args json>' [--side php|rust]     # one call, both results
 bin/compat new <lib>             # scaffold tests/compat/<lib>
+bin/compat report [<lib>...] [--iterations <n>] [--out <dir>]   # data for apps/compat, the conversion report
+bin/compat crates [--out <dir>]  # data for apps/crates, the docs of every library
+bin/compat examples [<crate dir>...]  # run every doc example: Rust doctests and their PHP twins
+bin/compat sync <lib>... [--force]  # after `run <lib>` passes, record the PHP commit the crate matches
 ```
+
+`bin/compat report` runs every case and fuzz profile (200 inputs each by default) with both runtimes' results kept, compares every public PHP method's signature with its Rust counterpart's, maps each PHP symbol to the Rust items whose docs name it, and writes the JSON [`apps/compat`](../../apps/compat) renders. `bin/compat crates` writes the documentation of every Utopia library, converted or not, for [`apps/crates`](../../apps/crates), reading PHP signatures through the PHP driver. `bin/compat examples` runs every example in the crates' docs: the Rust doctests and the PHP twin written after each one (see [`apps/crates/README.md`](../../apps/crates/README.md#writing-examples)).
 
 `cargo test -p compat` replays every recorded expectation against Rust without PHP (cases needing Redis or a database only with `COMPAT_SERVICES=1`), so the workspace test run guards compatibility too.
 

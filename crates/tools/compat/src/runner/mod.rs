@@ -4,11 +4,17 @@ pub mod cases;
 pub mod compare;
 pub mod config;
 pub mod coverage;
+pub mod crates;
+pub mod docs;
 pub mod engine;
+pub mod examples;
 pub mod generate;
+pub mod interface;
 pub mod process;
+pub mod report;
 pub mod snapshot;
 pub mod spec;
+pub mod sync;
 
 use std::path::Path;
 

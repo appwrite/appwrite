@@ -49,6 +49,41 @@ pub struct Engine {
     run: String,
     counter: u64,
     pub verbose: bool,
+    trace: Option<Trace>,
+}
+
+/// What `compat report` keeps of a run: every step of every case with both
+/// runtimes' results, and every fuzz profile's outcome.
+#[derive(Default)]
+pub struct Trace {
+    pub cases: Vec<Value>,
+    pub fuzz: Vec<Value>,
+    steps: Vec<Value>,
+}
+
+/// Long strings and lists cut for a report: keys and tokens stay readable,
+/// megabytes of generated data do not travel to the page.
+pub fn clip(v: &Value) -> Value {
+    const TEXT: usize = 2000;
+    const ITEMS: usize = 200;
+    match v {
+        Value::String(s) if s.len() > TEXT => {
+            let mut end = TEXT;
+            while !s.is_char_boundary(end) {
+                end -= 1;
+            }
+            Value::String(format!("{}… ({} more bytes)", &s[..end], s.len() - end))
+        }
+        Value::Array(a) => {
+            let mut out: Vec<Value> = a.iter().take(ITEMS).map(clip).collect();
+            if a.len() > ITEMS {
+                out.push(Value::String(format!("… ({} more items)", a.len() - ITEMS)));
+            }
+            Value::Array(out)
+        }
+        Value::Object(o) => Value::Object(o.iter().map(|(k, v)| (k.clone(), clip(v))).collect()),
+        other => other.clone(),
+    }
 }
 
 /// The comparable JSON of one step's outcome.
@@ -82,7 +117,7 @@ impl Engine {
             run.push(char::from_digit((seed % 36) as u32, 36).unwrap_or('0'));
             seed /= 36;
         }
-        Self { cfg, php: None, rust: None, run, counter: 0, verbose: false }
+        Self { cfg, php: None, rust: None, run, counter: 0, verbose: false, trace: None }
     }
 
     fn ensure(&mut self, side: &'static str) -> Result<(), String> {
@@ -125,6 +160,22 @@ impl Engine {
         self.rust = None;
     }
 
+    /// Starts keeping a [`Trace`] of everything that runs.
+    pub fn start_trace(&mut self) {
+        self.trace = Some(Trace::default());
+    }
+
+    /// The trace kept since [`Engine::start_trace`], which stops.
+    pub fn take_trace(&mut self) -> Trace {
+        self.trace.take().unwrap_or_default()
+    }
+
+    fn trace_step(&mut self, step: impl FnOnce() -> Value) {
+        if let Some(t) = &mut self.trace {
+            t.steps.push(step());
+        }
+    }
+
     fn configure(&mut self, side: &'static str, ns: &str) -> Result<(), String> {
         let services = self.cfg.services_for(side);
         self.driver(side)?.configure(ns, &services)
@@ -162,6 +213,17 @@ impl Engine {
                 let r =
                     if case.interop { self.interop_case(lib, &spec, case)? } else { self.diff_case(lib, &spec, case)? };
                 let failed = !r.differences.is_empty() || !r.faults.is_empty();
+                if let Some(t) = &mut self.trace {
+                    t.cases.push(json!({
+                        "file": file.path.file_name().map(|f| f.to_string_lossy().into_owned()),
+                        "name": case.name,
+                        "interop": case.interop,
+                        "ok": !failed,
+                        "differences": r.differences,
+                        "faults": r.faults,
+                        "steps": std::mem::take(&mut t.steps),
+                    }));
+                }
                 if failed {
                     for d in &r.differences {
                         report.differences.push(format!("{name}: {d}"));
@@ -211,31 +273,56 @@ impl Engine {
             let (op, or) = match (rp, rr) {
                 (Ok(p), Ok(r)) => (p, r),
                 (p, r) => {
+                    let mut faults = Vec::new();
                     for (side, res) in [("php", &p), ("rust", &r)] {
                         if let Err(f) = res {
-                            report.faults.push(format!("{at}: {}", fault_text(side, f)));
+                            faults.push(format!("{at}: {}", fault_text(side, f)));
                         }
                     }
+                    self.trace_step(
+                        || json!({ "op": step.op, "args": clip(&step.args), "status": "fault", "faults": faults }),
+                    );
+                    report.faults.extend(faults);
                     break;
                 }
             };
             let masks = step_masks(spec, step);
             let (cp, cr) = (comparable(&op, &ns_p, &masks), comparable(&or, &ns_r, &masks));
-            if let Some(d) = diff(&cp, &cr) {
+            let differs = diff(&cp, &cr);
+            let off = step.expect.as_ref().and_then(|e| diff(e, &cp));
+            if let Some(d) = &differs {
                 report.differences.push(format!(
                     "{at}: php and rust differ at {d}\n      php:  {}\n      rust: {}",
                     short(&cp),
                     short(&cr)
                 ));
-            } else if let Some(expect) = &step.expect
-                && let Some(d) = diff(expect, &cp)
-            {
+            } else if let (Some(expect), Some(d)) = (&step.expect, &off) {
                 report.differences.push(format!(
                     "{at}: both runtimes differ from the recorded expectation at {d}\n      expect: {}\n      got:    {}\n      (re-record with `bin/compat record {lib}` if PHP changed on purpose)",
                     short(expect),
                     short(&cp)
                 ));
             }
+            self.trace_step(|| {
+                let status = if differs.is_some() {
+                    "differ"
+                } else if off.is_some() {
+                    "expect"
+                } else {
+                    "match"
+                };
+                json!({
+                    "op": step.op,
+                    "args": clip(&step.args),
+                    "bind": step.bind,
+                    "masks": masks.iter().map(|m| json!({ "paths": m.paths, "reason": m.reason })).collect::<Vec<_>>(),
+                    "php": clip(&cp),
+                    "rust": clip(&cr),
+                    "expect": step.expect.as_ref().map(clip),
+                    "status": status,
+                    "at": differs.or(off),
+                })
+            });
             if let Some(name) = &step.bind {
                 bp.insert(name.clone(), op.to_json());
                 br.insert(name.clone(), or.to_json());
@@ -321,6 +408,29 @@ impl Engine {
                 if let Some(d) = diff(x, y) {
                     report.differences.push(format!("`{kind}` state disagrees between directions at {d}"));
                 }
+            }
+            // Side a is PHP in the first run and Rust in the second: each
+            // step's PHP and Rust results, fed by the other runtime's writes.
+            for (i, step) in case.steps.iter().enumerate() {
+                let (Some(x), Some(y)) = (r1.get(i), r2.get(i)) else {
+                    break;
+                };
+                let (php, rust) = if step.side.as_deref() == Some("a") { (x, y) } else { (y, x) };
+                let differs = diff(php, rust);
+                let off = step.expect.as_ref().and_then(|e| diff(e, php));
+                self.trace_step(|| {
+                    json!({
+                        "op": step.op,
+                        "side": step.side,
+                        "args": clip(&step.args),
+                        "bind": step.bind,
+                        "php": clip(php),
+                        "rust": clip(rust),
+                        "expect": step.expect.as_ref().map(clip),
+                        "status": if differs.is_some() { "differ" } else if off.is_some() { "expect" } else { "match" },
+                        "at": differs.or(off),
+                    })
+                });
             }
         }
         Ok(report)
@@ -452,6 +562,18 @@ impl Engine {
                     }
                     done += n;
                 }
+                if let Some(t) = &mut self.trace {
+                    let problem = if stop { report.differences.last().or(report.faults.last()).cloned() } else { None };
+                    t.fuzz.push(json!({
+                        "op": op_name,
+                        "profile": if profile.name.is_empty() { pi.to_string() } else { profile.name.clone() },
+                        "inputs": done,
+                        "iterations": profile.iterations,
+                        "isolate": profile.isolate,
+                        "ok": !stop,
+                        "problem": problem,
+                    }));
+                }
                 if self.verbose || !stop {
                     eprintln!(
                         "  {lib} fuzz {title}: {done} inputs{}",
@@ -521,8 +643,22 @@ impl Engine {
     }
 
     /// The PHP library's public API, by reflection.
+    /// Each PHP symbol's signature, docblock and location (the PHP driver's
+    /// `$docs`), for `compat report`.
+    pub fn php_docs(&mut self, symbols: &[String]) -> Result<Value, String> {
+        match self.driver("php")?.call("", "$docs", &json!({ "symbols": symbols }))? {
+            Ok(Outcome::Ok(docs)) => Ok(docs),
+            other => Err(format!("php $docs failed: {other:?}")),
+        }
+    }
+
     pub fn inventory(&mut self, spec: &Spec) -> Result<Vec<String>, String> {
-        match self.driver("php")?.call("", "$inventory", &json!({ "src": spec.php.src }))? {
+        self.inventory_of(&spec.php.src)
+    }
+
+    /// The public PHP API declared under `src` (directories from the repository root).
+    pub fn inventory_of(&mut self, src: &[String]) -> Result<Vec<String>, String> {
+        match self.driver("php")?.call("", "$inventory", &json!({ "src": src }))? {
             Ok(Outcome::Ok(Value::Array(items))) => {
                 Ok(items.into_iter().filter_map(|v| v.as_str().map(str::to_owned)).collect())
             }

@@ -1,6 +1,6 @@
 [package]
 name = "utopia-locale"
-description = "Translations with utopia-php/locale semantics: languages, default and fallback locales, placeholders."
+description = "Translations: languages, default and fallback locales, and placeholders."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -15,3 +15,6 @@ tokio = { workspace = true, features = ["fs"] }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["fs", "rt", "macros"] }
+
+[package.metadata.utopia]
+php-sync = "81b7c2fea5755cd9dd7f465dd2721aaaa773d59e"

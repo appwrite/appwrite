@@ -1,6 +1,6 @@
 [package]
 name = "utopia-database"
-description = "Document database layer that shares storage with utopia-php/database (PostgreSQL)."
+description = "A document database layer on PostgreSQL."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -20,3 +20,6 @@ tokio-postgres.workspace = true
 tracing.workspace = true
 utopia-cache.workspace = true
 utopia-validators.workspace = true
+
+[package.metadata.utopia]
+category = "data"

@@ -1,6 +1,6 @@
 [package]
 name = "utopia-domains"
-description = "Domain names against the Public Suffix List (utopia-php/domains: Domain)."
+description = "Domain names, checked against the Public Suffix List."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

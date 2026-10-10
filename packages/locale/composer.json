@@ -26,5 +26,10 @@
     },
     "scripts": {
         "test": "phpunit"
+    },
+    "extra": {
+        "utopia": {
+            "category": "input"
+        }
     }
 }

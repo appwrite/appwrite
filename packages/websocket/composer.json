@@ -36,5 +36,10 @@
         "ext-pcntl": "Required to run the Workerman server adapter.",
         "ext-swoole": "Required to use the Swoole client and server adapter.",
         "workerman/workerman": "Required to use the Workerman server adapter."
+    },
+    "extra": {
+        "utopia": {
+            "category": "web"
+        }
     }
 }

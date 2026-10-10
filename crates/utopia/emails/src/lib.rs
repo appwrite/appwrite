@@ -46,3 +46,8 @@ pub use email::{DOMAIN_MAX_LENGTH, Email, Format, LOCAL_MAX_LENGTH};
 pub use error::Error;
 pub use lists::{DomainList, Lists};
 pub use validator::{EmailCorporate, EmailDomain, EmailLocal, EmailNotDisposable, EmailValidator};
+
+/// The getting started guide (`guide.md`), compiled and run with the doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../guide.md")]
+pub struct GettingStarted;

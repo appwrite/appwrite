@@ -66,6 +66,11 @@ From the migration brief. These are review criteria, not suggestions.
 6. **Converge.** Run `bin/compat run <lib>`, `bin/compat fuzz <lib>` and `bin/compat coverage <lib>` until they are clean. Every difference is a Rust bug, a PHP quirk to record, or a missing case: never a reason to loosen a comparison.
 7. **Record.** `bin/compat record <lib>` stores PHP's results as `expect` in the case files, so `cargo test -p compat` replays them without PHP.
 8. **Integrate.** Update consumers in `crates/appwrite/*`, run the workspace checks and the E2E suites of migrated services, add benchmarks, and regenerate `tests/compat/STATUS.md`.
+9. **Sync.** `bin/compat sync <lib>` records the PHP commit the crate now matches (`php-sync` in its `Cargo.toml`). It refuses unless the library's cases all match.
+
+### Keeping up with PHP
+
+The team keeps changing the PHP libraries while they are ported. `apps/crates` shows, for every crate, the PHP commits to `packages/<lib>/src` since its `php-sync` point, and what is on `origin/main` but not merged yet. A crate with commits to catch up on is not complete until they are ported: port each change (with its cases, which `bin/compat record` refreshes), then run `bin/compat sync <lib>` again. `bin/compat ci` catches behaviour PHP changed under an existing case; the sync view catches new behaviour no case covers yet.
 
 ## 6. Waivers
 

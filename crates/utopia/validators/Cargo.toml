@@ -1,6 +1,6 @@
 [package]
 name = "utopia-validators"
-description = "Request parameter validators with Utopia semantics and messages."
+description = "Request parameter validators with their user-facing messages."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,3 +11,6 @@ publish.workspace = true
 php-std.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+
+[package.metadata.utopia]
+php-sync = "b2bc2695ae2b5e641ba45383e04811d4a1c51917"

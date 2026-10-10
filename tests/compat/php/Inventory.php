@@ -45,6 +45,112 @@ final class Inventory
     }
 
     /**
+     * Signature, docblock and location of each symbol (`Class::method` or
+     * `function()`), for `bin/compat report`. Symbols that do not resolve
+     * are left out.
+     *
+     * @param list<string> $symbols
+     * @return array<string, array{signature: string, static: bool, params: list<array<string, mixed>>, returns: string, doc: string, classDoc: string, file: string, line: int}>
+     */
+    public static function docs(array $symbols): array
+    {
+        $out = [];
+        foreach ($symbols as $symbol) {
+            try {
+                if (\str_ends_with($symbol, '()')) {
+                    $function = new \ReflectionFunction(\substr($symbol, 0, -2));
+                    $classDoc = '';
+                } else {
+                    [$class, $method] = \explode('::', $symbol, 2) + [1 => ''];
+                    $function = new \ReflectionMethod($class, $method);
+                    $classDoc = (string) $function->getDeclaringClass()->getDocComment();
+                }
+            } catch (\Throwable) {
+                continue;
+            }
+            $file = (string) $function->getFileName();
+            $out[$symbol] = [
+                'signature' => self::signature($function),
+                'static' => $function instanceof \ReflectionMethod && $function->isStatic(),
+                'params' => self::parameters($function),
+                'returns' => $function->hasReturnType() ? (string) $function->getReturnType() : '',
+                'doc' => (string) $function->getDocComment(),
+                'classDoc' => $classDoc,
+                'file' => \str_starts_with($file, '/usr/src/code/') ? \substr($file, \strlen('/usr/src/code/')) : $file,
+                'line' => (int) $function->getStartLine(),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Each parameter: name, declared type, default (as written) and flags.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private static function parameters(\ReflectionFunctionAbstract $function): array
+    {
+        $out = [];
+        foreach ($function->getParameters() as $parameter) {
+            $default = null;
+            try {
+                if ($parameter->isDefaultValueAvailable()) {
+                    $default = $parameter->isDefaultValueConstant()
+                        ? (string) $parameter->getDefaultValueConstantName()
+                        : self::literal($parameter->getDefaultValue());
+                }
+            } catch (\Throwable) {
+            }
+            $out[] = [
+                'name' => $parameter->getName(),
+                'type' => $parameter->hasType() ? (string) $parameter->getType() : '',
+                'default' => $default,
+                'optional' => $parameter->isOptional(),
+                'variadic' => $parameter->isVariadic(),
+                'reference' => $parameter->isPassedByReference(),
+            ];
+        }
+
+        return $out;
+    }
+
+    private static function signature(\ReflectionFunctionAbstract $function): string
+    {
+        $parameters = [];
+        foreach ($function->getParameters() as $parameter) {
+            $text = $parameter->hasType() ? $parameter->getType() . ' ' : '';
+            $text .= ($parameter->isPassedByReference() ? '&' : '') . ($parameter->isVariadic() ? '...' : '') . '$' . $parameter->getName();
+            try {
+                if ($parameter->isDefaultValueAvailable()) {
+                    $default = $parameter->isDefaultValueConstant()
+                        ? (string) $parameter->getDefaultValueConstantName()
+                        : $parameter->getDefaultValue();
+                    $text .= ' = ' . (\is_string($default) && $parameter->isDefaultValueConstant() ? $default : self::literal($default));
+                }
+            } catch (\Throwable) {
+            }
+            $parameters[] = $text;
+        }
+        $modifiers = $function instanceof \ReflectionMethod
+            ? \implode(' ', \Reflection::getModifierNames($function->getModifiers())) . ' '
+            : '';
+        $return = $function->hasReturnType() ? ': ' . $function->getReturnType() : '';
+
+        return $modifiers . 'function ' . $function->getName() . '(' . \implode(', ', $parameters) . ')' . $return;
+    }
+
+    private static function literal(mixed $value): string
+    {
+        return match (true) {
+            $value === [] => '[]',
+            \is_array($value) => '[…]',
+            \is_object($value) => 'new ' . $value::class . '(…)',
+            default => \var_export($value, true),
+        };
+    }
+
+    /**
      * @return list<string>
      */
     private static function methods(string $class): array

@@ -34,5 +34,10 @@
     "require": {
         "php": ">=8.0",
         "utopia-php/console": "0.2.*"
+    },
+    "extra": {
+        "utopia": {
+            "category": "runtime"
+        }
     }
 }

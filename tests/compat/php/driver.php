@@ -64,6 +64,7 @@ while (($line = fgets(STDIN)) !== false) {
                 return true;
             })(),
             '$inventory' => Inventory::take(array_values((array) ($args['src'] ?? []))),
+            '$docs' => Inventory::docs(array_values(array_map(strval(...), (array) ($args['symbols'] ?? [])))),
             '$equal' => ($args['a'] ?? null) === ($args['b'] ?? null),
             default => ($operations[$lib][$op] ?? throw new Fault("{$lib}: unknown operation `{$op}`"))($args, $session),
         };

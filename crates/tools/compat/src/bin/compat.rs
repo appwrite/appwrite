@@ -8,7 +8,7 @@ use compat::libs::LIBS;
 use compat::runner::config::Config;
 use compat::runner::coverage::coverage;
 use compat::runner::engine::{Engine, FuzzOptions, Report};
-use compat::runner::{render_status, scaffold, spec};
+use compat::runner::{crates, render_status, report, scaffold, spec};
 use serde_json::Value;
 
 const USAGE: &str = "usage: compat <command> [args]
@@ -21,6 +21,18 @@ const USAGE: &str = "usage: compat <command> [args]
   check <lib>...                                 coverage + run + fuzz: the conversion gate
   ci                                             run + fuzz every library; check the complete ones
   status [--write]                               table of every library (tests/compat/STATUS.md)
+  report [<lib>...] [--out <dir>] [--iterations <n>] [--seed <n>]
+                                                 run, fuzz (200 inputs a profile by default) and
+                                                 document every library as JSON for apps/compat
+                                                 (default apps/compat/data)
+  examples [<crate dir>...]                      run every example in the crates' docs: Rust doctests
+                                                 and their PHP twins (default: every crate)
+  sync <lib>... [--force]                        record that each crate matches its PHP library as the
+                                                 checkout has it (after `run <lib>` passes; --force
+                                                 for a crate without compat cases)
+  crates [--out <dir>]                           every Utopia library's docs (Rust API, PHP API by
+                                                 reflection, examples, status) as JSON for apps/crates
+                                                 (default apps/crates/data)
   call <lib> <op> [<args json>] [--side php|rust]  run one operation and print both results
   new <lib>                                      scaffold tests/compat/<lib>
 
@@ -34,6 +46,8 @@ struct Cli {
     iterations: Option<u64>,
     seed: Option<u64>,
     side: Option<String>,
+    out: Option<String>,
+    force: bool,
     fail_fast: bool,
     save: bool,
     write: bool,
@@ -48,6 +62,8 @@ fn parse(args: &[String]) -> Result<Cli, String> {
         iterations: None,
         seed: None,
         side: None,
+        out: None,
+        force: false,
         fail_fast: false,
         save: false,
         write: false,
@@ -62,7 +78,9 @@ fn parse(args: &[String]) -> Result<Cli, String> {
             "--iterations" => cli.iterations = Some(value("--iterations")?.parse().map_err(|_| "bad --iterations")?),
             "--seed" => cli.seed = Some(value("--seed")?.parse().map_err(|_| "bad --seed")?),
             "--side" => cli.side = Some(value("--side")?),
+            "--out" => cli.out = Some(value("--out")?),
             "--fail-fast" => cli.fail_fast = true,
+            "--force" => cli.force = true,
             "--save" => cli.save = true,
             "--write" => cli.write = true,
             "-v" | "--verbose" => cli.verbose = true,
@@ -219,6 +237,69 @@ fn real_main(args: &[String]) -> Result<bool, String> {
                 ok &= run.ok() && fuzz.ok();
             }
             Ok(ok)
+        }
+        "report" => {
+            let out = cli.out.as_deref().map(PathBuf::from).unwrap_or_else(|| root.join("apps/compat/data"));
+            let opts = report::Options { iterations: cli.iterations.unwrap_or(200), seed: seed(&cli) };
+            let ok = report::write(&mut engine, &libs_or_all(&cli, &root), &opts, &out)?;
+            eprintln!("wrote {}", out.display());
+            Ok(ok)
+        }
+        "examples" => {
+            let crates: Vec<String> = if cli.positional.len() > 1 {
+                cli.positional[1..].to_vec()
+            } else {
+                ["crates/utopia", "crates/support"]
+                    .iter()
+                    .flat_map(|g| {
+                        std::fs::read_dir(root.join(g))
+                            .into_iter()
+                            .flatten()
+                            .flatten()
+                            .map(move |e| format!("{g}/{}", e.file_name().to_string_lossy()))
+                    })
+                    .filter(|d| root.join(d).join("Cargo.toml").is_file())
+                    .collect()
+            };
+            compat::runner::examples::verify(&root, &crates, &engine.cfg.php)
+        }
+        "sync" => {
+            let mut ok = true;
+            for lib in need_lib(&cli)? {
+                let crate_dir = ["crates/utopia", "crates/support"]
+                    .iter()
+                    .map(|g| format!("{g}/{lib}"))
+                    .find(|d| root.join(d).join("Cargo.toml").is_file())
+                    .ok_or_else(|| format!("{lib}: no Rust crate"))?;
+                // The marker claims the crate matches PHP; only a clean run proves it.
+                if root.join("tests/compat").join(&lib).join("spec.json").is_file() {
+                    let r = engine.run_lib(&lib, None, false)?;
+                    print_report(&format!("{lib} run"), &r);
+                    if !r.ok() {
+                        eprintln!("{lib}: not synced, the crate does not match PHP yet");
+                        ok = false;
+                        continue;
+                    }
+                } else if !cli.force {
+                    return Err(format!(
+                        "{lib} has no compat cases to prove it matches PHP; pass --force to record it anyway"
+                    ));
+                }
+                let commit = compat::runner::sync::latest(&root, &lib)
+                    .ok_or_else(|| format!("{lib}: no PHP history in packages/{lib}"))?;
+                let path = root.join(&crate_dir).join("Cargo.toml");
+                let manifest = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+                std::fs::write(&path, compat::runner::sync::with_marker(&manifest, &commit))
+                    .map_err(|e| e.to_string())?;
+                eprintln!("{lib}: synced with PHP at {}", &commit[..10.min(commit.len())]);
+            }
+            Ok(ok)
+        }
+        "crates" => {
+            let out = cli.out.as_deref().map(PathBuf::from).unwrap_or_else(|| root.join("apps/crates/data"));
+            let n = crates::write(Some(&mut engine), &root, &out)?;
+            eprintln!("wrote {n} crates to {}", out.display());
+            Ok(true)
         }
         "status" => {
             let have = spec::libs(&root);

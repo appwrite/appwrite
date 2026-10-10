@@ -1,6 +1,6 @@
 [package]
 name = "utopia-cache"
-description = "Redis hash cache compatible with utopia-php/cache leases and purges."
+description = "A Redis-backed cache with leases and purges."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

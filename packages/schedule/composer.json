@@ -43,5 +43,10 @@
         "bench": "php tests/bench/run.php",
         "test:e2e": "phpunit --testsuite e2e"
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "extra": {
+        "utopia": {
+            "category": "messaging"
+        }
+    }
 }

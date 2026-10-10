@@ -1,0 +1,7 @@
+node_modules
+dist
+.tanstack
+.output
+.nitro
+# Written by `bin/compat crates`
+data

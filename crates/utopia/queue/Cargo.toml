@@ -1,6 +1,6 @@
 [package]
 name = "utopia-queue"
-description = "Redis queue publisher compatible with utopia-php/queue workers."
+description = "A Redis queue publisher for Utopia workers."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

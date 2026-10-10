@@ -18,6 +18,11 @@
 //! arrays, except empty objects, which stay `stdClass`; [`Value::from_json`]
 //! is the same mapping).
 
+/// The getting started guide (`guide.md`), compiled and run with the doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../guide.md")]
+pub struct GettingStarted;
+
 pub mod datetime;
 pub mod encoding;
 pub mod filter;

@@ -80,6 +80,11 @@ pub use view::{FILTER_ESCAPE, FILTER_NL2P, Filter, Template, View, minify_html};
 pub use ::http::{HeaderMap, HeaderName, HeaderValue, Method, StatusCode, header};
 pub use bytes::Bytes;
 
+/// The getting started guide (`guide.md`), compiled and run with the doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../guide.md")]
+pub struct GettingStarted;
+
 /// `Http::COMPRESSION_MIN_SIZE_DEFAULT`.
 pub const COMPRESSION_MIN_SIZE_DEFAULT: usize = 1024;
 /// `Http::COMPRESSION_BROTLI_LEVEL_DEFAULT`.

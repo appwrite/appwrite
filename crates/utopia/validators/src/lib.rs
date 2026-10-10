@@ -50,6 +50,11 @@
 /// PHP value semantics, re-exported from `php-std` for existing callers.
 pub use php_std::value as php;
 
+/// The getting started guide (`guide.md`), compiled and run with the doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../guide.md")]
+pub struct GettingStarted;
+
 mod compose;
 mod error;
 mod hostname;

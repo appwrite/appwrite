@@ -44,3 +44,8 @@ mod version;
 
 pub use agent::UserAgent;
 pub use values::{Bot, Client, Device, OperatingSystem, Text};
+
+/// The getting started guide (`guide.md`), compiled and run with the doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../guide.md")]
+pub struct GettingStarted;

@@ -1106,6 +1106,11 @@ jobs:
           COMPAT_SERVICES: '1'
         run: cargo test -p compat --test replay --locked
 
+      - name: Run documentation examples
+        env:
+          COMPAT_IMAGE: ${{ env.IMAGE }}
+        run: bin/compat examples
+
   benchmark:
     name: Benchmark
     if: github.event_name == 'pull_request' || github.event_name == 'push'

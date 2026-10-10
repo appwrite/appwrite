@@ -87,6 +87,10 @@ openssl = "0.10"
 # NIST P-256 ECDSA (ES256 passkeys, utopia-auth); RustCrypto, pure Rust.
 p256 = { version = "0.13", default-features = false, features = ["ecdsa", "pkcs8", "std"] }
 mimalloc = { version = "0.1", default-features = false }
+# Rust source parsing for `compat report` (crates/tools/compat): doc comments
+# and line numbers of each crate's public items.
+proc-macro2 = { version = "1", default-features = false, features = ["span-locations"] }
+quote = { version = "1", default-features = false }
 redis = { version = "0.32", default-features = false, features = ["tokio-comp", "aio", "connection-manager", "script"] }
 regex = "1"
 ripemd = "0.1"
@@ -98,6 +102,7 @@ serde_json = { version = "1", features = ["raw_value", "preserve_order", "float_
 sha1 = "0.10"
 sha2 = "0.10"
 sha3 = "0.10"
+syn = { version = "2", default-features = false, features = ["full", "parsing", "printing"] }
 thiserror = "2"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "sync", "signal"] }
 tokio-postgres = { version = "0.7.12", features = ["with-chrono-0_4", "with-serde_json-1"] }

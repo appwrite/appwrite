@@ -35,5 +35,10 @@
             "php-http/discovery": false,
             "tbachert/spi": false
         }
+    },
+    "extra": {
+        "utopia": {
+            "category": "networking"
+        }
     }
 }

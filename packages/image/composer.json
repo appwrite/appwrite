@@ -31,5 +31,10 @@
     "suggest": {
         "ext-imagick": "Imagick extension is required for Imagick adapter"
     },
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "extra": {
+        "utopia": {
+            "category": "data"
+        }
+    }
 }

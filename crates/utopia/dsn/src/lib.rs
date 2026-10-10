@@ -16,8 +16,38 @@
 //! messages never quote the DSN, and [`Dsn`]'s `Debug` hides the password:
 //! credentials do not leak into logs (PHP marks the argument
 //! `#[\SensitiveParameter]`).
+//!
+//! Read a database connection string:
+//!
+//! ```
+//! use utopia_dsn::Dsn;
+//!
+//! let dsn = Dsn::parse("mariadb://user:secret@localhost:3306/appwrite?charset=utf8mb4")?;
+//! assert_eq!(dsn.scheme(), "mariadb");
+//! assert_eq!(dsn.host(), "localhost");
+//! assert_eq!(dsn.port(), Some(3306));
+//! assert_eq!(dsn.path(), "appwrite");
+//! assert_eq!(dsn.param("charset")?, Some(&b"utf8mb4"[..]));
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
+//!
+//! ```php
+//! use Utopia\DSN\DSN;
+//!
+//! $dsn = new DSN('mariadb://user:secret@localhost:3306/appwrite?charset=utf8mb4');
+//! echo $dsn->getScheme(), "\n";          // mariadb
+//! echo $dsn->getHost(), "\n";            // localhost
+//! echo $dsn->getPort(), "\n";            // 3306
+//! echo $dsn->getPath(), "\n";            // appwrite
+//! echo $dsn->getParam('charset'), "\n";  // utf8mb4
+//! ```
 
 use std::fmt;
+
+/// The getting started guide (`guide.md`), compiled and run with the doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../guide.md")]
+pub struct GettingStarted;
 use std::sync::OnceLock;
 
 use php_std::encoding::{parse_str, urldecode};
@@ -28,6 +58,24 @@ use php_std::zval::{Array, Key, Zval};
 pub enum Error {
     /// `\InvalidArgumentException`: the DSN is malformed or lacks a scheme
     /// or host.
+    ///
+    /// ```
+    /// use utopia_dsn::{Dsn, Error};
+    ///
+    /// let error = Dsn::parse("localhost:3306").unwrap_err();
+    /// assert!(matches!(error, Error::InvalidArgument(_)));
+    /// assert_eq!(error.to_string(), "Unable to parse DSN: scheme is required");
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\DSN\DSN;
+    ///
+    /// try {
+    ///     new DSN('localhost:3306');
+    /// } catch (\InvalidArgumentException $e) {
+    ///     echo $e->getMessage(), "\n"; // Unable to parse DSN: scheme is required
+    /// }
+    /// ```
     #[error("{0}")]
     InvalidArgument(&'static str),
     /// `\TypeError`: [`Dsn::param`] on a key the query holds as an array
@@ -38,6 +86,23 @@ pub enum Error {
 
 impl Error {
     /// The PHP exception class this error corresponds to.
+    ///
+    /// ```
+    /// use utopia_dsn::Dsn;
+    ///
+    /// let error = Dsn::parse("redis://").unwrap_err();
+    /// assert_eq!(error.php_class(), "InvalidArgumentException");
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\DSN\DSN;
+    ///
+    /// try {
+    ///     new DSN('redis://');
+    /// } catch (\Throwable $e) {
+    ///     echo get_class($e), "\n"; // InvalidArgumentException
+    /// }
+    /// ```
     pub fn php_class(&self) -> &'static str {
         match self {
             Error::InvalidArgument(_) => "InvalidArgumentException",
@@ -47,6 +112,25 @@ impl Error {
 }
 
 /// A parsed DSN.
+///
+/// Its `Debug` output hides the password:
+///
+/// ```
+/// use utopia_dsn::Dsn;
+///
+/// let dsn = Dsn::parse("redis://default:secret@cache:6379")?;
+/// let printed = format!("{dsn:?}");
+/// assert!(printed.contains("cache"));
+/// assert!(!printed.contains("secret"));
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// ```php
+/// use Utopia\DSN\DSN;
+///
+/// $dsn = new DSN('redis://default:secret@cache:6379');
+/// echo $dsn->getHost(), "\n"; // cache
+/// ```
 #[derive(Clone)]
 pub struct Dsn {
     scheme: String,
@@ -66,6 +150,22 @@ impl Dsn {
     /// Fails like PHP: [`Error::InvalidArgument`] when `parse_url` rejects
     /// the input, or the scheme or host is missing or empty (or `"0"`, which
     /// PHP's `empty()` also treats as missing).
+    ///
+    /// ```
+    /// use utopia_dsn::Dsn;
+    ///
+    /// let dsn = Dsn::parse("redis://cache:6379")?;
+    /// assert_eq!(dsn.host(), "cache");
+    /// assert!(Dsn::parse("redis://").is_err());
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\DSN\DSN;
+    ///
+    /// $dsn = new DSN('redis://cache:6379');
+    /// echo $dsn->getHost(), "\n"; // cache
+    /// ```
     pub fn parse(dsn: &str) -> Result<Self, Error> {
         let url =
             php_std::url::parse_url(dsn.as_bytes()).ok_or(Error::InvalidArgument("Unable to parse DSN: malformed"))?;
@@ -92,34 +192,140 @@ impl Dsn {
         })
     }
 
+    /// `getScheme()`: the part before `://`.
+    ///
+    /// ```
+    /// use utopia_dsn::Dsn;
+    ///
+    /// let dsn = Dsn::parse("postgresql://db:5432/appwrite")?;
+    /// assert_eq!(dsn.scheme(), "postgresql");
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\DSN\DSN;
+    ///
+    /// $dsn = new DSN('postgresql://db:5432/appwrite');
+    /// echo $dsn->getScheme(), "\n"; // postgresql
+    /// ```
     pub fn scheme(&self) -> &str {
         &self.scheme
     }
 
-    /// The URL-decoded user, which can be any bytes (`%FF`).
+    /// `getUser()`: the URL-decoded user, which can be any bytes (`%FF`).
+    ///
+    /// ```
+    /// use utopia_dsn::Dsn;
+    ///
+    /// let dsn = Dsn::parse("smtp://mail%40example.com:secret@smtp.example.com:587")?;
+    /// assert_eq!(dsn.user(), Some(&b"mail@example.com"[..]));
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\DSN\DSN;
+    ///
+    /// $dsn = new DSN('smtp://mail%40example.com:secret@smtp.example.com:587');
+    /// echo $dsn->getUser(), "\n"; // mail@example.com
+    /// ```
     pub fn user(&self) -> Option<&[u8]> {
         self.user.as_deref()
     }
 
-    /// The URL-decoded password, which can be any bytes (`%FF`).
+    /// `getPassword()`: the URL-decoded password, which can be any bytes (`%FF`).
+    ///
+    /// ```
+    /// use utopia_dsn::Dsn;
+    ///
+    /// let dsn = Dsn::parse("redis://default:p%40ss%2Fword@cache")?;
+    /// assert_eq!(dsn.password(), Some(&b"p@ss/word"[..]));
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\DSN\DSN;
+    ///
+    /// $dsn = new DSN('redis://default:p%40ss%2Fword@cache');
+    /// echo $dsn->getPassword(), "\n"; // p@ss/word
+    /// ```
     pub fn password(&self) -> Option<&[u8]> {
         self.password.as_deref()
     }
 
+    /// `getHost()`.
+    ///
+    /// ```
+    /// use utopia_dsn::Dsn;
+    ///
+    /// let dsn = Dsn::parse("mongodb://user:secret@mongo.internal:27017/appwrite")?;
+    /// assert_eq!(dsn.host(), "mongo.internal");
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\DSN\DSN;
+    ///
+    /// $dsn = new DSN('mongodb://user:secret@mongo.internal:27017/appwrite');
+    /// echo $dsn->getHost(), "\n"; // mongo.internal
+    /// ```
     pub fn host(&self) -> &str {
         &self.host
     }
 
+    /// `getPort()`: PHP returns the port as a string (or `null`); Rust as a number.
+    ///
+    /// ```
+    /// use utopia_dsn::Dsn;
+    ///
+    /// assert_eq!(Dsn::parse("redis://cache:6379")?.port(), Some(6379));
+    /// assert_eq!(Dsn::parse("redis://cache")?.port(), None);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\DSN\DSN;
+    ///
+    /// var_dump((new DSN('redis://cache:6379'))->getPort()); // string(4) "6379"
+    /// var_dump((new DSN('redis://cache'))->getPort());      // NULL
+    /// ```
     pub fn port(&self) -> Option<u16> {
         self.port
     }
 
-    /// The path without its leading slashes; empty when there is none.
+    /// `getPath()`: the path without its leading slashes; empty when there is none.
+    ///
+    /// ```
+    /// use utopia_dsn::Dsn;
+    ///
+    /// assert_eq!(Dsn::parse("s3://key:secret@s3.amazonaws.com/backups/daily")?.path(), "backups/daily");
+    /// assert_eq!(Dsn::parse("redis://cache")?.path(), "");
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\DSN\DSN;
+    ///
+    /// echo (new DSN('s3://key:secret@s3.amazonaws.com/backups/daily'))->getPath(), "\n"; // backups/daily
+    /// ```
     pub fn path(&self) -> &str {
         &self.path
     }
 
-    /// The raw query string.
+    /// `getQuery()`: the raw query string.
+    ///
+    /// ```
+    /// use utopia_dsn::Dsn;
+    ///
+    /// let dsn = Dsn::parse("mariadb://db/appwrite?charset=utf8mb4&timeout=5")?;
+    /// assert_eq!(dsn.query(), Some("charset=utf8mb4&timeout=5"));
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\DSN\DSN;
+    ///
+    /// echo (new DSN('mariadb://db/appwrite?charset=utf8mb4&timeout=5'))->getQuery(), "\n"; // charset=utf8mb4&timeout=5
+    /// ```
     pub fn query(&self) -> Option<&str> {
         self.query.as_deref()
     }
@@ -128,6 +334,23 @@ impl Dsn {
     /// where PHP returns the default (no such key, or a query that is empty
     /// or `"0"`). Keys follow `parse_str`: `a.b` is read as `a_b`, `a[b]=c`
     /// makes `a` an array, which fails with [`Error::Type`] as in PHP.
+    ///
+    /// ```
+    /// use utopia_dsn::Dsn;
+    ///
+    /// let dsn = Dsn::parse("sms://key:secret@api.twilio.com?from=%2B15550100")?;
+    /// assert_eq!(dsn.param("from")?, Some(&b"+15550100"[..]));
+    /// assert_eq!(dsn.param("region")?, None);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\DSN\DSN;
+    ///
+    /// $dsn = new DSN('sms://key:secret@api.twilio.com?from=%2B15550100');
+    /// echo $dsn->getParam('from'), "\n";          // +15550100
+    /// var_dump($dsn->getParam('region'));         // string(0) ""
+    /// ```
     pub fn param(&self, key: &str) -> Result<Option<&[u8]>, Error> {
         let query = match self.query.as_deref() {
             None | Some("" | "0") => return Ok(None),
@@ -143,7 +366,22 @@ impl Dsn {
         }
     }
 
-    /// `getParam($key, $default)`.
+    /// `getParam($key, $default)`: the parameter, or `default` when it is absent.
+    ///
+    /// ```
+    /// use utopia_dsn::Dsn;
+    ///
+    /// let dsn = Dsn::parse("s3://key:secret@s3.amazonaws.com/backups")?;
+    /// assert_eq!(dsn.param_or("region", b"us-east-1")?, b"us-east-1");
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\DSN\DSN;
+    ///
+    /// $dsn = new DSN('s3://key:secret@s3.amazonaws.com/backups');
+    /// echo $dsn->getParam('region', 'us-east-1'), "\n"; // us-east-1
+    /// ```
     pub fn param_or<'a>(&'a self, key: &str, default: &'a [u8]) -> Result<&'a [u8], Error> {
         Ok(self.param(key)?.unwrap_or(default))
     }
