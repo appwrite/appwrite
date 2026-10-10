@@ -11,5 +11,16 @@ export default defineConfig({
     watch: { ignored: ['**/src/routeTree.gen.ts'] },
   },
   preview: { port: 3200 },
-  plugins: [viteTsConfigPaths(), tailwindcss(), tanstackStart(), viteReact()],
+  plugins: [
+    viteTsConfigPaths(),
+    tailwindcss(),
+    tanstackStart({
+      prerender: {
+        enabled: true,
+        crawlLinks: true,
+        failOnError: true,
+      },
+    }),
+    viteReact(),
+  ],
 })

@@ -5,7 +5,7 @@
   "scripts": {
     "generate": "cd ../.. && bin/compat crates",
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "vite build && bun scripts/link-css.ts",
     "start": "vite preview",
     "check": "tsc --noEmit"
   },
