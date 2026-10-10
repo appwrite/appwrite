@@ -1,7 +1,7 @@
 //! Unit tests of the crate's own API. PHP parity is checked by `bin/compat`
 //! (`tests/compat/validators`), whose recorded cases `cargo test -p compat` replays.
 
-use php_std::zval::{Object, Zval};
+use php_std::{Array, ArrayKey, Str, Value as Php};
 use serde_json::{Value, json};
 
 use crate::*;
@@ -33,8 +33,8 @@ fn formats_numbers_like_php() {
 #[test]
 fn third_party_validators_take_both_models() {
     assert!(Old.is_valid(&json!("old")));
-    assert!(Old.validate(Input::Zval(&Zval::String(b"old".to_vec()))).unwrap().valid);
-    assert!(!Old.validate(Input::Zval(&Zval::String(vec![0xff]))).unwrap().valid);
+    assert!(Old.validate(Input::Value(&Php::Str(Str::from("old")))).unwrap().valid);
+    assert!(!Old.validate(Input::Value(&Php::Str(Str::copy_from(&[0xff])))).unwrap().valid);
     assert_eq!(Old.kind(), Type::Mixed);
     assert_eq!(Old.check(&json!("new")), Err("Value must be \"old\".".to_owned()));
     let all = AllOf::new(vec![Box::new(Text::new(3)), Box::new(Old)]);
@@ -87,8 +87,8 @@ fn scalars() {
     assert!(!r.is_valid(&json!("1.5")));
     assert_eq!(Range::new(60, 31536000).description(), "Value must be a valid range between 60 and 31,536,000");
     let inf = Range::with_format(php::Number::Int(0), php::Number::Float(f64::INFINITY), Type::Integer);
-    assert!(inf.validate(Input::Zval(&Zval::Float(f64::INFINITY))).unwrap().valid);
-    assert!(!inf.validate(Input::Zval(&Zval::Float(f64::NAN))).unwrap().valid);
+    assert!(inf.validate(Input::Value(&Php::Float(f64::INFINITY))).unwrap().valid);
+    assert!(!inf.validate(Input::Value(&Php::Float(f64::NAN))).unwrap().valid);
     assert!(Float { loose: true }.is_valid(&json!("1e3")));
     assert!(Numeric.is_valid(&json!(" 1")));
 }
@@ -104,7 +104,7 @@ fn lists() {
         (err.php_class(), err.to_string().as_str()),
         ("Error", "Object of class stdClass could not be converted to string")
     );
-    let strict = WhiteList::with(vec![Zval::Int(1), Zval::String(b"a".to_vec())], true, Type::Integer).unwrap();
+    let strict = WhiteList::with(vec![Php::Int(1), Php::Str(Str::from("a"))], true, Type::Integer).unwrap();
     assert!(strict.is_valid(&json!(1)));
     assert!(!strict.is_valid(&json!("1")));
     let a = Assoc::default();
@@ -150,13 +150,13 @@ fn composites_describe_the_deciding_rule() {
 
 #[test]
 fn exact_values() {
-    let mut object = Object::new();
-    object.set(b"a".to_vec(), Zval::Int(1));
-    let object = Zval::Object(object);
-    assert!(json::Object::default().validate(Input::Zval(&object)).unwrap().valid);
-    assert!(!json::Array::default().validate(Input::Zval(&object)).unwrap().valid);
-    assert!(!Json.validate(Input::Zval(&Zval::String(vec![b'"', 0xff, b'"']))).unwrap().valid);
-    assert!(Hostname::default().validate(Input::Zval(&Zval::String(vec![0xff]))).unwrap().valid);
+    let mut object = Array::new();
+    object.set(ArrayKey::Str(Str::from("a")), Php::Int(1));
+    let object = Php::Object(object);
+    assert!(json::Object::default().validate(Input::Value(&object)).unwrap().valid);
+    assert!(!json::Array::default().validate(Input::Value(&object)).unwrap().valid);
+    assert!(!Json.validate(Input::Value(&Php::Str(Str::copy_from(&[b'"', 0xff, b'"'])))).unwrap().valid);
+    assert!(Hostname::default().validate(Input::Value(&Php::Str(Str::copy_from(&[0xff])))).unwrap().valid);
     assert_eq!(Phone::normalize(b"%2B1234567"), b"+1234567");
     assert_eq!(Phone::normalize(b"%FF"), vec![0xff]);
 }

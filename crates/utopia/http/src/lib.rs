@@ -68,7 +68,7 @@ pub use hook::{
 };
 pub use http::{Http, RouteBuilder, RouteMatch, mode};
 pub use params::{
-    Params, array_to_params, decode_payload, params_value, parse_query, parse_query_bytes, zval_to_value,
+    Params, array_to_params, decode_payload, params_value, parse_query, parse_query_bytes, value_to_json,
 };
 pub use request::{Range, Request, SCHEMES};
 pub use response::{Body, CHARSET_UTF8, CHUNK_SIZE, Cookie, Response, Wire, content_type, reason, same_site};

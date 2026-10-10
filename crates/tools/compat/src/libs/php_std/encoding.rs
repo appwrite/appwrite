@@ -84,7 +84,7 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
         "encoding.quoted_printable_decode" => ok(bytes_value(&encoding::quoted_printable_decode(&s()?))),
         "encoding.parse_str" => {
             let mut out = Vec::new();
-            if let php_std::Value::Array(a) = php_std::zval::Zval::Array(encoding::parse_str(&s()?)).to_value() {
+            if let php_std::Value::Array(a) = php_std::Value::Array(encoding::parse_str(&s()?)) {
                 leaves(&a, &mut Vec::new(), &mut out)?;
             }
             ok(Value::Array(out))

@@ -945,9 +945,9 @@ pub const MAX_INPUT_NESTING_LEVEL: usize = 64;
 /// for `application/x-www-form-urlencoded` bodies, `$request->post`.
 ///
 /// The input is a C string to the engine: it ends at the first NUL byte.
-pub fn parse_str(input: &[u8]) -> crate::zval::Array {
+pub fn parse_str(input: &[u8]) -> crate::types::Array {
     let input = c_str(input);
-    let mut array = crate::zval::Array::new();
+    let mut array = crate::types::Array::new();
     let mut count = 0usize;
     for var in input.split(|&b| b == b'&').filter(|t| !t.is_empty()) {
         count += 1;
@@ -959,7 +959,7 @@ pub fn parse_str(input: &[u8]) -> crate::zval::Array {
             None => (var, Vec::new()),
         };
         let name = urldecode(name);
-        register_variable(&mut array, &name, crate::zval::Zval::String(value), false);
+        register_variable(&mut array, &name, crate::types::Value::Str(value.into()), false);
     }
     array
 }
@@ -972,8 +972,14 @@ pub fn parse_str(input: &[u8]) -> crate::zval::Array {
 ///
 /// `keep_existing` is the `$_COOKIE` rule: a top-level name that is already
 /// set is not overwritten.
-pub fn register_variable(array: &mut crate::zval::Array, name: &[u8], value: crate::zval::Zval, keep_existing: bool) {
-    use crate::zval::{Key, Zval};
+pub fn register_variable(
+    array: &mut crate::types::Array,
+    name: &[u8],
+    value: crate::types::Value,
+    keep_existing: bool,
+) {
+    use crate::types::{Array, ArrayKey as Key, Value};
+    let key_of = |b: &[u8]| Key::normalize(crate::types::Str::copy_from(b));
 
     // The engine works on a NUL-terminated copy: everything from a NUL on is ignored.
     let mut var: Vec<u8> = c_str(name).iter().copied().skip_while(|&b| b == b' ').collect();
@@ -1003,7 +1009,7 @@ pub fn register_variable(array: &mut crate::zval::Array, name: &[u8], value: cra
     let mut index: Option<(usize, usize)> = Some((0, var_len));
     // Keys from the root to the array being filled.
     let mut path: Vec<Key> = Vec::new();
-    let root_key = Key::from_bytes(&var[..var_len]);
+    let root_key = key_of(&var[..var_len]);
 
     if let Some(mut ip) = ip {
         let mut nest_level = 0;
@@ -1051,19 +1057,21 @@ pub fn register_variable(array: &mut crate::zval::Array, name: &[u8], value: cra
             // Descend into (or create) the array at `index`.
             let table = table_at(array, &path);
             let key = match index {
-                None => match table.next_key() {
-                    Some(k) => {
-                        table.push(Zval::Array(crate::zval::Array::new()));
-                        Key::Int(k)
+                None => {
+                    let k = table.next_index().unwrap_or(0);
+                    if table.push(Value::Array(Array::new())).is_err() {
+                        return;
                     }
-                    None => return,
-                },
+                    Key::Int(k)
+                }
                 Some((start, len)) => {
-                    let key = Key::from_bytes(&var[start..start + len]);
+                    let key = key_of(&var[start..start + len]);
                     match table.get_mut(&key) {
-                        Some(Zval::Array(_)) => {}
-                        Some(other) => *other = Zval::Array(crate::zval::Array::new()),
-                        None => table.insert(key.clone(), Zval::Array(crate::zval::Array::new())),
+                        Some(Value::Array(_)) => {}
+                        Some(other) => *other = Value::Array(Array::new()),
+                        None => {
+                            table.set(key.clone(), Value::Array(Array::new()));
+                        }
                     }
                     key
                 }
@@ -1083,24 +1091,24 @@ pub fn register_variable(array: &mut crate::zval::Array, name: &[u8], value: cra
     let table = table_at(array, &path);
     match index {
         None => {
-            table.push(value);
+            let _ = table.push(value);
         }
         Some((start, len)) => {
-            let key = Key::from_bytes(&var[start..start + len]);
+            let key = key_of(&var[start..start + len]);
             if keep_existing && path.is_empty() && table.get(&key).is_some() {
                 return;
             }
-            table.insert(key, value);
+            table.set(key, value);
         }
     }
 }
 
 /// The nested array `path` leads to (every step is an array by construction).
-fn table_at<'a>(array: &'a mut crate::zval::Array, path: &[crate::zval::Key]) -> &'a mut crate::zval::Array {
+fn table_at<'a>(array: &'a mut crate::types::Array, path: &[crate::types::ArrayKey]) -> &'a mut crate::types::Array {
     let mut table = array;
     for key in path {
         match table.get_mut(key) {
-            Some(crate::zval::Zval::Array(next)) => table = next,
+            Some(crate::types::Value::Array(next)) => table = next,
             _ => unreachable!("register_variable path steps are arrays"),
         }
     }
@@ -1161,11 +1169,11 @@ mod tests {
 #[cfg(test)]
 mod parse_str_tests {
     use super::parse_str;
-    use crate::zval::Zval;
+    use crate::types::Value;
     use serde_json::json;
 
     fn parsed(s: &str) -> serde_json::Value {
-        Zval::Array(parse_str(s.as_bytes())).to_json().unwrap()
+        Value::Array(parse_str(s.as_bytes())).to_json()
     }
 
     #[test]

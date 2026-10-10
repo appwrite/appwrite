@@ -23,7 +23,7 @@
 //! Validators read PHP values through [`Input`], which borrows either model
 //! `php-std` defines: the request model (`serde_json::Value`, as
 //! `Utopia\Http\Request` decodes bodies and query strings) or the exact model
-//! ([`php_std::zval::Zval`], which also holds binary strings, non-finite
+//! ([`php_std::Value`], which also holds binary strings, non-finite
 //! floats and `stdClass` objects with properties). Both are validated the
 //! same way, without converting one into the other.
 //!
@@ -205,7 +205,7 @@ pub trait Validator: Send + Sync {
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         Ok(Verdict::of(match value {
             Input::Json(v) => self.is_valid(v),
-            Input::Zval(z) => z.to_json().is_ok_and(|v| self.is_valid(&v)),
+            Input::Value(z) => z.try_to_json().is_some_and(|v| self.is_valid(&v)),
         }))
     }
 

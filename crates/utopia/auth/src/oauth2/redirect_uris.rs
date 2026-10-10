@@ -1,5 +1,5 @@
+use php_std::Value;
 use php_std::string::strtolower;
-use php_std::zval::Zval;
 
 use super::parse_url;
 
@@ -8,6 +8,25 @@ const LOOPBACK_HOSTS: [&[u8]; 3] = [b"localhost", b"127.0.0.1", b"[::1]"];
 /// A client's registered redirect URIs (`Utopia\Auth\OAuth2\RedirectUris`):
 /// exact matching, plus RFC 8252 §7.3 port variance for http loopback URIs
 /// when asked for (public clients only).
+///
+/// ```
+/// use utopia_auth::oauth2::RedirectUris;
+///
+/// let uris = RedirectUris::from_strings([&b"https://app.example/callback"[..], b"http://127.0.0.1/cb"]);
+/// assert!(uris.matches(b"https://app.example/callback", false));
+/// assert!(!uris.matches(b"https://app.example/other", false));
+/// // Loopback redirects may use any port, when allowed.
+/// assert!(uris.matches(b"http://127.0.0.1:51004/cb", true));
+/// ```
+///
+/// ```php
+/// use Utopia\Auth\OAuth2\RedirectUris;
+///
+/// $uris = RedirectUris::from(['https://app.example/callback', 'http://127.0.0.1/cb']);
+/// var_dump($uris->matches('https://app.example/callback'));     // bool(true)
+/// var_dump($uris->matches('https://app.example/other'));        // bool(false)
+/// var_dump($uris->matches('http://127.0.0.1:51004/cb', true));  // bool(true)
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct RedirectUris(Vec<Vec<u8>>);
 
@@ -40,11 +59,11 @@ fn loopback(uri: &[u8]) -> Option<Loopback> {
 
 impl RedirectUris {
     /// `RedirectUris::from($uris)`: the non-empty strings among stored values.
-    pub fn from_values<'a>(uris: impl IntoIterator<Item = &'a Zval>) -> Self {
+    pub fn from_values<'a>(uris: impl IntoIterator<Item = &'a Value>) -> Self {
         Self(
             uris.into_iter()
                 .filter_map(|u| match u {
-                    Zval::String(s) if !s.is_empty() => Some(s.clone()),
+                    Value::Str(s) if !s.is_empty() => Some(s.to_vec()),
                     _ => None,
                 })
                 .collect(),

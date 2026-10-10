@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use php_std::string::strtolower;
-use php_std::zval::Zval;
+use php_std::{Str, Value};
 
 use crate::input::{View, loose_str_eq};
 use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate};
@@ -13,7 +13,7 @@ use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate};
 /// entry.
 #[derive(Debug, Clone)]
 pub struct WhiteList {
-    list: Vec<Zval>,
+    list: Vec<Value>,
     strict: bool,
     kind: Type,
 }
@@ -21,34 +21,30 @@ pub struct WhiteList {
 impl WhiteList {
     /// Loose (case-insensitive) white list of strings.
     pub fn new(list: &[&str]) -> Self {
-        let list = list.iter().map(|s| Zval::String(strtolower(s.as_bytes()).into_owned())).collect();
+        let list = list.iter().map(|s| Value::Str(Str::from(strtolower(s.as_bytes()).into_owned()))).collect();
         Self { list, strict: false, kind: Type::String }
     }
 
     /// Strict white list of strings.
     pub fn strict(list: &[&str]) -> Self {
-        Self {
-            list: list.iter().map(|s| Zval::String(s.as_bytes().to_vec())).collect(),
-            strict: true,
-            kind: Type::String,
-        }
+        Self { list: list.iter().map(|s| Value::Str(Str::from(*s))).collect(), strict: true, kind: Type::String }
     }
 
     /// `new WhiteList($list, $strict, $type)`. A loose list is converted to
     /// lower-case strings, which fails for a `stdClass` entry.
-    pub fn with(list: Vec<Zval>, strict: bool, kind: Type) -> Result<Self, Error> {
+    pub fn with(list: Vec<Value>, strict: bool, kind: Type) -> Result<Self, Error> {
         let list = if strict {
             list
         } else {
             list.iter()
-                .map(|v| Ok(Zval::String(strtolower(&Input::Zval(v).to_bytes()?).into_owned())))
+                .map(|v| Ok(Value::Str(Str::from(strtolower(&Input::Value(v).to_bytes()?).into_owned()))))
                 .collect::<Result<_, Error>>()?
         };
         Ok(Self { list, strict, kind })
     }
 
     /// `getList()`.
-    pub fn list(&self) -> &[Zval] {
+    pub fn list(&self) -> &[Value] {
         &self.list
     }
 }
@@ -73,7 +69,7 @@ impl Validator for WhiteList {
         let items: Vec<String> = self
             .list
             .iter()
-            .map(|v| String::from_utf8_lossy(&Input::Zval(v).to_bytes().unwrap_or_default()).into_owned())
+            .map(|v| String::from_utf8_lossy(&Input::Value(v).to_bytes().unwrap_or_default()).into_owned())
             .collect();
         format!("Value must be one of ({})", items.join(", "))
     }
@@ -81,7 +77,7 @@ impl Validator for WhiteList {
     /// A strict list holding a `stdClass` cannot be described.
     fn try_description(&self) -> Result<String, Error> {
         for v in &self.list {
-            Input::Zval(v).to_bytes()?;
+            Input::Value(v).to_bytes()?;
         }
         Ok(self.description())
     }
@@ -93,11 +89,11 @@ impl Validator for WhiteList {
             return Ok(Verdict::INVALID);
         }
         if self.strict {
-            return Ok(Verdict::of(self.list.iter().any(|item| identical(value, Input::Zval(item)))));
+            return Ok(Verdict::of(self.list.iter().any(|item| identical(value, Input::Value(item)))));
         }
         let value = value.to_bytes()?;
         let value = strtolower(&value);
-        Ok(Verdict::of(self.list.iter().any(|item| matches!(item, Zval::String(s) if loose_str_eq(&value, s)))))
+        Ok(Verdict::of(self.list.iter().any(|item| matches!(item, Value::Str(s) if loose_str_eq(&value, s)))))
     }
 
     fn kind(&self) -> Type {

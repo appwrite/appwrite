@@ -115,7 +115,7 @@ fn last_segment(t: &str) -> &str {
 
 const STRINGS: [&str; 10] = ["str", "String", "[u8]", "Vec<u8>", "Bytes", "Str", "Path", "PathBuf", "OsStr", "char"];
 const INTEGERS: [&str; 12] = ["i8", "i16", "i32", "i64", "i128", "isize", "u8", "u16", "u32", "u64", "u128", "usize"];
-const VALUES: [&str; 6] = ["Value", "Zval", "Input", "Any", "View", "Mixed"];
+const VALUES: [&str; 5] = ["Value", "Input", "Any", "View", "Mixed"];
 const COLLECTIONS: [&str; 9] =
     ["Vec", "Array", "BTreeMap", "HashMap", "IndexMap", "Map", "BTreeSet", "HashSet", "Entries"];
 
@@ -372,7 +372,7 @@ mod tests {
         assert_eq!(fit("string", "Cow<'a, str>", true).0, Fit::Same);
         assert_eq!(fit("Utopia\\Auth\\Store", "&Store", false).0, Fit::Same);
         assert_eq!(fit("static", "&mut Self", true).0, Fit::Same);
-        assert_eq!(fit("mixed", "&Zval", false).0, Fit::Compatible);
+        assert_eq!(fit("mixed", "&Value", false).0, Fit::Compatible);
         assert_eq!(fit("array", "Vec<String>", false).0, Fit::Compatible);
     }
 }

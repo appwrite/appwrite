@@ -5,7 +5,7 @@
 use p256::ecdsa::signature::Signer;
 use p256::ecdsa::{Signature, SigningKey};
 use p256::pkcs8::DecodePrivateKey;
-use php_std::zval::{Array, Key, Zval};
+use php_std::{Array, ArrayKey, Str, Value as Php};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
@@ -67,15 +67,15 @@ pub fn respond(a: &Args) -> Result<Value, Fault> {
         None => string(options, &["rpId"])?.to_owned(),
     };
     let client: Array = [
-        ("type", Zval::String(if register { b"webauthn.create".to_vec() } else { b"webauthn.get".to_vec() })),
-        ("challenge", Zval::String(string(options, &["challenge"])?.as_bytes().to_vec())),
-        ("origin", Zval::String(a.str("origin")?.as_bytes().to_vec())),
-        ("crossOrigin", Zval::Bool(a.opt_bool("cross_origin")?.unwrap_or(false))),
+        ("type", Php::Str(if register { Str::copy_from(b"webauthn.create") } else { Str::copy_from(b"webauthn.get") })),
+        ("challenge", Php::Str(Str::copy_from(string(options, &["challenge"])?.as_bytes()))),
+        ("origin", Php::Str(Str::copy_from(a.str("origin")?.as_bytes()))),
+        ("crossOrigin", Php::Bool(a.opt_bool("cross_origin")?.unwrap_or(false))),
     ]
     .into_iter()
-    .map(|(k, v)| (Key::from_bytes(k.as_bytes()), v))
+    .map(|(k, v)| (ArrayKey::from_bytes(k.as_bytes()), v))
     .collect();
-    let client_data = php_std::json::encode(&Zval::Array(client).to_value(), php_std::json::Flags::THROW_ON_ERROR, 512)
+    let client_data = php_std::json::encode(&Php::Array(client), php_std::json::Flags::THROW_ON_ERROR, 512)
         .map_err(|e| Fault::new(e.to_string()))?;
 
     let mut flags = FLAG_USER_PRESENT;

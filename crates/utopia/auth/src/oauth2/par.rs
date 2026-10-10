@@ -2,6 +2,25 @@ use crate::Error;
 
 /// A Pushed Authorization Request `request_uri` (RFC 9126): a deployment
 /// prefix plus a stored request id (`Utopia\Auth\OAuth2\PAR`).
+///
+/// ```
+/// use utopia_auth::oauth2::Par;
+///
+/// let prefix = b"urn:ietf:params:oauth:request_uri:";
+/// let par = Par::from_id(prefix, b"abc123")?;
+/// assert_eq!(par.request_uri(), b"urn:ietf:params:oauth:request_uri:abc123");
+/// assert_eq!(Par::from_request_uri(prefix, &par.request_uri())?.id(), b"abc123");
+/// # Ok::<(), utopia_auth::Error>(())
+/// ```
+///
+/// ```php
+/// use Utopia\Auth\OAuth2\PAR;
+///
+/// $prefix = 'urn:ietf:params:oauth:request_uri:';
+/// $par = PAR::fromId($prefix, 'abc123');
+/// echo $par->requestUri(), "\n";                                // urn:ietf:params:oauth:request_uri:abc123
+/// echo PAR::fromRequestUri($prefix, $par->requestUri())->id(), "\n"; // abc123
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Par {
     prefix: Vec<u8>,

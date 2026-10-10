@@ -3,7 +3,8 @@
 //! (ES256, RS256), with cose-lib's checks and messages.
 
 use openssl::bn::BigNum;
-use php_std::zval::{Array, Key, Zval};
+use php_std::types::KeyRef;
+use php_std::{Array, ArrayKey, Str, Value};
 
 use super::cbor::{self, Stream};
 use crate::jwt::{self, key::RsaPublicKey};
@@ -18,6 +19,7 @@ pub enum Algorithm {
 }
 
 impl Algorithm {
+    /// The COSE algorithm identifier (`-7`, `-257`, ...).
     pub fn id(self) -> i64 {
         match self {
             Algorithm::Es256 => -7,
@@ -55,10 +57,10 @@ fn normalize_integers(data: &Array, keys: &[i64]) -> Array {
     data.iter()
         .map(|(k, v)| {
             let v = match (k, v) {
-                (Key::Int(i), Zval::String(s)) if keys.contains(i) => integer_string(s).map_or(v.clone(), Zval::Int),
+                (KeyRef::Int(i), Value::Str(s)) if keys.contains(&i) => integer_string(s).map_or(v.clone(), Value::Int),
                 _ => v.clone(),
             };
-            (k.clone(), v)
+            (k.to_owned(), v)
         })
         .collect()
 }
@@ -90,25 +92,25 @@ impl PublicKey {
         if !item.is_normalizable() {
             return Err("Invalid attestation object. Unexpected object.".into());
         }
-        let Zval::Array(data) = item.normalize()? else {
+        let Value::Array(data) = item.normalize()? else {
             return Err("Invalid attestation object. Unexpected object.".into());
         };
-        if data.get(&Key::Int(TYPE)).is_none() {
+        if data.get(&ArrayKey::Int(TYPE)).is_none() {
             return Err("Invalid key: the type is not defined".into());
         }
         Ok(Self { data: normalize_integers(&data, &[TYPE]) })
     }
 
-    fn get(&self, key: i64) -> Option<&Zval> {
-        self.data.get(&Key::Int(key))
+    fn get(&self, key: i64) -> Option<&Value> {
+        self.data.get(&ArrayKey::Int(key))
     }
 
     /// `Key::alg()`.
     pub fn alg(&self) -> Result<i64, Vec<u8>> {
         match self.get(ALG) {
             None => Err(format!("The key has no data at index {ALG}").into()),
-            Some(Zval::Int(i)) => Ok(*i),
-            Some(Zval::String(s)) if filter_int(s).is_some() => Ok(filter_int(s).unwrap_or_default()),
+            Some(Value::Int(i)) => Ok(*i),
+            Some(Value::Str(s)) if filter_int(s).is_some() => Ok(filter_int(s).unwrap_or_default()),
             Some(_) => Err("Invalid key: the \"alg\" parameter must be an integer algorithm identifier".into()),
         }
     }
@@ -127,17 +129,17 @@ impl PublicKey {
         // CoseSignatureFixer: DER signatures become R || S.
         let signature = if signature.len() == 64 { signature.to_vec() } else { from_asn1(signature, 32)? };
         let key = normalize_integers(&self.data, &[CURVE, TYPE]);
-        let at = |k: i64| key.get(&Key::Int(k));
-        if !matches!(at(TYPE), Some(Zval::Int(2))) && at(TYPE) != Some(&Zval::String(b"EC".to_vec())) {
+        let at = |k: i64| key.get(&ArrayKey::Int(k));
+        if !matches!(at(TYPE), Some(Value::Int(2))) && at(TYPE) != Some(&Value::Str(Str::copy_from(b"EC"))) {
             return Err("Invalid EC2 key. The key type does not correspond to an EC2 key".into());
         }
-        let set = |k: i64| at(k).is_some_and(|v| *v != Zval::Null);
+        let set = |k: i64| at(k).is_some_and(|v| *v != Value::Null);
         if !set(CURVE) || !set(X) || !set(Y) {
             return Err("Invalid EC2 key. The curve or the \"x/y\" coordinates are missing".into());
         }
         let curve = match at(CURVE) {
-            Some(Zval::Int(c)) if [1, 8, 2, 3, 256, 257, 258, 259].contains(c) => *c,
-            Some(Zval::String(name)) => match name.as_slice() {
+            Some(Value::Int(c)) if [1, 8, 2, 3, 256, 257, 258, 259].contains(c) => *c,
+            Some(Value::Str(name)) => match name.as_bytes() {
                 b"P-256" => 1,
                 b"secp256k1" | b"P-256K" => 8,
                 b"P-384" => 2,
@@ -159,7 +161,7 @@ impl PublicKey {
         };
         let mut coordinates = Vec::new();
         for (index, name) in [(X, "x"), (Y, "y")] {
-            let Some(Zval::String(c)) = at(index) else {
+            let Some(Value::Str(c)) = at(index) else {
                 return Err(format!("Invalid type for {name} coordinate").into());
             };
             if c.len() != length {
@@ -168,7 +170,7 @@ impl PublicKey {
             coordinates.push(c.clone());
         }
         if let Some(d) = at(D)
-            && !matches!(d, Zval::String(s) if s.len() == length)
+            && !matches!(d, Value::Str(s) if s.len() == length)
         {
             return Err("Invalid length for d".into());
         }
@@ -193,15 +195,15 @@ impl PublicKey {
     /// `RsaKey::create()` then RS256's checks (an unusable key is an invalid signature).
     fn verify_rs256(&self, data: &[u8], signature: &[u8]) -> Result<bool, Vec<u8>> {
         let key = normalize_integers(&self.data, &[TYPE]);
-        let at = |k: i64| key.get(&Key::Int(k));
-        if !matches!(at(TYPE), Some(Zval::Int(3))) && at(TYPE) != Some(&Zval::String(b"RSA".to_vec())) {
+        let at = |k: i64| key.get(&ArrayKey::Int(k));
+        if !matches!(at(TYPE), Some(Value::Int(3))) && at(TYPE) != Some(&Value::Str(Str::copy_from(b"RSA"))) {
             return Err("Invalid RSA key. The key type does not correspond to a RSA key".into());
         }
-        let set = |k: i64| at(k).is_some_and(|v| *v != Zval::Null);
+        let set = |k: i64| at(k).is_some_and(|v| *v != Value::Null);
         if !set(N) || !set(E) {
             return Err("Invalid RSA key. The modulus or the exponent is missing".into());
         }
-        let (Some(Zval::String(n)), Some(Zval::String(e))) = (at(N), at(E)) else {
+        let (Some(Value::Str(n)), Some(Value::Str(e))) = (at(N), at(E)) else {
             return Err("Invalid RSA key. The modulus and the exponent shall be non-empty byte strings".into());
         };
         if n.is_empty() || e.is_empty() {

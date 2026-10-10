@@ -1,7 +1,8 @@
 use hmac::{Hmac, Mac};
 use php_std::encoding::bin2hex;
 use php_std::json::{self, Flags};
-use php_std::zval::{Array, Key, Zval};
+use php_std::types::KeyRef;
+use php_std::{Array, ArrayKey, Str, Value};
 use sha2::{Digest, Sha256};
 
 use super::key::{self, Public, Rsa};
@@ -9,15 +10,15 @@ use super::{Audience, Claim, Header, base64url_encode};
 use crate::Error;
 use crate::hash::random_bytes;
 
-fn string(s: &[u8]) -> Zval {
-    Zval::String(s.to_vec())
+fn string(s: &[u8]) -> Value {
+    Value::Str(Str::copy_from(s))
 }
 
 /// `$now + $duration` with PHP's integer overflow into float.
-fn add(now: i64, duration: i64) -> Zval {
+fn add(now: i64, duration: i64) -> Value {
     match now.checked_add(duration) {
-        Some(v) => Zval::Int(v),
-        None => Zval::Float(now as f64 + duration as f64),
+        Some(v) => Value::Int(v),
+        None => Value::Float(now as f64 + duration as f64),
     }
 }
 
@@ -26,22 +27,25 @@ fn spread(claims: &Array) -> Array {
     let mut out = Array::with_capacity(claims.len() + 8);
     for (k, v) in claims.iter() {
         match k {
-            Key::Str(_) => out.insert(k.clone(), v.clone()),
-            Key::Int(_) => {
-                out.push(v.clone());
+            KeyRef::Str(_) => {
+                out.set(k.to_owned(), v.clone());
+            }
+            KeyRef::Int(_) => {
+                // Overflow is impossible: renumbering starts at 0.
+                let _ = out.push(v.clone());
             }
         }
     }
     out
 }
 
-fn set(claims: &mut Array, claim: Claim, value: Zval) {
-    claims.insert(Key::Str(claim.as_str().as_bytes().to_vec()), value);
+fn set(claims: &mut Array, claim: Claim, value: Value) {
+    claims.set(ArrayKey::from(claim.as_str()), value);
 }
 
 fn unset(claims: &Array, claim: Claim) -> Array {
-    let key = Key::Str(claim.as_str().as_bytes().to_vec());
-    claims.iter().filter(|(k, _)| **k != key).map(|(k, v)| (k.clone(), v.clone())).collect()
+    let key = KeyRef::Str(claim.as_str().as_bytes());
+    claims.iter().filter(|(k, _)| *k != key).map(|(k, v)| (k.to_owned(), v.clone())).collect()
 }
 
 /// `generateJti()`: 16 random bytes as hex.
@@ -60,14 +64,14 @@ fn sign(
     signature: impl FnOnce(&[u8]) -> Result<Vec<u8>, Error>,
 ) -> Result<String, Error> {
     let mut header = Array::with_capacity(3);
-    header.insert(Key::Str(Header::Type.as_str().into()), string(typ.as_bytes()));
-    header.insert(Key::Str(Header::Algorithm.as_str().into()), string(alg.as_bytes()));
+    header.set(ArrayKey::Str(Header::Type.as_str().into()), string(typ.as_bytes()));
+    header.set(ArrayKey::Str(Header::Algorithm.as_str().into()), string(alg.as_bytes()));
     if let Some(kid) = key_id {
-        header.insert(Key::Str(Header::KeyId.as_str().into()), string(kid));
+        header.set(ArrayKey::Str(Header::KeyId.as_str().into()), string(kid));
     }
-    let encode = |v: Zval| json::encode(&v.to_value(), Flags::THROW_ON_ERROR, json::DEFAULT_DEPTH).map_err(Error::json);
-    let header = encode(Zval::Array(header))?;
-    let claims = encode(Zval::Array(claims))?;
+    let encode = |v: Value| json::encode(&v, Flags::THROW_ON_ERROR, json::DEFAULT_DEPTH).map_err(Error::json);
+    let header = encode(Value::Array(header))?;
+    let claims = encode(Value::Array(claims))?;
     let input = format!("{}.{}", base64url_encode(header.as_bytes()), base64url_encode(claims.as_bytes()));
     let signature = signature(input.as_bytes())?;
     Ok(format!("{input}.{}", base64url_encode(&signature)))
@@ -159,7 +163,7 @@ impl Asymmetric {
     }
 
     fn modulus(&self) -> Result<(Vec<u8>, Vec<u8>), Error> {
-        match key::public_key(&self.public_key) {
+        match key::public_key(&self.public_key)? {
             None => Err(Error::Exception("Unable to parse the public key".into())),
             Some(Public::Other) => Err(Error::Exception("Public key is not an RSA key".into())),
             Some(Public::Rsa(k)) => Ok((Rsa::modulus(&k), Rsa::exponent(&k))),
@@ -195,7 +199,7 @@ impl Asymmetric {
     pub fn sign(&self, typ: &str, claims: Array) -> Result<String, Error> {
         let kid = self.key_id()?;
         sign(typ, "RS256", Some(&kid), claims, |input| {
-            let key = key::private_key(&self.private_key)
+            let key = key::private_key(&self.private_key)?
                 .ok_or_else(|| Error::Exception("Unable to parse the private key".into()))?;
             key::sign(key, input)
         })
@@ -203,6 +207,25 @@ impl Asymmetric {
 }
 
 /// Application-defined HS256 JWTs (`Utopia\Auth\Issuers\Symmetric\Jwt`).
+///
+/// ```
+/// use php_std::Array;
+/// use utopia_auth::jwt::{Audience, Jwt, Symmetric};
+///
+/// let issuer = Jwt(Symmetric::new(b"secret", b"https://cloud.example", None)?);
+/// let token = issuer.issue(&Audience::One(b"app".to_vec()), 60, &Array::new(), 1_700_000_000)?;
+/// assert_eq!(token.split('.').count(), 3);
+/// assert!(token.starts_with("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9."));
+/// # Ok::<(), utopia_auth::Error>(())
+/// ```
+///
+/// ```php
+/// use Utopia\Auth\Issuers\Symmetric\Jwt;
+///
+/// $token = (new Jwt('secret', 'https://cloud.example'))->issue('app', 60);
+/// echo count(explode('.', $token)), "\n"; // 3
+/// echo explode('.', $token)[0], "\n";     // eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Jwt(pub Symmetric);
 
@@ -213,7 +236,7 @@ impl Jwt {
         if duration < 1 {
             return Err(Error::InvalidArgument("Token duration must be greater than zero".into()));
         }
-        let recipients: Vec<&Zval> = match audience {
+        let recipients: Vec<&Value> = match audience {
             Audience::One(_) => vec![],
             Audience::Many(list) => {
                 if list.is_empty() || !list.is_list() {
@@ -222,7 +245,7 @@ impl Jwt {
                 list.iter().map(|(_, v)| v).collect()
             }
         };
-        let valid = |v: &Zval| matches!(v, Zval::String(s) if !s.is_empty());
+        let valid = |v: &Value| matches!(v, Value::Str(s) if !s.is_empty());
         let one_valid = match audience {
             Audience::One(s) => !s.is_empty(),
             Audience::Many(_) => recipients.iter().all(|v| valid(v)),
@@ -232,8 +255,8 @@ impl Jwt {
         }
         let mut out = spread(claims);
         set(&mut out, Claim::Issuer, string(&self.0.issuer));
-        set(&mut out, Claim::Audience, audience.to_zval());
-        set(&mut out, Claim::IssuedAt, Zval::Int(now));
+        set(&mut out, Claim::Audience, audience.to_value());
+        set(&mut out, Claim::IssuedAt, Value::Int(now));
         set(&mut out, Claim::Expiration, add(now, duration));
         self.0.sign("JWT", out)
     }
@@ -263,16 +286,38 @@ impl RefreshToken {
         set(&mut out, Claim::Subject, string(subject));
         set(&mut out, Claim::ClientId, string(client_id));
         set(&mut out, Claim::Expiration, add(now, duration));
-        set(&mut out, Claim::IssuedAt, Zval::Int(now));
-        set(&mut out, Claim::JwtId, jti.map(string).unwrap_or_else(|| Zval::String(self::jti().into_bytes())));
+        set(&mut out, Claim::IssuedAt, Value::Int(now));
+        set(&mut out, Claim::JwtId, jti.map(string).unwrap_or_else(|| Value::Str(Str::from(self::jti().into_bytes()))));
         if !scopes.is_empty() {
-            set(&mut out, Claim::Scope, Zval::String(scopes.join(&b' ')));
+            set(&mut out, Claim::Scope, Value::Str(Str::from(scopes.join(&b' '))));
         }
         self.0.sign("JWT", out)
     }
 }
 
 /// OAuth2 access tokens per RFC 9068, RS256 (`Utopia\Auth\Issuers\Asymmetric\AccessToken`).
+///
+/// ```
+/// use php_std::Array;
+/// use utopia_auth::jwt::{generate_key_pair, AccessToken, Asymmetric};
+///
+/// let pair = generate_key_pair(2048)?;
+/// let issuer = AccessToken(Asymmetric::new(pair.private_key.as_bytes(), pair.public_key.as_bytes(), b"https://cloud.example", Some(b"key-1"))?);
+/// let audience = Array::from_list(vec!["https://api.example".into()]);
+/// let token = issuer.issue(b"user", &audience, b"client", 0, 3600, &[], None, &Array::new(), 1_700_000_000)?;
+/// assert!(token.starts_with("eyJ0eXAiOiJhdCtqd3QiLCJhbGciOiJSUzI1NiIsImtpZCI6ImtleS0xIn0."));
+/// # Ok::<(), utopia_auth::Error>(())
+/// ```
+///
+/// ```php
+/// use Utopia\Auth\Issuers\Asymmetric;
+/// use Utopia\Auth\Issuers\Asymmetric\AccessToken;
+///
+/// [$private, $public] = Asymmetric::generateKeyPair(2048);
+/// $issuer = new AccessToken($private, $public, 'https://cloud.example', 'key-1');
+/// $token = $issuer->issue('user', ['https://api.example'], 'client', 0, 3600);
+/// echo explode('.', $token)[0], "\n"; // eyJ0eXAiOiJhdCtqd3QiLCJhbGciOiJSUzI1NiIsImtpZCI6ImtleS0xIn0
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AccessToken(pub Asymmetric);
 
@@ -299,20 +344,20 @@ impl AccessToken {
         if !audience.is_list() {
             return Err(Error::InvalidArgument("audience must be a list of resource server identifiers.".into()));
         }
-        if audience.iter().any(|(_, v)| matches!(v, Zval::String(s) if s.is_empty())) {
+        if audience.iter().any(|(_, v)| matches!(v, Value::Str(s) if s.is_empty())) {
             return Err(Error::InvalidArgument("audience must contain non-empty resource server identifiers.".into()));
         }
         let mut out = spread(&unset(claims, Claim::Scope));
         set(&mut out, Claim::Issuer, string(&self.0.issuer));
-        set(&mut out, Claim::Audience, Zval::Array(audience.clone()));
+        set(&mut out, Claim::Audience, Value::Array(audience.clone()));
         set(&mut out, Claim::Subject, string(subject));
         set(&mut out, Claim::ClientId, string(client_id));
         set(&mut out, Claim::Expiration, add(now, duration));
-        set(&mut out, Claim::IssuedAt, Zval::Int(now));
-        set(&mut out, Claim::JwtId, jti.map(string).unwrap_or_else(|| Zval::String(self::jti().into_bytes())));
-        set(&mut out, Claim::AuthTime, Zval::Int(auth_time));
+        set(&mut out, Claim::IssuedAt, Value::Int(now));
+        set(&mut out, Claim::JwtId, jti.map(string).unwrap_or_else(|| Value::Str(Str::from(self::jti().into_bytes()))));
+        set(&mut out, Claim::AuthTime, Value::Int(auth_time));
         if !scopes.is_empty() {
-            set(&mut out, Claim::Scope, Zval::String(scopes.join(&b' ')));
+            set(&mut out, Claim::Scope, Value::Str(Str::from(scopes.join(&b' '))));
         }
         self.0.sign("at+jwt", out)
     }
@@ -346,8 +391,8 @@ impl IdToken {
         set(&mut out, Claim::Subject, string(subject));
         set(&mut out, Claim::Audience, string(audience));
         set(&mut out, Claim::Expiration, add(now, duration));
-        set(&mut out, Claim::IssuedAt, Zval::Int(now));
-        set(&mut out, Claim::AuthTime, Zval::Int(auth_time));
+        set(&mut out, Claim::IssuedAt, Value::Int(now));
+        set(&mut out, Claim::AuthTime, Value::Int(auth_time));
         fn present(v: Option<&[u8]>) -> Option<&[u8]> {
             v.filter(|v| !v.is_empty() && *v != b"0")
         }
@@ -355,10 +400,10 @@ impl IdToken {
             set(&mut out, Claim::Nonce, string(nonce));
         }
         if let Some(token) = present(access_token) {
-            set(&mut out, Claim::AccessTokenHash, Zval::String(left_half_hash(token).into_bytes()));
+            set(&mut out, Claim::AccessTokenHash, Value::Str(Str::from(left_half_hash(token).into_bytes())));
         }
         if let Some(code) = present(code) {
-            set(&mut out, Claim::CodeHash, Zval::String(left_half_hash(code).into_bytes()));
+            set(&mut out, Claim::CodeHash, Value::Str(Str::from(left_half_hash(code).into_bytes())));
         }
         self.0.sign("JWT", out)
     }

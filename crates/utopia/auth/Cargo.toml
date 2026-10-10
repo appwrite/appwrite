@@ -15,6 +15,8 @@ hex.workspace = true
 hmac.workspace = true
 indexmap.workspace = true
 md-5.workspace = true
+num-bigint.workspace = true
+num-integer.workspace = true
 openssl.workspace = true
 p256.workspace = true
 php-std.workspace = true
@@ -23,4 +25,5 @@ sha2.workspace = true
 thiserror.workspace = true
 
 [package.metadata.utopia]
-php-sync = "53360097f4bfe774d041ea1e3cd97c24802ae840"
+category = "security"
+php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"

@@ -37,17 +37,15 @@ pub fn token_hash(secret: &str) -> Result<String> {
 
 /// The session store a client keeps (`Store` with `id` and `secret`), encoded.
 pub fn session_store(id: &str, secret: &str) -> Result<String> {
-    use php_std::zval::Zval;
+    use php_std::Value;
     let mut store = utopia_auth::Store::new();
-    store
-        .set_property(b"id", Zval::String(id.as_bytes().to_vec()))
-        .set_property(b"secret", Zval::String(secret.as_bytes().to_vec()));
+    store.set_property(b"id", Value::from(id)).set_property(b"secret", Value::from(secret));
     store.encode().map_err(|e| Error::internal(e.to_string()))
 }
 
 /// The options document of a hash, as the `hashOptions` attribute stores it.
 pub fn hash_options(hash: &dyn Hash) -> serde_json::Value {
-    php_std::zval::Zval::Array(hash.options().as_array().clone()).to_json().unwrap_or(serde_json::Value::Null)
+    php_std::Value::Array(hash.options().as_array().clone()).try_to_json().unwrap_or(serde_json::Value::Null)
 }
 
 /// Loads a user or fails with `user_not_found`.

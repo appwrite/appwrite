@@ -1,4 +1,4 @@
-use php_std::zval::{Array, Key, Zval};
+use php_std::{Array, ArrayKey, Value};
 
 use super::AuthorizationDetail;
 
@@ -7,29 +7,29 @@ use super::AuthorizationDetail;
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct AuthorizationDetails(Vec<Array>);
 
-fn key(name: &[u8]) -> Key {
-    Key::from_bytes(name)
+fn key(name: &[u8]) -> ArrayKey {
+    ArrayKey::from_bytes(name)
 }
 
 fn strings(values: &Array) -> impl Iterator<Item = &[u8]> {
     values.iter().filter_map(|(_, v)| match v {
-        Zval::String(s) => Some(s.as_slice()),
+        Value::Str(s) => Some(s.as_bytes()),
         _ => None,
     })
 }
 
 fn lists(values: &Array, value: &[u8]) -> bool {
-    values.iter().any(|(_, v)| matches!(v, Zval::String(s) if s == value))
+    values.iter().any(|(_, v)| matches!(v, Value::Str(s) if s == value))
 }
 
 impl AuthorizationDetails {
     /// `new AuthorizationDetails($value)`.
-    pub fn new(value: &Zval) -> Self {
+    pub fn new(value: &Value) -> Self {
         match value {
-            Zval::Array(list) if list.is_list() => Self(
+            Value::Array(list) if list.is_list() => Self(
                 list.iter()
                     .filter_map(|(_, e)| match e {
-                        Zval::Array(entry) => Some(entry.clone()),
+                        Value::Array(entry) => Some(entry.clone()),
                         _ => None,
                     })
                     .collect(),
@@ -48,13 +48,13 @@ impl AuthorizationDetails {
         let field_key = key(field);
         for entry in &self.0 {
             match entry.get(&type_key) {
-                Some(Zval::String(t)) if t == kind => {}
+                Some(Value::Str(t)) if t == kind => {}
                 _ => continue,
             }
-            let Some(values) = entry.get(&field_key).filter(|v| **v != Zval::Null) else {
+            let Some(values) = entry.get(&field_key).filter(|v| **v != Value::Null) else {
                 continue;
             };
-            let Zval::Array(values) = values else {
+            let Value::Array(values) = values else {
                 continue;
             };
             if !values.is_list() {
@@ -82,14 +82,14 @@ impl AuthorizationDetails {
         let mut entries = Vec::with_capacity(self.0.len());
         for entry in &self.0 {
             let kind = match entry.get(&type_key) {
-                Some(Zval::String(t)) if !t.is_empty() && !field.is_empty() => t,
+                Some(Value::Str(t)) if !t.is_empty() && !field.is_empty() => t,
                 _ => {
                     entries.push(entry.clone());
                     continue;
                 }
             };
             let values: Vec<Vec<u8>> = match entry.get(&field_key) {
-                Some(Zval::Array(v)) if v.is_list() => strings(v).map(<[u8]>::to_vec).collect(),
+                Some(Value::Array(v)) if v.is_list() => strings(v).map(<[u8]>::to_vec).collect(),
                 _ => vec![],
             };
             let Some(allowed) = resolver(kind, &values) else {
@@ -104,7 +104,7 @@ impl AuthorizationDetails {
                 continue;
             }
             let mut entry = entry.clone();
-            entry.insert(field_key.clone(), Zval::Array(allowed.into_iter().map(Zval::String).collect()));
+            entry.set(field_key.clone(), Value::Array(allowed.into_iter().map(|s| Value::Str(s.into())).collect()));
             entries.push(entry);
         }
         Self(entries)

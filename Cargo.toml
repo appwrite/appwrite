@@ -86,6 +86,10 @@ md2 = "0.10"
 openssl = "0.10"
 # NIST P-256 ECDSA (ES256 passkeys, utopia-auth); RustCrypto, pure Rust.
 p256 = { version = "0.13", default-features = false, features = ["ecdsa", "pkcs8", "std"] }
+# Arbitrary-precision integers (utopia-auth: CBOR rational numbers reduced like
+# brick/math); pure Rust, rust-num project.
+num-bigint = { version = "0.4", default-features = false, features = ["std"] }
+num-integer = { version = "0.1", default-features = false, features = ["std"] }
 mimalloc = { version = "0.1", default-features = false }
 # Rust source parsing for `compat report` (crates/tools/compat): doc comments
 # and line numbers of each crate's public items.

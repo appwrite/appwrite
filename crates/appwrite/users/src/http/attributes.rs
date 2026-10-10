@@ -168,9 +168,9 @@ async fn finish_password(ctx: &mut Context, user: &User, password: String, pwned
 
     let kind = user.hash.clone().unwrap_or_else(|| "argon2".to_owned());
     let options = user.hash_options.clone().unwrap_or(Value::Null);
-    let options = match php_std::zval::Zval::from(&options) {
-        php_std::zval::Zval::Array(a) => a,
-        _ => php_std::zval::Array::new(),
+    let options = match php_std::Value::from_json(&options) {
+        php_std::Value::Array(a) => a,
+        _ => php_std::Array::new(),
     };
     let current = Password::create_hash(&kind, &options).map_err(|e| Error::internal(e.to_string()))?;
 

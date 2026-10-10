@@ -7,7 +7,7 @@ use std::sync::{Arc, OnceLock};
 
 use bytes::Bytes;
 use indexmap::IndexMap;
-use php_std::zval::{Array, Zval};
+use php_std::{Array, Value as Php};
 use serde_json::{Map, Value};
 
 use crate::headers::Headers;
@@ -732,6 +732,6 @@ fn parse_cookie(line: &[u8], array: &mut Array, count: &mut usize) {
             Some(eq) => (&pair[..eq], php_std::encoding::rawurldecode(&pair[eq + 1..])),
             None => (pair, Vec::new()),
         };
-        php_std::encoding::register_variable(array, name, Zval::String(value), true);
+        php_std::encoding::register_variable(array, name, Php::Str(value.into()), true);
     }
 }

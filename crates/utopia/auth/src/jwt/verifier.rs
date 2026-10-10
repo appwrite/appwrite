@@ -1,7 +1,7 @@
 use hmac::{Hmac, Mac};
 use php_std::json::{self, Flags};
 use php_std::value::{Number, compare_numbers, numeric_str};
-use php_std::zval::{Array, Key, Zval};
+use php_std::{Array, ArrayKey, Str, Value};
 use sha2::{Digest, Sha256};
 
 use super::key::{self, Public, Rsa};
@@ -13,15 +13,17 @@ use crate::options::to_long;
 /// An `aud` value: one recipient, or an array of them.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Audience {
+    /// One recipient (`string`).
     One(Vec<u8>),
+    /// Several recipients (`array`).
     Many(Array),
 }
 
 impl Audience {
-    pub(crate) fn to_zval(&self) -> Zval {
+    pub(crate) fn to_value(&self) -> Value {
         match self {
-            Audience::One(s) => Zval::String(s.clone()),
-            Audience::Many(a) => Zval::Array(a.clone()),
+            Audience::One(s) => Value::Str(Str::from(s.clone())),
+            Audience::Many(a) => Value::Array(a.clone()),
         }
     }
 }
@@ -43,6 +45,7 @@ pub struct Hs256 {
 }
 
 impl Hs256 {
+    /// `new Verifiers\Symmetric($secret)`: refuses an empty (or `"0"`) secret.
     pub fn new(secret: &[u8]) -> Result<Self, Error> {
         if secret.is_empty() || secret == b"0" {
             return Err(Error::Exception("A signing secret is required".into()));
@@ -70,6 +73,9 @@ pub struct Rs256 {
 }
 
 impl Rs256 {
+    /// `new Verifiers\Asymmetric($publicKey)`: refuses an empty (or `"0"`) key. The
+    /// key is PEM (a public key or a certificate), or a `file://` path to one, read
+    /// when verifying.
     pub fn new(public_key: &[u8]) -> Result<Self, Error> {
         if public_key.is_empty() || public_key == b"0" {
             return Err(Error::Exception("A public key is required".into()));
@@ -79,7 +85,7 @@ impl Rs256 {
 
     /// `getKeyId()`: SHA-256 (hex) of the RSA modulus, as the issuer derives it.
     pub fn key_id(&self) -> Result<String, Error> {
-        match key::public_key(&self.public_key) {
+        match key::public_key(&self.public_key)? {
             None => Err(Error::Verification("Unable to parse the public key".into())),
             Some(Public::Other) => Err(Error::Verification("Public key is not an RSA key".into())),
             Some(Public::Rsa(k)) => Ok(hex::encode(Sha256::digest(Rsa::modulus(&k)))),
@@ -93,7 +99,7 @@ impl SignatureCheck for Rs256 {
     }
 
     fn verify_signature(&self, input: &[u8], signature: &[u8]) -> Result<bool, Error> {
-        match key::public_key(&self.public_key) {
+        match key::public_key(&self.public_key)? {
             None => Err(Error::Verification("Unable to parse the public key".into())),
             Some(Public::Other) => Err(Error::Verification("Public key is not an RSA key".into())),
             Some(Public::Rsa(k)) => Ok(key::verify(k, input, signature)),
@@ -106,11 +112,42 @@ impl SignatureCheck for Rs256 {
 /// The expectations are fixed at construction: `iss`, acceptable `aud`
 /// values and `typ` are checked when given; `exp` is required unless
 /// `allow_expired`; `nbf`/`iat` are always checked; `leeway` tolerates skew.
+///
+/// ```
+/// use php_std::{Array, Value};
+/// use utopia_auth::jwt::{Audience, Hs256, Jwt, Symmetric, Verifier};
+///
+/// let token = Jwt(Symmetric::new(b"secret", b"iss", None)?).issue(&Audience::One(b"app".to_vec()), 60, &Array::new(), 1_000)?;
+///
+/// let verifier = Verifier::new(Hs256::new(b"secret")?, Some(b"iss"), None, None, false, 0)?;
+/// let claims = verifier.verify(token.as_bytes(), 1_030)?;
+/// assert_eq!(claims.get_str("aud"), Some(&Value::from("app")));
+///
+/// let error = verifier.verify(token.as_bytes(), 2_000).unwrap_err();
+/// assert_eq!(error.to_string(), "Token has expired");
+/// # Ok::<(), utopia_auth::Error>(())
+/// ```
+///
+/// ```php
+/// use Utopia\Auth\Issuers\Symmetric\Jwt;
+/// use Utopia\Auth\Verifiers\Symmetric;
+/// use Utopia\Auth\Verifiers\VerificationException;
+///
+/// $token = (new Jwt('secret', 'iss'))->issue('app', 60);
+/// $claims = (new Symmetric('secret', 'iss'))->verify($token);
+/// echo $claims['aud'], "\n"; // app
+///
+/// try {
+///     (new Symmetric('secret', 'iss'))->verify('a.b.c');
+/// } catch (VerificationException $e) {
+///     echo get_class($e), "\n"; // Utopia\Auth\Verifiers\VerificationException
+/// }
+/// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct Verifier<S: SignatureCheck> {
     check: S,
     issuer: Option<Vec<u8>>,
-    audience: Option<Vec<Zval>>,
+    audience: Option<Vec<Value>>,
     kind: Option<Vec<u8>>,
     allow_expired: bool,
     leeway: i64,
@@ -128,10 +165,10 @@ fn sum(a: i64, b: i64) -> Number {
     }
 }
 
-fn is_numeric(v: &Zval) -> bool {
+fn is_numeric(v: &Value) -> bool {
     match v {
-        Zval::Int(_) | Zval::Float(_) => true,
-        Zval::String(s) => std::str::from_utf8(s).ok().and_then(numeric_str).is_some(),
+        Value::Int(_) | Value::Float(_) => true,
+        Value::Str(s) => std::str::from_utf8(s).ok().and_then(numeric_str).is_some(),
         _ => false,
     }
 }
@@ -150,7 +187,7 @@ impl<S: SignatureCheck> Verifier<S> {
             return Err(Error::InvalidArgument("Leeway cannot be negative".into()));
         }
         let audience = audience.map(|a| match a {
-            Audience::One(s) => vec![Zval::String(s.clone())],
+            Audience::One(s) => vec![Value::Str(Str::from(s.clone()))],
             Audience::Many(list) => list.iter().map(|(_, v)| v.clone()).collect(),
         });
         Ok(Self {
@@ -178,12 +215,14 @@ impl<S: SignatureCheck> Verifier<S> {
         let claims = decode_segment(encoded_claims, "Claims")?;
         let signature =
             base64url_decode(encoded_signature).ok_or_else(|| verification("Signature is not valid base64url"))?;
-        let get = |a: &Array, k: &str| a.get(&Key::Str(k.as_bytes().to_vec())).cloned();
-        if get(&header, Header::Algorithm.as_str()) != Some(Zval::String(self.check.algorithm().as_bytes().to_vec())) {
+        let get = |a: &Array, k: &str| a.get(&ArrayKey::Str(Str::copy_from(k.as_bytes()))).cloned();
+        if get(&header, Header::Algorithm.as_str())
+            != Some(Value::Str(Str::copy_from(self.check.algorithm().as_bytes())))
+        {
             return Err(verification("Unexpected token algorithm"));
         }
         if let Some(kind) = &self.kind
-            && get(&header, Header::Type.as_str()) != Some(Zval::String(kind.clone()))
+            && get(&header, Header::Type.as_str()) != Some(Value::Str(Str::from(kind.clone())))
         {
             return Err(verification("Unexpected token type"));
         }
@@ -199,7 +238,8 @@ impl<S: SignatureCheck> Verifier<S> {
 
     /// `validateClaims()`.
     fn validate(&self, claims: &Array, now: i64) -> Result<(), Error> {
-        let get = |c: Claim| claims.get(&Key::Str(c.as_str().as_bytes().to_vec())).filter(|v| **v != Zval::Null);
+        let get =
+            |c: Claim| claims.get(&ArrayKey::Str(Str::copy_from(c.as_str().as_bytes()))).filter(|v| **v != Value::Null);
         let skewed = sum(now, self.leeway);
         if let Some(nbf) = get(Claim::NotBefore) {
             if !is_numeric(nbf) {
@@ -229,14 +269,14 @@ impl<S: SignatureCheck> Verifier<S> {
             }
         }
         if let Some(issuer) = &self.issuer
-            && get(Claim::Issuer) != Some(&Zval::String(issuer.clone()))
+            && get(Claim::Issuer) != Some(&Value::Str(Str::from(issuer.clone())))
         {
             return Err(verification("Unexpected token issuer"));
         }
         if let Some(expected) = &self.audience {
-            let aud = get(Claim::Audience).cloned().unwrap_or(Zval::Null);
-            let audiences: Vec<Zval> = match aud {
-                Zval::Array(a) => a.iter().map(|(_, v)| v.clone()).collect(),
+            let aud = get(Claim::Audience).cloned().unwrap_or(Value::Null);
+            let audiences: Vec<Value> = match aud {
+                Value::Array(a) => a.iter().map(|(_, v)| v.clone()).collect(),
                 other => vec![other],
             };
             if !expected.iter().any(|e| audiences.iter().any(|a| identical(a, e))) {
@@ -248,9 +288,9 @@ impl<S: SignatureCheck> Verifier<S> {
 }
 
 /// `===`.
-fn identical(a: &Zval, b: &Zval) -> bool {
+fn identical(a: &Value, b: &Value) -> bool {
     match (a, b) {
-        (Zval::Float(x), Zval::Float(y)) => x == y,
+        (Value::Float(x), Value::Float(y)) => x == y,
         _ => a == b,
     }
 }
@@ -260,10 +300,9 @@ fn decode_segment(segment: &[u8], label: &str) -> Result<Array, Error> {
     let decoded =
         base64url_decode(segment).ok_or_else(|| Error::Verification(format!("{label} is not valid base64url")))?;
     let data = json::decode(&decoded, Some(true), json::DEFAULT_DEPTH, Flags::THROW_ON_ERROR)
-        .map(|v| Zval::from_value(&v))
         .map_err(|_| Error::Verification(format!("{label} is not valid JSON")))?;
     match data {
-        Zval::Array(a) if a.is_empty() || !a.is_list() => Ok(a),
+        Value::Array(a) if a.is_empty() || !a.is_list() => Ok(a),
         _ => Err(Error::Verification(format!("{label} must be a JSON object"))),
     }
 }

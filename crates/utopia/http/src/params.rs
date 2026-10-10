@@ -1,12 +1,13 @@
 //! Request parameters in the request model: `serde_json::Value`s where PHP
 //! lists are arrays, other PHP arrays are objects and an empty `stdClass`
-//! is an empty object (see `php_std::zval`).
+//! is an empty object (see [`php_std::Value::from_json`]).
 //!
 //! Query strings and form bodies are parsed by PHP's own rules
 //! ([`php_std::encoding::parse_str`]), JSON bodies by
 //! [`decode_payload`] (`Utopia\Http\Request::decodePayload`).
 
-use php_std::zval::{Array, Key, Zval};
+use php_std::types::KeyRef;
+use php_std::{Array, ArrayKey, Str};
 use serde_json::{Map, Value};
 
 /// Decoded request parameters.
@@ -30,13 +31,9 @@ pub fn decode_payload(raw: &[u8]) -> Params {
     // PHP decodes into objects only when the body can hold an empty object
     // (`/\{\s*\}/`); the two modes differ for property names PHP objects reject.
     let assoc = !has_empty_object(raw);
-    match php_std::json::decode(raw, Some(assoc), php_std::json::DEFAULT_DEPTH, php_std::json::Flags::NONE)
-        .map(|v| Zval::from_value(&v))
-    {
-        Ok(Zval::Array(a)) => array_to_params(&a),
-        Ok(Zval::Object(o)) if !o.is_empty() => {
-            array_to_params(&o.iter().map(|(k, v)| (Key::from_bytes(k), v.clone())).collect())
-        }
+    match php_std::json::decode(raw, Some(assoc), php_std::json::DEFAULT_DEPTH, php_std::json::Flags::NONE) {
+        Ok(php_std::Value::Array(a)) => array_to_params(&a),
+        Ok(php_std::Value::Object(o)) if !o.is_empty() => array_to_params(&object_to_array(&o)),
         _ => Map::new(),
     }
 }
@@ -49,49 +46,59 @@ fn has_empty_object(raw: &[u8]) -> bool {
     })
 }
 
+/// `(array) $object`: numeric property names become integer keys.
+fn object_to_array(object: &Array) -> Array {
+    object
+        .iter()
+        .map(|(k, v)| {
+            let key = match k {
+                KeyRef::Int(i) => ArrayKey::Int(i),
+                KeyRef::Str(s) => ArrayKey::normalize(Str::copy_from(s)),
+            };
+            (key, v.clone())
+        })
+        .collect()
+}
+
 /// A PHP array as params (keys as strings, in order).
 pub fn array_to_params(array: &Array) -> Params {
     let mut map = Map::with_capacity(array.len());
     for (k, v) in array.iter() {
-        map.insert(key_string(k), zval_to_value(v));
+        map.insert(key_string(k), value_to_json(v));
     }
     map
 }
 
 /// The request-model value of a PHP value. Binary strings are decoded
 /// lossily (the model holds UTF-8 only); non-finite floats become `null`.
-pub fn zval_to_value(value: &Zval) -> Value {
+pub fn value_to_json(value: &php_std::Value) -> Value {
+    use php_std::Value as Php;
     match value {
-        Zval::Null => Value::Null,
-        Zval::Bool(b) => Value::Bool(*b),
-        Zval::Int(i) => Value::from(*i),
-        Zval::Float(f) => serde_json::Number::from_f64(*f).map(Value::Number).unwrap_or(Value::Null),
-        Zval::String(s) => Value::String(String::from_utf8_lossy(s).into_owned()),
-        Zval::Array(a) if !a.is_empty() && a.is_list() => {
-            Value::Array(a.iter().map(|(_, v)| zval_to_value(v)).collect())
-        }
-        Zval::Array(a) if a.is_empty() => Value::Array(Vec::new()),
-        Zval::Array(a) => Value::Object(array_to_params(a)),
-        // `(array) $object`: numeric property names become integer keys.
-        Zval::Object(o) if o.is_empty() => Value::Object(Map::new()),
-        Zval::Object(o) => {
-            let array: Array = o.iter().map(|(k, v)| (Key::from_bytes(k), v.clone())).collect();
-            zval_to_value(&Zval::Array(array))
-        }
+        Php::Null => Value::Null,
+        Php::Bool(b) => Value::Bool(*b),
+        Php::Int(i) => Value::from(*i),
+        Php::Float(f) => serde_json::Number::from_f64(*f).map(Value::Number).unwrap_or(Value::Null),
+        Php::Str(s) => Value::String(String::from_utf8_lossy(s).into_owned()),
+        Php::Array(a) if !a.is_empty() && a.is_list() => Value::Array(a.values().map(value_to_json).collect()),
+        Php::Array(a) if a.is_empty() => Value::Array(Vec::new()),
+        Php::Array(a) => Value::Object(array_to_params(a)),
+        Php::Object(o) if o.is_empty() => Value::Object(Map::new()),
+        Php::Object(o) => value_to_json(&Php::Array(object_to_array(o))),
+        Php::Ext(never) => match *never {},
     }
 }
 
-fn key_string(key: &Key) -> String {
+fn key_string(key: KeyRef<'_>) -> String {
     match key {
-        Key::Int(i) => i.to_string(),
-        Key::Str(s) => String::from_utf8_lossy(s).into_owned(),
+        KeyRef::Int(i) => i.to_string(),
+        KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
     }
 }
 
 /// Params as the PHP array they model: a list when the keys are `0..n`.
 pub fn params_value(params: &Params) -> Value {
     if !params.is_empty()
-        && params.keys().enumerate().all(|(i, k)| php_std::zval::numeric_key(k.as_bytes()) == Some(i as i64))
+        && params.keys().enumerate().all(|(i, k)| php_std::types::numeric_key(k.as_bytes()) == Some(i as i64))
     {
         Value::Array(params.values().cloned().collect())
     } else if params.is_empty() {

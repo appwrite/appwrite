@@ -2,18 +2,18 @@
 
 use std::borrow::Cow;
 
+use php_std::Value;
 use php_std::filter::{FILTER_VALIDATE_EMAIL, FILTER_VALIDATE_URL};
 use php_std::json::{self as php_json, DEFAULT_DEPTH, Flags};
 use php_std::string::{TRIM_CHARACTERS, strtolower, trim};
 use php_std::url::parse_url;
-use php_std::zval::Zval;
 
 use crate::input::{View, filter_str};
 use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate};
 
 /// `json_decode($json)` (objects as `stdClass`), `None` where it fails.
-fn decode(json: &[u8]) -> Option<Zval> {
-    php_json::decode(json, None, DEFAULT_DEPTH, Flags::NONE).ok().map(|v| Zval::from_value(&v))
+fn decode(json: &[u8]) -> Option<Value> {
+    php_json::decode(json, None, DEFAULT_DEPTH, Flags::NONE).ok()
 }
 
 /// `Utopia\Validator\JSON`: an array, or a string `json_decode()` accepts.
@@ -65,7 +65,7 @@ impl Validator for Array {
 
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         Ok(Verdict::of(match value.view() {
-            View::Str(s) => fits(self.length, Some(s.len())) && matches!(decode(s), Some(Zval::Array(_))),
+            View::Str(s) => fits(self.length, Some(s.len())) && matches!(decode(s), Some(Value::Array(_))),
             View::Array(e) => {
                 (e.len() == 0 || value.is_list()) && fits(self.length, value.json_encode().map(|j| j.len()))
             }
@@ -99,7 +99,7 @@ impl Validator for Object {
 
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         Ok(Verdict::of(match value.view() {
-            View::Str(s) => fits(self.length, Some(s.len())) && matches!(decode(s), Some(Zval::Object(_))),
+            View::Str(s) => fits(self.length, Some(s.len())) && matches!(decode(s), Some(Value::Object(_))),
             View::Object(_) => fits(self.length, value.json_encode().map(|j| j.len())),
             View::Array(e) => {
                 (e.len() == 0 || !value.is_list()) && fits(self.length, value.json_encode().map(|j| j.len()))
@@ -243,7 +243,7 @@ impl Validator for Fcm {
             Some(json) => match decode(json) {
                 Some(z) => {
                     decoded = z;
-                    Input::Zval(&decoded)
+                    Input::Value(&decoded)
                 }
                 None => return Ok(Verdict::decided(false, None)),
             },

@@ -1,5 +1,6 @@
 use indexmap::IndexMap;
-use php_std::zval::{Array, Key};
+use php_std::Array;
+use php_std::types::KeyRef;
 
 use super::Proof;
 use crate::hash::random_int;
@@ -27,6 +28,32 @@ enum Current {
 /// A user password (`Utopia\Auth\Proofs\Password`): a registry of named
 /// hashes (every built-in by default), the one in use, and how generated
 /// passwords look (16 characters from a symbol-rich charset).
+///
+/// ```
+/// use utopia_auth::proofs::{Password, Proof};
+///
+/// let mut password = Password::new();
+/// password.use_hash("bcrypt")?;
+/// let hash = password.hash(b"secret")?;
+/// assert!(hash.starts_with(b"$2y$"));
+/// assert!(password.verify(b"secret", &hash)?);
+///
+/// // Generated passwords are 16 characters long.
+/// assert_eq!(password.generate()?.len(), 16);
+/// # Ok::<(), utopia_auth::Error>(())
+/// ```
+///
+/// ```php
+/// use Utopia\Auth\Proofs\Password;
+///
+/// $password = new Password();
+/// $password->setHash($password->getHashByName('bcrypt'));
+/// $hash = $password->hash('secret');
+/// echo substr($hash, 0, 4), "\n";               // $2y$
+/// var_dump($password->verify('secret', $hash)); // bool(true)
+///
+/// echo strlen($password->generate()), "\n";     // 16
+/// ```
 #[derive(Debug, Clone)]
 pub struct Password {
     hashes: IndexMap<String, Box<dyn Hash>>,
@@ -158,8 +185,8 @@ impl Password {
 pub fn set_options(hash: &mut dyn Hash, options: &Array) -> Result<(), Error> {
     for (key, value) in options.iter() {
         match key {
-            Key::Str(k) => hash.options_mut().set(&String::from_utf8_lossy(k), value.clone()),
-            Key::Int(_) => {
+            KeyRef::Str(k) => hash.options_mut().set(&String::from_utf8_lossy(k), value.clone()),
+            KeyRef::Int(_) => {
                 return Err(Error::Type(
                     "Utopia\\Auth\\Hash::setOption(): Argument #1 ($key) must be of type string, int given, called in /usr/src/code/packages/auth/src/Hash.php on line 35".into(),
                 ));
