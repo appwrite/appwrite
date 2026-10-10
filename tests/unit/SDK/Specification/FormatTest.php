@@ -5,6 +5,7 @@ namespace Tests\Unit\SDK\Specification;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\Utopia\Database\Validator\Queries\Executions;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Parameter;
@@ -75,6 +76,7 @@ use Utopia\Validator\Integer as IntegerValidator;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Multiple;
 use Utopia\Validator\Nullable;
+use Utopia\Database\Query;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\Validator;
@@ -1358,6 +1360,7 @@ final class FormatTest extends TestCase
             ))
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Queries.', true)
             ->param('repositoryQueries', [], new VcsRepositories(), 'Repository queries.', true)
+            ->param('executionQueries', [], new Executions(), 'Execution queries.', true)
             ->param('deepQueries', [], $deepSubclass, 'Deeply nested queries.', true);
 
         $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
@@ -1371,6 +1374,98 @@ final class FormatTest extends TestCase
             $this->assertSame('array', $schemas[$name]['type'], "{$name} must serialise as an array");
             $this->assertSame(['type' => 'string'], $schemas[$name]['items'], "{$name} must hold query strings");
         }
+    }
+
+    public function testRestrictedQueriesPublishAllowedAttributesAndMethods(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/queries'))
+            ->desc('List tests')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'listTests',
+                description: 'List tests.',
+                auth: [AuthType::ADMIN],
+                responses: [],
+            ))
+            ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Queries.', true)
+            ->param('repositoryQueries', [], new VcsRepositories(), 'Repository queries.', true)
+            ->param('executionQueries', [], new Executions(), 'Execution queries.', true);
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
+
+        $parameters = \array_column($openApi['paths']['/tests/queries']['get']['parameters'], null, 'name');
+
+        // A validator that cannot describe itself emits nothing, so existing output is unchanged.
+        $this->assertArrayNotHasKey('x-appwrite', $parameters['queries']);
+
+        // Executions restricts filters and ordering to its allowed attributes plus the
+        // internal ones, and does not allow select.
+        $this->assertSame(
+            [...Executions::ALLOWED_ATTRIBUTES, '$id', '$createdAt', '$updatedAt', '$sequence'],
+            $parameters['executionQueries']['x-appwrite']['queries']['attributes']
+        );
+
+        foreach ([
+            Query::TYPE_LIMIT,
+            Query::TYPE_OFFSET,
+            Query::TYPE_CURSOR_AFTER,
+            Query::TYPE_CURSOR_BEFORE,
+            Query::TYPE_EQUAL,
+            Query::TYPE_NOT_EQUAL,
+            Query::TYPE_ORDER_ASC,
+            Query::TYPE_ORDER_DESC,
+        ] as $method) {
+            $this->assertContains($method, $parameters['executionQueries']['x-appwrite']['queries']['methods']);
+        }
+
+        $this->assertNotContains(Query::TYPE_SELECT, $parameters['executionQueries']['x-appwrite']['queries']['methods']);
+
+        // VcsRepositories accepts limit, offset and a single equal("namespace") filter.
+        $this->assertSame(
+            [
+                'attributes' => ['namespace'],
+                'methods' => ['limit', 'offset', 'equal'],
+            ],
+            $parameters['repositoryQueries']['x-appwrite']['queries']
+        );
+
+        // The execution query metadata is published in the same shape as the restricted validator.
+               $this->assertSame(
+            [
+                Query::TYPE_LIMIT,
+                Query::TYPE_OFFSET,
+                Query::TYPE_CURSOR_AFTER,
+                Query::TYPE_CURSOR_BEFORE,
+                // Filter validates per attribute type, not per method, so every filter method is published.
+                Query::TYPE_EQUAL,
+                Query::TYPE_NOT_EQUAL,
+                Query::TYPE_LESSER,
+                Query::TYPE_LESSER_EQUAL,
+                Query::TYPE_GREATER,
+                Query::TYPE_GREATER_EQUAL,
+                Query::TYPE_SEARCH,
+                Query::TYPE_NOT_SEARCH,
+                Query::TYPE_IS_NULL,
+                Query::TYPE_IS_NOT_NULL,
+                Query::TYPE_BETWEEN,
+                Query::TYPE_NOT_BETWEEN,
+                Query::TYPE_STARTS_WITH,
+                Query::TYPE_NOT_STARTS_WITH,
+                Query::TYPE_ENDS_WITH,
+                Query::TYPE_NOT_ENDS_WITH,
+                Query::TYPE_CONTAINS,
+                Query::TYPE_NOT_CONTAINS,
+                Query::TYPE_AND,
+                Query::TYPE_OR,
+                Query::TYPE_ORDER_ASC,
+                Query::TYPE_ORDER_DESC,
+            ],
+            $parameters['executionQueries']['x-appwrite']['queries']['methods']
+        );
     }
 
     public function testZeroIsKeptAsADeclaredExample(): void
