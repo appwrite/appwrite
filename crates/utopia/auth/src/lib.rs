@@ -33,9 +33,39 @@
 //! | `Passkeys\RelyingParty`, `Origin`, `Counter` | [`passkeys::RelyingParty`], [`passkeys::Origin`], [`passkeys::Counter`] |
 //! | `Passkeys\Exception` | [`Error::Passkey`] |
 //!
-//! PHP strings are bytes, so values are `&[u8]`. Every place PHP reads the
+//! PHP strings are bytes, so values are `&[u8]`, and PHP arrays and values
+//! are [`php_std::Array`] and [`php_std::Value`]. Every place PHP reads the
 //! clock (`time()`) takes `now` (Unix seconds) instead. Hashing is CPU
-//! bound: async callers run it on the blocking pool.
+//! bound: async callers run it on the blocking pool. JWT keys are PEM, inline
+//! or as a `file://` path, of any type and curve OpenSSL reads.
+//!
+//! Hash a password and check it later:
+//!
+//! ```
+//! use utopia_auth::Hash;
+//! use utopia_auth::hashes::Bcrypt;
+//!
+//! let mut bcrypt = Bcrypt::new();
+//! bcrypt.set_cost(10)?;
+//! let hash = bcrypt.hash(b"secret")?;
+//! assert!(hash.starts_with(b"$2y$10$"));
+//! assert!(bcrypt.verify(b"secret", &hash)?);
+//! # Ok::<(), utopia_auth::Error>(())
+//! ```
+//!
+//! ```php
+//! use Utopia\Auth\Hashes\Bcrypt;
+//!
+//! $bcrypt = (new Bcrypt())->setCost(10);
+//! $hash = $bcrypt->hash('secret');
+//! echo substr($hash, 0, 7), "\n";              // $2y$10$
+//! var_dump($bcrypt->verify('secret', $hash)); // bool(true)
+//! ```
+
+/// The getting started guide (`guide.md`), compiled and run with the doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../guide.md")]
+pub struct GettingStarted;
 
 mod error;
 mod hash;

@@ -121,10 +121,10 @@ impl View {
             } else {
                 match current.as_ref()? {
                     Value::Object(m) => m.get(key).cloned(),
-                    Value::Array(a) => php_std::zval::numeric_key(key.as_bytes())
+                    Value::Array(a) => php_std::types::numeric_key(key.as_bytes())
                         .and_then(|i| usize::try_from(i).ok())
                         .and_then(|i| a.get(i).cloned()),
-                    Value::String(s) => php_std::zval::numeric_key(key.as_bytes()).and_then(|i| {
+                    Value::String(s) => php_std::types::numeric_key(key.as_bytes()).and_then(|i| {
                         let bytes = s.as_bytes();
                         let len = bytes.len() as i64;
                         let at = if i < 0 { len + i } else { i };

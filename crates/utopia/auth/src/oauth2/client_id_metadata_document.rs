@@ -1,5 +1,6 @@
 use php_std::json::{self, Flags};
-use php_std::zval::{Array, Key, Zval};
+use php_std::types::KeyRef;
+use php_std::{Array, ArrayKey, Str, Value};
 
 use super::{ClientIdentifierUrl, RedirectUris, parse_url};
 use crate::Error;
@@ -36,15 +37,25 @@ fn invalid(message: impl Into<String>) -> Error {
     Error::InvalidClientMetadata(message.into())
 }
 
-fn key(name: &str) -> Key {
-    Key::from_bytes(name.as_bytes())
+fn key(name: &str) -> ArrayKey {
+    ArrayKey::from_bytes(name.as_bytes())
 }
 
 /// `normalizeJsonValue()`: `stdClass` objects become arrays, recursively.
-fn normalize(value: Zval) -> Zval {
+fn normalize(value: Value) -> Value {
     match value {
-        Zval::Object(o) => Zval::Array(o.iter().map(|(k, v)| (Key::from_bytes(k), normalize(v.clone()))).collect()),
-        Zval::Array(a) => Zval::Array(a.iter().map(|(k, v)| (k.clone(), normalize(v.clone()))).collect()),
+        Value::Object(o) => Value::Array(
+            o.iter()
+                .map(|(k, v)| {
+                    let key = match k {
+                        KeyRef::Int(i) => ArrayKey::Int(i),
+                        KeyRef::Str(s) => ArrayKey::from_bytes(s),
+                    };
+                    (key, normalize(v.clone()))
+                })
+                .collect(),
+        ),
+        Value::Array(a) => Value::Array(a.iter().map(|(k, v)| (k.to_owned(), normalize(v.clone()))).collect()),
         other => other,
     }
 }
@@ -54,7 +65,7 @@ fn string_list(metadata: &Array, property: &str, default: &[&str]) -> Result<Vec
     let Some(values) = metadata.get(&key(property)) else {
         return Ok(default.iter().map(|s| s.as_bytes().to_vec()).collect());
     };
-    let Zval::Array(values) = values else {
+    let Value::Array(values) = values else {
         return Err(invalid(format!("{property} must be a list of strings.")));
     };
     if !values.is_list() {
@@ -63,7 +74,7 @@ fn string_list(metadata: &Array, property: &str, default: &[&str]) -> Result<Vec
     values
         .iter()
         .map(|(_, v)| match v {
-            Zval::String(s) if !s.is_empty() => Ok(s.clone()),
+            Value::Str(s) if !s.is_empty() => Ok(s.to_vec()),
             _ => Err(invalid(format!("{property} must contain non-empty strings."))),
         })
         .collect()
@@ -80,16 +91,16 @@ fn validate_redirect_uri(uri: &[u8]) -> Result<(), Error> {
 }
 
 /// `validateJwks()`.
-fn validate_jwks(jwks: &Zval) -> Result<(), Error> {
+fn validate_jwks(jwks: &Value) -> Result<(), Error> {
     let keys = match jwks {
-        Zval::Array(set) => match set.get(&key("keys")) {
-            Some(Zval::Array(keys)) if keys.is_list() => keys,
+        Value::Array(set) => match set.get(&key("keys")) {
+            Some(Value::Array(keys)) if keys.is_list() => keys,
             _ => return Err(invalid("jwks must be a JSON Web Key Set object.")),
         },
         _ => return Err(invalid("jwks must be a JSON Web Key Set object.")),
     };
     for (_, jwk) in keys.iter() {
-        let Zval::Array(jwk) = jwk else {
+        let Value::Array(jwk) = jwk else {
             return Err(invalid("jwks must contain JSON Web Key objects."));
         };
         if jwk.is_list() {
@@ -106,12 +117,11 @@ impl ClientIdMetadataDocument {
     /// `fromJson($clientId, $json)`.
     pub fn from_json(client_id: ClientIdentifierUrl, json: &[u8]) -> Result<Self, Error> {
         let decoded = json::decode(json, None, json::DEFAULT_DEPTH, Flags::THROW_ON_ERROR)
-            .map(|v| Zval::from_value(&v))
             .map_err(|_| invalid("Client ID Metadata Document is not valid JSON."))?;
-        if !matches!(decoded, Zval::Object(_)) {
+        if !matches!(decoded, Value::Object(_)) {
             return Err(invalid("Client ID Metadata Document must be a JSON object."));
         }
-        let Zval::Array(metadata) = normalize(decoded) else {
+        let Value::Array(metadata) = normalize(decoded) else {
             return Err(invalid("Client ID Metadata Document must be a JSON object."));
         };
         Self::from_array(client_id, metadata)
@@ -119,7 +129,7 @@ impl ClientIdMetadataDocument {
 
     /// `fromArray($clientId, $metadata)`.
     pub fn from_array(client_id: ClientIdentifierUrl, metadata: Array) -> Result<Self, Error> {
-        if metadata.get(&key("client_id")) != Some(&Zval::String(client_id.as_bytes().to_vec())) {
+        if metadata.get(&key("client_id")) != Some(&Value::Str(Str::copy_from(client_id.as_bytes()))) {
             return Err(invalid("client_id must exactly match the Client Identifier URL."));
         }
         for property in ["client_secret", "client_secret_expires_at"] {
@@ -128,7 +138,7 @@ impl ClientIdMetadataDocument {
             }
         }
         let method = match metadata.get(&key("token_endpoint_auth_method")) {
-            Some(Zval::String(m)) if !m.is_empty() => m.clone(),
+            Some(Value::Str(m)) if !m.is_empty() => m.clone(),
             _ => return Err(invalid("token_endpoint_auth_method must be explicitly declared.")),
         };
         if method.starts_with(b"client_secret_") {
@@ -146,7 +156,7 @@ impl ClientIdMetadataDocument {
         }
         for property in STRING_PROPERTIES {
             if let Some(v) = metadata.get(&key(property))
-                && !matches!(v, Zval::String(_))
+                && !matches!(v, Value::Str(_))
             {
                 return Err(invalid(format!("{property} must be a string.")));
             }
@@ -159,7 +169,14 @@ impl ClientIdMetadataDocument {
             validate_jwks(jwks)?;
         }
         let redirect_uris = RedirectUris::from_strings(redirect_uris.iter().map(Vec::as_slice));
-        Ok(Self { client_id, metadata, token_endpoint_auth_method: method, grant_types, response_types, redirect_uris })
+        Ok(Self {
+            client_id,
+            metadata,
+            token_endpoint_auth_method: method.to_vec(),
+            grant_types,
+            response_types,
+            redirect_uris,
+        })
     }
 
     /// `clientId()`.
@@ -188,8 +205,8 @@ impl ClientIdMetadataDocument {
     }
 
     /// `get($property)`: the stored value, including `null` (`None` when absent).
-    pub fn get(&self, property: &[u8]) -> Option<&Zval> {
-        self.metadata.get(&Key::from_bytes(property))
+    pub fn get(&self, property: &[u8]) -> Option<&Value> {
+        self.metadata.get(&ArrayKey::from_bytes(property))
     }
 
     /// `toArray()`.

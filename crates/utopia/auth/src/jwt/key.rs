@@ -1,12 +1,13 @@
-//! RSA keys as PHP's OpenSSL functions read and write them (PEM), on OpenSSL
-//! itself: same key limits as PHP, and constant-time private key operations.
+//! Keys as PHP's OpenSSL functions read and write them (PEM, inline or
+//! from a `file://` path), on OpenSSL itself: same key types, curves and
+//! limits as PHP, and constant-time private key operations.
+
+use std::borrow::Cow;
 
 use openssl::hash::MessageDigest;
 use openssl::pkey::{HasPublic, Id, PKey};
 use openssl::rsa::RsaRef;
 use openssl::sign::{Signer, Verifier};
-use p256::ecdsa::signature::Signer as _;
-use p256::pkcs8::DecodePrivateKey;
 use php_std::encoding::base64_decode;
 
 use crate::Error;
@@ -125,10 +126,33 @@ fn spki_key(der: &[u8]) -> Option<Public> {
     key.rsa().ok().map(Public::Rsa)
 }
 
-/// `openssl_pkey_get_public($pem)`: the key of the first PEM certificate,
-/// else of the first PEM public key (SubjectPublicKeyInfo or PKCS#1);
-/// `None` where PHP returns `false`.
-pub(crate) fn public_key(pem: &[u8]) -> Option<Public> {
+/// The key material a key argument names: the contents of the file a
+/// `file://` argument points to (`None` when it cannot be read, where PHP
+/// returns `false`), else the argument itself. `function` and `parameter`
+/// name PHP's argument for the error a path with a NUL byte raises.
+fn key_source<'a>(key: &'a [u8], function: &str, parameter: &str) -> Result<Option<Cow<'a, [u8]>>, Error> {
+    // PHP reads a file only when something follows the scheme.
+    let Some(path) = key.strip_prefix(b"file://").filter(|p| !p.is_empty()) else {
+        return Ok(Some(Cow::Borrowed(key)));
+    };
+    if path.contains(&0) {
+        return Err(Error::Value(format!("{function}(): Argument #1 (${parameter}) must not contain any null bytes")));
+    }
+    Ok(php_std::path::file_get_contents(path).map(Cow::Owned))
+}
+
+/// `openssl_pkey_get_public($key)`: the key of the first PEM certificate,
+/// else of the first PEM public key (SubjectPublicKeyInfo or PKCS#1), in
+/// `key` or in the file a `file://` key names; `Ok(None)` where PHP returns
+/// `false`, and `\ValueError` for a path with a NUL byte.
+pub(crate) fn public_key(key: &[u8]) -> Result<Option<Public>, Error> {
+    let Some(pem) = key_source(key, "openssl_pkey_get_public", "public_key")? else {
+        return Ok(None);
+    };
+    Ok(public_pem(&pem))
+}
+
+fn public_pem(pem: &[u8]) -> Option<Public> {
     let blocks = pem_blocks(pem);
     for (label, der) in &blocks {
         if (*label == b"CERTIFICATE" || *label == b"X509 CERTIFICATE")
@@ -151,31 +175,38 @@ pub(crate) fn public_key(pem: &[u8]) -> Option<Public> {
     None
 }
 
-/// A private key `openssl_pkey_get_private()` accepts and this port can sign with.
-pub(crate) enum Private {
-    Rsa(RsaPrivateKey),
-    /// A NIST P-256 key: OpenSSL signs with ECDSA whatever `alg` the header claims.
-    P256(p256::ecdsa::SigningKey),
+/// A private key `openssl_pkey_get_private()` accepts: RSA, RSA-PSS, DSA,
+/// EC on any curve OpenSSL knows, Ed25519, ... Whether it can sign RS256
+/// input is decided when signing, as PHP's `openssl_sign()` does.
+pub(crate) type Private = PKey<openssl::pkey::Private>;
+
+/// `openssl_pkey_get_private($key)`: the first PKCS#8, PKCS#1 RSA, SEC1 EC
+/// or DSA private key in `key` or in the file a `file://` key names;
+/// `Ok(None)` where PHP returns `false` (encrypted keys need a passphrase),
+/// and `\ValueError` for a path with a NUL byte.
+pub(crate) fn private_key(key: &[u8]) -> Result<Option<Private>, Error> {
+    let Some(pem) = key_source(key, "openssl_pkey_get_private", "private_key")? else {
+        return Ok(None);
+    };
+    Ok(private_pem(&pem))
 }
 
-/// `openssl_pkey_get_private($pem)`: PKCS#8, PKCS#1 RSA and SEC1 EC keys.
-pub(crate) fn private_key(pem: &[u8]) -> Option<Private> {
+fn private_pem(pem: &[u8]) -> Option<Private> {
     for (label, der) in pem_blocks(pem) {
         let Some(der) = der else {
-            if matches!(label, b"PRIVATE KEY" | b"RSA PRIVATE KEY" | b"EC PRIVATE KEY" | b"ENCRYPTED PRIVATE KEY") {
+            if matches!(
+                label,
+                b"PRIVATE KEY" | b"RSA PRIVATE KEY" | b"EC PRIVATE KEY" | b"DSA PRIVATE KEY" | b"ENCRYPTED PRIVATE KEY"
+            ) {
                 return None;
             }
             continue;
         };
         return match label {
-            b"PRIVATE KEY" => match PKey::private_key_from_pkcs8(&der) {
-                Ok(key) if key.id() == Id::RSA => key.rsa().ok().map(Private::Rsa),
-                _ => p256::ecdsa::SigningKey::from_pkcs8_der(&der).ok().map(Private::P256),
-            },
-            b"RSA PRIVATE KEY" => RsaPrivateKey::private_key_from_der(&der).ok().map(Private::Rsa),
-            b"EC PRIVATE KEY" => {
-                p256::SecretKey::from_sec1_der(&der).ok().map(|k| Private::P256(p256::ecdsa::SigningKey::from(k)))
-            }
+            b"PRIVATE KEY" => PKey::private_key_from_pkcs8(&der).ok(),
+            b"RSA PRIVATE KEY" => RsaPrivateKey::private_key_from_der(&der).and_then(PKey::from_rsa).ok(),
+            b"EC PRIVATE KEY" => openssl::ec::EcKey::private_key_from_der(&der).and_then(PKey::from_ec_key).ok(),
+            b"DSA PRIVATE KEY" => PKey::private_key_from_der(&der).ok().filter(|k| k.id() == Id::DSA),
             _ => continue,
         };
     }
@@ -197,22 +228,14 @@ impl Rsa {
     }
 }
 
-/// `openssl_sign($input, $signature, $key, OPENSSL_ALGO_SHA256)`: RSASSA-PKCS1-v1_5
-/// with SHA-256 for RSA keys, DER ECDSA with SHA-256 for EC keys.
+/// `openssl_sign($input, $signature, $key, OPENSSL_ALGO_SHA256)`: SHA-256
+/// with the key's own scheme (RSASSA-PKCS1-v1_5 for RSA, DER ECDSA for EC and
+/// DSA); keys that cannot sign a SHA-256 digest (Ed25519, X25519, DH, SM2)
+/// fail like PHP's `false`.
 pub(crate) fn sign(key: Private, input: &[u8]) -> Result<Vec<u8>, Error> {
-    let failed = || Error::Exception("Unable to sign the token".into());
-    match key {
-        Private::Rsa(key) => {
-            let key = PKey::from_rsa(key).map_err(|_| failed())?;
-            Signer::new(MessageDigest::sha256(), &key)
-                .and_then(|mut signer| signer.sign_oneshot_to_vec(input))
-                .map_err(|_| failed())
-        }
-        Private::P256(key) => {
-            let signature: p256::ecdsa::Signature = key.try_sign(input).map_err(|_| failed())?;
-            Ok(signature.to_der().as_bytes().to_vec())
-        }
-    }
+    Signer::new(MessageDigest::sha256(), &key)
+        .and_then(|mut signer| signer.sign_oneshot_to_vec(input))
+        .map_err(|_| Error::Exception("Unable to sign the token".into()))
 }
 
 /// `openssl_verify(...) === 1`.

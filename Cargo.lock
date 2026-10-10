@@ -2274,6 +2274,8 @@ dependencies = [
  "hmac 0.12.1",
  "indexmap",
  "md-5 0.10.6",
+ "num-bigint",
+ "num-integer",
  "openssl",
  "p256",
  "php-std",

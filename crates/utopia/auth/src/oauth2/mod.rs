@@ -19,15 +19,21 @@ pub use resource_indicators::{ResourceIndicators, Resources};
 /// OpenID Connect `prompt` values (`Utopia\Auth\Enums\Prompt`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Prompt {
+    /// `none`: no interaction.
     None,
+    /// `login`: authenticate again.
     Login,
+    /// `consent`: ask for consent again.
     Consent,
+    /// `select_account`: let the user pick an account.
     SelectAccount,
 }
 
 impl Prompt {
+    /// Every prompt, in declaration order.
     pub const ALL: [Prompt; 4] = [Prompt::None, Prompt::Login, Prompt::Consent, Prompt::SelectAccount];
 
+    /// The prompt value (the enum's backing value).
     pub fn as_str(self) -> &'static str {
         match self {
             Prompt::None => "none",
@@ -46,15 +52,22 @@ impl Prompt {
 /// RFC 9396 common `authorization_details` fields (`Utopia\Auth\Enums\AuthorizationDetail`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AuthorizationDetail {
+    /// `type`.
     Type,
+    /// `locations`.
     Locations,
+    /// `actions`.
     Actions,
+    /// `datatypes`.
     Datatypes,
+    /// `identifier`.
     Identifier,
+    /// `privileges`.
     Privileges,
 }
 
 impl AuthorizationDetail {
+    /// Every field, in declaration order.
     pub const ALL: [AuthorizationDetail; 6] = [
         AuthorizationDetail::Type,
         AuthorizationDetail::Locations,
@@ -64,6 +77,7 @@ impl AuthorizationDetail {
         AuthorizationDetail::Privileges,
     ];
 
+    /// The field name (the enum's backing value).
     pub fn as_str(self) -> &'static str {
         match self {
             AuthorizationDetail::Type => "type",

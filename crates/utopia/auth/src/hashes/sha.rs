@@ -5,18 +5,28 @@ use crate::{Error, Hash, Options};
 /// The versions `Sha::setVersion()` accepts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ShaVersion {
+    /// `sha1`.
     Sha1,
+    /// `sha224`.
     Sha224,
+    /// `sha256`.
     Sha256,
+    /// `sha384`.
     Sha384,
+    /// `sha512`.
     Sha512,
+    /// `sha3-224`.
     Sha3_224,
+    /// `sha3-256`.
     Sha3_256,
+    /// `sha3-384`.
     Sha3_384,
+    /// `sha3-512`.
     Sha3_512,
 }
 
 impl ShaVersion {
+    /// Every version, in the order PHP lists them.
     pub const ALL: [ShaVersion; 9] = [
         ShaVersion::Sha1,
         ShaVersion::Sha224,
@@ -53,6 +63,24 @@ impl ShaVersion {
 /// Unsalted SHA digests, lowercase hex (`Utopia\Auth\Hashes\Sha`).
 ///
 /// Its options hold only `version` (no `type`), the `hash()` algorithm.
+///
+/// ```
+/// use utopia_auth::Hash;
+/// use utopia_auth::hashes::{Sha, ShaVersion};
+///
+/// let mut sha = Sha::new();
+/// sha.set_version(ShaVersion::Sha256);
+/// let hash = sha.hash(b"password")?;
+/// assert_eq!(hash, b"5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8");
+/// # Ok::<(), utopia_auth::Error>(())
+/// ```
+///
+/// ```php
+/// use Utopia\Auth\Hashes\Sha;
+///
+/// $sha = (new Sha())->setVersion(Sha::SHA256);
+/// echo $sha->hash('password'), "\n"; // 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8
+/// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct Sha {
     options: Options,

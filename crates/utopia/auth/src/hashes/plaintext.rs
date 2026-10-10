@@ -15,6 +15,7 @@ impl Default for Plaintext {
 }
 
 impl Plaintext {
+    /// `new Plaintext()`.
     pub fn new() -> Self {
         let mut options = Options::new();
         options.set("type", "plaintext");

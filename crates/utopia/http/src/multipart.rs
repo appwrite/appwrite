@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use php_std::zval::{Array, Key, Zval};
+use php_std::{Array, ArrayKey, Str, Value as Php};
 
 use crate::params::{Params, array_to_params};
 
@@ -70,7 +70,7 @@ pub(crate) fn parse(content_type: &str, body: &[u8]) -> (Params, Params) {
         }
         let Some(name) = name else { continue };
         match filename {
-            None => php_std::encoding::register_variable(&mut post, &name, Zval::String(data.to_vec()), false),
+            None => php_std::encoding::register_variable(&mut post, &name, Php::Str(Str::copy_from(data)), false),
             Some(filename) => {
                 let (tmp_name, size, error) = if filename.is_empty() {
                     (Vec::new(), 0, NO_FILE)
@@ -100,20 +100,20 @@ fn register_file(
         Some(pos) if pos > 0 => {
             let (base, path) = name.split_at(pos);
             let meta = |attr: &str| [base, b"[", attr.as_bytes(), b"]", path].concat();
-            php_std::encoding::register_variable(files, &meta("name"), Zval::String(filename), false);
-            php_std::encoding::register_variable(files, &meta("type"), Zval::String(kind), false);
-            php_std::encoding::register_variable(files, &meta("tmp_name"), Zval::String(tmp), false);
-            php_std::encoding::register_variable(files, &meta("error"), Zval::Int(error), false);
-            php_std::encoding::register_variable(files, &meta("size"), Zval::Int(size), false);
+            php_std::encoding::register_variable(files, &meta("name"), Php::Str(filename.into()), false);
+            php_std::encoding::register_variable(files, &meta("type"), Php::Str(kind.into()), false);
+            php_std::encoding::register_variable(files, &meta("tmp_name"), Php::Str(tmp.into()), false);
+            php_std::encoding::register_variable(files, &meta("error"), Php::Int(error), false);
+            php_std::encoding::register_variable(files, &meta("size"), Php::Int(size), false);
         }
         _ => {
             let mut file = Array::new();
-            file.insert(Key::Str(b"type".to_vec()), Zval::String(kind));
-            file.insert(Key::Str(b"tmp_name".to_vec()), Zval::String(tmp));
-            file.insert(Key::Str(b"size".to_vec()), Zval::Int(size));
-            file.insert(Key::Str(b"name".to_vec()), Zval::String(filename));
-            file.insert(Key::Str(b"error".to_vec()), Zval::Int(error));
-            php_std::encoding::register_variable(files, name, Zval::Array(file), false);
+            file.set(ArrayKey::Str(Str::from("type")), Php::Str(kind.into()));
+            file.set(ArrayKey::Str(Str::from("tmp_name")), Php::Str(tmp.into()));
+            file.set(ArrayKey::Str(Str::from("size")), Php::Int(size));
+            file.set(ArrayKey::Str(Str::from("name")), Php::Str(filename.into()));
+            file.set(ArrayKey::Str(Str::from("error")), Php::Int(error));
+            php_std::encoding::register_variable(files, name, Php::Array(file), false);
         }
     }
 }

@@ -4,6 +4,24 @@ use crate::hashes::Argon2;
 use crate::{Error, Hash};
 
 /// A numeric one-time code (`Utopia\Auth\Proofs\Code`), 6 digits by default.
+///
+/// ```
+/// use utopia_auth::proofs::{Code, Proof};
+///
+/// let code = Code::new(8)?;
+/// let secret = code.generate()?;
+/// assert_eq!(secret.len(), 8);
+/// assert!(secret.iter().all(u8::is_ascii_digit));
+/// # Ok::<(), utopia_auth::Error>(())
+/// ```
+///
+/// ```php
+/// use Utopia\Auth\Proofs\Code;
+///
+/// $secret = (new Code(8))->generate();
+/// echo strlen($secret), "\n";       // 8
+/// var_dump(ctype_digit($secret));  // bool(true)
+/// ```
 #[derive(Debug, Clone)]
 pub struct Code {
     length: i64,

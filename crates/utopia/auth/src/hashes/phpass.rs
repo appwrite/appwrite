@@ -1,7 +1,7 @@
 use md5::{Digest, Md5};
+use php_std::Value;
 use php_std::format::{dval_to_lval, str_to_float};
 use php_std::value::{Number, numeric_str_ex};
-use php_std::zval::Zval;
 
 use super::{hash_plumbing, password};
 use crate::hash::{hash_equals, random_bytes};
@@ -54,7 +54,7 @@ impl PHPass {
 
     /// `iteration_count_log2` as PHP arithmetic sees it.
     fn count(&self, op: &str) -> Result<Number, Error> {
-        let value = self.options.raw("iteration_count_log2").unwrap_or(&Zval::Null);
+        let value = self.options.raw("iteration_count_log2").unwrap_or(&Value::Null);
         operand(value, op)
     }
 
@@ -98,13 +98,13 @@ impl PHPass {
 
 /// An operand of PHP arithmetic: numbers as they are, numeric strings as
 /// their number, `null`/`bool` as `0`/`1`; anything else is a `TypeError`.
-fn operand(value: &Zval, op: &str) -> Result<Number, Error> {
+fn operand(value: &Value, op: &str) -> Result<Number, Error> {
     let unsupported = || Error::Type(format!("Unsupported operand types: {} {op} int", type_name(value)));
     Ok(match value {
-        Zval::Int(i) => Number::Int(*i),
-        Zval::Float(f) => Number::Float(*f),
-        Zval::Null | Zval::Bool(_) => Number::Int(to_long(value)),
-        Zval::String(s) => match std::str::from_utf8(s).ok().and_then(numeric_str_ex) {
+        Value::Int(i) => Number::Int(*i),
+        Value::Float(f) => Number::Float(*f),
+        Value::Null | Value::Bool(_) => Number::Int(to_long(value)),
+        Value::Str(s) => match std::str::from_utf8(s).ok().and_then(numeric_str_ex) {
             Some((n, _)) => n,
             None => {
                 // A leading-numeric string ("9abc") is used with a warning.
@@ -127,7 +127,8 @@ fn operand(value: &Zval, op: &str) -> Result<Number, Error> {
                 }
             }
         },
-        Zval::Array(_) | Zval::Object(_) => return Err(unsupported()),
+        Value::Array(_) | Value::Object(_) => return Err(unsupported()),
+        Value::Ext(never) => match *never {},
     })
 }
 

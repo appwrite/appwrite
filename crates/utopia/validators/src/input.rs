@@ -1,21 +1,25 @@
-//! [`Input`]: a PHP value borrowed from either `php-std` model.
+//! [`Input`]: a PHP value borrowed from a request value or an exact PHP value.
 
 use std::borrow::Cow;
 
+use php_std::Value;
 use php_std::filter;
 use php_std::format::Arg;
 use php_std::json;
+use php_std::types::{Iter, KeyRef, numeric_key};
 use php_std::value::{self, Number};
-use php_std::zval::{self, JsonEntries, KeyRef, PhpValue, Zval, ZvalEntries};
 
 use crate::Error;
 
 /// A PHP value to validate: a request value (`serde_json::Value`, decoded
-/// like `Utopia\Http\Request` decodes it) or an exact PHP value ([`Zval`]).
+/// like `Utopia\Http\Request` decodes it) or an exact PHP value ([`Value`]).
 #[derive(Debug, Clone, Copy)]
 pub enum Input<'a> {
+    /// A request value: non-empty objects are associative arrays, numeric
+    /// string keys are integer keys, integers beyond `i64` are floats.
     Json(&'a serde_json::Value),
-    Zval(&'a Zval),
+    /// An exact PHP value: binary strings, non-finite floats, `stdClass`.
+    Value(&'a Value),
 }
 
 impl<'a> From<&'a serde_json::Value> for Input<'a> {
@@ -24,9 +28,9 @@ impl<'a> From<&'a serde_json::Value> for Input<'a> {
     }
 }
 
-impl<'a> From<&'a Zval> for Input<'a> {
-    fn from(value: &'a Zval) -> Self {
-        Input::Zval(value)
+impl<'a> From<&'a Value> for Input<'a> {
+    fn from(value: &'a Value) -> Self {
+        Input::Value(value)
     }
 }
 
@@ -46,8 +50,12 @@ pub enum View<'a> {
 
 /// The entries of an array or the properties of an object.
 pub enum Entries<'a> {
-    Json(JsonEntries<'a>),
-    Zval(ZvalEntries<'a>),
+    /// A request list's elements.
+    List(std::iter::Enumerate<std::slice::Iter<'a, serde_json::Value>>),
+    /// A request object's members (numeric keys read as integers).
+    Map(serde_json::map::Iter<'a>),
+    /// A PHP value's entries.
+    Value(Iter<'a, php_std::Never>),
 }
 
 impl<'a> Iterator for Entries<'a> {
@@ -55,15 +63,17 @@ impl<'a> Iterator for Entries<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            Entries::Json(it) => it.next().map(|(k, v)| (k, Input::Json(v))),
-            Entries::Zval(it) => it.next().map(|(k, v)| (k, Input::Zval(v))),
+            Entries::List(it) => it.next().map(|(i, v)| (KeyRef::Int(i as i64), Input::Json(v))),
+            Entries::Map(it) => it.next().map(|(k, v)| (KeyRef::normalize(k.as_bytes()), Input::Json(v))),
+            Entries::Value(it) => it.next().map(|(k, v)| (k, Input::Value(v))),
         }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         match self {
-            Entries::Json(it) => it.size_hint(),
-            Entries::Zval(it) => it.size_hint(),
+            Entries::List(it) => it.size_hint(),
+            Entries::Map(it) => it.size_hint(),
+            Entries::Value(it) => it.size_hint(),
         }
     }
 }
@@ -71,25 +81,31 @@ impl<'a> Iterator for Entries<'a> {
 impl ExactSizeIterator for Entries<'_> {}
 
 impl<'a> Input<'a> {
+    /// One level of the value, as `gettype()` sees it.
     pub fn view(self) -> View<'a> {
+        use serde_json::Value as Json;
         match self {
-            Input::Json(v) => match v.view() {
-                zval::View::Null => View::Null,
-                zval::View::Bool(b) => View::Bool(b),
-                zval::View::Int(i) => View::Int(i),
-                zval::View::Float(f) => View::Float(f),
-                zval::View::Str(s) => View::Str(s),
-                zval::View::Array(e) => View::Array(Entries::Json(e)),
-                zval::View::Object(e) => View::Object(Entries::Json(e)),
+            Input::Json(v) => match v {
+                Json::Null => View::Null,
+                Json::Bool(b) => View::Bool(*b),
+                Json::Number(n) => match n.as_i64() {
+                    Some(i) => View::Int(i),
+                    None => View::Float(n.as_f64().unwrap_or(0.0)),
+                },
+                Json::String(s) => View::Str(s.as_bytes()),
+                Json::Array(a) => View::Array(Entries::List(a.iter().enumerate())),
+                Json::Object(o) if o.is_empty() => View::Object(Entries::Map(o.iter())),
+                Json::Object(o) => View::Array(Entries::Map(o.iter())),
             },
-            Input::Zval(z) => match z.view() {
-                zval::View::Null => View::Null,
-                zval::View::Bool(b) => View::Bool(b),
-                zval::View::Int(i) => View::Int(i),
-                zval::View::Float(f) => View::Float(f),
-                zval::View::Str(s) => View::Str(s),
-                zval::View::Array(e) => View::Array(Entries::Zval(e)),
-                zval::View::Object(e) => View::Object(Entries::Zval(e)),
+            Input::Value(z) => match z {
+                Value::Null => View::Null,
+                Value::Bool(b) => View::Bool(*b),
+                Value::Int(i) => View::Int(*i),
+                Value::Float(f) => View::Float(*f),
+                Value::Str(s) => View::Str(s.as_bytes()),
+                Value::Array(a) => View::Array(Entries::Value(a.iter())),
+                Value::Object(a) => View::Object(Entries::Value(a.iter())),
+                Value::Ext(never) => match *never {},
             },
         }
     }
@@ -133,8 +149,13 @@ impl<'a> Input<'a> {
     /// `array_is_list()` of an array (`false` for anything else).
     pub fn is_list(self) -> bool {
         match self {
-            Input::Json(v) => v.is_list(),
-            Input::Zval(z) => z.is_list(),
+            Input::Json(serde_json::Value::Array(_)) => true,
+            Input::Json(serde_json::Value::Object(o)) => {
+                !o.is_empty() && o.keys().enumerate().all(|(i, k)| numeric_key(k.as_bytes()) == Some(i as i64))
+            }
+            Input::Json(_) => false,
+            Input::Value(Value::Array(a)) => a.is_list(),
+            Input::Value(_) => false,
         }
     }
 
@@ -169,17 +190,14 @@ impl<'a> Input<'a> {
                 json::encode(&php_std::Value::<php_std::Never>::from_json(v), json::Flags::NONE, json::DEFAULT_DEPTH)
                     .ok()
             }
-            Input::Zval(z) => json::encode(&z.to_value(), json::Flags::NONE, json::DEFAULT_DEPTH).ok(),
+            Input::Value(z) => json::encode(z, json::Flags::NONE, json::DEFAULT_DEPTH).ok(),
         }
     }
 
     /// `$value[$key]` of an array or the property `$key` of a `stdClass`
     /// (`get_object_vars()`): `None` when missing or for any other value.
     pub fn get(self, key: &str) -> Option<Input<'a>> {
-        let wanted = match zval::numeric_key(key.as_bytes()) {
-            Some(i) => KeyRef::Int(i),
-            None => KeyRef::Str(key.as_bytes()),
-        };
+        let wanted = KeyRef::normalize(key.as_bytes());
         match self.view() {
             View::Array(mut e) => e.find(|(k, _)| *k == wanted).map(|(_, v)| v),
             // Property names are strings; get_object_vars() turns numeric ones into integer keys.

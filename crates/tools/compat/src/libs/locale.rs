@@ -9,7 +9,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard};
 
-use php_std::zval::{Array, Key, Zval};
+use php_std::{Array, ArrayKey, Value as Php};
 use serde_json::{Map, Value, json};
 use utopia_locale::{Error, Languages, Locale, Missing, Translations};
 
@@ -50,7 +50,7 @@ fn err(e: Error) -> Outcome {
 
 /// PHP's array key for a string: numeric strings are integers.
 fn key(s: &str) -> Value {
-    match php_std::zval::numeric_key(s.as_bytes()) {
+    match php_std::types::numeric_key(s.as_bytes()) {
         Some(i) => Value::from(i),
         None => Value::String(s.to_owned()),
     }
@@ -58,7 +58,7 @@ fn key(s: &str) -> Value {
 
 /// A Rust map as the PHP array it is: a list when its keys are `0..n`.
 fn php_array(t: &Translations) -> Value {
-    let array: Array = t.keys().map(|k| (Key::from_bytes(k.as_bytes()), Zval::Null)).collect();
+    let array: Array = t.keys().map(|k| (ArrayKey::from_bytes(k.as_bytes()), Php::Null)).collect();
     if array.is_list() {
         Value::Array(t.values().map(|v| Value::String(v.clone())).collect())
     } else {

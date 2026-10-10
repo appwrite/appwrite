@@ -30,8 +30,9 @@ use std::borrow::Cow;
 use std::path::Path;
 
 use indexmap::IndexMap;
+use php_std::Value;
 use php_std::json::{self, Flags};
-use php_std::zval::{Key, Zval};
+use php_std::types::KeyRef;
 
 /// The getting started guide (`guide.md`), compiled and run with the doctests.
 #[cfg(doctest)]
@@ -159,28 +160,29 @@ impl Languages {
     /// unusable language, as in PHP; an object or list must hold strings
     /// only ([`Error::Unsupported`] otherwise).
     pub fn insert_json(&mut self, name: impl Into<String>, json: &[u8]) -> Result<(), Error> {
-        let language = match json::decode(json, Some(true), 512, Flags::NONE).map(|v| Zval::from_value(&v)) {
-            Err(_) | Ok(Zval::Null) => Language::Unusable("null"),
-            Ok(Zval::Bool(true)) => Language::Unusable("true"),
-            Ok(Zval::Bool(false)) => Language::Unusable("false"),
-            Ok(Zval::Int(_)) => Language::Unusable("int"),
-            Ok(Zval::Float(_)) => Language::Unusable("float"),
-            Ok(Zval::String(_)) => Language::Unusable("string"),
-            Ok(Zval::Object(_)) => Language::Texts(Translations::new()),
-            Ok(Zval::Array(array)) => {
+        let language = match json::decode(json, Some(true), 512, Flags::NONE) {
+            Err(_) | Ok(Value::Null) => Language::Unusable("null"),
+            Ok(Value::Bool(true)) => Language::Unusable("true"),
+            Ok(Value::Bool(false)) => Language::Unusable("false"),
+            Ok(Value::Int(_)) => Language::Unusable("int"),
+            Ok(Value::Float(_)) => Language::Unusable("float"),
+            Ok(Value::Str(_)) => Language::Unusable("string"),
+            Ok(Value::Object(_)) => Language::Texts(Translations::new()),
+            Ok(Value::Array(array)) => {
                 let mut texts = Translations::with_capacity(array.len());
                 for (key, value) in array.iter() {
                     let key = match key {
-                        Key::Int(i) => i.to_string(),
-                        Key::Str(s) => String::from_utf8_lossy(s).into_owned(),
+                        KeyRef::Int(i) => i.to_string(),
+                        KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
                     };
-                    let Zval::String(text) = value else {
+                    let Value::Str(text) = value else {
                         return Err(Error::Unsupported(format!("Translation \"{key}\" is not a string.")));
                     };
                     texts.insert(key, String::from_utf8_lossy(text).into_owned());
                 }
                 Language::Texts(texts)
             }
+            Ok(Value::Ext(never)) => match never {},
         };
         self.languages.insert(name.into(), language);
         Ok(())

@@ -5,6 +5,27 @@ use crate::{Error, Hash, Options};
 ///
 /// Options: `type`, `memory_cost` (KiB), `time_cost`, `threads`; every
 /// option is passed to `password_hash()`, which reads the last three.
+///
+/// ```
+/// use utopia_auth::Hash;
+/// use utopia_auth::hashes::Argon2;
+///
+/// let mut argon2 = Argon2::new();
+/// argon2.set_memory_cost(7168).set_time_cost(5).set_threads(1);
+/// let hash = argon2.hash(b"secret")?;
+/// assert!(hash.starts_with(b"$argon2id$v=19$m=7168,t=5,p=1$"));
+/// assert!(argon2.verify(b"secret", &hash)?);
+/// # Ok::<(), utopia_auth::Error>(())
+/// ```
+///
+/// ```php
+/// use Utopia\Auth\Hashes\Argon2;
+///
+/// $argon2 = (new Argon2())->setMemoryCost(7168)->setTimeCost(5)->setThreads(1);
+/// $hash = $argon2->hash('secret');
+/// echo substr($hash, 0, 30), "\n";             // $argon2id$v=19$m=7168,t=5,p=1$
+/// var_dump($argon2->verify('secret', $hash)); // bool(true)
+/// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct Argon2 {
     options: Options,

@@ -5,7 +5,8 @@ mod authenticator;
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use indexmap::IndexMap;
-use php_std::zval::{Array, Key, Object, Zval};
+use php_std::types::KeyRef;
+use php_std::{Array, ArrayKey, Str, Value as Php};
 use serde_json::{Map, Value, json};
 use utopia_auth::hashes::{Argon2, Bcrypt, Md5, PHPass, Plaintext, Scrypt, ScryptModified, Sha};
 use utopia_auth::jwt::{
@@ -99,6 +100,8 @@ pub const OPS: &[&str] = &[
     "fixture.substr",
     "fixture.jwt",
     "fixture.jws",
+    "fixture.write",
+    "issuer.sign_once",
 ];
 
 // ---------------------------------------------------------------------------
@@ -106,60 +109,69 @@ pub const OPS: &[&str] = &[
 // ---------------------------------------------------------------------------
 
 /// `Codec::decode`: a JSON argument as the PHP value the PHP adapter receives.
-pub(crate) fn to_zval(value: &Value) -> Zval {
+pub(crate) fn to_php(value: &Value) -> Php {
     match value {
-        Value::Null => Zval::Null,
-        Value::Bool(b) => Zval::Bool(*b),
+        Value::Null => Php::Null,
+        Value::Bool(b) => Php::Bool(*b),
         Value::Number(n) => match n.as_i64() {
-            Some(i) => Zval::Int(i),
-            None => Zval::Float(n.as_f64().unwrap_or(0.0)),
+            Some(i) => Php::Int(i),
+            None => Php::Float(n.as_f64().unwrap_or(0.0)),
         },
-        Value::String(s) => Zval::String(s.as_bytes().to_vec()),
-        Value::Array(a) => Zval::Array(a.iter().map(to_zval).collect()),
-        Value::Object(o) if o.is_empty() => Zval::Object(Object::new()),
+        Value::String(s) => Php::Str(Str::copy_from(s.as_bytes())),
+        Value::Array(a) => Php::Array(a.iter().map(to_php).collect()),
+        Value::Object(o) if o.is_empty() => Php::Object(Array::new()),
         Value::Object(o) => {
             if o.len() == 1
                 && let Some(Value::String(b)) = o.get("$bytes")
             {
-                return Zval::String(BASE64.decode(b).unwrap_or_default());
+                return Php::Str(Str::from(BASE64.decode(b).unwrap_or_default()));
             }
             if o.len() == 1
                 && let Some(f) = o.get("$float")
             {
-                return Zval::Float(crate::adapter::float(&json!({ "$float": f })).unwrap_or(0.0));
+                return Php::Float(crate::adapter::float(&json!({ "$float": f })).unwrap_or(0.0));
             }
-            Zval::Array(o.iter().map(|(k, v)| (Key::from_bytes(k.as_bytes()), to_zval(v))).collect())
+            Php::Array(o.iter().map(|(k, v)| (ArrayKey::from_bytes(k.as_bytes()), to_php(v))).collect())
         }
     }
 }
 
 /// `Codec::encode`: a PHP value as the PHP driver reports it.
-pub(crate) fn from_zval(value: &Zval) -> Value {
+pub(crate) fn from_php(value: &Php) -> Value {
     match value {
-        Zval::Null => Value::Null,
-        Zval::Bool(b) => Value::Bool(*b),
-        Zval::Int(i) => Value::from(*i),
-        Zval::Float(f) => crate::adapter::float_value(*f),
-        Zval::String(s) => bytes_value(s),
-        Zval::Array(a) => from_array(a),
-        Zval::Object(o) => {
-            Value::Object(o.iter().map(|(k, v)| (String::from_utf8_lossy(k).into_owned(), from_zval(v))).collect())
-        }
+        Php::Null => Value::Null,
+        Php::Bool(b) => Value::Bool(*b),
+        Php::Int(i) => Value::from(*i),
+        Php::Float(f) => crate::adapter::float_value(*f),
+        Php::Str(s) => bytes_value(s),
+        Php::Array(a) => from_array(a),
+        Php::Object(o) => Value::Object(
+            o.iter()
+                .map(|(k, v)| {
+                    let key = match k {
+                        KeyRef::Int(i) => i.to_string(),
+                        KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
+                    };
+                    (key, from_php(v))
+                })
+                .collect(),
+        ),
+        Php::Ext(never) => match *never {},
     }
 }
 
 pub(crate) fn from_array(a: &Array) -> Value {
     if a.is_list() {
-        Value::Array(a.iter().map(|(_, v)| from_zval(v)).collect())
+        Value::Array(a.iter().map(|(_, v)| from_php(v)).collect())
     } else {
         Value::Object(
             a.iter()
                 .map(|(k, v)| {
                     let key = match k {
-                        Key::Int(i) => i.to_string(),
-                        Key::Str(s) => String::from_utf8_lossy(s).into_owned(),
+                        KeyRef::Int(i) => i.to_string(),
+                        KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
                     };
-                    (key, from_zval(v))
+                    (key, from_php(v))
                 })
                 .collect(),
         )
@@ -167,13 +179,13 @@ pub(crate) fn from_array(a: &Array) -> Value {
 }
 
 fn array(value: Option<&Value>) -> Array {
-    match value.map(to_zval) {
-        Some(Zval::Array(a)) => a,
+    match value.map(to_php) {
+        Some(Php::Array(a)) => a,
         _ => Array::new(),
     }
 }
 
-fn list(value: Option<&Value>) -> Vec<Zval> {
+fn list(value: Option<&Value>) -> Vec<Php> {
     array(value).iter().map(|(_, v)| v.clone()).collect()
 }
 
@@ -255,11 +267,13 @@ fn new_hash(algo: &str) -> Result<Box<dyn Hash>, Fault> {
 
 /// The typed setters (`$hash->setCost()`, ...), by PHP method name.
 fn setter(hash: &mut dyn Hash, method: &str, value: &Value) -> Result<Result<(), Error>, Fault> {
-    let z = to_zval(value);
+    let z = to_php(value);
     let int = || php_std::format::Arg::from(value).to_int();
     let string = || match &z {
-        Zval::String(s) => s.clone(),
-        other => php_std::format::Arg::from(&from_zval(other)).to_bytes().map(|c| c.into_owned()).unwrap_or_default(),
+        Php::Str(s) => s.clone(),
+        other => Str::from(
+            php_std::format::Arg::from(&from_php(other)).to_bytes().map(|c| c.into_owned()).unwrap_or_default(),
+        ),
     };
     let any = hash.as_any_mut();
     let unknown = || Fault::new(format!("{method} is not a setter"));
@@ -332,13 +346,13 @@ fn options_value(hash: &dyn Hash) -> Value {
 }
 
 fn audience(value: Option<&Value>) -> Option<Audience> {
-    match value.map(to_zval) {
-        None | Some(Zval::Null) => None,
-        Some(Zval::Array(a)) => Some(Audience::Many(a)),
-        Some(Zval::Object(_)) => Some(Audience::Many(Array::new())),
-        Some(Zval::String(s)) => Some(Audience::One(s)),
+    match value.map(to_php) {
+        None | Some(Php::Null) => None,
+        Some(Php::Array(a)) => Some(Audience::Many(a)),
+        Some(Php::Object(_)) => Some(Audience::Many(Array::new())),
+        Some(Php::Str(s)) => Some(Audience::One(s.to_vec())),
         Some(other) => Some(Audience::One(
-            php_std::format::Arg::from(&from_zval(&other)).to_bytes().map(|c| c.into_owned()).unwrap_or_default(),
+            php_std::format::Arg::from(&from_php(&other)).to_bytes().map(|c| c.into_owned()).unwrap_or_default(),
         )),
     }
 }
@@ -353,9 +367,9 @@ fn scopes(a: &Args) -> Vec<Vec<u8>> {
     list(a.opt("scopes"))
         .into_iter()
         .map(|z| match z {
-            Zval::String(s) => s,
+            Php::Str(s) => s.to_vec(),
             other => {
-                php_std::format::Arg::from(&from_zval(&other)).to_bytes().map(|c| c.into_owned()).unwrap_or_default()
+                php_std::format::Arg::from(&from_php(&other)).to_bytes().map(|c| c.into_owned()).unwrap_or_default()
             }
         })
         .collect()
@@ -409,8 +423,8 @@ fn relying_party(a: &Args) -> Result<RelyingParty, Fault> {
     let origins = list(a.opt("origins"))
         .into_iter()
         .map(|z| match z {
-            Zval::String(s) => String::from_utf8_lossy(&s).into_owned(),
-            other => from_zval(&other).to_string(),
+            Php::Str(s) => String::from_utf8_lossy(&s).into_owned(),
+            other => from_php(&other).to_string(),
         })
         .collect();
     Ok(RelyingParty::new(a.str("id")?, a.opt_str("name")?.unwrap_or_default(), origins))
@@ -418,16 +432,16 @@ fn relying_party(a: &Args) -> Result<RelyingParty, Fault> {
 
 fn resources(value: Option<&Value>, audience: Option<&Value>) -> Result<ResourceIndicators, Error> {
     use utopia_auth::oauth2::Resources;
-    let value = value.map(to_zval);
-    let audience = audience.map(to_zval).and_then(|z| match z {
-        Zval::Null => None,
-        Zval::String(s) => Some(s),
-        other => Some(from_zval(&other).to_string().into_bytes()),
+    let value = value.map(to_php);
+    let audience = audience.map(to_php).and_then(|z| match z {
+        Php::Null => None,
+        Php::Str(s) => Some(s),
+        other => Some(Str::from(from_php(&other).to_string().into_bytes())),
     });
     let resources = match &value {
-        None | Some(Zval::Null) => Resources::None,
-        Some(Zval::Array(a)) => Resources::Many(a),
-        Some(Zval::String(s)) => Resources::One(s),
+        None | Some(Php::Null) => Resources::None,
+        Some(Php::Array(a)) => Resources::Many(a),
+        Some(Php::Str(s)) => Resources::One(s),
         Some(_) => Resources::None,
     };
     ResourceIndicators::from(resources, audience.as_deref())
@@ -444,7 +458,7 @@ fn metadata(document: ClientIdMetadataDocument, a: &Args) -> Outcome {
     out.insert("metadata".into(), from_array(document.to_array()));
     if let Some(property) = a.opt("get").and_then(Value::as_str) {
         let value = match document.get(property.as_bytes()) {
-            Some(v) => from_zval(v),
+            Some(v) => from_php(v),
             None => a.opt("default").cloned().unwrap_or(Value::Null),
         };
         out.insert("get".into(), value);
@@ -466,11 +480,9 @@ fn jws(a: &Args, alg: &str, key: &[u8]) -> Result<String, Fault> {
         if let Some(r) = opt_bytes(a, raw)? {
             return Ok(r);
         }
-        let z = to_zval(a.opt(value).unwrap_or(&Value::Null));
+        let z = to_php(a.opt(value).unwrap_or(&Value::Null));
         // json_encode() failing gives false, which (string) casts to "".
-        Ok(php_std::json::encode(&z.to_value(), php_std::json::Flags::NONE, 512)
-            .map(String::into_bytes)
-            .unwrap_or_default())
+        Ok(php_std::json::encode(&z, php_std::json::Flags::NONE, 512).map(String::into_bytes).unwrap_or_default())
     };
     let input = format!("{}.{}", encode(&json("raw_header", "header")?), encode(&json("raw_claims", "claims")?));
     let signature = if alg == "HS256" {
@@ -485,6 +497,27 @@ fn ceremony<'a>(s: &'a Session, a: &Args) -> Result<&'a Ceremony, Fault> {
     s.get::<Ceremony>(a.value("ceremony")?)
 }
 
+/// `issuer.sign_once` after its files are written: a fresh AccessToken
+/// issuing a fixed token, decoded like `fixture.jwt`.
+async fn sign_once(new: &Value, session: &mut Session) -> OpResult {
+    let issuer = match Box::pin(call("issuer.new", new, session)).await? {
+        Outcome::Ok(handle) => handle,
+        other => return Ok(other),
+    };
+    let issue = serde_json::json!({
+        "issuer": issuer, "subject": "u", "audience": ["aud"], "client_id": "c",
+        "auth_time": 1000, "duration": 3600, "now": 1700000000, "jti": "j",
+    });
+    let token = match Box::pin(call("issuer.issue", &issue, session)).await? {
+        Outcome::Ok(token) => token,
+        other => return Ok(other),
+    };
+    Box::pin(call("fixture.jwt", &serde_json::json!({ "token": token }), session)).await
+}
+
+/// Where `issuer.sign_once` writes the key files its fuzzed inputs name.
+const FUZZ_DIR: &str = "/tmp/compat-fs/auth-fuzz";
+
 pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
     let a = Args(args);
     let result = match op {
@@ -498,13 +531,13 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "hash.get_option" => {
             let hash = hash_of(session, &a)?;
             match hash.options().get(a.str("key")?) {
-                Some(v) => Outcome::Ok(from_zval(v)),
+                Some(v) => Outcome::Ok(from_php(v)),
                 None => Outcome::Ok(a.opt("default").cloned().unwrap_or(Value::Null)),
             }
         }
         "hash.set_option" => {
             let key = a.str("key")?.to_owned();
-            let value = to_zval(a.opt("value").unwrap_or(&Value::Null));
+            let value = to_php(a.opt("value").unwrap_or(&Value::Null));
             hash_mut(session, &a)?.options_mut().set(&key, value);
             Outcome::Ok(Value::Null)
         }
@@ -603,7 +636,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         }
         "proof.hash_set_option" => {
             let key = a.str("key")?.to_owned();
-            let value = to_zval(a.opt("value").unwrap_or(&Value::Null));
+            let value = to_php(a.opt("value").unwrap_or(&Value::Null));
             session.get_mut::<AnyProof>(a.value("proof")?)?.proof_mut().hasher_mut().options_mut().set(&key, value);
             Outcome::Ok(Value::Null)
         }
@@ -687,14 +720,14 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "store.new" => Outcome::Ok(session.handle(Store::new())),
         "store.set_property" => {
             let key = a.bytes("key")?;
-            let value = to_zval(a.opt("value").unwrap_or(&Value::Null));
+            let value = to_php(a.opt("value").unwrap_or(&Value::Null));
             session.get_mut::<Store>(a.value("store")?)?.set_property(&key, value);
             Outcome::Ok(Value::Null)
         }
         "store.get_property" => {
             let key = a.bytes("key")?;
             match session.get::<Store>(a.value("store")?)?.property(&key) {
-                Some(v) => Outcome::Ok(from_zval(v)),
+                Some(v) => Outcome::Ok(from_php(v)),
                 None => Outcome::Ok(a.opt("default").cloned().unwrap_or(Value::Null)),
             }
         }
@@ -916,16 +949,16 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             Outcome::ok(r.equals(&o))
         }
         "authorization_details.new" => {
-            let d = AuthorizationDetails::new(&to_zval(a.opt("value").unwrap_or(&Value::Null)));
+            let d = AuthorizationDetails::new(&to_php(a.opt("value").unwrap_or(&Value::Null)));
             Outcome::Ok(Value::Array(d.entries().iter().map(from_array).collect()))
         }
         "authorization_details.grants" => {
-            let d = AuthorizationDetails::new(&to_zval(a.opt("details").unwrap_or(&Value::Null)));
+            let d = AuthorizationDetails::new(&to_php(a.opt("details").unwrap_or(&Value::Null)));
             let wildcard = opt_bytes(&a, "wildcard")?;
             Outcome::ok(d.grants(&a.bytes("type")?, &a.bytes("value")?, &a.bytes("field")?, wildcard.as_deref()))
         }
         "authorization_details.restrict" => {
-            let d = AuthorizationDetails::new(&to_zval(a.opt("details").unwrap_or(&Value::Null)));
+            let d = AuthorizationDetails::new(&to_php(a.opt("details").unwrap_or(&Value::Null)));
             let allow = array(a.opt("allow"));
             let wildcard = opt_bytes(&a, "wildcard")?;
             let mut calls = Vec::new();
@@ -936,8 +969,8 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                         bytes_value(kind),
                         Value::Array(values.iter().map(|v| bytes_value(v)).collect())
                     ]));
-                    match allow.get(&Key::from_bytes(kind)) {
-                        Some(Zval::Array(list)) => Some(list.clone()),
+                    match allow.get(&ArrayKey::from_bytes(kind)) {
+                        Some(Php::Array(list)) => Some(list.clone()),
                         _ => None,
                     }
                 },
@@ -978,7 +1011,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             let records: Vec<Array> = list(a.opt("records"))
                 .into_iter()
                 .map(|z| match z {
-                    Zval::Array(r) => r,
+                    Php::Array(r) => r,
                     _ => Array::new(),
                 })
                 .collect();
@@ -1059,6 +1092,43 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             }
         }
         "fixture.strlen" => Outcome::ok(a.bytes("value")?.len()),
+        "fixture.write" => {
+            let path = std::path::PathBuf::from(a.str("path")?);
+            if let Some(dir) = path.parent() {
+                std::fs::create_dir_all(dir).map_err(|e| Fault::new(e.to_string()))?;
+            }
+            std::fs::write(&path, a.bytes("content")?).map_err(|e| Fault::new(e.to_string()))?;
+            Outcome::ok(Value::Null)
+        }
+        "issuer.sign_once" => {
+            // A directory of this call's own: the PHP driver's view of
+            // /tmp/compat-fs is a shared mount, so the runtimes never share files.
+            static CALLS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+            let n = CALLS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            let dir = format!("{FUZZ_DIR}/rust-{}-{n}", std::process::id());
+            std::fs::create_dir_all(&dir).map_err(|e| Fault::new(e.to_string()))?;
+            for (field, name) in [("file", "key.pem"), ("public_file", "pub.pem")] {
+                if let Some(content) = opt_bytes(&a, field)? {
+                    std::fs::write(format!("{dir}/{name}"), content).map_err(|e| Fault::new(e.to_string()))?;
+                }
+            }
+            let in_dir = |key: &str| -> Result<Value, Fault> {
+                Ok(match a.value(key)? {
+                    Value::String(s) => Value::String(s.replace("{dir}", &dir)),
+                    other => other.clone(),
+                })
+            };
+            let new = serde_json::json!({
+                "kind": "access",
+                "private_key": in_dir("private_key")?,
+                "public_key": in_dir("public_key")?,
+                "issuer": "https://issuer.test",
+                "key_id": a.opt("key_id"),
+            });
+            let result = sign_once(&new, session).await;
+            let _ = std::fs::remove_dir_all(&dir);
+            return result;
+        }
         "fixture.substr" => {
             let value = a.bytes("value")?;
             bytes(php_std::string::substr(&value, a.i64("start")?, a.opt_i64("length")?).to_vec())
@@ -1078,7 +1148,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                     .collect();
                 let raw = php_std::encoding::base64_decode(&translated, false).unwrap_or_default();
                 match php_std::json::decode(&raw, Some(true), 512, php_std::json::Flags::NONE) {
-                    Ok(z) => from_zval(&php_std::zval::Zval::from_value(&z)),
+                    Ok(z) => from_php(&(z)),
                     Err(_) => Value::Null,
                 }
             };

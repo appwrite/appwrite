@@ -3,6 +3,25 @@ use crate::Error;
 
 /// The parsed OIDC `prompt` parameter (`Utopia\Auth\OAuth2\Prompts`):
 /// distinct values in first-seen order; `none` stands alone.
+///
+/// ```
+/// use utopia_auth::oauth2::{Prompt, Prompts};
+///
+/// let prompts = Prompts::from_string(b"login consent login")?;
+/// assert_eq!(prompts.to_vec(), ["login", "consent"]);
+/// assert!(prompts.contains(Prompt::Consent));
+/// assert!(Prompts::from_string(b"none login").is_err());
+/// # Ok::<(), utopia_auth::Error>(())
+/// ```
+///
+/// ```php
+/// use Utopia\Auth\Enums\Prompt;
+/// use Utopia\Auth\OAuth2\Prompts;
+///
+/// $prompts = Prompts::fromString('login consent login');
+/// echo implode(',', $prompts->toArray()), "\n";        // login,consent
+/// var_dump($prompts->contains(Prompt::Consent));       // bool(true)
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Prompts(Vec<Prompt>);
 

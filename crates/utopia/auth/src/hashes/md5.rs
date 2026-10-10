@@ -17,6 +17,7 @@ impl Default for Md5 {
 }
 
 impl Md5 {
+    /// `new MD5()`.
     pub fn new() -> Self {
         let mut options = Options::new();
         options.set("type", "md5");

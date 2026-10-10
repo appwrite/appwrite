@@ -243,6 +243,23 @@ const NOUNS: [&str; 104] = [
 ];
 
 /// A two-word passphrase, "Adjective noun" (`Utopia\Auth\Proofs\Phrase`).
+///
+/// ```
+/// use utopia_auth::proofs::{Phrase, Proof};
+///
+/// let phrase = Phrase::new().generate()?;
+/// let words: Vec<&[u8]> = phrase.split(|b| *b == b' ').collect();
+/// assert_eq!(words.len(), 2);
+/// assert!(words[0][0].is_ascii_uppercase());
+/// # Ok::<(), utopia_auth::Error>(())
+/// ```
+///
+/// ```php
+/// use Utopia\Auth\Proofs\Phrase;
+///
+/// $phrase = (new Phrase())->generate();
+/// echo count(explode(' ', $phrase)), "\n"; // 2
+/// ```
 #[derive(Debug, Clone)]
 pub struct Phrase {
     hash: Box<dyn Hash>,
@@ -255,6 +272,7 @@ impl Default for Phrase {
 }
 
 impl Phrase {
+    /// `new Phrase()`: hashed with Argon2.
     pub fn new() -> Self {
         Self { hash: Box::new(Argon2::new()) }
     }

@@ -5,7 +5,7 @@
 
 use php_std::json::{self, Flags};
 use php_std::url::parse_url;
-use php_std::zval::{Array, Key, Zval};
+use php_std::{Array, ArrayKey, Str, Value};
 use sha2::{Digest, Sha256};
 
 use super::RelyingParty;
@@ -31,6 +31,7 @@ const FLAG_ED: u8 = 0x80;
 pub struct Challenge {
     /// For `PublicKeyCredential.parseCreationOptionsFromJSON()` / `parseRequestOptionsFromJSON()`.
     pub options: Array,
+    /// The state to keep until the ceremony is verified (`getState()`).
     pub state: String,
 }
 
@@ -38,7 +39,9 @@ pub struct Challenge {
 /// identifier to find it by.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Credential {
+    /// The credential ID, base64url.
     pub identifier: String,
+    /// The credential record to store.
     pub record: Array,
 }
 
@@ -65,6 +68,7 @@ impl Counter {
 }
 
 impl StrictCounter {
+    /// `check($stored, $current)`: refuses a counter that did not increase.
     pub fn check(&self, stored: i64, current: i64) -> Result<(), Error> {
         if current > stored { Ok(()) } else { Err(Error::Counter("Invalid counter.".into())) }
     }
@@ -181,15 +185,15 @@ fn decode_no_padding(s: &[u8]) -> Result<Vec<u8>, Vec<u8>> {
 }
 
 /// PHP's name for a value's type in a `TypeError` (`true`/`false` for booleans).
-fn given(value: Option<&Zval>) -> String {
+fn given(value: Option<&Value>) -> String {
     match value {
-        None | Some(Zval::Null) => "null".into(),
-        Some(Zval::Bool(true)) => "true".into(),
-        Some(Zval::Bool(false)) => "false".into(),
-        Some(Zval::Int(_)) => "int".into(),
-        Some(Zval::Float(_)) => "float".into(),
-        Some(Zval::String(_)) => "string".into(),
-        Some(Zval::Array(_)) => "array".into(),
+        None | Some(Value::Null) => "null".into(),
+        Some(Value::Bool(true)) => "true".into(),
+        Some(Value::Bool(false)) => "false".into(),
+        Some(Value::Int(_)) => "int".into(),
+        Some(Value::Float(_)) => "float".into(),
+        Some(Value::Str(_)) => "string".into(),
+        Some(Value::Array(_)) => "array".into(),
         Some(object) => super::tags::class_of(object).unwrap_or_default(),
     }
 }
@@ -205,7 +209,7 @@ enum Decoder {
 /// A response field, or the `TypeError` webauthn-lib's denormalizers raise when it is not a string.
 fn string_field<'a>(a: &'a Array, name: &str, decoder: Decoder, file: &str, line: u32) -> Result<&'a [u8], Vec<u8>> {
     match get(a, name) {
-        Some(Zval::String(s)) => Ok(s),
+        Some(Value::Str(s)) => Ok(s),
         other => {
             let (func, param) = match decoder {
                 Decoder::Lenient => ("Webauthn\\Util\\Base64::decode", "$data"),
@@ -233,41 +237,39 @@ fn encode(b: &[u8]) -> String {
 // PHP array helpers
 // ---------------------------------------------------------------------------
 
-fn k(name: &str) -> Key {
-    Key::from_bytes(name.as_bytes())
+fn k(name: &str) -> ArrayKey {
+    ArrayKey::from_bytes(name.as_bytes())
 }
 
-fn s(v: &str) -> Zval {
-    Zval::String(v.as_bytes().to_vec())
+fn s(v: &str) -> Value {
+    Value::Str(Str::copy_from(v.as_bytes()))
 }
 
-fn get<'a>(a: &'a Array, name: &str) -> Option<&'a Zval> {
+fn get<'a>(a: &'a Array, name: &str) -> Option<&'a Value> {
     a.get(&k(name))
 }
 
-fn get_set<'a>(a: &'a Array, name: &str) -> Option<&'a Zval> {
-    get(a, name).filter(|v| **v != Zval::Null)
+fn get_set<'a>(a: &'a Array, name: &str) -> Option<&'a Value> {
+    get(a, name).filter(|v| **v != Value::Null)
 }
 
 fn string<'a>(a: &'a Array, name: &str) -> Option<&'a [u8]> {
     match get(a, name) {
-        Some(Zval::String(s)) => Some(s),
+        Some(Value::Str(s)) => Some(s),
         _ => None,
     }
 }
 
-fn object(pairs: Vec<(&str, Zval)>) -> Array {
+fn object(pairs: Vec<(&str, Value)>) -> Array {
     pairs.into_iter().map(|(name, v)| (k(name), v)).collect()
 }
 
 fn encode_json(value: &Array) -> Result<String, Error> {
-    json::encode(&Zval::Array(value.clone()).to_value(), Flags::THROW_ON_ERROR, json::DEFAULT_DEPTH)
-        .map_err(Error::json)
+    json::encode(&Value::Array(value.clone()), Flags::THROW_ON_ERROR, json::DEFAULT_DEPTH).map_err(Error::json)
 }
 
-fn decode_json(data: &[u8]) -> Result<Zval, Vec<u8>> {
+fn decode_json(data: &[u8]) -> Result<Value, Vec<u8>> {
     json::decode(data, Some(true), json::DEFAULT_DEPTH, Flags::THROW_ON_ERROR)
-        .map(|v| Zval::from_value(&v))
         .map_err(|e| e.message().as_bytes().to_vec())
 }
 
@@ -297,12 +299,12 @@ fn descriptors(data: &Array, name: &str) -> Result<Vec<Descriptor>, Vec<u8>> {
     let Some(list) = get_set(data, name) else {
         return Ok(vec![]);
     };
-    let Zval::Array(list) = list else {
+    let Value::Array(list) = list else {
         return Err("invalid descriptors".into());
     };
     let mut out = Vec::new();
     for (_, item) in list.iter() {
-        let Zval::Array(item) = item else {
+        let Value::Array(item) = item else {
             return Err("invalid descriptor".into());
         };
         let id = string(item, "id").ok_or("invalid descriptor id")?;
@@ -315,27 +317,27 @@ fn descriptors(data: &Array, name: &str) -> Result<Vec<Descriptor>, Vec<u8>> {
 fn decode_state(state: &[u8], creation: bool) -> Result<Options, Error> {
     let invalid = || passkey("Invalid ceremony state.");
     let parse = || -> Result<Options, Vec<u8>> {
-        let Zval::Array(data) = decode_json(state)? else {
+        let Value::Array(data) = decode_json(state)? else {
             return Err("not an object".into());
         };
         let challenge = match get(&data, "challenge") {
             None => vec![],
-            Some(Zval::String(c)) => decode_no_padding(c)?,
+            Some(Value::Str(c)) => decode_no_padding(c)?,
             Some(_) => return Err("challenge".into()),
         };
         let allow = descriptors(&data, if creation { "excludeCredentials" } else { "allowCredentials" })?;
         if creation {
             let rp_id = match get_set(&data, "rp") {
                 None => None,
-                Some(Zval::Array(rp)) => match get_set(rp, "id") {
+                Some(Value::Array(rp)) => match get_set(rp, "id") {
                     None => None,
-                    Some(Zval::String(id)) => Some(id.clone()),
+                    Some(Value::Str(id)) => Some(id.to_vec()),
                     Some(_) => return Err("rp.id".into()),
                 },
                 Some(_) => return Err("rp".into()),
             };
             let user = match get_set(&data, "user") {
-                Some(Zval::Array(u)) => u.clone(),
+                Some(Value::Array(u)) => u.clone(),
                 _ => Array::new(),
             };
             let (Some(user_id), Some(_), Some(_)) =
@@ -346,13 +348,13 @@ fn decode_state(state: &[u8], creation: bool) -> Result<Options, Error> {
             let user_id = decode_any(user_id)?;
             let mut algorithms = Vec::new();
             if let Some(params) = get_set(&data, "pubKeyCredParams") {
-                let Zval::Array(params) = params else {
+                let Value::Array(params) = params else {
                     return Err("pubKeyCredParams".into());
                 };
                 for (_, p) in params.iter() {
                     match p {
-                        Zval::Array(p) => match get(p, "alg") {
-                            Some(Zval::Int(alg)) => algorithms.push(*alg),
+                        Value::Array(p) => match get(p, "alg") {
+                            Some(Value::Int(alg)) => algorithms.push(*alg),
                             _ => return Err("alg".into()),
                         },
                         _ => return Err("param".into()),
@@ -360,7 +362,7 @@ fn decode_state(state: &[u8], creation: bool) -> Result<Options, Error> {
                 }
             }
             let user_verification = match get_set(&data, "authenticatorSelection") {
-                Some(Zval::Array(sel)) => string(sel, "userVerification").map(<[u8]>::to_vec),
+                Some(Value::Array(sel)) => string(sel, "userVerification").map(<[u8]>::to_vec),
                 Some(_) => return Err("authenticatorSelection".into()),
                 None => None,
             };
@@ -368,12 +370,12 @@ fn decode_state(state: &[u8], creation: bool) -> Result<Options, Error> {
         } else {
             let rp_id = match get_set(&data, "rpId") {
                 None => None,
-                Some(Zval::String(id)) => Some(id.clone()),
+                Some(Value::Str(id)) => Some(id.to_vec()),
                 Some(_) => return Err("rpId".into()),
             };
             let user_verification = match get_set(&data, "userVerification") {
                 None => None,
-                Some(Zval::String(uv)) => Some(uv.clone()),
+                Some(Value::Str(uv)) => Some(uv.to_vec()),
                 Some(_) => return Err("userVerification".into()),
             };
             Ok(Options { challenge, rp_id, user_verification, algorithms: vec![], allow, user_id: vec![] })
@@ -391,14 +393,14 @@ fn decode_state(state: &[u8], creation: bool) -> Result<Options, Error> {
 struct Record {
     id: Vec<u8>,
     kind: Vec<u8>,
-    transports: Zval,
+    transports: Value,
     attestation_type: Vec<u8>,
-    trust_path: Zval,
+    trust_path: Value,
     aaguid: [u8; 16],
     public_key: Vec<u8>,
     user_handle: Vec<u8>,
     counter: i64,
-    other_ui: Option<Zval>,
+    other_ui: Option<Value>,
     backup_eligible: Option<bool>,
     backup_status: Option<bool>,
     uv_initialized: Option<bool>,
@@ -436,7 +438,7 @@ fn uuid_string(b: &[u8; 16]) -> String {
 fn optional_bool(a: &Array, name: &str) -> Result<Option<bool>, Vec<u8>> {
     match get_set(a, name) {
         None => Ok(None),
-        Some(Zval::Bool(b)) => Ok(Some(*b)),
+        Some(Value::Bool(b)) => Ok(Some(*b)),
         Some(_) => Err(name.into()),
     }
 }
@@ -448,33 +450,35 @@ impl Record {
             let mut decoded = Vec::new();
             for key in ["publicKeyCredentialId", "credentialPublicKey", "userHandle"] {
                 match get(record, key) {
-                    Some(Zval::String(v)) => decoded.push(decode_any(v)?),
+                    Some(Value::Str(v)) => decoded.push(decode_any(v)?),
                     _ => return Err(format!("Missing {key}").into()),
                 }
             }
             let kind = string(record, "type").ok_or("type")?.to_vec();
             let transports = match get(record, "transports") {
-                Some(t @ Zval::Array(_)) => t.clone(),
+                Some(t @ Value::Array(_)) => t.clone(),
                 _ => return Err("transports".into()),
             };
             let attestation_type = string(record, "attestationType").ok_or("attestationType")?.to_vec();
             let trust_path = match get(record, "trustPath") {
-                Some(Zval::Array(t)) => match get(t, "x5c") {
-                    Some(x5c @ Zval::Array(_)) => Zval::Array(object(vec![("x5c", x5c.clone())])),
-                    _ if t.is_empty() => Zval::Array(Array::new()),
-                    _ if string(t, "type") == Some(b"Webauthn\\TrustPath\\EmptyTrustPath") => Zval::Array(Array::new()),
+                Some(Value::Array(t)) => match get(t, "x5c") {
+                    Some(x5c @ Value::Array(_)) => Value::Array(object(vec![("x5c", x5c.clone())])),
+                    _ if t.is_empty() => Value::Array(Array::new()),
+                    _ if string(t, "type") == Some(b"Webauthn\\TrustPath\\EmptyTrustPath") => {
+                        Value::Array(Array::new())
+                    }
                     _ => return Err("trustPath".into()),
                 },
                 _ => return Err("trustPath".into()),
             };
             let aaguid = string(record, "aaguid").and_then(uuid_parse).ok_or("aaguid")?;
             let counter = match get(record, "counter") {
-                Some(Zval::Int(c)) => *c,
+                Some(Value::Int(c)) => *c,
                 _ => return Err("counter".into()),
             };
             let other_ui = match get_set(record, "otherUI") {
                 None => None,
-                Some(v @ Zval::Array(_)) => Some(v.clone()),
+                Some(v @ Value::Array(_)) => Some(v.clone()),
                 Some(_) => return Err("otherUI".into()),
             };
             let mut decoded = decoded.into_iter();
@@ -501,17 +505,17 @@ impl Record {
     fn to_array(&self) -> Array {
         let mut a = object(vec![
             ("publicKeyCredentialId", s(&encode(&self.id))),
-            ("type", Zval::String(self.kind.clone())),
+            ("type", Value::Str(Str::from(self.kind.clone()))),
             ("transports", self.transports.clone()),
-            ("attestationType", Zval::String(self.attestation_type.clone())),
+            ("attestationType", Value::Str(Str::from(self.attestation_type.clone()))),
             ("trustPath", self.trust_path.clone()),
             ("aaguid", s(&uuid_string(&self.aaguid))),
             ("credentialPublicKey", s(&encode(&self.public_key))),
             ("userHandle", s(&encode(&self.user_handle))),
-            ("counter", Zval::Int(self.counter)),
+            ("counter", Value::Int(self.counter)),
         ]);
         if let Some(ui) = &self.other_ui {
-            a.insert(k("otherUI"), ui.clone());
+            a.set(k("otherUI"), ui.clone());
         }
         for (name, v) in [
             ("backupEligible", self.backup_eligible),
@@ -519,19 +523,19 @@ impl Record {
             ("uvInitialized", self.uv_initialized),
         ] {
             if let Some(b) = v {
-                a.insert(k(name), Zval::Bool(b));
+                a.set(k(name), Value::Bool(b));
             }
         }
         a
     }
 
     /// The descriptor of `excludeCredentials`.
-    fn descriptor(&self) -> Zval {
-        let mut d = object(vec![("type", Zval::String(self.kind.clone())), ("id", s(&encode(&self.id)))]);
-        if matches!(&self.transports, Zval::Array(t) if !t.is_empty()) {
-            d.insert(k("transports"), self.transports.clone());
+    fn descriptor(&self) -> Value {
+        let mut d = object(vec![("type", Value::Str(Str::from(self.kind.clone()))), ("id", s(&encode(&self.id)))]);
+        if matches!(&self.transports, Value::Array(t) if !t.is_empty()) {
+            d.set(k("transports"), self.transports.clone());
         }
-        Zval::Array(d)
+        Value::Array(d)
     }
 }
 
@@ -546,14 +550,14 @@ struct ClientData {
     kind: Vec<u8>,
     challenge: Vec<u8>,
     origin: Vec<u8>,
-    top_origin: Option<Zval>,
+    top_origin: Option<Value>,
     cross_origin: bool,
 }
 
 impl ClientData {
     fn parse(raw: Vec<u8>) -> Result<Self, Vec<u8>> {
         let data = match decode_json(&raw)? {
-            Zval::Array(data) => data,
+            Value::Array(data) => data,
             other => {
                 return Err(format!(
                     "Webauthn\\CollectedClientData::create(): Argument #2 ($data) must be of type array, {} given, called in {DENORMALIZERS}/CollectedClientDataDenormalizer.php on line 27",
@@ -562,24 +566,24 @@ impl ClientData {
             }
         };
         let kind = match get_set(&data, "type") {
-            Some(Zval::String(t)) if !t.is_empty() => t.clone(),
+            Some(Value::Str(t)) if !t.is_empty() => t.clone(),
             _ => return Err("Invalid parameter \"type\". Shall be a non-empty string.".into()),
         };
         let challenge = match get_set(&data, "challenge") {
             None => vec![],
-            Some(Zval::String(c)) => decode_no_padding(c)?,
+            Some(Value::Str(c)) => decode_no_padding(c)?,
             Some(_) => return Err("Invalid parameter \"challenge\". Shall be a string.".into()),
         };
         if challenge.is_empty() {
             return Err("Invalid parameter \"challenge\". Shall not be empty.".into());
         }
         let origin = match get_set(&data, "origin") {
-            Some(Zval::String(o)) if !o.is_empty() => o.clone(),
+            Some(Value::Str(o)) if !o.is_empty() => o.clone(),
             _ => return Err("Invalid parameter \"origin\". Shall be a non-empty string.".into()),
         };
         let top_origin = match get_set(&data, "topOrigin") {
             None => None,
-            Some(t @ Zval::String(_)) => Some(t.clone()),
+            Some(t @ Value::Str(_)) => Some(t.clone()),
             other => {
                 return Err(format!(
                     "Cannot assign {} to property Webauthn\\CollectedClientData::$topOrigin of type ?string",
@@ -590,7 +594,7 @@ impl ClientData {
         };
         let cross_origin = match get_set(&data, "crossOrigin") {
             None => false,
-            Some(Zval::Bool(b)) => *b,
+            Some(Value::Bool(b)) => *b,
             other => {
                 return Err(format!(
                     "Cannot assign {} to property Webauthn\\CollectedClientData::$crossOrigin of type bool",
@@ -599,7 +603,7 @@ impl ClientData {
                 .into());
             }
         };
-        Ok(ClientData { raw, kind, challenge, origin, top_origin, cross_origin })
+        Ok(ClientData { raw, kind: kind.to_vec(), challenge, origin: origin.to_vec(), top_origin, cross_origin })
     }
 }
 
@@ -673,7 +677,7 @@ impl AuthData {
 /// `AuthenticatorAttestationResponse` / `AuthenticatorAssertionResponse`.
 #[derive(Debug, Clone)]
 enum Response {
-    Attestation { client: ClientData, auth: AuthData, fmt: Vec<u8>, transports: Zval },
+    Attestation { client: ClientData, auth: AuthData, fmt: Vec<u8>, transports: Value },
     Assertion { client: ClientData, auth: AuthData, signature: Vec<u8>, user_handle: Option<Vec<u8>> },
 }
 
@@ -703,18 +707,18 @@ fn attestation_object(data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), Vec<u8>> {
     if !stream.is_eof() {
         return Err("Invalid attestation object. Presence of extra bytes.".into());
     }
-    let Zval::Array(object) = normalized else {
+    let Value::Array(object) = normalized else {
         // `$attestationObject['authData'] ?? ...` on an object that is not ArrayAccess.
         if let Some(class) = super::tags::class_of(&normalized) {
             return Err(format!("Cannot use object of type {class} as array").into());
         }
         return Err("Invalid attestation object. Missing \"authData\" field.".into());
     };
-    let Some(auth) = object.get(&k("authData")).filter(|v| **v != Zval::Null) else {
+    let Some(auth) = object.get(&k("authData")).filter(|v| **v != Value::Null) else {
         return Err("Invalid attestation object. Missing \"authData\" field.".into());
     };
     let fmt = match get(&object, "fmt") {
-        Some(Zval::String(f)) => f.clone(),
+        Some(Value::Str(f)) => f.clone(),
         other => {
             return Err(format!(
                 "Webauthn\\AttestationStatement\\AttestationStatementSupportManager::get(): Argument #1 ($name) must be of type string, {} given, called in {DENORMALIZERS}/AttestationStatementDenormalizer.php on line 25",
@@ -722,23 +726,23 @@ fn attestation_object(data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), Vec<u8>> {
             ).into());
         }
     };
-    if fmt != b"none" {
+    if fmt != "none" {
         return Err([b"The attestation statement format \"".as_slice(), &fmt, b"\" is not supported."].concat());
     }
-    if !matches!(get_set(&object, "attStmt"), None | Some(Zval::Array(_))) {
+    if !matches!(get_set(&object, "attStmt"), None | Some(Value::Array(_))) {
         return Err("Invalid attestation object".into());
     }
-    if matches!(get_set(&object, "attStmt"), Some(Zval::Array(a)) if !a.is_empty()) {
+    if matches!(get_set(&object, "attStmt"), Some(Value::Array(a)) if !a.is_empty()) {
         return Err("Invalid attestation object".into());
     }
     let auth = match auth {
-        Zval::String(b) => b.clone(),
-        Zval::Int(i) => i.to_string().into_bytes(),
-        Zval::Float(f) => php_std::number::to_string(*f).into_bytes(),
-        Zval::Bool(true) => b"1".to_vec(),
-        _ => Vec::new(),
+        Value::Str(b) => b.clone(),
+        Value::Int(i) => Str::from(i.to_string().into_bytes()),
+        Value::Float(f) => Str::from(php_std::number::to_string(*f).into_bytes()),
+        Value::Bool(true) => Str::from("1"),
+        _ => Str::default(),
     };
-    Ok((fmt, auth))
+    Ok((fmt.to_vec(), auth.to_vec()))
 }
 
 /// `decodeCredential()`: the credential's raw ID and response.
@@ -748,7 +752,7 @@ fn decode_credential(credential: &Array) -> Result<(Vec<u8>, Response), Error> {
             return Err(passkey(format!("Invalid credential: missing \"{key}\".")));
         }
     }
-    let Some(Zval::Array(response)) = get_set(credential, "response") else {
+    let Some(Value::Array(response)) = get_set(credential, "response") else {
         return Err(passkey("Invalid credential: missing \"response\"."));
     };
     let parse = || -> Result<(Vec<u8>, Response), Vec<u8>> {
@@ -764,8 +768,8 @@ fn decode_credential(credential: &Array) -> Result<(Vec<u8>, Response), Error> {
             let client = ClientData::parse(client)?;
             let (fmt, auth) = attestation_object(&object)?;
             let transports = match get_set(response, "transports") {
-                None => Zval::Array(Array::new()),
-                Some(t @ Zval::Array(_)) => t.clone(),
+                None => Value::Array(Array::new()),
+                Some(t @ Value::Array(_)) => t.clone(),
                 Some(other) => {
                     return Err(format!(
                         "Webauthn\\AuthenticatorAttestationResponse::create(): Argument #3 ($transports) must be of type array, {} given, called in {DENORMALIZERS}/{file}.php on line 45",
@@ -781,8 +785,8 @@ fn decode_credential(credential: &Array) -> Result<(Vec<u8>, Response), Error> {
             let client = decode_no_padding(string_field(response, "clientDataJSON", Decoder::NoPadding, file, 30)?)?;
             let user_handle = match get_set(response, "userHandle") {
                 None => None,
-                Some(Zval::String(h)) if h.is_empty() => Some(vec![]),
-                Some(Zval::String(h)) => Some(decode_any(h)?),
+                Some(Value::Str(h)) if h.is_empty() => Some(vec![]),
+                Some(Value::Str(h)) => Some(decode_any(h)?),
                 Some(other) => {
                     return Err(format!(
                         "Webauthn\\Util\\Base64::decode(): Argument #1 ($data) must be of type string, {} given, called in {DENORMALIZERS}/{file}.php on line 33",
@@ -808,6 +812,7 @@ fn decode_credential(credential: &Array) -> Result<(Vec<u8>, Response), Error> {
 /// discoverable credentials, required user verification, no attestation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ceremony {
+    /// The relying party the ceremonies run for.
     pub relying_party: RelyingParty,
 }
 
@@ -901,6 +906,7 @@ impl Origins {
 }
 
 impl Ceremony {
+    /// `new Ceremony($relyingParty)`.
     pub fn new(relying_party: RelyingParty) -> Self {
         Self { relying_party }
     }
@@ -917,33 +923,33 @@ impl Ceremony {
         let user_handle = existing.first().map(|r| r.user_handle.clone()).unwrap_or_else(random32);
         let rp = &self.relying_party;
         let params =
-            |alg: Algorithm| Zval::Array(object(vec![("type", s("public-key")), ("alg", Zval::Int(alg.id()))]));
+            |alg: Algorithm| Value::Array(object(vec![("type", s("public-key")), ("alg", Value::Int(alg.id()))]));
         Self::start(object(vec![
             ("challenge", s(&encode(&random32()))),
-            ("timeout", Zval::Int(TIMEOUT * 1000)),
-            ("rp", Zval::Array(object(vec![("id", s(&rp.id)), ("name", s(&rp.name))]))),
+            ("timeout", Value::Int(TIMEOUT * 1000)),
+            ("rp", Value::Array(object(vec![("id", s(&rp.id)), ("name", s(&rp.name))]))),
             (
                 "user",
-                Zval::Array(object(vec![
+                Value::Array(object(vec![
                     ("id", s(&encode(&user_handle))),
-                    ("name", Zval::String(name.to_vec())),
-                    ("displayName", Zval::String(display_name.to_vec())),
+                    ("name", Value::Str(Str::copy_from(name))),
+                    ("displayName", Value::Str(Str::copy_from(display_name))),
                 ])),
             ),
             (
                 "pubKeyCredParams",
-                Zval::Array([params(Algorithm::Es256), params(Algorithm::Rs256)].into_iter().collect()),
+                Value::Array([params(Algorithm::Es256), params(Algorithm::Rs256)].into_iter().collect()),
             ),
             (
                 "authenticatorSelection",
-                Zval::Array(object(vec![
-                    ("requireResidentKey", Zval::Bool(true)),
+                Value::Array(object(vec![
+                    ("requireResidentKey", Value::Bool(true)),
                     ("userVerification", s("required")),
                     ("residentKey", s("required")),
                 ])),
             ),
             ("attestation", s("none")),
-            ("excludeCredentials", Zval::Array(existing.iter().map(Record::descriptor).collect())),
+            ("excludeCredentials", Value::Array(existing.iter().map(Record::descriptor).collect())),
         ]))
     }
 
@@ -951,9 +957,9 @@ impl Ceremony {
     pub fn authenticate(&self) -> Result<Challenge, Error> {
         Self::start(object(vec![
             ("challenge", s(&encode(&random32()))),
-            ("timeout", Zval::Int(TIMEOUT * 1000)),
+            ("timeout", Value::Int(TIMEOUT * 1000)),
             ("rpId", s(&self.relying_party.id)),
-            ("allowCredentials", Zval::Array(Array::new())),
+            ("allowCredentials", Value::Array(Array::new())),
             ("userVerification", s("required")),
         ]))
     }
@@ -1066,7 +1072,7 @@ impl Ceremony {
             kind: b"public-key".to_vec(),
             transports: transports.clone(),
             attestation_type: if fmt == b"none" { b"none".to_vec() } else { fmt.clone() },
-            trust_path: Zval::Array(Array::new()),
+            trust_path: Value::Array(Array::new()),
             aaguid: *aaguid,
             public_key: public_key.clone(),
             user_handle: options.user_id.clone(),

@@ -389,6 +389,53 @@ fn object_vs<X: Extension>(other: &Value<X>, object_lhs: bool) -> i32 {
     if object_lhs { casted.compare(other) } else { other.compare(&casted) }
 }
 
+impl<X: Extension> Value<X> {
+    /// The request-model JSON of this value, exactly: like [`Value::to_json`]
+    /// (lists are arrays, other arrays and objects are objects with integer
+    /// keys as strings, an extension object its `to_array()`), but `None`
+    /// where JSON cannot hold the value: a non-finite float, or a string or
+    /// key that is not UTF-8.
+    ///
+    /// ```
+    /// use php_std::{Str, Value};
+    /// use serde_json::json;
+    ///
+    /// let list: Value = Value::from_json(&json!(["a", {"b": 1}]));
+    /// assert_eq!(list.try_to_json(), Some(json!(["a", {"b": 1}])));
+    /// assert_eq!(Value::<php_std::Never>::Str(Str::copy_from(&[0xff])).try_to_json(), None);
+    /// assert_eq!(Value::<php_std::Never>::Float(f64::INFINITY).try_to_json(), None);
+    /// ```
+    pub fn try_to_json(&self) -> Option<Json> {
+        fn text(b: &[u8]) -> Option<String> {
+            std::str::from_utf8(b).ok().map(str::to_owned)
+        }
+        fn object<X: Extension>(a: &Array<X>) -> Option<Json> {
+            let mut m = Map::with_capacity(a.len());
+            for (k, v) in a.iter() {
+                let key = match k {
+                    KeyRef::Int(i) => i.to_string(),
+                    KeyRef::Str(s) => text(s)?,
+                };
+                m.insert(key, v.try_to_json()?);
+            }
+            Some(Json::Object(m))
+        }
+        Some(match self {
+            Value::Null => Json::Null,
+            Value::Bool(b) => Json::Bool(*b),
+            Value::Int(i) => Json::from(*i),
+            Value::Float(f) => Json::Number(JsonNumber::from_f64(*f)?),
+            Value::Str(s) => Json::String(text(s)?),
+            Value::Array(a) if a.is_list() => Json::Array(a.values().map(Value::try_to_json).collect::<Option<_>>()?),
+            Value::Array(a) | Value::Object(a) => object(a)?,
+            Value::Ext(x) => {
+                let a = x.to_array();
+                if a.is_list() { Value::Array(a).try_to_json()? } else { object(&a)? }
+            }
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

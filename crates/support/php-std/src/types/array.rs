@@ -501,6 +501,24 @@ impl<X: Extension> fmt::Debug for Array<X> {
     }
 }
 
+impl ArrayKey {
+    /// The key PHP uses for the string offset `key` (`$a["7"]` is `$a[7]`):
+    /// [`ArrayKey::normalize`] of a copy of `key`.
+    ///
+    /// ```
+    /// use php_std::ArrayKey;
+    ///
+    /// assert_eq!(ArrayKey::from_bytes(b"7"), ArrayKey::Int(7));
+    /// assert_eq!(ArrayKey::from_bytes(b"07"), ArrayKey::Str("07".into()));
+    /// ```
+    pub fn from_bytes(key: &[u8]) -> Self {
+        match numeric_key(key) {
+            Some(i) => ArrayKey::Int(i),
+            None => ArrayKey::Str(Str::copy_from(key)),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

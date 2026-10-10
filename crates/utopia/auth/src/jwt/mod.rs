@@ -16,22 +16,36 @@ use php_std::encoding::{base64_decode, base64_encode};
 /// JWT claim names (`Utopia\Auth\Enums\Claim`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Claim {
+    /// `iss`: who issued the token.
     Issuer,
+    /// `sub`: whom the token is about.
     Subject,
+    /// `aud`: who the token is for.
     Audience,
+    /// `exp`: when the token expires (Unix seconds).
     Expiration,
+    /// `nbf`: when the token becomes valid.
     NotBefore,
+    /// `iat`: when the token was issued.
     IssuedAt,
+    /// `jti`: a unique token identifier.
     JwtId,
+    /// `client_id`: the OAuth2 client.
     ClientId,
+    /// `auth_time`: when the user authenticated.
     AuthTime,
+    /// `scope`: granted scopes, space separated.
     Scope,
+    /// `nonce`: the OpenID Connect request nonce.
     Nonce,
+    /// `at_hash`: the access token hash (ID tokens).
     AccessTokenHash,
+    /// `c_hash`: the authorization code hash (ID tokens).
     CodeHash,
 }
 
 impl Claim {
+    /// Every claim, in declaration order.
     pub const ALL: [Claim; 13] = [
         Claim::Issuer,
         Claim::Subject,
@@ -76,14 +90,19 @@ impl Claim {
 /// JOSE header parameters (`Utopia\Auth\Enums\Header`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Header {
+    /// `typ`: the token type.
     Type,
+    /// `alg`: the signature algorithm.
     Algorithm,
+    /// `kid`: the signing key.
     KeyId,
 }
 
 impl Header {
+    /// Every header parameter, in declaration order.
     pub const ALL: [Header; 3] = [Header::Type, Header::Algorithm, Header::KeyId];
 
+    /// The parameter name (the enum's backing value).
     pub fn as_str(self) -> &'static str {
         match self {
             Header::Type => "typ",
@@ -109,7 +128,7 @@ pub fn hs256(secret: &[u8], input: &[u8]) -> Vec<u8> {
 /// The RS256 signature (`openssl_sign($input, $signature, $privateKey, OPENSSL_ALGO_SHA256)`)
 /// with a PEM RSA private key.
 pub fn rs256(private_key: &[u8], input: &[u8]) -> Result<Vec<u8>, crate::Error> {
-    let key = key::private_key(private_key)
+    let key = key::private_key(private_key)?
         .ok_or_else(|| crate::Error::Exception("Unable to parse the private key".into()))?;
     key::sign(key, input)
 }

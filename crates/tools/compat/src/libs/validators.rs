@@ -10,8 +10,9 @@
 
 use std::sync::Arc;
 
+use php_std::types::KeyRef;
 use php_std::value::Number;
-use php_std::zval::{Key, Object, Zval};
+use php_std::{Array, ArrayKey, Str, Value as Php};
 use serde_json::{Map, Value, json};
 use utopia_validators::{
     AllOf, AnyOf, ArrayList, Assoc, Boolean, Contains, Domain, Error, Float, Globstar, HexColor, Host, Hostname,
@@ -93,21 +94,21 @@ fn err(e: Error) -> Outcome {
 }
 
 /// A PHP value: the exact model, and the request model when it can hold the value.
-fn value(v: &Value) -> Result<(Zval, Option<&Value>), Fault> {
+fn value(v: &Value) -> Result<(Php, Option<&Value>), Fault> {
     let mut exact = false;
-    let z = zval(v, &mut exact)?;
+    let z = php(v, &mut exact)?;
     Ok((z, (!exact).then_some(v)))
 }
 
-fn zval(v: &Value, exact: &mut bool) -> Result<Zval, Fault> {
+fn php(v: &Value, exact: &mut bool) -> Result<Php, Fault> {
     Ok(match v {
         Value::Object(o) if o.len() == 1 && o.contains_key("$bytes") => {
             *exact = true;
-            Zval::String(bytes(v).ok_or_else(|| Fault::new("invalid $bytes"))?)
+            Php::Str(Str::from(bytes(v).ok_or_else(|| Fault::new("invalid $bytes"))?))
         }
         Value::Object(o) if o.len() == 1 && o.contains_key("$float") => {
             *exact = true;
-            Zval::Float(float(v).ok_or_else(|| Fault::new("invalid $float"))?)
+            Php::Float(float(v).ok_or_else(|| Fault::new("invalid $float"))?)
         }
         Value::Object(o) if o.len() == 1 && o.contains_key("$object") => {
             *exact = true;
@@ -115,46 +116,55 @@ fn zval(v: &Value, exact: &mut bool) -> Result<Zval, Fault> {
                 Value::Object(p) => p,
                 _ => return Err(Fault::new("$object must be an object")),
             };
-            let mut object = Object::new();
+            let mut object = Array::new();
             for (k, v) in props {
-                object.set(k.as_bytes().to_vec(), zval(v, exact)?);
+                object.set(ArrayKey::Str(Str::from(k.as_str())), php(v, exact)?);
             }
-            Zval::Object(object)
+            Php::Object(object)
         }
-        Value::Object(o) if o.is_empty() => Zval::Object(Object::new()),
-        Value::Object(o) => Zval::Array(
+        Value::Object(o) if o.is_empty() => Php::Object(Array::new()),
+        Value::Object(o) => Php::Array(
             o.iter()
-                .map(|(k, v)| Ok((Key::from_bytes(k.as_bytes()), zval(v, exact)?)))
+                .map(|(k, v)| Ok((ArrayKey::from_bytes(k.as_bytes()), php(v, exact)?)))
                 .collect::<Result<_, Fault>>()?,
         ),
-        Value::Array(a) => Zval::Array(a.iter().map(|v| zval(v, exact)).collect::<Result<_, Fault>>()?),
-        other => Zval::from(other),
+        Value::Array(a) => Php::Array(a.iter().map(|v| php(v, exact)).collect::<Result<_, Fault>>()?),
+        other => Php::from_json(other),
     })
 }
 
 /// A PHP value as the PHP driver encodes it.
-fn wire(z: &Zval) -> Value {
+fn wire(z: &Php) -> Value {
     match z {
-        Zval::Null => Value::Null,
-        Zval::Bool(b) => Value::Bool(*b),
-        Zval::Int(i) => Value::from(*i),
-        Zval::Float(f) => float_value(*f),
-        Zval::String(s) => bytes_value(s),
-        Zval::Array(a) if a.is_list() => Value::Array(a.iter().map(|(_, v)| wire(v)).collect()),
-        Zval::Array(a) => Value::Object(
+        Php::Null => Value::Null,
+        Php::Bool(b) => Value::Bool(*b),
+        Php::Int(i) => Value::from(*i),
+        Php::Float(f) => float_value(*f),
+        Php::Str(s) => bytes_value(s),
+        Php::Array(a) if a.is_list() => Value::Array(a.iter().map(|(_, v)| wire(v)).collect()),
+        Php::Array(a) => Value::Object(
             a.iter()
                 .map(|(k, v)| {
                     let key = match k {
-                        Key::Int(i) => i.to_string(),
-                        Key::Str(s) => String::from_utf8_lossy(s).into_owned(),
+                        KeyRef::Int(i) => i.to_string(),
+                        KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
                     };
                     (key, wire(v))
                 })
                 .collect(),
         ),
-        Zval::Object(o) => {
-            Value::Object(o.iter().map(|(k, v)| (String::from_utf8_lossy(k).into_owned(), wire(v))).collect())
-        }
+        Php::Object(o) => Value::Object(
+            o.iter()
+                .map(|(k, v)| {
+                    let key = match k {
+                        KeyRef::Int(i) => i.to_string(),
+                        KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
+                    };
+                    (key, wire(v))
+                })
+                .collect(),
+        ),
+        Php::Ext(never) => match *never {},
     }
 }
 
@@ -374,7 +384,7 @@ fn build(spec: &Value, session: &Session) -> Result<Result<Held, Error>, Fault> 
             let list = match a.get("list") {
                 Some(Value::Array(items)) => {
                     let mut exact = false;
-                    items.iter().map(|v| zval(v, &mut exact)).collect::<Result<Vec<_>, _>>()?
+                    items.iter().map(|v| php(v, &mut exact)).collect::<Result<Vec<_>, _>>()?
                 }
                 _ => return Err(Fault::new("WhiteList list must be a list")),
             };
@@ -391,7 +401,7 @@ fn build(spec: &Value, session: &Session) -> Result<Result<Held, Error>, Fault> 
 /// Validates in the exact model and, when it can hold the value, in the request model too.
 fn validate(validator: &dyn Validator, value_arg: &Value) -> Result<Result<Verdict, Error>, Fault> {
     let (exact, request) = value(value_arg)?;
-    let verdict = validator.validate(Input::Zval(&exact));
+    let verdict = validator.validate(Input::Value(&exact));
     if let Some(request) = request {
         let other = validator.validate(Input::Json(request));
         if other != verdict {

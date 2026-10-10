@@ -3,6 +3,22 @@ use crate::oauth2::parse_url;
 /// The web origins allowed to run ceremonies for a relying party
 /// (`Utopia\Auth\Passkeys\Origin`): HTTPS on the RP ID or a subdomain, with
 /// no path, query, fragment or credentials; HTTP only for `localhost`.
+///
+/// ```
+/// use utopia_auth::passkeys::Origin;
+///
+/// let origin = Origin::new("example.com");
+/// assert_eq!(origin.normalize(b"https://app.example.com:443"), Some("https://app.example.com".to_owned()));
+/// assert_eq!(origin.normalize(b"http://app.example.com"), None);
+/// ```
+///
+/// ```php
+/// use Utopia\Auth\Passkeys\Origin;
+///
+/// $origin = new Origin('example.com');
+/// echo $origin->normalize('https://app.example.com:443'), "\n"; // https://app.example.com
+/// var_dump($origin->normalize('http://app.example.com'));       // NULL
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Origin {
     rp_id: String,
@@ -12,6 +28,7 @@ pub struct Origin {
 pub const LOCALHOST: &str = "localhost";
 
 impl Origin {
+    /// `new Origin($rpId)`.
     pub fn new(rp_id: impl Into<String>) -> Self {
         Self { rp_id: rp_id.into() }
     }

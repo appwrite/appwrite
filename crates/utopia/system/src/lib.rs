@@ -357,7 +357,7 @@ pub fn proc_stat_total(content: &[u8]) -> Option<CpuTimes> {
     if !truthy(content) {
         return None;
     }
-    let mut cpus: IndexMap<php_std::zval::Key, [i64; 9]> = IndexMap::new();
+    let mut cpus: IndexMap<php_std::ArrayKey, [i64; 9]> = IndexMap::new();
     for line in content.split(|&b| b == b'\n') {
         if !(line.starts_with(b"cpu") && line.get(3).is_some_and(u8::is_ascii_digit)) {
             continue;
@@ -368,7 +368,7 @@ pub fn proc_stat_total(content: &[u8]) -> Option<CpuTimes> {
         for (field, token) in fields.iter_mut().zip(tokens) {
             *field = format::str_to_int(token);
         }
-        cpus.insert(php_std::zval::Key::from_bytes(&name[3..]), fields);
+        cpus.insert(php_std::ArrayKey::normalize(php_std::Str::copy_from(&name[3..])), fields);
     }
     let mut total = [Number::Int(0); 9];
     for fields in cpus.values() {

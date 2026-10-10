@@ -6,7 +6,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use php_std::zval::{Array, Key, Zval};
+use php_std::{Array, ArrayKey, Str, Value};
 
 use super::tags;
 
@@ -37,7 +37,7 @@ const MAX_DEPTH: usize = 1000;
 /// One map entry, stored at the PHP array offset its key resolves to.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Entry {
-    offset: Key,
+    offset: ArrayKey,
     key: Item,
     value: Item,
 }
@@ -50,9 +50,9 @@ pub(crate) struct Entry {
 #[derive(Debug, Clone, PartialEq, Default)]
 pub(crate) struct Map {
     entries: Vec<Entry>,
-    identities: HashMap<Key, Vec<u8>>,
-    opaque: HashSet<Key>,
-    ambiguous: HashMap<Key, u8>,
+    identities: HashMap<ArrayKey, Vec<u8>>,
+    opaque: HashSet<ArrayKey>,
+    ambiguous: HashMap<ArrayKey, u8>,
 }
 
 /// The CBOR major type of a decoded item.
@@ -70,10 +70,10 @@ fn major(item: &Item) -> u8 {
 }
 
 /// `(string) $offset` of a PHP array offset.
-fn written(offset: &Key) -> Vec<u8> {
+fn written(offset: &ArrayKey) -> Vec<u8> {
     match offset {
-        Key::Int(i) => i.to_string().into_bytes(),
-        Key::Str(s) => s.clone(),
+        ArrayKey::Int(i) => i.to_string().into_bytes(),
+        ArrayKey::Str(s) => s.clone().to_vec(),
     }
 }
 
@@ -96,8 +96,8 @@ impl Map {
             Item::List(_) | Item::Map(_) | Item::MapIndefinite(_) => None,
             k if !k.is_normalizable() => None,
             k => match k.normalize()? {
-                Zval::Int(i) => Some(i.to_string().into_bytes()),
-                Zval::String(s) => Some(s),
+                Value::Int(i) => Some(i.to_string().into_bytes()),
+                Value::Str(s) => Some(s.to_vec()),
                 _ => None,
             },
         };
@@ -110,14 +110,14 @@ impl Map {
             Some(s) => (s, false),
             None => (opaque_offset(), true),
         };
-        let mut slot = Key::from_bytes(&offset);
+        let mut slot = ArrayKey::from_bytes(&offset);
         let mut existing = self.identities.get(&slot).cloned();
         if !opaque && existing.as_ref().is_some_and(|e| *e != identity(&offset)) {
             // Another major type owns the offset: this key is stored opaque.
             self.ambiguous.insert(slot, major);
             offset = opaque_offset();
             opaque = true;
-            slot = Key::Str(offset.clone());
+            slot = ArrayKey::Str(Str::from(offset.clone()));
             existing = self.identities.get(&slot).cloned();
         }
         let own = identity(&offset);
@@ -148,7 +148,7 @@ impl Map {
     }
 
     /// `normalizeEntries()`.
-    fn normalize(&self) -> Result<Zval, Vec<u8>> {
+    fn normalize(&self) -> Result<Value, Vec<u8>> {
         let mut out = Array::with_capacity(self.entries.len());
         for Entry { offset, key, value } in &self.entries {
             if let Some(second) = self.ambiguous.get(offset) {
@@ -175,9 +175,9 @@ impl Map {
                 )
                 .into_bytes());
             }
-            out.insert(offset.clone(), if value.is_normalizable() { value.normalize()? } else { value.as_object() });
+            out.set(offset.clone(), if value.is_normalizable() { value.normalize()? } else { value.as_object() });
         }
-        Ok(Zval::Array(out))
+        Ok(Value::Array(out))
     }
 }
 
@@ -377,15 +377,16 @@ fn process(stream: &mut Stream<'_>, breakable: bool, depth: usize) -> Result<Ite
 }
 
 /// PHP's `get_debug_type()` of a normalized value.
-fn debug_type(value: &Zval) -> String {
+fn debug_type(value: &Value) -> String {
     match value {
-        Zval::Null => "null".into(),
-        Zval::Bool(_) => "bool".into(),
-        Zval::Float(_) => "float".into(),
-        Zval::Int(_) => "int".into(),
-        Zval::String(_) => "string".into(),
-        Zval::Array(_) => "array".into(),
-        Zval::Object(_) => tags::class_of(value).unwrap_or_default(),
+        Value::Null => "null".into(),
+        Value::Bool(_) => "bool".into(),
+        Value::Float(_) => "float".into(),
+        Value::Int(_) => "int".into(),
+        Value::Str(_) => "string".into(),
+        Value::Array(_) => "array".into(),
+        Value::Object(_) => tags::class_of(value).unwrap_or_default(),
+        Value::Ext(never) => match *never {},
     }
 }
 
@@ -514,24 +515,24 @@ impl Item {
     }
 
     /// `normalize()`: the PHP value webauthn-lib reads.
-    pub(crate) fn normalize(&self) -> Result<Zval, Vec<u8>> {
+    pub(crate) fn normalize(&self) -> Result<Value, Vec<u8>> {
         Ok(match self {
-            Item::Int(s) => Zval::String(s.clone().into_bytes()),
-            Item::Bytes(b) | Item::Text(b) => Zval::String(b.clone()),
+            Item::Int(s) => Value::Str(Str::from(s.clone().into_bytes())),
+            Item::Bytes(b) | Item::Text(b) => Value::Str(Str::from(b.clone())),
             Item::List(items) => {
-                let mut out = Array::with_capacity(items.len());
+                let mut out = Vec::with_capacity(items.len());
                 for item in items {
                     out.push(if item.is_normalizable() { item.normalize()? } else { item.as_object() });
                 }
-                Zval::Array(out)
+                Value::Array(Array::from_list(out))
             }
             Item::Map(map) | Item::MapIndefinite(map) => map.normalize()?,
-            Item::Simple(i) => Zval::Int(*i),
-            Item::Bool(b) => Zval::Bool(*b),
+            Item::Simple(i) => Value::Int(*i),
+            Item::Bool(b) => Value::Bool(*b),
             Item::Tag(tag, _) if !tags::normalizable(*tag) => self.as_object(),
             Item::Tag(tag, content) => tags::normalize(*tag, content)?,
-            Item::Null | Item::Undefined | Item::Break => Zval::Null,
-            Item::Float(f) => Zval::Float(*f),
+            Item::Null | Item::Undefined | Item::Break => Value::Null,
+            Item::Float(f) => Value::Float(*f),
         })
     }
 }

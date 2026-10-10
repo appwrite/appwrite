@@ -52,6 +52,9 @@ require_once __DIR__ . '/Authenticator.php';
  */
 final class Adapter implements Base
 {
+    /** Where `issuer.sign_once` writes the key files its fuzzed inputs name. */
+    private const string FUZZ_DIR = '/tmp/compat-fs/auth-fuzz';
+
     public function operations(): array
     {
         return [
@@ -290,6 +293,48 @@ final class Adapter implements Base
             // Fixtures: the assertions the PHP tests make on random outputs.
             'fixture.matches' => fn (array $a, Session $s) => preg_match((string) $a['pattern'], (string) $a['value']),
             'fixture.strlen' => fn (array $a, Session $s) => \strlen((string) $a['value']),
+            'fixture.write' => function (array $a, Session $s) {
+                $path = (string) $a['path'];
+                if (!is_dir(\dirname($path)) && !mkdir(\dirname($path), 0o777, true)) {
+                    throw new Fault("Unable to create the directory of {$path}");
+                }
+                if (file_put_contents($path, (string) $a['content']) === false) {
+                    throw new Fault("Unable to write {$path}");
+                }
+
+                return;
+            },
+            'issuer.sign_once' => function (array $a, Session $s) {
+                // A directory of this call's own: /tmp/compat-fs is a mount
+                // shared with the Rust driver, so the runtimes never share files.
+                $dir = self::FUZZ_DIR . '/php-' . bin2hex(random_bytes(8));
+                if (!mkdir($dir, 0o777, true)) {
+                    throw new Fault("Unable to create {$dir}");
+                }
+                try {
+                    foreach (['file' => 'key.pem', 'public_file' => 'pub.pem'] as $field => $name) {
+                        if (isset($a[$field])) {
+                            file_put_contents("{$dir}/{$name}", (string) $a[$field]);
+                        }
+                    }
+                    $issuer = $s->handle(self::newIssuer([
+                        'kind' => 'access',
+                        'private_key' => str_replace('{dir}', $dir, (string) $a['private_key']),
+                        'public_key' => str_replace('{dir}', $dir, (string) $a['public_key']),
+                        'issuer' => 'https://issuer.test',
+                        'key_id' => $a['key_id'] ?? null,
+                    ]));
+                    $token = self::issue([
+                        'issuer' => $issuer, 'subject' => 'u', 'audience' => ['aud'], 'client_id' => 'c',
+                        'auth_time' => 1000, 'duration' => 3600, 'now' => 1700000000, 'jti' => 'j',
+                    ], $s);
+
+                    return $this->operations()['fixture.jwt'](['token' => $token], $s);
+                } finally {
+                    array_map(unlink(...), glob("{$dir}/*") ?: []);
+                    rmdir($dir);
+                }
+            },
             'fixture.substr' => fn (array $a, Session $s) => substr((string) $a['value'], (int) $a['start'], isset($a['length']) ? (int) $a['length'] : null),
             'fixture.jws' => fn (array $a, Session $s) => self::jws($a),
             'fixture.jwt' => function (array $a, Session $s) {

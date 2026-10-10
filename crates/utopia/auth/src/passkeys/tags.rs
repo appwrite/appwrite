@@ -8,7 +8,8 @@
 
 use std::collections::HashMap;
 
-use php_std::zval::{Array, Object, Zval};
+use php_std::types::KeyRef;
+use php_std::{Array, ArrayKey, Str, Value};
 
 use super::cbor::{Item, half_float};
 
@@ -17,17 +18,17 @@ const CLASS: &[u8] = b"\0class";
 
 /// A PHP object of `class` (a CBOR object cbor-php cannot normalize, or a
 /// `DateTimeImmutable`), as a `stdClass` carrying the class name.
-pub(crate) fn object(class: &str) -> Zval {
-    let mut o = Object::new();
-    o.set(CLASS.to_vec(), Zval::String(class.as_bytes().to_vec()));
-    Zval::Object(o)
+pub(crate) fn object(class: &str) -> Value {
+    let mut o = Array::new();
+    o.set(ArrayKey::Str(Str::from(CLASS)), Value::Str(Str::from(class)));
+    Value::Object(o)
 }
 
 /// The class of a value, as `get_debug_type()` names objects.
-pub(crate) fn class_of(value: &Zval) -> Option<String> {
+pub(crate) fn class_of(value: &Value) -> Option<String> {
     match value {
-        Zval::Object(o) => Some(match o.get(CLASS) {
-            Some(Zval::String(c)) => String::from_utf8_lossy(c).into_owned(),
+        Value::Object(o) => Some(match o.get_ref(KeyRef::Str(CLASS)) {
+            Some(Value::Str(c)) => String::from_utf8_lossy(c).into_owned(),
             _ => "stdClass".to_owned(),
         }),
         _ => None,
@@ -295,12 +296,12 @@ fn check_ip(length: usize, content: &Item) -> Result<(), Vec<u8>> {
 }
 
 /// What a normalizable content normalizes to, or the object itself.
-fn passthrough(content: &Item) -> Result<Zval, Vec<u8>> {
+fn passthrough(content: &Item) -> Result<Value, Vec<u8>> {
     if content.is_normalizable() { content.normalize() } else { Ok(content.as_object()) }
 }
 
 /// The tag's `normalize()`.
-pub(crate) fn normalize(tag: u128, content: &Item) -> Result<Zval, Vec<u8>> {
+pub(crate) fn normalize(tag: u128, content: &Item) -> Result<Value, Vec<u8>> {
     const DATE: &[u8] = b"Invalid data. Cannot be converted into a datetime object";
     Ok(match tag {
         0 => match content {
@@ -320,34 +321,38 @@ pub(crate) fn normalize(tag: u128, content: &Item) -> Result<Zval, Vec<u8>> {
                     b.len()
                 ));
             }
-            Zval::String(if tag == 2 { decimal(b) } else { [b"-".as_slice(), &decimal(&increment(b))].concat() })
+            Value::Str(if tag == 2 {
+                Str::from(decimal(b))
+            } else {
+                Str::from([b"-".as_slice(), &decimal(&increment(b))].concat())
+            })
         }
-        30 => Zval::String(rational(content)?),
+        30 => Value::Str(Str::from(rational(content)?)),
         37 => {
             let h = hex::encode(bytes(content).unwrap_or_default());
-            Zval::String(
+            Value::Str(Str::from(
                 format!("{}-{}-{}-{}-{}", &h[0..8], &h[8..12], &h[12..16], &h[16..20], &h[20..32]).into_bytes(),
-            )
+            ))
         }
         38 => {
-            let mut out = Array::new();
+            let mut out = Vec::new();
             for item in items(content) {
                 out.push(item.normalize()?);
             }
-            Zval::Array(out)
+            Value::Array(Array::from_list(out))
         }
         40 | 1040 => multi_dimensional(tag == 40, content)?,
-        52 | 54 => Zval::String(ip(if tag == 52 { 4 } else { 16 }, content)?),
+        52 | 54 => Value::Str(Str::from(ip(if tag == 52 { 4 } else { 16 }, content)?)),
         100 => match content {
             Item::Int(s) if s.parse::<i64>().ok().and_then(|d| d.checked_mul(86_400)).is_some() => object(DATE_TIME),
             _ => return fail(DATE),
         },
         260 => {
             let b = bytes(content).unwrap_or_default();
-            Zval::String(match b.len() {
-                6 => b.iter().map(|x| format!("{x:02x}")).collect::<Vec<_>>().join(":").into_bytes(),
-                4 => ipv4(b),
-                _ => ipv6(b),
+            Value::Str(match b.len() {
+                6 => Str::from(b.iter().map(|x| format!("{x:02x}")).collect::<Vec<_>>().join(":").into_bytes()),
+                4 => Str::from(ipv4(b)),
+                _ => Str::from(ipv6(b)),
             })
         }
         1004 => match content {
@@ -368,7 +373,7 @@ pub(crate) fn normalize(tag: u128, content: &Item) -> Result<Zval, Vec<u8>> {
 /// into nested lists, row-major (tag 40) or column-major (tag 1040). Built
 /// level by level from the innermost lists, so long dimension lists do not
 /// recurse.
-fn multi_dimensional(row_major: bool, content: &Item) -> Result<Zval, Vec<u8>> {
+fn multi_dimensional(row_major: bool, content: &Item) -> Result<Value, Vec<u8>> {
     let list = items(content);
     let mut dims = Vec::new();
     for d in items(&list[0]) {
@@ -376,8 +381,8 @@ fn multi_dimensional(row_major: bool, content: &Item) -> Result<Zval, Vec<u8>> {
         let Ok(v) = s.parse::<i64>() else { return fail("Invalid dimensions. The value is too large.") };
         dims.push(v as usize);
     }
-    let values: Vec<Zval> = match list[1].normalize()? {
-        Zval::Array(a) => a.iter().map(|(_, v)| v.clone()).collect(),
+    let values: Vec<Value> = match list[1].normalize()? {
+        Value::Array(a) => a.iter().map(|(_, v)| v.clone()).collect(),
         _ => return fail("Invalid values. Expected a List object or a typed array tag."),
     };
     let mismatch = || fail("Invalid data. The dimensions do not match the number of values.");
@@ -406,16 +411,16 @@ fn multi_dimensional(row_major: bool, content: &Item) -> Result<Zval, Vec<u8>> {
         let next: Vec<usize> = levels[k].iter().flat_map(|o| (0..count).map(move |i| o + i * step)).collect();
         levels.push(next);
     }
-    let mut built: HashMap<usize, Zval> = HashMap::new();
+    let mut built: HashMap<usize, Value> = HashMap::new();
     for k in (0..n).rev() {
         let mut level = HashMap::new();
         for &o in &levels[k] {
-            let mut out = Array::new();
+            let mut out = Vec::with_capacity(dims[k]);
             for i in 0..dims[k] {
                 let at = o + i * strides[k];
                 out.push(if k == n - 1 { values[at].clone() } else { built.get(&at).cloned().unwrap_or_default() });
             }
-            level.insert(o, Zval::Array(out));
+            level.insert(o, Value::Array(Array::from_list(out)));
         }
         built = level;
     }
@@ -423,9 +428,9 @@ fn multi_dimensional(row_major: bool, content: &Item) -> Result<Zval, Vec<u8>> {
 }
 
 /// `getChunks()` decoded as the typed array's element type.
-fn typed_array(tag: u128, data: &[u8]) -> Result<Zval, Vec<u8>> {
+fn typed_array(tag: u128, data: &[u8]) -> Result<Value, Vec<u8>> {
     let size = element_size(tag).unwrap_or(1);
-    let mut out = Array::new();
+    let mut out = Vec::with_capacity(data.len().div_ceil(size));
     for chunk in data.chunks(size) {
         let mut be = chunk.to_vec();
         if matches!(tag, 69..=71 | 77..=79 | 84..=86) {
@@ -433,21 +438,21 @@ fn typed_array(tag: u128, data: &[u8]) -> Result<Zval, Vec<u8>> {
         }
         let unsigned = be.iter().fold(0u64, |acc, b| (acc << 8) | u64::from(*b));
         out.push(match tag {
-            64 | 68 | 65 | 69 | 66 | 70 => Zval::Int(unsigned as i64),
+            64 | 68 | 65 | 69 | 66 | 70 => Value::Int(unsigned as i64),
             67 | 71 => match i64::try_from(unsigned) {
-                Ok(i) => Zval::Int(i),
-                Err(_) => Zval::String(unsigned.to_string().into_bytes()),
+                Ok(i) => Value::Int(i),
+                Err(_) => Value::Str(Str::from(unsigned.to_string().into_bytes())),
             },
-            72 => Zval::Int(i64::from(unsigned as u8 as i8)),
-            73 | 77 => Zval::Int(i64::from(unsigned as u16 as i16)),
-            74 | 78 => Zval::Int(i64::from(unsigned as u32 as i32)),
-            75 | 79 => Zval::Int(unsigned as i64),
-            80 | 84 => Zval::Float(half_float(unsigned as u16)),
-            81 | 85 => Zval::Float(f64::from(f32::from_bits(unsigned as u32))),
-            _ => Zval::Float(f64::from_bits(unsigned)),
+            72 => Value::Int(i64::from(unsigned as u8 as i8)),
+            73 | 77 => Value::Int(i64::from(unsigned as u16 as i16)),
+            74 | 78 => Value::Int(i64::from(unsigned as u32 as i32)),
+            75 | 79 => Value::Int(unsigned as i64),
+            80 | 84 => Value::Float(half_float(unsigned as u16)),
+            81 | 85 => Value::Float(f64::from(f32::from_bits(unsigned as u32))),
+            _ => Value::Float(f64::from_bits(unsigned)),
         });
     }
-    Ok(Zval::Array(out))
+    Ok(Value::Array(Array::from_list(out)))
 }
 
 /// `Utils::hexToString()`: a big-endian unsigned integer in decimal.
@@ -484,29 +489,29 @@ pub(crate) fn increment(bytes: &[u8]) -> Vec<u8> {
     out
 }
 
-/// `RationalNumberTag::normalize()` for values that fit 128 bits.
+/// `RationalNumberTag::normalize()`: numerator and denominator (bignums
+/// of any size) reduced to lowest terms by their greatest common divisor, as
+/// brick/math's `BigInteger` does; the numerator alone when the denominator
+/// reduces to 1.
 fn rational(content: &Item) -> Result<Vec<u8>, Vec<u8>> {
-    let value = |item: &Item| -> Result<String, Vec<u8>> {
+    use num_bigint::BigInt;
+    use num_integer::Integer;
+    let value = |item: &Item| -> Result<Option<BigInt>, Vec<u8>> {
         match item.normalize()? {
-            Zval::String(s) => Ok(String::from_utf8_lossy(&s).into_owned()),
-            other => Ok(format!("{other:?}")),
+            Value::Str(s) => Ok(BigInt::parse_bytes(&s, 10)),
+            _ => Ok(None),
         }
     };
     let list = items(content);
-    let (n, d) = (value(&list[0])?, value(&list[1])?);
-    if d == "0" {
+    let (Some(n), Some(d)) = (value(&list[0])?, value(&list[1])?) else {
+        return fail("Invalid data. Cannot be converted into a rational number");
+    };
+    if d == BigInt::ZERO {
         return fail("Invalid denominator. The value shall not be zero.");
     }
-    let (Ok(n), Ok(d)) = (n.parse::<i128>(), d.parse::<i128>()) else {
-        return Ok(format!("{n}/{d}").into_bytes());
-    };
-    let (mut a, mut b) = (n.unsigned_abs(), d.unsigned_abs());
-    while b != 0 {
-        (a, b) = (b, a % b);
-    }
-    let g = a.max(1) as i128;
-    let (n, d) = (n / g, d / g);
-    Ok(if d == 1 { n.to_string() } else { format!("{n}/{d}") }.into_bytes())
+    let g = n.gcd(&d);
+    let (n, d) = (n / &g, d / &g);
+    Ok(if d == BigInt::from(1) { n.to_string() } else { format!("{n}/{d}") }.into_bytes())
 }
 
 /// `AbstractIpAddressTag::normalize()`.
@@ -524,8 +529,8 @@ fn ip(length: usize, content: &Item) -> Result<Vec<u8>, Vec<u8>> {
         return Ok([text(&b).as_slice(), b"/", prefix.as_bytes()].concat());
     }
     let zone = match list[1].normalize()? {
-        Zval::String(s) => s,
-        other => format!("{other:?}").into_bytes(),
+        Value::Str(s) => s,
+        other => Str::from(format!("{other:?}").into_bytes()),
     };
     Ok([text(bytes(&list[0]).unwrap_or_default()).as_slice(), b"%", &zone].concat())
 }
@@ -598,11 +603,11 @@ pub(crate) fn valid_date(y: u32, m: u32, d: u32) -> bool {
 
 impl Item {
     /// A value cbor-php leaves as an object (its class) when normalizing.
-    pub(crate) fn as_object(&self) -> Zval {
+    pub(crate) fn as_object(&self) -> Value {
         match self {
             Item::Tag(t, _) => object(class(*t)),
             Item::Break => object("CBOR\\OtherObject\\BreakObject"),
-            _ => Zval::Null,
+            _ => Value::Null,
         }
     }
 }

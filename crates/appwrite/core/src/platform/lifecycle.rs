@@ -376,9 +376,9 @@ fn session_store(data: &str) -> (String, String) {
     let mut store = utopia_auth::Store::new();
     store.decode(data.as_bytes());
     let field = |key: &[u8]| match store.property(key) {
-        Some(php_std::zval::Zval::String(s)) => String::from_utf8_lossy(s).into_owned(),
-        Some(php_std::zval::Zval::Int(i)) => i.to_string(),
-        Some(php_std::zval::Zval::Float(f)) => php_std::number::to_string(*f),
+        Some(php_std::Value::Str(s)) => String::from_utf8_lossy(s).into_owned(),
+        Some(php_std::Value::Int(i)) => i.to_string(),
+        Some(php_std::Value::Float(f)) => php_std::number::to_string(*f),
         _ => String::new(),
     };
     (field(b"id"), field(b"secret"))

@@ -210,13 +210,13 @@ echo mb_strtoupper($name), "\n";   // ZOË ÅNGSTRÖM
 
 ```
 use php_std::encoding::parse_str;
-use php_std::zval::{Key, Zval};
+use php_std::Value;
 
 let query = parse_str(b"user.name=Ana+Lee&tags[]=a&tags[]=b");
 
-assert_eq!(query.get(&Key::from_bytes(b"user_name")), Some(&Zval::String(b"Ana Lee".to_vec())));
-let Some(Zval::Array(tags)) = query.get(&Key::from_bytes(b"tags")) else { panic!("expected an array") };
-assert_eq!(tags.get(&Key::Int(1)), Some(&Zval::String(b"b".to_vec())));
+assert_eq!(query.get_str("user_name"), Some(&Value::from("Ana Lee")));
+let Some(Value::Array(tags)) = query.get_str("tags") else { panic!("expected an array") };
+assert_eq!(tags.get(&1.into()), Some(&Value::from("b")));
 ```
 
 ```php

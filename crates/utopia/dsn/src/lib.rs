@@ -51,7 +51,7 @@ pub struct GettingStarted;
 use std::sync::OnceLock;
 
 use php_std::encoding::{parse_str, urldecode};
-use php_std::zval::{Array, Key, Zval};
+use php_std::{Array, Value};
 
 /// Why a DSN was refused or a parameter could not be read.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -357,9 +357,9 @@ impl Dsn {
             Some(q) => q,
         };
         let params = self.params.get_or_init(|| parse_str(query.as_bytes()));
-        match params.get(&Key::from_bytes(key.as_bytes())) {
+        match params.get_str(key) {
             None => Ok(None),
-            Some(Zval::String(value)) => Ok(Some(value)),
+            Some(Value::Str(value)) => Ok(Some(value)),
             Some(_) => {
                 Err(Error::Type("Utopia\\DSN\\DSN::getParam(): Return value must be of type string, array returned"))
             }

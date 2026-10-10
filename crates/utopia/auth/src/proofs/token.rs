@@ -4,6 +4,24 @@ use crate::hashes::Argon2;
 use crate::{Error, Hash};
 
 /// A random hex token (`Utopia\Auth\Proofs\Token`), 256 characters by default.
+///
+/// ```
+/// use utopia_auth::proofs::{Proof, Token};
+///
+/// let token = Token::new(64)?;
+/// let secret = token.generate()?;
+/// assert_eq!(secret.len(), 64);
+/// assert!(secret.iter().all(u8::is_ascii_hexdigit));
+/// # Ok::<(), utopia_auth::Error>(())
+/// ```
+///
+/// ```php
+/// use Utopia\Auth\Proofs\Token;
+///
+/// $secret = (new Token(64))->generate();
+/// echo strlen($secret), "\n";                // 64
+/// var_dump(ctype_xdigit($secret));          // bool(true)
+/// ```
 #[derive(Debug, Clone)]
 pub struct Token {
     length: i64,
