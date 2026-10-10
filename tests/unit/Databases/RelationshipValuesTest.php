@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Databases;
 
+use Appwrite\Databases\CreateAccess;
 use Appwrite\Databases\RelationshipValues;
 use Appwrite\Extend\Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -299,6 +300,31 @@ final class RelationshipValuesTest extends TestCase
         $this->assertArrayNotHasKey('$databaseId', $prepared['artist']);
         $this->assertArrayNotHasKey('$databaseId', $prepared['artist']['label']);
         $this->assertArrayNotHasKey('$databaseId', $prepared['tracks'][0]);
+    }
+
+    public function testTheCreateGateRefusesANestedRelatedDocumentBeforeItsOwnRelationshipsArePrepared(): void
+    {
+        $collections = self::collections();
+        $authorization = new Authorization();
+        $database = new Document(['$id' => 'music', '$sequence' => self::DATABASE_SEQUENCE]);
+        $values = new RelationshipValues(
+            $this->catalog($collections),
+            $database,
+            $authorization,
+            access: new CreateAccess($authorization, $this->tables([]), $database),
+        );
+
+        $error = null;
+
+        try {
+            $values->prepare(['artist' => ['name' => 'Artist', 'label' => ['$id' => 'bad id!']]], $collections['albums']);
+        } catch (Exception $caught) {
+            $error = $caught;
+        }
+
+        $this->assertInstanceOf(Exception::class, $error, 'a new related document needs create on its collection');
+        $this->assertSame(Exception::USER_UNAUTHORIZED, $error->getType(), 'Main checks the artist before validating the label');
+        $this->assertSame("No permissions provided for action 'create'", $error->getMessage());
     }
 
     /**

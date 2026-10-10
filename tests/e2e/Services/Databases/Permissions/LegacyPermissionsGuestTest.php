@@ -214,6 +214,8 @@ final class LegacyPermissionsGuestTest extends Scope
         );
 
         $this->assertEquals(401, $privateResponse['headers']['status-code']);
+        $this->assertSame('user_unauthorized', $privateResponse['body']['type']);
+        $this->assertSame("No permissions provided for action 'create'", $privateResponse['body']['message'], 'Main reports the collection create check');
 
         // Create a document in private collection with API key so we can test that update and delete are also not allowed
         $privateResponse = $this->client->call(
