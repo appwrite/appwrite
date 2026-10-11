@@ -269,7 +269,8 @@ pub const DEFAULT_DEPTH: i64 = 512;
 /// `JSON_PARTIAL_OUTPUT_ON_ERROR` is set. `depth` is cast to a C `int` like
 /// PHP does; it is not validated (a depth below 1 fails on any array).
 pub fn encode<X: Extension>(value: &Value<X>, flags: Flags, depth: i64) -> Result<String, Error> {
-    let mut encoder = Encoder { out: Vec::new(), depth: 0, max_depth: depth as i32, error: ErrorCode::None };
+    let mut encoder =
+        Encoder { out: Vec::with_capacity(512), depth: 0, max_depth: depth as i32, error: ErrorCode::None };
     // The engine ignores the encoder's return value here: the error code decides.
     let _ = encoder.value(value, flags);
     let json = String::from_utf8(encoder.out).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned());
@@ -291,6 +292,25 @@ struct Encoder {
 struct Failed;
 
 const HEX: &[u8; 16] = b"0123456789abcdef";
+
+/// Appends the decimal digits of `i` (no allocation).
+pub(crate) fn push_int(out: &mut Vec<u8>, i: i64) {
+    let mut buf = [0u8; 20];
+    let mut pos = buf.len();
+    let mut n = i.unsigned_abs();
+    loop {
+        pos -= 1;
+        buf[pos] = b'0' + (n % 10) as u8;
+        n /= 10;
+        if n == 0 {
+            break;
+        }
+    }
+    if i < 0 {
+        out.push(b'-');
+    }
+    out.extend_from_slice(&buf[pos..]);
+}
 
 /// Bytes `php_json_escape_string` cannot copy verbatim: controls, `"`, `&`,
 /// `'`, `/`, `<`, `>`, `\` and everything from 0x80.
@@ -322,7 +342,7 @@ impl Encoder {
             Value::Null => self.out.extend_from_slice(b"null"),
             Value::Bool(true) => self.out.extend_from_slice(b"true"),
             Value::Bool(false) => self.out.extend_from_slice(b"false"),
-            Value::Int(i) => self.out.extend_from_slice(i.to_string().as_bytes()),
+            Value::Int(i) => push_int(&mut self.out, *i),
             Value::Float(f) => {
                 if f.is_finite() {
                     self.double(*f, flags);
@@ -401,7 +421,7 @@ impl Encoder {
                         self.pretty_char(flags, b'\n');
                         self.pretty_indent(flags);
                         self.out.push(b'"');
-                        self.out.extend_from_slice(index.to_string().as_bytes());
+                        push_int(&mut self.out, index);
                         self.out.push(b'"');
                     }
                 }
@@ -439,7 +459,7 @@ impl Encoder {
         {
             match n {
                 value::Number::Int(i) => {
-                    self.out.extend_from_slice(i.to_string().as_bytes());
+                    push_int(&mut self.out, i);
                     return Ok(());
                 }
                 value::Number::Float(d) if d.is_finite() => {
@@ -662,8 +682,42 @@ fn decode_depth(json: &[u8], depth: i64, argument: &str) -> Result<i32, Error> {
     Ok(depth as i32)
 }
 
+/// The text of a string token: the input bytes when the string has no
+/// escapes (valid UTF-8, as the scanner checked), or the decoded bytes.
+enum Text<'a> {
+    Raw(&'a [u8]),
+    Decoded(Vec<u8>),
+}
+
+impl Text<'_> {
+    fn as_bytes(&self) -> &[u8] {
+        match self {
+            Text::Raw(b) => b,
+            Text::Decoded(v) => v,
+        }
+    }
+
+    /// The text as a PHP string (no copy of decoded bytes).
+    fn into_str(self) -> Str {
+        match self {
+            Text::Raw(b) => Str::copy_from(b),
+            Text::Decoded(v) => Str::from(v),
+        }
+    }
+
+    /// The text as a Rust string (the scanner only produces UTF-8).
+    fn into_string(self) -> String {
+        match self {
+            Text::Raw(b) => String::from_utf8_lossy(b).into_owned(),
+            Text::Decoded(v) => {
+                String::from_utf8(v).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
+            }
+        }
+    }
+}
+
 /// A token of PHP's JSON scanner.
-enum Token {
+enum Token<'a> {
     LBrace,
     RBrace,
     LBracket,
@@ -676,7 +730,7 @@ enum Token {
     Int(i64),
     Double(f64),
     /// A string (also a big integer with `JSON_BIGINT_AS_STRING`).
-    Str(String),
+    Str(Text<'a>),
     /// The end of the input.
     End,
 }
@@ -685,6 +739,8 @@ struct Scanner<'a> {
     s: &'a [u8],
     pos: usize,
     flags: Flags,
+    /// Whether string tokens need their text (not when only validating).
+    text: bool,
 }
 
 /// Length of the valid UTF-8 sequence (scanner byte ranges) at the start of
@@ -716,9 +772,9 @@ fn hex4(s: &[u8]) -> Option<u32> {
     Some(v)
 }
 
-impl Scanner<'_> {
+impl<'a> Scanner<'a> {
     /// `php_json_scan`: the next token, or the scanner's error.
-    fn next(&mut self) -> Result<Token, ErrorCode> {
+    fn next(&mut self) -> Result<Token<'a>, ErrorCode> {
         let s = self.s;
         loop {
             let Some(&c) = s.get(self.pos) else {
@@ -770,7 +826,7 @@ impl Scanner<'_> {
 
     /// `INT`, `FLOAT` or `EXP` at the cursor (longest match), or `None` when
     /// none matches (a lone `-`).
-    fn number(&mut self) -> Option<Token> {
+    fn number(&mut self) -> Option<Token<'a>> {
         let s = self.s;
         let start = self.pos;
         let mut i = start;
@@ -811,9 +867,9 @@ impl Scanner<'_> {
         }
         self.pos = i;
         // The token is ASCII digits, signs, '.', 'e': valid UTF-8.
-        let text = std::str::from_utf8(&s[start..i]).unwrap_or("0");
+        let text = || std::str::from_utf8(&s[start..i]).unwrap_or("0");
         if is_double {
-            return Some(Token::Double(text.parse().unwrap_or(0.0)));
+            return Some(Token::Double(text().parse().unwrap_or(0.0)));
         }
         debug_assert_eq!(int_end, i);
         let digits = &s[start + usize::from(negative)..int_end];
@@ -821,20 +877,61 @@ impl Scanner<'_> {
             || (digits.len() == 19
                 && !(digits < &b"9223372036854775808"[..] || (digits == b"9223372036854775808" && negative)));
         if !bigint {
-            return Some(Token::Int(text.parse().unwrap_or(0)));
+            // At most 19 digits within the range of `i64` (or its minimum).
+            let magnitude = digits.iter().fold(0u64, |m, d| m * 10 + u64::from(d - b'0'));
+            let i = if negative { 0u64.wrapping_sub(magnitude) as i64 } else { magnitude as i64 };
+            return Some(Token::Int(i));
         }
         if self.flags.contains(Flags::BIGINT_AS_STRING) {
-            return Some(Token::Str(text.to_owned()));
+            return Some(Token::Str(Text::Raw(&s[start..i])));
         }
-        Some(Token::Double(text.parse().unwrap_or(0.0)))
+        Some(Token::Double(text().parse().unwrap_or(0.0)))
     }
 
     /// A string after its opening quote (`STR_P1`, then `STR_P2`).
-    fn string(&mut self) -> Result<Token, ErrorCode> {
+    fn string(&mut self) -> Result<Token<'a>, ErrorCode> {
+        let s = self.s;
+        let start = self.pos;
+        // The common case: no escapes and valid UTF-8, borrowed from the input.
+        loop {
+            let Some(&c) = s.get(self.pos) else {
+                // The NUL terminator is a control character inside a string.
+                return Err(ErrorCode::CtrlChar);
+            };
+            match c {
+                0x00..=0x1f => return Err(ErrorCode::CtrlChar),
+                b'"' => {
+                    let raw = &s[start..self.pos];
+                    self.pos += 1;
+                    return Ok(Token::Str(Text::Raw(raw)));
+                }
+                b'\\' => break,
+                0x20..=0x7f => self.pos += 1,
+                _ => match utf8_len(&s[self.pos..]) {
+                    Some(n) => self.pos += n,
+                    None => break,
+                },
+            }
+        }
+        self.decode_string(start)
+    }
+
+    /// The rest of a string that has escapes or invalid UTF-8, decoded.
+    fn decode_string(&mut self, start: usize) -> Result<Token<'a>, ErrorCode> {
         let s = self.s;
         let substitute = self.flags.contains(Flags::INVALID_UTF8_SUBSTITUTE);
         let tolerant = self.flags.intersects(Flags::INVALID_UTF8_IGNORE | Flags::INVALID_UTF8_SUBSTITUTE);
-        let mut out = String::new();
+        let keep = self.text;
+        let mut out: Vec<u8> = Vec::new();
+        if keep {
+            out.reserve(self.pos - start + 16);
+            out.extend_from_slice(&s[start..self.pos]);
+        }
+        let push_char = |out: &mut Vec<u8>, c: char| {
+            if keep {
+                out.extend_from_slice(c.encode_utf8(&mut [0; 4]).as_bytes());
+            }
+        };
         let mut run = self.pos;
         loop {
             let Some(&c) = s.get(self.pos) else {
@@ -844,22 +941,26 @@ impl Scanner<'_> {
             match c {
                 0x00..=0x1f => return Err(ErrorCode::CtrlChar),
                 b'"' => {
-                    out.push_str(std::str::from_utf8(&s[run..self.pos]).unwrap_or_default());
+                    if keep {
+                        out.extend_from_slice(&s[run..self.pos]);
+                    }
                     self.pos += 1;
-                    return Ok(Token::Str(out));
+                    return Ok(Token::Str(Text::Decoded(out)));
                 }
                 b'\\' => {
-                    out.push_str(std::str::from_utf8(&s[run..self.pos]).unwrap_or_default());
+                    if keep {
+                        out.extend_from_slice(&s[run..self.pos]);
+                    }
                     let esc = s.get(self.pos + 1).copied();
                     let decoded = match esc {
-                        Some(b'"') => '"',
-                        Some(b'\\') => '\\',
-                        Some(b'/') => '/',
-                        Some(b'b') => '\u{8}',
-                        Some(b'f') => '\u{c}',
-                        Some(b'n') => '\n',
-                        Some(b'r') => '\r',
-                        Some(b't') => '\t',
+                        Some(b'"') => b'"',
+                        Some(b'\\') => b'\\',
+                        Some(b'/') => b'/',
+                        Some(b'b') => 0x08,
+                        Some(b'f') => 0x0c,
+                        Some(b'n') => b'\n',
+                        Some(b'r') => b'\r',
+                        Some(b't') => b'\t',
                         Some(b'u') => {
                             let Some(code) = hex4(&s[self.pos + 2..]) else {
                                 return Err(ErrorCode::Syntax);
@@ -870,14 +971,14 @@ impl Scanner<'_> {
                                 && let Some(low) = hex4(&s[self.pos + 8..]).filter(|l| (0xdc00..=0xdfff).contains(l))
                             {
                                 let c = 0x10000 + ((code & 0x3ff) << 10) + (low & 0x3ff);
-                                out.push(char::from_u32(c).unwrap_or('\u{fffd}'));
+                                push_char(&mut out, char::from_u32(c).unwrap_or('\u{fffd}'));
                                 self.pos += 12;
                                 run = self.pos;
                                 continue;
                             }
                             match char::from_u32(code) {
                                 Some(ch) => {
-                                    out.push(ch);
+                                    push_char(&mut out, ch);
                                     self.pos += 6;
                                     run = self.pos;
                                     continue;
@@ -887,7 +988,9 @@ impl Scanner<'_> {
                         }
                         _ => return Err(ErrorCode::Syntax),
                     };
-                    out.push(decoded);
+                    if keep {
+                        out.push(decoded);
+                    }
                     self.pos += 2;
                     run = self.pos;
                 }
@@ -895,9 +998,11 @@ impl Scanner<'_> {
                 _ => match utf8_len(&s[self.pos..]) {
                     Some(n) => self.pos += n,
                     None if tolerant => {
-                        out.push_str(std::str::from_utf8(&s[run..self.pos]).unwrap_or_default());
+                        if keep {
+                            out.extend_from_slice(&s[run..self.pos]);
+                        }
                         if substitute {
-                            out.push('\u{fffd}');
+                            push_char(&mut out, '\u{fffd}');
                         }
                         self.pos += 1;
                         run = self.pos;
@@ -910,26 +1015,24 @@ impl Scanner<'_> {
 }
 
 /// How the parser builds values: `stdClass`/arrays as [`Value`], the request
-/// model as `serde_json::Value`, or nothing (`json_validate`).
+/// model as `serde_json::Value`, or nothing (`json_validate`). Containers are
+/// built once complete, from their entries, so they are allocated at their size.
 trait Build {
     type Value;
-    type Array;
-    type Object;
+    type Key;
 
+    /// Whether strings are needed (their text is not decoded otherwise).
+    fn text(&self) -> bool {
+        true
+    }
     /// The value of a scalar token.
-    fn scalar(&self, token: Token) -> Result<Self::Value, ParseError>;
-    /// A new, empty array.
-    fn array(&self) -> Self::Array;
-    /// Appends a value to an array.
-    fn push(&self, array: &mut Self::Array, value: Self::Value);
-    /// The value of a finished array.
-    fn end_array(&self, array: Self::Array) -> Self::Value;
-    /// A new, empty object.
-    fn object(&self) -> Self::Object;
-    /// `php_json_parser_object_update`.
-    fn set(&self, object: &mut Self::Object, key: String, value: Self::Value) -> Result<(), ParseError>;
-    /// The value of a finished object.
-    fn end_object(&self, object: Self::Object) -> Self::Value;
+    fn scalar(&self, token: Token<'_>) -> Result<Self::Value, ParseError>;
+    /// The key of a member, when the member is complete (`php_json_parser_object_update`'s checks).
+    fn key(&self, key: Text<'_>) -> Result<Self::Key, ParseError>;
+    /// An array of these elements.
+    fn array(&self, items: std::vec::Drain<'_, Self::Value>) -> Self::Value;
+    /// An object of these members, assigned in order.
+    fn object(&self, members: std::vec::Drain<'_, (Self::Key, Self::Value)>) -> Self::Value;
 }
 
 enum ParseError {
@@ -959,60 +1062,48 @@ struct PhpBuilder {
 
 impl Build for PhpBuilder {
     type Value = Value;
-    type Array = Array;
-    /// An array (assoc mode) or a `stdClass` property table.
-    type Object = Array;
+    type Key = ArrayKey;
 
     /// The PHP value of a scalar token.
-    fn scalar(&self, token: Token) -> Result<Value, ParseError> {
+    fn scalar(&self, token: Token<'_>) -> Result<Value, ParseError> {
         Ok(match token {
             Token::Null => Value::Null,
             Token::True => Value::Bool(true),
             Token::False => Value::Bool(false),
             Token::Int(i) => Value::Int(i),
             Token::Double(d) => Value::Float(d),
-            Token::Str(s) => Value::Str(Str::from(s)),
+            Token::Str(s) => Value::Str(s.into_str()),
             _ => Value::Null,
         })
     }
 
-    /// A new, empty PHP array.
-    fn array(&self) -> Array {
-        Array::new()
-    }
-
-    /// Appends a value to a decoded list.
-    fn push(&self, array: &mut Array, value: Value) {
-        // A decoded list never runs out of keys.
-        let _ = array.push(value);
+    /// A normalised key in assoc mode; a property name (not starting with NUL) otherwise.
+    fn key(&self, key: Text<'_>) -> Result<ArrayKey, ParseError> {
+        if self.assoc {
+            // `zend_symtable_update`.
+            return Ok(match numeric_key(key.as_bytes()) {
+                Some(i) => ArrayKey::Int(i),
+                None => ArrayKey::Str(key.into_str()),
+            });
+        }
+        if key.as_bytes().first() == Some(&0) {
+            return Err(ParseError::Code(ErrorCode::InvalidPropertyName));
+        }
+        Ok(ArrayKey::Str(key.into_str()))
     }
 
     /// The decoded list as a PHP array.
-    fn end_array(&self, array: Array) -> Value {
-        Value::Array(array)
-    }
-
-    /// A new, empty property table.
-    fn object(&self) -> Array {
-        Array::new()
-    }
-
-    /// Sets a property (a normalised key in assoc mode; a NUL-prefixed name fails otherwise).
-    fn set(&self, object: &mut Array, key: String, value: Value) -> Result<(), ParseError> {
-        if self.assoc {
-            // `zend_symtable_update`.
-            object.set(ArrayKey::normalize(Str::from(key)), value);
-        } else {
-            if key.as_bytes().first() == Some(&0) {
-                return Err(ParseError::Code(ErrorCode::InvalidPropertyName));
-            }
-            object.set(ArrayKey::Str(Str::from(key)), value);
+    fn array(&self, items: std::vec::Drain<'_, Value>) -> Value {
+        if items.len() == 0 {
+            return Value::Array(Array::new());
         }
-        Ok(())
+        Value::Array(Array::from_list(items.collect()))
     }
 
     /// The object as a PHP array (assoc mode) or a `stdClass`.
-    fn end_object(&self, object: Array) -> Value {
+    fn object(&self, members: std::vec::Drain<'_, (ArrayKey, Value)>) -> Value {
+        // Each member assigned in order, as `$a[$k] = $v`.
+        let object: Array = members.collect();
         if self.assoc { Value::Array(object) } else { Value::Object(object) }
     }
 }
@@ -1021,51 +1112,39 @@ struct ValueBuilder;
 
 impl Build for ValueBuilder {
     type Value = Json;
-    type Array = Vec<Json>;
-    type Object = Map<String, Json>;
+    type Key = String;
 
     /// The `serde_json::Value` of a scalar token (`Unrepresentable` for `INF`).
-    fn scalar(&self, token: Token) -> Result<Json, ParseError> {
+    fn scalar(&self, token: Token<'_>) -> Result<Json, ParseError> {
         Ok(match token {
             Token::Null => Json::Null,
             Token::True => Json::Bool(true),
             Token::False => Json::Bool(false),
             Token::Int(i) => Json::from(i),
             Token::Double(d) => Json::Number(Number::from_f64(d).ok_or(ParseError::Unrepresentable)?),
-            Token::Str(s) => Json::String(s),
+            Token::Str(s) => Json::String(s.into_string()),
             _ => Json::Null,
         })
     }
 
-    /// A new, empty JSON array.
-    fn array(&self) -> Vec<Json> {
-        Vec::new()
-    }
-
-    /// Appends a value to a JSON array.
-    fn push(&self, array: &mut Vec<Json>, value: Json) {
-        array.push(value);
+    /// The member name.
+    fn key(&self, key: Text<'_>) -> Result<String, ParseError> {
+        Ok(key.into_string())
     }
 
     /// The JSON array.
-    fn end_array(&self, array: Vec<Json>) -> Json {
-        Json::Array(array)
+    fn array(&self, items: std::vec::Drain<'_, Json>) -> Json {
+        Json::Array(items.collect())
     }
 
-    /// A new, empty JSON object.
-    fn object(&self) -> Map<String, Json> {
-        Map::new()
-    }
-
-    /// Sets a member; a repeated key replaces the value in place.
-    fn set(&self, object: &mut Map<String, Json>, key: String, value: Json) -> Result<(), ParseError> {
-        // `zend_symtable_update`: the same key replaces the value in place.
-        object.insert(key, value);
-        Ok(())
-    }
-
-    /// The JSON object, or a JSON array when its keys are `0, 1, 2...` (as PHP's array would be a list).
-    fn end_object(&self, object: Map<String, Json>) -> Json {
+    /// The JSON object (a repeated key replaces the value in place, as
+    /// `zend_symtable_update` does), or a JSON array when its keys are
+    /// `0, 1, 2...` (as PHP's array would be a list).
+    fn object(&self, members: std::vec::Drain<'_, (String, Json)>) -> Json {
+        let mut object = Map::with_capacity(members.len());
+        for (k, v) in members {
+            object.insert(k, v);
+        }
         let is_list = object.keys().enumerate().all(|(i, k)| numeric_key(k.as_bytes()) == Some(i as i64));
         if is_list { Json::Array(object.into_iter().map(|(_, v)| v).collect()) } else { Json::Object(object) }
     }
@@ -1075,45 +1154,41 @@ struct Validator;
 
 impl Build for Validator {
     type Value = ();
-    type Array = ();
-    type Object = ();
+    type Key = ();
+
+    /// No: validating needs no text.
+    fn text(&self) -> bool {
+        false
+    }
 
     /// Accepts any scalar.
-    fn scalar(&self, _: Token) -> Result<(), ParseError> {
+    fn scalar(&self, _: Token<'_>) -> Result<(), ParseError> {
+        Ok(())
+    }
+
+    /// Accepts any member name.
+    fn key(&self, _: Text<'_>) -> Result<(), ParseError> {
         Ok(())
     }
 
     /// Builds nothing.
-    fn array(&self) {}
+    fn array(&self, _: std::vec::Drain<'_, ()>) {}
 
     /// Builds nothing.
-    fn push(&self, _: &mut (), _: ()) {}
-
-    /// Builds nothing.
-    fn end_array(&self, _: ()) {}
-
-    /// Builds nothing.
-    fn object(&self) {}
-
-    /// Accepts any member.
-    fn set(&self, _: &mut (), _: String, _: ()) -> Result<(), ParseError> {
-        Ok(())
-    }
-
-    /// Builds nothing.
-    fn end_object(&self, _: ()) {}
+    fn object(&self, _: std::vec::Drain<'_, ((), ())>) {}
 }
 
 /// `YYMAXDEPTH`: the bison parser stack never holds this many states; the
 /// push that would reach it fails with "memory exhausted", a syntax error.
 const PARSER_STACK_LIMIT: usize = 10000;
 
-/// An open array or object, and how many parser-stack entries it holds.
-enum Frame<B: Build> {
+/// An open array or object, where its entries start on the parser's
+/// value stacks, and how many parser-stack entries it holds.
+enum Frame<'a> {
     /// `'[' $@ element ','?`
-    Array { array: B::Array, entries: usize },
+    Array { start: usize, entries: usize },
     /// `'{' $@ (member ',')? key ':'`
-    Object { object: B::Object, key: Option<String>, entries: usize },
+    Object { start: usize, key: Option<Text<'a>>, entries: usize },
 }
 
 struct Parser<'a> {
@@ -1147,13 +1222,16 @@ impl Parser<'_> {
 /// same order and the same error is reported first.
 fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Result<B::Value, ParseError> {
     let mut p = Parser {
-        scanner: Scanner { s: json, pos: 0, flags },
+        scanner: Scanner { s: json, pos: 0, flags, text: builder.text() },
         depth: 1,
         max_depth,
         // State 0.
         stack: 1,
     };
-    let mut frames: Vec<Frame<B>> = Vec::new();
+    let mut frames: Vec<Frame<'_>> = Vec::new();
+    // The elements and members of the open containers, innermost last.
+    let mut items: Vec<B::Value> = Vec::new();
+    let mut members: Vec<(B::Key, B::Value)> = Vec::with_capacity((json.len() / 16).min(64));
     // The next token, when it was read ahead.
     let mut ahead: Option<Token> = None;
     loop {
@@ -1174,7 +1252,7 @@ fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Re
                         p.push()?;
                         p.depth -= 1;
                         p.stack -= 3;
-                        builder.end_array(builder.array())
+                        builder.array(items.drain(items.len()..))
                     }
                     Token::RBrace => {
                         p.push()?;
@@ -1182,7 +1260,7 @@ fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Re
                         return Err(ErrorCode::StateMismatch.into());
                     }
                     t => {
-                        frames.push(Frame::Array { array: builder.array(), entries: 2 });
+                        frames.push(Frame::Array { start: items.len(), entries: 2 });
                         ahead = Some(t);
                         continue;
                     }
@@ -1198,7 +1276,7 @@ fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Re
                         p.push()?;
                         p.depth -= 1;
                         p.stack -= 3;
-                        builder.end_object(builder.object())
+                        builder.object(members.drain(members.len()..))
                     }
                     Token::RBracket => {
                         p.push()?;
@@ -1212,7 +1290,7 @@ fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Re
                             return Err(ErrorCode::Syntax.into());
                         }
                         p.push()?;
-                        frames.push(Frame::Object { object: builder.object(), key: Some(key), entries: 4 });
+                        frames.push(Frame::Object { start: members.len(), key: Some(key), entries: 4 });
                         continue;
                     }
                     _ => return Err(ErrorCode::Syntax.into()),
@@ -1237,11 +1315,12 @@ fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Re
                 };
             };
             match frame {
-                Frame::Array { array, entries } => {
+                Frame::Array { start, entries } => {
                     // `element: value` or `element: element ',' value`.
                     p.stack -= *entries - 2;
                     *entries = 3;
-                    builder.push(array, value);
+                    let start = *start;
+                    items.push(value);
                     match p.scanner.next()? {
                         Token::Comma => {
                             p.push()?;
@@ -1252,8 +1331,8 @@ fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Re
                             p.push()?;
                             p.depth -= 1;
                             p.stack -= 3;
-                            let Some(Frame::Array { array, .. }) = frames.pop() else { unreachable!() };
-                            value = builder.end_array(array);
+                            frames.pop();
+                            value = builder.array(items.drain(start..));
                         }
                         Token::RBrace => {
                             p.push()?;
@@ -1262,12 +1341,13 @@ fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Re
                         _ => return Err(ErrorCode::Syntax.into()),
                     }
                 }
-                Frame::Object { object, key, entries } => {
+                Frame::Object { start, key, entries } => {
                     // `member: key ':' value` or `member: member ',' key ':' value`.
                     p.stack -= *entries - 2;
                     *entries = 3;
-                    let k = key.take().unwrap_or_default();
-                    builder.set(object, k, value)?;
+                    let start = *start;
+                    let k = builder.key(key.take().unwrap_or(Text::Raw(b"")))?;
+                    members.push((k, value));
                     match p.scanner.next()? {
                         Token::Comma => {
                             p.push()?;
@@ -1289,8 +1369,8 @@ fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Re
                             p.push()?;
                             p.depth -= 1;
                             p.stack -= 3;
-                            let Some(Frame::Object { object, .. }) = frames.pop() else { unreachable!() };
-                            value = builder.end_object(object);
+                            frames.pop();
+                            value = builder.object(members.drain(start..));
                         }
                         Token::RBracket => {
                             p.push()?;

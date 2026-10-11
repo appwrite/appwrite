@@ -94,12 +94,16 @@ pub fn numeric_str(s: &str) -> Option<Number> {
 /// allowed; the body is an optional sign and a decimal integer or float with
 /// an optional exponent. Hex, octal and binary literals are not numeric.
 pub fn numeric_str_ex(s: &str) -> Option<(Number, i8)> {
-    let is_ws = |c: char| matches!(c, ' ' | '\t' | '\n' | '\r' | '\x0B' | '\x0C');
-    let t = s.trim_start_matches(is_ws).trim_end_matches(is_ws);
-    if t.is_empty() {
-        return None;
-    }
-    let bytes = t.as_bytes();
+    numeric_bytes_ex(s.as_bytes())
+}
+
+/// [`numeric_str_ex`] on bytes (a numeric string is ASCII, so bytes that
+/// are not UTF-8 are never numeric).
+pub fn numeric_bytes_ex(s: &[u8]) -> Option<(Number, i8)> {
+    let is_ws = |c: &u8| matches!(c, b' ' | b'\t' | b'\n' | b'\r' | 0x0B | 0x0C);
+    let lead = s.iter().position(|c| !is_ws(c))?;
+    let trail = s.iter().rposition(|c| !is_ws(c)).map_or(0, |i| i + 1);
+    let bytes = &s[lead..trail];
     let mut i = 0;
     if bytes[i] == b'+' || bytes[i] == b'-' {
         i += 1;
@@ -141,21 +145,29 @@ pub fn numeric_str_ex(s: &str) -> Option<(Number, i8)> {
     if i != bytes.len() {
         return None;
     }
+    // Only signs, digits, '.' and exponents remain: ASCII.
+    let float = || std::str::from_utf8(bytes).ok().and_then(|t| t.parse::<f64>().ok());
     if !is_float {
-        if let Ok(v) = t.parse::<i64>() {
+        let negative = bytes[0] == b'-';
+        let parsed = bytes[int_start..].iter().try_fold(0i64, |v, d| {
+            let v = v.checked_mul(10)?;
+            let d = i64::from(d - b'0');
+            if negative { v.checked_sub(d) } else { v.checked_add(d) }
+        });
+        if let Some(v) = parsed {
             // The engine's overflow check `strcmp`s the 19 digits up to the
             // end of the string, trailing whitespace included: "-9223372036854775808 "
             // compares greater than "9223372036854775808" and becomes a float.
-            let trailing_ws = t.len() != s.trim_start_matches(is_ws).len();
+            let trailing_ws = trail != s.len();
             if v == i64::MIN && trailing_ws {
                 return Some((Number::Float(v as f64), -1));
             }
             return Some((Number::Int(v), 0));
         }
-        let oflow = if bytes[0] == b'-' { -1 } else { 1 };
-        return t.parse::<f64>().ok().map(|f| (Number::Float(f), oflow));
+        let oflow = if negative { -1 } else { 1 };
+        return float().map(|f| (Number::Float(f), oflow));
     }
-    t.parse::<f64>().ok().map(|f| (Number::Float(f), 0))
+    float().map(|f| (Number::Float(f), 0))
 }
 
 /// PHP truthiness (`(bool) $value`).

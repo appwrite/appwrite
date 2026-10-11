@@ -28,7 +28,7 @@
 //! Objects of other classes (`__PHP_Incomplete_Class` in PHP), recursive
 //! structures and nesting deeper than [`MAX_DEPTH`] are [`Error::Unsupported`].
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fmt;
 
 use bytes::Bytes;
@@ -82,7 +82,8 @@ pub const MAX_DEPTH: usize = 4096;
 
 /// `igbinary_serialize($value)`.
 pub fn serialize<X: Extension>(value: &Value<X>) -> Vec<u8> {
-    let mut s = Serializer { out: Vec::with_capacity(64), strings: HashMap::new(), references: 0, empty_array: None };
+    let mut s =
+        Serializer { out: Vec::with_capacity(64), strings: HashMap::default(), references: 0, empty_array: None };
     s.out.extend_from_slice(&[0, 0, 0, 2]);
     s.value(value);
     s.out
@@ -91,7 +92,7 @@ pub fn serialize<X: Extension>(value: &Value<X>) -> Vec<u8> {
 struct Serializer {
     out: Vec<u8>,
     /// The string table: each non-empty string's index.
-    strings: HashMap<Str, u32>,
+    strings: HashMap<Str, u32, foldhash::fast::RandomState>,
     /// Reference ids handed out (arrays and objects, in pre-order).
     references: u32,
     /// The id of the shared empty array, once written.
@@ -237,16 +238,7 @@ pub fn unserialize(input: &Bytes) -> Result<Value, Error> {
         return Err(Error::Empty);
     }
     header(input)?;
-    let mut u = Unserializer::new(input);
-    let value = u.run()?;
-    if u.wanted.is_empty() {
-        return Ok(value);
-    }
-    // Back-references to non-empty containers: read again, keeping copies of those.
-    let wanted = std::mem::take(&mut u.wanted);
-    let mut u = Unserializer::new(input);
-    u.keep = wanted;
-    u.run()
+    Unserializer::new(input).run()
 }
 
 /// `igbinary_unserialize_header`.
@@ -284,8 +276,6 @@ fn header(b: &[u8]) -> Result<(), Error> {
 enum Slot {
     /// A container still being read.
     Open,
-    /// Not kept (no back-reference to it was seen on the first pass).
-    Skipped,
     Value(Value),
 }
 
@@ -294,10 +284,8 @@ struct Unserializer<'a> {
     pos: usize,
     strings: Vec<Str>,
     references: Vec<Slot>,
-    /// Ids whose values must be kept (second pass).
-    keep: HashSet<usize>,
-    /// Ids a back-reference needed but that were not kept (first pass).
-    wanted: HashSet<usize>,
+    /// The pairs of the arrays being read, innermost last.
+    entries: Vec<(ArrayKey, Value)>,
     depth: usize,
 }
 
@@ -310,10 +298,10 @@ impl<'a> Unserializer<'a> {
         Unserializer {
             input,
             pos: 4,
-            strings: Vec::new(),
-            references: Vec::new(),
-            keep: HashSet::new(),
-            wanted: HashSet::new(),
+            // Room for what typical data holds, without growing.
+            strings: Vec::with_capacity((input.len() / 16).min(64)),
+            references: Vec::with_capacity((input.len() / 64).min(16)),
+            entries: Vec::with_capacity((input.len() / 8).min(64)),
             depth: 0,
         }
     }
@@ -377,7 +365,7 @@ impl<'a> Unserializer<'a> {
             return invalid("igbinary_unserialize_chararray: end-of-data");
         }
         let end = self.pos + len as usize;
-        let s = Str::from_bytes(self.input.slice(self.pos..end));
+        let s = Str::share(self.input, self.pos..end);
         self.pos = end;
         self.strings.push(s.clone());
         Ok(s)
@@ -418,16 +406,10 @@ impl<'a> Unserializer<'a> {
         self.references.len() - 1
     }
 
-    /// Closes a slot: keeps a copy when a back-reference needs it.
+    /// Closes a slot: keeps the value for back-references (arrays are
+    /// copy-on-write, so this shares them).
     fn close(&mut self, id: usize, value: &Value) {
-        self.references[id] = if matches!(value, Value::Array(a) if a.is_empty())
-            || !matches!(value, Value::Array(_) | Value::Object(_))
-            || self.keep.contains(&id)
-        {
-            Slot::Value(value.clone())
-        } else {
-            Slot::Skipped
-        };
+        self.references[id] = Slot::Value(value.clone());
     }
 
     /// `igbinary_unserialize_ref`: a copy of the value at a reference id.
@@ -437,10 +419,6 @@ impl<'a> Unserializer<'a> {
             None => invalid(format!("igbinary_unserialize_ref: invalid reference {id} >= {}", self.references.len())),
             Some(Slot::Open) => Err(Error::Unsupported("a reference to a container that is still being read")),
             Some(Slot::Value(v)) => Ok(v.clone()),
-            Some(Slot::Skipped) => {
-                self.wanted.insert(id);
-                Ok(Value::Null)
-            }
         }
     }
 
@@ -520,7 +498,7 @@ impl<'a> Unserializer<'a> {
         if self.depth > MAX_DEPTH {
             return Err(Error::Unsupported("nesting deeper than igbinary::MAX_DEPTH"));
         }
-        let mut a = Array::with_capacity(if object { 0 } else { n });
+        let start = self.entries.len();
         for _ in 0..n {
             let kt = self.byte("igbinary_unserialize_array")?;
             let key = match kt {
@@ -540,10 +518,11 @@ impl<'a> Unserializer<'a> {
                 },
             };
             let v = self.value(false)?;
-            a.set(key, v);
+            self.entries.push((key, v));
         }
         self.depth -= 1;
-        Ok(a)
+        // Each pair assigned in order (a repeated key keeps its place).
+        Ok(self.entries.drain(start..).collect())
     }
 }
 

@@ -46,6 +46,12 @@ impl Str {
         if b.len() <= INLINE { Self::inline(&b) } else { Str(Repr::Shared(b)) }
     }
 
+    /// The bytes of `b` in `range`: shared, or copied inline when short
+    /// (without touching `b`'s reference count).
+    pub fn share(b: &Bytes, range: std::ops::Range<usize>) -> Self {
+        if range.len() <= INLINE { Self::inline(&b[range]) } else { Str(Repr::Shared(b.slice(range))) }
+    }
+
     /// Copies `b`.
     pub fn copy_from(b: &[u8]) -> Self {
         if b.len() <= INLINE { Self::inline(b) } else { Str(Repr::Shared(Bytes::copy_from_slice(b))) }

@@ -2467,7 +2467,7 @@ mod tables;
 /// algorithm"). The name is case-insensitive.
 pub fn hash(algo: &[u8], data: &[u8]) -> Option<String> {
     use sha2::Digest;
-    let hex = |b: &[u8]| b.iter().map(|x| format!("{x:02x}")).collect::<String>();
+    let hex = crate::encoding::bin2hex;
     Some(match algo.to_ascii_lowercase().as_slice() {
         b"md2" => hex(&md2::Md2::digest(data)),
         b"md4" => hex(&md4(data)),

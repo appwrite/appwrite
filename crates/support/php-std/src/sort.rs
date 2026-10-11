@@ -26,11 +26,16 @@
 //! like PHP when they meet an object (`Error`), so the value sorts and set
 //! functions return `Result` (the skeleton in rfc/rust-database.md has `()`).
 
+use std::cell::OnceCell;
 use std::collections::HashSet;
 
 use crate::format::str_to_float;
-use crate::types::value::{binary_strcmp, smart_strcmp};
+use crate::types::value::{
+    binary_strcmp, compare_double_to_string_parsed, compare_long_to_string_parsed, normalize, numeric, smart_strcmp,
+    smart_strcmp_parsed,
+};
 use crate::types::{Array, ArrayKey, EngineError, Extension, KeyRef, Str, Value};
+use crate::value::Number;
 
 /// The `$flags` of the sort functions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -411,6 +416,11 @@ fn compare_strings(flags: SortFlags, a: &[u8], b: &[u8]) -> i32 {
 /// A value prepared for one flag: its string or float form, computed once.
 enum Form<'a, X: Extension> {
     Value(&'a Value<X>),
+    /// A string value and its numeric form (`SORT_REGULAR`), parsed once.
+    Str(&'a Value<X>, &'a [u8], Option<(Number, i8)>),
+    /// An integer or float (`SORT_REGULAR`), and its string form once a
+    /// comparison with a non-numeric string needs it.
+    Num(&'a Value<X>, OnceCell<Vec<u8>>),
     Number(f64),
     /// The string; `None` for an object (the engine throws and uses "").
     Text(Option<Str>),
@@ -418,16 +428,48 @@ enum Form<'a, X: Extension> {
 
 fn form<X: Extension>(v: &Value<X>, flags: SortFlags) -> Form<'_, X> {
     match flags {
-        SortFlags::Regular => Form::Value(v),
+        SortFlags::Regular => match v {
+            Value::Str(s) => Form::Str(v, s, numeric(s)),
+            Value::Int(_) | Value::Float(_) => Form::Num(v, OnceCell::new()),
+            _ => Form::Value(v),
+        },
         SortFlags::Numeric => Form::Number(v.to_double()),
         _ => Form::Text(v.to_php_string().ok()),
+    }
+}
+
+/// `zend_compare` of an integer or float with a string (`p`: its numeric
+/// form): `compare_longs_to_string` / `compare_doubles_to_string`.
+fn number_vs_string<X: Extension>(v: &Value<X>, text: &OnceCell<Vec<u8>>, s: &[u8], p: Option<(Number, i8)>) -> i32 {
+    let as_text = || {
+        text.get_or_init(|| match v {
+            Value::Int(l) => l.to_string().into_bytes(),
+            Value::Float(d) => crate::number::to_string(*d).into_bytes(),
+            _ => Vec::new(),
+        })
+    };
+    match (v, p) {
+        (Value::Float(d), _) if d.is_nan() => 1,
+        (Value::Int(_) | Value::Float(_), None) => binary_strcmp(as_text(), s),
+        (Value::Int(l), p) => compare_long_to_string_parsed(*l, s, p),
+        (Value::Float(d), p) => compare_double_to_string_parsed(*d, s, p),
+        _ => 0,
     }
 }
 
 /// The unstable data comparison (`php_array_data_compare_*_unstable_i`).
 fn compare_forms<X: Extension>(flags: SortFlags, a: &Form<'_, X>, b: &Form<'_, X>) -> i32 {
     match (a, b) {
-        (Form::Value(x), Form::Value(y)) => x.compare(y),
+        // `zend_compare`, with strings' numeric forms and numbers' string forms computed once.
+        (Form::Str(_, x, px), Form::Str(_, y, py)) => smart_strcmp_parsed(x, *px, y, *py),
+        (Form::Num(x, text), Form::Str(_, s, p)) => number_vs_string(x, text, s, *p),
+        (Form::Str(_, s, p), Form::Num(y, text)) => match y {
+            Value::Float(d) if d.is_nan() => 1,
+            _ => normalize(-number_vs_string(y, text, s, *p)),
+        },
+        (Form::Value(x) | Form::Str(x, ..) | Form::Num(x, _), Form::Value(y) | Form::Str(y, ..) | Form::Num(y, _)) => {
+            x.compare(y)
+        }
         (Form::Number(x), Form::Number(y)) => {
             if x == y {
                 0

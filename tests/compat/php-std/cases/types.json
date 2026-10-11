@@ -2458,6 +2458,258 @@
         ],
         "list": false
       }
+    },
+    {
+      "name": "array_ops: mutating the array leaves a copy unchanged",
+      "op": "types.array_ops",
+      "args": {
+        "a": [
+          0,
+          1,
+          2
+        ],
+        "ops": [
+          {
+            "op": "copy"
+          },
+          {
+            "op": "set",
+            "k": 0,
+            "v": "x"
+          },
+          {
+            "op": "push",
+            "v": "y"
+          },
+          {
+            "op": "unset",
+            "k": 1
+          },
+          {
+            "op": "set",
+            "k": "name",
+            "v": "z"
+          }
+        ]
+      },
+      "expect": {
+        "array": {
+          "$array": [
+            [
+              0,
+              "x"
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              "y"
+            ],
+            [
+              "name",
+              "z"
+            ]
+          ]
+        },
+        "results": [
+          0,
+          null,
+          3,
+          null,
+          null
+        ],
+        "list": false,
+        "copies": [
+          [
+            0,
+            1,
+            2
+          ]
+        ]
+      }
+    },
+    {
+      "name": "array_ops: mutating a copy leaves the array unchanged",
+      "op": "types.array_ops",
+      "args": {
+        "a": {
+          "$array": [
+            [
+              "a",
+              1
+            ],
+            [
+              5,
+              2
+            ]
+          ]
+        },
+        "ops": [
+          {
+            "op": "copy"
+          },
+          {
+            "op": "swap"
+          },
+          {
+            "op": "set",
+            "k": "a",
+            "v": 9
+          },
+          {
+            "op": "push",
+            "v": 3
+          },
+          {
+            "op": "unset",
+            "k": 5
+          },
+          {
+            "op": "copy"
+          },
+          {
+            "op": "push",
+            "v": 4
+          }
+        ]
+      },
+      "expect": {
+        "array": {
+          "$array": [
+            [
+              "a",
+              9
+            ],
+            [
+              6,
+              3
+            ],
+            [
+              7,
+              4
+            ]
+          ]
+        },
+        "results": [
+          0,
+          null,
+          null,
+          6,
+          null,
+          1,
+          7
+        ],
+        "list": false,
+        "copies": [
+          {
+            "$array": [
+              [
+                "a",
+                1
+              ],
+              [
+                5,
+                2
+              ]
+            ]
+          },
+          {
+            "$array": [
+              [
+                "a",
+                9
+              ],
+              [
+                6,
+                3
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "array_ops: copies of an empty array, then of its packed and hash forms",
+      "op": "types.array_ops",
+      "args": {
+        "a": [],
+        "ops": [
+          {
+            "op": "copy"
+          },
+          {
+            "op": "push",
+            "v": 1
+          },
+          {
+            "op": "copy"
+          },
+          {
+            "op": "set",
+            "k": "k",
+            "v": 2
+          },
+          {
+            "op": "copy"
+          },
+          {
+            "op": "swap"
+          },
+          {
+            "op": "unset",
+            "k": 0
+          },
+          {
+            "op": "push",
+            "v": 3
+          }
+        ]
+      },
+      "expect": {
+        "array": {
+          "$array": [
+            [
+              "k",
+              2
+            ],
+            [
+              1,
+              3
+            ]
+          ]
+        },
+        "results": [
+          0,
+          0,
+          1,
+          null,
+          2,
+          null,
+          null,
+          1
+        ],
+        "list": false,
+        "copies": [
+          [],
+          [
+            1
+          ],
+          {
+            "$array": [
+              [
+                0,
+                1
+              ],
+              [
+                "k",
+                2
+              ]
+            ]
+          }
+        ]
+      }
     }
   ]
 }

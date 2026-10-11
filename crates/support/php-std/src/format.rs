@@ -517,14 +517,26 @@ fn append_string(
 fn append_int(out: &mut Vec<u8>, number: i64, width: usize, padding: u8, align: Align, always_sign: bool) {
     let padding = if align == Align::Left && padding == b'0' { b' ' } else { padding };
     let neg = number < 0;
-    let mut buf = Vec::with_capacity(21);
-    if neg {
-        buf.push(b'-');
-    } else if always_sign {
-        buf.push(b'+');
+    // The sign and up to 20 digits, right-aligned.
+    let mut buf = [0u8; 21];
+    let mut pos = buf.len();
+    let mut n = number.unsigned_abs();
+    loop {
+        pos -= 1;
+        buf[pos] = b'0' + (n % 10) as u8;
+        n /= 10;
+        if n == 0 {
+            break;
+        }
     }
-    buf.extend_from_slice(number.unsigned_abs().to_string().as_bytes());
-    append_string(out, &buf, width, 0, padding, align, neg, false, always_sign);
+    if neg {
+        pos -= 1;
+        buf[pos] = b'-';
+    } else if always_sign {
+        pos -= 1;
+        buf[pos] = b'+';
+    }
+    append_string(out, &buf[pos..], width, 0, padding, align, neg, false, always_sign);
 }
 
 fn append_uint(out: &mut Vec<u8>, number: u64, width: usize, padding: u8, align: Align) {
@@ -561,23 +573,71 @@ fn append_2n(
 /// `php_conv_fp('F', ...)`'s digits: `value` (made non-negative) with
 /// `precision` decimals, correctly rounded.
 fn fixed_digits(abs: f64, precision: usize) -> String {
-    format!("{abs:.precision$}")
+    let mut out = Vec::new();
+    fixed_digits_into(&mut out, abs, precision);
+    String::from_utf8(out).unwrap_or_default()
+}
+
+/// [`fixed_digits`], appended to `out`.
+fn fixed_digits_into(out: &mut Vec<u8>, abs: f64, precision: usize) {
+    if !fixed_digits_short(out, abs, precision) {
+        use std::io::Write;
+        let _ = write!(out, "{abs:.precision$}");
+    }
+}
+
+/// [`fixed_digits_into`] without the exact (slow) decimal expansion, when
+/// `abs` is the double nearest to `n / 10^precision` for an integer `n < 2^50`.
+///
+/// Then `abs` is within half an ulp of `n / 10^precision`, and an ulp of a
+/// number below `2^50 / 10^precision` is under `10^-precision / 4`, so the
+/// correctly rounded `precision`-place decimal of `abs` is `n` itself (never
+/// a tie). Otherwise (`n / 10^precision` rounds to another double, as for
+/// any value with more significant decimals) nothing is written: `false`.
+fn fixed_digits_short(out: &mut Vec<u8>, abs: f64, precision: usize) -> bool {
+    const POW10: [f64; 16] = [1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15];
+    let Some(&scale) = POW10.get(precision) else { return false };
+    let scaled = abs * scale;
+    if scaled.is_nan() || scaled >= (1u64 << 50) as f64 {
+        return false;
+    }
+    let n = scaled.round();
+    if n / scale != abs {
+        return false;
+    }
+    // The digits of `n` (at least `precision + 1`), with the point inserted.
+    let mut n = n as u64;
+    let mut digits = [b'0'; 20];
+    let mut len = 0;
+    while n > 0 || len <= precision {
+        digits[len] = b'0' + (n % 10) as u8;
+        n /= 10;
+        len += 1;
+    }
+    out.reserve(len + 1);
+    for i in (0..len).rev() {
+        if i + 1 == precision {
+            out.push(b'.');
+        }
+        out.push(digits[i]);
+    }
+    true
 }
 
 /// `php_conv_fp`: `%e`/`%E` (`exp` = Some) or `%F` (`exp` = None) without
-/// the sign; returns the text and whether the value is negative (a zero,
-/// including -0.0, is not).
-fn conv_fp(value: f64, precision: usize, exp: Option<u8>) -> (Vec<u8>, bool) {
+/// the sign, appended to `out`; returns whether the value is negative (a
+/// zero, including -0.0, is not).
+fn conv_fp(out: &mut Vec<u8>, value: f64, precision: usize, exp: Option<u8>) -> bool {
     let precision = precision.min(318);
     let negative = value < 0.0;
     let abs = value.abs();
     match exp {
-        None => (fixed_digits(abs, precision).into_bytes(), negative),
+        None => fixed_digits_into(out, abs, precision),
         Some(e) => {
             let text = format!("{abs:.precision$e}");
             let (mantissa, exponent) = text.split_once('e').unwrap_or((&text, "0"));
             let exponent: i64 = exponent.parse().unwrap_or(0);
-            let mut out = mantissa.as_bytes().to_vec();
+            out.extend_from_slice(mantissa.as_bytes());
             out.push(e);
             if exponent == 0 {
                 out.extend_from_slice(b"+0");
@@ -585,9 +645,9 @@ fn conv_fp(value: f64, precision: usize, exp: Option<u8>) -> (Vec<u8>, bool) {
                 out.push(if exponent < 0 { b'-' } else { b'+' });
                 out.extend_from_slice(exponent.unsigned_abs().to_string().as_bytes());
             }
-            (out, negative)
         }
     }
+    negative
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -616,14 +676,14 @@ fn append_double(
     let (text, negative) = match fmt {
         b'e' | b'E' | b'f' | b'F' => {
             let exp = if fmt == b'e' || fmt == b'E' { Some(fmt) } else { None };
-            let (digits, negative) = conv_fp(number, precision.max(0) as usize, exp);
-            let mut text = Vec::with_capacity(digits.len() + 1);
-            if negative {
+            // The sign first: the value is negative exactly when it is below zero.
+            let mut text = Vec::with_capacity(32);
+            if number < 0.0 {
                 text.push(b'-');
             } else if always_sign {
                 text.push(b'+');
             }
-            text.extend_from_slice(&digits);
+            let negative = conv_fp(&mut text, number, precision.max(0) as usize, exp);
             (text, negative)
         }
         _ => {
@@ -649,7 +709,8 @@ fn append_double(
 fn formatted_print(fmt: &[u8], args: &[Arg<'_>], additional: i64) -> Result<Vec<u8>, Error> {
     let at = |i: usize| fmt.get(i).copied().unwrap_or(0);
     let argc = args.len();
-    let mut out = Vec::with_capacity(fmt.len() + 16);
+    let room: usize = args.iter().map(|a| if let Arg::Str(s) = a { s.len() } else { 16 }).sum();
+    let mut out = Vec::with_capacity(fmt.len() + room);
     let mut pos = 0usize;
     let mut currarg = 0usize;
     let mut max_missing: Option<usize> = None;
@@ -1322,6 +1383,33 @@ mod tests {
         assert_eq!(s("%.10g", &[Arg::Float(0.1)]), "0.1");
         assert_eq!(s("%2$s %1$s", &[Arg::Str(b"a"), Arg::Str(b"b")]), "b a");
         assert!(matches!(sprintf(b"%d", &[]), Err(Error::ArgumentCount(_))));
+    }
+
+    #[test]
+    fn fixed_digits_shortcut_is_exact() {
+        // Decimal-looking values, ties, tiny and huge values, and pseudo-random
+        // bit patterns: the shortcut agrees with the exact expansion.
+        let mut values = vec![0.0, 0.5, 2.5, 0.125, 1e-300, 1e15, 1e300, 99.5, 1.005, 0.045, 123456.789];
+        for k in 0..4000u64 {
+            values.push(k as f64 / 100.0);
+            values.push(k as f64 / 1000.0 + 0.0005);
+        }
+        let mut x = 0x9e3779b97f4a7c15u64;
+        for _ in 0..4000 {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            let f = f64::from_bits(x).abs();
+            if f.is_finite() {
+                values.push(f);
+            }
+            values.push((x % 1_000_000_000) as f64 / 1e4);
+        }
+        for v in values {
+            for p in 0..18 {
+                assert_eq!(fixed_digits(v, p), format!("{v:.p$}"), "{v:e} {p}");
+            }
+        }
     }
 
     #[test]
