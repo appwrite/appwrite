@@ -74,24 +74,25 @@ export function Performance({ bench, id }: { bench: Bench | null; id?: string })
   )
 }
 
-/** A library's overall speedup over PHP, for cards and headers, worded by direction. */
+/**
+ * A library's overall speedup over PHP (the geometric mean of its benchmarks),
+ * for cards and headers, worded by direction. The gate's parity tolerance
+ * applies to single bound benchmarks only, so the average gets none.
+ */
 export function SpeedupBadge({ bench }: { bench: { speedup: number; benchmarks: number } | null }) {
   if (!bench) return null
   const x = bench.speedup
-  // At or above 1 Rust is faster; down to the gate's parity bound it is level; below it, slower.
-  const [label, tone] =
-    x >= 1
-      ? [`${times(x)} faster`, 'bg-ok-soft text-ok-ink']
-      : x >= 0.95
-        ? ['at parity', 'bg-muted text-muted-foreground']
-        : [`${times(1 / x)} slower`, 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300']
+  const faster = x >= 1
+  const ratio = faster ? x : 1 / x
+  // Within 10% a percentage says more than "1.0×".
+  const amount = ratio < 1.1 ? `${Math.max(1, Math.round((ratio - 1) * 100))}%` : times(ratio)
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${tone}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${faster ? 'bg-ok-soft text-ok-ink' : 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300'}`}
       title={`Geometric mean of ${bench.benchmarks} benchmark${bench.benchmarks === 1 ? '' : 's'} against PHP: ${x.toFixed(2)}x PHP's speed`}
     >
       <Gauge className="size-3" />
-      {label}
+      {amount} {faster ? 'faster' : 'slower'}
     </span>
   )
 }
