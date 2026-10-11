@@ -6,7 +6,7 @@ use image::RgbaImage;
 
 use crate::error::{Error, Result};
 use crate::frame::{Format, Frame};
-use crate::options::check_dimensions;
+use crate::options::{canvas_bytes, check_dimensions, check_pixels};
 
 /// The container a blob's first bytes announce.
 pub(crate) fn sniff(data: &[u8]) -> Option<Format> {
@@ -100,6 +100,8 @@ fn gif(data: &[u8]) -> Result<Vec<Frame>> {
                 }
             }
         }
+        // Every frame keeps a whole canvas: the frames together stay in budget.
+        check_pixels(canvas_bytes(sw.max(1).into(), sh.max(1).into()).saturating_mul(frames.len() as u64 + 1))?;
         frames.push(Frame::new(canvas.clone(), frame.transparent.is_some(), u32::from(frame.delay), Format::Gif));
         match frame.dispose {
             gif::DisposalMethod::Background => {
@@ -149,6 +151,7 @@ fn webp(data: &[u8]) -> Result<Vec<Frame>> {
             Err(_) if !frames.is_empty() => break,
             Err(e) => return Err(corrupt(Format::Webp, e)),
         };
+        check_pixels(canvas_bytes(w.into(), h.into()).saturating_mul(frames.len() as u64 + 1))?;
         frames.push(Frame::new(to_rgba(&buf), alpha, ms / 10, Format::Webp));
     }
     Ok(frames)

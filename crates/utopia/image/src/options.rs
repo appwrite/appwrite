@@ -287,12 +287,40 @@ pub fn set_resource_limit(resource: Resource, value: i64) {
 /// policy in Appwrite's image).
 pub const MAX_DIMENSION: u64 = 50_000;
 
-/// Fails like ImageMagick's pixel cache when a dimension passes the limit.
+/// Bytes of RGBA pixels held for one canvas of `width` x `height`.
+pub(crate) fn canvas_bytes(width: u64, height: u64) -> u64 {
+    width.saturating_mul(height).saturating_mul(4)
+}
+
+/// How many bytes of pixels one image may hold: the `memory` and `map`
+/// resource limits together (768 MiB by default).
+///
+/// PHP: ImageMagick keeps a pixel cache in memory, then memory-mapped, then
+/// on disk (up to the `disk` limit, 4 GiB in Appwrite's image) before it
+/// fails. Pixels here live only in memory, so the in-memory limits are the
+/// whole budget: an image past them fails here although ImageMagick would
+/// spill it to disk.
+pub(crate) fn pixel_budget() -> u64 {
+    Resource::Memory.limit().saturating_add(Resource::Map.limit())
+}
+
+/// Fails like ImageMagick's pixel cache when holding `bytes` more of pixels
+/// would pass [`pixel_budget`]. Called with the size a decoder announces,
+/// before its buffers are allocated.
+pub(crate) fn check_pixels(bytes: u64) -> Result<()> {
+    if bytes > pixel_budget() {
+        return Err(Error::imagick("cache resources exhausted `' @ error/cache.c/OpenPixelCache/4119"));
+    }
+    Ok(())
+}
+
+/// Fails like ImageMagick's pixel cache when a dimension passes the limit,
+/// or when one canvas of this size would pass the pixel budget.
 pub(crate) fn check_dimensions(width: u64, height: u64) -> Result<()> {
     if width > MAX_DIMENSION || height > MAX_DIMENSION {
         return Err(Error::imagick(format!(
             "width or height exceeds limit `' ({width}x{height}) > ({MAX_DIMENSION}x{MAX_DIMENSION}) @ error/cache.c/OpenPixelCache/3805"
         )));
     }
-    Ok(())
+    check_pixels(canvas_bytes(width, height))
 }

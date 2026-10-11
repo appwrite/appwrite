@@ -388,6 +388,11 @@
       "symbol": "Utopia\\Image\\Image::save",
       "php": "An invalid $type is only refused after the target directory was created (mkdir runs first).",
       "reason": "Rust takes an OutputFormat, parsed from the string before save() runs, so an invalid type fails before any directory is created; the case compares the error without the files state."
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::__construct",
+      "php": "ImageMagick holds pixels in a cache that moves from memory (the memory limit, 256 MiB in Appwrite's image) to memory-mapped files (map, 512 MiB) to disk (disk, 4 GiB) at 8 bytes a pixel, and fails with \"cache resources exhausted\" only past the disk limit; width and height are capped at 50000 each.",
+      "reason": "Pixels here live only in memory, so the memory and map limits together are the whole budget (768 MiB by default, 4 bytes a pixel). The size a decoder announces is checked against it before any buffer is allocated, and an animation's frames count together, since each keeps a whole canvas: an image past the budget fails with ImageMagick's \"cache resources exhausted\" message instead of exhausting the process. Images between the budget and ImageMagick's disk limit (above about 200 megapixels per frame by default) therefore fail here and succeed in PHP. Pinned by crates/utopia/image/tests/budget.rs."
     }
   ],
   "bench": {
