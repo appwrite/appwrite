@@ -39,9 +39,17 @@ const failures = new Counter('appwrite_failures');
 
 /** A uniform number in [0, 1) from the platform's CSPRNG (ids, emails and secrets derive from it). */
 export function random() {
-    // From bytes: k6 fills wider typed arrays with one byte per element.
-    const [a, b, c, d] = crypto.getRandomValues(new Uint8Array(4));
-    return (a * 16777216 + b * 65536 + c * 256 + d) / 4294967296;
+    // 52 random bits as the mantissa of a double in [1, 2), minus 1: uniform,
+    // with no division or modulo to bias it. Bytes, because k6 fills wider
+    // typed arrays with one byte per element.
+    const bits = crypto.getRandomValues(new Uint8Array(7));
+    const view = new DataView(new ArrayBuffer(8));
+    view.setUint8(0, 0x3f);
+    view.setUint8(1, 0xf0 | (bits[0] & 0x0f));
+    for (let i = 1; i < 7; i++) {
+        view.setUint8(i + 1, bits[i]);
+    }
+    return view.getFloat64(0) - 1;
 }
 
 export function unique(prefix) {

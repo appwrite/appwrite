@@ -278,7 +278,7 @@ const ops = {
     getItem: (k) => (api, data) => api.call('GET', `${items(k, data[k.ns])}/${pick(data[k.ns].items)}`),
     createItem: (k) => (api, data) => {
         const d = data[k.ns];
-        const res = api.call('POST', items(k, d), { [k.itemId]: 'unique()', data: record(Math.floor(random() * 1000)) }, [201]);
+        const res = api.call('POST', items(k, d), { [k.itemId]: 'unique()', data: record(__ITER) }, [201]);
         if (res.status === 201) {
             api.prep('DELETE', `${items(k, d)}/${res.json('$id')}`, null, [204]);
         }
