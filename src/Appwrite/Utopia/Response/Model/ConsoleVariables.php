@@ -42,7 +42,7 @@ class ConsoleVariables extends Model
             ])
             ->addRule('_APP_STORAGE_LIMIT', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Maximum file size allowed for file upload in bytes.',
+                'description' => 'Maximum file size allowed for file upload in bytes. A value of 0 disables the server file size limit.',
                 'default' => '',
                 'example' => '30000000',
             ])
