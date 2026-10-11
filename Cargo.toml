@@ -63,7 +63,7 @@ aes-gcm = "0.10"
 argon2 = { version = "0.5", features = ["std"] }
 # NATS client with JetStream (utopia-queue's NATS broker); the official
 # pure-Rust client from the NATS maintainers, on tokio.
-async-nats = { version = "0.38", default-features = false, features = ["ring", "server_2_10"] }
+async-nats = { version = "0.50", default-features = false, features = ["ring", "server_2_10", "jetstream"] }
 base64 = "0.22"
 # EksBlowfish (php-std crypt()); RustCrypto, pure Rust.
 blowfish = { version = "0.9", features = ["bcrypt"] }
