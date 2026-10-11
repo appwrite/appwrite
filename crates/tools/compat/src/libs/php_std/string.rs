@@ -51,6 +51,7 @@ pub const OPS: &[&str] = &[
     "string.strval",
     "string.str_split",
     "string.chunk_split",
+    "string.basename",
     "string.wordwrap",
     "string.nl2br",
     "string.str_repeat",
@@ -400,6 +401,10 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
         }
         "string.strval" => done(string::to_php_string(a.value("value")?).map(|s| Value::String(s.into_owned()))),
         "string.str_split" => done(string::str_split(&s()?, a.opt_i64("length")?.unwrap_or(1)).map(|p| list(&p))),
+        "string.basename" => {
+            let suffix = opt_bytes(&a, "suffix")?.unwrap_or_default();
+            done(Ok::<_, Error>(bytes_value(php_std::path::basename(&a.bytes("path")?, &suffix))))
+        }
         "string.chunk_split" => {
             let sep = opt_bytes(&a, "separator")?.unwrap_or_else(|| b"\r\n".to_vec());
             done(string::chunk_split(&s()?, a.opt_i64("length")?.unwrap_or(76), &sep).map(|r| bytes_value(&r)))

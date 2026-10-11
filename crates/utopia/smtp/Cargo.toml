@@ -1,0 +1,24 @@
+[package]
+name = "utopia-smtp"
+description = "An async SMTP client: STARTTLS and implicit TLS, PLAIN, LOGIN and XOAUTH2, partial recipient refusal, and MIME messages with attachments built for the wire."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+getrandom.workspace = true
+indexmap.workspace = true
+php-std.workspace = true
+rustls.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["fs", "io-util", "net", "time"] }
+tokio-rustls.workspace = true
+webpki-roots.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "fs", "io-util", "net", "time"] }
+
+[package.metadata.utopia]
+php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"

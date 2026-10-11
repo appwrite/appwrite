@@ -49,6 +49,8 @@ utopia-span = { path = "crates/utopia/span" }
 utopia-di = { path = "crates/utopia/di" }
 utopia-registry = { path = "crates/utopia/registry" }
 utopia-abuse = { path = "crates/utopia/abuse" }
+utopia-client = { path = "crates/utopia/client" }
+utopia-smtp = { path = "crates/utopia/smtp" }
 
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }
@@ -137,11 +139,19 @@ syn = { version = "2", default-features = false, features = ["full", "parsing", 
 thiserror = "2"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "sync", "signal"] }
 tokio-postgres = { version = "0.7.12", features = ["with-chrono-0_4", "with-serde_json-1"] }
+# TLS streams on tokio for utopia-client's HTTP/1.1 and utopia-smtp's SMTP
+# transports (STARTTLS upgrades a plain stream in place); already in
+# the tree through hyper-rustls.
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
 # The connector trait hyper-rustls implements, to open single connections
 # (utopia-telemetry's OTLP transport keeps its own pool); already in the tree.
 tower-service = "0.3"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "env-filter", "ansi"] }
+# Mozilla's root certificates (the default trust store of utopia-client and
+# utopia-smtp, as the CA bundle PHP's cURL and OpenSSL use); already in the
+# tree through hyper-rustls.
+webpki-roots = "1"
 whirlpool = "0.10"
 # XXH3 and XXH128 for php-std hash(); pure Rust.
 xxhash-rust = { version = "0.8", features = ["xxh3"] }

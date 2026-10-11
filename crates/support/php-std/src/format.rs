@@ -26,6 +26,7 @@ use crate::string::Error;
 use crate::value::Number;
 
 mod arith;
+mod pow;
 
 pub use arith::{add, array_sum, div, mul, sub};
 
@@ -1334,6 +1335,28 @@ pub fn max(values: &[Number]) -> Option<Number> {
 /// smallest value, keeping its type.
 pub fn min(values: &[Number]) -> Option<Number> {
     minmax(values, false)
+}
+
+/// PHP `$base ** $exponent` (and `pow()`) of floats, or of a float and an
+/// integer: the C library's `pow`, which on the dev image (Alpine) is musl's.
+/// Ported bit for bit, so the last digit matches PHP's on every platform,
+/// where the platform's own `pow` (or a correctly rounded one) can differ.
+pub fn pow(base: f64, exponent: f64) -> f64 {
+    pow::pow(base, exponent)
+}
+
+/// PHP `min($a, $b)` of two floats written as a direct two-argument call,
+/// which PHP 8.4+ compiles to its frameless form: `$a < $b ? $a : $b`. With a
+/// NAN that is `$b`, unlike [`min`] (the variadic form, `min(...$values)`),
+/// which keeps the first argument.
+pub fn min_pair(a: f64, b: f64) -> f64 {
+    if a < b { a } else { b }
+}
+
+/// PHP `max($a, $b)` of two floats as a direct two-argument call (the
+/// frameless form): `$a > $b ? $a : $b`. With a NAN that is `$b`.
+pub fn max_pair(a: f64, b: f64) -> f64 {
+    if a > b { a } else { b }
 }
 
 fn empty_array(function: &str) -> Error {

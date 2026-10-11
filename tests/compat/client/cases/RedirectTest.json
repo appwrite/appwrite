@@ -1,0 +1,572 @@
+{
+  "source": "packages/client/tests/RedirectTest.php",
+  "cases": [
+    {
+      "name": "resolve '../final' against http://example.test:8080/a/b/c",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test:8080/a/b/c",
+        "location": "../final"
+      },
+      "expect": "http://example.test:8080/a/final"
+    },
+    {
+      "name": "resolve './final' against http://example.test:8080/a/b/c",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test:8080/a/b/c",
+        "location": "./final"
+      },
+      "expect": "http://example.test:8080/a/b/final"
+    },
+    {
+      "name": "resolve 'final' against http://example.test:8080/a/b/c",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test:8080/a/b/c",
+        "location": "final"
+      },
+      "expect": "http://example.test:8080/a/b/final"
+    },
+    {
+      "name": "resolve '/final' against http://example.test:8080/a/b/c",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test:8080/a/b/c",
+        "location": "/final"
+      },
+      "expect": "http://example.test:8080/final"
+    },
+    {
+      "name": "resolve '../../final' against http://example.test:8080/a/b/c",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test:8080/a/b/c",
+        "location": "../../final"
+      },
+      "expect": "http://example.test:8080/final"
+    },
+    {
+      "name": "resolve '../b//final' against http://example.test/a/b/c?old=1",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b/c?old=1",
+        "location": "../b//final"
+      },
+      "expect": "http://example.test/a/b//final"
+    },
+    {
+      "name": "resolve './' against http://example.test/a/b/c?old=1",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b/c?old=1",
+        "location": "./"
+      },
+      "expect": "http://example.test/a/b/"
+    },
+    {
+      "name": "resolve '?' against http://example.test/a/b/c?old=1",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b/c?old=1",
+        "location": "?"
+      },
+      "expect": "http://example.test/a/b/c"
+    },
+    {
+      "name": "resolve '?new=1' against http://example.test/a/b/c?old=1",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b/c?old=1",
+        "location": "?new=1"
+      },
+      "expect": "http://example.test/a/b/c?new=1"
+    },
+    {
+      "name": "resolve '#result' against http://example.test/a/b/c?old=1",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b/c?old=1",
+        "location": "#result"
+      },
+      "expect": "http://example.test/a/b/c?old=1#result"
+    },
+    {
+      "name": "resolve 'http://other.test/x' against http://example.test/a/b",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b",
+        "location": "http://other.test/x"
+      },
+      "expect": "http://other.test/x"
+    },
+    {
+      "name": "resolve 'https://other.test/x' against http://example.test/a/b",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b",
+        "location": "https://other.test/x"
+      },
+      "expect": "https://other.test/x"
+    },
+    {
+      "name": "resolve '//cdn.test/img' against http://example.test/a/b",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b",
+        "location": "//cdn.test/img"
+      },
+      "expect": "http://cdn.test/img"
+    },
+    {
+      "name": "resolve 'x/y' against http://example.test",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test",
+        "location": "x/y"
+      },
+      "expect": "http://example.test/x/y"
+    },
+    {
+      "name": "resolve '../../../../x' against http://example.test/a/b",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b",
+        "location": "../../../../x"
+      },
+      "expect": "http://example.test/x"
+    },
+    {
+      "name": "resolve '' against http://example.test/a/b",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b",
+        "location": ""
+      },
+      "expect": "http://example.test/a/b"
+    },
+    {
+      "name": "resolve 'HTTP://Other.TEST:80/./x/../y' against http://example.test/a/b",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b",
+        "location": "HTTP://Other.TEST:80/./x/../y"
+      },
+      "expect": "http://other.test/y"
+    },
+    {
+      "name": "resolve 'http://:80' against http://example.test/a/b",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b",
+        "location": "http://:80"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid URI."
+        }
+      }
+    },
+    {
+      "name": "resolve 'a b?c d#e f' against http://example.test/a/b",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b",
+        "location": "a b?c d#e f"
+      },
+      "expect": "http://example.test/a/a%20b?c%20d#e%20f"
+    },
+    {
+      "name": "resolve '//x.test:443/p' against https://example.test:443/a",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "https://example.test:443/a",
+        "location": "//x.test:443/p"
+      },
+      "expect": "https://x.test/p"
+    },
+    {
+      "name": "resolve '#' against http://example.test/a/b?q",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b?q",
+        "location": "#"
+      },
+      "expect": "http://example.test/a/b?q"
+    },
+    {
+      "name": "resolve '?#f' against http://example.test/a/b?q",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b?q",
+        "location": "?#f"
+      },
+      "expect": "http://example.test/a/b#f"
+    },
+    {
+      "name": "resolve '.' against http://example.test/a/b",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b",
+        "location": "."
+      },
+      "expect": "http://example.test/a/"
+    },
+    {
+      "name": "resolve '..' against http://example.test/a/b",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b",
+        "location": ".."
+      },
+      "expect": "http://example.test/"
+    },
+    {
+      "name": "resolve '%zz/./%41' against http://example.test/a/b/",
+      "op": "redirect.resolve",
+      "args": {
+        "base": "http://example.test/a/b/",
+        "location": "%zz/./%41"
+      },
+      "expect": "http://example.test/a/b/%25zz/%41"
+    },
+    {
+      "name": "remove dot segments of '/a/b/c/./../../g'",
+      "op": "redirect.remove_dot_segments",
+      "args": {
+        "path": "/a/b/c/./../../g"
+      },
+      "expect": "/a/g"
+    },
+    {
+      "name": "remove dot segments of 'mid/content=5/../6'",
+      "op": "redirect.remove_dot_segments",
+      "args": {
+        "path": "mid/content=5/../6"
+      },
+      "expect": "mid/6"
+    },
+    {
+      "name": "remove dot segments of '/./'",
+      "op": "redirect.remove_dot_segments",
+      "args": {
+        "path": "/./"
+      },
+      "expect": "/"
+    },
+    {
+      "name": "remove dot segments of '/..'",
+      "op": "redirect.remove_dot_segments",
+      "args": {
+        "path": "/.."
+      },
+      "expect": "/"
+    },
+    {
+      "name": "remove dot segments of '.'",
+      "op": "redirect.remove_dot_segments",
+      "args": {
+        "path": "."
+      },
+      "expect": ""
+    },
+    {
+      "name": "remove dot segments of '..'",
+      "op": "redirect.remove_dot_segments",
+      "args": {
+        "path": ".."
+      },
+      "expect": ""
+    },
+    {
+      "name": "remove dot segments of '../a'",
+      "op": "redirect.remove_dot_segments",
+      "args": {
+        "path": "../a"
+      },
+      "expect": "a"
+    },
+    {
+      "name": "remove dot segments of './a'",
+      "op": "redirect.remove_dot_segments",
+      "args": {
+        "path": "./a"
+      },
+      "expect": "a"
+    },
+    {
+      "name": "remove dot segments of '/a/..'",
+      "op": "redirect.remove_dot_segments",
+      "args": {
+        "path": "/a/.."
+      },
+      "expect": "/"
+    },
+    {
+      "name": "remove dot segments of 'a/./b/../../c'",
+      "op": "redirect.remove_dot_segments",
+      "args": {
+        "path": "a/./b/../../c"
+      },
+      "expect": "/c"
+    },
+    {
+      "name": "remove dot segments of ''",
+      "op": "redirect.remove_dot_segments",
+      "args": {
+        "path": ""
+      },
+      "expect": ""
+    },
+    {
+      "name": "remove dot segments of '//a//../b'",
+      "op": "redirect.remove_dot_segments",
+      "args": {
+        "path": "//a//../b"
+      },
+      "expect": "//a/b"
+    },
+    {
+      "name": "remove dot segments of '/a/b/..x/.x'",
+      "op": "redirect.remove_dot_segments",
+      "args": {
+        "path": "/a/b/..x/.x"
+      },
+      "expect": "/a/b/..x/.x"
+    },
+    {
+      "name": "origin of http://example.test:8080/start and http://example.test:8080/final",
+      "op": "redirect.origin",
+      "args": {
+        "from": "http://example.test:8080/start",
+        "to": "http://example.test:8080/final"
+      },
+      "expect": {
+        "same": true,
+        "strip": false
+      }
+    },
+    {
+      "name": "origin of http://example.test/start and http://other.test/final",
+      "op": "redirect.origin",
+      "args": {
+        "from": "http://example.test/start",
+        "to": "http://other.test/final"
+      },
+      "expect": {
+        "same": false,
+        "strip": true
+      }
+    },
+    {
+      "name": "origin of https://example.test/start and http://example.test/final",
+      "op": "redirect.origin",
+      "args": {
+        "from": "https://example.test/start",
+        "to": "http://example.test/final"
+      },
+      "expect": {
+        "same": false,
+        "strip": true
+      }
+    },
+    {
+      "name": "origin of http://Example.TEST/a and http://example.test:80/b",
+      "op": "redirect.origin",
+      "args": {
+        "from": "http://Example.TEST/a",
+        "to": "http://example.test:80/b"
+      },
+      "expect": {
+        "same": true,
+        "strip": false
+      }
+    },
+    {
+      "name": "origin of https://example.test/a and https://example.test:8443/b",
+      "op": "redirect.origin",
+      "args": {
+        "from": "https://example.test/a",
+        "to": "https://example.test:8443/b"
+      },
+      "expect": {
+        "same": false,
+        "strip": true
+      }
+    },
+    {
+      "name": "origin of http://example.test:443/a and https://example.test/b",
+      "op": "redirect.origin",
+      "args": {
+        "from": "http://example.test:443/a",
+        "to": "https://example.test/b"
+      },
+      "expect": {
+        "same": false,
+        "strip": true
+      }
+    },
+    {
+      "name": "strips credentials and keeps the rest",
+      "op": "redirect.without_sensitive_headers",
+      "args": {
+        "headers": [
+          [
+            "Authorization",
+            "Bearer secret"
+          ],
+          [
+            "Cookie",
+            "session=1"
+          ],
+          [
+            "Cookie2",
+            "legacy=1"
+          ],
+          [
+            "Proxy-Authorization",
+            "Basic abc"
+          ],
+          [
+            "X-Trace",
+            "keep"
+          ]
+        ]
+      },
+      "expect": [
+        [
+          "X-Trace",
+          [
+            "keep"
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "strips credentials in any case",
+      "op": "redirect.without_sensitive_headers",
+      "args": {
+        "headers": [
+          [
+            "authorization",
+            "a"
+          ],
+          [
+            "COOKIE",
+            "b"
+          ],
+          [
+            "x-other",
+            "c"
+          ],
+          [
+            "proxy-authorization",
+            "d"
+          ]
+        ]
+      },
+      "expect": [
+        [
+          "x-other",
+          [
+            "c"
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "is redirect: 302 [['Location', '/x']]",
+      "op": "redirect.is_redirect",
+      "args": {
+        "status": 302,
+        "headers": [
+          [
+            "Location",
+            "/x"
+          ]
+        ]
+      },
+      "expect": true
+    },
+    {
+      "name": "is redirect: 302 []",
+      "op": "redirect.is_redirect",
+      "args": {
+        "status": 302,
+        "headers": []
+      },
+      "expect": false
+    },
+    {
+      "name": "is redirect: 302 [['Location', '']]",
+      "op": "redirect.is_redirect",
+      "args": {
+        "status": 302,
+        "headers": [
+          [
+            "Location",
+            ""
+          ]
+        ]
+      },
+      "expect": false
+    },
+    {
+      "name": "is redirect: 200 [['Location', '/x']]",
+      "op": "redirect.is_redirect",
+      "args": {
+        "status": 200,
+        "headers": [
+          [
+            "Location",
+            "/x"
+          ]
+        ]
+      },
+      "expect": false
+    },
+    {
+      "name": "is redirect: 399 [['location', 'x']]",
+      "op": "redirect.is_redirect",
+      "args": {
+        "status": 399,
+        "headers": [
+          [
+            "location",
+            "x"
+          ]
+        ]
+      },
+      "expect": true
+    },
+    {
+      "name": "is redirect: 300 [['Location', '/']]",
+      "op": "redirect.is_redirect",
+      "args": {
+        "status": 300,
+        "headers": [
+          [
+            "Location",
+            "/"
+          ]
+        ]
+      },
+      "expect": true
+    },
+    {
+      "name": "is redirect: 400 [['Location', '/']]",
+      "op": "redirect.is_redirect",
+      "args": {
+        "status": 400,
+        "headers": [
+          [
+            "Location",
+            "/"
+          ]
+        ]
+      },
+      "expect": false
+    }
+  ]
+}

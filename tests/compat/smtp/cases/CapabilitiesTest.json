@@ -1,0 +1,845 @@
+{
+  "source": "packages/smtp/tests/CapabilitiesTest.php",
+  "cases": [
+    {
+      "name": "ignores the greeting line",
+      "op": "capabilities.parse",
+      "args": {
+        "lines": [
+          "mail.example.test",
+          "PIPELINING"
+        ],
+        "keywords": [
+          "mail.example.test",
+          "PIPELINING"
+        ]
+      },
+      "expect": {
+        "keywords": [
+          [
+            "mail.example.test",
+            false,
+            []
+          ],
+          [
+            "PIPELINING",
+            true,
+            []
+          ]
+        ],
+        "max_size": null,
+        "mechanisms": []
+      }
+    },
+    {
+      "name": "reads keywords and parameters",
+      "op": "capabilities.parse",
+      "args": {
+        "lines": [
+          "mail.example.test",
+          "PIPELINING",
+          "AUTH PLAIN LOGIN"
+        ]
+      },
+      "expect": {
+        "keywords": [
+          [
+            "PIPELINING",
+            true,
+            []
+          ],
+          [
+            "SIZE",
+            false,
+            []
+          ],
+          [
+            "8BITMIME",
+            false,
+            []
+          ],
+          [
+            "SMTPUTF8",
+            false,
+            []
+          ],
+          [
+            "STARTTLS",
+            false,
+            []
+          ],
+          [
+            "AUTH",
+            true,
+            [
+              "PLAIN",
+              "LOGIN"
+            ]
+          ],
+          [
+            "ENHANCEDSTATUSCODES",
+            false,
+            []
+          ],
+          [
+            "CHUNKING",
+            false,
+            []
+          ]
+        ],
+        "max_size": null,
+        "mechanisms": [
+          "PLAIN",
+          "LOGIN"
+        ]
+      }
+    },
+    {
+      "name": "accepts the equals form some servers use",
+      "op": "capabilities.parse",
+      "args": {
+        "lines": [
+          "mail.example.test",
+          "AUTH=PLAIN LOGIN"
+        ]
+      },
+      "expect": {
+        "keywords": [
+          [
+            "PIPELINING",
+            false,
+            []
+          ],
+          [
+            "SIZE",
+            false,
+            []
+          ],
+          [
+            "8BITMIME",
+            false,
+            []
+          ],
+          [
+            "SMTPUTF8",
+            false,
+            []
+          ],
+          [
+            "STARTTLS",
+            false,
+            []
+          ],
+          [
+            "AUTH",
+            true,
+            [
+              "PLAIN",
+              "LOGIN"
+            ]
+          ],
+          [
+            "ENHANCEDSTATUSCODES",
+            false,
+            []
+          ],
+          [
+            "CHUNKING",
+            false,
+            []
+          ]
+        ],
+        "max_size": null,
+        "mechanisms": [
+          "PLAIN",
+          "LOGIN"
+        ]
+      }
+    },
+    {
+      "name": "keywords are case insensitive",
+      "op": "capabilities.parse",
+      "args": {
+        "lines": [
+          "mail.example.test",
+          "StartTls",
+          "auth plain"
+        ],
+        "keywords": [
+          "STARTTLS",
+          "starttls",
+          "AUTH"
+        ]
+      },
+      "expect": {
+        "keywords": [
+          [
+            "STARTTLS",
+            true,
+            []
+          ],
+          [
+            "starttls",
+            true,
+            []
+          ],
+          [
+            "AUTH",
+            true,
+            [
+              "PLAIN"
+            ]
+          ]
+        ],
+        "max_size": null,
+        "mechanisms": [
+          "PLAIN"
+        ]
+      }
+    },
+    {
+      "name": "reads the size limit",
+      "op": "capabilities.parse",
+      "args": {
+        "lines": [
+          "mail.example.test",
+          "SIZE 35882577"
+        ]
+      },
+      "expect": {
+        "keywords": [
+          [
+            "PIPELINING",
+            false,
+            []
+          ],
+          [
+            "SIZE",
+            true,
+            [
+              "35882577"
+            ]
+          ],
+          [
+            "8BITMIME",
+            false,
+            []
+          ],
+          [
+            "SMTPUTF8",
+            false,
+            []
+          ],
+          [
+            "STARTTLS",
+            false,
+            []
+          ],
+          [
+            "AUTH",
+            false,
+            []
+          ],
+          [
+            "ENHANCEDSTATUSCODES",
+            false,
+            []
+          ],
+          [
+            "CHUNKING",
+            false,
+            []
+          ]
+        ],
+        "max_size": 35882577,
+        "mechanisms": []
+      }
+    },
+    {
+      "name": "treats a zero size as no limit",
+      "op": "capabilities.parse",
+      "args": {
+        "lines": [
+          "mail.example.test",
+          "SIZE 0"
+        ]
+      },
+      "expect": {
+        "keywords": [
+          [
+            "PIPELINING",
+            false,
+            []
+          ],
+          [
+            "SIZE",
+            true,
+            [
+              "0"
+            ]
+          ],
+          [
+            "8BITMIME",
+            false,
+            []
+          ],
+          [
+            "SMTPUTF8",
+            false,
+            []
+          ],
+          [
+            "STARTTLS",
+            false,
+            []
+          ],
+          [
+            "AUTH",
+            false,
+            []
+          ],
+          [
+            "ENHANCEDSTATUSCODES",
+            false,
+            []
+          ],
+          [
+            "CHUNKING",
+            false,
+            []
+          ]
+        ],
+        "max_size": null,
+        "mechanisms": []
+      }
+    },
+    {
+      "name": "treats a missing size as no limit",
+      "op": "capabilities.parse",
+      "args": {
+        "lines": [
+          "mail.example.test",
+          "PIPELINING"
+        ]
+      },
+      "expect": {
+        "keywords": [
+          [
+            "PIPELINING",
+            true,
+            []
+          ],
+          [
+            "SIZE",
+            false,
+            []
+          ],
+          [
+            "8BITMIME",
+            false,
+            []
+          ],
+          [
+            "SMTPUTF8",
+            false,
+            []
+          ],
+          [
+            "STARTTLS",
+            false,
+            []
+          ],
+          [
+            "AUTH",
+            false,
+            []
+          ],
+          [
+            "ENHANCEDSTATUSCODES",
+            false,
+            []
+          ],
+          [
+            "CHUNKING",
+            false,
+            []
+          ]
+        ],
+        "max_size": null,
+        "mechanisms": []
+      }
+    },
+    {
+      "name": "treats a size that is not a number as no limit",
+      "op": "capabilities.parse",
+      "args": {
+        "lines": [
+          "mail.example.test",
+          "SIZE 10MB"
+        ]
+      },
+      "expect": {
+        "keywords": [
+          [
+            "PIPELINING",
+            false,
+            []
+          ],
+          [
+            "SIZE",
+            true,
+            [
+              "10MB"
+            ]
+          ],
+          [
+            "8BITMIME",
+            false,
+            []
+          ],
+          [
+            "SMTPUTF8",
+            false,
+            []
+          ],
+          [
+            "STARTTLS",
+            false,
+            []
+          ],
+          [
+            "AUTH",
+            false,
+            []
+          ],
+          [
+            "ENHANCEDSTATUSCODES",
+            false,
+            []
+          ],
+          [
+            "CHUNKING",
+            false,
+            []
+          ]
+        ],
+        "max_size": null,
+        "mechanisms": []
+      }
+    },
+    {
+      "name": "a huge size saturates",
+      "op": "capabilities.parse",
+      "args": {
+        "lines": [
+          "mail.example.test",
+          "SIZE 99999999999999999999"
+        ]
+      },
+      "expect": {
+        "keywords": [
+          [
+            "PIPELINING",
+            false,
+            []
+          ],
+          [
+            "SIZE",
+            true,
+            [
+              "99999999999999999999"
+            ]
+          ],
+          [
+            "8BITMIME",
+            false,
+            []
+          ],
+          [
+            "SMTPUTF8",
+            false,
+            []
+          ],
+          [
+            "STARTTLS",
+            false,
+            []
+          ],
+          [
+            "AUTH",
+            false,
+            []
+          ],
+          [
+            "ENHANCEDSTATUSCODES",
+            false,
+            []
+          ],
+          [
+            "CHUNKING",
+            false,
+            []
+          ]
+        ],
+        "max_size": 9223372036854775807,
+        "mechanisms": []
+      }
+    },
+    {
+      "name": "leading zeros",
+      "op": "capabilities.parse",
+      "args": {
+        "lines": [
+          "mail.example.test",
+          "SIZE 0010"
+        ]
+      },
+      "expect": {
+        "keywords": [
+          [
+            "PIPELINING",
+            false,
+            []
+          ],
+          [
+            "SIZE",
+            true,
+            [
+              "0010"
+            ]
+          ],
+          [
+            "8BITMIME",
+            false,
+            []
+          ],
+          [
+            "SMTPUTF8",
+            false,
+            []
+          ],
+          [
+            "STARTTLS",
+            false,
+            []
+          ],
+          [
+            "AUTH",
+            false,
+            []
+          ],
+          [
+            "ENHANCEDSTATUSCODES",
+            false,
+            []
+          ],
+          [
+            "CHUNKING",
+            false,
+            []
+          ]
+        ],
+        "max_size": 10,
+        "mechanisms": []
+      }
+    },
+    {
+      "name": "skips a line that is not a keyword",
+      "op": "capabilities.parse",
+      "args": {
+        "lines": [
+          "mail.example.test",
+          "-PIPELINING",
+          " ",
+          "",
+          "8BITMIME",
+          "X!Y",
+          "DSN\nX"
+        ]
+      },
+      "expect": {
+        "keywords": [
+          [
+            "PIPELINING",
+            false,
+            []
+          ],
+          [
+            "SIZE",
+            false,
+            []
+          ],
+          [
+            "8BITMIME",
+            true,
+            []
+          ],
+          [
+            "SMTPUTF8",
+            false,
+            []
+          ],
+          [
+            "STARTTLS",
+            false,
+            []
+          ],
+          [
+            "AUTH",
+            false,
+            []
+          ],
+          [
+            "ENHANCEDSTATUSCODES",
+            false,
+            []
+          ],
+          [
+            "CHUNKING",
+            false,
+            []
+          ]
+        ],
+        "max_size": null,
+        "mechanisms": []
+      }
+    },
+    {
+      "name": "splits parameters on any white space",
+      "op": "capabilities.parse",
+      "args": {
+        "lines": [
+          "mail.example.test",
+          "AUTH \tPLAIN\u000bLOGIN  XOAUTH2 ",
+          "SIZE\f100"
+        ]
+      },
+      "expect": {
+        "keywords": [
+          [
+            "PIPELINING",
+            false,
+            []
+          ],
+          [
+            "SIZE",
+            false,
+            []
+          ],
+          [
+            "8BITMIME",
+            false,
+            []
+          ],
+          [
+            "SMTPUTF8",
+            false,
+            []
+          ],
+          [
+            "STARTTLS",
+            false,
+            []
+          ],
+          [
+            "AUTH",
+            true,
+            [
+              "PLAIN",
+              "LOGIN",
+              "XOAUTH2"
+            ]
+          ],
+          [
+            "ENHANCEDSTATUSCODES",
+            false,
+            []
+          ],
+          [
+            "CHUNKING",
+            false,
+            []
+          ]
+        ],
+        "max_size": null,
+        "mechanisms": [
+          "PLAIN",
+          "LOGIN",
+          "XOAUTH2"
+        ]
+      }
+    },
+    {
+      "name": "a later keyword replaces an earlier one",
+      "op": "capabilities.parse",
+      "args": {
+        "lines": [
+          "mail.example.test",
+          "AUTH PLAIN",
+          "SIZE 10",
+          "AUTH LOGIN"
+        ]
+      },
+      "expect": {
+        "keywords": [
+          [
+            "PIPELINING",
+            false,
+            []
+          ],
+          [
+            "SIZE",
+            true,
+            [
+              "10"
+            ]
+          ],
+          [
+            "8BITMIME",
+            false,
+            []
+          ],
+          [
+            "SMTPUTF8",
+            false,
+            []
+          ],
+          [
+            "STARTTLS",
+            false,
+            []
+          ],
+          [
+            "AUTH",
+            true,
+            [
+              "LOGIN"
+            ]
+          ],
+          [
+            "ENHANCEDSTATUSCODES",
+            false,
+            []
+          ],
+          [
+            "CHUNKING",
+            false,
+            []
+          ]
+        ],
+        "max_size": 10,
+        "mechanisms": [
+          "LOGIN"
+        ]
+      }
+    },
+    {
+      "name": "an equals sign with nothing after it",
+      "op": "capabilities.parse",
+      "args": {
+        "lines": [
+          "mail.example.test",
+          "AUTH=",
+          "SIZE="
+        ]
+      },
+      "expect": {
+        "keywords": [
+          [
+            "PIPELINING",
+            false,
+            []
+          ],
+          [
+            "SIZE",
+            true,
+            []
+          ],
+          [
+            "8BITMIME",
+            false,
+            []
+          ],
+          [
+            "SMTPUTF8",
+            false,
+            []
+          ],
+          [
+            "STARTTLS",
+            false,
+            []
+          ],
+          [
+            "AUTH",
+            true,
+            []
+          ],
+          [
+            "ENHANCEDSTATUSCODES",
+            false,
+            []
+          ],
+          [
+            "CHUNKING",
+            false,
+            []
+          ]
+        ],
+        "max_size": null,
+        "mechanisms": []
+      }
+    },
+    {
+      "name": "none advertises nothing",
+      "op": "capabilities.none",
+      "args": {},
+      "expect": {
+        "keywords": [
+          [
+            "PIPELINING",
+            false,
+            []
+          ],
+          [
+            "SIZE",
+            false,
+            []
+          ],
+          [
+            "8BITMIME",
+            false,
+            []
+          ],
+          [
+            "SMTPUTF8",
+            false,
+            []
+          ],
+          [
+            "STARTTLS",
+            false,
+            []
+          ],
+          [
+            "AUTH",
+            false,
+            []
+          ],
+          [
+            "ENHANCEDSTATUSCODES",
+            false,
+            []
+          ],
+          [
+            "CHUNKING",
+            false,
+            []
+          ]
+        ],
+        "max_size": null,
+        "mechanisms": []
+      }
+    }
+  ]
+}

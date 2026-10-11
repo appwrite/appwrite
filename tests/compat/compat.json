@@ -99,10 +99,61 @@
       "rust-container": "redis-cluster://compat-queue-cluster-php:17000,compat-queue-cluster-php:17001,compat-queue-cluster-php:17002",
       "runner": "redis-cluster://127.0.0.1:17200,127.0.0.1:17201,127.0.0.1:17202"
     },
+    "client-http": {
+      "php": "compat-client-http:8080",
+      "rust": "127.0.0.1:16610",
+      "rust-container": "compat-client-http:8080",
+      "runner": "127.0.0.1:16610"
+    },
+    "client-https": {
+      "php": "compat-client-http:8443",
+      "rust": "localhost:16611",
+      "rust-container": "compat-client-http:8443",
+      "runner": "localhost:16611"
+    },
+    "client-other": {
+      "php": "host.docker.internal:16610",
+      "rust": "localhost:16610",
+      "runner": "localhost:16610"
+    },
+    "client-other-tls": {
+      "php": "host.docker.internal:16611",
+      "rust": "[::1]:16611",
+      "runner": "[::1]:16611"
+    },
+    "client-range": {
+      "php": "172.16.0.0/12",
+      "rust": "127.0.0.0/8",
+      "runner": "127.0.0.0/8"
+    },
     "queue-nats": {
       "php": "nats://compat-queue-nats:4222",
       "rust": "nats://localhost:14422",
       "runner": "nats://localhost:14422"
+    },
+    "smtp": {
+      "php": "compat-smtp-mailpit:1025",
+      "rust": "127.0.0.1:16620",
+      "rust-container": "compat-smtp-mailpit-rust:1025",
+      "runner": "127.0.0.1:16620"
+    },
+    "smtp-api": {
+      "php": "http://compat-smtp-mailpit:8025",
+      "rust": "http://127.0.0.1:16621",
+      "rust-container": "http://compat-smtp-mailpit-rust:8025",
+      "runner": "http://127.0.0.1:16621"
+    },
+    "smtp-implicit": {
+      "php": "compat-smtp-implicit:1025",
+      "rust": "127.0.0.1:16622",
+      "rust-container": "compat-smtp-implicit-rust:1025",
+      "runner": "127.0.0.1:16622"
+    },
+    "smtp-implicit-api": {
+      "php": "http://compat-smtp-implicit:8025",
+      "rust": "http://127.0.0.1:16623",
+      "rust-container": "http://compat-smtp-implicit-rust:8025",
+      "runner": "http://127.0.0.1:16623"
     }
   }
 }

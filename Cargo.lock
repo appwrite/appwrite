@@ -433,6 +433,7 @@ dependencies = [
  "utopia-auth",
  "utopia-cache",
  "utopia-circuit-breaker",
+ "utopia-client",
  "utopia-config",
  "utopia-database",
  "utopia-di",
@@ -445,6 +446,7 @@ dependencies = [
  "utopia-pools",
  "utopia-queue",
  "utopia-registry",
+ "utopia-smtp",
  "utopia-span",
  "utopia-system",
  "utopia-telemetry",
@@ -2679,6 +2681,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "utopia-client"
+version = "0.1.0"
+dependencies = [
+ "brotli",
+ "bytes",
+ "flate2",
+ "getrandom 0.3.4",
+ "php-std",
+ "rustls",
+ "thiserror",
+ "tokio",
+ "tokio-rustls",
+ "utopia-pools",
+ "utopia-span",
+ "webpki-roots 1.0.9",
+ "zstd",
+]
+
+[[package]]
 name = "utopia-config"
 version = "0.1.0"
 dependencies = [
@@ -2833,6 +2854,20 @@ name = "utopia-registry"
 version = "0.1.0"
 dependencies = [
  "thiserror",
+]
+
+[[package]]
+name = "utopia-smtp"
+version = "0.1.0"
+dependencies = [
+ "getrandom 0.3.4",
+ "indexmap",
+ "php-std",
+ "rustls",
+ "thiserror",
+ "tokio",
+ "tokio-rustls",
+ "webpki-roots 1.0.9",
 ]
 
 [[package]]

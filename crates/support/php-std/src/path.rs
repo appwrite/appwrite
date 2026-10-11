@@ -28,6 +28,41 @@ pub fn dirname(path: &str) -> String {
     String::from_utf8_lossy(&b[..=end as usize]).into_owned()
 }
 
+/// PHP `basename($path, $suffix)` (Unix separators), as `php_basename`: the
+/// last component, trailing slashes ignored, with `suffix` removed when the
+/// component ends with it and is longer than it.
+///
+/// ```
+/// use php_std::path::basename;
+///
+/// assert_eq!(basename(b"/tmp/report.pdf/", b""), b"report.pdf");
+/// assert_eq!(basename(b"/tmp/report.pdf", b".pdf"), b"report");
+/// assert_eq!(basename(b"/", b""), b"");
+/// ```
+pub fn basename<'a>(path: &'a [u8], suffix: &[u8]) -> &'a [u8] {
+    let (mut start, mut end) = (0, 0);
+    let mut inside = false;
+    for (i, &b) in path.iter().enumerate() {
+        if b == b'/' {
+            if inside {
+                inside = false;
+                end = i;
+            }
+        } else if !inside {
+            start = i;
+            inside = true;
+        }
+    }
+    if inside {
+        end = path.len();
+    }
+    let name = &path[start..end];
+    if !suffix.is_empty() && suffix.len() < name.len() && name.ends_with(suffix) {
+        return &name[..name.len() - suffix.len()];
+    }
+    name
+}
+
 /// `MAXPATHLEN` on Linux, where PHP runs.
 const MAXPATHLEN: usize = 4096;
 

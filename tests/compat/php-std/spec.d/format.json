@@ -1057,6 +1057,320 @@
           "iterations": 2000
         }
       ]
+    },
+    "format.min_pair": {
+      "doc": "min($a, $b) of two floats as a direct call (PHP's frameless form)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "float",
+                    "min": -10,
+                    "max": 10
+                  },
+                  {
+                    "gen": "float",
+                    "min": -1000000.0,
+                    "max": 1000000.0
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0.0,
+                      -0.0,
+                      1.0,
+                      -1.0,
+                      0.5,
+                      2.0,
+                      {
+                        "$float": "NAN"
+                      },
+                      {
+                        "$float": "INF"
+                      },
+                      {
+                        "$float": "-INF"
+                      },
+                      1e-300,
+                      1e+300
+                    ]
+                  }
+                ]
+              },
+              "b": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "float",
+                    "min": -10,
+                    "max": 10
+                  },
+                  {
+                    "gen": "float",
+                    "min": -1000000.0,
+                    "max": 1000000.0
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0.0,
+                      -0.0,
+                      1.0,
+                      -1.0,
+                      0.5,
+                      2.0,
+                      {
+                        "$float": "NAN"
+                      },
+                      {
+                        "$float": "INF"
+                      },
+                      {
+                        "$float": "-INF"
+                      },
+                      1e-300,
+                      1e+300
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "format.max_pair": {
+      "doc": "max($a, $b) of two floats as a direct call (PHP's frameless form)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "a": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "float",
+                    "min": -10,
+                    "max": 10
+                  },
+                  {
+                    "gen": "float",
+                    "min": -1000000.0,
+                    "max": 1000000.0
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0.0,
+                      -0.0,
+                      1.0,
+                      -1.0,
+                      0.5,
+                      2.0,
+                      {
+                        "$float": "NAN"
+                      },
+                      {
+                        "$float": "INF"
+                      },
+                      {
+                        "$float": "-INF"
+                      },
+                      1e-300,
+                      1e+300
+                    ]
+                  }
+                ]
+              },
+              "b": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "float",
+                    "min": -10,
+                    "max": 10
+                  },
+                  {
+                    "gen": "float",
+                    "min": -1000000.0,
+                    "max": 1000000.0
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0.0,
+                      -0.0,
+                      1.0,
+                      -1.0,
+                      0.5,
+                      2.0,
+                      {
+                        "$float": "NAN"
+                      },
+                      {
+                        "$float": "INF"
+                      },
+                      {
+                        "$float": "-INF"
+                      },
+                      1e-300,
+                      1e+300
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "format.pow": {
+      "doc": "(float) $base ** (float) $exponent",
+      "fuzz": [
+        {
+          "name": "integral exponents",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "base": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "float",
+                    "min": -10,
+                    "max": 10
+                  },
+                  {
+                    "gen": "float",
+                    "min": -1000000.0,
+                    "max": 1000000.0
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0.0,
+                      -0.0,
+                      1.0,
+                      -1.0,
+                      0.5,
+                      2.0,
+                      {
+                        "$float": "NAN"
+                      },
+                      {
+                        "$float": "INF"
+                      },
+                      {
+                        "$float": "-INF"
+                      },
+                      1e-300,
+                      1e+300
+                    ]
+                  }
+                ]
+              },
+              "exponent": {
+                "gen": "float",
+                "min": -64,
+                "max": 64,
+                "integral": true
+              }
+            }
+          },
+          "iterations": 5000
+        },
+        {
+          "name": "any exponents",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "base": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "float",
+                    "min": -10,
+                    "max": 10
+                  },
+                  {
+                    "gen": "float",
+                    "min": -1000000.0,
+                    "max": 1000000.0
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0.0,
+                      -0.0,
+                      1.0,
+                      -1.0,
+                      0.5,
+                      2.0,
+                      {
+                        "$float": "NAN"
+                      },
+                      {
+                        "$float": "INF"
+                      },
+                      {
+                        "$float": "-INF"
+                      },
+                      1e-300,
+                      1e+300
+                    ]
+                  }
+                ]
+              },
+              "exponent": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "float",
+                    "min": -10,
+                    "max": 10
+                  },
+                  {
+                    "gen": "float",
+                    "min": -1000000.0,
+                    "max": 1000000.0
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0.0,
+                      -0.0,
+                      1.0,
+                      -1.0,
+                      0.5,
+                      2.0,
+                      {
+                        "$float": "NAN"
+                      },
+                      {
+                        "$float": "INF"
+                      },
+                      {
+                        "$float": "-INF"
+                      },
+                      1e-300,
+                      1e+300
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
     }
   },
   "generators": {

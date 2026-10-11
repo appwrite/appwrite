@@ -1,0 +1,152 @@
+{
+  "cases": [
+    {
+      "name": "a text part",
+      "op": "part.render",
+      "args": {
+        "part": {
+          "kind": "text",
+          "type": "text/plain",
+          "content": "héllo\nworld"
+        }
+      },
+      "expect": {
+        "head": "Content-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+        "body": [
+          "h=C3=A9llo\r\nworld"
+        ]
+      }
+    },
+    {
+      "name": "a text part with a non-ASCII type",
+      "op": "part.render",
+      "args": {
+        "part": {
+          "kind": "text",
+          "type": "text/plaïn",
+          "content": "x"
+        }
+      },
+      "expect": {
+        "head": "Content-Type: =?UTF-8?B?dGV4dC9wbGHDr247IGNoYXJzZXQ9dXRmLTg=?=\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+        "body": [
+          "x"
+        ]
+      }
+    },
+    {
+      "name": "an attachment part",
+      "op": "part.render",
+      "args": {
+        "part": {
+          "kind": "attachment",
+          "attachment": {
+            "content": "hello",
+            "name": "notes.txt"
+          }
+        }
+      },
+      "expect": {
+        "head": "Content-Type: application/octet-stream\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"notes.txt\"\r\n\r\n",
+        "body": [
+          "aGVsbG8=\r\n"
+        ]
+      }
+    },
+    {
+      "name": "an inline attachment part",
+      "op": "part.render",
+      "args": {
+        "part": {
+          "kind": "attachment",
+          "attachment": {
+            "content": "hello",
+            "name": "a.png",
+            "type": "image/png",
+            "cid": "a@b"
+          }
+        }
+      },
+      "expect": {
+        "head": "Content-Type: image/png\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: inline; filename=\"a.png\"\r\nContent-ID: <a@b>\r\n\r\n",
+        "body": [
+          "aGVsbG8=\r\n"
+        ]
+      }
+    },
+    {
+      "name": "a nested multipart",
+      "op": "part.render",
+      "args": {
+        "part": {
+          "kind": "multipart",
+          "subtype": "mixed",
+          "parts": [
+            {
+              "kind": "multipart",
+              "subtype": "alternative",
+              "parts": [
+                {
+                  "kind": "text",
+                  "type": "text/plain",
+                  "content": "a"
+                },
+                {
+                  "kind": "text",
+                  "type": "text/html",
+                  "content": "<b>a</b>"
+                }
+              ]
+            },
+            {
+              "kind": "attachment",
+              "attachment": {
+                "content": "",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      },
+      "expect": {
+        "head": "Content-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n",
+        "body": [
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY2\"\r\n\r\n",
+          "--=_BOUNDARY2\r\n",
+          "Content-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "a",
+          "\r\n",
+          "--=_BOUNDARY2\r\n",
+          "Content-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "<b>a</b>",
+          "\r\n",
+          "--=_BOUNDARY2--\r\n",
+          "\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: application/octet-stream\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"e\"\r\n\r\n",
+          "\r\n",
+          "\r\n",
+          "--=_BOUNDARY1--\r\n"
+        ]
+      }
+    },
+    {
+      "name": "an empty multipart",
+      "op": "part.render",
+      "args": {
+        "part": {
+          "kind": "multipart",
+          "subtype": "mixed",
+          "parts": []
+        }
+      },
+      "expect": {
+        "head": "Content-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n",
+        "body": [
+          ""
+        ]
+      }
+    }
+  ]
+}

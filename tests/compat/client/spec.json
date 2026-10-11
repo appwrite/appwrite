@@ -1,0 +1,1180 @@
+{
+  "lib": "client",
+  "description": "utopia-php/client: an HTTP client on cURL (and Swoole): request defaults, the wire request it sends, response parsing and decoding, redirects, destinations, timeouts, TLS, connection reuse, streaming, retries with backoff and pooling, against a raw HTTP/1.1 fixture server.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/client/src"
+    ],
+    "tests": [
+      "packages/client/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/client"
+  },
+  "services": [
+    "client-http",
+    "client-https"
+  ],
+  "state": [],
+  "ops": {
+    "uri.parse": {
+      "doc": "Utopia\\Psr7\\Uri::parse(uri) and its getters, as the client parses request, base and redirect URIs: {scheme, userInfo, host, port, path, query, fragment, authority, string}",
+      "covers": [],
+      "fuzz": [
+        {
+          "name": "uris",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "uri": {
+                "gen": "ref",
+                "name": "uri"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "redirect.resolve": {
+      "doc": "(string) Redirect::resolve(Uri::parse(base), location)",
+      "covers": [
+        "Utopia\\Client\\Redirect::resolve"
+      ],
+      "fuzz": [
+        {
+          "name": "locations",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "base": {
+                "gen": "pick",
+                "from": [
+                  "http://example.test/a/b/c?q=1",
+                  "https://example.test:8443/a/",
+                  "http://example.test",
+                  "http://example.test/a"
+                ]
+              },
+              "location": {
+                "gen": "ref",
+                "name": "uri"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "redirect.remove_dot_segments": {
+      "doc": "Redirect::removeDotSegments(path)",
+      "covers": [
+        "Utopia\\Client\\Redirect::removeDotSegments"
+      ],
+      "fuzz": [
+        {
+          "name": "paths",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "path": {
+                "gen": "ref",
+                "name": "path"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "redirect.origin": {
+      "doc": "{same: Redirect::isSameOrigin(from, to), strip: Redirect::shouldStripSensitiveHeaders(from, to)}",
+      "covers": [
+        "Utopia\\Client\\Redirect::isSameOrigin",
+        "Utopia\\Client\\Redirect::shouldStripSensitiveHeaders"
+      ],
+      "fuzz": [
+        {
+          "name": "origins",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "from": {
+                "gen": "ref",
+                "name": "uri"
+              },
+              "to": {
+                "gen": "ref",
+                "name": "uri"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "redirect.without_sensitive_headers": {
+      "doc": "Redirect::withoutSensitiveHeaders(request with headers [[name, value]])->getHeaders() as [[name, [values]]]",
+      "covers": [
+        "Utopia\\Client\\Redirect::withoutSensitiveHeaders"
+      ],
+      "fuzz": [
+        {
+          "name": "headers",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "headers": {
+                "gen": "ref",
+                "name": "headers"
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "redirect.is_redirect": {
+      "doc": "Redirect::isRedirect(response {status, headers})",
+      "covers": [
+        "Utopia\\Client\\Redirect::isRedirect"
+      ],
+      "fuzz": [
+        {
+          "name": "responses",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "status": {
+                "gen": "int",
+                "min": 100,
+                "max": 599
+              },
+              "headers": {
+                "gen": "array",
+                "items": {
+                  "gen": "array",
+                  "items": {
+                    "gen": "pick",
+                    "from": [
+                      "Location",
+                      "location",
+                      "X",
+                      "",
+                      "/x",
+                      " "
+                    ]
+                  },
+                  "min": 2,
+                  "max": 2
+                },
+                "min": 0,
+                "max": 2
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "iprange.contains": {
+      "doc": "new IPRange(range), then contains(address) for each of `addresses`",
+      "covers": [
+        "Utopia\\Client\\Destinations\\IPRange::__construct",
+        "Utopia\\Client\\Destinations\\IPRange::contains"
+      ],
+      "fuzz": [
+        {
+          "name": "ranges",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "range": {
+                "gen": "ref",
+                "name": "range"
+              },
+              "addresses": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "ip"
+                },
+                "min": 0,
+                "max": 4
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "destinations.allows": {
+      "doc": "{allows: [allows(address) for each of `addresses`], proxy: permitsProxy()} of `destinations`: {type: anywhere} | {type: public, also: [ranges]}",
+      "covers": [
+        "Utopia\\Client\\Destinations\\Anywhere::allows",
+        "Utopia\\Client\\Destinations\\Anywhere::permitsProxy",
+        "Utopia\\Client\\Destinations\\PublicInternet::__construct",
+        "Utopia\\Client\\Destinations\\PublicInternet::allows",
+        "Utopia\\Client\\Destinations\\PublicInternet::permitsProxy"
+      ],
+      "fuzz": [
+        {
+          "name": "addresses",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "destinations": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": {
+                      "type": "public"
+                    }
+                  },
+                  {
+                    "gen": "const",
+                    "value": {
+                      "type": "anywhere"
+                    }
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "type": {
+                        "gen": "const",
+                        "value": "public"
+                      },
+                      "also": {
+                        "gen": "array",
+                        "items": {
+                          "gen": "pick",
+                          "from": [
+                            "10.0.0.0/8",
+                            "::1",
+                            "127.0.0.0/8",
+                            "fc00::/7",
+                            "0.0.0.0/0"
+                          ]
+                        },
+                        "min": 1,
+                        "max": 2
+                      }
+                    }
+                  }
+                ]
+              },
+              "addresses": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "ip"
+                },
+                "min": 1,
+                "max": 5
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "backoff.delay": {
+      "doc": "new Backoff(strategy {max_attempts, base_delay, max_delay, multiplier}, fn () => strategy.random)->delay(request with `method`, attempt, response {status, headers} or null, new <error>(request, 'failure') or null)",
+      "covers": [
+        "Utopia\\Client\\Decorator\\Retry\\Backoff::__construct",
+        "Utopia\\Client\\Decorator\\Retry\\Backoff::delay"
+      ],
+      "fuzz": [
+        {
+          "name": "responses",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "strategy": {
+                "gen": "object",
+                "fields": {
+                  "random": {
+                    "gen": "float",
+                    "min": 0,
+                    "max": 1
+                  },
+                  "max_attempts": {
+                    "gen": "int",
+                    "min": -1,
+                    "max": 6
+                  },
+                  "base_delay": {
+                    "gen": "float",
+                    "min": 0,
+                    "max": 2
+                  },
+                  "max_delay": {
+                    "gen": "float",
+                    "min": 0,
+                    "max": 20
+                  },
+                  "multiplier": {
+                    "gen": "float",
+                    "min": 0,
+                    "max": 4
+                  }
+                }
+              },
+              "method": {
+                "gen": "pick",
+                "from": [
+                  "GET",
+                  "HEAD",
+                  "PUT",
+                  "DELETE",
+                  "OPTIONS",
+                  "TRACE",
+                  "POST",
+                  "PATCH",
+                  "get"
+                ]
+              },
+              "attempt": {
+                "gen": "int",
+                "min": 0,
+                "max": 8
+              },
+              "response": {
+                "gen": "object",
+                "fields": {
+                  "status": {
+                    "gen": "pick",
+                    "from": [
+                      200,
+                      301,
+                      404,
+                      429,
+                      500,
+                      502,
+                      503,
+                      504
+                    ]
+                  },
+                  "headers": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "array",
+                      "items": {
+                        "gen": "one_of",
+                        "of": [
+                          {
+                            "gen": "pick",
+                            "from": [
+                              "Retry-After"
+                            ]
+                          },
+                          {
+                            "gen": "string",
+                            "alphabet": "0123456789.e- +xa",
+                            "min": 0,
+                            "max": 6,
+                            "tricky": 0.4
+                          }
+                        ]
+                      },
+                      "min": 2,
+                      "max": 2
+                    },
+                    "min": 0,
+                    "max": 2
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "errors",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "strategy": {
+                "gen": "object",
+                "fields": {
+                  "random": {
+                    "gen": "float",
+                    "min": 0,
+                    "max": 1
+                  }
+                }
+              },
+              "method": {
+                "gen": "pick",
+                "from": [
+                  "GET",
+                  "POST",
+                  "DELETE",
+                  "TRACE"
+                ]
+              },
+              "attempt": {
+                "gen": "int",
+                "min": 0,
+                "max": 4
+              },
+              "error": {
+                "gen": "pick",
+                "from": [
+                  "RequestException",
+                  "AdapterInitializationException",
+                  "AdapterPreconditionException",
+                  "InvalidResponseException",
+                  "InvalidUriException",
+                  "NetworkException",
+                  "ConnectionException",
+                  "DestinationException",
+                  "DnsException",
+                  "ProtocolException",
+                  "ProxyException",
+                  "TimeoutException",
+                  "TlsException"
+                ]
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "exception.kind": {
+      "doc": "{client, network, request}: whether new Utopia\\Client\\Exception\\<class>(request, 'failure') is a PSR-18 ClientExceptionInterface, NetworkExceptionInterface, RequestExceptionInterface",
+      "covers": [
+        "Utopia\\Client\\Exception\\NetworkException::__construct",
+        "Utopia\\Client\\Exception\\RequestException::__construct"
+      ]
+    },
+    "response.build": {
+      "doc": "(new Builder(new Response\\Factory(), new Stream\\Factory()))->build(status, reason, headers grouped by name, body, protocol) as {protocol, status, reason, headers, body}",
+      "covers": [
+        "Utopia\\Client\\Response\\Builder::__construct",
+        "Utopia\\Client\\Response\\Builder::build"
+      ],
+      "fuzz": [
+        {
+          "name": "responses",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "status": {
+                "gen": "int",
+                "min": 100,
+                "max": 599
+              },
+              "reason": {
+                "gen": "string",
+                "alphabet": "ascii",
+                "min": 0,
+                "max": 10,
+                "tricky": 0.1
+              },
+              "headers": {
+                "gen": "ref",
+                "name": "headers"
+              },
+              "body": {
+                "gen": "bytes",
+                "min": 0,
+                "max": 16
+              },
+              "protocol": {
+                "gen": "pick",
+                "from": [
+                  "1.0",
+                  "1.1",
+                  "2"
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "client.new": {
+      "doc": "new Client(new Curl() or new Retry(new Curl(), backoff(retry), recorded sleep), destinations?), then each [setting, value] of `with`: destinations, timeout, connect_timeout, ssl_verification, custom_ca, certificate [cert, key, pass], min_tls (Tls case name), connection_reuse, follow_redirects [enabled, hops], headers, base_uri, basic_auth [user, pass], bearer_auth, trace; a handle",
+      "covers": [
+        "Utopia\\Client\\Client::__construct",
+        "Utopia\\Client\\Client::withDestinations",
+        "Utopia\\Client\\Client::withTimeout",
+        "Utopia\\Client\\Client::withConnectTimeout",
+        "Utopia\\Client\\Client::withSslVerification",
+        "Utopia\\Client\\Client::withCustomCA",
+        "Utopia\\Client\\Client::withCertificate",
+        "Utopia\\Client\\Client::withMinTlsVersion",
+        "Utopia\\Client\\Client::withConnectionReuse",
+        "Utopia\\Client\\Client::withFollowRedirects",
+        "Utopia\\Client\\Client::withHeaders",
+        "Utopia\\Client\\Client::withBaseUri",
+        "Utopia\\Client\\Client::withBasicAuth",
+        "Utopia\\Client\\Client::withBearerAuth",
+        "Utopia\\Client\\Client::withTracePropagation",
+        "Utopia\\Client\\Adapter\\Curl\\Client::__construct",
+        "Utopia\\Client\\Adapter\\Curl\\Client::withDestinations",
+        "Utopia\\Client\\Adapter\\Curl\\Client::withTimeout",
+        "Utopia\\Client\\Adapter\\Curl\\Client::withConnectTimeout",
+        "Utopia\\Client\\Adapter\\Curl\\Client::withSslVerification",
+        "Utopia\\Client\\Adapter\\Curl\\Client::withCustomCA",
+        "Utopia\\Client\\Adapter\\Curl\\Client::withCertificate",
+        "Utopia\\Client\\Adapter\\Curl\\Client::withMinTlsVersion",
+        "Utopia\\Client\\Adapter\\Curl\\Client::withConnectionReuse",
+        "Utopia\\Client\\Adapter\\Curl\\Client::withFollowRedirects",
+        "Utopia\\Client\\Decorator\\Retry::__construct",
+        "Utopia\\Client\\Decorator::__construct",
+        "Utopia\\Client\\Decorator::withTimeout",
+        "Utopia\\Client\\Decorator::withConnectTimeout",
+        "Utopia\\Client\\Decorator::withSslVerification",
+        "Utopia\\Client\\Decorator::withCustomCA",
+        "Utopia\\Client\\Decorator::withCertificate",
+        "Utopia\\Client\\Decorator::withMinTlsVersion",
+        "Utopia\\Client\\Decorator::withDestinations",
+        "Utopia\\Client\\Decorator::withConnectionReuse",
+        "Utopia\\Client\\Decorator::withFollowRedirects"
+      ]
+    },
+    "client.send": {
+      "doc": "$client->sendRequest(request {method, uri, headers [[name, value]], body | {repeat, times} | file}) as {protocol, status, reason, headers [[name, [values]]], body}, plus `sleeps` a Retry recorded",
+      "covers": [
+        "Utopia\\Client\\Client::sendRequest",
+        "Utopia\\Client\\Adapter\\Curl\\Client::sendRequest",
+        "Utopia\\Client\\Decorator\\Retry::sendRequest",
+        "Utopia\\Client\\Decorator::sendRequest"
+      ],
+      "fuzz": [
+        {
+          "name": "requests",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "request": {
+                "gen": "object",
+                "fields": {
+                  "method": {
+                    "gen": "pick",
+                    "from": [
+                      "GET",
+                      "POST",
+                      "PUT",
+                      "PATCH",
+                      "DELETE",
+                      "HEAD",
+                      "OPTIONS",
+                      "PURGE",
+                      "post"
+                    ]
+                  },
+                  "uri": {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "const",
+                        "value": "http://${http}/echo"
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "",
+                          "?a=1",
+                          "/x/../y",
+                          "?q=a b",
+                          "#f"
+                        ]
+                      }
+                    ]
+                  },
+                  "headers": {
+                    "gen": "ref",
+                    "name": "headers"
+                  },
+                  "body": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "bytes",
+                        "min": 0,
+                        "max": 24
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "ascii",
+                        "min": 0,
+                        "max": 24,
+                        "tricky": 0.3
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 300
+        },
+        {
+          "name": "responses",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "request": {
+                "gen": "object",
+                "fields": {
+                  "method": {
+                    "gen": "pick",
+                    "from": [
+                      "GET",
+                      "HEAD"
+                    ]
+                  },
+                  "raw": {
+                    "gen": "ref",
+                    "name": "raw"
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 400
+        }
+      ]
+    },
+    "client.stream": {
+      "doc": "$client->stream(request, sink): the response (its body empty) and `streamed`, what reached the sink",
+      "covers": [
+        "Utopia\\Client\\Client::stream",
+        "Utopia\\Client\\Adapter\\Curl\\Client::stream",
+        "Utopia\\Client\\Decorator\\Retry::stream",
+        "Utopia\\Client\\Decorator::stream"
+      ],
+      "fuzz": [
+        {
+          "name": "responses",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "request": {
+                "gen": "object",
+                "fields": {
+                  "method": {
+                    "gen": "pick",
+                    "from": [
+                      "GET",
+                      "HEAD"
+                    ]
+                  },
+                  "raw": {
+                    "gen": "ref",
+                    "name": "raw"
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 300
+        }
+      ]
+    },
+    "pool.send": {
+      "doc": "new Pool(new Connections(new Stack(), 'test', size, fn () => new Curl() (counted), 0.0)), then sendRequest (or stream, with `stream`) each of `requests`: {responses, created}",
+      "covers": [
+        "Utopia\\Client\\Pool::__construct",
+        "Utopia\\Client\\Pool::sendRequest",
+        "Utopia\\Client\\Pool::stream"
+      ]
+    }
+  },
+  "generators": {
+    "uri": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "http://",
+                "https://",
+                "HTTP://",
+                "//",
+                "",
+                "ftp://",
+                "http:",
+                "mailto:"
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "hostname",
+              "min": 0,
+              "max": 12,
+              "tricky": 0.1
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                ":80",
+                ":443",
+                ":8080",
+                ":0",
+                ":65536",
+                ":x",
+                "@h"
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "./ab%2Fz",
+              "min": 0,
+              "max": 12,
+              "tricky": 0.1
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "?",
+                "?a=b",
+                "?a b&c=%2",
+                "?#"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "#",
+                "#f",
+                "#a b"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "url",
+          "min": 0,
+          "max": 30,
+          "tricky": 0.3
+        },
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 12,
+          "tricky": 0.3
+        }
+      ]
+    },
+    "path": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "./ab",
+          "min": 0,
+          "max": 16,
+          "tricky": 0
+        },
+        {
+          "gen": "string",
+          "alphabet": "./a%2F",
+          "min": 0,
+          "max": 20,
+          "tricky": 0.2
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "pick",
+            "from": [
+              ".",
+              "..",
+              "a",
+              "",
+              "b.c"
+            ]
+          },
+          "sep": "/",
+          "min": 0,
+          "max": 6
+        }
+      ]
+    },
+    "ip": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "int",
+            "min": 0,
+            "max": 300
+          },
+          "sep": ".",
+          "min": 1,
+          "max": 5
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "string",
+            "alphabet": "0123456789abcdef",
+            "min": 0,
+            "max": 4,
+            "tricky": 0
+          },
+          "sep": ":",
+          "min": 1,
+          "max": 9
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "::ffff:",
+                "64:ff9b::",
+                "2002:",
+                "::",
+                "fe80::",
+                "fc00::"
+              ]
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "int",
+                "min": 0,
+                "max": 255
+              },
+              "sep": ".",
+              "min": 4,
+              "max": 4
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "127.0.0.1",
+            "::1",
+            "0.0.0.0",
+            "8.8.8.8",
+            "169.254.169.254",
+            "100.64.0.1",
+            "192.0.2.1",
+            "2001:db8::1",
+            "ff02::1",
+            "1.1.1.1",
+            "2606:4700:4700::1111"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "0123456789.:abcdef ",
+          "min": 0,
+          "max": 16,
+          "tricky": 0
+        }
+      ]
+    },
+    "range": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "ref",
+          "name": "ip"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "/",
+            "/0",
+            "/8",
+            "/12",
+            "/24",
+            "/32",
+            "/33",
+            "/64",
+            "/128",
+            "/129",
+            "/-1",
+            "/x",
+            "/007"
+          ]
+        }
+      ]
+    },
+    "token": {
+      "gen": "string",
+      "alphabet": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_!#$%&'*+.^`|~",
+      "min": 1,
+      "max": 12,
+      "tricky": 0
+    },
+    "header_name": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "token"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "Host",
+            "host",
+            "Accept",
+            "accept-encoding",
+            "Content-Type",
+            "Authorization",
+            "X-Trace",
+            "Expect",
+            "Cookie"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 8,
+          "tricky": 0.3
+        }
+      ]
+    },
+    "header_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 20,
+          "tricky": 0.3
+        },
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 6,
+          "tricky": 0.2
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            " ",
+            "0",
+            "a, b",
+            "  x  ",
+            "\r\n",
+            "\t",
+            "\u000b",
+            " \f ",
+            "a\u0000b",
+            "\u0000"
+          ]
+        }
+      ]
+    },
+    "headers": {
+      "gen": "array",
+      "items": {
+        "gen": "array",
+        "items": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "header_name"
+            },
+            {
+              "gen": "ref",
+              "name": "header_value"
+            }
+          ]
+        },
+        "min": 2,
+        "max": 2
+      },
+      "min": 0,
+      "max": 4
+    },
+    "raw": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "pick",
+          "from": [
+            "HTTP/1.1 ",
+            "HTTP/1.0 ",
+            "http/1.1 "
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "200",
+            "201",
+            "204",
+            "301",
+            "302",
+            "304",
+            "404",
+            "500",
+            "099",
+            "999",
+            "600"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            " OK",
+            "",
+            " Created Thing",
+            " ",
+            " OK  "
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "\r\n",
+            "\n"
+          ]
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "pick",
+                "from": [
+                  "X-A",
+                  "x-a",
+                  "Set-Cookie",
+                  "Content-Type",
+                  "Bad Name",
+                  "X-Fold",
+                  "Location",
+                  "Retry-After"
+                ]
+              },
+              {
+                "gen": "pick",
+                "from": [
+                  ": ",
+                  ":",
+                  ":  ",
+                  ": a:b "
+                ]
+              },
+              {
+                "gen": "string",
+                "alphabet": "ascii",
+                "min": 0,
+                "max": 8,
+                "tricky": 0.2
+              },
+              {
+                "gen": "pick",
+                "from": [
+                  "\r\n",
+                  "\n"
+                ]
+              }
+            ]
+          },
+          "sep": "",
+          "min": 0,
+          "max": 4
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "Content-Length: 2\r\n\r\nok",
+            "Content-Length: 5\r\n\r\nok",
+            "\r\nbody-until-close",
+            "Transfer-Encoding: chunked\r\n\r\n2\r\nok\r\n0\r\n\r\n",
+            "Transfer-Encoding: chunked\r\n\r\n2\r\nok\r\n",
+            "Content-Length: x\r\n\r\n",
+            "Content-Encoding: identity\r\nContent-Length: 2\r\n\r\nok",
+            "Content-Length: 0\r\n\r\n",
+            "\r\n",
+            "",
+            "\n\nok"
+          ]
+        }
+      ]
+    }
+  },
+  "waivers": {
+    "Utopia\\Client\\Adapter\\SwooleCoroutine\\*": "Swoole coroutine transport: runtime plumbing (CONVERSION.md section 6). Its behaviour, sending HTTP/1.1, is the Http transport's, compared against the cURL adapter, which the PHP side uses because both adapters must agree with each other and cURL is the reference the Swoole adapter follows.",
+    "Utopia\\Client\\PHPStan\\*": "PHPStan extension, no runtime behaviour.",
+    "Utopia\\Client\\Exception\\NetworkException::getRequest": "PSR-18 accessor returning the request object the exception carries: subsumed by Rust ownership (the caller keeps its request); the exception class and message are compared by every failing case.",
+    "Utopia\\Client\\Exception\\RequestException::getRequest": "PSR-18 accessor returning the request object the exception carries: subsumed by Rust ownership (the caller keeps its request)."
+  },
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Client\\Adapter\\Curl\\Client::sendRequest",
+      "description": "cURL hands chunked trailer fields to the header callback after the body, so parseHeaderBlock() reads them as the last header block, finds no status line and the request fails with InvalidResponseException, although the response was complete.",
+      "case": "CurlClientTest.json#decodes chunked bodies with extensions and trailers"
+    },
+    {
+      "symbol": "Utopia\\Client\\Adapter\\Curl\\Client::sendRequest",
+      "description": "A header block whose lines end in a bare LF but whose blank line is a CRLF (\\n\\r\\n) is complete for cURL, but the adapter's /\\r\\n\\r\\n|\\n\\n|\\r\\r/ check does not find it and throws ConnectionException 'Connection closed before a complete HTTP response was received.'.",
+      "case": "CurlClientTest.json#response: mixed line endings end the header block"
+    },
+    {
+      "symbol": "Utopia\\Client\\Response\\Builder::build",
+      "description": "Headers reach the builder as an array keyed by name, so a name like '123' becomes an int key and withAddedHeader() throws a TypeError (whose message names Builder.php's path and line).",
+      "case": "CurlClientTest.json#response: an integer header name"
+    },
+    {
+      "symbol": "Utopia\\Client\\Adapter\\Curl\\Client::sendRequest",
+      "description": "Following a 301, 302 or 303 after a POST, PUT or PATCH sends the next hop without a body (and without Content-Length) but with the original method: the adapter always sets CURLOPT_CUSTOMREQUEST, which cURL keeps across redirects. The Swoole adapter switches to GET instead.",
+      "case": "CurlClientTest.json#POST through a 301 redirect"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Client\\Destinations\\IPRange::contains",
+      "php": "inet_pton() throws a ValueError for an address containing a NUL byte, so contains() (and PublicInternet::allows()) throws.",
+      "reason": "IpRange::contains and Destinations::allows return a bool; an address with a NUL byte is not contained (false). A connected address never holds one, so the transport is unaffected. IpRange::new still raises the ValueError for a range with a NUL byte. Destinations::allows is called with the address a socket reached, which is always a valid address; a fallible signature would burden every policy for an input that cannot occur."
+    },
+    {
+      "symbol": "Utopia\\Client\\Tls",
+      "php": "V1_0 and V1_1 let cURL negotiate TLS 1.0 and 1.1 when the server offers nothing newer.",
+      "reason": "The transport (rustls) speaks TLS 1.2 and 1.3 only: V1_0 and V1_1 floors behave as V1_2. rustls does not implement TLS 1.0 or 1.1, which are deprecated (RFC 8996)."
+    },
+    {
+      "symbol": "Utopia\\Client\\Adapter\\Curl\\Client::sendRequest",
+      "php": "cURL follows a redirect to ftp:// or ftps:// (its default redirect protocols), and honours native options passed to the constructor (CURLOPT_PROXY, the http_proxy environment, CURLOPT_* in general).",
+      "reason": "Http speaks HTTP and HTTPS only: a redirect to another scheme fails with ProtocolException 'The redirect target URL could not be parsed: Unsupported URL scheme', as any scheme cURL does not know does; there are no native cURL options and no proxy support. The native options array is cURL's own configuration surface, not part of the library's Adapter interface; the transport-neutral settings are all covered."
+    },
+    {
+      "symbol": "Utopia\\Client\\Client::withCertificate",
+      "php": "An encrypted client key is decrypted with the passphrase.",
+      "reason": "The passphrase is kept but rustls reads unencrypted PKCS#8, PKCS#1 and SEC1 keys only: an encrypted key fails with TlsException. rustls has no key decryption; decrypting PEM keys would need OpenSSL."
+    }
+  ],
+  "bench": {
+    "bound": {
+      "round_trip": "A loopback round trip to the fixture server (request out, a Swoole coroutine answers, response back), the same on both runtimes, dominates the call",
+      "raw_response": "A new TCP connection and a round trip to the fixture server, the same on both runtimes, dominate the call"
+    }
+  }
+}
