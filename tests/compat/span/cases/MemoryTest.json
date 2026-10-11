@@ -1,0 +1,257 @@
+{
+  "source": "packages/span/tests/Storage/MemoryTest.php",
+  "cases": [
+    {
+      "name": "testGetReturnsNullInitially",
+      "steps": [
+        {
+          "op": "storage.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "storage.get",
+          "args": {
+            "storage": {
+              "$ref": "st"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testSetAndGet",
+      "steps": [
+        {
+          "op": "storage.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "storage.set",
+          "args": {
+            "storage": {
+              "$ref": "st"
+            },
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "storage.get",
+          "args": {
+            "storage": {
+              "$ref": "st"
+            },
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testSetNullClearsSpan",
+      "steps": [
+        {
+          "op": "storage.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "storage.set",
+          "args": {
+            "storage": {
+              "$ref": "st"
+            },
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "storage.set",
+          "args": {
+            "storage": {
+              "$ref": "st"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "storage.get",
+          "args": {
+            "storage": {
+              "$ref": "st"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testSetOverwritesPreviousSpan",
+      "steps": [
+        {
+          "op": "storage.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.new",
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.new",
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "storage.set",
+          "args": {
+            "storage": {
+              "$ref": "st"
+            },
+            "span": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "storage.set",
+          "args": {
+            "storage": {
+              "$ref": "st"
+            },
+            "span": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "storage.get",
+          "args": {
+            "storage": {
+              "$ref": "st"
+            },
+            "span": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testMultipleInstancesAreIndependent",
+      "steps": [
+        {
+          "op": "storage.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "storage.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "storage.set",
+          "args": {
+            "storage": {
+              "$ref": "s1"
+            },
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "storage.get",
+          "args": {
+            "storage": {
+              "$ref": "s1"
+            },
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "storage.get",
+          "args": {
+            "storage": {
+              "$ref": "s2"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "lib": "di",
+  "description": "utopia-php/di: a PSR-11 container of factories with declared dependencies, built once, resolved through parent containers.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/di/src"
+    ],
+    "tests": [
+      "packages/di/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/di"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "di.new": {
+      "doc": "new Container(parent?) as a handle",
+      "covers": [
+        "Utopia\\DI\\Container::__construct"
+      ]
+    },
+    "di.set": {
+      "doc": "$container->set(id, factory, dependencies?) === $container, where factory is {kind: value, value}, {kind: counter} (returns how many times it ran), {kind: format, template} ({i} replaced by the i-th dependency), {kind: list} (the dependencies), {kind: sum} (their sum) or {kind: fail, message} (throws ContainerException)",
+      "covers": [
+        "Utopia\\DI\\Container::set"
+      ]
+    },
+    "di.get": {
+      "doc": "$container->get(id)",
+      "covers": [
+        "Utopia\\DI\\Container::get"
+      ]
+    },
+    "di.has": {
+      "doc": "$container->has(id)",
+      "covers": [
+        "Utopia\\DI\\Container::has"
+      ]
+    },
+    "di.script": {
+      "doc": "replays calls on four containers (0 root, 1 child of 0, 2 child of 1, 3 child of 0): {op: set|get|has, container, id, dependencies?}. Ids are a..e; a set's dependencies are offsets after its id in that order (`missing` past e), so they never form a cycle, and its factory returns `id#runs(dependencies)`. Returns each call's result ({\"$error\"} for a failure)",
+      "covers": [
+        "Utopia\\DI\\Container::__construct",
+        "Utopia\\DI\\Container::set",
+        "Utopia\\DI\\Container::get",
+        "Utopia\\DI\\Container::has"
+      ],
+      "fuzz": [
+        {
+          "name": "calls",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "calls": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "call"
+                },
+                "min": 1,
+                "max": 20
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "call": {
+      "gen": "object",
+      "fields": {
+        "op": {
+          "gen": "pick",
+          "from": [
+            "set",
+            "set",
+            "get",
+            "get",
+            "has"
+          ]
+        },
+        "container": {
+          "gen": "int",
+          "min": 0,
+          "max": 3
+        },
+        "id": {
+          "gen": "pick",
+          "from": [
+            "a",
+            "b",
+            "c",
+            "d",
+            "e"
+          ]
+        },
+        "dependencies": {
+          "gen": "array",
+          "items": {
+            "gen": "int",
+            "min": 1,
+            "max": 3
+          },
+          "min": 0,
+          "max": 3
+        }
+      }
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [],
+  "deviations": []
+}

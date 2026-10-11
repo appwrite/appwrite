@@ -1,0 +1,14 @@
+[package]
+name = "utopia-registry"
+description = "Named resources created on first use by registered factories, cached per context."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+
+[package.metadata.utopia]
+php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"

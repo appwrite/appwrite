@@ -1,0 +1,124 @@
+{
+  "lib": "registry",
+  "description": "utopia-php/registry: named resources built by factories on first use, cached per context.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/registry/src"
+    ],
+    "tests": [
+      "packages/registry/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/registry"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "registry.new": {
+      "doc": "new Registry() as a handle",
+      "covers": []
+    },
+    "registry.set": {
+      "doc": "$registry->set(name, factory, fresh?) where factory is {kind: counter} (returns 1, 2, 3... on each call, as microtime() returns a new value), {kind: value, value} (returns the value) or {kind: list, value} (returns a new ArrayObject of the value's items)",
+      "covers": [
+        "Utopia\\Registry\\Registry::set"
+      ]
+    },
+    "registry.get": {
+      "doc": "$registry->get(name, fresh?): the value (a list's items)",
+      "covers": [
+        "Utopia\\Registry\\Registry::get"
+      ]
+    },
+    "registry.push": {
+      "doc": "$registry->get(name)[] = value: appends to the list resource, returns null",
+      "covers": [
+        "Utopia\\Registry\\Registry::get"
+      ]
+    },
+    "registry.has": {
+      "doc": "$registry->has(name)",
+      "covers": [
+        "Utopia\\Registry\\Registry::has"
+      ]
+    },
+    "registry.context": {
+      "doc": "$registry->context(name); returns null",
+      "covers": [
+        "Utopia\\Registry\\Registry::context"
+      ]
+    },
+    "registry.script": {
+      "doc": "replays calls on a new Registry: {op, name} with op set or set_fresh (a counter factory per call), get, get_fresh, has or context (name is the context); returns each call's result ({\"$error\"} for a failure)",
+      "covers": [
+        "Utopia\\Registry\\Registry::set",
+        "Utopia\\Registry\\Registry::get",
+        "Utopia\\Registry\\Registry::has",
+        "Utopia\\Registry\\Registry::context"
+      ],
+      "fuzz": [
+        {
+          "name": "calls",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "calls": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "call"
+                },
+                "min": 1,
+                "max": 16
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "call": {
+      "gen": "object",
+      "fields": {
+        "op": {
+          "gen": "pick",
+          "from": [
+            "set",
+            "set_fresh",
+            "get",
+            "get",
+            "get_fresh",
+            "has",
+            "context"
+          ]
+        },
+        "name": {
+          "gen": "pick",
+          "from": [
+            "db",
+            "cache",
+            "",
+            "0",
+            "default",
+            "new",
+            "db "
+          ]
+        }
+      }
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Registry\\Registry::set",
+      "description": "set() drops the cached instance of the current context only: a context that already built the resource keeps its old instance after the factory is replaced",
+      "case": "edge.json#set keeps the instances of other contexts"
+    }
+  ],
+  "deviations": []
+}

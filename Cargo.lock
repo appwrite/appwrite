@@ -394,6 +394,7 @@ dependencies = [
  "utopia-auth",
  "utopia-cache",
  "utopia-database",
+ "utopia-di",
  "utopia-domains",
  "utopia-dsn",
  "utopia-emails",
@@ -401,6 +402,8 @@ dependencies = [
  "utopia-locale",
  "utopia-lock",
  "utopia-queue",
+ "utopia-registry",
+ "utopia-span",
  "utopia-system",
  "utopia-user-agent",
  "utopia-validators",
@@ -2380,6 +2383,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "utopia-di"
+version = "0.1.0"
+dependencies = [
+ "foldhash",
+ "thiserror",
+]
+
+[[package]]
 name = "utopia-domains"
 version = "0.1.0"
 dependencies = [
@@ -2470,6 +2481,29 @@ dependencies = [
  "redis",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "utopia-registry"
+version = "0.1.0"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
+name = "utopia-span"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "getrandom 0.3.4",
+ "http-body-util",
+ "hyper",
+ "hyper-rustls",
+ "hyper-util",
+ "php-std",
+ "rustls",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]

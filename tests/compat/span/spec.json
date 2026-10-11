@@ -1,0 +1,839 @@
+{
+  "lib": "span",
+  "description": "utopia-php/span: span tracing with attributes, W3C trace context, per-coroutine storage, and Stdout, Pretty and Sentry exporters.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/span/src"
+    ],
+    "tests": [
+      "packages/span/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/span"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "span.reset": {
+      "doc": "Span::setExporters(); Span::setStorage(new Memory())",
+      "covers": [
+        "Utopia\\Span\\Span::setExporters",
+        "Utopia\\Span\\Span::setStorage"
+      ]
+    },
+    "span.set_storage": {
+      "doc": "Span::setStorage(kind: memory|auto|coroutine, or null)",
+      "covers": [
+        "Utopia\\Span\\Span::setStorage"
+      ]
+    },
+    "span.set_exporters": {
+      "doc": "Span::setExporters(...recorders)",
+      "covers": [
+        "Utopia\\Span\\Span::setExporters"
+      ]
+    },
+    "span.recorder": {
+      "doc": "an Exporter recording the spans it exports, with a sampler {kind: all|none|error|action|duration_over}",
+      "covers": []
+    },
+    "span.recorded": {
+      "doc": "the spans a recorder exported: action, name attribute, error message",
+      "covers": []
+    },
+    "span.recorded_is": {
+      "doc": "whether the recorder's index-th exported span === span",
+      "covers": []
+    },
+    "span.init": {
+      "doc": "Span::init(action, traceparent?) as a handle",
+      "covers": [
+        "Utopia\\Span\\Span::init"
+      ]
+    },
+    "span.current": {
+      "doc": "Span::current(): null, or true (=== span when given)",
+      "covers": [
+        "Utopia\\Span\\Span::current"
+      ]
+    },
+    "span.add": {
+      "doc": "Span::add(key, value)",
+      "covers": [
+        "Utopia\\Span\\Span::add"
+      ]
+    },
+    "span.current_traceparent": {
+      "doc": "Span::traceparent()",
+      "covers": [
+        "Utopia\\Span\\Span::traceparent"
+      ]
+    },
+    "span.new": {
+      "doc": "new Span(action?) as a handle",
+      "covers": [
+        "Utopia\\Span\\Span::__construct"
+      ]
+    },
+    "span.set": {
+      "doc": "$span->set(key, value) === $span",
+      "covers": [
+        "Utopia\\Span\\Span::set"
+      ]
+    },
+    "span.get": {
+      "doc": "$span->get(key)",
+      "covers": [
+        "Utopia\\Span\\Span::get"
+      ]
+    },
+    "span.describe": {
+      "doc": "the type of $span->get(key), and for a string its length and whether it is hex",
+      "covers": [
+        "Utopia\\Span\\Span::get"
+      ]
+    },
+    "span.attributes": {
+      "doc": "$span->getAttributes() as [key, value] pairs (keys as strings)",
+      "covers": [
+        "Utopia\\Span\\Span::getAttributes"
+      ]
+    },
+    "span.set_error": {
+      "doc": "$span->setError(throwable) === $span; the throwable is {class, message, code?, file?, line?, trace?, previous?}",
+      "covers": [
+        "Utopia\\Span\\Span::setError"
+      ]
+    },
+    "span.error": {
+      "doc": "$span->getError(): class, message, code and previous of the throwable, or null",
+      "covers": [
+        "Utopia\\Span\\Span::getError"
+      ]
+    },
+    "span.action": {
+      "doc": "$span->getAction()",
+      "covers": [
+        "Utopia\\Span\\Span::getAction"
+      ]
+    },
+    "span.traceparent": {
+      "doc": "$span->getTraceparent()",
+      "covers": [
+        "Utopia\\Span\\Span::getTraceparent"
+      ]
+    },
+    "span.finish": {
+      "doc": "$span->finish(level?, error?)",
+      "covers": [
+        "Utopia\\Span\\Span::finish"
+      ]
+    },
+    "span.sleep": {
+      "doc": "usleep(us)",
+      "covers": []
+    },
+    "span.duration_in": {
+      "doc": "whether span.duration is a float strictly between min and max",
+      "covers": []
+    },
+    "span.script": {
+      "doc": "on a new Span(action): calls {op: set|get, key, value}; returns each result and the attributes other than the random span.trace_id, span.id, span.started_at",
+      "covers": [
+        "Utopia\\Span\\Span::__construct",
+        "Utopia\\Span\\Span::set",
+        "Utopia\\Span\\Span::get",
+        "Utopia\\Span\\Span::getAttributes"
+      ],
+      "fuzz": [
+        {
+          "name": "attributes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "action": {
+                "gen": "ref",
+                "name": "text"
+              },
+              "calls": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "call"
+                },
+                "min": 1,
+                "max": 12
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "level.parse": {
+      "doc": "Level::tryFrom(name)?->value",
+      "covers": []
+    },
+    "sentry.level": {
+      "doc": "Sentry\\Level::fromSpan(Level::from(level))->value",
+      "covers": [
+        "Utopia\\Span\\Exporter\\Sentry\\Level::fromSpan"
+      ]
+    },
+    "storage.new": {
+      "doc": "new Memory() / new Auto() / new Coroutine() as a handle",
+      "covers": [
+        "Utopia\\Span\\Storage\\Auto::__construct"
+      ]
+    },
+    "storage.set": {
+      "doc": "$storage->set(span or null)",
+      "covers": [
+        "Utopia\\Span\\Storage\\Memory::set",
+        "Utopia\\Span\\Storage\\Auto::set",
+        "Utopia\\Span\\Storage\\Coroutine::set"
+      ]
+    },
+    "storage.get": {
+      "doc": "$storage->get(): null, or true (=== span when given)",
+      "covers": [
+        "Utopia\\Span\\Storage\\Memory::get",
+        "Utopia\\Span\\Storage\\Auto::get",
+        "Utopia\\Span\\Storage\\Coroutine::get"
+      ]
+    },
+    "storage.coroutine": {
+      "doc": "inside a coroutine (Rust: a Task scope), set a new span on a new storage of `kind` and read it back; then read it outside: {inside, outside}",
+      "covers": [
+        "Utopia\\Span\\Storage\\Coroutine::set",
+        "Utopia\\Span\\Storage\\Coroutine::get",
+        "Utopia\\Span\\Storage\\Auto::set",
+        "Utopia\\Span\\Storage\\Auto::get"
+      ]
+    },
+    "exporter.sample": {
+      "doc": "$exporter->sample(span) for exporter none|stdout|pretty|sentry with options {sampler?, dsn?}; span is {action?, attributes: [[k, v]...], error?}",
+      "covers": [
+        "Utopia\\Span\\Exporter\\None::sample",
+        "Utopia\\Span\\Exporter\\Stdout::__construct",
+        "Utopia\\Span\\Exporter\\Stdout::sample",
+        "Utopia\\Span\\Exporter\\Pretty::__construct",
+        "Utopia\\Span\\Exporter\\Pretty::sample",
+        "Utopia\\Span\\Exporter\\Sentry::sample"
+      ]
+    },
+    "exporter.export": {
+      "doc": "$exporter->export(span) for none|stdout|pretty with options {max_trace_frames?, width?}: what it wrote to stdout and stderr (PHP: in a child process, export.php)",
+      "covers": [
+        "Utopia\\Span\\Exporter\\None::export",
+        "Utopia\\Span\\Exporter\\Stdout::__construct",
+        "Utopia\\Span\\Exporter\\Stdout::export",
+        "Utopia\\Span\\Exporter\\Pretty::__construct",
+        "Utopia\\Span\\Exporter\\Pretty::export"
+      ],
+      "fuzz": [
+        {
+          "name": "stdout",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "exporter": {
+                "gen": "const",
+                "value": "stdout"
+              },
+              "options": {
+                "gen": "object",
+                "fields": {
+                  "max_trace_frames": {
+                    "gen": "int",
+                    "min": 0,
+                    "max": 4
+                  }
+                }
+              },
+              "span": {
+                "gen": "ref",
+                "name": "span"
+              }
+            }
+          },
+          "iterations": 300
+        },
+        {
+          "name": "pretty",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "exporter": {
+                "gen": "const",
+                "value": "pretty"
+              },
+              "options": {
+                "gen": "object",
+                "fields": {
+                  "max_trace_frames": {
+                    "gen": "int",
+                    "min": 0,
+                    "max": 4
+                  },
+                  "width": {
+                    "gen": "int",
+                    "min": 0,
+                    "max": 12
+                  }
+                }
+              },
+              "span": {
+                "gen": "ref",
+                "name": "span"
+              }
+            }
+          },
+          "iterations": 300
+        }
+      ]
+    },
+    "sentry.new": {
+      "doc": "new Sentry(dsn: dsn); true or the exception",
+      "covers": [
+        "Utopia\\Span\\Exporter\\Sentry::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "dsn",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "dsn": {
+                "gen": "ref",
+                "name": "dsn"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "sentry.export": {
+      "doc": "new Sentry(dsn, environment?, release?, server_name?, classifier? {prefixes: [[prefix, tag|context|extra]...], default}, sampler?) with a capturing PSR-18 client, export(span): the request sent (method, uri, Content-Type, X-Sentry-Auth, the envelope's three JSON lines decoded) or null",
+      "covers": [
+        "Utopia\\Span\\Exporter\\Sentry::__construct",
+        "Utopia\\Span\\Exporter\\Sentry::export"
+      ],
+      "mask": {
+        "paths": [
+          "/envelope/0/sent_at",
+          "/envelope/2/contexts/runtime",
+          "/envelope/2/sdk/version"
+        ],
+        "reason": "the send time, the runtime (PHP's version and SAPI, Rust's) and the library version differ by design"
+      },
+      "fuzz": [
+        {
+          "name": "attributes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "dsn": {
+                "gen": "const",
+                "value": "https://key@sentry.io/123"
+              },
+              "classifier": {
+                "gen": "const",
+                "value": {
+                  "prefixes": [
+                    [
+                      "t",
+                      "tag"
+                    ],
+                    [
+                      "x",
+                      "extra"
+                    ]
+                  ],
+                  "default": "context"
+                }
+              },
+              "span": {
+                "gen": "ref",
+                "name": "error_span"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "text": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 12,
+          "tricky": 0.3
+        },
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 6
+        }
+      ]
+    },
+    "key": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "key",
+            "level",
+            "action",
+            "http.url",
+            "http.method",
+            "http.query",
+            "http.response.status_code",
+            "span.handled",
+            "span.parent_id",
+            "tenant.id",
+            "user.id",
+            "x.debug",
+            "0",
+            "1",
+            "-1",
+            "01",
+            "",
+            "error.type",
+            "error.code",
+            "name"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "abtx.01_",
+          "min": 0,
+          "max": 8
+        }
+      ]
+    },
+    "value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "text"
+        },
+        {
+          "gen": "int",
+          "min": -1000000,
+          "max": 1000000
+        },
+        {
+          "gen": "float",
+          "min": -100000,
+          "max": 100000
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0.1,
+            1.0,
+            -0.0,
+            1e+25,
+            1.5e-07,
+            0.30000000000000004,
+            123456789012345.67,
+            3.14,
+            0.0123,
+            1.23456
+          ]
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "200",
+            "1.5",
+            "warn",
+            "error",
+            "fatal",
+            "info",
+            "debug",
+            {
+              "$bytes": "/w=="
+            },
+            {
+              "$bytes": "YWL/Yg=="
+            }
+          ]
+        }
+      ]
+    },
+    "call": {
+      "gen": "object",
+      "fields": {
+        "op": {
+          "gen": "pick",
+          "from": [
+            "set",
+            "set",
+            "get"
+          ]
+        },
+        "key": {
+          "gen": "ref",
+          "name": "key"
+        },
+        "value": {
+          "gen": "ref",
+          "name": "value"
+        }
+      }
+    },
+    "frame": {
+      "gen": "object",
+      "fields": {
+        "file": {
+          "gen": "pick",
+          "from": [
+            "/app/src/A.php",
+            "/app/vendor/x/B.php",
+            "c.php"
+          ]
+        },
+        "line": {
+          "gen": "int",
+          "min": 1,
+          "max": 500
+        },
+        "function": {
+          "gen": "pick",
+          "from": [
+            "run",
+            "handle",
+            "{closure}"
+          ]
+        },
+        "class": {
+          "gen": "pick",
+          "from": [
+            "App\\Worker",
+            "Kernel"
+          ]
+        },
+        "type": {
+          "gen": "pick",
+          "from": [
+            "->",
+            "::"
+          ]
+        }
+      },
+      "optional": [
+        "file",
+        "line",
+        "class",
+        "type"
+      ]
+    },
+    "failure": {
+      "gen": "object",
+      "fields": {
+        "class": {
+          "gen": "pick",
+          "from": [
+            "RuntimeException",
+            "LogicException",
+            "InvalidArgumentException",
+            "Tests\\Compat\\Span\\NamespacedException"
+          ]
+        },
+        "message": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "code": {
+          "gen": "int",
+          "min": -5,
+          "max": 500
+        },
+        "file": {
+          "gen": "pick",
+          "from": [
+            "/app/src/Throw.php",
+            "/app/vendor/lib/X.php"
+          ]
+        },
+        "line": {
+          "gen": "int",
+          "min": 0,
+          "max": 900
+        },
+        "trace": {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "frame"
+          },
+          "min": 0,
+          "max": 5
+        }
+      },
+      "optional": [
+        "code",
+        "trace"
+      ]
+    },
+    "chain": {
+      "gen": "object",
+      "fields": {
+        "class": {
+          "gen": "pick",
+          "from": [
+            "RuntimeException",
+            "Tests\\Compat\\Span\\NamespacedException"
+          ]
+        },
+        "message": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "file": {
+          "gen": "const",
+          "value": "/app/src/Outer.php"
+        },
+        "line": {
+          "gen": "int",
+          "min": 1,
+          "max": 50
+        },
+        "previous": {
+          "gen": "ref",
+          "name": "failure"
+        }
+      }
+    },
+    "span": {
+      "gen": "object",
+      "fields": {
+        "base": {
+          "gen": "const",
+          "value": {
+            "trace_id": "0af7651916cd43dd8448eb211c80319c",
+            "span_id": "b7ad6b7169203331",
+            "started_at": 1700000000.25,
+            "finished_at": 1700000000.5
+          }
+        },
+        "action": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "attributes": {
+          "gen": "ref",
+          "name": "span_attributes"
+        },
+        "error": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "failure"
+            },
+            {
+              "gen": "ref",
+              "name": "chain"
+            }
+          ]
+        }
+      },
+      "optional": [
+        "error"
+      ]
+    },
+    "error_span": {
+      "gen": "object",
+      "fields": {
+        "base": {
+          "gen": "const",
+          "value": {
+            "trace_id": "0af7651916cd43dd8448eb211c80319c",
+            "span_id": "b7ad6b7169203331",
+            "started_at": 1700000000.25,
+            "finished_at": 1700000000.5
+          }
+        },
+        "action": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "attributes": {
+          "gen": "ref",
+          "name": "span_attributes"
+        },
+        "error": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "failure"
+            },
+            {
+              "gen": "ref",
+              "name": "chain"
+            }
+          ]
+        }
+      }
+    },
+    "span_attributes": {
+      "gen": "array",
+      "items": {
+        "gen": "ref",
+        "name": "fuzz_pair"
+      },
+      "min": 0,
+      "max": 8
+    },
+    "dsn": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "https://key@sentry.io/123",
+            "http:///invalid",
+            "https://sentry.io/123",
+            "https://key@sentry.io",
+            "https://key@sentry.io/",
+            "https://key@sentry.io//",
+            "//key@host/1",
+            "https://key:secret@host:9000/42/",
+            "key@host/1",
+            "https://k@h:0/1",
+            "https://k@h:65536/1",
+            "https://@h/1",
+            "mailto:k@h/1"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "https://",
+                "http://",
+                "//",
+                ""
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "ka:@",
+              "min": 0,
+              "max": 4
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "sentry.io",
+                "h",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                ":9000",
+                ":x"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "/",
+                "/1",
+                "/a/b",
+                "//2"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "fuzz_pair": {
+      "gen": "object",
+      "fields": {
+        "key": {
+          "gen": "ref",
+          "name": "key"
+        },
+        "value": {
+          "gen": "ref",
+          "name": "value"
+        }
+      }
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Span\\Span::finish",
+      "description": "finish() clears the current span of the storage even when the finished span is not the current one",
+      "case": "edge.json#finish clears whatever span is current"
+    },
+    {
+      "symbol": "Utopia\\Span\\Exporter\\Stdout::export",
+      "description": "an attribute named `action` is dropped from the JSON line: the span's action takes its key (`$ordered + $attributes`), and user attributes named error.* are overwritten in place by the error fields",
+      "case": "StdoutTest.json#numeric and odd keys"
+    },
+    {
+      "symbol": "Utopia\\Span\\Exporter\\Sentry::export",
+      "description": "a tag cut at 200 bytes inside a multi-byte character, or any string that is not UTF-8, makes json_encode() fail and the event is silently not sent",
+      "case": "SentryTest.json#unencodable tag cut"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Span\\Exporter\\Stdout::__construct",
+      "php": "a negative $maxTraceFrames slices frames from the end (array_slice) and reports a negative truncation count",
+      "reason": "max_trace_frames is a usize: a count of frames cannot be negative"
+    },
+    {
+      "symbol": "Utopia\\Span\\Exporter\\Pretty::__construct",
+      "php": "a negative $width makes str_repeat() throw a ValueError on every export, and a negative $maxTraceFrames slices from the end",
+      "reason": "width and max_trace_frames are usize"
+    },
+    {
+      "symbol": "Utopia\\Span\\Exporter\\Sentry::export",
+      "php": "contexts.runtime reports PHP's version and SAPI, sdk.version the Composer version; the request is sent synchronously with a 1 s timeout and failures go to error_log()",
+      "reason": "Rust reports its own runtime (masked in cases); the default HttpTransport sends in the background on tokio with the same timeouts and writes failures to stderr"
+    },
+    {
+      "symbol": "Utopia\\Span\\Span::finish",
+      "php": "a span.started_at overwritten with a non-numeric string makes finish() throw a TypeError (float minus string)",
+      "reason": "Rust converts the value like (float) and never fails while finishing a span: tracing must not break the application"
+    },
+    {
+      "symbol": "Utopia\\Span\\Span::setError",
+      "php": "takes any \\Throwable, with the file, line and trace the engine recorded",
+      "reason": "Rust errors carry no class, file or trace: a Failure carries them as data (Failure::new records the caller's location; Failure::from_error converts a std::error::Error and its sources)"
+    }
+  ]
+}

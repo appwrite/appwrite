@@ -1,0 +1,342 @@
+{
+  "source": "packages/registry/tests/RegistryTest.php",
+  "cases": [
+    {
+      "name": "testGet",
+      "steps": [
+        {
+          "op": "registry.new",
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registry.set",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "array",
+            "factory": {
+              "kind": "list",
+              "value": [
+                "test"
+              ]
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.push",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "array",
+            "value": "Hello World"
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "array"
+          },
+          "expect": [
+            "test",
+            "Hello World"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testSet",
+      "steps": [
+        {
+          "op": "registry.new",
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registry.set",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "array",
+            "factory": {
+              "kind": "list",
+              "value": [
+                "test"
+              ]
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "array"
+          },
+          "expect": [
+            "test"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testHas",
+      "steps": [
+        {
+          "op": "registry.new",
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registry.set",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "item",
+            "factory": {
+              "kind": "value",
+              "value": [
+                "test"
+              ]
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.has",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "item"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testGetFresh",
+      "steps": [
+        {
+          "op": "registry.new",
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registry.set",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "array",
+            "factory": {
+              "kind": "list",
+              "value": [
+                "test"
+              ]
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "array",
+            "fresh": true
+          },
+          "expect": [
+            "test"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testSetFresh",
+      "steps": [
+        {
+          "op": "registry.new",
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registry.set",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "fresh",
+            "factory": {
+              "kind": "counter"
+            },
+            "fresh": true
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "fresh"
+          },
+          "expect": 1
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "fresh"
+          },
+          "expect": 2
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "fresh"
+          },
+          "expect": 3
+        }
+      ]
+    },
+    {
+      "name": "testGetCaching",
+      "steps": [
+        {
+          "op": "registry.new",
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registry.set",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "time",
+            "factory": {
+              "kind": "counter"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "time"
+          },
+          "expect": 1
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "time"
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "testContextSwitching",
+      "steps": [
+        {
+          "op": "registry.new",
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registry.set",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "time",
+            "factory": {
+              "kind": "counter"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "time"
+          },
+          "expect": 1
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "time"
+          },
+          "expect": 1
+        },
+        {
+          "op": "registry.context",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "new"
+          },
+          "expect": null
+        },
+        {
+          "op": "registry.get",
+          "args": {
+            "registry": {
+              "$ref": "r"
+            },
+            "name": "time"
+          },
+          "expect": 2
+        }
+      ]
+    }
+  ]
+}
