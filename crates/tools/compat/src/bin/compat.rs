@@ -249,7 +249,17 @@ fn real_main(args: &[String]) -> Result<bool, String> {
         }
         "examples" => {
             let crates: Vec<String> = if cli.positional.len() > 1 {
-                cli.positional[1..].to_vec()
+                // A library name (`auth`) or a crate directory (`crates/utopia/auth`).
+                cli.positional[1..]
+                    .iter()
+                    .map(|c| {
+                        ["crates/utopia", "crates/support"]
+                            .iter()
+                            .map(|g| format!("{g}/{c}"))
+                            .find(|d| !c.contains('/') && root.join(d).join("Cargo.toml").is_file())
+                            .unwrap_or_else(|| c.clone())
+                    })
+                    .collect()
             } else {
                 ["crates/utopia", "crates/support"]
                     .iter()

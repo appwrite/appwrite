@@ -558,7 +558,13 @@ pub fn migration_notes(doc: &str) -> (String, String) {
 }
 
 fn mentions_php(text: &str) -> bool {
-    text.contains("PHP") || text.contains("utopia-php") || text.contains("Utopia\\")
+    // "PHP" as a word: `PHPass` names a hash, not the runtime.
+    let word = text.match_indices("PHP").any(|(i, _)| {
+        let before = text[..i].chars().next_back().is_none_or(|c| !c.is_alphanumeric());
+        let after = text[i + 3..].chars().next().is_none_or(|c| !c.is_alphanumeric());
+        before && after
+    });
+    word || text.contains("utopia-php") || text.contains("Utopia\\")
 }
 
 /// A leading `` `name(...)` `` followed by `:` or `.` naming a PHP method.
@@ -611,6 +617,14 @@ fn paragraphs(doc: &str) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn php_is_a_word() {
+        assert!(mentions_php("PHP returns a string."));
+        assert!(mentions_php("As in PHP."));
+        assert!(!mentions_php("The registered name of the PHPass hash."));
+        assert!(!mentions_php("Reads a file."));
+    }
 
     #[test]
     fn php_notes_move_out_of_the_docs() {
