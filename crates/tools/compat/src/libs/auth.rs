@@ -609,8 +609,14 @@ async fn sign_once(new: &Value, session: &mut Session) -> OpResult {
     Box::pin(call("fixture.jwt", &serde_json::json!({ "token": token }), session)).await
 }
 
-/// Where `issuer.sign_once` writes the key files its fuzzed inputs name.
-const FUZZ_DIR: &str = "/tmp/compat-fs/auth-fuzz";
+/// Where `issuer.sign_once` writes the key files its inputs name: the Rust
+/// driver's own temporary directory. The runtimes never share these files,
+/// and `/tmp/compat-fs` is no place for them: the PHP driver runs as root in
+/// its container, so a directory it creates there first is not writable by
+/// the Rust driver on a Linux host.
+fn fuzz_dir() -> std::path::PathBuf {
+    std::env::temp_dir().join("compat-auth-keys")
+}
 
 pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
     let a = Args(args);
@@ -1195,11 +1201,10 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             Outcome::ok(Value::Null)
         }
         "issuer.sign_once" => {
-            // A directory of this call's own: the PHP driver's view of
-            // /tmp/compat-fs is a shared mount, so the runtimes never share files.
+            // A directory of this call's own (see `fuzz_dir`).
             static CALLS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
             let n = CALLS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            let dir = format!("{FUZZ_DIR}/rust-{}-{n}", std::process::id());
+            let dir = format!("{}/rust-{}-{n}", fuzz_dir().display(), std::process::id());
             std::fs::create_dir_all(&dir).map_err(|e| Fault::new(e.to_string()))?;
             for (field, name) in [("file", "key.pem"), ("public_file", "pub.pem")] {
                 if let Some(content) = opt_bytes(&a, field)? {
