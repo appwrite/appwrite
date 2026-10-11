@@ -60,6 +60,14 @@ class Table extends Model
                 'default' => '',
                 'example' => true,
             ])
+            // Stored under this name already, so unlike rowSecurity it needs no rename
+            // in the filter below.
+            ->addRule('columnSecurity', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether a permission may be scoped to a single column. [Learn more about permissions](https://appwrite.io/docs/permissions).',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('columns', [
                 'type' => [
                     Response::MODEL_COLUMN_BOOLEAN,

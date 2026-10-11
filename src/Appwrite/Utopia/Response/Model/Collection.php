@@ -59,6 +59,12 @@ class Collection extends Model
                 'default' => '',
                 'example' => true,
             ])
+            ->addRule('columnSecurity', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether a permission may be scoped to a single attribute. [Learn more about permissions](https://appwrite.io/docs/permissions).',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('attributes', [
                 'type' => [
                     Response::MODEL_ATTRIBUTE_BOOLEAN,

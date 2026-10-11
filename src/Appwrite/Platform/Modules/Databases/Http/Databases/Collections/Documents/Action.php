@@ -11,7 +11,9 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Permissions;
 
 abstract class Action extends DatabasesAction
 {
@@ -24,6 +26,71 @@ abstract class Action extends DatabasesAction
     /**
      * Get the response model used in the SDK and HTTP responses.
      */
+
+    /**
+     * Reject permissions the collection cannot hold, before the write does.
+     *
+     * The route validator judges a permission without a collection in scope, so it
+     * checks the shape and leaves the column half alone -- it has no way to know which
+     * table it is validating for. Here the collection is loaded, so the rest of the
+     * question can be answered: may a permission name a column at all on this
+     * collection, and does the one it names exist. Without this the library still
+     * refuses the write, but as an untyped failure the caller reads as a server error
+     * rather than an answer about their input.
+     *
+     * @param array<Document> $documents
+     * @throws Exception
+     */
+    protected function assertPermissionsFitCollection(Document $collection, array $documents): void
+    {
+        $columns = [];
+
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            $key = $attribute['key'] ?? $attribute['$id'] ?? null;
+
+            if (\is_string($key) && $key !== '') {
+                $columns[] = $key;
+            }
+        }
+
+        $columnSecurity = (bool) $collection->getAttribute('columnSecurity', false);
+
+        foreach ($documents as $document) {
+            $permissions = $document->getPermissions();
+
+            if (empty($permissions)) {
+                continue;
+            }
+
+            foreach ($permissions as $permission) {
+                if (Permission::parse($permission)->isForAllColumns()) {
+                    continue;
+                }
+
+                // Said before the existence check below, because it is the more useful
+                // answer: "that column does not exist" invites creating it and trying
+                // again, into the same refusal.
+                if (!$columnSecurity) {
+                    throw new Exception(
+                        Exception::GENERAL_ARGUMENT_INVALID,
+                        'Permission "' . $permission . '" is scoped to a column, but column security is not enabled on this collection.'
+                    );
+                }
+            }
+
+            $validator = new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+                Database::PERMISSION_WRITE,
+            ], $columns);
+
+            if (!$validator->isValid($permissions)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
+            }
+        }
+    }
+
     abstract protected function getResponseModel(): string;
 
     public function setHttpPath(string $path): self

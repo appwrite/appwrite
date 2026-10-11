@@ -119,7 +119,11 @@ class Update extends Action
             ->setAttribute('antivirus', $antivirus)
             ->setAttribute('transformations', $transformations));
 
-        $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), $permissions, $fileSecurity);
+        $internalId = 'bucket_' . $bucket->getSequence();
+
+        // Buckets cannot have column security: nothing exposes the flag for them, so
+        // false is the value they were created with and the only one they can hold.
+        $dbForProject->updateCollection($internalId, $permissions, $fileSecurity, columnSecurity: false);
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId());
