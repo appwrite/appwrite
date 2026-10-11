@@ -13,6 +13,7 @@ use crate::bench::Bench;
 
 pub mod auth;
 pub mod cache;
+pub mod circuit_breaker;
 pub mod database;
 pub mod domains;
 pub mod dsn;
@@ -21,9 +22,11 @@ pub mod http;
 pub mod locale;
 pub mod lock;
 pub mod php_std;
+pub mod pools;
 pub mod query;
 pub mod queue;
 pub mod system;
+pub mod telemetry;
 pub mod user_agent;
 pub mod validators;
 
@@ -31,6 +34,7 @@ pub mod validators;
 pub const LIBS: &[(&str, &[&str])] = &[
     ("auth", auth::OPS),
     ("cache", cache::OPS),
+    ("circuit-breaker", circuit_breaker::OPS),
     ("database", database::OPS),
     ("domains", domains::OPS),
     ("dsn", dsn::OPS),
@@ -39,9 +43,11 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("locale", locale::OPS),
     ("lock", lock::OPS),
     ("php-std", php_std::OPS),
+    ("pools", pools::OPS),
     ("query", query::OPS),
     ("queue", queue::OPS),
     ("system", system::OPS),
+    ("telemetry", telemetry::OPS),
     ("user-agent", user_agent::OPS),
     ("validators", validators::OPS),
 ];
@@ -51,6 +57,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
     match lib {
         "auth" => auth::call(op, args, session).await,
         "cache" => cache::call(op, args, session).await,
+        "circuit-breaker" => circuit_breaker::call(op, args, session).await,
         "database" => database::call(op, args, session).await,
         "domains" => domains::call(op, args, session).await,
         "dsn" => dsn::call(op, args, session).await,
@@ -59,9 +66,11 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "locale" => locale::call(op, args, session).await,
         "lock" => lock::call(op, args, session).await,
         "php-std" => php_std::call(op, args, session).await,
+        "pools" => pools::call(op, args, session).await,
         "query" => query::call(op, args, session).await,
         "queue" => queue::call(op, args, session).await,
         "system" => system::call(op, args, session).await,
+        "telemetry" => telemetry::call(op, args, session).await,
         "user-agent" => user_agent::call(op, args, session).await,
         "validators" => validators::call(op, args, session).await,
         _ => Err(Fault::new(format!("unknown library `{lib}`"))),
@@ -71,16 +80,19 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
 /// The benchmarks of a library: name and what it times.
 pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
     match lib {
-        "dsn" => dsn::BENCHES,
         "auth" => auth::BENCHES,
         "cache" => cache::BENCHES,
+        "circuit-breaker" => circuit_breaker::BENCHES,
         "domains" => domains::BENCHES,
+        "dsn" => dsn::BENCHES,
         "emails" => emails::BENCHES,
         "http" => http::BENCHES,
         "locale" => locale::BENCHES,
         "lock" => lock::BENCHES,
         "php-std" => php_std::BENCHES,
+        "pools" => pools::BENCHES,
         "system" => system::BENCHES,
+        "telemetry" => telemetry::BENCHES,
         "user-agent" => user_agent::BENCHES,
         "validators" => validators::BENCHES,
         _ => &[],
@@ -90,16 +102,19 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
 /// Sets up one benchmark of one library and returns the closure to time.
 pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench, Fault> {
     match lib {
-        "dsn" => dsn::bench(name, session).await,
         "auth" => auth::bench(name, session).await,
         "cache" => cache::bench(name, session).await,
+        "circuit-breaker" => circuit_breaker::bench(name, session).await,
         "domains" => domains::bench(name, session).await,
+        "dsn" => dsn::bench(name, session).await,
         "emails" => emails::bench(name, session).await,
         "http" => http::bench(name, session).await,
         "locale" => locale::bench(name, session).await,
         "lock" => lock::bench(name, session).await,
         "php-std" => php_std::bench(name, session).await,
+        "pools" => pools::bench(name, session).await,
         "system" => system::bench(name, session).await,
+        "telemetry" => telemetry::bench(name, session).await,
         "user-agent" => user_agent::bench(name, session).await,
         "validators" => validators::bench(name, session).await,
         _ => Err(Fault::new(format!("{lib}: no benchmarks"))),

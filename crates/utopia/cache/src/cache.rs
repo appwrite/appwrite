@@ -9,7 +9,7 @@ use php_std::types::Value;
 
 use crate::Result;
 use crate::adapter::{Adapter, DynAdapter, Fields};
-use crate::telemetry::{Counter, Histogram, NoTelemetry, Telemetry};
+use utopia_telemetry::{Counter, Histogram, NoTelemetry, Telemetry, Value as Attribute};
 
 /// Bucket boundaries of `cache.operation.duration`, in seconds.
 const DURATION_BUCKETS: [f64; 9] = [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0];
@@ -54,8 +54,8 @@ pub struct Cache<A: ?Sized = dyn DynAdapter> {
 
 struct Instruments {
     telemetry: Arc<dyn Telemetry>,
-    duration: OnceLock<Arc<dyn Histogram>>,
-    loads: OnceLock<Arc<dyn Counter>>,
+    duration: OnceLock<Histogram>,
+    loads: OnceLock<Counter>,
 }
 
 impl Instruments {
@@ -63,12 +63,13 @@ impl Instruments {
         Instruments { telemetry, duration: OnceLock::new(), loads: OnceLock::new() }
     }
 
-    fn duration(&self) -> &Arc<dyn Histogram> {
-        self.duration
-            .get_or_init(|| self.telemetry.histogram("cache.operation.duration", Some("s"), None, &DURATION_BUCKETS))
+    fn duration(&self) -> &Histogram {
+        self.duration.get_or_init(|| {
+            self.telemetry.histogram("cache.operation.duration", Some("s"), None, Some(&DURATION_BUCKETS))
+        })
     }
 
-    fn loads(&self) -> &Arc<dyn Counter> {
+    fn loads(&self) -> &Counter {
         self.loads.get_or_init(|| {
             self.telemetry.counter(
                 "cache.load.total",
@@ -145,7 +146,9 @@ impl<A: Adapter + ?Sized> Cache<A> {
         let duration = start.elapsed().as_secs_f64();
         let name = self.adapter.name(key);
         let instruments = self.telemetry.read().unwrap_or_else(|e| e.into_inner());
-        instruments.duration().record(duration, &[("operation", operation), ("adapter", name)]);
+        instruments
+            .duration()
+            .record(duration, &[("operation", Attribute::from(operation)), ("adapter", Attribute::from(name))]);
     }
 
     /// The entry for `key` (and `hash`) if it was saved less than `ttl`
@@ -158,9 +161,11 @@ impl<A: Adapter + ?Sized> Cache<A> {
         let duration = start.elapsed().as_secs_f64();
         let name = self.adapter.name(Some(&key));
         let instruments = self.telemetry.read().unwrap_or_else(|e| e.into_inner());
-        instruments.duration().record(duration, &[("operation", "load"), ("adapter", name)]);
+        instruments
+            .duration()
+            .record(duration, &[("operation", Attribute::from("load")), ("adapter", Attribute::from(name))]);
         let outcome = if matches!(result, None | Some(Value::Bool(false))) { "miss" } else { "hit" };
-        instruments.loads().add(1.0, &[("adapter", name), ("result", outcome)]);
+        instruments.loads().add(1, &[("adapter", Attribute::from(name)), ("result", Attribute::from(outcome))]);
         Ok(result)
     }
 

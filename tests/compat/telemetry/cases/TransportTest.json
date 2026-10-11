@@ -1,0 +1,377 @@
+{
+  "source": "packages/telemetry/tests/Adapter/OpenTelemetry/Swoole/TransportTest.php",
+  "cases": [
+    {
+      "name": "parses an https endpoint with a query",
+      "steps": [
+        {
+          "op": "transport.new",
+          "args": {
+            "endpoint": "https://otel.example.com:4318/v1/metrics?foo=bar"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.content_type",
+          "args": {
+            "transport": {
+              "$ref": "t"
+            }
+          },
+          "expect": "application/x-protobuf"
+        }
+      ]
+    },
+    {
+      "name": "http endpoint",
+      "steps": [
+        {
+          "op": "transport.new",
+          "args": {
+            "endpoint": "http://localhost:4318/v1/metrics"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.content_type",
+          "args": {
+            "transport": {
+              "$ref": "t"
+            }
+          },
+          "expect": "application/x-protobuf"
+        }
+      ]
+    },
+    {
+      "name": "custom content type",
+      "steps": [
+        {
+          "op": "transport.new",
+          "args": {
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "content_type": "application/json"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.content_type",
+          "args": {
+            "transport": {
+              "$ref": "t"
+            }
+          },
+          "expect": "application/json"
+        }
+      ]
+    },
+    {
+      "name": "custom headers, timeout, pool size and socket buffer",
+      "steps": [
+        {
+          "op": "transport.new",
+          "args": {
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "headers": [
+              [
+                "Authorization",
+                "Bearer token123"
+              ]
+            ]
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.content_type",
+          "args": {
+            "transport": {
+              "$ref": "a"
+            }
+          },
+          "expect": "application/x-protobuf"
+        },
+        {
+          "op": "transport.new",
+          "args": {
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "timeout": 5.0
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.content_type",
+          "args": {
+            "transport": {
+              "$ref": "b"
+            }
+          },
+          "expect": "application/x-protobuf"
+        },
+        {
+          "op": "transport.new",
+          "args": {
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "timeout": 10.0,
+            "pool_size": 16
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.content_type",
+          "args": {
+            "transport": {
+              "$ref": "c"
+            }
+          },
+          "expect": "application/x-protobuf"
+        },
+        {
+          "op": "transport.new",
+          "args": {
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "timeout": 10.0,
+            "pool_size": 8,
+            "socket_buffer_size": 131072
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.content_type",
+          "args": {
+            "transport": {
+              "$ref": "d"
+            }
+          },
+          "expect": "application/x-protobuf"
+        }
+      ]
+    },
+    {
+      "name": "shutdown and force flush return true, and repeat safely",
+      "steps": [
+        {
+          "op": "transport.new",
+          "args": {
+            "endpoint": "http://localhost:4318/v1/metrics"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.force_flush",
+          "args": {
+            "transport": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "transport.shutdown",
+          "args": {
+            "transport": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "transport.shutdown",
+          "args": {
+            "transport": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "send after shutdown fails",
+      "steps": [
+        {
+          "op": "transport.new",
+          "args": {
+            "endpoint": "http://localhost:4318/v1/metrics"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.shutdown",
+          "args": {
+            "transport": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "transport.send",
+          "args": {
+            "transport": {
+              "$ref": "t"
+            },
+            "payload": "test payload"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Telemetry\\Exception",
+              "message": "Transport has been shut down"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "endpoint with a query string",
+      "steps": [
+        {
+          "op": "transport.new",
+          "args": {
+            "endpoint": "http://localhost:4318/v1/metrics?api_key=secret&env=test"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.content_type",
+          "args": {
+            "transport": {
+              "$ref": "t"
+            }
+          },
+          "expect": "application/x-protobuf"
+        }
+      ]
+    },
+    {
+      "name": "malformed url",
+      "op": "transport.new",
+      "args": {
+        "endpoint": "http:///v1/metrics"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid endpoint URL: http:///v1/metrics"
+        }
+      }
+    },
+    {
+      "name": "default ports",
+      "steps": [
+        {
+          "op": "transport.new",
+          "args": {
+            "endpoint": "http://example.com/v1/metrics"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.content_type",
+          "args": {
+            "transport": {
+              "$ref": "a"
+            }
+          },
+          "expect": "application/x-protobuf"
+        },
+        {
+          "op": "transport.new",
+          "args": {
+            "endpoint": "https://example.com/v1/metrics"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.content_type",
+          "args": {
+            "transport": {
+              "$ref": "b"
+            }
+          },
+          "expect": "application/x-protobuf"
+        }
+      ]
+    },
+    {
+      "name": "content type matches the constructor",
+      "steps": [
+        {
+          "op": "transport.new",
+          "args": {
+            "endpoint": "http://localhost:4318",
+            "content_type": "application/json"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.content_type",
+          "args": {
+            "transport": {
+              "$ref": "a"
+            }
+          },
+          "expect": "application/json"
+        },
+        {
+          "op": "transport.new",
+          "args": {
+            "endpoint": "http://localhost:4318",
+            "content_type": "application/x-protobuf"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.content_type",
+          "args": {
+            "transport": {
+              "$ref": "b"
+            }
+          },
+          "expect": "application/x-protobuf"
+        }
+      ]
+    }
+  ]
+}

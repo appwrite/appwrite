@@ -16,8 +16,8 @@ use crate::adapter::{Adapter, Fields, blank, coerce, empty, field, now};
 use crate::lease::{self, Transport, is_reserved};
 use crate::redis_adapter::text;
 use crate::resp::{self, Reply};
-use crate::telemetry::{NoTelemetry, Telemetry, UpDownCounter};
 use crate::{Codec, Envelope, Error, Json, Result};
+use utopia_telemetry::{NoTelemetry, Telemetry, UpDownCounter};
 
 /// Settings of a [`Multiplexing`] connection; defaults in parentheses.
 ///
@@ -86,12 +86,12 @@ impl Connection {
 
 struct Shared {
     current: Mutex<Option<Arc<Connection>>>,
-    depth: Mutex<Option<Arc<dyn UpDownCounter>>>,
+    depth: Mutex<Option<UpDownCounter>>,
     telemetry: Mutex<Arc<dyn Telemetry>>,
 }
 
 impl Shared {
-    fn depth(&self, amount: f64) {
+    fn depth(&self, amount: i64) {
         let mut depth = self.depth.lock().unwrap_or_else(|e| e.into_inner());
         let counter = depth.get_or_insert_with(|| {
             self.telemetry.lock().unwrap_or_else(|e| e.into_inner()).up_down_counter(
@@ -122,7 +122,7 @@ impl Shared {
     fn finish(&self, connection: &Connection, error: Error) {
         let waiting: Vec<Waiter> = connection.pending.lock().unwrap_or_else(|e| e.into_inner()).drain(..).collect();
         for waiter in waiting {
-            self.depth(-1.0);
+            self.depth(-1);
             let _ = waiter.send(Err(error.clone()));
         }
         connection.closed.notify_one();
@@ -320,7 +320,7 @@ impl<K: Codec> Multiplexing<K> {
                 }
                 pending.push_back(sender);
             }
-            self.shared.depth(1.0);
+            self.shared.depth(1);
             writer.write_all(&resp::encode(args)).await
         };
         if let Err(e) = sent {
@@ -393,7 +393,7 @@ async fn read(shared: Arc<Shared>, connection: Arc<Connection>, mut reader: Owne
             let waiter = connection.pending.lock().unwrap_or_else(|e| e.into_inner()).pop_front();
             match waiter {
                 Some(waiter) => {
-                    shared.depth(-1.0);
+                    shared.depth(-1);
                     connection.record_progress();
                     // A caller that gave up has dropped its receiver: the reply is dropped.
                     let _ = waiter.send(Ok(reply));

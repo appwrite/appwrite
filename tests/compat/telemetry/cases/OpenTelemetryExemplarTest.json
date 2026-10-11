@@ -1,0 +1,198 @@
+{
+  "source": "packages/telemetry/tests/Adapter/OpenTelemetryExemplarTest.php",
+  "cases": [
+    {
+      "name": "records under a sampled span export no exemplars",
+      "steps": [
+        {
+          "op": "telemetry.otlp",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "histogram",
+            "name": "cache.operation.duration",
+            "unit": "s"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "counter",
+            "name": "cache.load.total"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "h"
+            },
+            "value": 0.002,
+            "attributes": [
+              [
+                "operation",
+                "load"
+              ]
+            ],
+            "sampled_span": true
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "c"
+            },
+            "value": 1,
+            "attributes": [
+              [
+                "result",
+                "hit"
+              ]
+            ],
+            "sampled_span": true
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.collect",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "otlp.payloads",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              {
+                "resource": [
+                  [
+                    "service.namespace",
+                    "namespace"
+                  ],
+                  [
+                    "service.name",
+                    "service"
+                  ],
+                  [
+                    "service.instance.id",
+                    "instance"
+                  ]
+                ],
+                "schema_url": "https://opentelemetry.io/schemas/1.32.0",
+                "scopes": [
+                  {
+                    "name": "cloud",
+                    "version": "",
+                    "schema_url": "",
+                    "metrics": [
+                      {
+                        "name": "cache.operation.duration",
+                        "unit": "s",
+                        "description": "",
+                        "data": "histogram",
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [
+                              [
+                                "operation",
+                                "load"
+                              ]
+                            ],
+                            "count": 1,
+                            "sum": 0.002,
+                            "min": 0.002,
+                            "max": 0.002,
+                            "buckets": [
+                              0,
+                              1,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0
+                            ],
+                            "bounds": [
+                              0.0,
+                              5.0,
+                              10.0,
+                              25.0,
+                              50.0,
+                              75.0,
+                              100.0,
+                              250.0,
+                              500.0,
+                              1000.0
+                            ],
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "cache.load.total",
+                        "unit": "",
+                        "description": "",
+                        "data": "sum",
+                        "monotonic": true,
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [
+                              [
+                                "result",
+                                "hit"
+                              ]
+                            ],
+                            "value": 1,
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

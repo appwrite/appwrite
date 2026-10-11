@@ -1,0 +1,304 @@
+{
+  "source": "scenarios beyond the PHP tests",
+  "cases": [
+    {
+      "name": "a connection reclaimed twice is idle twice, and the count goes past the size",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "stack",
+            "name": "twice",
+            "size": 1
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": false
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 0,
+            "empty": true,
+            "full": false
+          }
+        },
+        {
+          "op": "pool.destroy",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.destroy",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 1,
+            "empty": false,
+            "full": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "destroying every connection, then handing one back",
+      "op": "pool.scenario",
+      "args": {
+        "adapter": "stack",
+        "name": "db",
+        "size": 1,
+        "init": [
+          {
+            "value": "x"
+          }
+        ],
+        "steps": [
+          "pop",
+          "destroy",
+          "pop",
+          "use_ok",
+          "use_failed",
+          "maintain",
+          "pop",
+          "pop"
+        ]
+      },
+      "expect": [
+        [
+          "x",
+          0
+        ],
+        [
+          null,
+          1
+        ],
+        [
+          "x",
+          0
+        ],
+        [
+          {
+            "$error": {
+              "class": "Exception",
+              "message": "Pool 'db' could not provide a connection within 0s (size 1, active 1, idle 0)"
+            }
+          },
+          0
+        ],
+        [
+          {
+            "$error": {
+              "class": "Exception",
+              "message": "Pool 'db' could not provide a connection within 0s (size 1, active 1, idle 0)"
+            }
+          },
+          0
+        ],
+        [
+          null,
+          0
+        ],
+        [
+          {
+            "$error": {
+              "class": "Exception",
+              "message": "Pool 'db' could not provide a connection within 0s (size 1, active 1, idle 0)"
+            }
+          },
+          0
+        ],
+        [
+          {
+            "$error": {
+              "class": "Exception",
+              "message": "Pool 'db' could not provide a connection within 0s (size 1, active 1, idle 0)"
+            }
+          },
+          0
+        ]
+      ]
+    },
+    {
+      "name": "a waiting pool with a short timeout",
+      "op": "pool.scenario",
+      "args": {
+        "adapter": "swoole",
+        "name": "db",
+        "size": 2,
+        "timeout": 0.001,
+        "init": [
+          {
+            "object": "o",
+            "reconnect": true
+          },
+          {
+            "ticking": true,
+            "tick_throws": true
+          }
+        ],
+        "steps": [
+          "pop",
+          "pop",
+          "pop",
+          "release_failed",
+          "release_ok",
+          "maintain",
+          "use_ok",
+          "use_failed"
+        ]
+      },
+      "expect": [
+        [
+          {
+            "object": "o-1"
+          },
+          1
+        ],
+        [
+          {
+            "serial": 2,
+            "ticks": 0
+          },
+          0
+        ],
+        [
+          {
+            "$error": {
+              "class": "Exception",
+              "message": "Pool 'db' could not provide a connection within 0.001s (size 2, active 2, idle 0)"
+            }
+          },
+          0
+        ],
+        [
+          null,
+          1
+        ],
+        [
+          null,
+          2
+        ],
+        [
+          null,
+          2
+        ],
+        [
+          {
+            "object": "o-1"
+          },
+          2
+        ],
+        [
+          {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "failed"
+            }
+          },
+          2
+        ]
+      ]
+    }
+  ]
+}

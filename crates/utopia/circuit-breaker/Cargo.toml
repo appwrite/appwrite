@@ -1,0 +1,27 @@
+[package]
+name = "utopia-circuit-breaker"
+description = "Circuit breakers judged on a rolling failure rate, with half-open probes, state shared through Redis or an in-process table, and telemetry."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+default = ["redis"]
+# Breaker state shared through Redis.
+redis = ["dep:redis"]
+
+[dependencies]
+hex.workspace = true
+php-std.workspace = true
+redis = { workspace = true, optional = true }
+sha1.workspace = true
+thiserror.workspace = true
+utopia-telemetry.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros", "time"] }
+
+[package.metadata.utopia]
+php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"

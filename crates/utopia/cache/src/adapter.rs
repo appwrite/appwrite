@@ -10,7 +10,7 @@ use indexmap::IndexMap;
 use php_std::types::Value;
 
 use crate::Result;
-use crate::telemetry::Telemetry;
+use utopia_telemetry::Telemetry;
 
 /// Fields of a hash and their values, in order.
 ///

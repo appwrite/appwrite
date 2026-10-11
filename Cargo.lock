@@ -393,6 +393,7 @@ dependencies = [
  "tokio",
  "utopia-auth",
  "utopia-cache",
+ "utopia-circuit-breaker",
  "utopia-database",
  "utopia-domains",
  "utopia-dsn",
@@ -400,8 +401,10 @@ dependencies = [
  "utopia-http",
  "utopia-locale",
  "utopia-lock",
+ "utopia-pools",
  "utopia-queue",
  "utopia-system",
+ "utopia-telemetry",
  "utopia-user-agent",
  "utopia-validators",
 ]
@@ -2359,6 +2362,22 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
+ "utopia-circuit-breaker",
+ "utopia-pools",
+ "utopia-telemetry",
+]
+
+[[package]]
+name = "utopia-circuit-breaker"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "php-std",
+ "redis",
+ "sha1",
+ "thiserror",
+ "tokio",
+ "utopia-telemetry",
 ]
 
 [[package]]
@@ -2463,6 +2482,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "utopia-pools"
+version = "0.1.0"
+dependencies = [
+ "php-std",
+ "thiserror",
+ "tokio",
+ "utopia-telemetry",
+]
+
+[[package]]
 name = "utopia-queue"
 version = "0.1.0"
 dependencies = [
@@ -2481,6 +2510,22 @@ dependencies = [
  "rustix",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "utopia-telemetry"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "http-body-util",
+ "hyper",
+ "hyper-rustls",
+ "hyper-util",
+ "php-std",
+ "rustls",
+ "thiserror",
+ "tokio",
+ "tower-service",
 ]
 
 [[package]]

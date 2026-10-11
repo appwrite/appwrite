@@ -1,0 +1,20 @@
+[package]
+name = "utopia-pools"
+description = "Fixed-capacity pools of lazily created resources (connections), with bounded waits, recovery, upkeep, groups and telemetry."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+php-std.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["sync", "time"] }
+utopia-telemetry.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "time", "sync"] }
+
+[package.metadata.utopia]
+php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"
