@@ -95,14 +95,14 @@ class Get extends Base
 
         $video = self::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
-        $preview = $authorization->skip(fn () => $dbForProject->getDocument('videos_previews', $previewId));
+        $preview = $authorization->skip(fn () => $dbForProject->getDocument('videos_timelines', $previewId));
 
         // The timeline cue file is stored beside the sprites so its bytes are
         // counted. It is not an image.
         if (
             $preview->isEmpty()
             || $preview->getAttribute('videoInternalId') !== $video->getSequence()
-            || $preview->getAttribute('type') !== 'sprite'
+            || $preview->getAttribute('name') === 'timeline.vtt'
         ) {
             throw new Exception(Exception::VIDEO_PREVIEW_NOT_FOUND);
         }

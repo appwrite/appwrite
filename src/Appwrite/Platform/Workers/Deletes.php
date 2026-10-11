@@ -366,6 +366,7 @@ class Deletes extends Action
                 $this->deleteExpiredPushLedger($project, $getProjectDB);
                 $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
                 $this->updateProcessingMigrations($project, $getProjectDB);
+                $this->abortStaleRenditions($project, $getProjectDB);
                 break;
             case DELETE_TYPE_REPORT:
                 $this->deleteReport($dbForPlatform, $project, $document);
@@ -562,6 +563,54 @@ class Deletes extends Action
                     ]));
                 } catch (Throwable $th) {
                     Console::error("Failed to update processing migration {$migration->getId()} for project {$project->getId()}: " . $th->getMessage());
+                }
+            }
+        );
+    }
+
+    /**
+     * Park in-flight renditions that have not progressed past the retention window.
+     *
+     * Encode already stops when the row leaves `started` and will not overwrite
+     * `aborted`, so a live ffmpeg that outlives this pass still settles safely.
+     */
+    private function abortStaleRenditions(Document $project, callable $getProjectDB): void
+    {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+        Console::info('Abort stale video renditions');
+
+        /** @var Database $dbForProject */
+        $dbForProject = $getProjectDB($project);
+
+        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
+        $date = DateTime::addSeconds(new \DateTime(), -1 * $retention);
+
+        $queries = [
+            Query::select($this->selects),
+            Query::equal('status', [
+                VideosBase::STATUS_PENDING,
+                VideosBase::STATUS_STARTED,
+                VideosBase::STATUS_ENDED,
+                VideosBase::STATUS_UPLOADING,
+            ]),
+            Query::lessThanEqual('$updatedAt', $date),
+        ];
+
+        $this->listByGroup(
+            'videos_renditions',
+            $queries,
+            $dbForProject,
+            function (Document $rendition) use ($dbForProject, $project) {
+                try {
+                    $dbForProject->updateDocument('videos_renditions', $rendition->getId(), new Document([
+                        'status' => VideosBase::STATUS_ABORTED,
+                        'endedAt' => DateTime::now(),
+                    ]));
+                } catch (Throwable $th) {
+                    Console::error("Failed to abort stale rendition {$rendition->getId()} for project {$project->getId()}: " . $th->getMessage());
                 }
             }
         );
@@ -1357,10 +1406,12 @@ class Deletes extends Action
     }
 
     /**
-     * Remove orphaned videos-tmp job folders older than VideosBase::TMP_TTL.
+     * Remove orphaned videos-tmp job folders older than the retention window.
      *
      * Folder names are `{YmdHi}~{projectId}~{videoId}~{type}-{jobId}`; the
      * leading stamp is compared as text so this never stats the filesystem.
+     * Cutoff comes from `_APP_MAINTENANCE_RETENTION_VIDEOS_TMP` (default
+     * VideosBase::TMP_TTL, 24 hours).
      */
     private function deleteOldVideoTmp(): void
     {
@@ -1371,7 +1422,11 @@ class Deletes extends Action
             return;
         }
 
-        $cutoff = \gmdate('YmdHi', \time() - VideosBase::TMP_TTL);
+        $retention = (int) System::getEnv(
+            '_APP_MAINTENANCE_RETENTION_VIDEOS_TMP',
+            (string) VideosBase::TMP_TTL
+        );
+        $cutoff = \gmdate('YmdHi', \time() - $retention);
         Console::info('Deleting video tmp jobs older than ' . $cutoff);
 
         foreach (\scandir($root) ?: [] as $name) {
@@ -1868,7 +1923,7 @@ class Deletes extends Action
     }
 
     /**
-     * Cascades a video deletion across its previews, renditions and captions —
+     * Cascades a video deletion across its timelines, renditions and captions —
      * including the per-rendition and per-caption segment rows — then removes the
      * whole transcoded output tree from the videos device.
      *
@@ -1884,7 +1939,7 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
         $videoInternalId = $document->getSequence();
 
-        $this->deleteByGroup('videos_previews', [
+        $this->deleteByGroup('videos_timelines', [
             Query::equal('videoInternalId', [$videoInternalId]),
         ], $dbForProject);
 

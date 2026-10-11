@@ -336,7 +336,7 @@ class StatsResources extends Action
     private function videoStorage(Database $dbForProject, array $queries = []): int
     {
         $storage = 0;
-        foreach (['videos_renditions', 'videos_captions', 'videos_previews'] as $collection) {
+        foreach (['videos_renditions', 'videos_captions', 'videos_timelines'] as $collection) {
             $storage += (int) $dbForProject->sum($collection, 'size', $queries);
         }
 

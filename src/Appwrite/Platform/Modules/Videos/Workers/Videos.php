@@ -219,10 +219,11 @@ class Videos extends Action
             }
 
             // Wipe previous sprites so a source-file update can regenerate cleanly
-            // against the UNIQUE (videoId, type, name) index.
-            $existing = $dbForProject->find('videos_previews', [
+            // against the UNIQUE (videoId, name) index. Leave timeline.vtt for an
+            // in-place size update in persistTimelineVtt().
+            $existing = $dbForProject->find('videos_timelines', [
                 Query::equal('videoInternalId', [$video->getSequence()]),
-                Query::equal('type', ['sprite']),
+                Query::notEqual('name', ['timeline.vtt']),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
 
@@ -235,7 +236,7 @@ class Videos extends Action
                         // Best-effort; the DB row is the source of truth for readiness.
                     }
                 }
-                $dbForProject->deleteDocument('videos_previews', $preview->getId());
+                $dbForProject->deleteDocument('videos_timelines', $preview->getId());
             }
 
             // Appwrite rewrites sheet URLs to preview endpoints, so skip the
@@ -259,10 +260,9 @@ class Videos extends Action
                 // Retained bytes. StatsResources sums this column into the videos.storage gauge.
                 $bytes = $data->getSize() ?? (\filesize($localFile) ?: 0);
 
-                $preview = $dbForProject->createDocument('videos_previews', new Document([
+                $preview = $dbForProject->createDocument('videos_timelines', new Document([
                     'videoId' => $video->getId(),
                     'videoInternalId' => $video->getSequence(),
-                    'type' => 'sprite',
                     'name' => $fileName,
                     'path' => $fullPath,
                     'size' => $bytes,
@@ -877,23 +877,21 @@ class Videos extends Action
     /**
      * Record the timeline cue file so its bytes join the videos.storage gauge.
      *
-     * Sprite rows are replaced on each timeline job. This row stays and its size
-     * is replaced, so a rebuild does not stack the previous cue file.
+     * Sprite sheet rows are replaced on each timeline job. This row stays and
+     * its size is replaced, so a rebuild does not stack the previous cue file.
      */
     private function persistTimelineVtt(Database $dbForProject, Document $video, string $path, int $bytes): void
     {
-        $existing = $dbForProject->find('videos_previews', [
+        $existing = $dbForProject->find('videos_timelines', [
             Query::equal('videoInternalId', [$video->getSequence()]),
-            Query::equal('type', ['timeline']),
             Query::equal('name', ['timeline.vtt']),
             Query::limit(1),
         ]);
 
         if (empty($existing)) {
-            $dbForProject->createDocument('videos_previews', new Document([
+            $dbForProject->createDocument('videos_timelines', new Document([
                 'videoId' => $video->getId(),
                 'videoInternalId' => $video->getSequence(),
-                'type' => 'timeline',
                 'name' => 'timeline.vtt',
                 'path' => $path,
                 'size' => $bytes,
@@ -902,7 +900,7 @@ class Videos extends Action
             return;
         }
 
-        $dbForProject->updateDocument('videos_previews', $existing[0]->getId(), new Document([
+        $dbForProject->updateDocument('videos_timelines', $existing[0]->getId(), new Document([
             'path' => $path,
             'size' => $bytes,
         ]));

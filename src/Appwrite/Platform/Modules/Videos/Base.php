@@ -142,7 +142,10 @@ abstract class Base extends UtopiaAction
     public const STATUS_ERROR = 'error';
     public const STATUS_ABORTED = 'aborted';
 
-    /** Orphaned job folders under videos-tmp/jobs are swept after this many seconds. */
+    /**
+     * Default age (seconds) before orphaned job folders under videos-tmp/jobs
+     * are swept. Overridden by `_APP_MAINTENANCE_RETENTION_VIDEOS_TMP`.
+     */
     public const TMP_TTL = 86400;
 
     public const JOB_RENDITION = 'rendition';
@@ -159,7 +162,8 @@ abstract class Base extends UtopiaAction
      * Per-job directory: `{tmpJobsRoot()}/{YmdHi}~{projectId}~{videoId}~{type}-{jobId}`.
      *
      * The leading 12-character UTC minute stamp sorts as text so a maintenance
-     * sweep can drop leftovers older than TMP_TTL without reading file times.
+     * sweep can drop leftovers older than the retention window without reading
+     * file times.
      * Encode jobs use the rendition id; timeline and caption jobs use a uniqid.
      */
     public static function tmpJobPath(

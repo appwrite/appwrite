@@ -2999,10 +2999,10 @@ return [
         ],
     ],
 
-    'videos_previews' => [
+    'videos_timelines' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('videos_previews'),
-        'name' => 'Videos Previews',
+        '$id' => ID::custom('videos_timelines'),
+        'name' => 'Videos Timelines',
         'attributes' => [
             [
                 '$id' => ID::custom('videoId'),
@@ -3017,17 +3017,6 @@ return [
             ],
             [
                 '$id' => ID::custom('videoInternalId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('type'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -3073,9 +3062,9 @@ return [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_video_type'),
+                '$id' => ID::custom('_key_video_name'),
                 'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['videoId', 'type', 'name'],
+                'attributes' => ['videoId', 'name'],
                 'lengths' => [],
                 'orders' => [],
             ],

@@ -482,7 +482,7 @@ final class MigrationVersionsTest extends TestCase
 
         $collections = [
             'videos',
-            'videos_previews',
+            'videos_timelines',
             'videos_renditions',
             'videos_renditions_segments',
             'videos_profiles',
@@ -505,7 +505,7 @@ final class MigrationVersionsTest extends TestCase
         \sort($names);
         $this->assertSame(['1080p', '2160p', '360p', '480p', '576p', '720p'], $names);
 
-        foreach (['videos_renditions', 'videos_captions', 'videos_previews'] as $collectionId) {
+        foreach (['videos_renditions', 'videos_captions', 'videos_timelines'] as $collectionId) {
             $attributeIds = [];
             foreach ($database->getCollection($collectionId)->getAttribute('attributes', []) as $attribute) {
                 $attributeIds[] = $attribute instanceof Document ? $attribute->getId() : ($attribute['$id'] ?? '');
@@ -513,11 +513,12 @@ final class MigrationVersionsTest extends TestCase
             $this->assertContains('size', $attributeIds, "Expected \"{$collectionId}\" to store retained bytes");
         }
 
-        $previewAttributeIds = [];
-        foreach ($database->getCollection('videos_previews')->getAttribute('attributes', []) as $attribute) {
-            $previewAttributeIds[] = $attribute instanceof Document ? $attribute->getId() : ($attribute['$id'] ?? '');
+        $timelineAttributeIds = [];
+        foreach ($database->getCollection('videos_timelines')->getAttribute('attributes', []) as $attribute) {
+            $timelineAttributeIds[] = $attribute instanceof Document ? $attribute->getId() : ($attribute['$id'] ?? '');
         }
-        $this->assertNotContains('second', $previewAttributeIds);
+        $this->assertNotContains('second', $timelineAttributeIds);
+        $this->assertNotContains('type', $timelineAttributeIds);
     }
 
     public function testV26SkipsConsoleProject(): void

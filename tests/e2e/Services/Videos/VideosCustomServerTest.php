@@ -10,6 +10,8 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Scopes\VideoCustom;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\Query;
 
 final class VideosCustomServerTest extends Scope
@@ -713,6 +715,70 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertEquals('video_profile_not_found', $response['body']['type']);
+    }
+
+    /**
+     * Maintenance parks in-flight renditions whose `$updatedAt` is older than
+     * `_APP_MAINTENANCE_RETENTION_RENDITION`. Fresh in-flight and ready rows
+     * stay put even when their `$updatedAt` is old.
+     */
+    public function testMaintenanceAbortsStaleRenditions(): void
+    {
+        $ready = $this->createReadyVideo();
+        $videoId = $ready['$id'];
+        $projectId = $this->getProject()['$id'];
+
+        // Park before the encode worker claims the row, then age only the stale one.
+        $stale = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $this->seededProfile('360p')['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $stale['headers']['status-code']);
+        $staleId = $stale['body']['$id'];
+        $this->timeTravelRendition($projectId, $staleId, status: 'started', updatedAt: '2020-01-01T00:00:00Z');
+
+        $fresh = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $this->seededProfile('480p')['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $fresh['headers']['status-code']);
+        $freshId = $fresh['body']['$id'];
+        $this->timeTravelRendition($projectId, $freshId, status: 'started');
+
+        $readyRendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $this->seededProfile('720p')['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $readyRendition['headers']['status-code']);
+        $readyId = $readyRendition['body']['$id'];
+        $readyBody = $this->waitForRenditionTerminalState($videoId, $readyId);
+        $this->assertEquals('ready', $readyBody['status']);
+        $this->timeTravelRendition($projectId, $readyId, updatedAt: '2020-01-01T00:00:00Z');
+
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute(
+            (new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'),
+            '',
+            $stdout,
+            $stderr
+        );
+        $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+
+        $this->assertEventually(function () use ($videoId, $staleId, $freshId, $readyId) {
+            $stale = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $staleId, $this->headers());
+            $this->assertEquals(200, $stale['headers']['status-code']);
+            $this->assertEquals('aborted', $stale['body']['status']);
+            $this->assertNotEmpty($stale['body']['endedAt'] ?? '');
+
+            $fresh = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $freshId, $this->headers());
+            $this->assertEquals(200, $fresh['headers']['status-code']);
+            $this->assertEquals('started', $fresh['body']['status']);
+
+            $ready = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $readyId, $this->headers());
+            $this->assertEquals(200, $ready['headers']['status-code']);
+            $this->assertEquals('ready', $ready['body']['status']);
+        }, 30000);
     }
 
     /**
@@ -1853,6 +1919,33 @@ final class VideosCustomServerTest extends Scope
         }
 
         $this->fail('Seeded ' . $name . ' profile missing');
+    }
+
+    private function timeTravelRendition(
+        string $projectId,
+        string $renditionId,
+        ?string $status = null,
+        ?string $updatedAt = null
+    ): void {
+        $command = (new Command('docker'))
+            ->argument('exec')
+            ->argument('appwrite')
+            ->argument('task-time-travel')
+            ->argument('--projectId=' . $projectId)
+            ->argument('--resourceType=videos_rendition')
+            ->argument('--resourceId=' . $renditionId);
+
+        if ($status !== null) {
+            $command->argument('--status=' . $status);
+        }
+        if ($updatedAt !== null) {
+            $command->argument('--updatedAt=' . $updatedAt);
+        }
+
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute($command, '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
     }
 
     private function assertDirectoryHasFiles(string $path): void

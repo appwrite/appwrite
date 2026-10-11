@@ -22,7 +22,7 @@ class V26 extends Migration
      */
     private const VIDEO_COLLECTIONS = [
         'videos',
-        'videos_previews',
+        'videos_timelines',
         'videos_renditions',
         'videos_renditions_segments',
         'videos_profiles',

@@ -73,11 +73,11 @@ class Get extends Base
     ): void {
         $video = self::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
-        // Scoped to this video's sprites. The pre-merge check queried every sprite
-        // in the project, so any video with a timeline made all of them look ready.
-        $sprites = $authorization->skip(fn () => $dbForProject->find('videos_previews', [
+        // Scoped to this video's sprite sheets. The cue file alone is not enough:
+        // during a rebuild only timeline.vtt remains until the sheets are rewritten.
+        $sprites = $authorization->skip(fn () => $dbForProject->find('videos_timelines', [
             Query::equal('videoInternalId', [$video->getSequence()]),
-            Query::equal('type', ['sprite']),
+            Query::notEqual('name', ['timeline.vtt']),
             Query::limit(1),
         ]));
 
