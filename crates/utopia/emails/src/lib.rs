@@ -1,7 +1,9 @@
-//! Email addresses with the semantics of `utopia-php/emails`: parsing,
-//! validation (PHP's `FILTER_VALIDATE_EMAIL`, through `php-std`), the
-//! canonical form of an address per mail provider, and the free /
-//! disposable / corporate classification of its domain.
+//! Email addresses: parsing, validation, the canonical form of an address
+//! per mail provider, and the free / disposable / corporate classification
+//! of its domain.
+//!
+//! PHP: the semantics of `utopia-php/emails`; validation is PHP's
+//! `FILTER_VALIDATE_EMAIL`, through `php-std`.
 //!
 //! | PHP | Rust |
 //! |---|---|
@@ -24,13 +26,17 @@
 //! | validator `getDescription()`, `getType()`, `isArray()` | `Validator::description`, `value_type()`, `Validator::is_array` |
 //! | `Exception` (constructor), `InvalidArgumentException` (canonical form) | [`Error::Parse`], [`Error::InvalidArgument`] |
 //!
-//! Domain parsing (provider, subdomain, known suffixes) is `utopia-domains`,
-//! as `utopia-php/emails` uses `utopia-php/domains`.
+//! Domain parsing (provider, subdomain, known suffixes) is `utopia-domains`.
 //!
-//! The free and disposable lists are the PHP package's data files. PHP
-//! includes them from the package directory on first use; Rust reads them
-//! from there too ([`Lists::default_dir`]) unless a server installs lists
-//! loaded from its assets with [`Lists::install`] at startup.
+//! The free and disposable lists are read on first use from
+//! [`Lists::default_dir`], unless a server installs lists loaded from its
+//! assets with [`Lists::install`] at startup.
+//!
+//! PHP: `utopia-php/emails` uses `utopia-php/domains` the same way. The lists
+//! are the PHP package's data files, which PHP includes from the package
+//! directory on first use.
+
+#![warn(missing_docs)]
 
 mod canonicals;
 mod email;

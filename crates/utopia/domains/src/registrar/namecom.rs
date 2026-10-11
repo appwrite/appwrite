@@ -1,4 +1,4 @@
-//! [`NameCom`]: the Name.com Core API.
+//! The Name.com registrar, over its Core API.
 
 use std::sync::Arc;
 
@@ -18,9 +18,11 @@ const AVAILABILITY_BATCH_SIZE: usize = 50;
 const AVAILABILITY_CACHE_TTL: i64 = 60;
 const TLD_PAGE_SIZE: i64 = 1000;
 
-/// Name.com's error messages (`NameCom::ERROR_*`), matched in this order
-/// against an error's lower-cased message, each only with the code it
-/// comes with (`None`: any code).
+/// Name.com's error messages, matched in this order against an error's
+/// lower-cased message, each only with the code it comes with (`None`: any
+/// code).
+///
+/// PHP: `NameCom::ERROR_*`.
 const ERROR_MAP: [(&str, Option<i64>); 13] = [
     (NameCom::ERROR_NOT_FOUND, Some(404)),
     (NameCom::ERROR_DOMAIN_TAKEN, None),
@@ -37,8 +39,9 @@ const ERROR_MAP: [(&str, Option<i64>); 13] = [
     (NameCom::ERROR_RATE_LIMIT_EXCEEDED, Some(429)),
 ];
 
-/// The Name.com registrar (`Registrar\Adapter\NameCom`), over its Core API
-/// with HTTP basic authentication.
+/// The Name.com registrar, over its Core API with HTTP basic authentication.
+///
+/// PHP: `Registrar\Adapter\NameCom`.
 ///
 /// Availability is asked 50 domains per request; each answer carries the
 /// prices too, so with a cache a following [`Adapter::price`] for the same
@@ -94,6 +97,7 @@ pub struct NameCom {
 }
 
 impl std::fmt::Debug for NameCom {
+    /// Writes the username and endpoint, leaving the token out.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("NameCom").field("username", &self.username).field("endpoint", &self.endpoint).finish()
     }

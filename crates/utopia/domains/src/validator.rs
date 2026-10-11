@@ -1,5 +1,4 @@
-//! Validators of domain names against the Public Suffix List:
-//! [`PublicDomain`], [`ApexDomain`] and [`RegistrableDomain`].
+//! Validators of domain names against the Public Suffix List.
 
 use std::borrow::Cow;
 use std::sync::RwLock;
@@ -13,11 +12,15 @@ use utopia_validators::{Error, Input, Type, Validator, Verdict};
 use crate::Domain;
 
 /// Domains accepted by [`PublicDomain`] and [`ApexDomain`] although no
-/// public suffix rule matches them (`PublicDomain::allow()`): shared by the
-/// whole process, as PHP keeps them in a static property.
+/// public suffix rule matches them ([`PublicDomain::allow`]), shared by the
+/// whole process.
+///
+/// PHP: keeps them in a static property.
 static ALLOWED: RwLock<Vec<String>> = RwLock::new(Vec::new());
 
-/// `filter_var($value, $filter) !== false`.
+/// Whether the value passes a validation filter.
+///
+/// PHP: `filter_var($value, $filter) !== false`.
 fn passes(value: Input<'_>, filter: i64) -> bool {
     matches!(
         filter::filter_var(&value.filter_value(), filter, &Options::Flags(0)),
@@ -28,7 +31,9 @@ fn passes(value: Input<'_>, filter: i64) -> bool {
 /// What `isValid()` looks at: the host of a URL, else the value itself.
 enum Subject<'a> {
     Value(Input<'a>),
-    /// `parse_url($value, PHP_URL_HOST)`: `None` is PHP's `null`.
+    /// The host of a URL value, `None` when it has none.
+    ///
+    /// PHP: `parse_url($value, PHP_URL_HOST)`; `None` is PHP's `null`.
     Host(Option<Vec<u8>>),
 }
 
@@ -107,8 +112,10 @@ fn is_public(subject: &Subject<'_>) -> Result<bool, Error> {
 pub struct PublicDomain;
 
 impl PublicDomain {
-    /// `PublicDomain::allow()`: accepts these domains too, from now on and
-    /// in every validator of the process (they add to those allowed before).
+    /// Accepts these domains too, from now on and in every validator of the
+    /// process (they add to those allowed before).
+    ///
+    /// PHP: `PublicDomain::allow()`.
     ///
     /// ```
     /// use utopia_domains::validator::PublicDomain;
@@ -130,18 +137,24 @@ impl PublicDomain {
 }
 
 impl Validator for PublicDomain {
+    /// What a valid value is, in words.
     fn description(&self) -> String {
         "Value must be a public domain".to_owned()
     }
 
+    /// Whether a JSON value is valid; values that cannot be read as a domain
+    /// are not.
     fn is_valid(&self, value: &serde_json::Value) -> bool {
         self.validate(Input::Json(value)).is_ok_and(|v| v.valid)
     }
 
+    /// The verdict on a value, or an error for a value that cannot be read as
+    /// a domain.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         is_public(&Subject::of(value)?).map(Verdict::of)
     }
 
+    /// Values are strings.
     fn kind(&self) -> Type {
         Type::String
     }
@@ -169,14 +182,19 @@ impl Validator for PublicDomain {
 pub struct ApexDomain;
 
 impl Validator for ApexDomain {
+    /// What a valid value is, in words.
     fn description(&self) -> String {
         "Value must be a public apex domain".to_owned()
     }
 
+    /// Whether a JSON value is valid; values that cannot be read as a domain
+    /// are not.
     fn is_valid(&self, value: &serde_json::Value) -> bool {
         self.validate(Input::Json(value)).is_ok_and(|v| v.valid)
     }
 
+    /// The verdict on a value, or an error for a value that cannot be read as
+    /// a domain.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         let subject = Subject::of(value)?;
         // The public check runs on the host again, as a value of its own.
@@ -195,6 +213,7 @@ impl Validator for ApexDomain {
         Ok(Verdict::of(subject.as_str() == Some(apex.as_bytes())))
     }
 
+    /// Values are strings.
     fn kind(&self) -> Type {
         Type::String
     }
@@ -225,15 +244,20 @@ impl Validator for ApexDomain {
 pub struct RegistrableDomain;
 
 impl Validator for RegistrableDomain {
+    /// What a valid value is, in words.
     fn description(&self) -> String {
         "Value must be a lowercase domain name such as \"example.com\". IP addresses and public suffixes are not allowed."
             .to_owned()
     }
 
+    /// Whether a JSON value is valid; values that cannot be read as a domain
+    /// are not.
     fn is_valid(&self, value: &serde_json::Value) -> bool {
         self.validate(Input::Json(value)).is_ok_and(|v| v.valid)
     }
 
+    /// The verdict on a value, or an error for a value that cannot be read as
+    /// a domain.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         let Some(s) = value.as_str() else {
             return Ok(Verdict::INVALID);
@@ -248,6 +272,7 @@ impl Validator for RegistrableDomain {
         Ok(Verdict::of(domain.is_known() && domain.suffix().as_bytes() != s))
     }
 
+    /// Values are strings.
     fn kind(&self) -> Type {
         Type::String
     }

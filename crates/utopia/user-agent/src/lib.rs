@@ -1,7 +1,8 @@
 //! User-agent detection: the operating system, client, device and bot
-//! behind a user-agent string. The Rust port of `utopia-php/user-agent`
-//! (`packages/user-agent`), with identical results for every input,
-//! including bytes that are not UTF-8.
+//! behind a user-agent string.
+//!
+//! Any bytes are accepted, including bytes that are not UTF-8, and what is
+//! read from the string is borrowed from it.
 //!
 //! ```
 //! use utopia_user_agent::UserAgent;
@@ -13,7 +14,10 @@
 //! ```
 //!
 //! Detection runs on every request, so each regular expression is compiled
-//! once per process. Patterns are the PHP library's, run by
+//! once per process, on first use.
+//!
+//! PHP: the port of `utopia-php/user-agent` (`packages/user-agent`), with
+//! identical results for every input. Patterns are the PHP library's, run by
 //! [`php_std::pcre`] (a port of the PCRE2 PHP uses), so matching, limits
 //! included, is PHP's.
 //!
@@ -33,8 +37,10 @@
 //! | `Detection\DeviceDetector::detect()` | [`detection::device`] |
 //! | `Detection\BotDetector::detect()` | [`detection::bot`] |
 //!
-//! Appwrite's session attributes (`Appwrite\Detector\Detector`) are in
+//! PHP: Appwrite's session attributes (`Appwrite\Detector\Detector`) are in
 //! `appwrite_core::detector`.
+
+#![warn(missing_docs)]
 
 mod agent;
 pub mod detection;

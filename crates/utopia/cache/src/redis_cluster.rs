@@ -51,29 +51,39 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> RedisCluster<C
     }
 
     /// Retries commands that failed on the connection up to `retries` times
-    /// (clamped to `0..=10`, `setMaxRetries`).
+    /// (clamped to `0..=10`).
+    ///
+    /// PHP: `setMaxRetries`.
     pub fn with_max_retries(mut self, retries: i64) -> Self {
         self.retry = self.retry.with_max_retries(retries);
         self
     }
 
-    /// Waits `delay_ms` milliseconds between attempts (`setRetryDelay`).
+    /// Waits `delay_ms` milliseconds between attempts.
+    ///
+    /// PHP: `setRetryDelay`.
     pub fn with_retry_delay(mut self, delay_ms: i64) -> Self {
         self.retry = self.retry.with_delay_ms(delay_ms);
         self
     }
 
-    /// The retry settings (`getMaxRetries`, `getRetryDelay`).
+    /// The retry settings.
+    ///
+    /// PHP: `getMaxRetries`, `getRetryDelay`.
     pub fn retry(&self) -> Retry {
         self.retry
     }
 
-    /// The cluster's name (`getClusterName`).
+    /// The cluster's name.
+    ///
+    /// PHP: `getClusterName`.
     pub fn cluster_name(&self) -> Option<&str> {
         self.name.as_deref()
     }
 
-    /// The seed nodes (`getSeeds`).
+    /// The seed nodes.
+    ///
+    /// PHP: `getSeeds`.
     pub fn seeds(&self) -> &[String] {
         &self.seeds
     }

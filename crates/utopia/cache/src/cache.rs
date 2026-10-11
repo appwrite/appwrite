@@ -108,19 +108,25 @@ impl<A: Adapter + ?Sized> Cache<A> {
         &self.adapter
     }
 
-    /// Whether keys are case-sensitive (`$caseSensitive`).
+    /// Whether keys are case-sensitive.
+    ///
+    /// PHP: `$caseSensitive`.
     pub fn case_sensitive(&self) -> bool {
         self.case_sensitive.load(Ordering::Relaxed)
     }
 
-    /// Makes keys case-sensitive or not (`setCaseSensitivity`); returns the new setting.
+    /// Makes keys case-sensitive or not; returns the new setting.
+    ///
+    /// PHP: `setCaseSensitivity`.
     pub fn set_case_sensitivity(&self, value: bool) -> bool {
         self.case_sensitive.store(value, Ordering::Relaxed);
         value
     }
 
     /// Records metrics with `telemetry` from now on, and hands it to the
-    /// adapter (`setTelemetry`). Instruments are created on first use.
+    /// adapter. Instruments are created on first use.
+    ///
+    /// PHP: `setTelemetry`.
     pub fn set_telemetry(&self, telemetry: Arc<dyn Telemetry>) {
         *self.telemetry.write().unwrap_or_else(|e| e.into_inner()) = Instruments::new(telemetry.clone());
         self.adapter.set_telemetry(telemetry);
@@ -269,7 +275,9 @@ impl<A: Adapter + ?Sized> Cache<A> {
         self.adapter.ping().await
     }
 
-    /// The size of the cache (`getSize`).
+    /// The size of the cache.
+    ///
+    /// PHP: `getSize`.
     pub async fn size(&self) -> Result<i64> {
         let start = Instant::now();
         let result = self.adapter.size().await?;

@@ -1,15 +1,19 @@
-//! [`Error`]: one variant per exception class the library raises.
+//! The errors of domain parsing, validation and registrar calls.
 
-/// Why an operation failed: one variant per exception class, each carrying
-/// the message and, where the class has one, the numeric code.
+/// Why an operation failed. Each variant carries the message and, where it
+/// has one, the numeric code.
 ///
 /// Registrar errors keep the code the registrar answered with (an HTTP
 /// status for Name.com, an OpenSRS response code), so callers can tell a
 /// missing domain (`404`) from a refused request (`400`).
+///
+/// PHP: one variant per exception class the library raises.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
-    /// `\Exception`: a URL given as a domain, a request that could not be
-    /// sent or read, or an operation the registrar does not offer.
+    /// A URL given as a domain, a request that could not be sent or read, or
+    /// an operation the registrar does not offer.
+    ///
+    /// PHP: `\Exception`.
     #[error("{message}")]
     Exception {
         /// What went wrong.
@@ -17,7 +21,9 @@ pub enum Error {
         /// The registrar's code (an HTTP status, an OpenSRS response code), `0` when none.
         code: i64,
     },
-    /// `Utopia\Domains\Exception`: a registrar operation failed.
+    /// A registrar operation failed.
+    ///
+    /// PHP: `Utopia\Domains\Exception`.
     #[error("{message}")]
     Domains {
         /// What went wrong.
@@ -25,7 +31,9 @@ pub enum Error {
         /// The registrar's code (an HTTP status, an OpenSRS response code), `0` when none.
         code: i64,
     },
-    /// `Registrar\Exception\AuthException`: the credentials were refused.
+    /// The credentials were refused.
+    ///
+    /// PHP: `Registrar\Exception\AuthException`.
     #[error("{message}")]
     Auth {
         /// What went wrong.
@@ -33,7 +41,9 @@ pub enum Error {
         /// The registrar's code (an HTTP status, an OpenSRS response code), `0` when none.
         code: i64,
     },
-    /// `Registrar\Exception\DomainNotFoundException`.
+    /// The registrar does not have the domain.
+    ///
+    /// PHP: `Registrar\Exception\DomainNotFoundException`.
     #[error("{message}")]
     DomainNotFound {
         /// What went wrong.
@@ -41,7 +51,9 @@ pub enum Error {
         /// The registrar's code (an HTTP status, an OpenSRS response code), `0` when none.
         code: i64,
     },
-    /// `Registrar\Exception\DomainNotTransferableException`.
+    /// The domain cannot be transferred.
+    ///
+    /// PHP: `Registrar\Exception\DomainNotTransferableException`.
     #[error("{message}")]
     DomainNotTransferable {
         /// What went wrong.
@@ -49,8 +61,9 @@ pub enum Error {
         /// The registrar's code (an HTTP status, an OpenSRS response code), `0` when none.
         code: i64,
     },
-    /// `Registrar\Exception\DomainTakenException`: the domain is registered
-    /// already (by someone else, or in this account).
+    /// The domain is registered already (by someone else, or in this account).
+    ///
+    /// PHP: `Registrar\Exception\DomainTakenException`.
     #[error("{message}")]
     DomainTaken {
         /// What went wrong.
@@ -58,7 +71,9 @@ pub enum Error {
         /// The registrar's code (an HTTP status, an OpenSRS response code), `0` when none.
         code: i64,
     },
-    /// `Registrar\Exception\InvalidAuthCodeException`.
+    /// The transfer authorization code was refused.
+    ///
+    /// PHP: `Registrar\Exception\InvalidAuthCodeException`.
     #[error("{message}")]
     InvalidAuthCode {
         /// What went wrong.
@@ -66,7 +81,9 @@ pub enum Error {
         /// The registrar's code (an HTTP status, an OpenSRS response code), `0` when none.
         code: i64,
     },
-    /// `Registrar\Exception\InvalidContactException`.
+    /// The registrar refused a contact.
+    ///
+    /// PHP: `Registrar\Exception\InvalidContactException`.
     #[error("{message}")]
     InvalidContact {
         /// What went wrong.
@@ -74,8 +91,9 @@ pub enum Error {
         /// The registrar's code (an HTTP status, an OpenSRS response code), `0` when none.
         code: i64,
     },
-    /// `Registrar\Exception\InvalidPeriodException`: the registration
-    /// period is not allowed for the TLD.
+    /// The registration period is not allowed for the TLD.
+    ///
+    /// PHP: `Registrar\Exception\InvalidPeriodException`.
     #[error("{message}")]
     InvalidPeriod {
         /// What went wrong.
@@ -83,7 +101,9 @@ pub enum Error {
         /// The registrar's code (an HTTP status, an OpenSRS response code), `0` when none.
         code: i64,
     },
-    /// `Registrar\Exception\PriceNotFoundException`.
+    /// The registrar has no price for the domain.
+    ///
+    /// PHP: `Registrar\Exception\PriceNotFoundException`.
     #[error("{message}")]
     PriceNotFound {
         /// What went wrong.
@@ -91,8 +111,9 @@ pub enum Error {
         /// The registrar's code (an HTTP status, an OpenSRS response code), `0` when none.
         code: i64,
     },
-    /// `Registrar\Exception\RateLimitException`: the registrar throttled
-    /// the account (always code `429`).
+    /// The registrar throttled the account (always code `429`).
+    ///
+    /// PHP: `Registrar\Exception\RateLimitException`.
     #[error("{message}")]
     RateLimit {
         /// What went wrong.
@@ -100,7 +121,9 @@ pub enum Error {
         /// The registrar's code (an HTTP status, an OpenSRS response code), `0` when none.
         code: i64,
     },
-    /// `Registrar\Exception\UnsupportedTldException`.
+    /// The registrar does not offer the TLD.
+    ///
+    /// PHP: `Registrar\Exception\UnsupportedTldException`.
     #[error("{message}")]
     UnsupportedTld {
         /// What went wrong.
@@ -108,28 +131,41 @@ pub enum Error {
         /// The registrar's code (an HTTP status, an OpenSRS response code), `0` when none.
         code: i64,
     },
-    /// `\InvalidArgumentException`: a request URL that does not parse.
+    /// A request URL that does not parse.
+    ///
+    /// PHP: `\InvalidArgumentException`.
     #[error("{0}")]
     InvalidArgument(String),
-    /// `\DateMalformedStringException`: a date the registrar sent could
-    /// not be read.
+    /// A date the registrar sent could not be read.
+    ///
+    /// PHP: `\DateMalformedStringException`.
     #[error("{0}")]
     DateMalformed(String),
-    /// `\TypeError`: a value that is not a string where a domain is expected.
+    /// A value that is not a string where a domain is expected.
+    ///
+    /// PHP: `\TypeError`.
     #[error("{0}")]
     Type(String),
-    /// `\Error`: an operation on a missing value (a single contact under a
-    /// role instead of position `0`, for OpenSRS).
+    /// An operation on a missing value (a single contact under a role instead
+    /// of position `0`, for OpenSRS).
+    ///
+    /// PHP: `\Error`.
     #[error("{0}")]
     Engine(String),
-    /// The suffix list could not be read or is not a PHP array literal (PHP
-    /// fails with a warning and a `TypeError` on the first lookup).
+    /// The suffix list could not be read or parsed.
+    ///
+    /// PHP: the file is not a PHP array literal; PHP fails with a warning and
+    /// a `TypeError` on the first lookup.
     #[error("{0}")]
     Data(String),
 }
 
 impl Error {
-    /// The exception class this error corresponds to in `utopia-php/domains`.
+    /// The fully qualified name of the exception class this error stands
+    /// for.
+    ///
+    /// PHP: the class `utopia-php/domains` throws (`Exception`,
+    /// `Utopia\Domains\Exception`, ...).
     pub fn php_class(&self) -> &'static str {
         match self {
             Error::Exception { .. } => "Exception",
@@ -153,7 +189,9 @@ impl Error {
         }
     }
 
-    /// The numeric code (`getCode()`): `0` for errors without one.
+    /// The numeric code: `0` for errors without one.
+    ///
+    /// PHP: `getCode()`.
     pub fn code(&self) -> i64 {
         match self {
             Error::Exception { code, .. }
@@ -176,7 +214,9 @@ impl Error {
         }
     }
 
-    /// The message (`getMessage()`).
+    /// The message.
+    ///
+    /// PHP: `getMessage()`.
     pub fn message(&self) -> &str {
         match self {
             Error::Exception { message, .. }

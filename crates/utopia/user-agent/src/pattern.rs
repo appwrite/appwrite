@@ -1,5 +1,7 @@
-//! The library's regular expressions: PHP patterns run by `php_std::pcre`
-//! (PCRE2 semantics, PHP's limits), each compiled once, on first use.
+//! The library's regular expressions, each compiled once, on first use.
+//!
+//! PHP: the patterns are PHP's, run by `php_std::pcre` (PCRE2 semantics,
+//! PHP's limits).
 
 use std::sync::Arc;
 

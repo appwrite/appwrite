@@ -1,4 +1,5 @@
-//! [`Domain`] and [`PublicSuffixList`]: a domain name split against the Public Suffix List.
+//! Domain names split against the Public Suffix List into suffix,
+//! registrable name and subdomain.
 
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
@@ -9,7 +10,7 @@ use php_std::mb;
 
 use crate::{Error, literal};
 
-/// The section of the Public Suffix List a rule comes from (`type`).
+/// The section of the Public Suffix List a rule comes from.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Section {
     /// `ICANN` domains.
@@ -33,13 +34,19 @@ pub struct PublicSuffixList {
 static GLOBAL: OnceLock<PublicSuffixList> = OnceLock::new();
 
 impl PublicSuffixList {
-    /// Where the list ships: `data/data.php` of the library's package in
-    /// this repository (`packages/domains/data/data.php`).
+    /// Where the list is read from by default.
+    ///
+    /// PHP: `data/data.php` of the library's PHP package in this repository
+    /// (`packages/domains/data/data.php`).
     pub fn default_path() -> PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../packages/domains/data/data.php")
     }
 
-    /// Parses the list file: `return ['<rule>' => ['suffix' => ..., 'type' => 'ICANN' | 'PRIVATE', 'comments' => [...]], ...];`.
+    /// Parses the list file: an array of rules, each with its suffix, its
+    /// section (`ICANN` or `PRIVATE`) and comments.
+    ///
+    /// PHP: the file is PHP source, `return ['<rule>' => ['suffix' => ...,
+    /// 'type' => 'ICANN' | 'PRIVATE', 'comments' => [...]], ...];`.
     ///
     /// ```
     /// use utopia_domains::{PublicSuffixList, Section};
@@ -96,7 +103,7 @@ impl PublicSuffixList {
         GLOBAL.get_or_init(|| Self::load(&Self::default_path()).unwrap_or_default())
     }
 
-    /// Number of rules.
+    /// The number of rules.
     pub fn len(&self) -> usize {
         self.rules.len()
     }
@@ -156,12 +163,16 @@ pub struct Domain<'l> {
     list: Option<&'l PublicSuffixList>,
 }
 
-/// PHP `empty()` of a string.
+/// Whether a string is empty or `"0"`.
+///
+/// PHP: `empty()` of a string.
 fn empty(s: &str) -> bool {
     s.is_empty() || s == "0"
 }
 
-/// `mb_substr($s, 0, -$cut)`.
+/// `s` without its last `cut` characters.
+///
+/// PHP: `mb_substr($s, 0, -$cut)`.
 fn cut_end(s: &str, cut: usize) -> String {
     let cut = i64::try_from(cut).unwrap_or(i64::MAX);
     let bytes = mb::mb_substr(s.as_bytes(), 0, Some(-cut)).unwrap_or_default();
@@ -169,8 +180,10 @@ fn cut_end(s: &str, cut: usize) -> String {
 }
 
 impl Domain<'static> {
-    /// A domain on the process-wide list ([`PublicSuffixList::global`], read
-    /// on first use). Fails for a URL (`http://`, `https://`).
+    /// Parses a domain against the process-wide list
+    /// ([`PublicSuffixList::global`], read on first use).
+    ///
+    /// Fails for a URL (`http://`, `https://`).
     ///
     /// ```
     /// use utopia_domains::Domain;
@@ -194,7 +207,9 @@ impl Domain<'static> {
 }
 
 impl<'l> Domain<'l> {
-    /// A domain on a given list.
+    /// Parses a domain against a given list.
+    ///
+    /// Fails for a URL (`http://`, `https://`).
     pub fn with_list(domain: &str, list: &'l PublicSuffixList) -> Result<Self, Error> {
         Self::build(domain, Some(list))
     }
@@ -241,22 +256,31 @@ impl<'l> Domain<'l> {
         }
     }
 
-    /// `get()`: the lower-cased domain.
+    /// The whole domain, lower-cased.
+    ///
+    /// PHP: `get()`.
     pub fn get(&self) -> &str {
         &self.domain
     }
 
-    /// `getTLD()`: the last label.
+    /// The top-level domain: the last label (`uk` in `example.co.uk`).
+    ///
+    /// PHP: `getTLD()`.
     pub fn tld(&self) -> &str {
         self.domain.rsplit('.').next().unwrap_or("")
     }
 
-    /// `getSuffix()`: the public suffix, `""` when no rule matches.
+    /// The public suffix (`co.uk` in `example.co.uk`), `""` when no rule
+    /// matches.
+    ///
+    /// PHP: `getSuffix()`.
     pub fn suffix(&self) -> &str {
         self.find().0
     }
 
-    /// `getRule()`: the rule that matched (`com`, `*.ck`, `!www.ck`), `""` when none did.
+    /// The rule that matched (`com`, `*.ck`, `!www.ck`), `""` when none did.
+    ///
+    /// PHP: `getRule()`.
     pub fn rule(&self) -> Cow<'_, str> {
         match self.find().1 {
             Rule::None => Cow::Borrowed(""),
@@ -273,7 +297,10 @@ impl<'l> Domain<'l> {
         1 + mb::mb_strlen(suffix.as_bytes())
     }
 
-    /// `getName()`: the label before the suffix.
+    /// The registrable name: the label before the suffix (`example` in
+    /// `blog.example.co.uk`).
+    ///
+    /// PHP: `getName()`.
     pub fn name(&self) -> String {
         let mut rest = cut_end(&self.domain, self.suffix_len());
         match rest.rfind('.') {
@@ -282,19 +309,27 @@ impl<'l> Domain<'l> {
         }
     }
 
-    /// `getSub()`: what comes before the name.
+    /// The subdomain: what comes before the name (`blog` in
+    /// `blog.example.co.uk`).
+    ///
+    /// PHP: `getSub()`.
     pub fn sub(&self) -> String {
         let name = self.name();
         let name_len = if empty(&name) { 0 } else { 1 + mb::mb_strlen(name.as_bytes()) };
         cut_end(&self.domain, name_len + self.suffix_len())
     }
 
-    /// `getApex()`: `name.suffix`.
+    /// The apex domain, `name.suffix`, whether or not the suffix is known.
+    ///
+    /// PHP: `getApex()`.
     pub fn apex(&self) -> String {
         format!("{}.{}", self.name(), self.suffix())
     }
 
-    /// `getRegisterable()`: `name.suffix` when the suffix is known, else `""`.
+    /// The registrable domain, `name.suffix`, when the suffix is known; else
+    /// `""`.
+    ///
+    /// PHP: `getRegisterable()`.
     pub fn registerable(&self) -> String {
         if !self.is_known() {
             return String::new();
@@ -302,22 +337,30 @@ impl<'l> Domain<'l> {
         self.apex()
     }
 
-    /// `isKnown()`: the matching rule is in the list.
+    /// Whether the matching rule is on the list.
+    ///
+    /// PHP: `isKnown()`.
     pub fn is_known(&self) -> bool {
         self.list().rules.contains_key(&*self.rule())
     }
 
-    /// `isICANN()`: the matching rule is in the ICANN section.
+    /// Whether the matching rule is in the ICANN section.
+    ///
+    /// PHP: `isICANN()`.
     pub fn is_icann(&self) -> bool {
         self.list().section(&self.rule()) == Some(Section::Icann)
     }
 
-    /// `isPrivate()`: the matching rule is in the PRIVATE section.
+    /// Whether the matching rule is in the PRIVATE section.
+    ///
+    /// PHP: `isPrivate()`.
     pub fn is_private(&self) -> bool {
         self.list().section(&self.rule()) == Some(Section::Private)
     }
 
-    /// `isTest()`: the TLD is reserved for testing (`test`, `localhost`).
+    /// Whether the TLD is reserved for testing (`test`, `localhost`).
+    ///
+    /// PHP: `isTest()`.
     pub fn is_test(&self) -> bool {
         matches!(self.tld(), "test" | "localhost")
     }

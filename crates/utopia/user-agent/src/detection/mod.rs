@@ -1,6 +1,8 @@
-//! The detectors (`Utopia\UserAgent\Detection\*`): pure functions from a
-//! user-agent string to what it reveals. [`UserAgent`](crate::UserAgent)
-//! runs them lazily and keeps their results.
+//! The detectors: pure functions from a user-agent string to what it
+//! reveals. [`UserAgent`](crate::UserAgent) runs them lazily and keeps their
+//! results.
+//!
+//! PHP: `Utopia\UserAgent\Detection\*`.
 
 mod bot;
 mod client;

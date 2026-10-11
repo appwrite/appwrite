@@ -19,7 +19,9 @@ use crate::resp::{self, Reply};
 use crate::telemetry::{NoTelemetry, Telemetry, UpDownCounter};
 use crate::{Codec, Envelope, Error, Json, Result};
 
-/// Settings of a [`Multiplexing`] connection, with PHP's defaults.
+/// Settings of a [`Multiplexing`] connection; defaults in parentheses.
+///
+/// PHP: the defaults are PHP's.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MultiplexingOptions {
     /// Server host.
@@ -187,7 +189,7 @@ impl Multiplexing<Json> {
 
 impl<K: Codec> Multiplexing<K> {
     /// Connects with `options`, storing entries with `codec`. Fails on
-    /// invalid options (`InvalidArgumentException`) or when the connection,
+    /// invalid options ([`Error::InvalidArgument`]) or when the connection,
     /// `AUTH` or `SELECT` fails.
     pub async fn connect_with_codec(options: MultiplexingOptions, codec: K) -> Result<Self> {
         let invalid = |m: &str| Err(Error::InvalidArgument(m.to_owned()));
@@ -218,13 +220,17 @@ impl<K: Codec> Multiplexing<K> {
         Ok(adapter)
     }
 
-    /// Refuses leased saves for `ms` milliseconds after a purge (`setLeaseGraceWindow`).
+    /// Refuses leased saves for `ms` milliseconds after a purge.
+    ///
+    /// PHP: `setLeaseGraceWindow`.
     pub fn with_lease_grace_window(mut self, ms: i64) -> Self {
         self.grace_ms = ms.max(0);
         self
     }
 
-    /// The grace window in milliseconds (`getLeaseGraceWindow`).
+    /// The grace window in milliseconds.
+    ///
+    /// PHP: `getLeaseGraceWindow`.
     pub fn lease_grace_window(&self) -> i64 {
         self.grace_ms
     }
@@ -419,7 +425,9 @@ async fn read(shared: Arc<Shared>, connection: Arc<Connection>, mut reader: Owne
 }
 
 impl<K> Multiplexing<K> {
-    /// Closes the connection, failing callers still waiting (`disconnect`).
+    /// Closes the connection, failing callers still waiting.
+    ///
+    /// PHP: `disconnect`.
     pub fn disconnect(&self) {
         let current = self.shared.current.lock().unwrap_or_else(|e| e.into_inner()).take();
         if let Some(connection) = current {
@@ -429,12 +437,15 @@ impl<K> Multiplexing<K> {
 }
 
 impl<K> Drop for Multiplexing<K> {
+    /// Closes the connection ([`Multiplexing::disconnect`]).
     fn drop(&mut self) {
         self.disconnect();
     }
 }
 
 impl<K: Codec> Transport for Multiplexing<K> {
+    /// Runs a cached script by digest; [`Error::NoScript`] when the server
+    /// has no script for `sha`.
     async fn eval_sha(&self, sha: &str, key: &str, args: &[&[u8]]) -> Result<Reply> {
         let mut command: Vec<&[u8]> = vec![b"EVALSHA", sha.as_bytes(), b"1", key.as_bytes()];
         command.extend_from_slice(args);
@@ -444,12 +455,14 @@ impl<K: Codec> Transport for Multiplexing<K> {
         }
     }
 
+    /// Runs a script, sending its body.
     async fn eval(&self, script: &str, key: &str, args: &[&[u8]]) -> Result<Reply> {
         let mut command: Vec<&[u8]> = vec![b"EVAL", script.as_bytes(), b"1", key.as_bytes()];
         command.extend_from_slice(args);
         self.command(&command).await
     }
 
+    /// The value of one field of a hash, `None` when missing.
     async fn hget(&self, key: &str, field: &str) -> Result<Option<Vec<u8>>> {
         Ok(match self.command(&[b"HGET", key.as_bytes(), field.as_bytes()]).await? {
             Reply::Str(s) => Some(s),

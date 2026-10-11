@@ -1,5 +1,8 @@
-//! Reading decoded API answers the way PHP reads arrays: `$a['k'] ?? ...`,
-//! `(string)`, `(float)`, `(int)`, `empty()`.
+//! Reading values out of decoded API answers: lookups by key, and
+//! conversions to strings, numbers and booleans.
+//!
+//! PHP: the way PHP reads arrays: `$a['k'] ?? ...`, `(string)`, `(float)`,
+//! `(int)`, `empty()`.
 
 use php_std::format::{Arg, floatval, str_to_int};
 use php_std::value as pv;

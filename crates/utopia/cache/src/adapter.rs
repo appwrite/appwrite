@@ -12,7 +12,9 @@ use php_std::types::Value;
 use crate::Result;
 use crate::telemetry::Telemetry;
 
-/// Fields of a hash and their values, in order (`loadMany`/`saveMany`).
+/// Fields of a hash and their values, in order.
+///
+/// PHP: `loadMany`, `saveMany`.
 pub type Fields = IndexMap<String, Value>;
 
 /// A cache backend.
@@ -53,8 +55,9 @@ pub trait Adapter: Send + Sync {
     /// The adapter's name (for metrics), of the shard serving `key` when given.
     fn name(&self, key: Option<&str>) -> &str;
 
-    /// Whether [`Adapter::load_many`] and [`Adapter::save_many`] are supported
-    /// (`Feature\Batchable`).
+    /// Whether [`Adapter::load_many`] and [`Adapter::save_many`] are supported.
+    ///
+    /// PHP: `Feature\Batchable`.
     fn batchable(&self) -> bool {
         false
     }
@@ -74,7 +77,9 @@ pub trait Adapter: Send + Sync {
     }
 
     /// Whether [`Adapter::generation`] and [`Adapter::save_with_lease`] guard
-    /// against stale writes (`Feature\Leasable`).
+    /// against stale writes.
+    ///
+    /// PHP: `Feature\Leasable`.
     fn leasable(&self) -> bool {
         false
     }
@@ -99,8 +104,10 @@ pub trait Adapter: Send + Sync {
         self.save(key, data, hash, 0)
     }
 
-    /// Hands the adapter a telemetry backend for its own metrics
-    /// (`Feature\Telemetry`). Ignored by adapters without metrics.
+    /// Hands the adapter a telemetry backend for its own metrics. Ignored by
+    /// adapters without metrics.
+    ///
+    /// PHP: `Feature\Telemetry`.
     fn set_telemetry(&self, telemetry: Arc<dyn Telemetry>) {
         let _ = telemetry;
     }
@@ -113,35 +120,35 @@ pub type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 /// adapters of different types can share a `Vec<Arc<dyn DynAdapter>>` (and
 /// `dyn DynAdapter` is itself an [`Adapter`]).
 pub trait DynAdapter: Send + Sync {
-    /// [`Adapter::load`].
+    /// Object-safe [`Adapter::load`].
     fn dyn_load<'a>(&'a self, key: &'a str, ttl: i64, hash: &'a str) -> BoxFuture<'a, Result<Option<Value>>>;
-    /// [`Adapter::save`].
+    /// Object-safe [`Adapter::save`].
     fn dyn_save<'a>(&'a self, key: &'a str, data: &'a Value, hash: &'a str, ttl: i64) -> BoxFuture<'a, Result<bool>>;
-    /// [`Adapter::touch`].
+    /// Object-safe [`Adapter::touch`].
     fn dyn_touch<'a>(&'a self, key: &'a str, hash: &'a str) -> BoxFuture<'a, Result<bool>>;
-    /// [`Adapter::list`].
+    /// Object-safe [`Adapter::list`].
     fn dyn_list<'a>(&'a self, key: &'a str) -> BoxFuture<'a, Result<Vec<String>>>;
-    /// [`Adapter::purge`].
+    /// Object-safe [`Adapter::purge`].
     fn dyn_purge<'a>(&'a self, key: &'a str, hash: &'a str) -> BoxFuture<'a, Result<bool>>;
-    /// [`Adapter::flush`].
+    /// Object-safe [`Adapter::flush`].
     fn dyn_flush(&self) -> BoxFuture<'_, Result<bool>>;
-    /// [`Adapter::ping`].
+    /// Object-safe [`Adapter::ping`].
     fn dyn_ping(&self) -> BoxFuture<'_, Result<bool>>;
-    /// [`Adapter::size`].
+    /// Object-safe [`Adapter::size`].
     fn dyn_size(&self) -> BoxFuture<'_, Result<i64>>;
-    /// [`Adapter::name`].
+    /// Object-safe [`Adapter::name`].
     fn dyn_name(&self, key: Option<&str>) -> &str;
-    /// [`Adapter::batchable`].
+    /// Object-safe [`Adapter::batchable`].
     fn dyn_batchable(&self) -> bool;
-    /// [`Adapter::load_many`].
+    /// Object-safe [`Adapter::load_many`].
     fn dyn_load_many<'a>(&'a self, key: &'a str, fields: &'a [&'a str], ttl: i64) -> BoxFuture<'a, Result<Fields>>;
-    /// [`Adapter::save_many`].
+    /// Object-safe [`Adapter::save_many`].
     fn dyn_save_many<'a>(&'a self, key: &'a str, data: &'a Fields, ttl: i64) -> BoxFuture<'a, Result<bool>>;
-    /// [`Adapter::leasable`].
+    /// Object-safe [`Adapter::leasable`].
     fn dyn_leasable(&self) -> bool;
-    /// [`Adapter::generation`].
+    /// Object-safe [`Adapter::generation`].
     fn dyn_generation<'a>(&'a self, key: &'a str) -> BoxFuture<'a, Result<String>>;
-    /// [`Adapter::save_with_lease`].
+    /// Object-safe [`Adapter::save_with_lease`].
     fn dyn_save_with_lease<'a>(
         &'a self,
         key: &'a str,
@@ -149,7 +156,7 @@ pub trait DynAdapter: Send + Sync {
         hash: &'a str,
         generation: &'a str,
     ) -> BoxFuture<'a, Result<bool>>;
-    /// [`Adapter::set_telemetry`].
+    /// Object-safe [`Adapter::set_telemetry`].
     fn dyn_set_telemetry(&self, telemetry: Arc<dyn Telemetry>);
 }
 
@@ -324,9 +331,10 @@ macro_rules! forward {
 
 forward!(Arc, Box);
 
-/// Retries of a networked adapter (`Feature\Retryable`): how many times a
-/// command that failed on the connection is retried, and the pause between
-/// attempts.
+/// Retries of a networked adapter: how many times a command that failed on the
+/// connection is retried, and the pause between attempts.
+///
+/// PHP: `Feature\Retryable`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Retry {
     max_retries: u32,
@@ -334,33 +342,46 @@ pub struct Retry {
 }
 
 impl Default for Retry {
+    /// No retries, one second between attempts.
     fn default() -> Self {
         Retry { max_retries: 0, delay_ms: 1000 }
     }
 }
 
 impl Retry {
-    /// Fewest retries (`Retryable::MIN_RETRIES`).
+    /// The fewest retries allowed.
+    ///
+    /// PHP: `Retryable::MIN_RETRIES`.
     pub const MIN_RETRIES: i64 = 0;
-    /// Most retries (`Retryable::MAX_RETRIES`).
+    /// The most retries allowed.
+    ///
+    /// PHP: `Retryable::MAX_RETRIES`.
     pub const MAX_RETRIES: i64 = 10;
 
-    /// Retries, clamped to `0..=10` (`setMaxRetries`).
+    /// The same settings with `retries` retries, clamped to `0..=10`.
+    ///
+    /// PHP: `setMaxRetries`.
     pub fn with_max_retries(self, retries: i64) -> Self {
         Retry { max_retries: retries.clamp(Self::MIN_RETRIES, Self::MAX_RETRIES) as u32, ..self }
     }
 
-    /// Milliseconds between attempts (`setRetryDelay`).
+    /// The same settings with `delay_ms` milliseconds between attempts.
+    ///
+    /// PHP: `setRetryDelay`.
     pub fn with_delay_ms(self, delay_ms: i64) -> Self {
         Retry { delay_ms, ..self }
     }
 
-    /// `getMaxRetries()`.
+    /// How many times a failed command is retried.
+    ///
+    /// PHP: `getMaxRetries()`.
     pub fn max_retries(&self) -> u32 {
         self.max_retries
     }
 
-    /// `getRetryDelay()`, in milliseconds.
+    /// The pause between attempts, in milliseconds.
+    ///
+    /// PHP: `getRetryDelay()`.
     pub fn delay_ms(&self) -> i64 {
         self.delay_ms
     }
@@ -374,12 +395,17 @@ impl Retry {
     }
 }
 
-/// The current unix time in seconds (`time()`).
+/// The current unix time in seconds.
+///
+/// PHP: `time()`.
 pub(crate) fn now() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0)
 }
 
-/// `$hash === '' || $hash === '0'`: the hash defaults to the key.
+/// The hash field an entry is stored under: `hash`, or the key when `hash`
+/// is `""` or `"0"`.
+///
+/// PHP: `$hash === '' || $hash === '0'`.
 #[cfg_attr(not(feature = "redis"), allow(dead_code))]
 pub(crate) fn field<'a>(key: &'a str, hash: &'a str) -> &'a str {
     if hash.is_empty() || hash == "0" { key } else { hash }

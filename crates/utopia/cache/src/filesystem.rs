@@ -58,7 +58,9 @@ impl Filesystem {
         &self.root
     }
 
-    /// The file holding `key` (`getPath`): the root, `/`, then the key.
+    /// The file holding `key`: the root, `/`, then the key.
+    ///
+    /// PHP: `getPath`.
     pub fn path(&self, key: &str) -> PathBuf {
         let mut path = self.root.as_os_str().as_bytes().to_vec();
         path.push(b'/');
@@ -66,8 +68,9 @@ impl Filesystem {
         PathBuf::from(std::ffi::OsStr::from_bytes(&path))
     }
 
-    /// The file of a fresh entry, opened for reading: the streaming load
-    /// (`new Filesystem($path, streaming: true)`).
+    /// The file of a fresh entry, opened for reading: the streaming load.
+    ///
+    /// PHP: `new Filesystem($path, streaming: true)`.
     pub async fn open(&self, key: &str, ttl: i64) -> Result<Option<tokio::fs::File>> {
         let file = self.path(key);
         if !fresh_file(&file, ttl).await {
@@ -205,7 +208,9 @@ impl Adapter for Filesystem {
     }
 }
 
-/// `glob($dir . '*')`: entries not starting with a dot, sorted by name.
+/// Entries not starting with a dot, sorted by name.
+///
+/// PHP: `glob($dir . '*')`.
 fn glob(dir: &Path) -> Vec<PathBuf> {
     let Ok(entries) = std::fs::read_dir(dir) else { return Vec::new() };
     let mut paths: Vec<PathBuf> =
@@ -225,9 +230,11 @@ fn directory_size(dir: &Path) -> i64 {
         .sum()
 }
 
-/// Deletes `path` and everything under it (`deleteDirectory`). Fails when
-/// `path` is not a directory, or when it or a subdirectory is empty (where
-/// `glob()` finds nothing).
+/// Deletes `path` and everything under it. Fails when `path` is not a
+/// directory, or when it or a subdirectory is empty (where `glob()` finds
+/// nothing).
+///
+/// PHP: `deleteDirectory`.
 fn delete_directory(path: &Path) -> Result<bool> {
     if !path.is_dir() {
         return Err(Error::Exception(format!("{} must be a directory", path.display())));

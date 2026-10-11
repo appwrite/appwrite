@@ -63,8 +63,10 @@ impl Codec for Json {
     }
 }
 
-/// `preg_match('/\{\s*\}/', $text) === 0`: no empty object (`{`, blanks,
-/// `}`) anywhere in the text, so the plain array decode keeps every value.
+/// No empty object (`{`, blanks, `}`) anywhere in the text, so the plain array
+/// decode keeps every value.
+///
+/// PHP: `preg_match('/\{\s*\}/', $text) === 0`.
 fn has_empty_object(text: &[u8]) -> bool {
     !matches!(php_std::pcre::preg_match_bare(br"/\{\s*\}/", text).map(|p| p.value), Ok(php_std::pcre::Value::Int(0)))
 }

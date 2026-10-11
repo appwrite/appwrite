@@ -7,12 +7,15 @@
 //! [`Pool`] borrows one per operation, [`CircuitBreaker`] falls back while a
 //! backend fails. Every load takes a TTL: an entry older than it is a miss.
 //!
-//! Values are PHP values ([`php_std::types::Value`]): the Redis-protocol and
-//! Hazelcast adapters store them in an [`Envelope`] encoded with a [`Codec`]
-//! ([`Json`] by default, or [`Igbinary`]), byte for byte what the PHP
-//! library writes, so both runtimes read each other's entries. Leases
-//! ([`lease`]) keep a stale reader from re-caching data a concurrent writer
-//! just purged.
+//! Values are [`php_std::types::Value`]s: the Redis-protocol and Hazelcast
+//! adapters store them in an [`Envelope`] encoded with a [`Codec`] ([`Json`]
+//! by default, or [`Igbinary`]). Leases ([`lease`]) keep a stale reader from
+//! re-caching data a concurrent writer just purged.
+//!
+//! A load returns `None` on a miss; a save returns whether it stored.
+//!
+//! PHP: values are PHP values, encoded byte for byte as the PHP library
+//! writes them, so both runtimes read each other's entries.
 //!
 //! | PHP | Rust |
 //! |---|---|
@@ -38,6 +41,8 @@
 //!
 //! PHP's `load` returns `false` on a miss; Rust returns `None`. `save`
 //! returns the data or `false`; Rust returns whether it stored.
+
+#![warn(missing_docs)]
 
 /// The getting started guide (`guide.md`), compiled and run with the doctests.
 #[cfg(doctest)]

@@ -1,5 +1,5 @@
-//! [`Cache`]: registrar answers kept per domain (prices, availability), on
-//! any [`Store`].
+//! A cache of registrar answers per domain (prices, availability), on any
+//! key-value [`Store`].
 
 use std::collections::HashMap;
 use std::future::Future;
@@ -27,7 +27,10 @@ pub trait Store: Send + Sync {
     fn purge<'a>(&'a self, key: &'a str) -> BoxFuture<'a, bool>;
 }
 
-/// PHP `empty()` of a cached value: `false`, `0`, `0.0`, `""`, `"0"`, `[]`, `null`.
+/// Whether a value counts as empty: `false`, `0`, `0.0`, `""`, `"0"`, `[]`,
+/// `null`.
+///
+/// PHP: `empty()` of a cached value.
 fn empty(data: &Value) -> bool {
     match data {
         Value::Null => true,
@@ -39,9 +42,10 @@ fn empty(data: &Value) -> bool {
     }
 }
 
-/// Entries kept in this process (`Utopia\Cache\Adapter\Memory`), each with
-/// the second it was saved. Empty values, and the keys `""` and `"0"`, are
-/// not stored.
+/// A store that keeps entries in this process, each with the second it was
+/// saved. Empty values, and the keys `""` and `"0"`, are not stored.
+///
+/// PHP: `Utopia\Cache\Adapter\Memory`.
 #[derive(Debug, Default)]
 pub struct MemoryStore {
     entries: Mutex<HashMap<String, (i64, Value)>>,
@@ -88,8 +92,10 @@ impl Store for MemoryStore {
     }
 }
 
-/// A store that keeps nothing (`Utopia\Cache\Adapter\None`): every load
-/// misses, every save is refused, every purge succeeds.
+/// A store that keeps nothing: every load misses, every save is refused, every
+/// purge succeeds.
+///
+/// PHP: `Utopia\Cache\Adapter\None`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct NoStore;
 
@@ -141,6 +147,7 @@ pub struct Cache {
 }
 
 impl std::fmt::Debug for Cache {
+    /// Writes `Cache`; the store is not shown.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("Cache")
     }
@@ -162,17 +169,23 @@ impl Cache {
         String::from_utf8(php_std::string::strtolower(key.as_bytes()).into_owned()).unwrap_or(key)
     }
 
-    /// `load()`: what was saved for the domain less than `ttl` seconds ago.
+    /// What was saved for the domain less than `ttl` seconds ago.
+    ///
+    /// PHP: `load()`.
     pub async fn load(&self, domain: &str, ttl: i64) -> Option<Value> {
         self.store.load(&Self::key(domain), ttl).await
     }
 
-    /// `save()`: keeps `data` for the domain; returns whether it was stored.
+    /// Keeps `data` for the domain; returns whether it was stored.
+    ///
+    /// PHP: `save()`.
     pub async fn save(&self, domain: &str, data: &Value) -> bool {
         self.store.save(&Self::key(domain), data).await
     }
 
-    /// `purge()`: forgets the domain.
+    /// Forgets the domain.
+    ///
+    /// PHP: `purge()`.
     pub async fn purge(&self, domain: &str) -> bool {
         self.store.purge(&Self::key(domain)).await
     }

@@ -11,8 +11,9 @@ use crate::adapter::{Adapter, Fields, now};
 use crate::telemetry::{Counter, Telemetry};
 
 /// Decides whether calls reach a dependency, from how recent calls went.
-/// Implement it to share a breaker's state across processes (the role of
-/// `Utopia\CircuitBreaker\CircuitBreaker`).
+/// Implement it to share a breaker's state across processes.
+///
+/// PHP: `Utopia\CircuitBreaker\CircuitBreaker`.
 pub trait Breaker: Send + Sync {
     /// What an admitted call carries until it completes.
     type Ticket: Send;
@@ -53,7 +54,9 @@ impl State {
     }
 }
 
-/// Settings of a [`Circuit`], with the defaults of `utopia-php/circuit-breaker`.
+/// Settings of a [`Circuit`].
+///
+/// PHP: the defaults are those of `utopia-php/circuit-breaker`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CircuitOptions {
     /// Seconds the circuit stays open before probing.
@@ -73,6 +76,9 @@ pub struct CircuitOptions {
 }
 
 impl Default for CircuitOptions {
+    /// Open for 30 s, closed again after 2 successful probes, judged over
+    /// 10 s once 20 calls were made, opening at a 50% failure rate, one probe
+    /// at a time, named `default`.
     fn default() -> Self {
         CircuitOptions {
             timeout: 30,

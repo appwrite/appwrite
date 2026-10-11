@@ -1,4 +1,4 @@
-//! [`OpenSrs`]: the OpenSRS XML API (XCP envelopes over HTTPS).
+//! The OpenSRS registrar, over its XML API (XCP envelopes over HTTPS).
 
 use std::sync::Arc;
 
@@ -28,7 +28,9 @@ impl Item {
         Item::Array(items.into_iter().enumerate().map(|(i, s)| (i.to_string(), Item::Str(s.into()))).collect())
     }
 
-    /// `array_keys($a) === range(0, count($a) - 1)`.
+    /// Whether the entries are a list: keys `0..n`, in order.
+    ///
+    /// PHP: `array_keys($a) === range(0, count($a) - 1)`.
     fn is_list(entries: &[(String, Item)]) -> bool {
         !entries.is_empty() && entries.iter().enumerate().all(|(i, (k, _))| *k == i.to_string())
     }
@@ -50,7 +52,10 @@ fn s(value: impl Into<String>) -> Item {
     Item::Str(value.into())
 }
 
-/// `createEnvelopItem()`: a scalar as `<item key='k'>v</item>`, an array as a `dt_array`.
+/// One XCP item: a scalar as `<item key='k'>v</item>`, an array as a
+/// `dt_array`.
+///
+/// PHP: `createEnvelopItem()`.
 fn envelop_item(key: &str, value: &Item) -> String {
     match value {
         Item::Str(v) => format!("<item key='{key}'>{v}</item>"),
@@ -100,7 +105,9 @@ fn wrap_array(key: &str, parts: impl IntoIterator<Item = String>) -> String {
     out.join("\n")
 }
 
-/// `validateContact()` + `createContact()`.
+/// A contact as XCP items, after checking its required fields.
+///
+/// PHP: `validateContact()` + `createContact()`.
 fn create_contact(kind: &str, contact: &[(String, Item)]) -> String {
     const REQUIRED: [(&str, &str); 11] = [
         ("firstname", "first_name"),
@@ -190,8 +197,9 @@ fn build_envelope(message: &Message) -> String {
     out.join("\n")
 }
 
-/// The OpenSRS registrar (`Registrar\Adapter\OpenSRS`): XCP messages
-/// signed with the reseller API key.
+/// The OpenSRS registrar: XCP messages signed with the reseller API key.
+///
+/// PHP: `Registrar\Adapter\OpenSRS`.
 ///
 /// ```
 /// use std::sync::Arc;
@@ -248,6 +256,7 @@ pub struct OpenSrs {
 }
 
 impl std::fmt::Debug for OpenSrs {
+    /// Writes the username and endpoint, leaving the keys out.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("OpenSrs").field("username", &self.username).field("endpoint", &self.endpoint).finish()
     }
@@ -326,7 +335,10 @@ impl OpenSrs {
         Ok(response.body)
     }
 
-    /// `sanitizeResponse()`: the document, or the error it reports (codes above 299).
+    /// Parses an answer: the document, or the error it reports (codes above
+    /// 299).
+    ///
+    /// PHP: `sanitizeResponse()`.
     fn sanitize(body: &[u8]) -> Result<Document, Error> {
         let doc =
             Document::parse(body).ok_or_else(|| Error::exception("OpenSRS returned an invalid XML response", 0))?;
@@ -357,7 +369,9 @@ impl OpenSrs {
         Ok(Item::Array(contacts.iter().map(|(key, c)| (key.as_string().into_owned(), fields(c))).collect()))
     }
 
-    /// `register()`: an `SW_REGISTER` order; returns its id.
+    /// Places an `SW_REGISTER` order; returns its id.
+    ///
+    /// PHP: `register()`.
     async fn register(&self, config: &Config, order: Registration<'_>) -> Result<String, Error> {
         let mut attributes = vec![
             attr("domain", s(order.domain)),

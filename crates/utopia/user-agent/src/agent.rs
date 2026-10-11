@@ -1,4 +1,6 @@
-//! `Utopia\UserAgent\UserAgent`.
+//! The entry point: a user-agent string and what detection finds in it.
+//!
+//! PHP: `Utopia\UserAgent\UserAgent`.
 
 use std::cell::OnceCell;
 
@@ -20,8 +22,11 @@ pub struct UserAgent<'a> {
 }
 
 impl<'a> UserAgent<'a> {
-    /// `UserAgent::parse()`: nothing is detected yet. Accepts any bytes, as
-    /// a header can carry them.
+    /// Wraps a user-agent string without detecting anything yet.
+    ///
+    /// Accepts any bytes, as a header can carry them.
+    ///
+    /// PHP: `UserAgent::parse()`.
     pub fn parse(value: &'a (impl AsRef<[u8]> + ?Sized)) -> Self {
         Self {
             value: value.as_ref(),
@@ -32,32 +37,46 @@ impl<'a> UserAgent<'a> {
         }
     }
 
-    /// `raw()`: the user-agent string as given.
+    /// The user-agent string as given.
+    ///
+    /// PHP: `raw()`.
     pub fn raw(&self) -> &'a [u8] {
         self.value
     }
 
-    /// `operatingSystem()`.
+    /// The operating system, detected on first call.
+    ///
+    /// PHP: `operatingSystem()`.
     pub fn operating_system(&self) -> &OperatingSystem<'a> {
         self.operating_system.get_or_init(|| detection::operating_system(self.value))
     }
 
-    /// `client()`.
+    /// The client (browser, HTTP library or native app), detected on first
+    /// call.
+    ///
+    /// PHP: `client()`.
     pub fn client(&self) -> &Client<'a> {
         self.client.get_or_init(|| detection::client(self.value))
     }
 
-    /// `device()`.
+    /// The device, detected on first call.
+    ///
+    /// PHP: `device()`.
     pub fn device(&self) -> &Device<'a> {
         self.device.get_or_init(|| detection::device(self.value))
     }
 
-    /// `bot()`: the bot, or `None` for a human client.
+    /// The bot behind the string, or `None` for a human client. Detected on
+    /// first call.
+    ///
+    /// PHP: `bot()`.
     pub fn bot(&self) -> Option<&Bot<'a>> {
         self.bot.get_or_init(|| detection::bot(self.value)).as_ref()
     }
 
-    /// `isBot()`.
+    /// Whether the string belongs to a bot ([`UserAgent::bot`] is `Some`).
+    ///
+    /// PHP: `isBot()`.
     pub fn is_bot(&self) -> bool {
         self.bot().is_some()
     }
