@@ -431,10 +431,12 @@ dependencies = [
  "tokio",
  "utopia-abuse",
  "utopia-auth",
+ "utopia-balancer",
  "utopia-cache",
  "utopia-circuit-breaker",
  "utopia-config",
  "utopia-database",
+ "utopia-detector",
  "utopia-di",
  "utopia-domains",
  "utopia-dsn",
@@ -2645,6 +2647,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "utopia-balancer"
+version = "0.1.0"
+dependencies = [
+ "php-std",
+ "thiserror",
+ "utopia-telemetry",
+]
+
+[[package]]
 name = "utopia-cache"
 version = "0.1.0"
 dependencies = [
@@ -2703,6 +2714,14 @@ dependencies = [
  "tracing",
  "utopia-cache",
  "utopia-validators",
+]
+
+[[package]]
+name = "utopia-detector"
+version = "0.1.0"
+dependencies = [
+ "php-std",
+ "thiserror",
 ]
 
 [[package]]
