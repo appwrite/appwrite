@@ -5,6 +5,7 @@ import { isTopLevel, moduleSplat, type Navigation } from '@/lib/docs'
 import { StatusBadge, StatusDot } from './Status'
 import { MigrationOnly } from './Migration'
 import { useMigration } from '@/lib/prefs'
+import { SERVICE_STATUS, loadMigration, type Migration, type ServiceStatus } from '@/lib/appwrite'
 
 const root = getRouteApi('__root__')
 
@@ -174,6 +175,40 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
   )
 }
 
+const SERVICE_DOT: Record<ServiceStatus, string> = { rust: 'bg-ok', partial: 'bg-started', php: 'bg-muted-foreground/40' }
+
+/** The Appwrite migration: its overview and a page per service, with each service's status. */
+function AppwriteGroup() {
+  const [migration, setMigration] = useState<Migration | null>(null)
+  const path = useRouterState({ select: (s) => s.location.pathname })
+  useEffect(() => {
+    loadMigration().then(setMigration)
+  }, [])
+  const services = [...(migration?.services ?? [])].sort((a, b) => a.title.localeCompare(b.title))
+  return (
+    <Group
+      label={
+        <span className="flex items-center gap-1.5">
+          <ArrowLeftRight className="size-3.5 flex-none text-migration-ink" />
+          Appwrite migration
+        </span>
+      }
+      open={path.startsWith('/appwrite')}
+      badge={services.length ? <span className="text-[11px] text-muted-foreground tabular-nums">{services.length}</span> : undefined}
+    >
+      <Link to="/appwrite" activeOptions={{ exact: true }} className={row}>
+        Overview
+      </Link>
+      {services.map((x) => (
+        <Link key={x.id} to="/appwrite/$service" params={{ service: x.id }} className={row} title={SERVICE_STATUS[x.status].label}>
+          <span className={`size-1.5 flex-none rounded-full ${SERVICE_DOT[x.status]}`} />
+          <span className="truncate">{x.title}</span>
+        </Link>
+      ))}
+    </Group>
+  )
+}
+
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const index = root.useLoaderData()
   const libMatch = useMatch({ from: '/$lib', shouldThrow: false })
@@ -205,13 +240,10 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </Link>
         <FoldControls fold={fold} onFold={setFold} />
       </div>
-      <MigrationOnly>
-        <Link to="/appwrite" className={`${row} -mt-2`}>
-          <ArrowLeftRight className="size-3.5 flex-none text-migration-ink" />
-          <span className="truncate">Appwrite migration</span>
-        </Link>
-      </MigrationOnly>
       <Fold.Provider value={fold}>
+      <MigrationOnly>
+        <AppwriteGroup />
+      </MigrationOnly>
       {index.categories.map((c) => {
         const libs = c.libraries
           .map((s) => bySlug.get(s))

@@ -1,5 +1,5 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
-import { Search } from 'lucide-react'
+import { ChevronRight, Search } from 'lucide-react'
 import { useState } from 'react'
 import { Bar, BenchSteps, BenchEnvironment, HookRow, MigrationGate, ServiceBadge, ServiceSpeed, SourceLink, Stat } from '@/components/Appwrite'
 import { MigrationCard } from '@/components/Migration'
@@ -107,6 +107,7 @@ function Overview() {
                   <th className="px-3 py-2 text-right font-semibold">SDK</th>
                   <th className="px-3 py-2 text-right font-semibold">E2E test methods</th>
                   <th className="px-3 py-2 font-semibold">Rust vs PHP</th>
+                  <th className="px-3 py-2" />
                 </tr>
               </thead>
               <tbody>
@@ -115,7 +116,7 @@ function Overview() {
                   .map((x) => (
                     <tr key={x.id} className="border-b border-border align-top last:border-b-0 hover:bg-accent/40">
                       <td className="px-3 py-2.5">
-                        <Link to="/appwrite/$service" params={{ service: x.id }} className="font-medium hover:underline">
+                        <Link to="/appwrite/$service" params={{ service: x.id }} className="font-medium underline decoration-border underline-offset-2 hover:decoration-foreground">
                           {x.title}
                         </Link>
                         <div className="font-mono text-[11px] text-muted-foreground">{x.sources.map((p) => p.replace('src/Appwrite/Platform/Modules/', 'Modules/').replace('app/controllers/', 'controllers/')).join(' · ')}</div>
@@ -154,6 +155,16 @@ function Overview() {
                       </td>
                       <td className="px-3 py-2.5">
                         <ServiceSpeed bench={m.benchmarks.find((b) => b.service === x.id)} />
+                      </td>
+                      <td className="px-3 py-2.5 text-right">
+                        <Link
+                          to="/appwrite/$service"
+                          params={{ service: x.id }}
+                          className="inline-flex items-center gap-0.5 text-[12px] whitespace-nowrap text-muted-foreground hover:text-foreground"
+                        >
+                          Endpoints
+                          <ChevronRight className="size-3.5" />
+                        </Link>
                       </td>
                     </tr>
                   ))}
