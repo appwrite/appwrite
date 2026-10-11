@@ -1,5 +1,6 @@
-//! Canonical forms of addresses per mail provider
-//! (`Utopia\Emails\Canonicals\Provider` and its `Providers\*`).
+//! Canonical forms of addresses per mail provider.
+//!
+//! PHP: `Utopia\Emails\Canonicals\Provider`, `Providers\*`.
 
 use std::fmt;
 
@@ -7,51 +8,69 @@ use php_std::string;
 
 use crate::Error;
 
-/// The canonical form of an address (`['local' => ..., 'domain' => ...]`).
+/// The canonical form of an address: its local part and domain with a
+/// provider's aliases removed.
+///
+/// PHP: the array `['local' => ..., 'domain' => ...]`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Canonical {
+    /// The part before the `@`.
     pub local: String,
+    /// The part after the `@`.
     pub domain: String,
 }
 
 impl fmt::Display for Canonical {
+    /// Writes the address, `local@domain`.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}@{}", self.local, self.domain)
     }
 }
 
-/// A mail provider's aliasing rules (`Utopia\Emails\Canonicals\Provider`).
-/// Implement it to add a provider; [`crate::Email::canonical_with`] takes
-/// any set of them.
+/// A mail provider's aliasing rules. Implement it to add a provider;
+/// [`crate::Email::canonical_with`] takes any set of them.
+///
+/// PHP: `Utopia\Emails\Canonicals\Provider`.
 pub trait Provider: Send + Sync {
-    /// `supports($domain)`: whether the domain belongs to this provider.
+    /// Whether the domain belongs to this provider.
+    ///
+    /// PHP: `supports($domain)`.
     fn supports(&self, domain: &str) -> bool {
         self.supported_domains().contains(&domain)
     }
 
-    /// `getCanonical($local, $domain)`: the address with the provider's
-    /// aliases removed.
+    /// The address with the provider's aliases removed.
+    ///
+    /// PHP: `getCanonical($local, $domain)`.
     fn canonical(&self, local: &str, domain: &str) -> Result<Canonical, Error>;
 
-    /// `getCanonicalDomain()`.
+    /// The domain canonical addresses of this provider use (`gmail.com`).
+    ///
+    /// PHP: `getCanonicalDomain()`.
     fn canonical_domain(&self) -> &str;
 
-    /// `getSupportedDomains()`.
+    /// The domains that belong to this provider.
+    ///
+    /// PHP: `getSupportedDomains()`.
     fn supported_domains(&self) -> &[&str];
 }
 
-/// The providers [`crate::Email`] consults, in order. `Yandex` is not
-/// among them, as in PHP.
+/// The providers [`crate::Email`] consults, in order.
+///
+/// PHP: the same list, in the same order, as PHP consults.
 pub static PROVIDERS: &[&dyn Provider] = &[&Gmail, &Outlook, &Yahoo, &Icloud, &Protonmail, &Fastmail, &Walla];
 
-/// `toLowerCase()`: PHP `strtolower` (ASCII only).
+/// Lower-cases ASCII letters only.
+///
+/// PHP: `toLowerCase()`, PHP `strtolower`.
 fn lower(local: &str) -> String {
     let lowered = string::strtolower(local.as_bytes());
     String::from_utf8(lowered.into_owned()).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
 }
 
-/// `removePlusAddressing()`: drops everything from the first `+`, unless
-/// the local part starts with it.
+/// Drops everything from the first `+`, unless the local part starts with it.
+///
+/// PHP: `removePlusAddressing()`.
 fn without_plus(mut local: String) -> String {
     if let Some(p) = local.find('+')
         && p > 0
@@ -61,12 +80,16 @@ fn without_plus(mut local: String) -> String {
     local
 }
 
-/// `removeDots()`.
+/// Drops every dot.
+///
+/// PHP: `removeDots()`.
 fn without_dots(local: String) -> String {
     if local.contains('.') { local.replace('.', "") } else { local }
 }
 
-/// PHP `empty()` of a string.
+/// Whether a string is empty or `"0"`.
+///
+/// PHP: `empty()` of a string.
 fn empty(s: &str) -> bool {
     s.is_empty() || s == "0"
 }
@@ -82,7 +105,9 @@ fn canonical(local: String, domain: &str) -> Result<Canonical, Error> {
     Ok(Canonical { local, domain: domain.to_owned() })
 }
 
-/// `Providers\Gmail`: drops `+tags` and all dots; `googlemail.com` is `gmail.com`.
+/// Gmail: drops `+tags` and all dots; `googlemail.com` is `gmail.com`.
+///
+/// PHP: `Providers\Gmail`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Gmail;
 
@@ -100,8 +125,10 @@ impl Provider for Gmail {
     }
 }
 
-/// `Providers\Outlook`: Outlook, Hotmail, Live, MSN and Passport; drops
-/// `+tags`, keeps dots.
+/// Outlook, Hotmail, Live, MSN and Passport: drops `+tags`, keeps dots, and
+/// uses `outlook.com`.
+///
+/// PHP: `Providers\Outlook`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Outlook;
 
@@ -203,8 +230,10 @@ impl Provider for Outlook {
     }
 }
 
-/// `Providers\Yahoo`: keeps the local part (a `-keyword` is a separate
-/// disposable address, not an alias).
+/// Yahoo, Ymail and Rocketmail: keeps the local part (a `-keyword` is a
+/// separate disposable address, not an alias) and uses `yahoo.com`.
+///
+/// PHP: `Providers\Yahoo`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Yahoo;
 
@@ -232,7 +261,10 @@ impl Provider for Yahoo {
     }
 }
 
-/// `Providers\Icloud`: iCloud, me.com, mac.com; drops `+tags`, keeps dots.
+/// iCloud, me.com and mac.com: drops `+tags`, keeps dots, and uses
+/// `icloud.com`.
+///
+/// PHP: `Providers\Icloud`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Icloud;
 
@@ -250,8 +282,10 @@ impl Provider for Icloud {
     }
 }
 
-/// `Providers\Protonmail`: drops `+tags`, keeps dots and the domain (each
-/// Proton domain is a separate address).
+/// Proton Mail: drops `+tags`, keeps dots and the domain (each Proton domain
+/// is a separate address).
+///
+/// PHP: `Providers\Protonmail`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Protonmail;
 
@@ -270,7 +304,9 @@ impl Provider for Protonmail {
     }
 }
 
-/// `Providers\Fastmail`: keeps the local part.
+/// Fastmail: keeps the local part and uses `fastmail.com`.
+///
+/// PHP: `Providers\Fastmail`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Fastmail;
 
@@ -288,7 +324,9 @@ impl Provider for Fastmail {
     }
 }
 
-/// `Providers\Yandex`: keeps the local part.
+/// Yandex: keeps the local part and uses `yandex.ru`. Not in [`PROVIDERS`].
+///
+/// PHP: `Providers\Yandex`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Yandex;
 
@@ -306,7 +344,9 @@ impl Provider for Yandex {
     }
 }
 
-/// `Providers\Walla`: keeps the local part; `walla.com` is `walla.co.il`.
+/// Walla: keeps the local part; `walla.com` is `walla.co.il`.
+///
+/// PHP: `Providers\Walla`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Walla;
 
@@ -324,7 +364,10 @@ impl Provider for Walla {
     }
 }
 
-/// `Providers\Generic`: any domain; only lower-cases the local part.
+/// The fallback for any domain: only lower-cases the local part. Its
+/// canonical domain is empty and it lists no domains.
+///
+/// PHP: `Providers\Generic`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Generic;
 

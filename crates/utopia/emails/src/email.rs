@@ -1,4 +1,6 @@
-//! `Utopia\Emails\Email`.
+//! A parsed email address and what can be asked of it.
+//!
+//! PHP: `Utopia\Emails\Email`.
 
 use std::borrow::Cow;
 
@@ -9,31 +11,39 @@ use utopia_domains::Domain;
 use crate::canonicals::{Generic, PROVIDERS, Provider};
 use crate::{Error, Lists};
 
-/// `Email::LOCAL_MAX_LENGTH`: characters allowed before the `@`.
+/// The most characters allowed before the `@`.
+///
+/// PHP: `Email::LOCAL_MAX_LENGTH`.
 pub const LOCAL_MAX_LENGTH: usize = 64;
 
-/// `Email::DOMAIN_MAX_LENGTH`: characters allowed after the `@`.
+/// The most characters allowed after the `@`.
+///
+/// PHP: `Email::DOMAIN_MAX_LENGTH`.
 pub const DOMAIN_MAX_LENGTH: usize = 253;
 
-/// What [`Email::formatted`] returns (`Email::FORMAT_*`).
+/// Which part of an address [`Email::formatted`] returns.
+///
+/// PHP: `Email::FORMAT_*`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Format {
-    /// `full`: the whole address.
+    /// The whole address (named `full`).
     #[default]
     Full,
-    /// `local`: the part before the `@`.
+    /// The part before the `@` (named `local`).
     Local,
-    /// `domain`: the part after the `@`.
+    /// The part after the `@` (named `domain`).
     Domain,
-    /// `provider`: the registrable domain.
+    /// The registrable domain (named `provider`).
     Provider,
-    /// `subdomain`: what comes before the registrable domain.
+    /// What comes before the registrable domain (named `subdomain`).
     Subdomain,
 }
 
 impl Format {
-    /// The format named `name`; any other name is [`Format::Full`], as in
-    /// PHP's `getFormatted()`.
+    /// The format named `name` (see [`Format::name`]); any other name is
+    /// [`Format::Full`].
+    ///
+    /// PHP: unknown names fall back to `full` as in `getFormatted()`.
     pub fn from_name(name: &str) -> Self {
         match name {
             "local" => Format::Local,
@@ -44,7 +54,10 @@ impl Format {
         }
     }
 
-    /// The PHP constant's value.
+    /// The format's name: `full`, `local`, `domain`, `provider` or
+    /// `subdomain`.
+    ///
+    /// PHP: the value of the `Email::FORMAT_*` constant.
     pub fn name(self) -> &'static str {
         match self {
             Format::Full => "full",
@@ -56,12 +69,16 @@ impl Format {
     }
 }
 
-/// PHP `empty()` of a string.
+/// Whether a string is empty or `"0"`.
+///
+/// PHP: `empty()` of a string.
 fn empty(s: &str) -> bool {
     s.is_empty() || s == "0"
 }
 
-/// `filter_var($value, FILTER_VALIDATE_EMAIL) !== false`.
+/// Whether the email filter accepts `value`.
+///
+/// PHP: `filter_var($value, FILTER_VALIDATE_EMAIL) !== false`.
 fn filter_email(value: &[u8]) -> bool {
     matches!(
         filter::filter_var(&filter::Value::Str(value.to_vec()), FILTER_VALIDATE_EMAIL, &Options::Flags(0)),
@@ -69,8 +86,10 @@ fn filter_email(value: &[u8]) -> bool {
     )
 }
 
-/// A parsed address: trimmed, lower-cased (`mb_strtolower`) and split at its
-/// single `@`.
+/// A parsed email address: trimmed, lower-cased and split at its single
+/// `@`.
+///
+/// PHP: lower-cased with `mb_strtolower`.
 #[derive(Debug, Clone)]
 pub struct Email {
     email: String,
@@ -80,7 +99,14 @@ pub struct Email {
 }
 
 impl Email {
-    /// `new Email($email)`.
+    /// Parses an address, which can be any bytes.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Parse`] for an empty address, one without exactly one `@`
+    /// and something on both sides of it, or one whose domain is a URL.
+    ///
+    /// PHP: `new Email($email)`.
     pub fn new(email: impl AsRef<[u8]>) -> Result<Self, Error> {
         let input = email.as_ref();
         let lowered = mb::mb_strtolower(string::trim(input, string::TRIM_CHARACTERS));
@@ -106,28 +132,39 @@ impl Email {
         Ok(Self { email, at, domain })
     }
 
-    /// `get()`: the whole address.
+    /// The whole address.
+    ///
+    /// PHP: `get()`.
     pub fn get(&self) -> &str {
         &self.email
     }
 
-    /// `getLocal()`: the part before the `@`.
+    /// The part before the `@`.
+    ///
+    /// PHP: `getLocal()`.
     pub fn local(&self) -> &str {
         &self.email[..self.at]
     }
 
-    /// `getDomain()`: the part after the `@`.
+    /// The part after the `@`.
+    ///
+    /// PHP: `getDomain()`.
     pub fn domain(&self) -> &str {
         &self.email[self.at + 1..]
     }
 
-    /// `isValid()`: PHP's `FILTER_VALIDATE_EMAIL` accepts the address.
+    /// Whether the address is a valid email address.
+    ///
+    /// PHP: `isValid()`; PHP's `FILTER_VALIDATE_EMAIL` accepts the address.
     pub fn is_valid(&self) -> bool {
         filter_email(self.email.as_bytes())
     }
 
-    /// `hasValidLocal()`: at most [`LOCAL_MAX_LENGTH`] characters of
-    /// `[a-zA-Z0-9._+-]`, no `..`, not starting or ending with a dot.
+    /// Whether the local part is valid: at most [`LOCAL_MAX_LENGTH`]
+    /// characters of `[a-zA-Z0-9._+-]`, no `..`, not starting or ending with
+    /// a dot.
+    ///
+    /// PHP: `hasValidLocal()`.
     pub fn has_valid_local(&self) -> bool {
         let local = self.local();
         if mb::mb_strlen(local.as_bytes()) > LOCAL_MAX_LENGTH {
@@ -141,9 +178,11 @@ impl Email {
         !(local.contains("..") || local.starts_with('.') || local.ends_with('.'))
     }
 
-    /// `hasValidDomain()`: at most [`DOMAIN_MAX_LENGTH`] characters, valid
-    /// after `test@` for `FILTER_VALIDATE_EMAIL`, and with a known public
-    /// suffix or a test TLD.
+    /// Whether the domain is valid: at most [`DOMAIN_MAX_LENGTH`] characters,
+    /// valid in an address after `test@`, and with a known public suffix or a
+    /// test TLD.
+    ///
+    /// PHP: `hasValidDomain()`.
     pub fn has_valid_domain(&self) -> bool {
         let domain = self.domain();
         if mb::mb_strlen(domain.as_bytes()) > DOMAIN_MAX_LENGTH {
@@ -158,39 +197,53 @@ impl Email {
         self.domain.is_known() || self.domain.is_test()
     }
 
-    /// `isDisposable()`: the domain is in the disposable list.
+    /// Whether the domain is on the disposable list.
+    ///
+    /// PHP: `isDisposable()`.
     pub fn is_disposable(&self) -> bool {
         Lists::global().disposable.contains(self.domain())
     }
 
-    /// `isFree()`: the domain is in the free list and not disposable.
+    /// Whether the domain is on the free list and not disposable.
+    ///
+    /// PHP: `isFree()`.
     pub fn is_free(&self) -> bool {
         Lists::global().free.contains(self.domain()) && !self.is_disposable()
     }
 
-    /// `isCorporate()`: neither free nor disposable.
+    /// Whether the domain is neither free nor disposable.
+    ///
+    /// PHP: `isCorporate()`.
     pub fn is_corporate(&self) -> bool {
         !self.is_free() && !self.is_disposable()
     }
 
-    /// `getProvider()`: the registrable domain, else the whole domain.
+    /// The registrable domain (`example.co.uk` for `mail.example.co.uk`), else
+    /// the whole domain.
+    ///
+    /// PHP: `getProvider()`.
     pub fn provider(&self) -> Cow<'_, str> {
         let registerable = self.domain.registerable();
         if empty(&registerable) { Cow::Borrowed(self.domain()) } else { Cow::Owned(registerable) }
     }
 
-    /// `getSubdomain()`: what comes before the registrable domain.
+    /// What comes before the registrable domain.
+    ///
+    /// PHP: `getSubdomain()`.
     pub fn subdomain(&self) -> String {
         self.domain.sub()
     }
 
-    /// `hasSubdomain()`: the subdomain is not empty (nor `"0"`).
+    /// Whether there is a subdomain (one that is not empty nor `"0"`).
+    ///
+    /// PHP: `hasSubdomain()`.
     pub fn has_subdomain(&self) -> bool {
         !empty(&self.domain.sub())
     }
 
-    /// `getCanonical()`: the address with the aliases of its provider
-    /// ([`PROVIDERS`]) removed.
+    /// The address with the aliases of its provider ([`PROVIDERS`]) removed.
+    ///
+    /// PHP: `getCanonical()`.
     pub fn canonical(&self) -> Result<String, Error> {
         self.canonical_with(PROVIDERS)
     }
@@ -203,13 +256,17 @@ impl Email {
         provider.canonical(self.local(), domain).map(|c| c.to_string())
     }
 
-    /// `isCanonicalSupported()`: one of [`PROVIDERS`] supports the domain.
+    /// Whether one of [`PROVIDERS`] supports the domain.
+    ///
+    /// PHP: `isCanonicalSupported()`.
     pub fn is_canonical_supported(&self) -> bool {
         PROVIDERS.iter().any(|p| p.supports(self.domain()))
     }
 
-    /// `getCanonicalDomain()`: the canonical domain of the provider of
-    /// [`PROVIDERS`] that supports the domain, if one does.
+    /// The canonical domain of the provider of [`PROVIDERS`] that supports the
+    /// domain, if one does.
+    ///
+    /// PHP: `getCanonicalDomain()`.
     pub fn canonical_domain(&self) -> Option<&'static str> {
         Self::canonical_domain_in(PROVIDERS, self.domain())
     }
@@ -223,7 +280,9 @@ impl Email {
         providers.iter().copied().find(|p| p.supports(domain)).map(|p| p.canonical_domain())
     }
 
-    /// `getFormatted($format)`.
+    /// One part of the address, chosen by `format`.
+    ///
+    /// PHP: `getFormatted($format)`.
     pub fn formatted(&self, format: Format) -> Cow<'_, str> {
         match format {
             Format::Full => Cow::Borrowed(self.get()),

@@ -1,16 +1,20 @@
-//! The PHP data files this crate reads: `<?php return <array literal>;`
-//! with single-quoted string keys and values (`\'` and `\\` escapes),
-//! nested short arrays and comments.
+//! A reader for the data file the Public Suffix List ships as.
+//!
+//! PHP: the file is PHP source, `<?php return <array literal>;`, with
+//! single-quoted string keys and values (`\'` and `\\` escapes), nested short
+//! arrays and comments.
 
-/// A value of the literal.
+/// A value of a data file: a string or an array.
 #[derive(Debug)]
 pub enum Literal {
+    /// A string.
     Str(String),
     /// Entries in order; list items have no key.
     Array(Vec<(Option<String>, Literal)>),
 }
 
 impl Literal {
+    /// The string, or `None` for an array.
     pub fn as_str(&self) -> Option<&str> {
         match self {
             Literal::Str(s) => Some(s),
@@ -18,7 +22,10 @@ impl Literal {
         }
     }
 
-    /// The value under `key` (the last one, as PHP keeps).
+    /// The value under `key` in an array; with a repeated key, the last
+    /// one.
+    ///
+    /// PHP: the last one wins, as PHP keeps it.
     pub fn get(&self, key: &str) -> Option<&Literal> {
         match self {
             Literal::Array(entries) => entries.iter().rev().find(|(k, _)| k.as_deref() == Some(key)).map(|(_, v)| v),
@@ -40,7 +47,7 @@ struct Parser<'s> {
     pos: usize,
 }
 
-/// Parses the file.
+/// Parses a data file into the value it returns.
 pub fn parse(source: &str) -> Result<Literal, String> {
     let body = source.trim_start().strip_prefix("<?php").ok_or("missing `<?php`")?;
     let mut p = Parser { s: body.as_bytes(), pos: 0 };

@@ -1,5 +1,7 @@
-//! The free and disposable domain lists (`data/free-domains.php`,
-//! `data/disposable-domains.php`).
+//! The free and disposable domain lists an address's domain is classified
+//! with.
+//!
+//! PHP: `data/free-domains.php` and `data/disposable-domains.php`.
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -10,8 +12,11 @@ use serde_json::Value;
 
 use crate::literal::{self, Literal};
 
-/// A list of domains, matched like PHP's `in_array($domain, $list)`: loose
-/// comparison, so numeric strings compare as numbers (`"1e3" == "1000"`).
+/// A set of domains.
+///
+/// Numeric strings compare as numbers, so `"1e3"` matches an entry `"1000"`.
+///
+/// PHP: matched like PHP's `in_array($domain, $list)`, a loose comparison.
 #[derive(Debug, Default)]
 pub struct DomainList {
     exact: HashSet<Box<str>>,
@@ -21,7 +26,9 @@ pub struct DomainList {
 }
 
 impl DomainList {
-    /// `in_array($domain, $list)`.
+    /// Whether `domain` is on the list.
+    ///
+    /// PHP: `in_array($domain, $list)`.
     pub fn contains(&self, domain: &str) -> bool {
         if self.exact.contains(domain) {
             return true;
@@ -33,16 +40,19 @@ impl DomainList {
         self.numeric.iter().any(|entry| value::loose_eq(&needle, &Value::String(entry.to_string())))
     }
 
+    /// The number of domains on the list.
     pub fn len(&self) -> usize {
         self.exact.len()
     }
 
+    /// Whether the list has no domains.
     pub fn is_empty(&self) -> bool {
         self.exact.is_empty()
     }
 }
 
 impl<S: Into<Box<str>>> FromIterator<S> for DomainList {
+    /// A list of the given domains.
     fn from_iter<I: IntoIterator<Item = S>>(iter: I) -> Self {
         let mut list = DomainList::default();
         for domain in iter {
@@ -56,22 +66,30 @@ impl<S: Into<Box<str>>> FromIterator<S> for DomainList {
     }
 }
 
-/// Both lists [`crate::Email`] classifies domains with.
+/// The free and disposable domain lists [`crate::Email`] classifies domains
+/// with.
 #[derive(Debug, Default)]
 pub struct Lists {
+    /// Domains of free mail services (`gmail.com`).
     pub free: DomainList,
+    /// Domains of disposable, throwaway mail services.
     pub disposable: DomainList,
 }
 
 static GLOBAL: OnceLock<Lists> = OnceLock::new();
 
 impl Lists {
-    /// The lists as PHP includes them: `data/` of the PHP package in this repository.
+    /// The directory the lists are read from by default.
+    ///
+    /// PHP: `data/` of the PHP package in this repository, where PHP includes
+    /// them from.
     pub fn default_dir() -> PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../packages/emails/data")
     }
 
-    /// Parses one data file: `<?php return ['domain', ...];`.
+    /// Parses one data file, a list of domains.
+    ///
+    /// PHP: the file is PHP source, `<?php return ['domain', ...];`.
     pub fn parse(source: &str) -> Result<DomainList, String> {
         match literal::parse(source)? {
             Literal::Array(entries) => {
@@ -81,7 +99,8 @@ impl Lists {
         }
     }
 
-    /// Reads `free-domains.php` and `disposable-domains.php` from `dir`.
+    /// Reads both lists from `dir`, from `free-domains.php` and
+    /// `disposable-domains.php`.
     pub fn load(dir: &Path) -> Result<Self, String> {
         let read = |name: &str| -> Result<DomainList, String> {
             let path = dir.join(name);

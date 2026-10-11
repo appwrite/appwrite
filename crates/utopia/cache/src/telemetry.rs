@@ -56,7 +56,9 @@ pub trait Telemetry: Send + Sync {
     fn gauge(&self, name: &str, unit: Option<&str>, description: Option<&str>) -> Arc<dyn Gauge>;
 }
 
-/// Records nothing (`Utopia\Telemetry\Adapter\None`).
+/// Records nothing.
+///
+/// PHP: `Utopia\Telemetry\Adapter\None`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct NoTelemetry;
 
@@ -108,9 +110,10 @@ pub struct Point {
     pub attributes: Vec<(String, String)>,
 }
 
-/// Keeps every data point, by instrument name
-/// (`Utopia\Telemetry\Adapter\Test`). An instrument appears on its first
-/// data point, not when it is created.
+/// Keeps every data point, by instrument name. An instrument appears on its
+/// first data point, not when it is created.
+///
+/// PHP: `Utopia\Telemetry\Adapter\Test`.
 #[derive(Clone, Default)]
 pub struct MemoryTelemetry {
     points: Store,

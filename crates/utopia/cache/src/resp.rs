@@ -29,7 +29,10 @@ impl Reply {
         }
     }
 
-    /// PHP's `(bool)` of the decoded reply (an error counts as `false`).
+    /// Whether the reply counts as true: not nil, not an error, not `0`, not
+    /// an empty string or `"0"`, not an empty array.
+    ///
+    /// PHP: the `(bool)` of the decoded reply.
     pub fn truthy(&self) -> bool {
         match self {
             Reply::Nil | Reply::Error(_) => false,
@@ -184,8 +187,9 @@ pub fn unwrap(reply: Reply) -> Result<Reply> {
     }
 }
 
-/// Whether a Redis error's code (its first word) is `NOSCRIPT`
-/// (`NoScript::matches`).
+/// Whether a Redis error's code (its first word) is `NOSCRIPT`.
+///
+/// PHP: `NoScript::matches`.
 ///
 /// ```
 /// assert!(utopia_cache::resp::is_noscript("NOSCRIPT No matching script. Please use EVAL."));

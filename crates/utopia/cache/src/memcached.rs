@@ -1,5 +1,7 @@
-//! [`Memcached`] and [`Hazelcast`]: the Memcached text protocol, with the
-//! value format of PHP's Memcached extension.
+//! Cache adapters over the Memcached text protocol: [`Memcached`] and
+//! [`Hazelcast`].
+//!
+//! PHP: values use the format of PHP's Memcached extension.
 
 use std::time::Duration;
 
@@ -78,11 +80,14 @@ fn unpack(flags: u32, bytes: Vec<u8>) -> Option<Value> {
     })
 }
 
+/// Reads a whole stream synchronously.
 trait ReadToEnd {
+    /// Reads every byte into `out`; `None` when reading fails.
     fn read_to_end_sync(self, out: &mut Vec<u8>) -> Option<()>;
 }
 
 impl<R: std::io::Read> ReadToEnd for flate2::read::ZlibDecoder<R> {
+    /// Inflates the whole stream into `out`.
     fn read_to_end_sync(mut self, out: &mut Vec<u8>) -> Option<()> {
         std::io::Read::read_to_end(&mut self, out).ok().map(|_| ())
     }
@@ -279,9 +284,12 @@ macro_rules! execute {
     }};
 }
 
-/// Entries in Memcached: one item per key holding the serialized
-/// `['time' => ..., 'data' => ...]` record, in the Memcached extension's
-/// format (so PHP and Rust read each other's items). Hashes are ignored.
+/// Entries in Memcached: one item per key holding the entry's data and the
+/// time it was written. Hashes are ignored.
+///
+/// PHP: the item is the serialized `['time' => ..., 'data' => ...]` record,
+/// in the Memcached extension's format, so PHP and Rust read each other's
+/// items.
 ///
 /// ```no_run
 /// use php_std::types::Value;
@@ -306,19 +314,25 @@ impl Memcached {
         Memcached { client, retry: Retry::default() }
     }
 
-    /// Retries connection failures up to `retries` times (clamped to `0..=10`, `setMaxRetries`).
+    /// Retries connection failures up to `retries` times (clamped to `0..=10`).
+    ///
+    /// PHP: `setMaxRetries`.
     pub fn with_max_retries(mut self, retries: i64) -> Self {
         self.retry = self.retry.with_max_retries(retries);
         self
     }
 
-    /// Waits `delay_ms` milliseconds between attempts (`setRetryDelay`).
+    /// Waits `delay_ms` milliseconds between attempts.
+    ///
+    /// PHP: `setRetryDelay`.
     pub fn with_retry_delay(mut self, delay_ms: i64) -> Self {
         self.retry = self.retry.with_delay_ms(delay_ms);
         self
     }
 
-    /// The retry settings (`getMaxRetries`, `getRetryDelay`).
+    /// The retry settings.
+    ///
+    /// PHP: `getMaxRetries`, `getRetryDelay`.
     pub fn retry(&self) -> Retry {
         self.retry
     }
@@ -439,19 +453,25 @@ impl<K: Codec> Hazelcast<K> {
         Hazelcast { client, envelope: Envelope::new(codec), retry: Retry::default() }
     }
 
-    /// Retries connection failures up to `retries` times (clamped to `0..=10`, `setMaxRetries`).
+    /// Retries connection failures up to `retries` times (clamped to `0..=10`).
+    ///
+    /// PHP: `setMaxRetries`.
     pub fn with_max_retries(mut self, retries: i64) -> Self {
         self.retry = self.retry.with_max_retries(retries);
         self
     }
 
-    /// Waits `delay_ms` milliseconds between attempts (`setRetryDelay`).
+    /// Waits `delay_ms` milliseconds between attempts.
+    ///
+    /// PHP: `setRetryDelay`.
     pub fn with_retry_delay(mut self, delay_ms: i64) -> Self {
         self.retry = self.retry.with_delay_ms(delay_ms);
         self
     }
 
-    /// The retry settings (`getMaxRetries`, `getRetryDelay`).
+    /// The retry settings.
+    ///
+    /// PHP: `getMaxRetries`, `getRetryDelay`.
     pub fn retry(&self) -> Retry {
         self.retry
     }

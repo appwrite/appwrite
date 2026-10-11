@@ -1,4 +1,4 @@
-//! [`Mock`]: an in-memory registrar for tests.
+//! An in-memory registrar for tests.
 
 use std::sync::{Mutex, MutexGuard};
 
@@ -27,10 +27,12 @@ struct State {
     premium: IndexMap<String, f64>,
 }
 
-/// A registrar that keeps its registry in memory (`Registrar\Adapter\Mock`):
-/// `google.com`, `facebook.com` and `amazon.com` are taken, `com`, `net`,
-/// `org`, `io`, `dev` and `app` are sold at the default price, a few domains
-/// are premium, and purchases and transfers are remembered.
+/// A registrar that keeps its registry in memory: `google.com`, `facebook.com`
+/// and `amazon.com` are taken, `com`, `net`, `org`, `io`, `dev` and `app` are
+/// sold at the default price, a few domains are premium, and purchases and
+/// transfers are remembered.
+///
+/// PHP: `Registrar\Adapter\Mock`.
 ///
 /// ```
 /// use utopia_domains::registrar::{Contact, Mock, Purchase, Registrar};
@@ -68,6 +70,7 @@ pub struct Mock {
 }
 
 impl Default for Mock {
+    /// The default registry ([`Mock::new`]).
     fn default() -> Self {
         Self::new()
     }
@@ -112,24 +115,32 @@ impl Mock {
         self.state.lock().unwrap_or_else(|e| e.into_inner())
     }
 
-    /// `getPurchasedDomains()`: domains bought or transferred in.
+    /// Domains bought or transferred in.
+    ///
+    /// PHP: `getPurchasedDomains()`.
     pub fn purchased(&self) -> Vec<String> {
         self.state().purchased.clone()
     }
 
-    /// `getTransferredDomains()`.
+    /// Domains transferred in.
+    ///
+    /// PHP: `getTransferredDomains()`.
     pub fn transferred(&self) -> Vec<String> {
         self.state().transferred.clone()
     }
 
-    /// `reset()`: forgets purchases and transfers.
+    /// Forgets purchases and transfers.
+    ///
+    /// PHP: `reset()`.
     pub fn reset(&self) {
         let mut state = self.state();
         state.purchased.clear();
         state.transferred.clear();
     }
 
-    /// `addTakenDomain()`.
+    /// Marks a domain as taken, so it is not available.
+    ///
+    /// PHP: `addTakenDomain()`.
     pub fn add_taken(&self, domain: &str) {
         let mut state = self.state();
         if !contains(&state.taken, domain) {
@@ -137,7 +148,9 @@ impl Mock {
         }
     }
 
-    /// `addPremiumDomain()`.
+    /// Sells a domain at a premium `price`.
+    ///
+    /// PHP: `addPremiumDomain()`.
     pub fn add_premium(&self, domain: &str, price: f64) {
         self.state().premium.insert(domain.to_owned(), price);
     }
@@ -182,7 +195,9 @@ impl Mock {
     }
 }
 
-/// Truthiness of a `filter_var()` result.
+/// Whether a filter result counts as true.
+///
+/// PHP: truthiness of a `filter_var()` result.
 fn filtered_json(value: &filter::Value) -> serde_json::Value {
     match value {
         filter::Value::Str(s) => serde_json::Value::String(String::from_utf8_lossy(s).into_owned()),

@@ -67,31 +67,41 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Redis<C, K> {
     }
 
     /// Retries commands that failed on the connection up to `retries` times
-    /// (clamped to `0..=10`, `setMaxRetries`).
+    /// (clamped to `0..=10`).
+    ///
+    /// PHP: `setMaxRetries`.
     pub fn with_max_retries(mut self, retries: i64) -> Self {
         self.retry = self.retry.with_max_retries(retries);
         self
     }
 
-    /// Waits `delay_ms` milliseconds between attempts (`setRetryDelay`).
+    /// Waits `delay_ms` milliseconds between attempts.
+    ///
+    /// PHP: `setRetryDelay`.
     pub fn with_retry_delay(mut self, delay_ms: i64) -> Self {
         self.retry = self.retry.with_delay_ms(delay_ms);
         self
     }
 
-    /// The retry settings (`getMaxRetries`, `getRetryDelay`).
+    /// The retry settings.
+    ///
+    /// PHP: `getMaxRetries`, `getRetryDelay`.
     pub fn retry(&self) -> Retry {
         self.retry
     }
 
     /// Refuses leased saves for `ms` milliseconds after a purge; `0` (the
-    /// default) disables the tombstone (`setLeaseGraceWindow`).
+    /// default) disables the tombstone.
+    ///
+    /// PHP: `setLeaseGraceWindow`.
     pub fn with_lease_grace_window(mut self, ms: i64) -> Self {
         self.grace_ms = ms.max(0);
         self
     }
 
-    /// The grace window in milliseconds (`getLeaseGraceWindow`).
+    /// The grace window in milliseconds.
+    ///
+    /// PHP: `getLeaseGraceWindow`.
     pub fn lease_grace_window(&self) -> i64 {
         self.grace_ms
     }
@@ -174,6 +184,8 @@ pub(crate) fn text(bytes: &[u8]) -> String {
 }
 
 impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Transport for Redis<C, K> {
+    /// Runs a cached script by digest; [`Error::NoScript`] when the server
+    /// has no script for `sha`.
     async fn eval_sha(&self, sha: &str, key: &str, args: &[&[u8]]) -> Result<Reply> {
         let mut cmd = redis::cmd("EVALSHA");
         cmd.arg(sha).arg(1).arg(key);
@@ -186,6 +198,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Transport for 
         }
     }
 
+    /// Runs a script, sending its body.
     async fn eval(&self, script: &str, key: &str, args: &[&[u8]]) -> Result<Reply> {
         let mut cmd = redis::cmd("EVAL");
         cmd.arg(script).arg(1).arg(key);
@@ -195,6 +208,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Transport for 
         self.execute(&cmd).await
     }
 
+    /// The value of one field of a hash, `None` when missing.
     fn hget(&self, key: &str, field: &str) -> impl Future<Output = Result<Option<Vec<u8>>>> + Send {
         Redis::hget(self, key, field)
     }

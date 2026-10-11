@@ -1,7 +1,9 @@
-//! The XML OpenSRS answers in, read as SimpleXML reads it: a document of
-//! elements with attributes and text, queried with the location paths the
-//! adapter uses (`//body/data_block/dt_assoc/item[@key="response_code"]`,
+//! The XML OpenSRS answers in: a document of elements with attributes and
+//! text, queried with the location paths the adapter uses
+//! (`//body/data_block/dt_assoc/item[@key="response_code"]`,
 //! `dt_assoc/item`, unions with `|`).
+//!
+//! PHP: read as SimpleXML reads it.
 
 /// An element.
 #[derive(Debug)]
@@ -111,8 +113,9 @@ fn unescape(raw: &[u8]) -> Option<String> {
 }
 
 impl Document {
-    /// `simplexml_load_string()`: `None` where PHP returns `false` (empty or
-    /// malformed input).
+    /// Parses a document; `None` for empty or malformed input.
+    ///
+    /// PHP: `simplexml_load_string()`, `None` where PHP returns `false`.
     pub(crate) fn parse(source: &[u8]) -> Option<Document> {
         let mut p = Parser { s: source, pos: 0 };
         let mut elements: Vec<Element> = Vec::new();
@@ -235,12 +238,16 @@ impl Document {
         Node(0)
     }
 
-    /// `(string) $element`.
+    /// The text directly inside an element.
+    ///
+    /// PHP: `(string) $element`.
     pub(crate) fn text(&self, node: Node) -> &str {
         &self.elements[node.0].text
     }
 
-    /// `(string) $element[$name]`: `""` when missing.
+    /// The value of an attribute, `""` when missing.
+    ///
+    /// PHP: `(string) $element[$name]`.
     pub(crate) fn attribute(&self, node: Node, name: &str) -> &str {
         self.elements[node.0].attributes.iter().find(|(k, _)| k == name).map_or("", |(_, v)| v.as_str())
     }

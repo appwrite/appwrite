@@ -26,7 +26,9 @@ pub type Availability = IndexMap<String, bool>;
 /// Suggested domains, in the order the registrar ranked them.
 pub type Suggestions = IndexMap<String, Suggestion>;
 
-/// The kind of registration a price is for (`Registrar::REG_TYPE_*`).
+/// The kind of registration a price is for.
+///
+/// PHP: `Registrar::REG_TYPE_*`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum RegType {
     /// `new`: a first registration.
@@ -34,7 +36,7 @@ pub enum RegType {
     New,
     /// `transfer`: a transfer from another registrar.
     Transfer,
-    /// `renewal`.
+    /// `renewal`: a renewal of a registration.
     Renewal,
     /// `trade`: a change of owner.
     Trade,
@@ -117,7 +119,9 @@ impl Contact {
         }
     }
 
-    /// `toArray()`: every field by name, in order, `owner` resolved.
+    /// Every field by name, in order, `owner` resolved.
+    ///
+    /// PHP: `toArray()`.
     pub fn fields(&self) -> [(&'static str, Cow<'_, str>); 13] {
         [
             ("firstname", Cow::Borrowed(&self.firstname)),
@@ -180,7 +184,7 @@ impl ContactKey {
 pub struct Contacts(pub Vec<(ContactKey, Contact)>);
 
 impl Contacts {
-    /// Number of contacts.
+    /// The number of contacts.
     pub fn len(&self) -> usize {
         self.0.len()
     }
@@ -190,7 +194,9 @@ impl Contacts {
         self.0.is_empty()
     }
 
-    /// The contact under a key (`$contacts[$key]`).
+    /// The contact under a key.
+    ///
+    /// PHP: `$contacts[$key]`.
     pub fn get(&self, key: &ContactKey) -> Option<&Contact> {
         self.0.iter().find(|(k, _)| k == key).map(|(_, c)| c)
     }
@@ -212,24 +218,29 @@ impl Contacts {
 }
 
 impl From<Contact> for Contacts {
+    /// One contact for every role, at position `0`.
     fn from(contact: Contact) -> Self {
         Contacts(vec![(ContactKey::Index(0), contact)])
     }
 }
 
 impl From<Vec<Contact>> for Contacts {
+    /// A list of contacts, keyed by position.
     fn from(contacts: Vec<Contact>) -> Self {
         Contacts(contacts.into_iter().enumerate().map(|(i, c)| (ContactKey::Index(i as i64), c)).collect())
     }
 }
 
 impl<S: Into<String>> FromIterator<(S, Contact)> for Contacts {
+    /// Contacts by role (`owner`, `admin`, `tech`, `billing`).
     fn from_iter<I: IntoIterator<Item = (S, Contact)>>(iter: I) -> Self {
         Contacts(iter.into_iter().map(|(role, c)| (ContactKey::Role(role.into()), c)).collect())
     }
 }
 
-/// A registered domain (`Registrar\Domain`).
+/// A registered domain.
+///
+/// PHP: `Registrar\Domain`.
 #[derive(Debug, Clone)]
 pub struct Domain {
     /// The domain name.
@@ -244,7 +255,9 @@ pub struct Domain {
     pub nameservers: Option<Vec<String>>,
 }
 
-/// A price quote (`Registrar\Price`).
+/// A price quote.
+///
+/// PHP: `Registrar\Price`.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Price {
     /// The price, in the account currency.
@@ -254,7 +267,9 @@ pub struct Price {
     pub premium: bool,
 }
 
-/// The outcome of a renewal (`Registrar\Renewal`).
+/// The outcome of a renewal.
+///
+/// PHP: `Registrar\Renewal`.
 #[derive(Debug, Clone)]
 pub struct Renewal {
     /// The registrar's order id.
@@ -263,7 +278,9 @@ pub struct Renewal {
     pub expires_at: Option<DateTime>,
 }
 
-/// Where a transfer stands (`TransferStatusEnum`).
+/// Where a transfer stands.
+///
+/// PHP: `TransferStatusEnum`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TransferState {
     /// The domain can be transferred.
@@ -300,7 +317,9 @@ impl TransferState {
     }
 }
 
-/// The status of a transfer (`Registrar\TransferStatus`).
+/// The status of a transfer.
+///
+/// PHP: `Registrar\TransferStatus`.
 #[derive(Debug, Clone)]
 pub struct TransferStatus {
     /// Where the transfer stands.
@@ -311,8 +330,9 @@ pub struct TransferStatus {
     pub timestamp: Option<DateTime>,
 }
 
-/// What to change on a domain (`Registrar\UpdateDetails`). Adapters refuse
-/// details without `auto_renew`.
+/// What to change on a domain. Adapters refuse details without `auto_renew`.
+///
+/// PHP: `Registrar\UpdateDetails`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct UpdateDetails {
     /// Whether it renews automatically.
@@ -369,7 +389,9 @@ pub struct SuggestOptions {
     pub price_min: Option<i64>,
 }
 
-/// A domain to buy (the arguments of `purchase()`).
+/// A domain to buy, with the details of the registration.
+///
+/// PHP: the arguments of `purchase()`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Purchase {
     /// The domain name.
@@ -416,9 +438,10 @@ pub struct NameserverUpdate {
     pub error: Option<String>,
 }
 
-/// What a [`Registrar`] passes its adapter on every call: the settings of
-/// `setDefaultNameservers()`, `setCache()`, `setConnectTimeout()` and
-/// `setTimeout()`.
+/// The settings a [`Registrar`] passes its adapter on every call.
+///
+/// PHP: the settings of `setDefaultNameservers()`, `setCache()`,
+/// `setConnectTimeout()` and `setTimeout()`.
 #[derive(Debug, Clone)]
 pub struct Config {
     /// Nameservers a purchase delegates to when it names none.
@@ -432,6 +455,7 @@ pub struct Config {
 }
 
 impl Default for Config {
+    /// No default nameservers, no cache, 5 s to connect, 10 s per request.
     fn default() -> Self {
         Self {
             default_nameservers: Vec::new(),
@@ -442,9 +466,13 @@ impl Default for Config {
     }
 }
 
-/// A registrar API (`Registrar\Adapter`). Implement it to add a registrar.
+/// A registrar API. Implement it to add a registrar.
+///
+/// PHP: `Registrar\Adapter`.
 pub trait Adapter: Send + Sync {
-    /// `getName()`: the adapter's id (`mock`, `namecom`, `opensrs`).
+    /// The adapter's id (`mock`, `namecom`, `opensrs`).
+    ///
+    /// PHP: `getName()`.
     fn name(&self) -> &str;
 
     /// Whether each domain can be registered.
@@ -533,7 +561,9 @@ pub trait Adapter: Send + Sync {
     fn cancel_purchase(&self, config: &Config) -> impl Future<Output = Result<bool, Error>> + Send;
 }
 
-/// A registrar: an [`Adapter`] with its settings (`Utopia\Domains\Registrar`).
+/// A registrar: an [`Adapter`] with its settings.
+///
+/// PHP: `Utopia\Domains\Registrar`.
 ///
 /// ```
 /// use utopia_domains::registrar::{Contact, Mock, Purchase, RegType, Registrar};
@@ -589,89 +619,126 @@ impl<A: Adapter> Registrar<A> {
         &self.config
     }
 
-    /// `getName()`.
+    /// The adapter's id (`mock`, `namecom`, `opensrs`).
+    ///
+    /// PHP: `getName()`.
     pub fn name(&self) -> &str {
         self.adapter.name()
     }
 
-    /// `available()`.
+    /// Whether each domain can be registered, in the order asked.
+    ///
+    /// PHP: `available()`.
     pub async fn available(&self, domains: &[String]) -> Result<Availability, Error> {
         self.adapter.available(&self.config, domains).await
     }
 
-    /// `purchase()`.
+    /// Registers a domain; returns the order id.
+    ///
+    /// PHP: `purchase()`.
     pub async fn purchase(&self, purchase: &Purchase) -> Result<String, Error> {
         self.adapter.purchase(&self.config, purchase).await
     }
 
-    /// `suggest()`.
+    /// Domains to register for a query (its words are joined), in the order
+    /// the registrar ranks them.
+    ///
+    /// PHP: `suggest()`.
     pub async fn suggest(&self, query: &[String], options: &SuggestOptions) -> Result<Suggestions, Error> {
         self.adapter.suggest(&self.config, query, options).await
     }
 
-    /// `tlds()`.
+    /// The TLDs the registrar sells.
+    ///
+    /// PHP: `tlds()`.
     pub async fn tlds(&self) -> Result<Vec<String>, Error> {
         self.adapter.tlds(&self.config).await
     }
 
-    /// `getDomain()`.
+    /// A domain of the account.
+    ///
+    /// PHP: `getDomain()`.
     pub async fn domain(&self, domain: &str) -> Result<Domain, Error> {
         self.adapter.domain(&self.config, domain).await
     }
 
-    /// `updateDomain()`.
+    /// Changes a domain of the account; returns whether it changed.
+    ///
+    /// PHP: `updateDomain()`.
     pub async fn update_domain(&self, domain: &str, details: &UpdateDetails) -> Result<bool, Error> {
         self.adapter.update_domain(&self.config, domain, details).await
     }
 
-    /// `updateNameservers()`.
+    /// Changes a domain's nameservers.
+    ///
+    /// PHP: `updateNameservers()`.
     pub async fn update_nameservers(&self, domain: &str, nameservers: &[String]) -> Result<NameserverUpdate, Error> {
         self.adapter.update_nameservers(&self.config, domain, nameservers).await
     }
 
-    /// `getPrice()`.
+    /// The price of a registration, renewal or transfer for `period_years`;
+    /// cached answers younger than `ttl` seconds are reused.
+    ///
+    /// PHP: `getPrice()`.
     pub async fn price(&self, domain: &str, period_years: i64, reg_type: RegType, ttl: i64) -> Result<Price, Error> {
         self.adapter.price(&self.config, domain, period_years, reg_type, ttl).await
     }
 
-    /// `renew()`.
+    /// Renews a domain of the account for `period_years`.
+    ///
+    /// PHP: `renew()`.
     pub async fn renew(&self, domain: &str, period_years: i64) -> Result<Renewal, Error> {
         self.adapter.renew(&self.config, domain, period_years).await
     }
 
-    /// `transfer()`.
+    /// Transfers a domain in with its authorization code; returns the order
+    /// id. `price` is required for a premium domain.
+    ///
+    /// PHP: `transfer()`.
     pub async fn transfer(&self, domain: &str, auth_code: &str, price: Option<f64>) -> Result<String, Error> {
         self.adapter.transfer(&self.config, domain, auth_code, price).await
     }
 
-    /// `getAuthCode()`.
+    /// The EPP authorization code of a domain of the account.
+    ///
+    /// PHP: `getAuthCode()`.
     pub async fn auth_code(&self, domain: &str) -> Result<String, Error> {
         self.adapter.auth_code(&self.config, domain).await
     }
 
-    /// `checkTransferStatus()`.
+    /// Where a transfer of the domain stands.
+    ///
+    /// PHP: `checkTransferStatus()`.
     pub async fn transfer_status(&self, domain: &str) -> Result<TransferStatus, Error> {
         self.adapter.transfer_status(&self.config, domain).await
     }
 
-    /// `cancelPurchase()`.
+    /// Cancels pending purchase orders; returns whether that succeeded.
+    ///
+    /// PHP: `cancelPurchase()`.
     pub async fn cancel_purchase(&self) -> Result<bool, Error> {
         self.adapter.cancel_purchase(&self.config).await
     }
 }
 
-/// `ltrim($tld, '.')`.
+/// A TLD without its leading dots.
+///
+/// PHP: `ltrim($tld, '.')`.
 pub(crate) fn bare_tld(tld: &str) -> &str {
     tld.trim_start_matches('.')
 }
 
-/// `new DateTime($value)` in UTC.
+/// Parses a date the registrar sent, in UTC.
+///
+/// PHP: `new DateTime($value)` in UTC.
 pub(crate) fn datetime(value: &str) -> Result<DateTime, Error> {
     DateTime::new(value.as_bytes(), None, &php_std::datetime::TzInfo::utc())
         .map_err(|e| Error::DateMalformed(e.message().into_owned()))
 }
 
-/// `md5($data)`.
+/// The MD5 digest of `data`, in hex.
+///
+/// PHP: `md5($data)`.
 pub(crate) fn md5(data: &str) -> String {
     php_std::string::hash(b"md5", data.as_bytes()).unwrap_or_default()
 }

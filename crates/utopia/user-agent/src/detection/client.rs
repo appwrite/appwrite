@@ -1,4 +1,7 @@
-//! `Utopia\UserAgent\Detection\ClientDetector`.
+//! Client detection: browsers and their engines, HTTP libraries and native
+//! apps.
+//!
+//! PHP: `Utopia\UserAgent\Detection\ClientDetector`.
 
 use std::borrow::Cow;
 use std::sync::{Arc, LazyLock};
@@ -10,9 +13,13 @@ use crate::pattern::{around, compile, contains_ci, group, pattern};
 use crate::values::{Client, Text, text};
 use crate::version;
 
-/// `ClientDetector::detect()`: the first rule that recognises the client.
+/// The client behind a user-agent string: the first rule that recognises
+/// it.
+///
 /// Specific browsers resolve before the engines they embed (Edge, Opera and
 /// the Chromium derivatives before Chrome), then libraries, then native apps.
+///
+/// PHP: `ClientDetector::detect()`.
 pub fn client(user_agent: &[u8]) -> Client<'_> {
     if user_agent.is_empty() {
         return Client::default();

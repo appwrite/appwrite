@@ -31,14 +31,19 @@
 //! | `Utopia\Domains\Adapter` (`call()`) | [`api::Api`] |
 //! | `Utopia\Domains\Exception`, `Registrar\Exception\*` | [`Error`], one variant per class |
 //!
-//! The list is the data file shipped with the PHP package
-//! (`packages/domains/data/data.php`), parsed once. Rust reads it from there
-//! unless a list is installed with [`PublicSuffixList::install`] (a server
-//! ships the file with its assets).
+//! The Public Suffix List is read once, from
+//! [`PublicSuffixList::default_path`] unless a list is installed with
+//! [`PublicSuffixList::install`] (a server ships the file with its assets).
 //!
 //! Registrar calls are async. Their settings travel with the
-//! [`registrar::Registrar`] (PHP sets them on the adapter), so one adapter
-//! can serve several registrars with different caches.
+//! [`registrar::Registrar`], so one adapter can serve several registrars
+//! with different caches.
+//!
+//! PHP: the list is the data file shipped with the PHP package
+//! (`packages/domains/data/data.php`). PHP sets the registrar settings on
+//! the adapter.
+
+#![warn(missing_docs)]
 
 pub mod api;
 mod cache;

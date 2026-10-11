@@ -1,4 +1,4 @@
-//! [`Api`]: a JSON API client with `sso-key` authentication, the base of
+//! A JSON API client with `sso-key` authentication, the base of
 //! key-and-secret registrar APIs.
 
 use std::sync::Arc;
@@ -23,12 +23,14 @@ pub enum Params {
 }
 
 impl Params {
-    /// No parameters (`[]`).
+    /// No parameters: an empty list of fields.
     pub fn none() -> Self {
         Params::Fields(Value::Array(Vec::new()))
     }
 
-    /// `in_array($params, ['', '0', []], true)`.
+    /// Whether there is nothing to send: no fields, or a body `""` or `"0"`.
+    ///
+    /// PHP: `in_array($params, ['', '0', []], true)`.
     fn is_empty(&self) -> bool {
         match self {
             Params::Text(t) => t.is_empty() || t == "0",
@@ -59,8 +61,10 @@ pub enum Answer {
     Text(String),
 }
 
-/// An HTTP API client (`Utopia\Domains\Adapter`): JSON by default, with
+/// An HTTP API client: JSON by default, authenticated with
 /// `Authorization: sso-key <key>:<secret>`, following redirects.
+///
+/// PHP: `Utopia\Domains\Adapter`.
 ///
 /// ```
 /// use std::sync::Arc;
@@ -103,6 +107,7 @@ pub struct Api {
 }
 
 impl std::fmt::Debug for Api {
+    /// Writes the endpoint only, so credentials stay out of logs.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Api").field("endpoint", &self.endpoint).finish()
     }
@@ -137,15 +142,17 @@ impl Api {
         self
     }
 
-    /// `call()`: one request. `path` is appended to the endpoint unless it
-    /// contains `http`; fields go in the query string of a `GET`, else in
-    /// the body, encoded by the `Content-Type` (`application/json`,
-    /// `text/xml` as is, `multipart/form-data`, or a form). `headers`
-    /// replace or add to the defaults.
+    /// Sends one request and returns the answer. `path` is appended to the endpoint unless it contains
+    /// `http`; fields go in the query string of a `GET`, else in the body,
+    /// encoded by the `Content-Type` (`application/json`, `text/xml` as is,
+    /// `multipart/form-data`, or a form). `headers` replace or add to the
+    /// defaults.
     ///
     /// The answer is decoded when its `Content-Type` is
     /// `application/json; <parameters>`. A status of 400 or more is an
     /// error carrying the answer.
+    ///
+    /// PHP: `call()`.
     pub async fn call(
         &self,
         method: &str,
@@ -244,7 +251,10 @@ fn random_bytes() -> [u8; 16] {
     bytes
 }
 
-/// `flatten()`: nested fields as `a[b][c]` names; scalars as strings, anything else `""`.
+/// Flattens nested fields into `a[b][c]` names; scalars become strings,
+/// anything else `""`.
+///
+/// PHP: `flatten()`.
 fn flatten(data: &Value) -> Vec<(String, String)> {
     fn walk(data: &Value, prefix: &str, out: &mut Vec<(String, String)>) {
         let entries: Vec<(String, &Value)> = match data {

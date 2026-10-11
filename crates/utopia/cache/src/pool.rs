@@ -11,7 +11,9 @@ use crate::adapter::{Adapter, Fields};
 use crate::{Error, Result};
 
 /// Lends adapters for the duration of one operation. Implement it to back a
-/// [`Pool`] with another pool (the role of `Utopia\Pools\Pool`).
+/// [`Pool`] with another pool.
+///
+/// PHP: `Utopia\Pools\Pool`.
 pub trait Lender: Send + Sync {
     /// The adapters lent.
     type Adapter: Adapter;
@@ -25,7 +27,9 @@ pub trait Lender: Send + Sync {
 }
 
 /// A pool of up to `size` adapters made on demand by a factory and reused
-/// last-in first-out (`Utopia\Pools\Adapter\Stack`).
+/// last-in first-out.
+///
+/// PHP: `Utopia\Pools\Adapter\Stack`.
 pub struct Stack<A> {
     idle: Mutex<Vec<A>>,
     permits: Semaphore,
@@ -49,12 +53,14 @@ pub struct Lent<'a, A> {
 impl<A> Deref for Lent<'_, A> {
     type Target = A;
 
+    /// The borrowed adapter.
     fn deref(&self) -> &A {
         self.adapter.as_ref().expect("a lent adapter is present until dropped")
     }
 }
 
 impl<A> Drop for Lent<'_, A> {
+    /// Returns the adapter to the stack.
     fn drop(&mut self) {
         if let Some(adapter) = self.adapter.take() {
             self.stack.idle.lock().unwrap_or_else(|e| e.into_inner()).push(adapter);
@@ -106,8 +112,12 @@ pub struct Pool<P> {
 }
 
 impl<P: Lender> Pool<P> {
-    /// Operations through `lender`. Borrows one adapter at once (as PHP's
-    /// constructor does to check the pool's contents) and keeps its name.
+    /// A pool adapter running every operation through `lender`.
+    ///
+    /// Borrows one adapter right away and keeps its name; fails when none can
+    /// be borrowed.
+    ///
+    /// PHP: the constructor borrows one too, to check the pool's contents.
     pub async fn new(lender: P) -> Result<Self> {
         let name = lender.lend().await?.name(None).to_owned();
         Ok(Pool { lender, name })

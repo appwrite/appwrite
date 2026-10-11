@@ -1,4 +1,6 @@
-//! `Utopia\UserAgent\Detection\DeviceDetector`.
+//! Device detection: the kind, brand and model of the device.
+//!
+//! PHP: `Utopia\UserAgent\Detection\DeviceDetector`.
 
 use std::borrow::Cow;
 use std::sync::{Arc, LazyLock};
@@ -9,8 +11,11 @@ use php_std::string;
 use crate::pattern::{compile, contains_ci, pattern};
 use crate::values::{Device, Text, text};
 
-/// `DeviceDetector::detect()`: consoles, TVs, Apple devices, Windows
-/// phones, Kindles, Android devices, BlackBerrys, then desktops.
+/// The device behind a user-agent string, tried in order: consoles, TVs,
+/// Apple devices, Windows phones, Kindles, Android devices, BlackBerrys,
+/// then desktops.
+///
+/// PHP: `DeviceDetector::detect()`.
 pub fn device(user_agent: &[u8]) -> Device<'_> {
     if user_agent.is_empty() {
         return Device::default();

@@ -1,4 +1,6 @@
-//! `Utopia\UserAgent\Detection\OperatingSystemDetector`.
+//! Operating system detection: the system's code, name and version.
+//!
+//! PHP: `Utopia\UserAgent\Detection\OperatingSystemDetector`.
 
 use std::borrow::Cow;
 use std::sync::{Arc, LazyLock};
@@ -71,7 +73,13 @@ fn os<'a>(code: &'static str, name: &'static str, version: Option<Text<'a>>) -> 
     OperatingSystem { code: text(code), name: text(name), version }
 }
 
-/// `OperatingSystemDetector::detect()`.
+/// The operating system behind a user-agent string; every field is `None`
+/// for an empty or unrecognised string.
+///
+/// Windows reports its release (`7` for `Windows NT 6.1`) and macOS its
+/// version up to the second dot; underscores in versions become dots.
+///
+/// PHP: `OperatingSystemDetector::detect()`.
 pub fn operating_system(user_agent: &[u8]) -> OperatingSystem<'_> {
     let ua = user_agent;
     if ua.is_empty() {

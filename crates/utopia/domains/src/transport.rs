@@ -1,4 +1,4 @@
-//! [`Transport`]: how registrar adapters reach their APIs, and
+//! How registrar adapters reach their APIs: the [`Transport`] trait and
 //! [`HttpTransport`], the default one over HTTPS.
 
 use std::collections::HashMap;
@@ -124,8 +124,9 @@ impl Response {
     }
 }
 
-/// A request could not be sent or no response came back (PHP's
-/// `Psr\Http\Client\ClientExceptionInterface`).
+/// The error of a request that could not be sent or got no response.
+///
+/// PHP: `Psr\Http\Client\ClientExceptionInterface`.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 #[error("{0}")]
 pub struct TransportError(pub String);
@@ -138,6 +139,7 @@ pub trait Transport: Send + Sync {
 }
 
 impl<T: Transport + ?Sized> Transport for Arc<T> {
+    /// Sends through the shared transport.
     fn send<'a>(&'a self, request: Request) -> BoxFuture<'a, Result<Response, TransportError>> {
         (**self).send(request)
     }
@@ -155,6 +157,7 @@ pub struct HttpTransport {
 }
 
 impl std::fmt::Debug for HttpTransport {
+    /// Writes whether redirects are followed.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("HttpTransport").field("follow_redirects", &self.follow_redirects).finish()
     }
@@ -245,6 +248,8 @@ fn resolve(base: &str, location: &str) -> String {
 }
 
 impl Transport for HttpTransport {
+    /// Sends a request; fails when the whole exchange takes longer than the
+    /// request's `timeout`.
     fn send<'a>(&'a self, request: Request) -> BoxFuture<'a, Result<Response, TransportError>> {
         Box::pin(async move {
             let timeout = request.timeout;

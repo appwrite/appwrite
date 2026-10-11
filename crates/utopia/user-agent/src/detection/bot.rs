@@ -1,4 +1,6 @@
-//! `Utopia\UserAgent\Detection\BotDetector`.
+//! Bot detection: known bots by name, then a generic rule for crawlers.
+//!
+//! PHP: `Utopia\UserAgent\Detection\BotDetector`.
 
 use std::borrow::Cow;
 
@@ -82,8 +84,11 @@ const BOTS: [(&str, &str, &str); 69] = [
     ("gtmetrix", "GTmetrix", "site monitor"),
 ];
 
-/// `BotDetector::detect()`: a known bot, or a token ending in `bot`,
-/// `crawler`, `spider`, `scraper` or `slurp` (category [`Bot::CRAWLER`]).
+/// The bot behind a user-agent string: a known bot, or one with a token
+/// ending in `bot`, `crawler`, `spider`, `scraper` or `slurp` (category
+/// [`Bot::CRAWLER`]).
+///
+/// PHP: `BotDetector::detect()`.
 pub fn bot(user_agent: &[u8]) -> Option<Bot<'_>> {
     if user_agent.is_empty() {
         return None;

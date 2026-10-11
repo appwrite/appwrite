@@ -48,10 +48,12 @@ impl<C: Codec> Envelope<C> {
         &self.codec
     }
 
-    /// The bytes stored for `data` written at `time` (unix seconds). Other
-    /// scalars than strings are stored as strings (PHP's coercion of the
-    /// `array|string` parameter); null and objects fail, as do values the
-    /// codec cannot encode.
+    /// The bytes stored for `data` written at `time` (unix seconds).
+    ///
+    /// Scalars other than strings are stored as strings; null and objects
+    /// fail, as do values the codec cannot encode.
+    ///
+    /// PHP: the coercion of the `array|string` parameter.
     pub fn encode(&self, data: &Value, time: i64) -> Result<Vec<u8>> {
         let data = crate::adapter::coerce(data, "Utopia\\Cache\\Envelope::encode(): Argument #1 ($data)")?;
         let mut record = Array::with_capacity(2);

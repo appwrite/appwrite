@@ -1,16 +1,24 @@
-//! `Utopia\Emails\Validator\*`: request parameter validators. Each accepts
-//! a string that [`Email::new`] parses and [`Email::is_valid`] accepts, and
-//! adds its own rule. Values that are not strings are invalid.
+//! Request parameter validators. Each accepts a string that [`Email::new`]
+//! parses and [`Email::is_valid`] accepts, and adds its own rule. Values that
+//! are not strings are invalid.
+//!
+//! PHP: `Utopia\Emails\Validator\*`.
 
 use serde_json::Value;
 use utopia_validators::Validator;
 
 use crate::Email;
 
-/// `Validator::TYPE_STRING`, what every email validator's `getType()` returns.
+/// The value type every email validator accepts.
+///
+/// PHP: `Validator::TYPE_STRING`, what every email validator's `getType()`
+/// returns.
 const TYPE: &str = "string";
 
-/// Parses `value` and applies `rule` (PHP: `try { new Email(...) } catch { false }`).
+/// Parses `value` and applies `rule`; an address that does not parse or is
+/// not valid fails.
+///
+/// PHP: `try { new Email(...) } catch { false }`.
 fn check(value: &[u8], rule: impl FnOnce(&Email) -> bool) -> bool {
     Email::new(value).is_ok_and(|email| email.is_valid() && rule(&email))
 }
@@ -35,7 +43,9 @@ macro_rules! string_only {
         }
 
         impl $ty {
-            /// `getType()`.
+            /// The type of value this validator accepts: `string`.
+            ///
+            /// PHP: `getType()`.
             pub fn value_type(&self) -> &'static str {
                 TYPE
             }
@@ -43,21 +53,29 @@ macro_rules! string_only {
     };
 }
 
-/// `Validator\Email`: a valid email address; with `allow_empty`, also `""`.
+/// Validates an email address; with `allow_empty`, also accepts `""`.
+///
+/// PHP: `Validator\Email`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct EmailValidator {
+    /// Whether the empty string is accepted.
     pub allow_empty: bool,
 }
 
 impl EmailValidator {
+    /// What the validator reports a valid value to be.
     pub const DESCRIPTION: &'static str = "Value must be a valid email address";
 
-    /// `new Email($allowEmpty)`.
+    /// A validator that accepts `""` when `allow_empty` is set.
+    ///
+    /// PHP: `new Email($allowEmpty)`.
     pub fn new(allow_empty: bool) -> Self {
         Self { allow_empty }
     }
 
-    /// `isValid()` on a string (any bytes).
+    /// Whether a string, of any bytes, is a value this validator accepts.
+    ///
+    /// PHP: `isValid()` on a string.
     pub fn is_valid_address(&self, value: impl AsRef<[u8]>) -> bool {
         let value = value.as_ref();
         if self.allow_empty && value.is_empty() {
@@ -69,15 +87,20 @@ impl EmailValidator {
 
 string_only!(EmailValidator);
 
-/// `Validator\EmailDomain`: a valid address whose domain is valid
+/// Validates an email address whose domain is valid
 /// ([`Email::has_valid_domain`]).
+///
+/// PHP: `Validator\EmailDomain`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct EmailDomain;
 
 impl EmailDomain {
+    /// What the validator reports a valid value to be.
     pub const DESCRIPTION: &'static str = "Value must be a valid email address with a valid domain";
 
-    /// `isValid()` on a string (any bytes).
+    /// Whether a string, of any bytes, is a value this validator accepts.
+    ///
+    /// PHP: `isValid()` on a string.
     pub fn is_valid_address(&self, value: impl AsRef<[u8]>) -> bool {
         check(value.as_ref(), Email::has_valid_domain)
     }
@@ -85,15 +108,20 @@ impl EmailDomain {
 
 string_only!(EmailDomain);
 
-/// `Validator\EmailLocal`: a valid address whose local part is valid
+/// Validates an email address whose local part is valid
 /// ([`Email::has_valid_local`]).
+///
+/// PHP: `Validator\EmailLocal`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct EmailLocal;
 
 impl EmailLocal {
+    /// What the validator reports a valid value to be.
     pub const DESCRIPTION: &'static str = "Value must be a valid email address with a valid local part";
 
-    /// `isValid()` on a string (any bytes).
+    /// Whether a string, of any bytes, is a value this validator accepts.
+    ///
+    /// PHP: `isValid()` on a string.
     pub fn is_valid_address(&self, value: impl AsRef<[u8]>) -> bool {
         check(value.as_ref(), Email::has_valid_local)
     }
@@ -101,15 +129,20 @@ impl EmailLocal {
 
 string_only!(EmailLocal);
 
-/// `Validator\EmailCorporate`: a valid address on a corporate domain
+/// Validates an email address on a corporate domain
 /// ([`Email::is_corporate`]).
+///
+/// PHP: `Validator\EmailCorporate`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct EmailCorporate;
 
 impl EmailCorporate {
+    /// What the validator reports a valid value to be.
     pub const DESCRIPTION: &'static str = "Value must be a valid email address from a corporate domain";
 
-    /// `isValid()` on a string (any bytes).
+    /// Whether a string, of any bytes, is a value this validator accepts.
+    ///
+    /// PHP: `isValid()` on a string.
     pub fn is_valid_address(&self, value: impl AsRef<[u8]>) -> bool {
         check(value.as_ref(), Email::is_corporate)
     }
@@ -117,16 +150,21 @@ impl EmailCorporate {
 
 string_only!(EmailCorporate);
 
-/// `Validator\EmailNotDisposable`: a valid address not on a disposable
-/// domain ([`Email::is_disposable`]).
+/// Validates an email address that is not on a disposable domain
+/// ([`Email::is_disposable`]).
+///
+/// PHP: `Validator\EmailNotDisposable`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct EmailNotDisposable;
 
 impl EmailNotDisposable {
+    /// What the validator reports a valid value to be.
     pub const DESCRIPTION: &'static str =
         "Value must be a valid email address that is not from a disposable email service";
 
-    /// `isValid()` on a string (any bytes).
+    /// Whether a string, of any bytes, is a value this validator accepts.
+    ///
+    /// PHP: `isValid()` on a string.
     pub fn is_valid_address(&self, value: impl AsRef<[u8]>) -> bool {
         check(value.as_ref(), |email| !email.is_disposable())
     }
