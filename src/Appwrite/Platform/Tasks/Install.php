@@ -148,10 +148,7 @@ class Install extends Action
             try {
                 $ports = $compose->getService('traefik')->getPorts();
             } catch (\Throwable $th) {
-                $ports = [
-                    $defaultHttpPort => $defaultHttpPort,
-                    $defaultHttpsPort => $defaultHttpsPort
-                ];
+                $ports = [];
                 Console::warning('Traefik not found. Falling back to default ports.');
             }
 
@@ -168,21 +165,6 @@ class Install extends Action
                         if (!empty($configVar) && !($configVar['overwrite'] ?? false)) {
                             $vars[$key]['default'] = $value;
                         }
-                    }
-                }
-
-                foreach ($ports as $published => $target) {
-                    $published = (string) $published;
-                    if (\str_starts_with($published, '$')) {
-                        continue;
-                    }
-
-                    if ($target === '80') {
-                        $defaultHttpPort = $published;
-                    }
-
-                    if ($target === '443') {
-                        $defaultHttpsPort = $published;
                     }
                 }
 
@@ -209,6 +191,22 @@ class Install extends Action
                     // The compose file publishes ${_APP_HTTP_PORT} and ${_APP_HTTPS_PORT}, so .env holds the ports in use.
                     $defaultHttpPort = ($env->list()['_APP_HTTP_PORT'] ?? '') ?: $defaultHttpPort;
                     $defaultHttpsPort = ($env->list()['_APP_HTTPS_PORT'] ?? '') ?: $defaultHttpsPort;
+                }
+
+                // A literal port in the compose file is what is published, even if .env says otherwise.
+                foreach ($ports as $published => $target) {
+                    $published = (string) $published;
+                    if (\str_starts_with($published, '$')) {
+                        continue;
+                    }
+
+                    if ($target === '80') {
+                        $defaultHttpPort = $published;
+                    }
+
+                    if ($target === '443') {
+                        $defaultHttpsPort = $published;
+                    }
                 }
             }
 

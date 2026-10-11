@@ -24,10 +24,13 @@
         });
     };
 
+    // URL rejects a malformed address in brackets, but canonicalizes a valid one
+    // (2001:0db8::0:1 becomes 2001:db8::1), so only whether it parses is compared.
     const isValidIPv6 = (host) => {
+        if (!host.includes(':') || !/^[0-9a-fA-F:.]+$/.test(host)) return false;
         try {
-            const url = new URL(`http://[${host}]`);
-            return url.hostname.toLowerCase() === `[${host.toLowerCase()}]`;
+            new URL(`http://[${host}]`);
+            return true;
         } catch (error) {
             return false;
         }
