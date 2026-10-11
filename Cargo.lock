@@ -97,7 +97,7 @@ dependencies = [
  "rustls",
  "serde",
  "serde_json",
- "sha1",
+ "sha1 0.10.7",
  "sha2 0.10.9",
  "tokio",
  "tracing",
@@ -416,6 +416,7 @@ dependencies = [
  "base64",
  "bytes",
  "futures-util",
+ "http",
  "httparse",
  "indexmap",
  "mimalloc",
@@ -452,6 +453,7 @@ dependencies = [
  "utopia-telemetry",
  "utopia-user-agent",
  "utopia-validators",
+ "utopia-websocket",
 ]
 
 [[package]]
@@ -564,6 +566,12 @@ checksum = "03bb0e1cc970d482d121d9a1744999169b69a07470b3d644a7894e53fcaf4574"
 dependencies = [
  "cmov",
 ]
+
+[[package]]
+name = "data-encoding"
+version = "2.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4583a4551df46e2792f82ceeac45e850d2e2d5debba0b91f102385cda5b11f06"
 
 [[package]]
 name = "deadpool"
@@ -1573,7 +1581,7 @@ dependencies = [
  "ripemd",
  "rustix",
  "serde_json",
- "sha1",
+ "sha1 0.10.7",
  "sha2 0.10.9",
  "sha3",
  "unsafe-libyaml",
@@ -2111,6 +2119,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sha1"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aacc4cc499359472b4abe1bf11d0b12e688af9a805fa5e3016f9a386dc2d0214"
+dependencies = [
+ "cfg-if",
+ "cpufeatures 0.3.1",
+ "digest 0.11.3",
+]
+
+[[package]]
 name = "sha1_smol"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2433,6 +2452,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-tungstenite"
+version = "0.30.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17a073bfed563fa236697a068031408a93cd9522e08abf9933ead3e73411bd71"
+dependencies = [
+ "futures-util",
+ "log",
+ "rustls",
+ "rustls-pki-types",
+ "tokio",
+ "tokio-rustls",
+ "tungstenite",
+ "webpki-roots 0.26.11",
+]
+
+[[package]]
 name = "tokio-util"
 version = "0.7.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2534,6 +2569,24 @@ checksum = "9fe58ebd5edd976e0fe0f8a14d2a04b7c81ef153ea9a54eebc42e67c2c23b4e5"
 dependencies = [
  "pin-project-lite",
  "tokio",
+]
+
+[[package]]
+name = "tungstenite"
+version = "0.30.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e48ac77174b19c110a50ab2128b24215ac9cb40e0e12e093fb602d175c569d22"
+dependencies = [
+ "bytes",
+ "data-encoding",
+ "http",
+ "httparse",
+ "log",
+ "rand 0.10.3",
+ "rustls",
+ "rustls-pki-types",
+ "sha1 0.11.0",
+ "thiserror",
 ]
 
 [[package]]
@@ -2667,7 +2720,7 @@ dependencies = [
  "php-std",
  "redis",
  "rustix",
- "sha1",
+ "sha1 0.10.7",
  "thiserror",
  "tokio",
  "tracing",
@@ -2683,7 +2736,7 @@ dependencies = [
  "hex",
  "php-std",
  "redis",
- "sha1",
+ "sha1 0.10.7",
  "thiserror",
  "tokio",
  "utopia-telemetry",
@@ -2839,7 +2892,7 @@ dependencies = [
  "redis",
  "serde",
  "serde_json",
- "sha1",
+ "sha1 0.10.7",
  "thiserror",
  "tokio",
  "utopia-dsn",
@@ -2913,6 +2966,21 @@ dependencies = [
  "php-std",
  "serde_json",
  "thiserror",
+]
+
+[[package]]
+name = "utopia-websocket"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "futures-util",
+ "http",
+ "httparse",
+ "indexmap",
+ "php-std",
+ "thiserror",
+ "tokio",
+ "tokio-tungstenite",
 ]
 
 [[package]]

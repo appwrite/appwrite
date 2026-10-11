@@ -58,3 +58,5 @@ utopia-telemetry = { workspace = true, features = ["otlp"] }
 utopia-pools.workspace = true
 utopia-circuit-breaker = { workspace = true, features = ["redis"] }
 utopia-validators.workspace = true
+utopia-websocket.workspace = true
+http.workspace = true
