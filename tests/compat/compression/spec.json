@@ -1,0 +1,1020 @@
+{
+  "lib": "compression",
+  "description": "utopia-php/compression: Brotli, Deflate, GZIP, LZ4, Snappy, XZ and Zstd behind one interface, and Accept-Encoding negotiation.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/compression/src"
+    ],
+    "tests": [
+      "packages/compression/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/compression"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "compress": {
+      "doc": "algorithm(args)->compress(data): {value, warning} (value as {length, sha256} with digest; warning: the first warning the extension emitted). algorithm is {class, level? (constructor), set_level? (setLevel), mode? (generic|text|font)}; data is `data` or `file` (a path from the checkout root)",
+      "covers": [
+        "Utopia\\Compression\\Algorithms\\Brotli::compress",
+        "Utopia\\Compression\\Algorithms\\Brotli::setLevel",
+        "Utopia\\Compression\\Algorithms\\Brotli::useGenericMode",
+        "Utopia\\Compression\\Algorithms\\Brotli::useTextMode",
+        "Utopia\\Compression\\Algorithms\\Brotli::useFontMode",
+        "Utopia\\Compression\\Algorithms\\Deflate::compress",
+        "Utopia\\Compression\\Algorithms\\GZIP::compress",
+        "Utopia\\Compression\\Algorithms\\LZ4::__construct",
+        "Utopia\\Compression\\Algorithms\\LZ4::compress",
+        "Utopia\\Compression\\Algorithms\\LZ4::setLevel",
+        "Utopia\\Compression\\Algorithms\\Snappy::compress",
+        "Utopia\\Compression\\Algorithms\\XZ::compress",
+        "Utopia\\Compression\\Algorithms\\Zstd::__construct",
+        "Utopia\\Compression\\Algorithms\\Zstd::compress",
+        "Utopia\\Compression\\Algorithms\\Zstd::setLevel"
+      ],
+      "fuzz": [
+        {
+          "name": "exact algorithms on random bytes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algorithm": {
+                "gen": "ref",
+                "name": "exact"
+              },
+              "data": {
+                "gen": "bytes",
+                "min": 0,
+                "max": 3000
+              }
+            }
+          },
+          "iterations": 400
+        },
+        {
+          "name": "exact algorithms on repetitive text",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algorithm": {
+                "gen": "ref",
+                "name": "exact"
+              },
+              "data": {
+                "gen": "ref",
+                "name": "text"
+              }
+            }
+          },
+          "iterations": 400
+        }
+      ]
+    },
+    "decompress": {
+      "doc": "algorithm(args)->decompress(data): {value, warning}",
+      "covers": [
+        "Utopia\\Compression\\Algorithms\\Brotli::decompress",
+        "Utopia\\Compression\\Algorithms\\Deflate::decompress",
+        "Utopia\\Compression\\Algorithms\\GZIP::decompress",
+        "Utopia\\Compression\\Algorithms\\LZ4::decompress",
+        "Utopia\\Compression\\Algorithms\\Snappy::decompress",
+        "Utopia\\Compression\\Algorithms\\XZ::decompress",
+        "Utopia\\Compression\\Algorithms\\Zstd::decompress"
+      ],
+      "fuzz": [
+        {
+          "name": "random bytes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algorithm": {
+                "gen": "pick",
+                "from": [
+                  {
+                    "class": "Brotli"
+                  },
+                  {
+                    "class": "Deflate"
+                  },
+                  {
+                    "class": "GZIP"
+                  },
+                  {
+                    "class": "Zstd"
+                  },
+                  {
+                    "class": "XZ"
+                  }
+                ]
+              },
+              "data": {
+                "gen": "bytes",
+                "min": 0,
+                "max": 64
+              }
+            }
+          },
+          "iterations": 600
+        },
+        {
+          "name": "magic numbers and short headers",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algorithm": {
+                "gen": "pick",
+                "from": [
+                  {
+                    "class": "Deflate"
+                  },
+                  {
+                    "class": "GZIP"
+                  },
+                  {
+                    "class": "Snappy"
+                  },
+                  {
+                    "class": "Zstd"
+                  }
+                ]
+              },
+              "data": {
+                "gen": "pick",
+                "from": [
+                  "",
+                  "\u0000",
+                  "\u0001",
+                  "\u0001a",
+                  "\u0002a",
+                  "\u0003\u0000a",
+                  "\u0005\u0000",
+                  "",
+                  {
+                    "$bytes": "H4sIAAAAAAAAAw=="
+                  },
+                  {
+                    "$bytes": "H4sIAAAAAAAAA0sEAEO+t+gBAAAA"
+                  },
+                  {
+                    "$bytes": "H4sIAAAAAAAAA0sEAEO+t+gBAAAAH4sIAAAAAAAAA0sEAEO+t+gBAAAA"
+                  },
+                  {
+                    "$bytes": "SwQA"
+                  },
+                  {
+                    "$bytes": "SwQAAAAA"
+                  },
+                  {
+                    "$bytes": "AwA="
+                  },
+                  {
+                    "$bytes": "AQAA//8="
+                  },
+                  {
+                    "$bytes": "AQUA+v9oZWxsbw=="
+                  },
+                  {
+                    "$bytes": "KLUv/SAAAQAA"
+                  },
+                  {
+                    "$bytes": "KLUv/SABCQAAYQ=="
+                  },
+                  {
+                    "$bytes": "KLUv/SABCQAAYSi1L/0gAQkAAGI="
+                  },
+                  {
+                    "$bytes": "KLUv/QAAAQAA"
+                  },
+                  {
+                    "$bytes": "UCpNGAAAAAA="
+                  },
+                  {
+                    "$bytes": "KLUv/SAV"
+                  },
+                  {
+                    "$bytes": "AQAAABBh"
+                  },
+                  {
+                    "$bytes": "AgAAABBh"
+                  },
+                  {
+                    "$bytes": "AAAAAAA="
+                  },
+                  {
+                    "$bytes": "/////wA="
+                  },
+                  {
+                    "$bytes": "AQAAAAA="
+                  },
+                  {
+                    "$bytes": "AQBh"
+                  },
+                  {
+                    "$bytes": "AgBh"
+                  },
+                  {
+                    "$bytes": "gICAgBA="
+                  },
+                  {
+                    "$bytes": "gICAgAE="
+                  },
+                  {
+                    "$bytes": "BAIBAA=="
+                  },
+                  {
+                    "$bytes": "BQBhYgEB"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 300
+        },
+        {
+          "name": "LZ4 blocks behind small size prefixes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algorithm": {
+                "gen": "const",
+                "value": {
+                  "class": "LZ4"
+                }
+              },
+              "data": {
+                "gen": "pick",
+                "from": [
+                  {
+                    "$bytes": "AQAAABBh"
+                  },
+                  {
+                    "$bytes": "AgAAABBh"
+                  },
+                  {
+                    "$bytes": "AAAAAAA="
+                  },
+                  {
+                    "$bytes": "AQAAAAA="
+                  },
+                  {
+                    "$bytes": "AAAAAA=="
+                  },
+                  {
+                    "$bytes": "BQAAAFBoZWxsbw=="
+                  },
+                  {
+                    "$bytes": "BAAAAFBoZWxsbw=="
+                  },
+                  {
+                    "$bytes": "BgAAAFBoZWxsbw=="
+                  },
+                  {
+                    "$bytes": "FAAAABFhAQBQYWFhYWE="
+                  },
+                  {
+                    "$bytes": "FAAAABFhAgBQYWFhYWE="
+                  },
+                  {
+                    "$bytes": "FAAAABFhAQA="
+                  },
+                  {
+                    "$bytes": "CgAAAB9hAQD/"
+                  },
+                  {
+                    "$bytes": "AQAAAPA="
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 100
+        }
+      ]
+    },
+    "roundtrip": {
+      "doc": "decompress(compress(data)) on one instance: {value, warning, smaller} (smaller: the compressed string is shorter than data). For Brotli at qualities 2 to 11, whose bytes may differ (see deviations)",
+      "fuzz": [
+        {
+          "name": "every algorithm and level",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algorithm": {
+                "gen": "ref",
+                "name": "any"
+              },
+              "data": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "bytes",
+                    "min": 0,
+                    "max": 2000
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "text"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 300
+        }
+      ]
+    },
+    "corrupt": {
+      "doc": "compress(data), XOR the byte at `at` (modulo the length) with `xor`, then decompress: {value, warning}. Decoders on near-valid streams",
+      "fuzz": [
+        {
+          "name": "one flipped byte",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algorithm": {
+                "gen": "ref",
+                "name": "stream"
+              },
+              "data": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "bytes",
+                    "min": 0,
+                    "max": 400
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "text"
+                  }
+                ]
+              },
+              "at": {
+                "gen": "int",
+                "min": 0,
+                "max": 100000
+              },
+              "xor": {
+                "gen": "int",
+                "min": 1,
+                "max": 255
+              }
+            }
+          },
+          "iterations": 800
+        },
+        {
+          "name": "one flipped byte after the LZ4 size prefix",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algorithm": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": {
+                      "class": "LZ4"
+                    }
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "class": {
+                        "gen": "const",
+                        "value": "LZ4"
+                      },
+                      "level": {
+                        "gen": "int",
+                        "min": 0,
+                        "max": 12
+                      }
+                    }
+                  }
+                ]
+              },
+              "data": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "bytes",
+                    "min": 1,
+                    "max": 400
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "text"
+                  }
+                ]
+              },
+              "from": {
+                "gen": "const",
+                "value": 4
+              },
+              "at": {
+                "gen": "int",
+                "min": 0,
+                "max": 100000
+              },
+              "xor": {
+                "gen": "int",
+                "min": 1,
+                "max": 255
+              }
+            }
+          },
+          "iterations": 400
+        },
+        {
+          "name": "one flipped byte after the zstd frame header",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algorithm": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": {
+                      "class": "Zstd"
+                    }
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "class": {
+                        "gen": "const",
+                        "value": "Zstd"
+                      },
+                      "level": {
+                        "gen": "int",
+                        "min": -10,
+                        "max": 22
+                      }
+                    }
+                  }
+                ]
+              },
+              "data": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "bytes",
+                    "min": 1,
+                    "max": 400
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "text"
+                  }
+                ]
+              },
+              "from": {
+                "gen": "const",
+                "value": 18
+              },
+              "at": {
+                "gen": "int",
+                "min": 0,
+                "max": 100000
+              },
+              "xor": {
+                "gen": "int",
+                "min": 1,
+                "max": 255
+              }
+            }
+          },
+          "iterations": 400
+        }
+      ]
+    },
+    "describe": {
+      "doc": "{class (short name), name: getName(), encoding: getContentEncoding(), supported: isSupported(), level: getLevel() where it exists} of algorithm(args)",
+      "covers": [
+        "Utopia\\Compression\\Algorithms\\Brotli::getName",
+        "Utopia\\Compression\\Algorithms\\Brotli::getContentEncoding",
+        "Utopia\\Compression\\Algorithms\\Brotli::getLevel",
+        "Utopia\\Compression\\Algorithms\\Brotli::isSupported",
+        "Utopia\\Compression\\Algorithms\\Deflate::getName",
+        "Utopia\\Compression\\Algorithms\\Deflate::isSupported",
+        "Utopia\\Compression\\Algorithms\\GZIP::getName",
+        "Utopia\\Compression\\Algorithms\\GZIP::isSupported",
+        "Utopia\\Compression\\Algorithms\\LZ4::getName",
+        "Utopia\\Compression\\Algorithms\\LZ4::getLevel",
+        "Utopia\\Compression\\Algorithms\\LZ4::isSupported",
+        "Utopia\\Compression\\Algorithms\\Snappy::getName",
+        "Utopia\\Compression\\Algorithms\\Snappy::isSupported",
+        "Utopia\\Compression\\Algorithms\\XZ::getName",
+        "Utopia\\Compression\\Algorithms\\XZ::isSupported",
+        "Utopia\\Compression\\Algorithms\\Zstd::getName",
+        "Utopia\\Compression\\Algorithms\\Zstd::getLevel",
+        "Utopia\\Compression\\Algorithms\\Zstd::isSupported"
+      ]
+    },
+    "is_supported": {
+      "doc": "Algorithms\\<class>::isSupported(), statically"
+    },
+    "from_name": {
+      "doc": "describe(Compression::fromName(name)), null for none",
+      "covers": [
+        "Utopia\\Compression\\Compression::fromName"
+      ],
+      "fuzz": [
+        {
+          "name": "names",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "name": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "brotli",
+                      "br",
+                      "BR",
+                      "Brotli",
+                      "deflate",
+                      "DEFLATE",
+                      "gzip",
+                      "GZip",
+                      "lz4",
+                      "LZ4",
+                      "snappy",
+                      "xz",
+                      "XZ",
+                      "zstd",
+                      "ZSTD",
+                      "none",
+                      "identity",
+                      "x-gzip",
+                      " gzip",
+                      "gzip ",
+                      "İgzip",
+                      "brotlı"
+                    ]
+                  },
+                  {
+                    "gen": "string",
+                    "max": 8,
+                    "tricky": 0.5
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 400
+        }
+      ]
+    },
+    "from_accept_encoding": {
+      "doc": "describe(Compression::fromAcceptEncoding(accept, supported?)); supported is a list of names or a name => bool map",
+      "covers": [
+        "Utopia\\Compression\\Compression::fromAcceptEncoding"
+      ],
+      "fuzz": [
+        {
+          "name": "headers",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "accept": {
+                "gen": "ref",
+                "name": "accept"
+              },
+              "supported": {
+                "gen": "ref",
+                "name": "supported"
+              }
+            },
+            "optional": [
+              "supported"
+            ]
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "tricky strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "accept": {
+                "gen": "string",
+                "alphabet": "unicode",
+                "max": 24,
+                "tricky": 0.5
+              }
+            }
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "custom": {
+      "doc": "A user-defined Compression subclass named `name`: {name: getName(), encoding: getContentEncoding()} (the inherited strtolower)",
+      "covers": [
+        "Utopia\\Compression\\Compression::getContentEncoding"
+      ],
+      "fuzz": [
+        {
+          "name": "names",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "name": {
+                "gen": "string",
+                "alphabet": "unicode",
+                "max": 12,
+                "tricky": 0.5
+              }
+            }
+          },
+          "iterations": 300
+        }
+      ]
+    }
+  },
+  "generators": {
+    "exact": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "class": "Brotli",
+              "set_level": 0
+            },
+            {
+              "class": "Brotli",
+              "set_level": 1
+            },
+            {
+              "class": "Brotli",
+              "set_level": 1,
+              "mode": "font"
+            },
+            {
+              "class": "Deflate"
+            },
+            {
+              "class": "GZIP"
+            },
+            {
+              "class": "Snappy"
+            },
+            {
+              "class": "LZ4"
+            },
+            {
+              "class": "Zstd"
+            }
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "class": {
+              "gen": "const",
+              "value": "LZ4"
+            },
+            "level": {
+              "gen": "int",
+              "min": 0,
+              "max": 12
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "class": {
+              "gen": "const",
+              "value": "Zstd"
+            },
+            "level": {
+              "gen": "int",
+              "min": -10,
+              "max": 22
+            }
+          }
+        }
+      ]
+    },
+    "any": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "exact"
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "class": {
+              "gen": "const",
+              "value": "Brotli"
+            },
+            "set_level": {
+              "gen": "int",
+              "min": 0,
+              "max": 11
+            }
+          }
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "class": "XZ"
+            },
+            {
+              "class": "LZ4",
+              "level": 13
+            },
+            {
+              "class": "Zstd",
+              "level": 23
+            }
+          ]
+        }
+      ]
+    },
+    "text": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "ab",
+          "min": 0,
+          "max": 3000
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "pick",
+            "from": [
+              "lorem ",
+              "ipsum ",
+              "dolor ",
+              "sit ",
+              "amet, ",
+              "\n",
+              "0123456789"
+            ]
+          },
+          "min": 0,
+          "max": 600
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "string",
+            "alphabet": "unicode",
+            "max": 6
+          },
+          "min": 0,
+          "max": 300
+        }
+      ]
+    },
+    "token": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "gzip",
+            "br",
+            "BR",
+            "brotli",
+            "deflate",
+            "zstd",
+            "ZSTD",
+            "lz4",
+            "snappy",
+            "xz",
+            "identity",
+            "none",
+            "*",
+            "x-gzip",
+            "compress",
+            ""
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "lower",
+          "max": 6
+        }
+      ]
+    },
+    "quality": {
+      "gen": "pick",
+      "from": [
+        "",
+        ";q=1",
+        ";q=0",
+        ";q=0.5",
+        ";q=0.50",
+        ";q=.5",
+        ";q=1.0",
+        ";q=0.001",
+        ";q=1e3",
+        ";q=-1",
+        ";q=abc",
+        ";q=",
+        ";Q=0.5",
+        ";q =0.5",
+        "; q=0.5",
+        ";q=0.5;level=1",
+        ";level=1;q=0.2",
+        ";q=q=0.3",
+        ";0.7",
+        ";q=0x1",
+        ";q=INF",
+        ";q=1e999",
+        ";q= 0.2"
+      ]
+    },
+    "accept": {
+      "gen": "repeat",
+      "part": {
+        "gen": "concat",
+        "parts": [
+          {
+            "gen": "pick",
+            "from": [
+              "",
+              " ",
+              "  ",
+              "\t"
+            ]
+          },
+          {
+            "gen": "ref",
+            "name": "token"
+          },
+          {
+            "gen": "ref",
+            "name": "quality"
+          },
+          {
+            "gen": "pick",
+            "from": [
+              "",
+              " ",
+              "\n"
+            ]
+          }
+        ]
+      },
+      "sep": ",",
+      "min": 0,
+      "max": 5
+    },
+    "supported": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "array",
+          "items": {
+            "gen": "pick",
+            "from": [
+              "gzip",
+              "brotli",
+              "br",
+              "deflate",
+              "zstd",
+              "lz4",
+              "snappy",
+              "xz",
+              "none",
+              "identity",
+              "GZIP"
+            ]
+          },
+          "min": 0,
+          "max": 4
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "gzip": {
+              "gen": "bool"
+            },
+            "brotli": {
+              "gen": "bool"
+            },
+            "zstd": {
+              "gen": "bool"
+            },
+            "snappy": {
+              "gen": "bool"
+            },
+            "none": {
+              "gen": "bool"
+            }
+          },
+          "optional": [
+            "gzip",
+            "brotli",
+            "zstd",
+            "snappy"
+          ]
+        }
+      ]
+    },
+    "stream": {
+      "gen": "pick",
+      "from": [
+        {
+          "class": "Brotli",
+          "set_level": 0
+        },
+        {
+          "class": "Brotli",
+          "set_level": 1
+        },
+        {
+          "class": "Brotli",
+          "set_level": 1,
+          "mode": "font"
+        },
+        {
+          "class": "Deflate"
+        },
+        {
+          "class": "GZIP"
+        },
+        {
+          "class": "Snappy"
+        }
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Compression\\Algorithms\\Brotli::useTextMode",
+      "description": "useTextMode() and useFontMode() set BROTLI_GENERIC, so they compress exactly like generic mode. Kept in Rust (use_text_mode and use_font_mode keep Mode::Generic).",
+      "case": "extra.json#brotli font and text modes compress as generic"
+    },
+    {
+      "symbol": "Utopia\\Compression\\Algorithms\\Brotli::useFontMode",
+      "description": "useFontMode() sets BROTLI_GENERIC (see useTextMode).",
+      "case": "extra.json#brotli font and text modes compress as generic"
+    },
+    {
+      "symbol": "Utopia\\Compression\\Algorithms\\LZ4::decompress",
+      "description": "lz4_uncompress() fails with 'data error' when the block decodes to 0 bytes, so LZ4 cannot decompress its own output for an empty string.",
+      "case": "extra.json#lz4 empty string does not round trip"
+    },
+    {
+      "symbol": "Utopia\\Compression\\Algorithms\\LZ4::__construct",
+      "description": "The constructor takes any level; one outside 0..12 makes compress() return an empty string with the warning 'lz4_compress: compression level (13) must be within 1..12'.",
+      "case": "extra.json#lz4 constructor levels are unchecked"
+    },
+    {
+      "symbol": "Utopia\\Compression\\Algorithms\\Zstd::__construct",
+      "description": "The constructor takes any level: zstd's negative levels and 0 (the default) work, and one above 22 makes compress() return an empty string with a warning.",
+      "case": "extra.json#zstd constructor levels are unchecked"
+    },
+    {
+      "symbol": "Utopia\\Compression\\Algorithms\\Zstd::decompress",
+      "description": "zstd_uncompress() decodes the first frame only, ignores what follows it, and returns what it decoded of a truncated frame without a warning.",
+      "case": "extra.json#zstd reads the first frame"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Compression\\Algorithms\\Brotli::compress",
+      "php": "ext-brotli links C brotli 1.2.0. At qualities 0 and 1 Rust writes the same bytes; at 2 to 11 it writes the same bytes for many inputs, but for some (in a test of 8 inputs x 12 qualities x 3 modes: 54 of 288, all at qualities 2 to 11, mostly larger text) the C encoder makes other choices, so the stream differs (by under 1% in size).",
+      "reason": "utopia-compression uses the `brotli` crate 9 (Dropbox's pure-Rust port of the C library). Byte identity needs C brotli 1.2.0's encoder, which no maintained binding builds: brotlic-sys bundles a 2023 snapshot whose output also differs (24 of the same 288, at qualities 2 to 4). Every stream decodes in both runtimes to the same bytes: interop.json and the roundtrip fuzz profile check it, and exact cases and fuzz profiles cover qualities 0 and 1 (and the inputs where higher qualities agree)."
+    },
+    {
+      "symbol": "Utopia\\Compression\\Algorithms\\LZ4::decompress",
+      "php": "lz4_uncompress() reads the 4-byte size prefix with memcpy() whether or not the string has 4 bytes: for a shorter string it reads past the end, so the warning ('data error' or 'allocate size error') depends on heap contents. It then malloc()s the size the prefix claims, up to 2 GiB, which fails ('memory error') or not depending on the host's memory.",
+      "reason": "Rust reads no memory it does not own: a string under 4 bytes is a 'data error', and a large claimed size is decoded into a buffer bounded by what the block can produce (255 bytes per input byte), which behaves as PHP's buffer does whenever PHP's malloc() succeeds. Cases and fuzz profiles keep LZ4 input at 4 bytes or more and do not flip the prefix."
+    },
+    {
+      "symbol": "Utopia\\Compression\\Algorithms\\Zstd::decompress",
+      "php": "zstd_uncompress() allocates the content size a frame header claims before decoding: a corrupt header claiming more than the memory limit is a fatal error that ends the PHP process.",
+      "reason": "A fatal error cannot be reproduced or compared; Rust fails with Error::Codec ('zstd_uncompress(): insufficient memory') when the allocation fails, and decodes otherwise. The corrupt fuzz profile for Zstd leaves the frame header (the first 18 bytes) intact."
+    }
+  ],
+  "bench": {
+    "bound": {
+      "gzip": "zlib 1.3.2's deflate, the same C library both runtimes call, dominates the call",
+      "deflate_decompress": "zlib 1.3.2's inflate, the same C library both runtimes call, dominates the call",
+      "zstd": "libzstd 1.5.7, the same C library both runtimes call, dominates the call",
+      "zstd_decompress": "libzstd 1.5.7, the same C library both runtimes call, dominates the call"
+    }
+  }
+}

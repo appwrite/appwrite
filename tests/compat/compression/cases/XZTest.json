@@ -1,0 +1,88 @@
+{
+  "source": "packages/compression/tests/Algorithms/XZTest.php",
+  "cases": [
+    {
+      "name": "name",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        }
+      },
+      "expect": {
+        "class": "XZ",
+        "name": "xz",
+        "encoding": "xz",
+        "supported": false
+      }
+    },
+    {
+      "name": "compress text without ext-xz",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Call to undefined function Utopia\\Compression\\Algorithms\\xzencode()"
+        }
+      }
+    },
+    {
+      "name": "decompress without ext-xz",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        },
+        "data": {
+          "$bytes": "/Td6WFoAAAQ="
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Call to undefined function Utopia\\Compression\\Algorithms\\xzdecode()"
+        }
+      }
+    },
+    {
+      "name": "compress JPG image without ext-xz",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        },
+        "file": "packages/compression/tests/resources/disk-a/kitten-1.jpg",
+        "digest": true
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Call to undefined function Utopia\\Compression\\Algorithms\\xzencode()"
+        }
+      }
+    },
+    {
+      "name": "round trip PNG image without ext-xz",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        },
+        "file": "packages/compression/tests/resources/disk-b/kitten-1.png",
+        "digest": true
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Call to undefined function Utopia\\Compression\\Algorithms\\xzencode()"
+        }
+      }
+    }
+  ]
+}

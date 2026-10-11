@@ -1,0 +1,123 @@
+{
+  "source": "packages/compression/tests/Algorithms/SnappyTest.php",
+  "cases": [
+    {
+      "name": "name",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        }
+      },
+      "expect": {
+        "class": "Snappy",
+        "name": "snappy",
+        "encoding": "snappy",
+        "supported": true
+      }
+    },
+    {
+      "name": "compress text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": "\u0015PThis is a demo string",
+        "warning": null
+      }
+    },
+    {
+      "name": "round trip text",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": "This is a demo string",
+        "warning": null,
+        "smaller": false
+      }
+    },
+    {
+      "name": "compress JPG image",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "file": "packages/compression/tests/resources/disk-a/kitten-1.jpg",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 599504,
+          "sha256": "d4122fd0d538a9fedefa849b88436f83d22aa959e02fbfc65f4115b823979a25"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "round trip JPG image",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "file": "packages/compression/tests/resources/disk-a/kitten-1.jpg",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 599639,
+          "sha256": "ac20844d0d8a7e2ffeb17322f279ef8651b300d9bd86b69512aa933678153d3e"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "compress PNG image",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "file": "packages/compression/tests/resources/disk-b/kitten-1.png",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 3038200,
+          "sha256": "bbb16d1de2aed76df583c892d37fcd558f51f11b2e1dda77a408098d48042871"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "round trip PNG image",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "file": "packages/compression/tests/resources/disk-b/kitten-1.png",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 3038056,
+          "sha256": "07b78c11dab6ab70719e9ed46f5ef7ad5c20b27259be3a3af2968964934edace"
+        },
+        "warning": null,
+        "smaller": false
+      }
+    }
+  ]
+}

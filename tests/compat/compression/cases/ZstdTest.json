@@ -1,0 +1,163 @@
+{
+  "source": "packages/compression/tests/Algorithms/ZstdTest.php",
+  "cases": [
+    {
+      "name": "name",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        }
+      },
+      "expect": {
+        "class": "Zstd",
+        "name": "zstd",
+        "encoding": "zstd",
+        "supported": true,
+        "level": 3
+      }
+    },
+    {
+      "name": "compress text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "KLUv/SAVqQAAVGhpcyBpcyBhIGRlbW8gc3RyaW5n"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "round trip text",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": "This is a demo string",
+        "warning": null,
+        "smaller": false
+      }
+    },
+    {
+      "name": "compress large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 56226,
+          "sha256": "aeab973ddce82834332e9a3a457c6c8687d422d0c4271519e16974a8808c6e65"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "round trip large text",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 386795,
+          "sha256": "46afc5648fa06a19441aaadf963f67964b3f6e6f4d2e10af833783a0e9a68db5"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "compress JPG image",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "file": "packages/compression/tests/resources/disk-a/kitten-1.jpg",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 599663,
+          "sha256": "52e49f68127a3bdd51783b05d616d6a02cf4af80d2d5e0cb78c369c82e2674ee"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "round trip JPG image",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "file": "packages/compression/tests/resources/disk-a/kitten-1.jpg",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 599639,
+          "sha256": "ac20844d0d8a7e2ffeb17322f279ef8651b300d9bd86b69512aa933678153d3e"
+        },
+        "warning": null,
+        "smaller": false
+      }
+    },
+    {
+      "name": "compress PNG image",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "file": "packages/compression/tests/resources/disk-b/kitten-1.png",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 3038138,
+          "sha256": "3f995efe2b6d2b9d56a2d95bb803c51435b4919352e1b5d44f5f86158b802716"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "round trip PNG image",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "file": "packages/compression/tests/resources/disk-b/kitten-1.png",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 3038056,
+          "sha256": "07b78c11dab6ab70719e9ed46f5ef7ad5c20b27259be3a3af2968964934edace"
+        },
+        "warning": null,
+        "smaller": false
+      }
+    }
+  ]
+}

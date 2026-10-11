@@ -49,6 +49,7 @@ utopia-span = { path = "crates/utopia/span" }
 utopia-di = { path = "crates/utopia/di" }
 utopia-registry = { path = "crates/utopia/registry" }
 utopia-abuse = { path = "crates/utopia/abuse" }
+utopia-compression = { path = "crates/utopia/compression" }
 
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }
@@ -67,7 +68,11 @@ async-nats = { version = "0.50", default-features = false, features = ["ring", "
 base64 = "0.22"
 # EksBlowfish (php-std crypt()); RustCrypto, pure Rust.
 blowfish = { version = "0.9", features = ["bcrypt"] }
-brotli = { version = "8", default-features = false, features = ["std"] }
+# Brotli (utopia-compression; utopia-http through it); Dropbox's pure-Rust port of
+# Google's C library. Its encoder is not byte for byte C brotli 1.2.0 (PHP's
+# ext-brotli) at qualities 2-11, nor is any maintained binding's bundled C
+# (brotlic-sys: a 2023 snapshot); 9 brings the decoder's metablock length checks.
+brotli = { version = "9", default-features = false, features = ["std"] }
 bytes = "1"
 # Compiles the PCRE2 10.44 sources php-std vendors (crates/support/php-std/pcre2).
 cc = "1"
@@ -95,6 +100,19 @@ hyper = { version = "1", features = ["server", "http1"] }
 hyper-util = { version = "0.1", features = ["tokio"] }
 hyper-rustls = { version = "0.27", default-features = false, features = ["http1", "ring", "tls12", "webpki-roots"] }
 indexmap = "2"
+# zlib 1.3.2, the version PHP's ext-zlib links, built from the bundled sources
+# (utopia-compression's Deflate and GZIP). C: gzdeflate()/gzencode() output is
+# zlib's deflate at memLevel 9, which no Rust encoder reproduces byte for byte
+# (miniz_oxide and zlib-rs choose other matches) and flate2 cannot configure
+# (it hardcodes memLevel 8).
+libz-sys = { version = "1", default-features = false, features = ["static", "libc"] }
+# LZ4 1.10.0, the version PHP's ext-lz4 links (utopia-compression's LZ4). C:
+# lz4_compress() levels 1-12 are LZ4_compress_HC, which no Rust crate
+# implements, and lz4_flex's fast mode picks other matches than LZ4's.
+lz4 = "1"
+# XZ (LZMA2 in an .xz container with CRC64) for utopia-compression's optional
+# XZ algorithm; pure Rust, maintained.
+lzma-rust2 = { version = "0.22", default-features = false, features = ["std", "encoder", "xz"] }
 # UTS #46 mapping and Unicode properties at the Unicode version of PHP's ICU
 # (php-std's idn_to_ascii/idn_to_utf8); pure Rust, from the ICU project.
 icu_normalizer = { version = "2.3", default-features = false, features = ["compiled_data"] }

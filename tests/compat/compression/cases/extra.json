@@ -1,0 +1,4676 @@
+{
+  "cases": [
+    {
+      "name": "Brotli defaults",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        }
+      },
+      "expect": {
+        "class": "Brotli",
+        "name": "brotli",
+        "encoding": "br",
+        "supported": true,
+        "level": 11
+      }
+    },
+    {
+      "name": "Brotli is supported",
+      "op": "is_supported",
+      "args": {
+        "class": "Brotli"
+      },
+      "expect": true
+    },
+    {
+      "name": "Brotli compress empty",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        },
+        "data": ""
+      },
+      "expect": {
+        "value": ";",
+        "warning": null
+      }
+    },
+    {
+      "name": "Brotli compress one byte",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        },
+        "data": "a"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "CwCAYQM="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "Brotli compress binary",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        },
+        "data": {
+          "$bytes": "AP8Q7oAA"
+        }
+      },
+      "expect": {
+        "value": {
+          "$bytes": "iwKAAP8Q7oAAAw=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "Brotli compress utf-8",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        },
+        "data": "日本語 é"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "GwsA+CVBUofrEE0iGboD"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "Brotli decompress empty",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        },
+        "data": ""
+      },
+      "expect": {
+        "value": "",
+        "warning": "brotli_uncompress(): failed to uncompress"
+      }
+    },
+    {
+      "name": "Brotli decompress garbage",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        },
+        "data": "garbage"
+      },
+      "expect": {
+        "value": "",
+        "warning": "brotli_uncompress(): failed to uncompress"
+      }
+    },
+    {
+      "name": "Brotli decompress zeros",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        },
+        "data": {
+          "$bytes": "AAAAAA=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "brotli_uncompress(): failed to uncompress"
+      }
+    },
+    {
+      "name": "Brotli decompress one zero",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        },
+        "data": {
+          "$bytes": "AA=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "brotli_uncompress(): failed to uncompress"
+      }
+    },
+    {
+      "name": "Brotli decompress high bytes",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        },
+        "data": {
+          "$bytes": "//////////8="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "brotli_uncompress(): failed to uncompress"
+      }
+    },
+    {
+      "name": "Brotli decompress short",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        },
+        "data": {
+          "$bytes": "qw=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "brotli_uncompress(): failed to uncompress"
+      }
+    },
+    {
+      "name": "Deflate defaults",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        }
+      },
+      "expect": {
+        "class": "Deflate",
+        "name": "deflate",
+        "encoding": "deflate",
+        "supported": true
+      }
+    },
+    {
+      "name": "Deflate is supported",
+      "op": "is_supported",
+      "args": {
+        "class": "Deflate"
+      },
+      "expect": true
+    },
+    {
+      "name": "Deflate compress empty",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": ""
+      },
+      "expect": {
+        "value": "\u0003\u0000",
+        "warning": null
+      }
+    },
+    {
+      "name": "Deflate compress one byte",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": "a"
+      },
+      "expect": {
+        "value": "K\u0004\u0000",
+        "warning": null
+      }
+    },
+    {
+      "name": "Deflate compress binary",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": {
+          "$bytes": "AP8Q7oAA"
+        }
+      },
+      "expect": {
+        "value": {
+          "$bytes": "Y/gv8K6BAQA="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "Deflate compress utf-8",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": "日本語 é"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "ezZ96bM5a16smqdweCUA"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "Deflate decompress empty",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": ""
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzinflate(): data error"
+      }
+    },
+    {
+      "name": "Deflate decompress garbage",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": "garbage"
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzinflate(): data error"
+      }
+    },
+    {
+      "name": "Deflate decompress zeros",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": {
+          "$bytes": "AAAAAA=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzinflate(): data error"
+      }
+    },
+    {
+      "name": "Deflate decompress one zero",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": {
+          "$bytes": "AA=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzinflate(): data error"
+      }
+    },
+    {
+      "name": "Deflate decompress high bytes",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": {
+          "$bytes": "//////////8="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzinflate(): data error"
+      }
+    },
+    {
+      "name": "Deflate decompress short",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": {
+          "$bytes": "qw=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzinflate(): data error"
+      }
+    },
+    {
+      "name": "GZIP defaults",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        }
+      },
+      "expect": {
+        "class": "GZIP",
+        "name": "gzip",
+        "encoding": "gzip",
+        "supported": true
+      }
+    },
+    {
+      "name": "GZIP is supported",
+      "op": "is_supported",
+      "args": {
+        "class": "GZIP"
+      },
+      "expect": true
+    },
+    {
+      "name": "GZIP compress empty",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": ""
+      },
+      "expect": {
+        "value": {
+          "$bytes": "H4sIAAAAAAAAAwMAAAAAAAAAAAA="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "GZIP compress one byte",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": "a"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "H4sIAAAAAAAAA0sEAEO+t+gBAAAA"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "GZIP compress binary",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": {
+          "$bytes": "AP8Q7oAA"
+        }
+      },
+      "expect": {
+        "value": {
+          "$bytes": "H4sIAAAAAAAAA2P4L/CugQEAUVRAswYAAAA="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "GZIP compress utf-8",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": "日本語 é"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "H4sIAAAAAAAAA3s2femzOWterJqncHglAI70pzgMAAAA"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "GZIP decompress empty",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": ""
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzdecode(): data error"
+      }
+    },
+    {
+      "name": "GZIP decompress garbage",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": "garbage"
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzdecode(): data error"
+      }
+    },
+    {
+      "name": "GZIP decompress zeros",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": {
+          "$bytes": "AAAAAA=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzdecode(): data error"
+      }
+    },
+    {
+      "name": "GZIP decompress one zero",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": {
+          "$bytes": "AA=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzdecode(): data error"
+      }
+    },
+    {
+      "name": "GZIP decompress high bytes",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": {
+          "$bytes": "//////////8="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzdecode(): data error"
+      }
+    },
+    {
+      "name": "GZIP decompress short",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": {
+          "$bytes": "qw=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzdecode(): data error"
+      }
+    },
+    {
+      "name": "LZ4 defaults",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        }
+      },
+      "expect": {
+        "class": "LZ4",
+        "name": "lz4",
+        "encoding": "lz4",
+        "supported": true,
+        "level": 0
+      }
+    },
+    {
+      "name": "LZ4 is supported",
+      "op": "is_supported",
+      "args": {
+        "class": "LZ4"
+      },
+      "expect": true
+    },
+    {
+      "name": "LZ4 compress empty",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "data": ""
+      },
+      "expect": {
+        "value": "\u0000\u0000\u0000\u0000\u0000",
+        "warning": null
+      }
+    },
+    {
+      "name": "LZ4 compress one byte",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "data": "a"
+      },
+      "expect": {
+        "value": "\u0001\u0000\u0000\u0000\u0010a",
+        "warning": null
+      }
+    },
+    {
+      "name": "LZ4 compress binary",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "data": {
+          "$bytes": "AP8Q7oAA"
+        }
+      },
+      "expect": {
+        "value": {
+          "$bytes": "BgAAAGAA/xDugAA="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "LZ4 compress utf-8",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "data": "日本語 é"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "DAAAAMDml6XmnKzoqp4gw6k="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "LZ4 decompress garbage",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "data": "garbage"
+      },
+      "expect": {
+        "value": "",
+        "warning": "lz4_uncompress : data error"
+      }
+    },
+    {
+      "name": "LZ4 decompress zeros",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "data": {
+          "$bytes": "AAAAAA=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "lz4_uncompress : data error"
+      }
+    },
+    {
+      "name": "LZ4 decompress high bytes",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "data": {
+          "$bytes": "//////////8="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "lz4_uncompress : allocate size error"
+      }
+    },
+    {
+      "name": "Snappy defaults",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        }
+      },
+      "expect": {
+        "class": "Snappy",
+        "name": "snappy",
+        "encoding": "snappy",
+        "supported": true
+      }
+    },
+    {
+      "name": "Snappy is supported",
+      "op": "is_supported",
+      "args": {
+        "class": "Snappy"
+      },
+      "expect": true
+    },
+    {
+      "name": "Snappy compress empty",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": ""
+      },
+      "expect": {
+        "value": "\u0000",
+        "warning": null
+      }
+    },
+    {
+      "name": "Snappy compress one byte",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": "a"
+      },
+      "expect": {
+        "value": "\u0001\u0000a",
+        "warning": null
+      }
+    },
+    {
+      "name": "Snappy compress binary",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": {
+          "$bytes": "AP8Q7oAA"
+        }
+      },
+      "expect": {
+        "value": {
+          "$bytes": "BhQA/xDugAA="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "Snappy compress utf-8",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": "日本語 é"
+      },
+      "expect": {
+        "value": "\f,日本語 é",
+        "warning": null
+      }
+    },
+    {
+      "name": "Snappy decompress empty",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": ""
+      },
+      "expect": {
+        "value": "",
+        "warning": "snappy_uncompress : output length error"
+      }
+    },
+    {
+      "name": "Snappy decompress garbage",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": "garbage"
+      },
+      "expect": {
+        "value": "",
+        "warning": "snappy_uncompress : data error"
+      }
+    },
+    {
+      "name": "Snappy decompress zeros",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": {
+          "$bytes": "AAAAAA=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "snappy_uncompress : data error"
+      }
+    },
+    {
+      "name": "Snappy decompress one zero",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": {
+          "$bytes": "AA=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": null
+      }
+    },
+    {
+      "name": "Snappy decompress high bytes",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": {
+          "$bytes": "//////////8="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "snappy_uncompress : output length error"
+      }
+    },
+    {
+      "name": "Snappy decompress short",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": {
+          "$bytes": "qw=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "snappy_uncompress : output length error"
+      }
+    },
+    {
+      "name": "XZ defaults",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        }
+      },
+      "expect": {
+        "class": "XZ",
+        "name": "xz",
+        "encoding": "xz",
+        "supported": false
+      }
+    },
+    {
+      "name": "XZ is supported",
+      "op": "is_supported",
+      "args": {
+        "class": "XZ"
+      },
+      "expect": false
+    },
+    {
+      "name": "XZ compress empty",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        },
+        "data": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Call to undefined function Utopia\\Compression\\Algorithms\\xzencode()"
+        }
+      }
+    },
+    {
+      "name": "XZ compress one byte",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        },
+        "data": "a"
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Call to undefined function Utopia\\Compression\\Algorithms\\xzencode()"
+        }
+      }
+    },
+    {
+      "name": "XZ compress binary",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        },
+        "data": {
+          "$bytes": "AP8Q7oAA"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Call to undefined function Utopia\\Compression\\Algorithms\\xzencode()"
+        }
+      }
+    },
+    {
+      "name": "XZ compress utf-8",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        },
+        "data": "日本語 é"
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Call to undefined function Utopia\\Compression\\Algorithms\\xzencode()"
+        }
+      }
+    },
+    {
+      "name": "XZ decompress empty",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        },
+        "data": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Call to undefined function Utopia\\Compression\\Algorithms\\xzdecode()"
+        }
+      }
+    },
+    {
+      "name": "XZ decompress garbage",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        },
+        "data": "garbage"
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Call to undefined function Utopia\\Compression\\Algorithms\\xzdecode()"
+        }
+      }
+    },
+    {
+      "name": "XZ decompress zeros",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        },
+        "data": {
+          "$bytes": "AAAAAA=="
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Call to undefined function Utopia\\Compression\\Algorithms\\xzdecode()"
+        }
+      }
+    },
+    {
+      "name": "XZ decompress one zero",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        },
+        "data": {
+          "$bytes": "AA=="
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Call to undefined function Utopia\\Compression\\Algorithms\\xzdecode()"
+        }
+      }
+    },
+    {
+      "name": "XZ decompress high bytes",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        },
+        "data": {
+          "$bytes": "//////////8="
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Call to undefined function Utopia\\Compression\\Algorithms\\xzdecode()"
+        }
+      }
+    },
+    {
+      "name": "XZ decompress short",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "XZ"
+        },
+        "data": {
+          "$bytes": "qw=="
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Error",
+          "message": "Call to undefined function Utopia\\Compression\\Algorithms\\xzdecode()"
+        }
+      }
+    },
+    {
+      "name": "Zstd defaults",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        }
+      },
+      "expect": {
+        "class": "Zstd",
+        "name": "zstd",
+        "encoding": "zstd",
+        "supported": true,
+        "level": 3
+      }
+    },
+    {
+      "name": "Zstd is supported",
+      "op": "is_supported",
+      "args": {
+        "class": "Zstd"
+      },
+      "expect": true
+    },
+    {
+      "name": "Zstd compress empty",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": ""
+      },
+      "expect": {
+        "value": {
+          "$bytes": "KLUv/SAAAQAA"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "Zstd compress one byte",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": "a"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "KLUv/SABCQAAYQ=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "Zstd compress binary",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "AP8Q7oAA"
+        }
+      },
+      "expect": {
+        "value": {
+          "$bytes": "KLUv/SAGMQAAAP8Q7oAA"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "Zstd compress utf-8",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": "日本語 é"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "KLUv/SAMYQAA5pel5pys6KqeIMOp"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "Zstd decompress empty",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": ""
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): it was not compressed by zstd"
+      }
+    },
+    {
+      "name": "Zstd decompress garbage",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": "garbage"
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): it was not compressed by zstd"
+      }
+    },
+    {
+      "name": "Zstd decompress zeros",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "AAAAAA=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): it was not compressed by zstd"
+      }
+    },
+    {
+      "name": "Zstd decompress one zero",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "AA=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): it was not compressed by zstd"
+      }
+    },
+    {
+      "name": "Zstd decompress high bytes",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "//////////8="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): it was not compressed by zstd"
+      }
+    },
+    {
+      "name": "Zstd decompress short",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "qw=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): it was not compressed by zstd"
+      }
+    },
+    {
+      "name": "Brotli setLevel 0",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 0
+        }
+      },
+      "expect": {
+        "class": "Brotli",
+        "name": "brotli",
+        "encoding": "br",
+        "supported": true,
+        "level": 0
+      }
+    },
+    {
+      "name": "Brotli setLevel 11",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 11
+        }
+      },
+      "expect": {
+        "class": "Brotli",
+        "name": "brotli",
+        "encoding": "br",
+        "supported": true,
+        "level": 11
+      }
+    },
+    {
+      "name": "Brotli setLevel 5",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 5
+        }
+      },
+      "expect": {
+        "class": "Brotli",
+        "name": "brotli",
+        "encoding": "br",
+        "supported": true,
+        "level": 5
+      }
+    },
+    {
+      "name": "Brotli setLevel -1",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": -1
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Level must be between 0 and 11"
+        }
+      }
+    },
+    {
+      "name": "Brotli setLevel 12",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 12
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Level must be between 0 and 11"
+        }
+      }
+    },
+    {
+      "name": "Brotli setLevel 100",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 100
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Level must be between 0 and 11"
+        }
+      }
+    },
+    {
+      "name": "LZ4 setLevel 0",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 0
+        }
+      },
+      "expect": {
+        "class": "LZ4",
+        "name": "lz4",
+        "encoding": "lz4",
+        "supported": true,
+        "level": 0
+      }
+    },
+    {
+      "name": "LZ4 setLevel 12",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 12
+        }
+      },
+      "expect": {
+        "class": "LZ4",
+        "name": "lz4",
+        "encoding": "lz4",
+        "supported": true,
+        "level": 12
+      }
+    },
+    {
+      "name": "LZ4 setLevel 1",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 1
+        }
+      },
+      "expect": {
+        "class": "LZ4",
+        "name": "lz4",
+        "encoding": "lz4",
+        "supported": true,
+        "level": 1
+      }
+    },
+    {
+      "name": "LZ4 setLevel -1",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": -1
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Level must be between 0 and 12"
+        }
+      }
+    },
+    {
+      "name": "LZ4 setLevel 13",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 13
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Level must be between 0 and 12"
+        }
+      }
+    },
+    {
+      "name": "Zstd setLevel 1",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "set_level": 1
+        }
+      },
+      "expect": {
+        "class": "Zstd",
+        "name": "zstd",
+        "encoding": "zstd",
+        "supported": true,
+        "level": 1
+      }
+    },
+    {
+      "name": "Zstd setLevel 22",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "set_level": 22
+        }
+      },
+      "expect": {
+        "class": "Zstd",
+        "name": "zstd",
+        "encoding": "zstd",
+        "supported": true,
+        "level": 22
+      }
+    },
+    {
+      "name": "Zstd setLevel 0",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "set_level": 0
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Level must be between 1 and 22"
+        }
+      }
+    },
+    {
+      "name": "Zstd setLevel 23",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "set_level": 23
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Level must be between 1 and 22"
+        }
+      }
+    },
+    {
+      "name": "Zstd setLevel -1",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "set_level": -1
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Level must be between 1 and 22"
+        }
+      }
+    },
+    {
+      "name": "brotli quality 0 text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 0
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "CwqAVGhpcyBpcyBhIGRlbW8gc3RyaW5nAw=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 0 repetitive",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 0
+        },
+        "data": "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcxyz"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "C+IAAICqqqrq/3A6E9HlwiL/d9W/597qnlFd3sZwV7xYWFjY2FjVy4zq4MOHH4PBYBxnsqoGg8FgMBjMoc6IVJRG4bDQTrL3BBnb/XLn8u4H"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 0 large text round trip",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 0
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 386795,
+          "sha256": "46afc5648fa06a19441aaadf963f67964b3f6e6f4d2e10af833783a0e9a68db5"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "brotli quality 1 text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 1
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "CwqAVGhpcyBpcyBhIGRlbW8gc3RyaW5nAw=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 1 repetitive",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 1
+        },
+        "data": "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcxyz"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "C+IAAICqqqrq/3A6E/HlssABXPxKqTKwwZjjBoXJd+o+"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 1 large text round trip",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 1
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 386795,
+          "sha256": "46afc5648fa06a19441aaadf963f67964b3f6e6f4d2e10af833783a0e9a68db5"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "brotli quality 2 text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 2
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "CwqAVGhpcyBpcyBhIGRlbW8gc3RyaW5nAw=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 2 repetitive",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 2
+        },
+        "data": "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcxyz"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "G8QBAICqqqrq/3A6E/HlsgzAwVgQiUligDtt5uRhEFndAQ=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 2 large text round trip",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 2
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 386795,
+          "sha256": "46afc5648fa06a19441aaadf963f67964b3f6e6f4d2e10af833783a0e9a68db5"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "brotli quality 3 text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 3
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "CwqAVGhpcyBpcyBhIGRlbW8gc3RyaW5nAw=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 3 repetitive",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 3
+        },
+        "data": "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcxyz"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "G8QBAAA24IC4FvlLE86CmIfRHQ=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 3 large text round trip",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 3
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 386795,
+          "sha256": "46afc5648fa06a19441aaadf963f67964b3f6e6f4d2e10af833783a0e9a68db5"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "brotli quality 4 text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 4
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "CwqAVGhpcyBpcyBhIGRlbW8gc3RyaW5nAw=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 4 repetitive",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 4
+        },
+        "data": "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcxyz"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "G8QBAAQ24IC4FvlLE86CmIfRHQ=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 4 large text round trip",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 4
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 386795,
+          "sha256": "46afc5648fa06a19441aaadf963f67964b3f6e6f4d2e10af833783a0e9a68db5"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "brotli quality 5 text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 5
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "GxQAAKRAwpIRSYBJzkN/ga/WgQI="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 5 repetitive",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 5
+        },
+        "data": "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcxyz"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "G8QBAAQ24IC4FvlLE86CmIfRHQ=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 5 large text round trip",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 5
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 386795,
+          "sha256": "46afc5648fa06a19441aaadf963f67964b3f6e6f4d2e10af833783a0e9a68db5"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "brotli quality 6 text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 6
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "GxQAAKRAwpIRSYBJzkN/ga/WgQI="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 6 repetitive",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 6
+        },
+        "data": "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcxyz"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "G8QBAAQ24IC4FvlLE86CmIfRHQ=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 6 large text round trip",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 6
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 386795,
+          "sha256": "46afc5648fa06a19441aaadf963f67964b3f6e6f4d2e10af833783a0e9a68db5"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "brotli quality 7 text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 7
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "GxQAAKRAwpIRSYBJzkN/ga/WgQI="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 7 repetitive",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 7
+        },
+        "data": "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcxyz"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "G8QBAAQ24IC4FvlLE86CmIfRHQ=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 7 large text round trip",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 7
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 386795,
+          "sha256": "46afc5648fa06a19441aaadf963f67964b3f6e6f4d2e10af833783a0e9a68db5"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "brotli quality 8 text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 8
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "GxQAAKRAwpIRSYBJzkN/ga/WgQI="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 8 repetitive",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 8
+        },
+        "data": "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcxyz"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "G8QBAAQ24IC4FvlLE86CmIfRHQ=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 8 large text round trip",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 8
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 386795,
+          "sha256": "46afc5648fa06a19441aaadf963f67964b3f6e6f4d2e10af833783a0e9a68db5"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "brotli quality 9 text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 9
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "GxQAAKRAwpIRSYBJzkN/ga/WgQI="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 9 repetitive",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 9
+        },
+        "data": "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcxyz"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "G8QBAAQ24IC4FvlLE86CmIfRHQ=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 9 large text round trip",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 9
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 386795,
+          "sha256": "46afc5648fa06a19441aaadf963f67964b3f6e6f4d2e10af833783a0e9a68db5"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "brotli quality 10 text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 10
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "GxQA+CXCkpBCFEla3FGop1yUAA=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 10 repetitive",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 10
+        },
+        "data": "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcxyz"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "G8QB+AU24IC4FvlLE86CgHkY3QE="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 10 large text round trip",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 10
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 386795,
+          "sha256": "46afc5648fa06a19441aaadf963f67964b3f6e6f4d2e10af833783a0e9a68db5"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "brotli quality 11 text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 11
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "CwqAVGhpcyBpcyBhIGRlbW8gc3RyaW5nAw=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 11 repetitive",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 11
+        },
+        "data": "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcxyz"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "G8QB+AU24IC4FvlLE86CgHkY3QE="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 11 large text round trip",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 11
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 386795,
+          "sha256": "46afc5648fa06a19441aaadf963f67964b3f6e6f4d2e10af833783a0e9a68db5"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "brotli quality 0 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 0
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 87386,
+          "sha256": "57240c3d37aba87952d99c8347782ec73b65235482ba8213602c5df674ebb314"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 0 JPG image",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 0
+        },
+        "file": "packages/compression/tests/resources/disk-a/kitten-1.jpg",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 599644,
+          "sha256": "13f9cecec1e8a908b582d52ade4764ac749638885dfda6d0c97585d1bda0db68"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 1 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 1
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 70466,
+          "sha256": "e82fe7c2669ad23465df93594e9d8b4a5246d2a312bf53e73dfcc065e77dd566"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli quality 1 JPG image",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 1
+        },
+        "file": "packages/compression/tests/resources/disk-a/kitten-1.jpg",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 599644,
+          "sha256": "13f9cecec1e8a908b582d52ade4764ac749638885dfda6d0c97585d1bda0db68"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "lz4 HC level 1 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 1
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 85113,
+          "sha256": "ca7305270191d66f00dfbea45a8d4d390e94aa967d3ddcb5decc337c46d32571"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "lz4 HC level 2 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 2
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 85113,
+          "sha256": "ca7305270191d66f00dfbea45a8d4d390e94aa967d3ddcb5decc337c46d32571"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "lz4 HC level 3 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 3
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 62385,
+          "sha256": "4d257c7d766114668bd781c61736b3cff43f7bf70efd59c44b3b0cd75d996b93"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "lz4 HC level 4 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 4
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 55080,
+          "sha256": "3f0a7561d427be9e6e41042cb431baee9f66c05bb51f6f3d1ea842ab5cb4ab9b"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "lz4 HC level 5 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 5
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 51032,
+          "sha256": "8143bda953188a5d2f5f53f61693ab85466259042e6ef2cedf7881935dd1d4fb"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "lz4 HC level 6 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 6
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 49326,
+          "sha256": "328e60c85f79a465af60c23b02d301926b07de4b3321609fa0bf09bfdac34e06"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "lz4 HC level 7 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 7
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 48728,
+          "sha256": "637c24befc22facaa797dbc089cde8f99b92f90fa719e88391fbf95112fd60f4"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "lz4 HC level 8 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 8
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 48529,
+          "sha256": "59dd919fbe19a5d81bad46123804d6a19ff023d63790d67b208687f062bf290b"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "lz4 HC level 9 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 9
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 48493,
+          "sha256": "bd2065c5e4774418aa450fb724fc1b0a28ee7e8ae734e2ab457449808f969112"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "lz4 HC level 10 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 10
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 47938,
+          "sha256": "900b90f53f9f98433bbe64c7b5babed50878ce05b8b617d1942eca1404a38d48"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "lz4 HC level 11 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 11
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 47872,
+          "sha256": "a8980600b780ad6b2b7ef05b0ba2fb670bd73a08a313a30ad9839f9431a7074c"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "lz4 HC level 12 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 12
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 47876,
+          "sha256": "fbc204b159b96488d409f0cab34c5ecdf0820cbc907112fd5163a0c1fdfdd400"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level -5 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": -5
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 80032,
+          "sha256": "69128db7bd563756ab0a5e7dd5a0b328192ed66eed839842b0dbe1c050f82a57"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level -4 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": -4
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 78530,
+          "sha256": "eb4098776499b3cbe336bc061be97b9cad83c652f629f12f88599d376e517dd9"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level -3 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": -3
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 76868,
+          "sha256": "bbcf7f48c86d2c05ff15bfb257d0969da169045f91b5fe266fa47661ce369ff8"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level -2 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": -2
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 75324,
+          "sha256": "7a08bcc5e6acc66fb8872b46f10fb128ee03e24b1faf85d0312b2c5b361ec8d2"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level -1 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": -1
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 73570,
+          "sha256": "9ec0f7ac9240714a586003756119a3419024bc2f146db113ac63e385f01b4414"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 0 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 0
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 56226,
+          "sha256": "aeab973ddce82834332e9a3a457c6c8687d422d0c4271519e16974a8808c6e65"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 1 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 1
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 62876,
+          "sha256": "c3fe52b8d6f8827695e71d5abe46db454e3c79c0020f35d7caf04492f900d811"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 2 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 2
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 69735,
+          "sha256": "515d14abe6a5bd58af3b312dcea9f7b1c1d8e1d1952c89438d8e43afab92108f"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 3 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 3
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 56226,
+          "sha256": "aeab973ddce82834332e9a3a457c6c8687d422d0c4271519e16974a8808c6e65"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 4 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 4
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 56263,
+          "sha256": "dd6401b75930ae5bb634de2a88bd28d202e6547fc9ef74d42829e563e2366281"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 5 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 5
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 47733,
+          "sha256": "9a30141e792f0fe53f15a445ddaf8ecd0efb87076901811fa651f40af48d2a11"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 6 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 6
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 42819,
+          "sha256": "0ff6fb4cee872078b358bca94e87c34a750fde91720cf0c55d92a2ebcffbe7ba"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 7 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 7
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 37826,
+          "sha256": "881f01478f937ecaf18c4d54ca865208306ca827fdc4a7e02e349e8cf28e613d"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 8 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 8
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 36659,
+          "sha256": "f289202e2b08bcc1ac0f1cae203b27b01feb5c60c2b5fb14115e9718ec0bb4d5"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 9 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 9
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 36659,
+          "sha256": "f289202e2b08bcc1ac0f1cae203b27b01feb5c60c2b5fb14115e9718ec0bb4d5"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 10 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 10
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 34286,
+          "sha256": "9d903555e009684ec0a37b15f05e0a0389ef40c933cea885be4be07206a6c8ad"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 11 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 11
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 33468,
+          "sha256": "4874870c229f0726e375d682b44087f8f14de4a7ddde7ff5ddc474b14166f3b0"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 12 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 12
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 33468,
+          "sha256": "4874870c229f0726e375d682b44087f8f14de4a7ddde7ff5ddc474b14166f3b0"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 13 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 13
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 33824,
+          "sha256": "8ca6451309b13204abadc824e0a2922b28c7a24958f70c456a8747a6a620abf1"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 14 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 14
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 33341,
+          "sha256": "8e25ddffa49ac9cd698a8157b7555f86ac45d70a6eb9b68b1083fa33522a6bcb"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 15 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 15
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 33281,
+          "sha256": "a4f3a4e80358f935d4f604f9d5a8e902bd79bf6977325bb45b9fea23c7297a85"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 16 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 16
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 32002,
+          "sha256": "8959bb4d04af1219383a4bc294bf85d326ab91baa8090d3eae806b2930642d76"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 17 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 17
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 31566,
+          "sha256": "3ec3489f3a7682a5c7d2c0ba606efc28dd09712859afb61a66625fc348eac163"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 18 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 18
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 31590,
+          "sha256": "e1e4e47bfee62c7a978ca123bac8ed100749ef113ebc2568d0acb84cbe1ef8d9"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 19 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 19
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 31306,
+          "sha256": "106fc0a1848002432e66505874e6e47d86394383364f55bc7ce7d83a3a54f404"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 20 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 20
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 31306,
+          "sha256": "106fc0a1848002432e66505874e6e47d86394383364f55bc7ce7d83a3a54f404"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 21 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 21
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 31306,
+          "sha256": "106fc0a1848002432e66505874e6e47d86394383364f55bc7ce7d83a3a54f404"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd level 22 large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 22
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 31306,
+          "sha256": "106fc0a1848002432e66505874e6e47d86394383364f55bc7ce7d83a3a54f404"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "deflate large text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 44426,
+          "sha256": "315f36a937b420c62486ab4db3ffe66565394121003b1c58511d444c2e434559"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "deflate JPG image",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "file": "packages/compression/tests/resources/disk-a/kitten-1.jpg",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 599089,
+          "sha256": "dd2c0b643c9bc63b338bd239edbb86413a65e7a7ab4621cc5c41976a00b6b264"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "deflate PNG image round trip",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "file": "packages/compression/tests/resources/disk-b/kitten-1.png",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 3038056,
+          "sha256": "07b78c11dab6ab70719e9ed46f5ef7ad5c20b27259be3a3af2968964934edace"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "brotli font and text modes compress as generic",
+      "steps": [
+        {
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 1,
+              "mode": "generic"
+            },
+            "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+            "digest": true
+          },
+          "bind": "generic",
+          "expect": {
+            "value": {
+              "length": 70466,
+              "sha256": "e82fe7c2669ad23465df93594e9d8b4a5246d2a312bf53e73dfcc065e77dd566"
+            },
+            "warning": null
+          }
+        },
+        {
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 1,
+              "mode": "font"
+            },
+            "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+            "digest": true
+          },
+          "bind": "font",
+          "expect": {
+            "value": {
+              "length": 70466,
+              "sha256": "e82fe7c2669ad23465df93594e9d8b4a5246d2a312bf53e73dfcc065e77dd566"
+            },
+            "warning": null
+          }
+        },
+        {
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 1,
+              "mode": "text"
+            },
+            "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+            "digest": true
+          },
+          "bind": "text",
+          "expect": {
+            "value": {
+              "length": 70466,
+              "sha256": "e82fe7c2669ad23465df93594e9d8b4a5246d2a312bf53e73dfcc065e77dd566"
+            },
+            "warning": null
+          }
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "generic"
+            },
+            "b": {
+              "$ref": "font"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "generic"
+            },
+            "b": {
+              "$ref": "text"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "brotli mode text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "mode": "text"
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "CwqAVGhpcyBpcyBhIGRlbW8gc3RyaW5nAw=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli mode font then generic",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "mode": "generic"
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "CwqAVGhpcyBpcyBhIGRlbW8gc3RyaW5nAw=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "lz4 empty string does not round trip",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "data": ""
+      },
+      "expect": {
+        "value": "",
+        "warning": "lz4_uncompress : data error",
+        "smaller": false
+      }
+    },
+    {
+      "name": "lz4 constructor levels are unchecked 13",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "level": 13
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": "",
+        "warning": "lz4_compress: compression level (13) must be within 1..12"
+      }
+    },
+    {
+      "name": "lz4 constructor levels are unchecked -1",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "level": -1
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": "",
+        "warning": "lz4_compress: compression level (-1) must be within 1..12"
+      }
+    },
+    {
+      "name": "lz4 constructor levels are unchecked 100",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "level": 100
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": "",
+        "warning": "lz4_compress: compression level (100) must be within 1..12"
+      }
+    },
+    {
+      "name": "lz4 constructor levels are unchecked -2147483649",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "level": -2147483649
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": "",
+        "warning": "lz4_compress: compression level (2147483647) must be within 1..12"
+      }
+    },
+    {
+      "name": "lz4 constructor levels are unchecked",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "level": 13
+        }
+      },
+      "expect": {
+        "class": "LZ4",
+        "name": "lz4",
+        "encoding": "lz4",
+        "supported": true,
+        "level": 13
+      }
+    },
+    {
+      "name": "zstd constructor levels are unchecked -5",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": -5
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "KLUv/SAVqQAAVGhpcyBpcyBhIGRlbW8gc3RyaW5n"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd constructor levels are unchecked 0",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 0
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "KLUv/SAVqQAAVGhpcyBpcyBhIGRlbW8gc3RyaW5n"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd constructor levels are unchecked 23",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 23
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_compress(): compression level (23) must be within 1..22 or smaller then 0"
+      }
+    },
+    {
+      "name": "zstd constructor levels are unchecked -200000",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": -200000
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "KLUv/SAVqQAAVGhpcyBpcyBhIGRlbW8gc3RyaW5n"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd constructor levels are unchecked 4294967299",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 4294967299
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_compress(): compression level (4294967299) must be within 1..22 or smaller then 0"
+      }
+    },
+    {
+      "name": "zstd constructor levels are unchecked",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Zstd",
+          "level": 0
+        }
+      },
+      "expect": {
+        "class": "Zstd",
+        "name": "zstd",
+        "encoding": "zstd",
+        "supported": true,
+        "level": 0
+      }
+    },
+    {
+      "name": "zstd reads the first frame",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "KLUv/SABCQAAYSi1L/0gAQkAAGI="
+        }
+      },
+      "expect": {
+        "value": "a",
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd ignores trailing bytes",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "KLUv/SABCQAAYQEC"
+        }
+      },
+      "expect": {
+        "value": "a",
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd truncated frame",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "KLUv/SABCQAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd skippable frame",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "UCpNGAAAAAAotS/9IAEJAABh"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd frame without content size",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "KLUv/QBYCQAAYWJj"
+        }
+      },
+      "expect": {
+        "value": "a",
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd legacy v0.1 magic",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "/S+1HgAAAAAAAAAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): it was not compressed by zstd"
+      }
+    },
+    {
+      "name": "zstd legacy v0.1 magic, short",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "/S+1HiAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): it was not compressed by zstd"
+      }
+    },
+    {
+      "name": "zstd legacy v0.2 magic",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "IrUv/QAAAAAAAAAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): it was not compressed by zstd"
+      }
+    },
+    {
+      "name": "zstd legacy v0.2 magic, short",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "IrUv/SAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): it was not compressed by zstd"
+      }
+    },
+    {
+      "name": "zstd legacy v0.3 magic",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "I7Uv/QAAAAAAAAAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): it was not compressed by zstd"
+      }
+    },
+    {
+      "name": "zstd legacy v0.3 magic, short",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "I7Uv/SAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): it was not compressed by zstd"
+      }
+    },
+    {
+      "name": "zstd legacy v0.4 magic",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "JLUv/QAAAAAAAAAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): it was not compressed by zstd"
+      }
+    },
+    {
+      "name": "zstd legacy v0.4 magic, short",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "JLUv/SAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): it was not compressed by zstd"
+      }
+    },
+    {
+      "name": "zstd legacy v0.5 magic",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "JbUv/QAAAAAAAAAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd legacy v0.5 magic, short",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "JbUv/SAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): Unsupported frame parameter"
+      }
+    },
+    {
+      "name": "zstd legacy v0.6 magic",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "JrUv/QAAAAAAAAAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd legacy v0.6 magic, short",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "JrUv/SAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "zstd_uncompress(): Unsupported frame parameter"
+      }
+    },
+    {
+      "name": "zstd legacy v0.7 magic",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "J7Uv/QAAAAAAAAAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": null
+      }
+    },
+    {
+      "name": "zstd legacy v0.7 magic, short",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": {
+          "$bytes": "J7Uv/SAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": null
+      }
+    },
+    {
+      "name": "gzip reads the first member",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": {
+          "$bytes": "H4sIAAAAAAAAA0sEAEO+t+gBAAAAH4sIAAAAAAAAA0sEAEO+t+gBAAAA"
+        }
+      },
+      "expect": {
+        "value": "a",
+        "warning": null
+      }
+    },
+    {
+      "name": "gzip ignores trailing bytes",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": {
+          "$bytes": "H4sIAAAAAAAAA0sEAEO+t+gBAAAA//8="
+        }
+      },
+      "expect": {
+        "value": "a",
+        "warning": null
+      }
+    },
+    {
+      "name": "gzip truncated",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": {
+          "$bytes": "H4sIAAAAAAAAA0sEAEO+t+g="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzdecode(): data error"
+      }
+    },
+    {
+      "name": "gzip bad crc",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": {
+          "$bytes": "H4sIAAAAAAAAA0sEAAAAAAABAAAA"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzdecode(): data error"
+      }
+    },
+    {
+      "name": "deflate ignores trailing bytes",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": {
+          "$bytes": "SwQA//8="
+        }
+      },
+      "expect": {
+        "value": "a",
+        "warning": null
+      }
+    },
+    {
+      "name": "deflate truncated",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": {
+          "$bytes": "SwQ="
+        }
+      },
+      "expect": {
+        "value": "a",
+        "warning": null
+      }
+    },
+    {
+      "name": "deflate stored block",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": {
+          "$bytes": "AQUA+v9oZWxsbw=="
+        }
+      },
+      "expect": {
+        "value": "hello",
+        "warning": null
+      }
+    },
+    {
+      "name": "deflate stored block without its last byte",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": {
+          "$bytes": "AQUA+v9oZWxs"
+        }
+      },
+      "expect": {
+        "value": "hell\u0000",
+        "warning": null
+      }
+    },
+    {
+      "name": "deflate zlib stream",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": {
+          "$bytes": "eJxLBAAAYgBi"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzinflate(): data error"
+      }
+    },
+    {
+      "name": "brotli ignores trailing bytes",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        },
+        "data": {
+          "$bytes": "CwCAYQN4eXo="
+        }
+      },
+      "expect": {
+        "value": "a",
+        "warning": null
+      }
+    },
+    {
+      "name": "brotli truncated",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        },
+        "data": {
+          "$bytes": "CwCAYQ=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "brotli_uncompress(): failed to uncompress"
+      }
+    },
+    {
+      "name": "brotli empty stream",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        },
+        "data": {
+          "$bytes": "Ow=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": null
+      }
+    },
+    {
+      "name": "lz4 negative size",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "data": {
+          "$bytes": "/////xBh"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "lz4_uncompress : allocate size error"
+      }
+    },
+    {
+      "name": "lz4 size too small",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "data": {
+          "$bytes": "AAAAABBh"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "lz4_uncompress : data error"
+      }
+    },
+    {
+      "name": "lz4 size too large",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "data": {
+          "$bytes": "/wAAABBh"
+        }
+      },
+      "expect": {
+        "value": "a",
+        "warning": null
+      }
+    },
+    {
+      "name": "lz4 trailing bytes",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "data": {
+          "$bytes": "AQAAABBhAA=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "lz4_uncompress : data error"
+      }
+    },
+    {
+      "name": "snappy length too long",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": {
+          "$bytes": "AgBh"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "snappy_uncompress : data error"
+      }
+    },
+    {
+      "name": "snappy length too short",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": {
+          "$bytes": "AABh"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "snappy_uncompress : data error"
+      }
+    },
+    {
+      "name": "snappy five byte varint",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": {
+          "$bytes": "gICAgBA="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "snappy_uncompress : output length error"
+      }
+    },
+    {
+      "name": "snappy varint too long",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": {
+          "$bytes": "gICAgIAB"
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "snappy_uncompress : output length error"
+      }
+    },
+    {
+      "name": "snappy copy before start",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": {
+          "$bytes": "BQABBQ=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "snappy_uncompress : data error"
+      }
+    },
+    {
+      "name": "snappy overlapping copy",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": {
+          "$bytes": "CgRhYg4CAA=="
+        }
+      },
+      "expect": {
+        "value": "",
+        "warning": "snappy_uncompress : data error"
+      }
+    },
+    {
+      "name": "snappy long literal",
+      "op": "decompress",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": {
+          "$bytes": "RvBFeHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eA=="
+        }
+      },
+      "expect": {
+        "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "warning": null
+      }
+    },
+    {
+      "name": "corrupt GZIP at 5 xor 1",
+      "op": "corrupt",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": "the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; ",
+        "at": 5,
+        "xor": 1
+      },
+      "expect": {
+        "value": "the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; ",
+        "warning": null
+      }
+    },
+    {
+      "name": "corrupt GZIP at 40 xor 128",
+      "op": "corrupt",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": "the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; ",
+        "at": 40,
+        "xor": 128
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzdecode(): data error"
+      }
+    },
+    {
+      "name": "corrupt GZIP at 1 xor 255",
+      "op": "corrupt",
+      "args": {
+        "algorithm": {
+          "class": "GZIP"
+        },
+        "data": "the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; ",
+        "at": 1,
+        "xor": 255
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzdecode(): data error"
+      }
+    },
+    {
+      "name": "corrupt Deflate at 0 xor 4",
+      "op": "corrupt",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": "the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; ",
+        "at": 0,
+        "xor": 4
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzinflate(): data error"
+      }
+    },
+    {
+      "name": "corrupt Deflate at 30 xor 16",
+      "op": "corrupt",
+      "args": {
+        "algorithm": {
+          "class": "Deflate"
+        },
+        "data": "the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; ",
+        "at": 30,
+        "xor": 16
+      },
+      "expect": {
+        "value": "",
+        "warning": "gzinflate(): data error"
+      }
+    },
+    {
+      "name": "corrupt Snappy at 0 xor 1",
+      "op": "corrupt",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": "the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; ",
+        "at": 0,
+        "xor": 1
+      },
+      "expect": {
+        "value": "",
+        "warning": "snappy_uncompress : data error"
+      }
+    },
+    {
+      "name": "corrupt Snappy at 7 xor 64",
+      "op": "corrupt",
+      "args": {
+        "algorithm": {
+          "class": "Snappy"
+        },
+        "data": "the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; ",
+        "at": 7,
+        "xor": 64
+      },
+      "expect": {
+        "value": "the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; the 1uick brown fox jumps over the lazy dog; ",
+        "warning": null
+      }
+    },
+    {
+      "name": "corrupt Zstd at 3 xor 2",
+      "op": "corrupt",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": "the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; ",
+        "at": 3,
+        "xor": 2,
+        "from": 18
+      },
+      "expect": {
+        "value": "the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; the quick\"brown fox jumps over the lazy dog; ",
+        "warning": null
+      }
+    },
+    {
+      "name": "corrupt Zstd at 30 xor 255",
+      "op": "corrupt",
+      "args": {
+        "algorithm": {
+          "class": "Zstd"
+        },
+        "data": "the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; ",
+        "at": 30,
+        "xor": 255,
+        "from": 18
+      },
+      "expect": {
+        "value": {
+          "$bytes": "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsgdGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsnnp5IGRvZzsg"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "corrupt Brotli at 10 xor 8",
+      "op": "corrupt",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 1
+        },
+        "data": "the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; ",
+        "at": 10,
+        "xor": 8
+      },
+      "expect": {
+        "value": {
+          "$bytes": "lIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tAlIiFQJGViYOLQIKSj5eOQIaPmECKlY2Qk0CPloWSQJSIhUCMgZqZQISPh1tA"
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "corrupt Brotli at 0 xor 1",
+      "op": "corrupt",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 0
+        },
+        "data": "the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; ",
+        "at": 0,
+        "xor": 1
+      },
+      "expect": {
+        "value": "",
+        "warning": "brotli_uncompress(): failed to uncompress"
+      }
+    },
+    {
+      "name": "corrupt LZ4 at 9 xor 32",
+      "op": "corrupt",
+      "args": {
+        "algorithm": {
+          "class": "LZ4"
+        },
+        "data": "the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; ",
+        "at": 9,
+        "xor": 32,
+        "from": 4
+      },
+      "expect": {
+        "value": "the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; the quiCk brown fox jumps over the lazy dog; ",
+        "warning": null
+      }
+    },
+    {
+      "name": "corrupt LZ4 at 2 xor 1",
+      "op": "corrupt",
+      "args": {
+        "algorithm": {
+          "class": "LZ4",
+          "set_level": 9
+        },
+        "data": "the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; the quick brown fox jumps over the lazy dog; ",
+        "at": 2,
+        "xor": 1,
+        "from": 4
+      },
+      "expect": {
+        "value": "uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; uhe quick brown fox jumps over uhe lazy dog; ",
+        "warning": null
+      }
+    },
+    {
+      "name": "custom 'Store'",
+      "op": "custom",
+      "args": {
+        "name": "Store"
+      },
+      "expect": {
+        "name": "Store",
+        "encoding": "store"
+      }
+    },
+    {
+      "name": "custom 'MyALGO'",
+      "op": "custom",
+      "args": {
+        "name": "MyALGO"
+      },
+      "expect": {
+        "name": "MyALGO",
+        "encoding": "myalgo"
+      }
+    },
+    {
+      "name": "custom 'ÄÖÜ'",
+      "op": "custom",
+      "args": {
+        "name": "ÄÖÜ"
+      },
+      "expect": {
+        "name": "ÄÖÜ",
+        "encoding": "ÄÖÜ"
+      }
+    },
+    {
+      "name": "custom ''",
+      "op": "custom",
+      "args": {
+        "name": ""
+      },
+      "expect": {
+        "name": "",
+        "encoding": ""
+      }
+    },
+    {
+      "name": "custom 'GZIP'",
+      "op": "custom",
+      "args": {
+        "name": "GZIP"
+      },
+      "expect": {
+        "name": "GZIP",
+        "encoding": "gzip"
+      }
+    },
+    {
+      "name": "custom 'İ'",
+      "op": "custom",
+      "args": {
+        "name": "İ"
+      },
+      "expect": {
+        "name": "İ",
+        "encoding": "İ"
+      }
+    },
+    {
+      "name": "fromName 'BROTLI'",
+      "op": "from_name",
+      "args": {
+        "name": "BROTLI"
+      },
+      "expect": {
+        "class": "Brotli",
+        "name": "brotli",
+        "encoding": "br",
+        "supported": true,
+        "level": 11
+      }
+    },
+    {
+      "name": "fromName 'Br'",
+      "op": "from_name",
+      "args": {
+        "name": "Br"
+      },
+      "expect": {
+        "class": "Brotli",
+        "name": "brotli",
+        "encoding": "br",
+        "supported": true,
+        "level": 11
+      }
+    },
+    {
+      "name": "fromName 'gZiP'",
+      "op": "from_name",
+      "args": {
+        "name": "gZiP"
+      },
+      "expect": {
+        "class": "GZIP",
+        "name": "gzip",
+        "encoding": "gzip",
+        "supported": true
+      }
+    },
+    {
+      "name": "fromName 'LZ4'",
+      "op": "from_name",
+      "args": {
+        "name": "LZ4"
+      },
+      "expect": {
+        "class": "LZ4",
+        "name": "lz4",
+        "encoding": "lz4",
+        "supported": true,
+        "level": 0
+      }
+    },
+    {
+      "name": "fromName 'Snappy'",
+      "op": "from_name",
+      "args": {
+        "name": "Snappy"
+      },
+      "expect": {
+        "class": "Snappy",
+        "name": "snappy",
+        "encoding": "snappy",
+        "supported": true
+      }
+    },
+    {
+      "name": "fromName 'XZ'",
+      "op": "from_name",
+      "args": {
+        "name": "XZ"
+      },
+      "expect": {
+        "class": "XZ",
+        "name": "xz",
+        "encoding": "xz",
+        "supported": false
+      }
+    },
+    {
+      "name": "fromName 'none'",
+      "op": "from_name",
+      "args": {
+        "name": "none"
+      },
+      "expect": null
+    },
+    {
+      "name": "fromName 'identity'",
+      "op": "from_name",
+      "args": {
+        "name": "identity"
+      },
+      "expect": null
+    },
+    {
+      "name": "fromName ''",
+      "op": "from_name",
+      "args": {
+        "name": ""
+      },
+      "expect": null
+    },
+    {
+      "name": "fromName 'brotli '",
+      "op": "from_name",
+      "args": {
+        "name": "brotli "
+      },
+      "expect": null
+    },
+    {
+      "name": "fromName 'x-gzip'",
+      "op": "from_name",
+      "args": {
+        "name": "x-gzip"
+      },
+      "expect": null
+    },
+    {
+      "name": "fromAcceptEncoding 'identity, gzip'",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "identity, gzip"
+      },
+      "expect": null
+    },
+    {
+      "name": "fromAcceptEncoding 'zstd;q=0, gzip;q=0.1'",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "zstd;q=0, gzip;q=0.1"
+      },
+      "expect": {
+        "class": "GZIP",
+        "name": "gzip",
+        "encoding": "gzip",
+        "supported": true
+      }
+    },
+    {
+      "name": "fromAcceptEncoding '*'",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "*"
+      },
+      "expect": null
+    },
+    {
+      "name": "fromAcceptEncoding '0'",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "0"
+      },
+      "expect": null
+    },
+    {
+      "name": "fromAcceptEncoding ''",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": ""
+      },
+      "expect": null
+    },
+    {
+      "name": "fromAcceptEncoding 'gzip, deflate, br'",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "gzip, deflate, br"
+      },
+      "expect": {
+        "class": "GZIP",
+        "name": "gzip",
+        "encoding": "gzip",
+        "supported": true
+      }
+    },
+    {
+      "name": "fromAcceptEncoding 'gzip, deflate, br, zstd'",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "gzip, deflate, br, zstd"
+      },
+      "expect": {
+        "class": "GZIP",
+        "name": "gzip",
+        "encoding": "gzip",
+        "supported": true
+      }
+    },
+    {
+      "name": "fromAcceptEncoding 'deflate;q=0.9, gzip;q=0.9'",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "deflate;q=0.9, gzip;q=0.9"
+      },
+      "expect": {
+        "class": "Deflate",
+        "name": "deflate",
+        "encoding": "deflate",
+        "supported": true
+      }
+    },
+    {
+      "name": "fromAcceptEncoding 'gzip;level=1;q=0.2, br;q=0.1'",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "gzip;level=1;q=0.2, br;q=0.1"
+      },
+      "expect": {
+        "class": "Brotli",
+        "name": "brotli",
+        "encoding": "br",
+        "supported": true,
+        "level": 11
+      }
+    },
+    {
+      "name": "fromAcceptEncoding 'GZIP;Q=0.5, BR;q=0.4'",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "GZIP;Q=0.5, BR;q=0.4"
+      },
+      "expect": {
+        "class": "GZIP",
+        "name": "gzip",
+        "encoding": "gzip",
+        "supported": true
+      }
+    },
+    {
+      "name": "fromAcceptEncoding ' gzip ; q=0.5 '",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": " gzip ; q=0.5 "
+      },
+      "expect": null
+    },
+    {
+      "name": "fromAcceptEncoding 'br;q=1e3, gzip;q=INF'",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "br;q=1e3, gzip;q=INF"
+      },
+      "expect": {
+        "class": "Brotli",
+        "name": "brotli",
+        "encoding": "br",
+        "supported": true,
+        "level": 11
+      }
+    },
+    {
+      "name": "fromAcceptEncoding 'none, gzip'",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "none, gzip"
+      },
+      "expect": null
+    },
+    {
+      "name": "fromAcceptEncoding 'gzip;q=0.5, none;q=0.6'",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "gzip;q=0.5, none;q=0.6"
+      },
+      "expect": null
+    },
+    {
+      "name": "fromAcceptEncoding 'lz4, xz, snappy' [\"lz4\", \"xz\", \"snappy\"]",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "lz4, xz, snappy",
+        "supported": [
+          "lz4",
+          "xz",
+          "snappy"
+        ]
+      },
+      "expect": {
+        "class": "LZ4",
+        "name": "lz4",
+        "encoding": "lz4",
+        "supported": true,
+        "level": 0
+      }
+    },
+    {
+      "name": "fromAcceptEncoding 'xz' [\"xz\"]",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "xz",
+        "supported": [
+          "xz"
+        ]
+      },
+      "expect": {
+        "class": "XZ",
+        "name": "xz",
+        "encoding": "xz",
+        "supported": false
+      }
+    },
+    {
+      "name": "fromAcceptEncoding 'br' [\"br\"]",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "br",
+        "supported": [
+          "br"
+        ]
+      },
+      "expect": null
+    },
+    {
+      "name": "fromAcceptEncoding 'gzip, br' {\"gzip\": false, \"brotli\": true}",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "gzip, br",
+        "supported": {
+          "gzip": false,
+          "brotli": true
+        }
+      },
+      "expect": {
+        "class": "Brotli",
+        "name": "brotli",
+        "encoding": "br",
+        "supported": true,
+        "level": 11
+      }
+    },
+    {
+      "name": "fromAcceptEncoding 'gzip, br' {\"gzip\": true, \"brotli\": false}",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "gzip, br",
+        "supported": {
+          "gzip": true,
+          "brotli": false
+        }
+      },
+      "expect": {
+        "class": "GZIP",
+        "name": "gzip",
+        "encoding": "gzip",
+        "supported": true
+      }
+    },
+    {
+      "name": "fromAcceptEncoding 'gzip, br' {\"zstd\": true}",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "gzip, br",
+        "supported": {
+          "zstd": true
+        }
+      },
+      "expect": null
+    },
+    {
+      "name": "fromAcceptEncoding 'snappy;q=0.2, lz4;q=0.2' [\"lz4\", \"snappy\"]",
+      "op": "from_accept_encoding",
+      "args": {
+        "accept": "snappy;q=0.2, lz4;q=0.2",
+        "supported": [
+          "lz4",
+          "snappy"
+        ]
+      },
+      "expect": {
+        "class": "Snappy",
+        "name": "snappy",
+        "encoding": "snappy",
+        "supported": true
+      }
+    }
+  ]
+}

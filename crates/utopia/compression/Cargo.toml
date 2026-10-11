@@ -1,0 +1,32 @@
+[package]
+name = "utopia-compression"
+description = "Compression algorithms (Brotli, Deflate, GZIP, LZ4, Snappy, XZ, Zstd) and Accept-Encoding negotiation, byte for byte as PHP's extensions."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+# One feature per PHP extension the algorithm needs. Without its feature, an
+# algorithm reports itself unsupported and fails like PHP without the
+# extension. `xz` is off by default: PHP's dev image has no ext-xz.
+default = ["brotli", "lz4", "zlib", "zstd"]
+brotli = ["dep:brotli"]
+lz4 = ["dep:lz4"]
+xz = ["dep:lzma-rust2"]
+zlib = ["dep:libz-sys"]
+zstd = ["dep:zstd"]
+
+[dependencies]
+brotli = { workspace = true, optional = true }
+libz-sys = { workspace = true, optional = true }
+lz4 = { workspace = true, optional = true }
+lzma-rust2 = { workspace = true, optional = true }
+php-std.workspace = true
+thiserror.workspace = true
+# Legacy frames (zstd v0.5 to v0.7) are recognised, as by the libzstd PHP links.
+zstd = { workspace = true, optional = true, features = ["legacy"] }
+
+[package.metadata.utopia]
+php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"
