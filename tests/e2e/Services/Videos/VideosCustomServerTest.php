@@ -1648,6 +1648,20 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $vtt['headers']['status-code']);
         $this->assertStringContainsString('OVERRIDE CUE', (string) $vtt['body']);
         $this->assertStringNotContainsString('EMBEDDED CUE', (string) $vtt['body']);
+        // Caption bytes share a stable URL across source replacements, so they
+        // must revalidate rather than cache as immutable year-long.
+        $this->assertSame(
+            'public, max-age=300, stale-while-revalidate=86400',
+            $vtt['headers']['cache-control'] ?? null
+        );
+        $etag = $vtt['headers']['etag'] ?? '';
+        $this->assertNotSame('', $etag);
+        $revalidated = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/dash/captions/' . $uploadId . '/manifest',
+            $this->headers() + ['if-none-match' => $etag]
+        );
+        $this->assertEquals(304, $revalidated['headers']['status-code']);
 
         // The HLS captions playlist must be valid VOD HLS: one MEDIA-SEQUENCE tag,
         // a comma-terminated EXTINF, and a closing ENDLIST.

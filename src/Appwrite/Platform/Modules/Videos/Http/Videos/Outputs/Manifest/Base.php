@@ -363,13 +363,9 @@ abstract class Base extends VideosAction
                     } elseif (\count($media) > 0) {
                         $presentation = (string) ($mpd['mediaPresentationDuration'] ?? '');
                         // PT32.8S → seconds; split evenly across media segments.
-                        if (\preg_match('/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?/', $presentation, $m)) {
-                            $seconds = ((int) ($m[1] ?? 0)) * 3600
-                                + ((int) ($m[2] ?? 0)) * 60
-                                + (float) ($m[3] ?? 0);
-                            if ($seconds > 0) {
-                                $segAttrs['duration'] = (string) (int) \round(($seconds / \count($media)) * $timescale);
-                            }
+                        $seconds = $this->presentationDurationSeconds($presentation);
+                        if ($seconds > 0) {
+                            $segAttrs['duration'] = (string) (int) \round(($seconds / \count($media)) * $timescale);
                         }
                     }
                     $representation['segmentList']['attributes'] = $segAttrs;
@@ -483,5 +479,59 @@ abstract class Base extends VideosAction
         ]);
 
         $this->sendManifest($response, $manifest, 'application/x-mpegurl');
+    }
+
+    /**
+     * Parse an MPD mediaPresentationDuration (`PT1H2M3.5S`) into seconds.
+     *
+     * Walks the string with digit/unit tokens instead of preg_* (AGENTS.md).
+     * Returns 0 when the value is missing or malformed.
+     */
+    private function presentationDurationSeconds(string $presentation): float
+    {
+        if (!\str_starts_with($presentation, 'PT') || \strlen($presentation) < 3) {
+            return 0.0;
+        }
+
+        $rest = \substr($presentation, 2);
+        $seconds = 0.0;
+        $number = '';
+        $length = \strlen($rest);
+
+        for ($i = 0; $i < $length; $i++) {
+            $ch = $rest[$i];
+            if (($ch >= '0' && $ch <= '9') || $ch === '.') {
+                $number .= $ch;
+                continue;
+            }
+            // Same shape as the old ISO-8601 fragment: digits, optional fraction.
+            if (
+                $number === ''
+                || \str_starts_with($number, '.')
+                || \str_ends_with($number, '.')
+                || \substr_count($number, '.') > 1
+            ) {
+                return 0.0;
+            }
+
+            $value = (float) $number;
+            $number = '';
+
+            if ($ch === 'H') {
+                $seconds += $value * 3600;
+            } elseif ($ch === 'M') {
+                $seconds += $value * 60;
+            } elseif ($ch === 'S') {
+                $seconds += $value;
+            } else {
+                return 0.0;
+            }
+        }
+
+        if ($number !== '') {
+            return 0.0;
+        }
+
+        return $seconds;
     }
 }

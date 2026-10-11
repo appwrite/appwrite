@@ -235,7 +235,7 @@ class Videos extends Action
             Base::JOB_TIMELINE,
             \uniqid('', true)
         );
-        $permissions = $this->sourceReadPermissions($dbForProject, $project, $video);
+        $permissions = $this->sourceReadPermissions($dbForProject, $video);
         $started = \microtime(true);
         $stage = 'download';
         $outcome = 'error';
@@ -436,7 +436,7 @@ class Videos extends Action
             Base::JOB_CAPTION,
             \uniqid('', true)
         );
-        $permissions = $this->sourceReadPermissions($dbForProject, $project, $video);
+        $permissions = $this->sourceReadPermissions($dbForProject, $video);
         Span::add('caption.code', (string) $caption->getAttribute('code', ''));
         Span::add('caption.default', (bool) $caption->getAttribute('default', false));
         Span::add('caption.bucket.id', (string) $caption->getAttribute('bucketId', ''));
@@ -495,16 +495,17 @@ class Videos extends Action
                 }
             } else {
                 // text/plain and application/x-subrip without a .srt extension: try
-                // Subrip parsing, then fall back to a straight copy.
+                // SubRip. A parse failure fails the job — never persist non-WebVTT
+                // bytes under a .vtt path.
                 $conversion = 'srt';
                 try {
                     $this->subripToWebvtt($downloaded, $captionPath);
                 } catch (\Throwable $parse) {
-                    $conversion = 'fallback';
-                    Span::add('warning.message', 'SubRip parse failed, stored raw copy: ' . $parse->getMessage());
-                    if (!\copy($downloaded, $captionPath)) {
-                        throw new \Exception('Failed to stage caption as WebVTT');
-                    }
+                    Span::add('warning.message', 'SubRip parse failed: ' . $parse->getMessage());
+                    throw new \Exception(
+                        'Failed to convert caption to WebVTT: ' . $parse->getMessage(),
+                        previous: $parse
+                    );
                 }
             }
             $this->phase($telemetry, VideoAction::Caption->value, 'convert', $phaseStart);
@@ -599,7 +600,7 @@ class Videos extends Action
         $output = $videoMessage->output !== ''
             ? $videoMessage->output
             : (string) $rendition->getAttribute('output', Base::OUTPUT_HLS);
-        $permissions = $this->sourceReadPermissions($dbForProject, $project, $videoMessage->video);
+        $permissions = $this->sourceReadPermissions($dbForProject, $videoMessage->video);
         $claimed = false;
         $codec = Base::normalizeCodec(
             $rendition->getAttribute('codec')
@@ -1082,6 +1083,42 @@ class Videos extends Action
     }
 
     /**
+     * Require a WebVTT signature before uploading as text/vtt.
+     *
+     * Accepts an optional UTF-8 BOM. The next character after "WEBVTT" must be
+     * end-of-file, space, tab, CR, or LF (WebVTT cue-file header).
+     */
+    private function assertWebvtt(string $vttPath): void
+    {
+        $handle = \fopen($vttPath, 'rb');
+        if ($handle === false) {
+            throw new \Exception('Failed to read staged caption');
+        }
+
+        $prefix = \fread($handle, 16);
+        \fclose($handle);
+
+        if ($prefix === false || $prefix === '') {
+            throw new \Exception('Staged caption is empty');
+        }
+
+        if (\str_starts_with($prefix, "\xEF\xBB\xBF")) {
+            $prefix = \substr($prefix, 3);
+        }
+
+        if (!\str_starts_with($prefix, 'WEBVTT')) {
+            throw new \Exception('Staged caption is not WebVTT');
+        }
+
+        if (\strlen($prefix) > 6) {
+            $next = $prefix[6];
+            if ($next !== ' ' && $next !== "\t" && $next !== "\n" && $next !== "\r") {
+                throw new \Exception('Staged caption is not WebVTT');
+            }
+        }
+    }
+
+    /**
      * Record the timeline cue file so its bytes join the videos.storage gauge.
      *
      * Sprite sheet rows are replaced on each timeline job. This row stays and
@@ -1145,6 +1182,8 @@ class Videos extends Action
             'path' => $dir,
             'duration' => $duration,
         ]));
+
+        $this->assertWebvtt($vttPath);
 
         $data = (new Local('/'))->read($vttPath);
         // Retained bytes. StatsResources sums this column into the videos.storage gauge.
@@ -1506,6 +1545,9 @@ class Videos extends Action
 
     /**
      * Map a container language tag to an ISO 639-2 code2 used by the API.
+     *
+     * Tries the full BCP 47 tag first (zh-cn, pt-br, …) against locale
+     * `code` / `code2`, then the primary subtag, then a bare 3-letter code.
      */
     private function captionLanguageCode(?string $language): string
     {
@@ -1515,8 +1557,15 @@ class Videos extends Action
 
         $tag = \strtolower(\str_replace('_', '-', \trim($language)));
         $primary = \explode('-', $tag)[0];
+        $languages = Config::getParam('locale-languages');
 
-        foreach (Config::getParam('locale-languages') as $entry) {
+        foreach ($languages as $entry) {
+            if (($entry['code'] ?? '') === $tag || ($entry['code2'] ?? '') === $tag) {
+                return $entry['code2'];
+            }
+        }
+
+        foreach ($languages as $entry) {
             if (($entry['code'] ?? '') === $primary || ($entry['code2'] ?? '') === $primary) {
                 return $entry['code2'];
             }
@@ -1882,6 +1931,10 @@ class Videos extends Action
      * value would let one uploader inject playlist lines or XML into the
      * manifest served to every other viewer. Cleaning at persist time means
      * the playback endpoints can render the stored metadata verbatim.
+     *
+     * Implemented with string walks (no preg_*) per AGENTS.md: ASCII alnum
+     * plus a fixed punctuation set, and any non-ASCII code point (titles in
+     * other scripts). Breakout vectors for these manifests are ASCII.
      */
     private function sanitizeMeta(?string $value): ?string
     {
@@ -1889,7 +1942,29 @@ class Videos extends Action
             return null;
         }
 
-        return \preg_replace('/[^\p{L}\p{N} .,:;\/@=+_\-]/u', '', $value);
+        $allowed = [
+            ' ' => true, '.' => true, ',' => true, ':' => true, ';' => true,
+            '/' => true, '@' => true, '=' => true, '+' => true, '_' => true, '-' => true,
+        ];
+        $out = '';
+        $length = \mb_strlen($value, 'UTF-8');
+
+        for ($i = 0; $i < $length; $i++) {
+            $char = \mb_substr($value, $i, 1, 'UTF-8');
+            if (isset($allowed[$char])) {
+                $out .= $char;
+                continue;
+            }
+            if (\strlen($char) === 1 && \ctype_alnum($char)) {
+                $out .= $char;
+                continue;
+            }
+            if (\strlen($char) > 1) {
+                $out .= $char;
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -2125,24 +2200,20 @@ class Videos extends Action
     }
 
     /**
-     * Read permissions to stamp onto rendition realtime payloads: the source
-     * bucket's and file's readers, plus the project's console team so the
-     * console receives progress events.
+     * Read permissions to stamp onto realtime payloads so delivery stays within
+     * the video ACL: the video's readers when set, otherwise the source
+     * bucket's and file's readers. Console delivery is routed separately via
+     * setSubscribers() — do not broaden roles with the project team.
      *
      * @return array<string>
      */
-    private function sourceReadPermissions(Database $dbForProject, Document $project, Document $video): array
+    private function sourceReadPermissions(Database $dbForProject, Document $video): array
     {
         $roles = [];
 
-        $teamId = (string) $project->getAttribute('teamId', '');
-        if ($teamId !== '') {
-            $roles[] = Role::team($teamId)->toString();
-        }
-
         $own = $video->getAttribute('$permissions', []);
         if (\is_array($own) && $own !== []) {
-            $roles = \array_merge($roles, $video->getRead());
+            $roles = $video->getRead();
         } else {
             try {
                 $bucket = $dbForProject->getDocument('buckets', $video->getAttribute('bucketId', ''));
@@ -2156,7 +2227,7 @@ class Videos extends Action
                     $roles = \array_merge($roles, $file->getRead());
                 }
             } catch (\Throwable) {
-                // Source may be mid-delete; the console team role above still applies.
+                // Source may be mid-delete; leave roles empty so the event is dropped.
             }
         }
 
@@ -2173,7 +2244,8 @@ class Videos extends Action
      * the Realtime adapter derives delivery roles from the payload's read
      * permissions — an empty set means the event is silently dropped. Stamp the
      * roles from the video document when set, otherwise from the source
-     * bucket/file (see sourceReadPermissions()) so subscribers receive the event.
+     * bucket/file (see sourceReadPermissions()) so only ACL readers receive the
+     * event. Console updates are routed via setSubscribers(['console', …]).
      *
      * @param array<string, string> $params
      * @param array<string> $permissions

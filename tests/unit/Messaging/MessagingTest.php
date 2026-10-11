@@ -1225,7 +1225,8 @@ final class MessagingTest extends TestCase
             event: 'videos.video1.renditions.rendition1.update',
             payload: new Document([
                 '$id' => 'rendition1',
-                '$permissions' => [Permission::read(Role::team('team1'))],
+                // Roles come only from the stamped payload ACL — not the project team.
+                '$permissions' => [Permission::read(Role::user('user1'))],
             ]),
             project: new Document(['$id' => 'project1', 'teamId' => 'team1']),
         );
@@ -1233,7 +1234,8 @@ final class MessagingTest extends TestCase
         $this->assertContains('videos.video1.renditions.rendition1', $result['channels']);
         $this->assertContains('console', $result['channels']);
         $this->assertContains('projects.project1', $result['channels']);
-        $this->assertContains(Role::team('team1')->toString(), $result['roles']);
+        $this->assertContains(Role::user('user1')->toString(), $result['roles']);
+        $this->assertNotContains(Role::team('team1')->toString(), $result['roles']);
     }
 
     public function testExtractDeletedPresenceIdReturnsIdForDeleteEvent(): void

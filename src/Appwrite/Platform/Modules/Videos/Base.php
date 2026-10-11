@@ -6,6 +6,8 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -380,6 +382,42 @@ abstract class Base extends UtopiaAction
             type: DELETE_TYPE_DOCUMENT,
             document: $caption,
         ));
+    }
+
+    /**
+     * Cache policy for caption WebVTT served at a stable URL.
+     *
+     * Captions/Update can replace the source and the worker rewrites the same
+     * `captions/{captionId}.vtt` path, so bytes must not be immutable. Short
+     * max-age plus stale-while-revalidate lets CDNs serve quickly while still
+     * revalidating; ETag tracks `$updatedAt`, source file id and size.
+     *
+     * @return bool true when If-None-Match matched and a 304 was sent
+     */
+    protected function captionBytesNotModified(
+        Request $request,
+        Response $response,
+        Document $caption
+    ): bool {
+        $etag = '"' . \sha1(
+            $caption->getUpdatedAt()
+            . "\0"
+            . (string) $caption->getAttribute('fileId', '')
+            . "\0"
+            . (string) $caption->getAttribute('size', 0)
+        ) . '"';
+
+        $response
+            ->addHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400')
+            ->addHeader('ETag', $etag);
+
+        if ($request->getHeaderLine('if-none-match') === $etag) {
+            $response->setStatusCode(Response::STATUS_CODE_NOT_MODIFIED)->send('');
+
+            return true;
+        }
+
+        return false;
     }
 
 }

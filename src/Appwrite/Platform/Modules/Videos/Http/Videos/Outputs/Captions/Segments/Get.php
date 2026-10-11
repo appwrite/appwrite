@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
@@ -59,6 +60,7 @@ class Get extends Base
             ->param('output', '', new WhiteList(self::OUTPUTS, true), 'Streaming output format.', enum: new Enum(name: 'VideoOutput'))
             ->param('captionId', '', new UID(), 'Caption unique ID.')
             ->param('segmentId', '', new UID(), 'Segment unique ID.')
+            ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -72,6 +74,7 @@ class Get extends Base
         string $output,
         string $captionId,
         string $segmentId,
+        Request $request,
         Response $response,
         Database $dbForProject,
         User $user,
@@ -98,9 +101,12 @@ class Get extends Base
             throw new Exception(Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND);
         }
 
+        if ($this->captionBytesNotModified($request, $response, $caption)) {
+            return;
+        }
+
         $response
             ->setContentType('text/vtt')
-            ->addHeader('Cache-Control', 'public, max-age=31536000, immutable')
             ->send((string) $deviceForVideos->read($path));
     }
 }
