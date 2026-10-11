@@ -1,4 +1,4 @@
-import { Link, getRouteApi, useRouterState } from '@tanstack/react-router'
+import { Link, getRouteApi, useMatch, useRouterState } from '@tanstack/react-router'
 import { Menu, Monitor, Moon, Sun } from 'lucide-react'
 import { Fragment } from 'react'
 import { setMigration, useMigration, useTheme, write } from '@/lib/prefs'
@@ -11,7 +11,11 @@ function Crumbs() {
   const path = useRouterState({ select: (s) => decodeURIComponent(s.location.pathname) })
   const parts = path.split('/').filter(Boolean)
   const crumbs: { label: string; to?: string; params?: Record<string, string> }[] = []
-  if (index && parts[0] === 'categories' && parts[1]) {
+  const service = useMatch({ from: '/appwrite/$service', shouldThrow: false })?.loaderData?.service
+  if (parts[0] === 'appwrite') {
+    crumbs.push({ label: 'Appwrite migration', to: '/appwrite' })
+    if (parts[1]) crumbs.push({ label: service?.title ?? parts[1] })
+  } else if (index && parts[0] === 'categories' && parts[1]) {
     crumbs.push({ label: index.categories.find((c) => c.id === parts[1])?.title ?? parts[1] })
   } else if (index && parts[0]) {
     const lib = index.libraries.find((l) => l.slug === parts[0])

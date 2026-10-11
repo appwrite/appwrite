@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LibRouteImport } from './routes/$lib'
 import { Route as LibIndexRouteImport } from './routes/$lib/index'
 import { Route as LibSplatRouteImport } from './routes/$lib/$'
+import { Route as AppwriteIndexRouteImport } from './routes/appwrite/index'
+import { Route as AppwriteServiceRouteImport } from './routes/appwrite/$service'
 import { Route as CategoriesCategoryRouteImport } from './routes/categories/$category'
 import { Route as LibPhpApiSplatRouteImport } from './routes/$lib/php-api/$'
 
@@ -36,6 +38,16 @@ const LibSplatRoute = LibSplatRouteImport.update({
   path: '/$',
   getParentRoute: () => LibRoute,
 } as any)
+const AppwriteIndexRoute = AppwriteIndexRouteImport.update({
+  id: '/appwrite/',
+  path: '/appwrite/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppwriteServiceRoute = AppwriteServiceRouteImport.update({
+  id: '/appwrite/$service',
+  path: '/appwrite/$service',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategoriesCategoryRoute = CategoriesCategoryRouteImport.update({
   id: '/categories/$category',
   path: '/categories/$category',
@@ -51,15 +63,19 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$lib': typeof LibRouteWithChildren
   '/$lib/$': typeof LibSplatRoute
+  '/appwrite/$service': typeof AppwriteServiceRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/$lib/': typeof LibIndexRoute
+  '/appwrite/': typeof AppwriteIndexRoute
   '/$lib/php-api/$': typeof LibPhpApiSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$lib/$': typeof LibSplatRoute
+  '/appwrite/$service': typeof AppwriteServiceRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/$lib': typeof LibIndexRoute
+  '/appwrite': typeof AppwriteIndexRoute
   '/$lib/php-api/$': typeof LibPhpApiSplatRoute
 }
 export interface FileRoutesById {
@@ -67,8 +83,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$lib': typeof LibRouteWithChildren
   '/$lib/$': typeof LibSplatRoute
+  '/appwrite/$service': typeof AppwriteServiceRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/$lib/': typeof LibIndexRoute
+  '/appwrite/': typeof AppwriteIndexRoute
   '/$lib/php-api/$': typeof LibPhpApiSplatRoute
 }
 export interface FileRouteTypes {
@@ -77,25 +95,38 @@ export interface FileRouteTypes {
     | '/'
     | '/$lib'
     | '/$lib/$'
+    | '/appwrite/$service'
     | '/categories/$category'
     | '/$lib/'
+    | '/appwrite/'
     | '/$lib/php-api/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$lib/$' | '/categories/$category' | '/$lib' | '/$lib/php-api/$'
+  to:
+    | '/'
+    | '/$lib/$'
+    | '/appwrite/$service'
+    | '/categories/$category'
+    | '/$lib'
+    | '/appwrite'
+    | '/$lib/php-api/$'
   id:
     | '__root__'
     | '/'
     | '/$lib'
     | '/$lib/$'
+    | '/appwrite/$service'
     | '/categories/$category'
     | '/$lib/'
+    | '/appwrite/'
     | '/$lib/php-api/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LibRoute: typeof LibRouteWithChildren
+  AppwriteServiceRoute: typeof AppwriteServiceRoute
   CategoriesCategoryRoute: typeof CategoriesCategoryRoute
+  AppwriteIndexRoute: typeof AppwriteIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -127,6 +158,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/$lib/$'
       preLoaderRoute: typeof LibSplatRouteImport
       parentRoute: typeof LibRoute
+    }
+    '/appwrite/': {
+      id: '/appwrite/'
+      path: '/appwrite'
+      fullPath: '/appwrite/'
+      preLoaderRoute: typeof AppwriteIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/appwrite/$service': {
+      id: '/appwrite/$service'
+      path: '/appwrite/$service'
+      fullPath: '/appwrite/$service'
+      preLoaderRoute: typeof AppwriteServiceRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/categories/$category': {
       id: '/categories/$category'
@@ -162,7 +207,9 @@ const LibRouteWithChildren = LibRoute._addFileChildren(LibRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LibRoute: LibRouteWithChildren,
+  AppwriteServiceRoute: AppwriteServiceRoute,
   CategoriesCategoryRoute: CategoriesCategoryRoute,
+  AppwriteIndexRoute: AppwriteIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

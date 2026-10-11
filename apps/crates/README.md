@@ -4,6 +4,8 @@ The documentation of the Utopia libraries in Rust, as a TanStack Start app in th
 
 **Migration** mode (the switch in the header) adds everything about the move from PHP, each piece in a yellow migration card: the libraries not converted yet and their PHP API, each library's conversion status and sync with PHP, the PHP twin of every example, the PHP method each item ports, and the PHP notes the generator moves out of the Rust docs (paragraphs that mention PHP, sections under a PHP heading, and a leading PHP name such as `` `getHost()`: ``). Libraries are grouped by category; inside one, a second menu lists its namespaces.
 
+Migration mode also adds **Appwrite migration** to the menu (`/appwrite`): the move of the Appwrite API itself to Rust ([rfc/rust.md](../../rfc/rust.md)). The overview lists every service with how many of its routes Rust serves, its E2E tests, the cross-cutting behaviour (hooks and request resources) a migrated service must reproduce and where Rust does, the benchmarks, and the Traefik routing. Each service's page (`/appwrite/<service>`) lists its routes, its suites and recorded runs, its benchmarks and the hooks its routes run.
+
 ## Run
 
 From the repository root, generate the data (PHP signatures are read in the `appwrite-dev` image; without Docker the docs are generated without them), then start the app:
@@ -15,7 +17,7 @@ bun install
 bun run dev
 ```
 
-The app serves on <http://localhost:3200>. `bun run generate` regenerates the data from here. `bun run build` then `bun run start` serves a production build. The data lands in `apps/crates/data` (not committed).
+The app serves on <http://localhost:3200>. `bun run generate` regenerates the data from here; `bin/compat appwrite` regenerates only the Appwrite migration (`data/appwrite.json`), which needs neither Docker nor a dev stack: E2E runs and benchmarks are read from the files committed in the repository. `bun run build` then `bun run start` serves a production build. The data lands in `apps/crates/data` (not committed).
 
 ## Where the content comes from
 
@@ -33,6 +35,12 @@ Everything is generated from each library's own data and metadata; nothing is wr
 | Namespaces and items | module and item doc comments, read with `syn` |
 | PHP API | the package's public classes and methods by reflection |
 | Examples | code blocks in doc comments (below) |
+| Appwrite services and routes | the action classes of `src/Appwrite/Platform/Modules/*/Http` registered by each module's services, and the `Http::get(...)` routes left in `app/controllers`, read statically (method, path, aliases, SDK method, scope, groups); titles from `app/config/services.php` |
+| Served by Rust | the `route!`/`Route` declarations in `crates/appwrite/*` that `crates/appwrite/server` registers, and the Traefik routers to the `appwrite-rust` container in the compose files |
+| E2E suites | test classes and methods in `tests/e2e/Services/<Suite>` (trait tests included); the workflow steps that set `_APP_E2E_ENDPOINT` run them against Rust |
+| E2E runs | `tests/e2e/results/<suite>.<runtime>.json`, written by `bin/compat appwrite e2e <Suite> --write` (`--side php` for PHP) on a running dev stack |
+| Appwrite benchmarks | `tests/benchmarks/results/<service>.json`, written by `RESULTS=tests/benchmarks/results/users.json tests/benchmarks/users-compare.sh` |
+| Hooks to reproduce | every `Http::init`/`shutdown`/`error`/`options`/`wildcard` hook and hook action class, read from the code (groups, injections, labels read, errors thrown, headers set); what each does and where `appwrite-core` reproduces it from [`crates/appwrite/hooks.json`](../../crates/appwrite/hooks.json) |
 
 ## Writing examples
 

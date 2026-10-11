@@ -174,7 +174,8 @@ export interface Library {
 }
 
 const indexModule = import.meta.glob<Index>('../../data/index.json', { import: 'default' })
-const libraryModules = import.meta.glob<Library>(['../../data/*.json', '!../../data/index.json'], { import: 'default' })
+// `appwrite.json` is the Appwrite migration (src/lib/appwrite.ts), not a library.
+const libraryModules = import.meta.glob<Library>(['../../data/*.json', '!../../data/index.json', '!../../data/appwrite.json'], { import: 'default' })
 
 export async function loadIndex(): Promise<Index | null> {
   const load = Object.values(indexModule)[0]

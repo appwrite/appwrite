@@ -1,5 +1,5 @@
 import { Link, getRouteApi, useMatch, useRouterState } from '@tanstack/react-router'
-import { ChevronRight, ChevronsDownUp, ChevronsUpDown, Search } from 'lucide-react'
+import { ArrowLeftRight, ChevronRight, ChevronsDownUp, ChevronsUpDown, Search } from 'lucide-react'
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { isTopLevel, moduleSplat, type Navigation } from '@/lib/docs'
 import { StatusBadge, StatusDot } from './Status'
@@ -205,6 +205,12 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </Link>
         <FoldControls fold={fold} onFold={setFold} />
       </div>
+      <MigrationOnly>
+        <Link to="/appwrite" className={`${row} -mt-2`}>
+          <ArrowLeftRight className="size-3.5 flex-none text-migration-ink" />
+          <span className="truncate">Appwrite migration</span>
+        </Link>
+      </MigrationOnly>
       <Fold.Provider value={fold}>
       {index.categories.map((c) => {
         const libs = c.libraries
