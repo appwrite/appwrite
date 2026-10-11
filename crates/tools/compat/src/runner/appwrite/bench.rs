@@ -38,7 +38,9 @@ pub fn coverage(root: &Path) -> BTreeMap<String, Coverage> {
                 skipped: strings(&src, "skipped: '")
                     .into_iter()
                     .map(|(at, route)| {
-                        (route, strings(&src[at..], "reason: '").into_iter().next().map(|(_, r)| r).unwrap_or_default())
+                        // The reason of this declaration only: up to the end of its object.
+                        let entry = &src[at..at + src[at..].find('}').unwrap_or(src.len() - at)];
+                        (route, strings(entry, "reason: '").into_iter().next().map(|(_, r)| r).unwrap_or_default())
                     })
                     .collect(),
             },
@@ -89,5 +91,20 @@ mod tests {
         let skipped = strings(src, "skipped: '");
         assert_eq!(skipped[0].1, "POST /v1/y");
         assert_eq!(strings(&src[skipped[0].0..], "reason: '")[0].1, "calls GitHub's API");
+    }
+
+    #[test]
+    fn a_skip_without_a_reason_does_not_borrow_the_next_one() {
+        let dir = std::env::temp_dir().join(format!("compat-bench-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join("tests/benchmarks/api")).unwrap();
+        std::fs::write(
+            dir.join("tests/benchmarks/api/x.js"),
+            "skipped: [{ skipped: 'GET /v1/a' }, { skipped: 'GET /v1/b', reason: 'calls GitHub' }]",
+        )
+        .unwrap();
+        let c = super::coverage(&dir);
+        std::fs::remove_dir_all(&dir).unwrap();
+        assert_eq!(c["x"].skipped["GET /v1/a"], "");
+        assert_eq!(c["x"].skipped["GET /v1/b"], "calls GitHub");
     }
 }

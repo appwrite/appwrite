@@ -43,6 +43,7 @@ DB_CONTAINER=${DB_CONTAINER:-appwrite-postgresql}
 REDIS_CONTAINER=${REDIS_CONTAINER:-appwrite-redis}
 
 mkdir -p "$OUT"
+FAILED=
 if [ -n "${RESULTS:-}" ]; then
     mkdir -p "$(dirname "$RESULTS")"
 fi
@@ -90,7 +91,12 @@ run_step() {
     APPWRITE_ENDPOINT=$endpoint APPWRITE_CONTROL_ENDPOINT=$CONTROL_ENDPOINT \
         APPWRITE_BENCHMARK_DURATION=$DURATION APPWRITE_BENCHMARK_HASHING=$HASHING \
         APPWRITE_BENCHMARK_SUMMARY_PATH="$OUT/$label.k6.json" \
-        k6 run --quiet "$SCRIPT" > "$OUT/$label.k6.log" 2>&1 || true
+        k6 run --quiet "$SCRIPT" > "$OUT/$label.k6.log" 2>&1 || {
+        # A failed request (or any other k6 error) fails the run: keep sampling
+        # and cleaning up, then report it below instead of publishing.
+        echo "failed: $label (see $OUT/$label.k6.log)" >&2
+        FAILED="$FAILED $label"
+    }
     end=$(python3 -c 'import time; print(time.time())')
     kill "$sampler_pid" 2>/dev/null || true
     wait "$sampler_pid" 2>/dev/null || true
@@ -124,5 +130,12 @@ for vus in $MAX_VUS; do
     step vus "$vus"
 done
 
+if [ -n "$FAILED" ]; then
+    # Report what ran, but never write a failed run to $RESULTS.
+    SERVICE=$SERVICE DURATION=$DURATION HASHING=$HASHING PHP_ENDPOINT=$PHP_ENDPOINT RUST_ENDPOINT=$RUST_ENDPOINT DB_CONTAINER=$DB_CONTAINER \
+        python3 "$HERE/report.py" "$OUT" | tee "$OUT/report.md"
+    echo "compare.sh: failed steps:$FAILED; nothing written to ${RESULTS:-$OUT/$SERVICE.json}" >&2
+    exit 1
+fi
 SERVICE=$SERVICE DURATION=$DURATION HASHING=$HASHING PHP_ENDPOINT=$PHP_ENDPOINT RUST_ENDPOINT=$RUST_ENDPOINT DB_CONTAINER=$DB_CONTAINER \
     python3 "$HERE/report.py" "$OUT" --json "${RESULTS:-$OUT/$SERVICE.json}" | tee "$OUT/report.md"

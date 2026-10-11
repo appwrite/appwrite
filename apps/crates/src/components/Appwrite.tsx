@@ -352,7 +352,7 @@ export function EndpointBench({ step, route, bench }: { step: ReturnType<typeof 
             ) : null}
             <Duel label="Median" php={p?.p50} rust={r?.p50} format={millis} compact />
             <Duel label="p99" php={p?.p99} rust={r?.p99} format={millis} compact />
-            {p && !r ? <span className="text-[11px] text-muted-foreground">PHP only: Rust does not serve it yet</span> : null}
+            {p && !r ? <span className="text-[11px] text-muted-foreground">No Rust timing recorded</span> : null}
           </div>
         )
       })}
