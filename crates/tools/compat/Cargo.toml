@@ -46,4 +46,7 @@ utopia-lock.workspace = true
 utopia-queue.workspace = true
 utopia-system.workspace = true
 utopia-user-agent.workspace = true
+utopia-telemetry = { workspace = true, features = ["otlp"] }
+utopia-pools.workspace = true
+utopia-circuit-breaker = { workspace = true, features = ["redis"] }
 utopia-validators.workspace = true

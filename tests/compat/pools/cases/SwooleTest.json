@@ -1,0 +1,5140 @@
+{
+  "source": "packages/pools/tests/Adapter/SwooleTest.php",
+  "cases": [
+    {
+      "name": "pool name and size",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 5,
+            "init": [
+              {
+                "value": "x"
+              }
+            ],
+            "timeout": 0.0
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.info",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "name": "test",
+            "size": 5,
+            "timeout": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "pop",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 5,
+            "init": [
+              {
+                "value": "x"
+              }
+            ],
+            "timeout": 0.0
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 4,
+            "empty": false,
+            "full": false
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "pool_name": "test"
+          },
+          "expect": {
+            "resource": "x",
+            "id": {
+              "prefixed": true,
+              "length": 13
+            }
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Pool 'test' could not provide a connection within 0s (size 5, active 5, idle 0)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "use",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 5,
+            "init": [
+              {
+                "value": "x"
+              }
+            ],
+            "timeout": 0.0
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "during": [
+              {
+                "op": "counts",
+                "pool": {
+                  "$ref": "p"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "resources": [
+              "x"
+            ],
+            "during": [
+              {
+                "count": 4,
+                "empty": false,
+                "full": false
+              }
+            ]
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "push",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 5,
+            "init": [
+              {
+                "value": "x"
+              }
+            ],
+            "timeout": 0.0
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 4,
+            "empty": false,
+            "full": false
+          }
+        },
+        {
+          "op": "pool.push",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "count",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 5,
+            "init": [
+              {
+                "value": "x"
+              }
+            ],
+            "timeout": 0.0
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 4,
+            "empty": false,
+            "full": false
+          }
+        },
+        {
+          "op": "pool.push",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "reclaim",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 5,
+            "init": [
+              {
+                "value": "x"
+              }
+            ],
+            "timeout": 0.0
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": false
+          }
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "is empty",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 5,
+            "init": [
+              {
+                "value": "x"
+              }
+            ],
+            "timeout": 0.0
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 0,
+            "empty": true,
+            "full": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "is full",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 5,
+            "init": [
+              {
+                "value": "x"
+              }
+            ],
+            "timeout": 0.0
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 4,
+            "empty": false,
+            "full": false
+          }
+        },
+        {
+          "op": "pool.push",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 0,
+            "empty": true,
+            "full": false
+          }
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 0,
+            "empty": true,
+            "full": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "destroy",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "testDestroy",
+            "size": 2,
+            "init": [
+              {
+                "value": "x"
+              },
+              {
+                "value": "x"
+              },
+              {
+                "value": "y"
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 0,
+            "empty": true,
+            "full": false
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "c1"
+            }
+          },
+          "expect": {
+            "resource": "x",
+            "id": {
+              "prefixed": false,
+              "length": 24
+            }
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "c2"
+            }
+          },
+          "expect": {
+            "resource": "x",
+            "id": {
+              "prefixed": false,
+              "length": 24
+            }
+          }
+        },
+        {
+          "op": "pool.destroy",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 0,
+            "empty": true,
+            "full": false
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "c3"
+            }
+          },
+          "expect": {
+            "resource": "y",
+            "id": {
+              "prefixed": false,
+              "length": 24
+            }
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "c4"
+            }
+          },
+          "expect": {
+            "resource": "y",
+            "id": {
+              "prefixed": false,
+              "length": 24
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "pop waits the acquire timeout, then throws",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-budget",
+            "size": 1,
+            "timeout": 0.25
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop_elapsed",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "at_least": 0.0,
+            "below": 3.0
+          },
+          "expect": {
+            "error": {
+              "$error": {
+                "class": "Exception",
+                "message": "Pool 'test-budget' could not provide a connection within 0.25s (size 1, active 1, idle 0)"
+              }
+            },
+            "within": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "a creation failure surfaces to the caller",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-create-fails",
+            "size": 1,
+            "init": [
+              {
+                "throw": "connect refused",
+                "class": "Exception"
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "connect refused"
+            }
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 1,
+            "empty": false,
+            "full": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "pop releases the reserved slot when creation throws an Error",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-error-leak",
+            "size": 2,
+            "init": [
+              {
+                "throw": "Connection init failed",
+                "class": "TypeError"
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Connection init failed"
+            }
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Connection init failed"
+            }
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Connection init failed"
+            }
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Connection init failed"
+            }
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Connection init failed"
+            }
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "double destroy does not inflate capacity",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-double-destroy",
+            "size": 2,
+            "init": [
+              {
+                "value": "x"
+              },
+              {
+                "value": "x"
+              },
+              {
+                "value": "z"
+              },
+              {
+                "value": "w"
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.destroy",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.destroy",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Pool 'test-double-destroy' could not provide a connection within 0s (size 2, active 2, idle 0)"
+            }
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "resource": "x",
+            "id": {
+              "prefixed": false,
+              "length": 32
+            }
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "resource": "z",
+            "id": {
+              "prefixed": false,
+              "length": 32
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "the exhausted error includes the active count",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 5,
+            "init": [
+              {
+                "value": "x"
+              }
+            ],
+            "timeout": 0.0
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Pool 'test' could not provide a connection within 0s (size 5, active 5, idle 0)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "use destroys the connection when recovery fails",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-destroy-on-error",
+            "size": 2,
+            "init": [
+              {
+                "object": "resource",
+                "reconnect": "throw"
+              },
+              {
+                "object": "resource",
+                "reconnect": "void"
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "throw": {
+              "class": "RuntimeException",
+              "message": "Callback failed"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Callback failed"
+            }
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "resources": [
+              {
+                "object": "resource-2"
+              }
+            ],
+            "during": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "use destroys the connection when recovery returns false",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-destroy-on-false-recovery",
+            "size": 2,
+            "init": [
+              {
+                "object": "resource",
+                "reconnect": false
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "throw": {
+              "class": "RuntimeException",
+              "message": "Callback failed"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Callback failed"
+            }
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "resources": [
+              {
+                "object": "resource-2"
+              }
+            ],
+            "during": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "use recovers and reuses the connection when recovery succeeds",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-recover-and-reuse",
+            "size": 2,
+            "init": [
+              {
+                "object": "resource",
+                "reconnect": true
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "throw": {
+              "class": "RuntimeException",
+              "message": "Callback failed"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Callback failed"
+            }
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "resources": [
+              {
+                "object": "resource-1"
+              }
+            ],
+            "during": []
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "use destroys an object connection without recovery hooks",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-destroy-without-recovery",
+            "size": 2,
+            "init": [
+              {
+                "object": "resource"
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "throw": {
+              "class": "RuntimeException",
+              "message": "Callback failed"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Callback failed"
+            }
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "resources": [
+              {
+                "object": "resource-2"
+              }
+            ],
+            "during": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "use destroys a native resource connection after a failure",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-destroy-native-resource",
+            "size": 2,
+            "init": [
+              {
+                "stream": "resource"
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "throw": {
+              "class": "RuntimeException",
+              "message": "Callback failed"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Callback failed"
+            }
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "resources": [
+              {
+                "stream": "resource-2"
+              }
+            ],
+            "during": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "use recovers a plain value after a failure",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-plain",
+            "size": 1,
+            "init": [
+              {
+                "value": "a"
+              },
+              {
+                "value": "b"
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "throw": {
+              "class": "LogicException",
+              "message": "Callback failed"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "LogicException",
+              "message": "Callback failed"
+            }
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 1,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "resources": [
+              "a"
+            ],
+            "during": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "use preserves the callback exception when the replacement fails",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-preserve-callback-error",
+            "size": 1,
+            "init": [
+              {
+                "object": "resource",
+                "reconnect": "throw"
+              },
+              {
+                "throw": "Replacement failed",
+                "class": "TypeError"
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "throw": {
+              "class": "LogicException",
+              "message": "Callback failed"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "LogicException",
+              "message": "Callback failed"
+            }
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 1,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Replacement failed"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "telemetry",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "telemetry": {
+              "$ref": "t"
+            },
+            "name": "test",
+            "size": 5,
+            "init": [
+              {
+                "value": "x"
+              }
+            ],
+            "timeout": 0.0
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "histograms": [],
+            "observableGauges": [
+              [
+                "pool.connection.active.count",
+                1
+              ],
+              [
+                "pool.connection.idle.count",
+                1
+              ],
+              [
+                "pool.connection.open.count",
+                1
+              ],
+              [
+                "pool.connection.capacity.count",
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "gauge": "pool.connection.open.count"
+          },
+          "expect": [
+            [
+              3,
+              [
+                [
+                  "pool",
+                  "test"
+                ],
+                [
+                  "size",
+                  5
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "gauge": "pool.connection.active.count"
+          },
+          "expect": [
+            [
+              3,
+              [
+                [
+                  "pool",
+                  "test"
+                ],
+                [
+                  "size",
+                  5
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "gauge": "pool.connection.idle.count"
+          },
+          "expect": [
+            [
+              0,
+              [
+                [
+                  "pool",
+                  "test"
+                ],
+                [
+                  "size",
+                  5
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "gauge": "pool.connection.capacity.count"
+          },
+          "expect": [
+            [
+              3,
+              [
+                [
+                  "pool",
+                  "test"
+                ],
+                [
+                  "size",
+                  5
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "histograms": [
+              [
+                "pool.connection.wait_time",
+                3
+              ]
+            ],
+            "observableGauges": [
+              [
+                "pool.connection.active.count",
+                1
+              ],
+              [
+                "pool.connection.idle.count",
+                1
+              ],
+              [
+                "pool.connection.open.count",
+                1
+              ],
+              [
+                "pool.connection.capacity.count",
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "c3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "gauge": "pool.connection.open.count"
+          },
+          "expect": [
+            [
+              3,
+              [
+                [
+                  "pool",
+                  "test"
+                ],
+                [
+                  "size",
+                  5
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "gauge": "pool.connection.active.count"
+          },
+          "expect": [
+            [
+              2,
+              [
+                [
+                  "pool",
+                  "test"
+                ],
+                [
+                  "size",
+                  5
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "gauge": "pool.connection.idle.count"
+          },
+          "expect": [
+            [
+              1,
+              [
+                [
+                  "pool",
+                  "test"
+                ],
+                [
+                  "size",
+                  5
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "gauge": "pool.connection.capacity.count"
+          },
+          "expect": [
+            [
+              3,
+              [
+                [
+                  "pool",
+                  "test"
+                ],
+                [
+                  "size",
+                  5
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "c1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "c2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "gauge": "pool.connection.idle.count"
+          },
+          "expect": [
+            [
+              3,
+              [
+                [
+                  "pool",
+                  "test"
+                ],
+                [
+                  "size",
+                  5
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "histograms": [
+              [
+                "pool.connection.wait_time",
+                3
+              ],
+              [
+                "pool.connection.use_time",
+                3
+              ]
+            ],
+            "observableGauges": [
+              [
+                "pool.connection.active.count",
+                1
+              ],
+              [
+                "pool.connection.idle.count",
+                1
+              ],
+              [
+                "pool.connection.open.count",
+                1
+              ],
+              [
+                "pool.connection.capacity.count",
+                1
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "multiple pools share gauges but emit distinct series",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "alpha",
+            "size": 5,
+            "timeout": 0.0,
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "alpha",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "beta",
+            "size": 5,
+            "timeout": 0.0,
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "beta",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "alpha"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "beta"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "beta"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "gauge": "pool.connection.active.count"
+          },
+          "expect": [
+            [
+              1,
+              [
+                [
+                  "pool",
+                  "alpha"
+                ],
+                [
+                  "size",
+                  5
+                ]
+              ]
+            ],
+            [
+              2,
+              [
+                [
+                  "pool",
+                  "beta"
+                ],
+                [
+                  "size",
+                  5
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "histograms": [
+              [
+                "pool.connection.wait_time",
+                2
+              ]
+            ],
+            "observableGauges": [
+              [
+                "pool.connection.active.count",
+                2
+              ],
+              [
+                "pool.connection.idle.count",
+                2
+              ],
+              [
+                "pool.connection.open.count",
+                2
+              ],
+              [
+                "pool.connection.capacity.count",
+                2
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "use time telemetry is created on first use",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "telemetry": {
+              "$ref": "t"
+            },
+            "name": "test",
+            "size": 5,
+            "init": [
+              {
+                "value": "x"
+              }
+            ],
+            "timeout": 0.0
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "histograms": [],
+            "observableGauges": [
+              [
+                "pool.connection.active.count",
+                1
+              ],
+              [
+                "pool.connection.idle.count",
+                1
+              ],
+              [
+                "pool.connection.open.count",
+                1
+              ],
+              [
+                "pool.connection.capacity.count",
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "resources": [
+              "x"
+            ],
+            "during": []
+          }
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "histograms": [
+              [
+                "pool.connection.wait_time",
+                1
+              ],
+              [
+                "pool.connection.use_time",
+                1
+              ]
+            ],
+            "observableGauges": [
+              [
+                "pool.connection.active.count",
+                1
+              ],
+              [
+                "pool.connection.idle.count",
+                1
+              ],
+              [
+                "pool.connection.open.count",
+                1
+              ],
+              [
+                "pool.connection.capacity.count",
+                1
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "maintain ticks every idle resource",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-maintain-ticks",
+            "size": 3,
+            "init": [
+              {
+                "ticking": true
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.maintain",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "resource": {
+              "serial": 1,
+              "ticks": 1
+            },
+            "id": {
+              "prefixed": false,
+              "length": 32
+            }
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "resource": {
+              "serial": 2,
+              "ticks": 1
+            },
+            "id": {
+              "prefixed": false,
+              "length": 32
+            }
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "resource": {
+              "serial": 3,
+              "ticks": 1
+            },
+            "id": {
+              "prefixed": false,
+              "length": 32
+            }
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 3,
+            "empty": false,
+            "full": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "maintain leaves checked-out resources untouched",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-maintain-active",
+            "size": 2,
+            "init": [
+              {
+                "ticking": true
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "idle",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "active",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "idle"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.maintain",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "idle"
+            }
+          },
+          "expect": {
+            "resource": {
+              "serial": 1,
+              "ticks": 1
+            },
+            "id": {
+              "prefixed": false,
+              "length": 33
+            }
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "active"
+            }
+          },
+          "expect": {
+            "resource": {
+              "serial": 2,
+              "ticks": 0
+            },
+            "id": {
+              "prefixed": false,
+              "length": 33
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "maintain ignores resources that cannot tick",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-maintain-no-tick",
+            "size": 2
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.maintain",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "resources": [
+              "x"
+            ],
+            "during": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "maintain discards a resource whose tick throws",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-maintain-discard",
+            "size": 2,
+            "init": [
+              {
+                "ticking": true,
+                "tick_throws": true
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "dead",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "dead"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.maintain",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "dead"
+            }
+          },
+          "expect": {
+            "resource": {
+              "serial": 1,
+              "ticks": 1
+            },
+            "id": {
+              "prefixed": false,
+              "length": 34
+            }
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "resources": [
+              {
+                "serial": 2,
+                "ticks": 0
+              }
+            ],
+            "during": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "release reclaims after success and recovers or destroys after failure",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test-release",
+            "size": 2,
+            "init": [
+              {
+                "object": "resource"
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.release",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "a"
+            },
+            "failed": false
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.release",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "b"
+            },
+            "failed": true
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "resources": [
+              {
+                "object": "resource-2"
+              }
+            ],
+            "during": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid size and timeout",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "bad",
+            "size": 0
+          },
+          "bind": "p",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Pool 'bad' size must be at least 1, got 0."
+            }
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "bad",
+            "size": 1,
+            "timeout": -0.5
+          },
+          "bind": "q",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Pool 'bad' timeout cannot be negative, got -0.5."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "connection id is namespaced by the pool",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "alpha",
+            "size": 2
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "pool_name": "alpha"
+          },
+          "expect": {
+            "resource": "x",
+            "id": {
+              "prefixed": true,
+              "length": 13
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "connection exposes its resource",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 2
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "pool_name": "test"
+          },
+          "expect": {
+            "resource": "x",
+            "id": {
+              "prefixed": true,
+              "length": 13
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "connection reclaim",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 2
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 1,
+            "empty": false,
+            "full": false
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 0,
+            "empty": true,
+            "full": false
+          }
+        },
+        {
+          "op": "connection.reclaim",
+          "args": {
+            "connection": {
+              "$ref": "c1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 1,
+            "empty": false,
+            "full": false
+          }
+        },
+        {
+          "op": "connection.reclaim",
+          "args": {
+            "connection": {
+              "$ref": "c2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "connection destroy",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "testDestroy",
+            "size": 2,
+            "init": [
+              {
+                "value": "x"
+              },
+              {
+                "value": "x"
+              },
+              {
+                "value": "y"
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 0,
+            "empty": true,
+            "full": false
+          }
+        },
+        {
+          "op": "connection.destroy",
+          "args": {
+            "connection": {
+              "$ref": "c1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.destroy",
+          "args": {
+            "connection": {
+              "$ref": "c2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 0,
+            "empty": true,
+            "full": false
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "c3"
+            }
+          },
+          "expect": {
+            "resource": "y",
+            "id": {
+              "prefixed": false,
+              "length": 24
+            }
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "c4"
+            }
+          },
+          "expect": {
+            "resource": "y",
+            "id": {
+              "prefixed": false,
+              "length": 24
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "dropping a pool frees the resources it was holding",
+      "steps": [
+        {
+          "op": "pool.dropped_frees",
+          "args": {
+            "adapter": "swoole"
+          },
+          "expect": 3
+        }
+      ]
+    },
+    {
+      "name": "a connection outlives its pool without reclaiming failing",
+      "steps": [
+        {
+          "op": "connection.orphan",
+          "args": {
+            "adapter": "swoole",
+            "name": "orphan",
+            "size": 2
+          },
+          "expect": "x"
+        }
+      ]
+    },
+    {
+      "name": "group add",
+      "steps": [
+        {
+          "op": "group.new",
+          "args": {
+            "adapter": "swoole"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 1
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.get",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "name": "test"
+          },
+          "expect": "test"
+        }
+      ]
+    },
+    {
+      "name": "group get",
+      "steps": [
+        {
+          "op": "group.new",
+          "args": {
+            "adapter": "swoole"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 1
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.get",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "name": "test"
+          },
+          "expect": "test"
+        },
+        {
+          "op": "group.get",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "name": "testx"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Pool 'testx' not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "group remove",
+      "steps": [
+        {
+          "op": "group.new",
+          "args": {
+            "adapter": "swoole"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 1
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.remove",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "name": "test"
+          },
+          "expect": null
+        },
+        {
+          "op": "group.get",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "name": "test"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Pool 'test' not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "group reset",
+      "steps": [
+        {
+          "op": "group.new",
+          "args": {
+            "adapter": "swoole"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 5
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 2,
+            "empty": false,
+            "full": false
+          }
+        },
+        {
+          "op": "group.reclaim",
+          "args": {
+            "group": {
+              "$ref": "g"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 5,
+            "empty": false,
+            "full": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "group use",
+      "steps": [
+        {
+          "op": "group.new",
+          "args": {
+            "adapter": "swoole"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "pool1",
+            "size": 1,
+            "init": [
+              {
+                "value": "1"
+              }
+            ]
+          },
+          "bind": "p1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "pool2",
+            "size": 1,
+            "init": [
+              {
+                "value": "2"
+              }
+            ]
+          },
+          "bind": "p2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "pool3",
+            "size": 1,
+            "init": [
+              {
+                "value": "3"
+              }
+            ]
+          },
+          "bind": "p3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "pool": {
+              "$ref": "p1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "pool": {
+              "$ref": "p2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "pool": {
+              "$ref": "p3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p1"
+            }
+          },
+          "expect": {
+            "count": 1,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p2"
+            }
+          },
+          "expect": {
+            "count": 1,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p3"
+            }
+          },
+          "expect": {
+            "count": 1,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "group.use",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "names": [
+              "pool1",
+              "pool3"
+            ],
+            "during": [
+              {
+                "op": "counts",
+                "pool": {
+                  "$ref": "p1"
+                }
+              },
+              {
+                "op": "counts",
+                "pool": {
+                  "$ref": "p2"
+                }
+              },
+              {
+                "op": "counts",
+                "pool": {
+                  "$ref": "p3"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "resources": [
+              "1",
+              "3"
+            ],
+            "during": [
+              {
+                "count": 0,
+                "empty": true,
+                "full": false
+              },
+              {
+                "count": 1,
+                "empty": false,
+                "full": true
+              },
+              {
+                "count": 0,
+                "empty": true,
+                "full": false
+              }
+            ]
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p1"
+            }
+          },
+          "expect": {
+            "count": 1,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p2"
+            }
+          },
+          "expect": {
+            "count": 1,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p3"
+            }
+          },
+          "expect": {
+            "count": 1,
+            "empty": false,
+            "full": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "group use reclaims an earlier connection when a later pool is missing",
+      "steps": [
+        {
+          "op": "group.new",
+          "args": {
+            "adapter": "swoole"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "pool1",
+            "size": 1,
+            "init": [
+              {
+                "object": "resource"
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.use",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "names": [
+              "pool1",
+              "missing"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Pool 'missing' not found"
+            }
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 1,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.use",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "resources": [
+              {
+                "object": "resource-1"
+              }
+            ],
+            "during": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "group use records use time telemetry",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.new",
+          "args": {
+            "adapter": "swoole"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "pool1",
+            "size": 1,
+            "init": [
+              {
+                "value": "1"
+              }
+            ],
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "histograms": [],
+            "observableGauges": [
+              [
+                "pool.connection.active.count",
+                1
+              ],
+              [
+                "pool.connection.idle.count",
+                1
+              ],
+              [
+                "pool.connection.open.count",
+                1
+              ],
+              [
+                "pool.connection.capacity.count",
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "op": "group.use",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "names": [
+              "pool1"
+            ]
+          },
+          "expect": {
+            "resources": [
+              "1"
+            ],
+            "during": []
+          }
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "histograms": [
+              [
+                "pool.connection.wait_time",
+                1
+              ],
+              [
+                "pool.connection.use_time",
+                1
+              ]
+            ],
+            "observableGauges": [
+              [
+                "pool.connection.active.count",
+                1
+              ],
+              [
+                "pool.connection.idle.count",
+                1
+              ],
+              [
+                "pool.connection.open.count",
+                1
+              ],
+              [
+                "pool.connection.capacity.count",
+                1
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "group use with no names",
+      "steps": [
+        {
+          "op": "group.new",
+          "args": {
+            "adapter": "swoole"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.use",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "names": []
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Cannot use with empty names"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "group use releases every connection as failed when the callback throws",
+      "steps": [
+        {
+          "op": "group.new",
+          "args": {
+            "adapter": "swoole"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "pool1",
+            "size": 1,
+            "init": [
+              {
+                "object": "resource"
+              }
+            ]
+          },
+          "bind": "p1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "pool2",
+            "size": 1,
+            "init": [
+              {
+                "value": "2"
+              }
+            ]
+          },
+          "bind": "p2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "pool": {
+              "$ref": "p1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "pool": {
+              "$ref": "p2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.use",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "names": [
+              "pool1",
+              "pool2"
+            ],
+            "throw": {
+              "class": "RuntimeException",
+              "message": "boom"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "boom"
+            }
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p1"
+            }
+          },
+          "expect": {
+            "count": 1,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p2"
+            }
+          },
+          "expect": {
+            "count": 1,
+            "empty": false,
+            "full": true
+          }
+        },
+        {
+          "op": "group.use",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "names": [
+              "pool1",
+              "pool2"
+            ]
+          },
+          "expect": {
+            "resources": [
+              {
+                "object": "resource-2"
+              },
+              "2"
+            ],
+            "during": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "adapter push, pop, count, unblock and synchronized",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "swoole",
+            "size": 2
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 2,
+            "init": [
+              {
+                "value": "x"
+              },
+              {
+                "value": "y"
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "adapter.pop",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "timeout": 0.0
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.push",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "connection": {
+              "$ref": "c1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.push",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "connection": {
+              "$ref": "c2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "adapter.unblock",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.synchronized",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "value": 42
+          },
+          "expect": 42
+        },
+        {
+          "op": "adapter.pop",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "timeout": 0.01
+          },
+          "expect": "x"
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "coroutine race condition",
+      "steps": [
+        {
+          "op": "pool.concurrency",
+          "args": {
+            "adapter": "swoole",
+            "size": 5,
+            "timeout": 5.0,
+            "tasks": 10,
+            "hold_ms": 10,
+            "mode": "pop_reclaim"
+          },
+          "expect": {
+            "success": 10,
+            "errors": 0,
+            "created": 5,
+            "count": 5,
+            "distinct": 5,
+            "duplicates": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "coroutine high concurrency",
+      "steps": [
+        {
+          "op": "pool.concurrency",
+          "args": {
+            "adapter": "swoole",
+            "size": 3,
+            "timeout": 5.0,
+            "tasks": 20,
+            "hold_ms": 10,
+            "mode": "use"
+          },
+          "expect": {
+            "success": 20,
+            "errors": 0,
+            "created": 3,
+            "count": 3,
+            "distinct": 0,
+            "duplicates": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "coroutine connection uniqueness",
+      "steps": [
+        {
+          "op": "pool.concurrency",
+          "args": {
+            "adapter": "swoole",
+            "size": 5,
+            "timeout": 5.0,
+            "tasks": 5,
+            "hold_ms": 10,
+            "mode": "hold"
+          },
+          "expect": {
+            "success": 5,
+            "errors": 0,
+            "created": 5,
+            "count": 0,
+            "distinct": 5,
+            "duplicates": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "coroutine idle connection reuse",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "swoole-reuse",
+            "size": 3,
+            "timeout": 5.0,
+            "init": [
+              {
+                "value": "c1"
+              },
+              {
+                "value": "c2"
+              },
+              {
+                "value": "c3"
+              },
+              {
+                "value": "c4"
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "a0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "a2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "a0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "a1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.reclaim",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            },
+            "connection": {
+              "$ref": "a2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "b0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "b1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.pop",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "bind": "b2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "b0"
+            },
+            "pool_name": "swoole-reuse"
+          },
+          "expect": {
+            "resource": "c1",
+            "id": {
+              "prefixed": true,
+              "length": 13
+            }
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "b1"
+            },
+            "pool_name": "swoole-reuse"
+          },
+          "expect": {
+            "resource": "c2",
+            "id": {
+              "prefixed": true,
+              "length": 13
+            }
+          }
+        },
+        {
+          "op": "connection.get",
+          "args": {
+            "connection": {
+              "$ref": "b2"
+            },
+            "pool_name": "swoole-reuse"
+          },
+          "expect": {
+            "resource": "c3",
+            "id": {
+              "prefixed": true,
+              "length": 13
+            }
+          }
+        },
+        {
+          "op": "pool.counts",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "count": 0,
+            "empty": true,
+            "full": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "coroutine stress test",
+      "steps": [
+        {
+          "op": "pool.concurrency",
+          "args": {
+            "adapter": "swoole",
+            "size": 10,
+            "timeout": 5.0,
+            "tasks": 100,
+            "random_hold": true,
+            "mode": "use"
+          },
+          "expect": {
+            "success": 100,
+            "errors": 0,
+            "created": 10,
+            "count": 10,
+            "distinct": 0,
+            "duplicates": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "init outside a coroutine does not throw",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "adapter": "swoole",
+            "name": "test",
+            "size": 1,
+            "timeout": 0.0
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pool.info",
+          "args": {
+            "pool": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "name": "test",
+            "size": 1,
+            "timeout": 0.0
+          }
+        }
+      ]
+    }
+  ]
+}

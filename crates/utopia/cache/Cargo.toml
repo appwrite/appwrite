@@ -31,6 +31,9 @@ sha1.workspace = true
 thiserror.workspace = true
 tokio = { workspace = true, features = ["sync", "time", "rt"] }
 tracing.workspace = true
+utopia-circuit-breaker.workspace = true
+utopia-pools.workspace = true
+utopia-telemetry.workspace = true
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "time", "sync", "net", "io-util"] }

@@ -6,8 +6,8 @@ use std::sync::Arc;
 use php_std::types::Value;
 
 use crate::adapter::{Adapter, Fields};
-use crate::telemetry::Telemetry;
 use crate::{Error, Result};
+use utopia_telemetry::Telemetry;
 
 /// Spreads keys over several adapters: `crc32(key) % shards` picks the one
 /// that stores a key, so each key always lives on the same shard until the

@@ -245,9 +245,10 @@ A `CircuitBreaker` adapter turns failures of the backend into misses and `false`
 
 ```
 use php_std::types::Value;
-use utopia_cache::{Cache, Circuit, CircuitBreaker, CircuitOptions, Memory};
+use utopia_cache::{Cache, CircuitBreaker, Memory};
+use utopia_circuit_breaker::{CircuitBreaker as Breaker, Options};
 
-let breaker = Circuit::new(CircuitOptions { minimum_throughput: 5, ..CircuitOptions::default() })?;
+let breaker = Breaker::new(Options { minimum_throughput: 5, ..Options::default() })?;
 let cache = Cache::new(CircuitBreaker::new(Memory::new(), breaker));
 
 tokio::runtime::Runtime::new()?.block_on(async {

@@ -1,0 +1,399 @@
+{
+  "source": "packages/telemetry/tests/LazyInstrumentTest.php",
+  "cases": [
+    {
+      "name": "lazy counter creates its inner counter on the first add",
+      "steps": [
+        {
+          "op": "telemetry.memory",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "counter",
+            "name": "events.total",
+            "unit": "{event}",
+            "description": "Event count",
+            "lazy": true
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "memory.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counters": [],
+            "upDownCounters": [],
+            "histograms": [],
+            "gauges": [],
+            "observableGauges": []
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "c"
+            },
+            "value": 1,
+            "attributes": [
+              [
+                "event.name",
+                "created"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counters": [
+              [
+                "events.total",
+                [
+                  1
+                ]
+              ]
+            ],
+            "upDownCounters": [],
+            "histograms": [],
+            "gauges": [],
+            "observableGauges": []
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "c"
+            },
+            "value": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counters": [
+              [
+                "events.total",
+                [
+                  1,
+                  2
+                ]
+              ]
+            ],
+            "upDownCounters": [],
+            "histograms": [],
+            "gauges": [],
+            "observableGauges": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lazy gauge creates its inner gauge on the first record",
+      "steps": [
+        {
+          "op": "telemetry.memory",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "gauge",
+            "name": "event.timestamp",
+            "unit": "s",
+            "description": "Event timestamp",
+            "lazy": true
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "memory.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counters": [],
+            "upDownCounters": [],
+            "histograms": [],
+            "gauges": [],
+            "observableGauges": []
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "g"
+            },
+            "value": 123.45,
+            "attributes": [
+              [
+                "event.name",
+                "transition"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "g"
+            },
+            "value": 456.78
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counters": [],
+            "upDownCounters": [],
+            "histograms": [],
+            "gauges": [
+              [
+                "event.timestamp",
+                [
+                  123.45,
+                  456.78
+                ]
+              ]
+            ],
+            "observableGauges": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lazy histogram creates its inner histogram on the first record",
+      "steps": [
+        {
+          "op": "telemetry.memory",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "histogram",
+            "name": "request.duration",
+            "unit": "ms",
+            "description": "Request duration",
+            "lazy": true
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "memory.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counters": [],
+            "upDownCounters": [],
+            "histograms": [],
+            "gauges": [],
+            "observableGauges": []
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "h"
+            },
+            "value": 12.3,
+            "attributes": [
+              [
+                "route",
+                "/v1/health"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "h"
+            },
+            "value": 45.6
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counters": [],
+            "upDownCounters": [],
+            "histograms": [
+              [
+                "request.duration",
+                [
+                  12.3,
+                  45.6
+                ]
+              ]
+            ],
+            "gauges": [],
+            "observableGauges": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lazy up/down counter creates its inner counter on the first add",
+      "steps": [
+        {
+          "op": "telemetry.memory",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "up_down_counter",
+            "name": "active.requests",
+            "unit": "{request}",
+            "description": "Active requests",
+            "lazy": true
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "memory.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counters": [],
+            "upDownCounters": [],
+            "histograms": [],
+            "gauges": [],
+            "observableGauges": []
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "u"
+            },
+            "value": 1,
+            "attributes": [
+              [
+                "route",
+                "/v1/health"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "u"
+            },
+            "value": -1
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counters": [],
+            "upDownCounters": [
+              [
+                "active.requests",
+                [
+                  1,
+                  -1
+                ]
+              ]
+            ],
+            "histograms": [],
+            "gauges": [],
+            "observableGauges": []
+          }
+        }
+      ]
+    }
+  ]
+}

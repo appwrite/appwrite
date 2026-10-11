@@ -9,9 +9,9 @@ use php_std::types::Value;
 use serde_json::{Map, Value as Json, json};
 use utopia_cache::telemetry::{Kind, MemoryTelemetry, Telemetry};
 use utopia_cache::{
-    Adapter, AnyCodec, Cache, Circuit, CircuitBreaker, CircuitOptions, Codec, DynAdapter, Envelope, Error, Fields,
-    Filesystem, Hazelcast, Memcached, MemcachedClient, Memory, Multiplexing, MultiplexingOptions, None as NoneAdapter,
-    Pool, Redis, RedisCluster, Retry, Sharding, Stack, resp,
+    Adapter, AnyCodec, Cache, CircuitBreaker, Codec, DynAdapter, Envelope, Error, Fields, Filesystem, Hazelcast,
+    Memcached, MemcachedClient, Memory, Multiplexing, MultiplexingOptions, None as NoneAdapter, Pool, Redis,
+    RedisCluster, Retry, Sharding, resp,
 };
 
 use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes, bytes_value};
@@ -504,20 +504,23 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
         "pool.new" => {
             let path = a.str("path")?.to_owned();
             let size = a.opt_i64("size")?.unwrap_or(10) as usize;
-            match Pool::new(Stack::new(size, move || Filesystem::new(path.clone()))).await {
+            let make = move || std::future::ready(Ok::<_, std::convert::Infallible>(Filesystem::new(path.clone())));
+            let filesystems = utopia_pools::Pool::new(utopia_pools::Stack::new(), "compat", size, make, 0.0)
+                .map_err(|e| Fault::new(e.to_string()))?;
+            match Pool::new(filesystems).await {
                 Ok(pool) => new(session, Arc::new(pool)),
                 Err(e) => err(e),
             }
         }
         "circuit_breaker.new" => {
             let inner = handle(session, a.value("adapter")?)?.adapter;
-            let mut options = CircuitOptions::default();
+            let mut options = utopia_circuit_breaker::Options::default();
             if let Some(m) = a.opt_i64("minimum_throughput")? {
                 options.minimum_throughput = m;
             }
-            match Circuit::new(options) {
-                Ok(circuit) => new(session, Arc::new(CircuitBreaker::new(inner, circuit))),
-                Err(e) => err(e),
+            match utopia_circuit_breaker::CircuitBreaker::new(options) {
+                Ok(breaker) => new(session, Arc::new(CircuitBreaker::new(inner, breaker))),
+                Err(e) => Outcome::err(e.php_class(), e.to_string()),
             }
         }
         "failing.new" => new(session, Arc::new(Failing { loads: None })),
@@ -792,12 +795,9 @@ fn frame(value: &Json, top: bool) -> Result<utopia_cache::Result<resp::Reply>, F
 
 fn dump_telemetry(t: &MemoryTelemetry) -> Json {
     let mut out: BTreeMap<String, Json> = BTreeMap::new();
-    for (kind, prefix) in [
-        (Kind::Counter, "counter"),
-        (Kind::UpDownCounter, "upDownCounter"),
-        (Kind::Histogram, "histogram"),
-        (Kind::Gauge, "gauge"),
-    ] {
+    for (kind, prefix) in
+        [(Kind::Counter, "counter"), (Kind::UpDownCounter, "upDownCounter"), (Kind::Histogram, "histogram")]
+    {
         for name in t.names(kind) {
             let points = t.points(kind, &name).unwrap_or_default();
             let list: Vec<Json> = points
@@ -805,7 +805,7 @@ fn dump_telemetry(t: &MemoryTelemetry) -> Json {
                 .map(|p| {
                     let value = if kind == Kind::Histogram { json!(0) } else { number(p.value) };
                     let attributes: Map<String, Json> =
-                        p.attributes.into_iter().map(|(k, v)| (k, Json::String(v))).collect();
+                        p.attributes.into_iter().map(|(k, v)| (k, attribute(&v))).collect();
                     json!({ "value": value, "attributes": attributes })
                 })
                 .collect();
@@ -815,8 +815,20 @@ fn dump_telemetry(t: &MemoryTelemetry) -> Json {
     Json::Object(out.into_iter().collect())
 }
 
-fn number(f: f64) -> Json {
-    if f.fract() == 0.0 && f.abs() < 9e15 { json!(f as i64) } else { json!(f) }
+fn number(n: utopia_telemetry::Number) -> Json {
+    match n {
+        utopia_telemetry::Number::Int(i) => json!(i),
+        utopia_telemetry::Number::Float(f) => crate::adapter::float_value(f),
+    }
+}
+
+fn attribute(v: &utopia_telemetry::Value<'_>) -> Json {
+    match v {
+        utopia_telemetry::Value::Str(s) => json!(s),
+        utopia_telemetry::Value::Int(i) => json!(i),
+        utopia_telemetry::Value::Float(f) => crate::adapter::float_value(*f),
+        utopia_telemetry::Value::Bool(b) => json!(b),
+    }
 }
 
 async fn multiplexing(session: &Session, a: &Args<'_>) -> Result<Json, Fault> {

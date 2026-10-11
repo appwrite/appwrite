@@ -33,11 +33,11 @@
 //! | `Adapter\RedisCluster` | [`RedisCluster`] (feature `redis-cluster`) |
 //! | `Adapter\Memcached`, `Adapter\Hazelcast` | [`Memcached`], [`Hazelcast`] (feature `memcached`) |
 //! | `Adapter\Sharding` | [`Sharding`] |
-//! | `Adapter\Pool` (over `Utopia\Pools\Pool`) | [`Pool`] over a [`Lender`] ([`Stack`]) |
-//! | `Adapter\CircuitBreaker` (over `Utopia\CircuitBreaker\CircuitBreaker`) | [`CircuitBreaker`] over a [`Breaker`] ([`Circuit`]) |
+//! | `Adapter\Pool` (over `Utopia\Pools\Pool`) | [`Pool`] over a [`utopia_pools::Pool`] |
+//! | `Adapter\CircuitBreaker` (over `Utopia\CircuitBreaker\CircuitBreaker`) | [`CircuitBreaker`] over a [`utopia_circuit_breaker::CircuitBreaker`] |
 //! | `Codec`, `Codec\Json`, `Codec\Igbinary` | [`Codec`], [`Json`], [`Igbinary`] |
 //! | `Envelope` | [`Envelope`] |
-//! | `Utopia\Telemetry\Adapter` (`None`, `Test`) | [`telemetry::Telemetry`] ([`telemetry::NoTelemetry`], [`telemetry::MemoryTelemetry`]) |
+//! | `Utopia\Telemetry\Adapter` | [`telemetry::Telemetry`] (the `utopia-telemetry` crate) |
 //!
 //! PHP's `load` returns `false` on a miss; Rust returns `None`. `save`
 //! returns the data or `false`; Rust returns whether it stored.
@@ -73,10 +73,11 @@ mod redis_adapter;
 mod redis_cluster;
 pub mod resp;
 mod sharding;
-pub mod telemetry;
+/// The telemetry library the cache records its metrics with.
+pub use utopia_telemetry as telemetry;
 
 pub use adapter::{Adapter, BoxFuture, DynAdapter, Fields, Retry};
-pub use breaker::{Admitted, Breaker, Circuit, CircuitBreaker, CircuitOptions, State};
+pub use breaker::CircuitBreaker;
 pub use cache::Cache;
 pub use codec::{AnyCodec, Codec, Igbinary, Json};
 pub use envelope::Envelope;
@@ -89,7 +90,7 @@ pub use memory::Memory;
 #[cfg(feature = "redis")]
 pub use multiplexing::{Multiplexing, MultiplexingOptions};
 pub use none::None;
-pub use pool::{Lender, Lent, Pool, Stack};
+pub use pool::Pool;
 #[cfg(feature = "redis")]
 pub use redis_adapter::Redis;
 #[cfg(feature = "redis-cluster")]

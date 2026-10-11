@@ -225,7 +225,7 @@ async fn a_closed_connection_is_rebuilt_by_the_next_call() {
 
 #[tokio::test]
 async fn pending_depth_goes_up_and_down_with_each_command() {
-    use utopia_cache::telemetry::{Kind, MemoryTelemetry};
+    use utopia_cache::telemetry::{Kind, MemoryTelemetry, Number};
 
     let server = Server::start().await;
     let cache = server.adapter(0.25, 5.0).await;
@@ -234,6 +234,6 @@ async fn pending_depth_goes_up_and_down_with_each_command() {
     assert!(cache.ping().await.unwrap());
 
     let points = telemetry.points(Kind::UpDownCounter, "cache.redis_multiplexing.pending.depth").expect("recorded");
-    let values: Vec<f64> = points.iter().map(|p| p.value).collect();
-    assert_eq!(values, vec![1.0, -1.0]);
+    let values: Vec<Number> = points.iter().map(|p| p.value).collect();
+    assert_eq!(values, vec![Number::Int(1), Number::Int(-1)]);
 }

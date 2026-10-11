@@ -1,94 +1,42 @@
-//! [`Pool`]: every operation on an adapter borrowed from a pool.
-
-use std::future::Future;
-use std::ops::Deref;
-use std::sync::{Arc, Mutex};
+//! [`Pool`]: every operation on an adapter borrowed from a
+//! [`utopia_pools::Pool`].
 
 use php_std::types::Value;
-use tokio::sync::Semaphore;
+use utopia_pools::{Adapter as Idle, Connection, Resource, Stack};
 
 use crate::adapter::{Adapter, Fields};
 use crate::{Error, Result};
 
-/// Lends adapters for the duration of one operation. Implement it to back a
-/// [`Pool`] with another pool.
-///
-/// PHP: `Utopia\Pools\Pool`.
-pub trait Lender: Send + Sync {
-    /// The adapters lent.
-    type Adapter: Adapter;
-    /// A borrowed adapter, returned to the pool when dropped.
-    type Guard<'a>: Deref<Target = Self::Adapter> + Send
-    where
-        Self: 'a;
-
-    /// Borrows an adapter, waiting for one to come back when all are lent.
-    fn lend(&self) -> impl Future<Output = Result<Self::Guard<'_>>> + Send;
-}
-
-/// A pool of up to `size` adapters made on demand by a factory and reused
-/// last-in first-out.
-///
-/// PHP: `Utopia\Pools\Adapter\Stack`.
-pub struct Stack<A> {
-    idle: Mutex<Vec<A>>,
-    permits: Semaphore,
-    make: Box<dyn Fn() -> A + Send + Sync>,
-}
-
-impl<A: Adapter> Stack<A> {
-    /// A pool of at most `size` adapters made by `make`.
-    pub fn new(size: usize, make: impl Fn() -> A + Send + Sync + 'static) -> Self {
-        Stack { idle: Mutex::new(Vec::new()), permits: Semaphore::new(size), make: Box::new(make) }
+/// A pool's error as a cache error: `init`'s own error when it is one.
+fn pool_error(e: utopia_pools::Error) -> Error {
+    match e {
+        utopia_pools::Error::Init(inner) => match inner.downcast::<Error>() {
+            Ok(e) => *e,
+            Err(other) => Error::Exception(other.to_string()),
+        },
+        utopia_pools::Error::InvalidArgument(m) => Error::InvalidArgument(m),
+        other => Error::Exception(other.to_string()),
     }
 }
 
-/// An adapter borrowed from a [`Stack`].
-pub struct Lent<'a, A> {
-    adapter: Option<A>,
-    stack: &'a Stack<A>,
-    _permit: tokio::sync::SemaphorePermit<'a>,
-}
-
-impl<A> Deref for Lent<'_, A> {
-    type Target = A;
-
-    /// The borrowed adapter.
-    fn deref(&self) -> &A {
-        self.adapter.as_ref().expect("a lent adapter is present until dropped")
-    }
-}
-
-impl<A> Drop for Lent<'_, A> {
-    /// Returns the adapter to the stack.
-    fn drop(&mut self) {
-        if let Some(adapter) = self.adapter.take() {
-            self.stack.idle.lock().unwrap_or_else(|e| e.into_inner()).push(adapter);
-        }
-    }
-}
-
-impl<A: Adapter + 'static> Lender for Stack<A> {
-    type Adapter = A;
-    type Guard<'a> = Lent<'a, A>;
-
-    async fn lend(&self) -> Result<Lent<'_, A>> {
-        let permit = self.permits.acquire().await.map_err(|_| Error::Exception("Pool is closed".into()))?;
-        let idle = self.idle.lock().unwrap_or_else(|e| e.into_inner()).pop();
-        let adapter = idle.unwrap_or_else(|| (self.make)());
-        Ok(Lent { adapter: Some(adapter), stack: self, _permit: permit })
-    }
-}
-
-/// Runs every operation on an adapter borrowed from a [`Lender`], returning
-/// it afterwards, so concurrent tasks never share one connection.
+/// Runs every operation on an adapter borrowed from a
+/// [`utopia_pools::Pool`], returning it afterwards (or discarding it when the
+/// operation failed), so concurrent tasks never share one connection.
 ///
 /// ```
 /// use php_std::types::Value;
-/// use utopia_cache::{Adapter, Memory, Pool, Stack};
+/// use utopia_cache::{Adapter, Memory, Pool};
 ///
 /// # tokio::runtime::Runtime::new()?.block_on(async {
-/// let pool = Pool::new(Stack::new(4, Memory::new)).await?;
+/// let memories = utopia_pools::Pool::new(
+///     utopia_pools::Stack::new(),
+///     "cache",
+///     4,
+///     || async { Ok::<_, std::convert::Infallible>(Memory::new()) },
+///     0.0,
+/// )
+/// .unwrap();
+/// let pool = Pool::new(memories).await?;
 /// assert!(pool.save("key", &Value::from("value"), "", 0).await?);
 /// assert_eq!(pool.name(None), "memory");
 /// # Ok::<(), utopia_cache::Error>(())
@@ -106,60 +54,91 @@ impl<A: Adapter + 'static> Lender for Stack<A> {
 /// var_dump($pool->save('key', 'value')); // string(5) "value"
 /// echo $pool->getName(), "\n"; // memory
 /// ```
-pub struct Pool<P> {
-    lender: P,
+///
+/// PHP: `Utopia\Cache\Adapter\Pool`.
+pub struct Pool<A, S = Stack<A>> {
+    pool: utopia_pools::Pool<A, S>,
     name: String,
 }
 
-impl<P: Lender> Pool<P> {
-    /// A pool adapter running every operation through `lender`.
+impl<A: Adapter + Resource, S: Idle<A>> Pool<A, S> {
+    /// A pool adapter running every operation through `pool`.
     ///
     /// Borrows one adapter right away and keeps its name; fails when none can
     /// be borrowed.
     ///
     /// PHP: the constructor borrows one too, to check the pool's contents.
-    pub async fn new(lender: P) -> Result<Self> {
-        let name = lender.lend().await?.name(None).to_owned();
-        Ok(Pool { lender, name })
+    pub async fn new(pool: utopia_pools::Pool<A, S>) -> Result<Self> {
+        let connection = pool.pop().await.map_err(pool_error)?;
+        let name = connection.resource().name(None).to_owned();
+        pool.reclaim(&connection);
+        Ok(Pool { pool, name })
     }
 
-    /// The lender.
-    pub fn lender(&self) -> &P {
-        &self.lender
+    /// The pool the adapters are borrowed from.
+    pub fn pool(&self) -> &utopia_pools::Pool<A, S> {
+        &self.pool
+    }
+
+    async fn pop(&self) -> Result<Connection<A>> {
+        self.pool.pop().await.map_err(pool_error)
+    }
+
+    /// Returns a borrowed adapter: reclaimed after a success, released as
+    /// failed (discarded) after an error.
+    async fn done<T>(&self, connection: Connection<A>, result: Result<T>) -> Result<T> {
+        self.pool.release(&connection, result.is_err()).await;
+        result
     }
 }
 
-impl<P: Lender + 'static> Adapter for Pool<P> {
+impl<A: Adapter + Resource, S: Idle<A>> Adapter for Pool<A, S> {
     async fn load(&self, key: &str, ttl: i64, hash: &str) -> Result<Option<Value>> {
-        self.lender.lend().await?.load(key, ttl, hash).await
+        let c = self.pop().await?;
+        let r = c.load(key, ttl, hash).await;
+        self.done(c, r).await
     }
 
     async fn save(&self, key: &str, data: &Value, hash: &str, ttl: i64) -> Result<bool> {
-        self.lender.lend().await?.save(key, data, hash, ttl).await
+        let c = self.pop().await?;
+        let r = c.save(key, data, hash, ttl).await;
+        self.done(c, r).await
     }
 
     async fn touch(&self, key: &str, hash: &str) -> Result<bool> {
-        self.lender.lend().await?.touch(key, hash).await
+        let c = self.pop().await?;
+        let r = c.touch(key, hash).await;
+        self.done(c, r).await
     }
 
     async fn list(&self, key: &str) -> Result<Vec<String>> {
-        self.lender.lend().await?.list(key).await
+        let c = self.pop().await?;
+        let r = c.list(key).await;
+        self.done(c, r).await
     }
 
     async fn purge(&self, key: &str, hash: &str) -> Result<bool> {
-        self.lender.lend().await?.purge(key, hash).await
+        let c = self.pop().await?;
+        let r = c.purge(key, hash).await;
+        self.done(c, r).await
     }
 
     async fn flush(&self) -> Result<bool> {
-        self.lender.lend().await?.flush().await
+        let c = self.pop().await?;
+        let r = c.flush().await;
+        self.done(c, r).await
     }
 
     async fn ping(&self) -> Result<bool> {
-        self.lender.lend().await?.ping().await
+        let c = self.pop().await?;
+        let r = c.ping().await;
+        self.done(c, r).await
     }
 
     async fn size(&self) -> Result<i64> {
-        self.lender.lend().await?.size().await
+        let c = self.pop().await?;
+        let r = c.size().await;
+        self.done(c, r).await
     }
 
     fn name(&self, _key: Option<&str>) -> &str {
@@ -171,11 +150,15 @@ impl<P: Lender + 'static> Adapter for Pool<P> {
     }
 
     async fn load_many(&self, key: &str, fields: &[&str], ttl: i64) -> Result<Fields> {
-        self.lender.lend().await?.load_many(key, fields, ttl).await
+        let c = self.pop().await?;
+        let r = c.load_many(key, fields, ttl).await;
+        self.done(c, r).await
     }
 
     async fn save_many(&self, key: &str, data: &Fields, ttl: i64) -> Result<bool> {
-        self.lender.lend().await?.save_many(key, data, ttl).await
+        let c = self.pop().await?;
+        let r = c.save_many(key, data, ttl).await;
+        self.done(c, r).await
     }
 
     fn leasable(&self) -> bool {
@@ -183,23 +166,44 @@ impl<P: Lender + 'static> Adapter for Pool<P> {
     }
 
     async fn generation(&self, key: &str) -> Result<String> {
-        self.lender.lend().await?.generation(key).await
+        let c = self.pop().await?;
+        let r = c.generation(key).await;
+        self.done(c, r).await
     }
 
     async fn save_with_lease(&self, key: &str, data: &Value, hash: &str, generation: &str) -> Result<bool> {
-        self.lender.lend().await?.save_with_lease(key, data, hash, generation).await
+        let c = self.pop().await?;
+        let r = c.save_with_lease(key, data, hash, generation).await;
+        self.done(c, r).await
     }
 }
 
-/// A pool shared between owners lends like the pool itself.
-impl<L: Lender> Lender for Arc<L> {
-    type Adapter = L::Adapter;
-    type Guard<'a>
-        = L::Guard<'a>
-    where
-        Self: 'a;
+/// A cache adapter in a pool: no recovery hook, so one whose operation
+/// failed is discarded and replaced.
+///
+/// PHP: the Redis adapters' `reconnect()` is private, so the pool's probe for
+/// it fails and the adapter is discarded too.
+macro_rules! resources {
+    ($($(#[$cfg:meta])* [$($g:ident),*] $t:ty;)*) => {$(
+        $(#[$cfg])*
+        impl<$($g: Send + Sync + 'static),*> Resource for $t {}
+    )*};
+}
 
-    fn lend(&self) -> impl Future<Output = Result<Self::Guard<'_>>> + Send {
-        (**self).lend()
-    }
+resources! {
+    [] crate::Memory;
+    [] crate::None;
+    [A] crate::Sharding<A>;
+    #[cfg(feature = "filesystem")]
+    [] crate::Filesystem;
+    #[cfg(feature = "redis")]
+    [C, K] crate::Redis<C, K>;
+    #[cfg(feature = "redis")]
+    [K] crate::Multiplexing<K>;
+    #[cfg(feature = "redis-cluster")]
+    [C, K] crate::RedisCluster<C, K>;
+    #[cfg(feature = "memcached")]
+    [] crate::Memcached;
+    #[cfg(feature = "memcached")]
+    [K] crate::Hazelcast<K>;
 }

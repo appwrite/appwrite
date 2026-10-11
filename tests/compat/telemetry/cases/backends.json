@@ -1,0 +1,1817 @@
+{
+  "source": "backends: None, Test and OpenTelemetry beyond the PHP tests",
+  "cases": [
+    {
+      "name": "None records nothing and collects",
+      "steps": [
+        {
+          "op": "telemetry.none",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "counter",
+            "name": "c"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "c"
+            },
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "up_down_counter",
+            "name": "u"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "u"
+            },
+            "value": -1
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "histogram",
+            "name": "h",
+            "boundaries": [
+              1,
+              2
+            ]
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "h"
+            },
+            "value": 1.5
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "gauge",
+            "name": "g"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "g"
+            },
+            "value": 3
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "observable_gauge",
+            "name": "o"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "observations": [
+              {
+                "value": 1
+              }
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.observe",
+          "args": {
+            "instrument": {
+              "$ref": "o"
+            },
+            "source": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.collect",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "Test: the last instrument of a name to record owns it",
+      "steps": [
+        {
+          "op": "telemetry.memory",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "counter",
+            "name": "x"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "counter",
+            "name": "x"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "a"
+            },
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "b"
+            },
+            "value": 2.5
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counters": [
+              [
+                "x",
+                [
+                  2.5
+                ]
+              ]
+            ],
+            "upDownCounters": [],
+            "histograms": [],
+            "gauges": [],
+            "observableGauges": []
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "a"
+            },
+            "value": 3
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counters": [
+              [
+                "x",
+                [
+                  1,
+                  3
+                ]
+              ]
+            ],
+            "upDownCounters": [],
+            "histograms": [],
+            "gauges": [],
+            "observableGauges": []
+          }
+        },
+        {
+          "op": "telemetry.collect",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "Test: observable gauges of one name accumulate callbacks and appear once observed",
+      "steps": [
+        {
+          "op": "telemetry.memory",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "observable_gauge",
+            "name": "pool.count"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "memory.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counters": [],
+            "upDownCounters": [],
+            "histograms": [],
+            "gauges": [],
+            "observableGauges": []
+          }
+        },
+        {
+          "op": "memory.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "name": "pool.count"
+          },
+          "expect": null
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "observations": [
+              {
+                "value": 1,
+                "attributes": [
+                  [
+                    "pool",
+                    "alpha"
+                  ],
+                  [
+                    "size",
+                    5
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.observe",
+          "args": {
+            "instrument": {
+              "$ref": "a"
+            },
+            "source": {
+              "$ref": "s1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "observable_gauge",
+            "name": "pool.count"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "observations": [
+              {
+                "value": 2.5,
+                "attributes": [
+                  [
+                    "pool",
+                    "beta"
+                  ],
+                  [
+                    "ok",
+                    true
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.observe",
+          "args": {
+            "instrument": {
+              "$ref": "b"
+            },
+            "source": {
+              "$ref": "s2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counters": [],
+            "upDownCounters": [],
+            "histograms": [],
+            "gauges": [],
+            "observableGauges": [
+              [
+                "pool.count",
+                2
+              ]
+            ]
+          }
+        },
+        {
+          "op": "memory.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "name": "pool.count"
+          },
+          "expect": [
+            [
+              1,
+              [
+                [
+                  "pool",
+                  "alpha"
+                ],
+                [
+                  "size",
+                  5
+                ]
+              ]
+            ],
+            [
+              2.5,
+              [
+                [
+                  "pool",
+                  "beta"
+                ],
+                [
+                  "ok",
+                  true
+                ]
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OpenTelemetry: sums, histograms and series by attributes over two collections",
+      "steps": [
+        {
+          "op": "telemetry.otlp",
+          "args": {
+            "namespace": "ns",
+            "service": "svc",
+            "instance": "i-1"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "histogram",
+            "name": "pool.wait",
+            "unit": "s",
+            "description": "Wait",
+            "boundaries": [
+              0.005,
+              0.01,
+              0.1,
+              1,
+              2.5
+            ]
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "h"
+            },
+            "value": 0.007,
+            "attributes": [
+              [
+                "pool",
+                "a"
+              ],
+              [
+                "size",
+                5
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "h"
+            },
+            "value": 3,
+            "attributes": [
+              [
+                "pool",
+                "a"
+              ],
+              [
+                "size",
+                5
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "h"
+            },
+            "value": 0.01,
+            "attributes": [
+              [
+                "pool",
+                "b"
+              ],
+              [
+                "size",
+                5
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "histogram",
+            "name": "default.buckets"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "d"
+            },
+            "value": 75
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "counter",
+            "name": "hits",
+            "description": "Hits"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "c"
+            },
+            "value": 1,
+            "attributes": [
+              [
+                "ok",
+                true
+              ],
+              [
+                "ratio",
+                0.5
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "c"
+            },
+            "value": 2.5,
+            "attributes": [
+              [
+                "ok",
+                true
+              ],
+              [
+                "ratio",
+                0.5
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "c"
+            },
+            "value": 4,
+            "attributes": [
+              [
+                "ok",
+                false
+              ],
+              [
+                "ratio",
+                0.5
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "up_down_counter",
+            "name": "inflight"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "u"
+            },
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "u"
+            },
+            "value": -1
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "gauge",
+            "name": "temperature"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "g"
+            },
+            "value": 20,
+            "attributes": [
+              [
+                "room",
+                "a"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "g"
+            },
+            "value": 21.5,
+            "attributes": [
+              [
+                "room",
+                "a"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.collect",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "c"
+            },
+            "value": 1,
+            "attributes": [
+              [
+                "ok",
+                true
+              ],
+              [
+                "ratio",
+                0.5
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.collect",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "otlp.payloads",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              {
+                "resource": [
+                  [
+                    "service.namespace",
+                    "ns"
+                  ],
+                  [
+                    "service.name",
+                    "svc"
+                  ],
+                  [
+                    "service.instance.id",
+                    "i-1"
+                  ]
+                ],
+                "schema_url": "https://opentelemetry.io/schemas/1.32.0",
+                "scopes": [
+                  {
+                    "name": "cloud",
+                    "version": "",
+                    "schema_url": "",
+                    "metrics": [
+                      {
+                        "name": "pool.wait",
+                        "unit": "s",
+                        "description": "Wait",
+                        "data": "histogram",
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [
+                              [
+                                "pool",
+                                "a"
+                              ],
+                              [
+                                "size",
+                                5
+                              ]
+                            ],
+                            "count": 2,
+                            "sum": 3.007,
+                            "min": 0.007,
+                            "max": 3.0,
+                            "buckets": [
+                              0,
+                              1,
+                              0,
+                              0,
+                              0,
+                              1
+                            ],
+                            "bounds": [
+                              0.005,
+                              0.01,
+                              0.1,
+                              1.0,
+                              2.5
+                            ],
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          },
+                          {
+                            "attributes": [
+                              [
+                                "pool",
+                                "b"
+                              ],
+                              [
+                                "size",
+                                5
+                              ]
+                            ],
+                            "count": 1,
+                            "sum": 0.01,
+                            "min": 0.01,
+                            "max": 0.01,
+                            "buckets": [
+                              0,
+                              1,
+                              0,
+                              0,
+                              0,
+                              0
+                            ],
+                            "bounds": [
+                              0.005,
+                              0.01,
+                              0.1,
+                              1.0,
+                              2.5
+                            ],
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "default.buckets",
+                        "unit": "",
+                        "description": "",
+                        "data": "histogram",
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [],
+                            "count": 1,
+                            "sum": 75.0,
+                            "min": 75.0,
+                            "max": 75.0,
+                            "buckets": [
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              1,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0
+                            ],
+                            "bounds": [
+                              0.0,
+                              5.0,
+                              10.0,
+                              25.0,
+                              50.0,
+                              75.0,
+                              100.0,
+                              250.0,
+                              500.0,
+                              1000.0
+                            ],
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "hits",
+                        "unit": "",
+                        "description": "Hits",
+                        "data": "sum",
+                        "monotonic": true,
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [
+                              [
+                                "ok",
+                                true
+                              ],
+                              [
+                                "ratio",
+                                0.5
+                              ]
+                            ],
+                            "value": 3.5,
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          },
+                          {
+                            "attributes": [
+                              [
+                                "ok",
+                                false
+                              ],
+                              [
+                                "ratio",
+                                0.5
+                              ]
+                            ],
+                            "value": 4,
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "inflight",
+                        "unit": "",
+                        "description": "",
+                        "data": "sum",
+                        "monotonic": false,
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [],
+                            "value": 0,
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "temperature",
+                        "unit": "",
+                        "description": "",
+                        "data": "gauge",
+                        "points": [
+                          {
+                            "attributes": [
+                              [
+                                "room",
+                                "a"
+                              ]
+                            ],
+                            "value": 21.5,
+                            "start": false,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "resource": [
+                  [
+                    "service.namespace",
+                    "ns"
+                  ],
+                  [
+                    "service.name",
+                    "svc"
+                  ],
+                  [
+                    "service.instance.id",
+                    "i-1"
+                  ]
+                ],
+                "schema_url": "https://opentelemetry.io/schemas/1.32.0",
+                "scopes": [
+                  {
+                    "name": "cloud",
+                    "version": "",
+                    "schema_url": "",
+                    "metrics": [
+                      {
+                        "name": "pool.wait",
+                        "unit": "s",
+                        "description": "Wait",
+                        "data": "histogram",
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [
+                              [
+                                "pool",
+                                "a"
+                              ],
+                              [
+                                "size",
+                                5
+                              ]
+                            ],
+                            "count": 2,
+                            "sum": 3.007,
+                            "min": 0.007,
+                            "max": 3.0,
+                            "buckets": [
+                              0,
+                              1,
+                              0,
+                              0,
+                              0,
+                              1
+                            ],
+                            "bounds": [
+                              0.005,
+                              0.01,
+                              0.1,
+                              1.0,
+                              2.5
+                            ],
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          },
+                          {
+                            "attributes": [
+                              [
+                                "pool",
+                                "b"
+                              ],
+                              [
+                                "size",
+                                5
+                              ]
+                            ],
+                            "count": 1,
+                            "sum": 0.01,
+                            "min": 0.01,
+                            "max": 0.01,
+                            "buckets": [
+                              0,
+                              1,
+                              0,
+                              0,
+                              0,
+                              0
+                            ],
+                            "bounds": [
+                              0.005,
+                              0.01,
+                              0.1,
+                              1.0,
+                              2.5
+                            ],
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "default.buckets",
+                        "unit": "",
+                        "description": "",
+                        "data": "histogram",
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [],
+                            "count": 1,
+                            "sum": 75.0,
+                            "min": 75.0,
+                            "max": 75.0,
+                            "buckets": [
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              1,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0
+                            ],
+                            "bounds": [
+                              0.0,
+                              5.0,
+                              10.0,
+                              25.0,
+                              50.0,
+                              75.0,
+                              100.0,
+                              250.0,
+                              500.0,
+                              1000.0
+                            ],
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "hits",
+                        "unit": "",
+                        "description": "Hits",
+                        "data": "sum",
+                        "monotonic": true,
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [
+                              [
+                                "ok",
+                                true
+                              ],
+                              [
+                                "ratio",
+                                0.5
+                              ]
+                            ],
+                            "value": 4.5,
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          },
+                          {
+                            "attributes": [
+                              [
+                                "ok",
+                                false
+                              ],
+                              [
+                                "ratio",
+                                0.5
+                              ]
+                            ],
+                            "value": 4,
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "inflight",
+                        "unit": "",
+                        "description": "",
+                        "data": "sum",
+                        "monotonic": false,
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [],
+                            "value": 0,
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "temperature",
+                        "unit": "",
+                        "description": "",
+                        "data": "gauge",
+                        "points": [
+                          {
+                            "attributes": [
+                              [
+                                "room",
+                                "a"
+                              ]
+                            ],
+                            "value": 21.5,
+                            "start": false,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OpenTelemetry: one observable gauge per name, every callback reports its own series",
+      "steps": [
+        {
+          "op": "telemetry.otlp",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "observable_gauge",
+            "name": "pool.active",
+            "unit": "{connection}"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "observable_gauge",
+            "name": "pool.active"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "observations": [
+              {
+                "value": 1,
+                "attributes": [
+                  [
+                    "pool",
+                    "alpha"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "observations": [
+              {
+                "value": 2,
+                "attributes": [
+                  [
+                    "pool",
+                    "beta"
+                  ]
+                ]
+              },
+              {
+                "value": 3,
+                "attributes": [
+                  [
+                    "pool",
+                    "beta"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.observe",
+          "args": {
+            "instrument": {
+              "$ref": "a"
+            },
+            "source": {
+              "$ref": "s1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.observe",
+          "args": {
+            "instrument": {
+              "$ref": "b"
+            },
+            "source": {
+              "$ref": "s2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.collect",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "otlp.payloads",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              {
+                "resource": [
+                  [
+                    "service.namespace",
+                    "namespace"
+                  ],
+                  [
+                    "service.name",
+                    "service"
+                  ],
+                  [
+                    "service.instance.id",
+                    "instance"
+                  ]
+                ],
+                "schema_url": "https://opentelemetry.io/schemas/1.32.0",
+                "scopes": [
+                  {
+                    "name": "cloud",
+                    "version": "",
+                    "schema_url": "",
+                    "metrics": [
+                      {
+                        "name": "pool.active",
+                        "unit": "{connection}",
+                        "description": "",
+                        "data": "gauge",
+                        "points": [
+                          {
+                            "attributes": [
+                              [
+                                "pool",
+                                "alpha"
+                              ]
+                            ],
+                            "value": 1,
+                            "start": false,
+                            "time": true,
+                            "exemplars": 0
+                          },
+                          {
+                            "attributes": [
+                              [
+                                "pool",
+                                "beta"
+                              ]
+                            ],
+                            "value": 3,
+                            "start": false,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "replay on OpenTelemetry: integer sums overflowing into floats, negative histogram values",
+      "op": "telemetry.replay",
+      "args": {
+        "backend": "otlp",
+        "records": [
+          {
+            "kind": "counter",
+            "name": "a",
+            "value": 1,
+            "attributes": {
+              "route": "x"
+            }
+          },
+          {
+            "kind": "counter",
+            "name": "a",
+            "value": 2.5,
+            "attributes": {
+              "route": "x"
+            }
+          },
+          {
+            "kind": "gauge",
+            "name": "g",
+            "value": -3
+          },
+          {
+            "kind": "up_down_counter",
+            "name": "u",
+            "value": 9223372036854775807
+          },
+          {
+            "kind": "up_down_counter",
+            "name": "u",
+            "value": 1
+          },
+          {
+            "kind": "histogram",
+            "name": "h",
+            "value": -1.5,
+            "attributes": {
+              "method": true
+            }
+          }
+        ]
+      },
+      "expect": {
+        "collected": [
+          true,
+          true
+        ],
+        "held": [
+          [
+            {
+              "resource": [
+                [
+                  "service.namespace",
+                  "namespace"
+                ],
+                [
+                  "service.name",
+                  "service"
+                ],
+                [
+                  "service.instance.id",
+                  "instance"
+                ]
+              ],
+              "schema_url": "https://opentelemetry.io/schemas/1.32.0",
+              "scopes": [
+                {
+                  "name": "cloud",
+                  "version": "",
+                  "schema_url": "",
+                  "metrics": [
+                    {
+                      "name": "a",
+                      "unit": "",
+                      "description": "",
+                      "data": "sum",
+                      "monotonic": true,
+                      "temporality": 2,
+                      "points": [
+                        {
+                          "attributes": [
+                            [
+                              "route",
+                              "x"
+                            ]
+                          ],
+                          "value": 3.5,
+                          "start": true,
+                          "time": true,
+                          "exemplars": 0
+                        }
+                      ]
+                    },
+                    {
+                      "name": "g",
+                      "unit": "",
+                      "description": "",
+                      "data": "gauge",
+                      "points": [
+                        {
+                          "attributes": [],
+                          "value": -3,
+                          "start": false,
+                          "time": true,
+                          "exemplars": 0
+                        }
+                      ]
+                    },
+                    {
+                      "name": "u",
+                      "unit": "",
+                      "description": "",
+                      "data": "sum",
+                      "monotonic": false,
+                      "temporality": 2,
+                      "points": [
+                        {
+                          "attributes": [],
+                          "value": 9.223372036854776e+18,
+                          "start": true,
+                          "time": true,
+                          "exemplars": 0
+                        }
+                      ]
+                    },
+                    {
+                      "name": "h",
+                      "unit": "",
+                      "description": "",
+                      "data": "histogram",
+                      "temporality": 2,
+                      "points": [
+                        {
+                          "attributes": [
+                            [
+                              "method",
+                              true
+                            ]
+                          ],
+                          "count": 1,
+                          "sum": -1.5,
+                          "min": -1.5,
+                          "max": -1.5,
+                          "buckets": [
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0
+                          ],
+                          "bounds": [
+                            0.0,
+                            5.0,
+                            10.0,
+                            25.0,
+                            50.0,
+                            75.0,
+                            100.0,
+                            250.0,
+                            500.0,
+                            1000.0
+                          ],
+                          "start": true,
+                          "time": true,
+                          "exemplars": 0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "resource": [
+                [
+                  "service.namespace",
+                  "namespace"
+                ],
+                [
+                  "service.name",
+                  "service"
+                ],
+                [
+                  "service.instance.id",
+                  "instance"
+                ]
+              ],
+              "schema_url": "https://opentelemetry.io/schemas/1.32.0",
+              "scopes": [
+                {
+                  "name": "cloud",
+                  "version": "",
+                  "schema_url": "",
+                  "metrics": [
+                    {
+                      "name": "a",
+                      "unit": "",
+                      "description": "",
+                      "data": "sum",
+                      "monotonic": true,
+                      "temporality": 2,
+                      "points": [
+                        {
+                          "attributes": [
+                            [
+                              "route",
+                              "x"
+                            ]
+                          ],
+                          "value": 3.5,
+                          "start": true,
+                          "time": true,
+                          "exemplars": 0
+                        }
+                      ]
+                    },
+                    {
+                      "name": "g",
+                      "unit": "",
+                      "description": "",
+                      "data": "gauge",
+                      "points": [
+                        {
+                          "attributes": [],
+                          "value": -3,
+                          "start": false,
+                          "time": true,
+                          "exemplars": 0
+                        }
+                      ]
+                    },
+                    {
+                      "name": "u",
+                      "unit": "",
+                      "description": "",
+                      "data": "sum",
+                      "monotonic": false,
+                      "temporality": 2,
+                      "points": [
+                        {
+                          "attributes": [],
+                          "value": 9.223372036854776e+18,
+                          "start": true,
+                          "time": true,
+                          "exemplars": 0
+                        }
+                      ]
+                    },
+                    {
+                      "name": "h",
+                      "unit": "",
+                      "description": "",
+                      "data": "histogram",
+                      "temporality": 2,
+                      "points": [
+                        {
+                          "attributes": [
+                            [
+                              "method",
+                              true
+                            ]
+                          ],
+                          "count": 1,
+                          "sum": -1.5,
+                          "min": -1.5,
+                          "max": -1.5,
+                          "buckets": [
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0
+                          ],
+                          "bounds": [
+                            0.0,
+                            5.0,
+                            10.0,
+                            25.0,
+                            50.0,
+                            75.0,
+                            100.0,
+                            250.0,
+                            500.0,
+                            1000.0
+                          ],
+                          "start": true,
+                          "time": true,
+                          "exemplars": 0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "name": "replay on the Test backend",
+      "op": "telemetry.replay",
+      "args": {
+        "backend": "memory",
+        "records": [
+          {
+            "kind": "histogram",
+            "name": "h",
+            "value": 2
+          },
+          {
+            "kind": "histogram",
+            "name": "h",
+            "value": 3.25
+          }
+        ]
+      },
+      "expect": {
+        "collected": [
+          true,
+          true
+        ],
+        "held": {
+          "counters": [],
+          "upDownCounters": [],
+          "histograms": [
+            [
+              "h",
+              [
+                3.25
+              ]
+            ]
+          ],
+          "gauges": [],
+          "observableGauges": []
+        }
+      }
+    }
+  ]
+}

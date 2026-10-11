@@ -1,0 +1,31 @@
+[package]
+name = "utopia-telemetry"
+description = "Metrics instruments (counters, histograms, gauges, observable gauges) over pluggable backends: none, in memory, and OpenTelemetry (OTLP over HTTP)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+default = ["otlp"]
+# The OpenTelemetry backend: OTLP/protobuf over HTTP(S).
+otlp = ["dep:bytes", "dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "dep:rustls", "dep:tokio", "dep:tower-service"]
+
+[dependencies]
+bytes = { workspace = true, optional = true }
+http-body-util = { workspace = true, optional = true }
+hyper = { workspace = true, features = ["client", "http1"], optional = true }
+hyper-rustls = { workspace = true, optional = true }
+hyper-util = { workspace = true, features = ["client-legacy", "http1", "tokio"], optional = true }
+php-std.workspace = true
+rustls = { workspace = true, optional = true }
+thiserror.workspace = true
+tokio = { workspace = true, features = ["rt", "time", "net"], optional = true }
+tower-service = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros", "time", "net", "io-util"] }
+
+[package.metadata.utopia]
+php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"

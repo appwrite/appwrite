@@ -1,0 +1,1676 @@
+{
+  "source": "packages/circuit-breaker/tests/FailureRateWindowTest.php",
+  "cases": [
+    {
+      "name": "a burst among healthy traffic does not open the circuit",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed"
+            ]
+          },
+          "expect": {
+            "ok": 1000
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail"
+            ]
+          },
+          "expect": {
+            "fallback": 5
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        }
+      ]
+    },
+    {
+      "name": "sustained failure still opens the circuit",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail"
+            ]
+          },
+          "expect": {
+            "fallback": 20
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        }
+      ]
+    },
+    {
+      "name": "the ratio is not trusted below minimum throughput",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail"
+            ]
+          },
+          "expect": {
+            "fallback": 19
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        }
+      ]
+    },
+    {
+      "name": "failures older than the window are forgotten",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "window": 1,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 4
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              "fail",
+              "fail",
+              "fail"
+            ]
+          },
+          "expect": {
+            "fallback": 3
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 3000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              "fail",
+              "fail",
+              "fail"
+            ]
+          },
+          "expect": {
+            "fallback": 3
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        }
+      ]
+    },
+    {
+      "name": "successes do not wipe the window",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 10
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              "fail",
+              "succeed",
+              "fail",
+              "succeed",
+              "fail",
+              "succeed",
+              "fail",
+              "succeed",
+              "fail",
+              "succeed",
+              "fail",
+              "succeed",
+              "fail",
+              "succeed",
+              "fail",
+              "succeed",
+              "fail",
+              "succeed",
+              "fail",
+              "succeed"
+            ]
+          },
+          "expect": {
+            "fallback": 15,
+            "ok": 5
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        }
+      ]
+    },
+    {
+      "name": "the verdict is shared through the cache adapter but the window is not",
+      "steps": [
+        {
+          "op": "store.array",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "store": {
+              "$ref": "c"
+            },
+            "key": "users-api",
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 10
+          },
+          "bind": "first",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "first"
+            },
+            "outcomes": [
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail"
+            ]
+          },
+          "expect": {
+            "fallback": 5
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "store": {
+              "$ref": "c"
+            },
+            "key": "users-api",
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 10
+          },
+          "bind": "second",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "second"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "second"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "first"
+            },
+            "outcomes": [
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail"
+            ]
+          },
+          "expect": {
+            "fallback": 5
+          }
+        },
+        {
+          "op": "breaker.is",
+          "args": {
+            "breaker": {
+              "$ref": "first"
+            }
+          },
+          "expect": {
+            "open": true,
+            "closed": false,
+            "half_open": false
+          }
+        },
+        {
+          "op": "breaker.is",
+          "args": {
+            "breaker": {
+              "$ref": "second"
+            }
+          },
+          "expect": {
+            "open": true,
+            "closed": false,
+            "half_open": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "reopening does not reuse the tally that opened it",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 1,
+            "success_threshold": 1,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 10
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail",
+              "fail"
+            ]
+          },
+          "expect": {
+            "fallback": 10
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 2000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "ok"
+            }
+          },
+          "expect": "ok"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        }
+      ]
+    },
+    {
+      "name": "window must be positive",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "window": 0
+          },
+          "bind": "b",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Window must be greater than 0 seconds."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "failure ratio must be a proportion",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "window": 60,
+            "failure_ratio": 1.5
+          },
+          "bind": "b",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Failure ratio must be greater than 0 and at most 1."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "minimum throughput must be at least one",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "window": 60,
+            "minimum_throughput": 0
+          },
+          "bind": "b",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Minimum throughput must be at least 1."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "failure ratio of zero is rejected",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "failure_ratio": 0
+          },
+          "bind": "b",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Failure ratio must be greater than 0 and at most 1."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "failure ratio of one is accepted",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "failure_ratio": 1,
+            "minimum_throughput": 1
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        }
+      ]
+    }
+  ]
+}
