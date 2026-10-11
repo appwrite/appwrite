@@ -1,7 +1,5 @@
-import type { Models } from '@appwrite.io/console'
-
-/** The server rejects more origins than this. */
-export const MAX_PASSKEY_ORIGINS = 10
+import { PlatformType, type Models } from '@appwrite.io/console'
+import { parse } from 'tldts'
 
 /** The server rejects a longer relying party ID (the maximum length of a domain name). */
 export const MAX_PASSKEY_RP_ID_LENGTH = 253
@@ -25,15 +23,84 @@ export function parsePasskeyPolicy(
   }
 }
 
-/** Passkeys fail closed: sign-in needs a relying party and at least one origin. */
-export function isPasskeyPolicyConfigured(policy: PasskeyPolicy): boolean {
-  return policy.rpId !== '' && policy.origins.length > 0
+export type PasskeyPlatform = Models.PlatformList['platforms'][number]
+
+const LOCALHOST = 'localhost'
+
+function webHostnames(platforms: PasskeyPlatform[]): string[] {
+  return platforms.flatMap((platform) =>
+    platform.type === PlatformType.Web &&
+    'hostname' in platform &&
+    platform.hostname
+      ? [platform.hostname.toLowerCase()]
+      : [],
+  )
 }
 
-/** Matches the server's normalisation closely enough to compare for changes. */
-export function normalizePasskeyOrigin(origin: string): string {
-  const trimmed = origin.trim()
-  return trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed
+function hasLocalhostPlatform(platforms: PasskeyPlatform[]): boolean {
+  return webHostnames(platforms).includes(LOCALHOST)
+}
+
+/**
+ * Where passkeys work for a relying party ID, mirroring
+ * `Appwrite\Auth\Passkey\Ceremony::getOrigins()`: web platforms on the
+ * domain (wildcards included), the domain itself for Apple apps, and
+ * localhost when it is a web platform. Previews an unsaved domain; the saved
+ * policy carries the server's own list.
+ */
+export function platformPasskeyOrigins(
+  rpId: string,
+  platforms: PasskeyPlatform[],
+): string[] {
+  const origins = new Set<string>()
+  if (rpId !== '' && rpId !== LOCALHOST) {
+    if (platforms.some((platform) => platform.type === PlatformType.Apple)) {
+      origins.add(`https://${rpId}`)
+    }
+    for (const hostname of webHostnames(platforms)) {
+      const domain = hostname.startsWith('*.') ? hostname.slice(2) : hostname
+      if (domain.includes('*')) continue
+      if (domain === rpId || domain.endsWith(`.${rpId}`)) {
+        origins.add(`https://${hostname}`)
+      }
+    }
+  }
+  if (hasLocalhostPlatform(platforms)) {
+    origins.add('http://localhost')
+    origins.add('https://localhost')
+  }
+  return [...origins]
+}
+
+/**
+ * Relying party IDs to offer, from the project's web platforms: each
+ * registrable domain first, since it also covers its subdomains, then the
+ * hostname itself. Like the server, public suffixes (including private ones
+ * such as github.io) are never offered, and hostnames under a shared domain
+ * such as the Sites domain only offer themselves.
+ */
+export function suggestPasskeyRpIds(
+  platforms: PasskeyPlatform[],
+  sharedDomains: string[] = [],
+): string[] {
+  const parents: string[] = []
+  const hosts: string[] = []
+  for (const raw of webHostnames(platforms)) {
+    const hostname = raw.startsWith('*.') ? raw.slice(2) : raw
+    if (hostname.includes('*') || passkeyRpIdError(hostname) !== null) continue
+    const { domain, isIcann, isPrivate } = parse(hostname, {
+      allowPrivateDomains: true,
+    })
+    if (!domain || !(isIcann || isPrivate)) continue
+    hosts.push(hostname)
+    const shared = sharedDomains.some(
+      (shared) => shared && hostname.endsWith(`.${shared}`),
+    )
+    if (!shared && domain !== hostname) parents.push(domain)
+  }
+  return [...new Set([...parents, ...hosts])].filter(
+    (domain) => !sharedDomains.includes(domain),
+  )
 }
 
 /**
@@ -56,36 +123,6 @@ export function passkeyRpIdError(rpId: string): string | null {
   }
   if (!rpId.includes('.') || rpId.startsWith('.') || rpId.endsWith('.')) {
     return 'Enter a domain like example.com, or localhost.'
-  }
-  return null
-}
-
-export function passkeyOriginError(
-  origin: string,
-  rpId: string,
-): string | null {
-  let url: URL
-  try {
-    url = new URL(origin)
-  } catch {
-    return 'Enter a full origin, like https://example.com.'
-  }
-  const isLocalhost = url.hostname === 'localhost'
-  if (url.protocol !== 'https:' && !(url.protocol === 'http:' && isLocalhost)) {
-    return 'Origins must use https://, or http:// on localhost.'
-  }
-  if (url.username || url.password) {
-    return 'Origins cannot include credentials.'
-  }
-  if (url.pathname !== '/' || url.search || url.hash) {
-    return 'Origins cannot include a path, query or fragment.'
-  }
-  if (
-    rpId !== '' &&
-    url.hostname !== rpId &&
-    !url.hostname.endsWith(`.${rpId}`)
-  ) {
-    return 'Origins must be on the relying party ID or one of its subdomains.'
   }
   return null
 }
