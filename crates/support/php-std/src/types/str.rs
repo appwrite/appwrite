@@ -57,6 +57,7 @@ impl Str {
         Str(Repr::Inline { len: b.len() as u8, buf })
     }
 
+    /// The bytes of the string.
     pub fn as_bytes(&self) -> &[u8] {
         match &self.0 {
             Repr::Inline { len, buf } => &buf[..*len as usize],
@@ -70,10 +71,12 @@ impl Str {
         std::str::from_utf8(self.as_bytes()).ok()
     }
 
+    /// The length in bytes.
     pub fn len(&self) -> usize {
         self.as_bytes().len()
     }
 
+    /// Whether the string is empty.
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -89,6 +92,7 @@ impl Str {
 }
 
 impl Default for Str {
+    /// The empty string.
     fn default() -> Self {
         Str::EMPTY
     }
@@ -97,24 +101,28 @@ impl Default for Str {
 impl Deref for Str {
     type Target = [u8];
 
+    /// The bytes of the string.
     fn deref(&self) -> &[u8] {
         self.as_bytes()
     }
 }
 
 impl AsRef<[u8]> for Str {
+    /// The bytes of the string.
     fn as_ref(&self) -> &[u8] {
         self.as_bytes()
     }
 }
 
 impl Borrow<[u8]> for Str {
+    /// The bytes of the string, so maps keyed by `Str` can be queried with `&[u8]`.
     fn borrow(&self) -> &[u8] {
         self.as_bytes()
     }
 }
 
 impl PartialEq for Str {
+    /// Whether both hold the same bytes.
     fn eq(&self, other: &Self) -> bool {
         self.as_bytes() == other.as_bytes()
     }
@@ -123,24 +131,28 @@ impl PartialEq for Str {
 impl Eq for Str {}
 
 impl PartialEq<[u8]> for Str {
+    /// Whether the string holds these bytes.
     fn eq(&self, other: &[u8]) -> bool {
         self.as_bytes() == other
     }
 }
 
 impl PartialEq<str> for Str {
+    /// Whether the string holds the bytes of `other`.
     fn eq(&self, other: &str) -> bool {
         self.as_bytes() == other.as_bytes()
     }
 }
 
 impl PartialEq<&str> for Str {
+    /// Whether the string holds the bytes of `other`.
     fn eq(&self, other: &&str) -> bool {
         self.as_bytes() == other.as_bytes()
     }
 }
 
 impl PartialOrd for Str {
+    /// Byte order, as [`Ord`].
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
@@ -148,6 +160,7 @@ impl PartialOrd for Str {
 
 /// Byte order (`strcmp`), not PHP's `<=>` (see [`crate::types::Value::cmp_php`]).
 impl Ord for Str {
+    /// Compares the bytes (`strcmp` order).
     fn cmp(&self, other: &Self) -> Ordering {
         self.as_bytes().cmp(other.as_bytes())
     }
@@ -155,42 +168,49 @@ impl Ord for Str {
 
 /// Hashes like `[u8]`, so maps keyed by `Str` can be queried with `&[u8]`.
 impl Hash for Str {
+    /// Hashes the bytes, as `[u8]` does.
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_bytes().hash(state);
     }
 }
 
 impl fmt::Debug for Str {
+    /// Writes the string quoted, with invalid UTF-8 replaced.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(&String::from_utf8_lossy(self.as_bytes()), f)
     }
 }
 
 impl From<&str> for Str {
+    /// Copies the bytes of `s`.
     fn from(s: &str) -> Self {
         Str::copy_from(s.as_bytes())
     }
 }
 
 impl From<String> for Str {
+    /// Takes the bytes of `s`.
     fn from(s: String) -> Self {
         Str::from(s.into_bytes())
     }
 }
 
 impl From<&[u8]> for Str {
+    /// Copies `s`.
     fn from(s: &[u8]) -> Self {
         Str::copy_from(s)
     }
 }
 
 impl From<Vec<u8>> for Str {
+    /// Takes `s` (short strings are copied inline).
     fn from(s: Vec<u8>) -> Self {
         if s.len() <= INLINE { Str::inline(&s) } else { Str(Repr::Shared(Bytes::from(s))) }
     }
 }
 
 impl From<Bytes> for Str {
+    /// Shares `b`, as [`Str::from_bytes`].
     fn from(b: Bytes) -> Self {
         Str::from_bytes(b)
     }

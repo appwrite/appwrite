@@ -18,6 +18,8 @@
 //! arrays, except empty objects, which stay `stdClass`; [`Value::from_json`]
 //! is the same mapping).
 
+#![warn(missing_docs)]
+
 /// The getting started guide (`guide.md`), compiled and run with the doctests.
 #[cfg(doctest)]
 #[doc = include_str!("../guide.md")]

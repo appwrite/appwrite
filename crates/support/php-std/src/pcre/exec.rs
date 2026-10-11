@@ -19,6 +19,7 @@ use super::program::{self, BraKind, EarlyFail, KetKind, LoopCount, LoopKind, Op,
 use super::study::StartInfo;
 use super::unicode::{self, CTYPE_DIGIT, CTYPE_SPACE, CTYPE_WORD};
 
+/// An `ovector` slot of a group that did not match.
 pub const UNSET: usize = usize::MAX;
 const RECURSE_UNSET: u32 = u32::MAX;
 
@@ -29,7 +30,9 @@ const GF_RECURSE: u32 = 0x0004_0000;
 const GF_IDMASK: u32 = 0xffff_0000;
 const GF_DATAMASK: u32 = 0x0000_ffff;
 
+/// The match succeeded.
 pub const MATCH_MATCH: i32 = 1;
+/// The match failed.
 pub const MATCH_NOMATCH: i32 = 0;
 const MATCH_ACCEPT: i32 = -999;
 const MATCH_KETRPOS: i32 = -998;
@@ -41,11 +44,17 @@ const MATCH_THEN: i32 = -993;
 const MATCH_BACKTRACK_MAX: i32 = MATCH_THEN;
 const MATCH_BACKTRACK_MIN: i32 = MATCH_COMMIT;
 
+/// `PCRE2_ERROR_BADUTFOFFSET`: the start offset is inside a UTF-8 character.
 pub const ERROR_BADUTFOFFSET: i32 = -36;
+/// `PCRE2_ERROR_INTERNAL`: an internal error.
 pub const ERROR_INTERNAL: i32 = -44;
+/// `PCRE2_ERROR_JIT_STACKLIMIT`: the JIT stack ran out.
 pub const ERROR_JIT_STACKLIMIT: i32 = -46;
+/// `PCRE2_ERROR_MATCHLIMIT`: the match limit (`pcre.backtrack_limit`) was reached.
 pub const ERROR_MATCHLIMIT: i32 = -47;
+/// `PCRE2_ERROR_RECURSELOOP`: a recursion loop was detected.
 pub const ERROR_RECURSELOOP: i32 = -52;
+/// `PCRE2_ERROR_DEPTHLIMIT`: the depth limit (`pcre.recursion_limit`) was reached.
 pub const ERROR_DEPTHLIMIT: i32 = -53;
 
 /// PHP's JIT stack (`PCRE_JIT_STACK_MAX_SIZE`, 192 KiB) in 8-byte words.
@@ -56,7 +65,9 @@ const JIT_STACK_WORDS: u32 = 192 * 1024 / 8;
 
 /// Match-time options (`pcre2_match()` options).
 pub const NOTEMPTY: u32 = 0x0000_0004;
+/// `PCRE2_NOTEMPTY_ATSTART`: no empty match at the start offset.
 pub const NOTEMPTY_ATSTART: u32 = 0x0000_0008;
+/// `PCRE2_ANCHORED`: the match must start at the start offset.
 pub const ANCHORED: u32 = 0x8000_0000;
 
 /// Where a frame resumes when the frame it pushed returns.
@@ -153,6 +164,7 @@ pub struct MatchData {
     pub mark: Option<u32>,
 }
 
+/// The matcher state for one subject: runs a [`Program`] against it.
 pub struct Matcher<'a> {
     prog: &'a Program,
     s: &'a [u8],
@@ -211,6 +223,7 @@ pub struct Matcher<'a> {
 }
 
 impl<'a> Matcher<'a> {
+    /// A matcher for `subject`, with the pattern's options, newline and `\R` conventions.
     pub fn new(prog: &'a Program, subject: &'a [u8], poptions: u32, newline: Newline, bsr: Bsr) -> Self {
         let ovs = 2 * prog.top_bracket as usize;
         Matcher {

@@ -90,10 +90,12 @@ impl Error {
         Error { kind, message: message.into() }
     }
 
+    /// What went wrong, as an [`ErrorKind`].
     pub fn kind(&self) -> ErrorKind {
         self.kind
     }
 
+    /// The PHP exception class.
     pub fn php_class(&self) -> &'static str {
         match self.kind {
             ErrorKind::MalformedString => "DateMalformedStringException",
@@ -115,6 +117,7 @@ impl Error {
 }
 
 impl fmt::Display for Error {
+    /// Writes the message, with invalid UTF-8 replaced.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.message())
     }
@@ -145,7 +148,9 @@ fn first_error(prefix: &str, input: &[u8], errors: &Messages) -> Vec<u8> {
 /// A point in time, as `gettimeofday` reports it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Timestamp {
+    /// Seconds since the Unix epoch.
     pub sec: i64,
+    /// Microseconds past `sec` (0 to 999 999).
     pub usec: i32,
 }
 
@@ -181,7 +186,14 @@ pub enum TimeZone {
     Offset(i64),
     /// `timezone_type` 2: an abbreviation (`EST`), its UTC offset without
     /// DST, and whether it is a DST abbreviation.
-    Abbr { abbr: String, utc_offset: i64, dst: bool },
+    Abbr {
+        /// The abbreviation, as given.
+        abbr: String,
+        /// The UTC offset in seconds, without DST.
+        utc_offset: i64,
+        /// Whether it is a DST abbreviation.
+        dst: bool,
+    },
     /// `timezone_type` 3: an identifier (`Europe/Paris`).
     Id(TzInfo),
 }
@@ -400,12 +412,14 @@ impl DateTime {
 }
 
 impl PartialEq for DateTime {
+    /// Whether both are the same instant, as PHP's `==` on `DateTime`.
     fn eq(&self, other: &Self) -> bool {
         self.cmp_time(other) == Ordering::Equal
     }
 }
 
 impl PartialOrd for DateTime {
+    /// Orders by instant, as PHP's `<` and `>` on `DateTime`.
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp_time(other))
     }

@@ -39,9 +39,13 @@ const INT_MAX: i64 = i32::MAX as i64;
 /// A PHP value as the formatting and conversion functions see it.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Arg<'a> {
+    /// PHP `null`.
     Null,
+    /// A PHP `bool`.
     Bool(bool),
+    /// A PHP `int`.
     Int(i64),
+    /// A PHP `float`.
     Float(f64),
     /// A (byte) string.
     Str(&'a [u8]),

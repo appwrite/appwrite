@@ -509,6 +509,7 @@ pub struct HtmlFlags {
     pub substitute: bool,
     /// `ENT_DISALLOWED` (128): replace code points the doctype disallows.
     pub disallowed: bool,
+    /// The document type (`ENT_HTML401`, `ENT_XML1`, `ENT_XHTML` or `ENT_HTML5`).
     pub doctype: Doctype,
 }
 
@@ -535,6 +536,7 @@ impl HtmlFlags {
 }
 
 impl Default for HtmlFlags {
+    /// PHP's default flags, [`HtmlFlags::DEFAULT`].
     fn default() -> Self {
         Self::DEFAULT
     }

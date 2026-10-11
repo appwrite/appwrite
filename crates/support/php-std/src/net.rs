@@ -37,6 +37,7 @@ impl NulByteError {
 }
 
 impl fmt::Display for NulByteError {
+    /// Writes PHP's `ValueError` message.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}(): Argument #1 ($ip) must not contain any null bytes", self.function)
     }
@@ -69,11 +70,14 @@ pub fn long2ip(ip: i64) -> String {
 /// A packed address from [`inet_pton`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PackedAddr {
+    /// A 4-byte IPv4 address.
     V4([u8; 4]),
+    /// A 16-byte IPv6 address.
     V6([u8; 16]),
 }
 
 impl PackedAddr {
+    /// The packed bytes, as PHP's binary string.
     pub fn as_bytes(&self) -> &[u8] {
         match self {
             PackedAddr::V4(b) => b,

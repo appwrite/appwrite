@@ -86,6 +86,7 @@ const SEVERE_ERRORS: u32 = IDNA_ERROR_LEADING_COMBINING_MARK
 pub struct Flags(u32);
 
 impl Default for Flags {
+    /// [`IDNA_DEFAULT`].
     fn default() -> Self {
         Flags(IDNA_DEFAULT as u32)
     }
@@ -98,6 +99,7 @@ impl Flags {
         Flags(bits as u32)
     }
 
+    /// The option bits.
     pub fn bits(self) -> u32 {
         self.0
     }
@@ -121,6 +123,7 @@ impl Error {
 }
 
 impl fmt::Display for Error {
+    /// Writes the message.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.message)
     }
@@ -210,6 +213,7 @@ struct State {
 }
 
 impl Default for State {
+    /// No errors yet, and bidi labels assumed valid.
     fn default() -> Self {
         State { errors: 0, label_errors: 0, is_trans_diff: false, is_bidi: false, is_ok_bidi: true }
     }
@@ -706,27 +710,48 @@ impl Uts46 {
 /// The Bidi_Class bits `checkLabelBiDi()` tests (`U_MASK(u_charDirection(c))`);
 /// every other class shares one bit.
 mod dir {
+    /// Bidi class L, left-to-right.
     pub const L: u32 = 1 << 0;
+    /// Bidi class R, right-to-left.
     pub const R: u32 = 1 << 1;
+    /// Bidi class EN, European number.
     pub const EN: u32 = 1 << 2;
+    /// Bidi class ES, European separator.
     pub const ES: u32 = 1 << 3;
+    /// Bidi class ET, European terminator.
     pub const ET: u32 = 1 << 4;
+    /// Bidi class AN, Arabic number.
     pub const AN: u32 = 1 << 5;
+    /// Bidi class CS, common separator.
     pub const CS: u32 = 1 << 6;
+    /// Bidi class ON, other neutral.
     pub const ON: u32 = 1 << 10;
+    /// Bidi class AL, Arabic letter.
     pub const AL: u32 = 1 << 13;
+    /// Bidi class NSM, nonspacing mark.
     pub const NSM: u32 = 1 << 17;
+    /// Bidi class BN, boundary neutral.
     pub const BN: u32 = 1 << 18;
+    /// Every other bidi class.
     pub const OTHER: u32 = 1 << 31;
 
+    /// Classes R and AL.
     pub const R_AL: u32 = R | AL;
+    /// Classes L, R and AL.
     pub const L_R_AL: u32 = L | R_AL;
+    /// Classes R, AL and AN.
     pub const R_AL_AN: u32 = R_AL | AN;
+    /// Classes EN and AN.
     pub const EN_AN: u32 = EN | AN;
+    /// Classes R, AL, EN and AN.
     pub const R_AL_EN_AN: u32 = R_AL | EN_AN;
+    /// Classes L and EN.
     pub const L_EN: u32 = L | EN;
+    /// Classes ES, CS, ET, ON, BN and NSM.
     pub const ES_CS_ET_ON_BN_NSM: u32 = ES | CS | ET | ON | BN | NSM;
+    /// Classes L, EN, ES, CS, ET, ON, BN and NSM.
     pub const L_EN_ES_CS_ET_ON_BN_NSM: u32 = L_EN | ES_CS_ET_ON_BN_NSM;
+    /// Classes R, AL, AN, EN, ES, CS, ET, ON, BN and NSM.
     pub const R_AL_AN_EN_ES_CS_ET_ON_BN_NSM: u32 = R_AL | EN_AN | ES_CS_ET_ON_BN_NSM;
 }
 

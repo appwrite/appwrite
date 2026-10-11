@@ -218,6 +218,7 @@ impl Error {
 }
 
 impl fmt::Display for Error {
+    /// Writes the warning PHP emits.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::Empty => f.write_str("igbinary_unserialize(): empty input"),

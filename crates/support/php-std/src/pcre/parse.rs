@@ -12,76 +12,142 @@ use std::ops::Range;
 use super::ucd;
 use super::unicode::{self, CTYPE_LCLETTER, CTYPE_LETTER, CTYPE_SPACE, CTYPE_WORD};
 
+/// Parsed-pattern item: the end of the pattern.
 pub const META_END: u32 = 0x8000_0000;
+/// Parsed-pattern item: `|`, an alternation.
 pub const META_ALT: u32 = 0x8001_0000;
+/// Parsed-pattern item: `(?>`, an atomic group.
 pub const META_ATOMIC: u32 = 0x8002_0000;
+/// Parsed-pattern item: a numbered back reference (the group number in the low 16 bits; from group 10 on, its pattern offset follows).
 pub const META_BACKREF: u32 = 0x8003_0000;
+/// Parsed-pattern item: a back reference by name (its length and offset follow).
 pub const META_BACKREF_BYNAME: u32 = 0x8004_0000;
+/// Parsed-pattern item: the next item is a literal whose value would look like a META code.
 pub const META_BIGVALUE: u32 = 0x8005_0000;
+/// Parsed-pattern item: `(?Cn)`, a numbered callout.
 pub const META_CALLOUT_NUMBER: u32 = 0x8006_0000;
+/// Parsed-pattern item: `(?C"text")`, a string callout.
 pub const META_CALLOUT_STRING: u32 = 0x8007_0000;
+/// Parsed-pattern item: a capturing group (the group number in the low 16 bits).
 pub const META_CAPTURE: u32 = 0x8008_0000;
+/// Parsed-pattern item: `^`.
 pub const META_CIRCUMFLEX: u32 = 0x8009_0000;
+/// Parsed-pattern item: `[`, the start of a character class.
 pub const META_CLASS: u32 = 0x800a_0000;
+/// Parsed-pattern item: `[]`, an empty class that never matches.
 pub const META_CLASS_EMPTY: u32 = 0x800b_0000;
+/// Parsed-pattern item: `[^]`, an empty negated class that matches any character.
 pub const META_CLASS_EMPTY_NOT: u32 = 0x800c_0000;
+/// Parsed-pattern item: `]`, the end of a character class.
 pub const META_CLASS_END: u32 = 0x800d_0000;
+/// Parsed-pattern item: `[^`, the start of a negated character class.
 pub const META_CLASS_NOT: u32 = 0x800e_0000;
+/// Parsed-pattern item: `(?(?=`, a condition that is an assertion.
 pub const META_COND_ASSERT: u32 = 0x800f_0000;
+/// Parsed-pattern item: `(?(DEFINE)`.
 pub const META_COND_DEFINE: u32 = 0x8010_0000;
+/// Parsed-pattern item: `(?(<name>)`, a named-group condition.
 pub const META_COND_NAME: u32 = 0x8011_0000;
+/// Parsed-pattern item: `(?(n)`, a numbered-group condition.
 pub const META_COND_NUMBER: u32 = 0x8012_0000;
+/// Parsed-pattern item: `(?(R&name)`, a named recursion condition.
 pub const META_COND_RNAME: u32 = 0x8013_0000;
+/// Parsed-pattern item: `(?(Rn)`, a numbered recursion condition.
 pub const META_COND_RNUMBER: u32 = 0x8014_0000;
+/// Parsed-pattern item: `(?(VERSION>=n.m)`.
 pub const META_COND_VERSION: u32 = 0x8015_0000;
+/// Parsed-pattern item: `$`.
 pub const META_DOLLAR: u32 = 0x8016_0000;
+/// Parsed-pattern item: `.`.
 pub const META_DOT: u32 = 0x8017_0000;
+/// Parsed-pattern item: a backslash escape (an `ESC_*` code in the low 16 bits).
 pub const META_ESCAPE: u32 = 0x8018_0000;
+/// Parsed-pattern item: `)`, the end of a group.
 pub const META_KET: u32 = 0x8019_0000;
+/// Parsed-pattern item: `(?:`, a non-capturing group.
 pub const META_NOCAPTURE: u32 = 0x801a_0000;
+/// Parsed-pattern item: an option change such as `(?i)` (the new options follow).
 pub const META_OPTIONS: u32 = 0x801b_0000;
+/// Parsed-pattern item: a POSIX class such as `[:alpha:]` (its number follows).
 pub const META_POSIX: u32 = 0x801c_0000;
+/// Parsed-pattern item: a negated POSIX class such as `[:^alpha:]` (its number follows).
 pub const META_POSIX_NEG: u32 = 0x801d_0000;
+/// Parsed-pattern item: `-` in a class range with an escaped end point.
 pub const META_RANGE_ESCAPED: u32 = 0x801e_0000;
+/// Parsed-pattern item: `-` in a class range between literals.
 pub const META_RANGE_LITERAL: u32 = 0x801f_0000;
+/// Parsed-pattern item: `(?n)`, a numbered recursion.
 pub const META_RECURSE: u32 = 0x8020_0000;
+/// Parsed-pattern item: `(?&name)`, a recursion by name.
 pub const META_RECURSE_BYNAME: u32 = 0x8021_0000;
+/// Parsed-pattern item: `(*script_run:`.
 pub const META_SCRIPT_RUN: u32 = 0x8022_0000;
+/// Parsed-pattern item: `(?=`, a positive lookahead.
 pub const META_LOOKAHEAD: u32 = 0x8023_0000;
+/// Parsed-pattern item: `(?!`, a negative lookahead.
 pub const META_LOOKAHEADNOT: u32 = 0x8024_0000;
+/// Parsed-pattern item: `(?<=`, a positive lookbehind.
 pub const META_LOOKBEHIND: u32 = 0x8025_0000;
+/// Parsed-pattern item: `(?<!`, a negative lookbehind.
 pub const META_LOOKBEHINDNOT: u32 = 0x8026_0000;
+/// Parsed-pattern item: `(*napla:`, a non-atomic positive lookahead.
 pub const META_LOOKAHEAD_NA: u32 = 0x8027_0000;
+/// Parsed-pattern item: `(*naplb:`, a non-atomic positive lookbehind.
 pub const META_LOOKBEHIND_NA: u32 = 0x8028_0000;
+/// Parsed-pattern item: `(*MARK:name)`.
 pub const META_MARK: u32 = 0x8029_0000;
+/// Parsed-pattern item: `(*ACCEPT)`.
 pub const META_ACCEPT: u32 = 0x802a_0000;
+/// Parsed-pattern item: `(*FAIL)`.
 pub const META_FAIL: u32 = 0x802b_0000;
+/// Parsed-pattern item: `(*COMMIT)`.
 pub const META_COMMIT: u32 = 0x802c_0000;
+/// Parsed-pattern item: `(*COMMIT:name)`.
 pub const META_COMMIT_ARG: u32 = 0x802d_0000;
+/// Parsed-pattern item: `(*PRUNE)`.
 pub const META_PRUNE: u32 = 0x802e_0000;
+/// Parsed-pattern item: `(*PRUNE:name)`.
 pub const META_PRUNE_ARG: u32 = 0x802f_0000;
+/// Parsed-pattern item: `(*SKIP)`.
 pub const META_SKIP: u32 = 0x8030_0000;
+/// Parsed-pattern item: `(*SKIP:name)`.
 pub const META_SKIP_ARG: u32 = 0x8031_0000;
+/// Parsed-pattern item: `(*THEN)`.
 pub const META_THEN: u32 = 0x8032_0000;
+/// Parsed-pattern item: `(*THEN:name)`.
 pub const META_THEN_ARG: u32 = 0x8033_0000;
+/// Parsed-pattern item: the `*` quantifier.
 pub const META_ASTERISK: u32 = 0x8034_0000;
+/// Parsed-pattern item: the possessive `*+` quantifier.
 pub const META_ASTERISK_PLUS: u32 = 0x8035_0000;
+/// Parsed-pattern item: the lazy `*?` quantifier.
 pub const META_ASTERISK_QUERY: u32 = 0x8036_0000;
+/// Parsed-pattern item: the `+` quantifier.
 pub const META_PLUS: u32 = 0x8037_0000;
+/// Parsed-pattern item: the possessive `++` quantifier.
 pub const META_PLUS_PLUS: u32 = 0x8038_0000;
+/// Parsed-pattern item: the lazy `+?` quantifier.
 pub const META_PLUS_QUERY: u32 = 0x8039_0000;
+/// Parsed-pattern item: the `?` quantifier.
 pub const META_QUERY: u32 = 0x803a_0000;
+/// Parsed-pattern item: the possessive `?+` quantifier.
 pub const META_QUERY_PLUS: u32 = 0x803b_0000;
+/// Parsed-pattern item: the lazy `??` quantifier.
 pub const META_QUERY_QUERY: u32 = 0x803c_0000;
+/// Parsed-pattern item: the `{n,m}` quantifier (minimum and maximum follow).
 pub const META_MINMAX: u32 = 0x803d_0000;
+/// Parsed-pattern item: the possessive `{n,m}+` quantifier.
 pub const META_MINMAX_PLUS: u32 = 0x803e_0000;
+/// Parsed-pattern item: the lazy `{n,m}?` quantifier.
 pub const META_MINMAX_QUERY: u32 = 0x803f_0000;
 const META_ATOMIC_SCRIPT_RUN: u32 = 0x8fff_0000;
 
+/// The META code of a parsed-pattern item (its high 16 bits).
 pub fn meta_code(x: u32) -> u32 {
     x & 0xffff_0000
 }
 
+/// The data of a parsed-pattern item (its low 16 bits).
 pub fn meta_data(x: u32) -> u32 {
     x & 0x0000_ffff
 }
@@ -93,68 +159,123 @@ pub const META_EXTRA_LENGTHS: [u32; 64] = [
     1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2,
 ];
 
+/// Escape code: `\A`, the start of the subject.
 pub const ESC_A: u32 = 1;
+/// Escape code: `\G`, the start of the match attempt.
 pub const ESC_G: u32 = 2;
+/// Escape code: `\K`, which resets the reported match start.
 pub const ESC_K: u32 = 3;
+/// Escape code: `\B`, not a word boundary.
 pub const ESC_B: u32 = 4;
+/// Escape code: `\b`, a word boundary.
 pub const ESC_B_LOWER: u32 = 5;
+/// Escape code: `\D`, a non-digit.
 pub const ESC_D: u32 = 6;
+/// Escape code: `\d`, a digit.
 pub const ESC_D_LOWER: u32 = 7;
+/// Escape code: `\S`, a non-space.
 pub const ESC_S: u32 = 8;
+/// Escape code: `\s`, a space.
 pub const ESC_S_LOWER: u32 = 9;
+/// Escape code: `\W`, a non-word character.
 pub const ESC_W: u32 = 10;
+/// Escape code: `\w`, a word character.
 pub const ESC_W_LOWER: u32 = 11;
+/// Escape code: `\N`, any character but a newline.
 pub const ESC_N: u32 = 12;
+/// Escape code: an unused placeholder that keeps PCRE2's numbering.
 #[allow(dead_code)] // PCRE2's escape numbering, kept whole.
 pub const ESC_DUM: u32 = 13;
+/// Escape code: `\C`, one code unit.
 pub const ESC_C: u32 = 14;
+/// Escape code: `\P`, not a Unicode property.
 pub const ESC_P: u32 = 15;
+/// Escape code: `\p`, a Unicode property.
 pub const ESC_P_LOWER: u32 = 16;
+/// Escape code: `\R`, any newline sequence.
 pub const ESC_R: u32 = 17;
+/// Escape code: `\H`, not horizontal space.
 pub const ESC_H: u32 = 18;
+/// Escape code: `\h`, horizontal space.
 pub const ESC_H_LOWER: u32 = 19;
+/// Escape code: `\V`, not vertical space.
 pub const ESC_V: u32 = 20;
+/// Escape code: `\v`, vertical space.
 pub const ESC_V_LOWER: u32 = 21;
+/// Escape code: `\X`, an extended grapheme cluster.
 pub const ESC_X: u32 = 22;
+/// Escape code: `\Z`, the end of the subject or before a final newline.
 pub const ESC_Z: u32 = 23;
+/// Escape code: `\z`, the end of the subject.
 pub const ESC_Z_LOWER: u32 = 24;
+/// Escape code: `\E`, the end of a `\Q` quotation.
 pub const ESC_E: u32 = 25;
+/// Escape code: `\Q`, the start of a quotation.
 pub const ESC_Q: u32 = 26;
+/// Escape code: `\g`, a back reference or subroutine call.
 pub const ESC_G_LOWER: u32 = 27;
+/// Escape code: `\k`, a named back reference.
 pub const ESC_K_LOWER: u32 = 28;
+/// Escape code: a `\u{` kept as the literal characters `u{`.
 pub const ESC_UB: u32 = 29;
 
 /// Compile option bits (PCRE2 values).
 pub mod opt {
     // PHP never sets these two; they complete PCRE2's option bits.
+    /// `PCRE2_ALLOW_EMPTY_CLASS`: `[]` is an empty class.
     #[allow(dead_code)]
     pub const ALLOW_EMPTY_CLASS: u32 = 0x0000_0001;
+    /// `PCRE2_ALT_BSUX`: JavaScript-style `\u`, `\U` and `\x`.
     #[allow(dead_code)]
     pub const ALT_BSUX: u32 = 0x0000_0002;
+    /// `PCRE2_CASELESS`: case-insensitive matching (`i`).
     pub const CASELESS: u32 = 0x0000_0008;
+    /// `PCRE2_DOLLAR_ENDONLY`: `$` matches only at the very end (`D`).
     pub const DOLLAR_ENDONLY: u32 = 0x0000_0010;
+    /// `PCRE2_DOTALL`: `.` matches newlines (`s`).
     pub const DOTALL: u32 = 0x0000_0020;
+    /// `PCRE2_DUPNAMES`: group names may repeat (`J`).
     pub const DUPNAMES: u32 = 0x0000_0040;
+    /// `PCRE2_EXTENDED`: whitespace and `#` comments are ignored (`x`).
     pub const EXTENDED: u32 = 0x0000_0080;
+    /// `PCRE2_MATCH_UNSET_BACKREF`: a back reference to an unset group matches empty.
     pub const MATCH_UNSET_BACKREF: u32 = 0x0000_0200;
+    /// `PCRE2_MULTILINE`: `^` and `$` match at line breaks (`m`).
     pub const MULTILINE: u32 = 0x0000_0400;
+    /// `PCRE2_NO_AUTO_CAPTURE`: plain groups do not capture (`n`).
     pub const NO_AUTO_CAPTURE: u32 = 0x0000_2000;
+    /// `PCRE2_NO_AUTO_POSSESS`: no automatic possessification.
     pub const NO_AUTO_POSSESS: u32 = 0x0000_4000;
+    /// `PCRE2_NO_DOTSTAR_ANCHOR`: a leading `.*` does not imply an anchor.
     pub const NO_DOTSTAR_ANCHOR: u32 = 0x0000_8000;
+    /// `PCRE2_NO_START_OPTIMIZE`: no start-of-match optimizations.
     pub const NO_START_OPTIMIZE: u32 = 0x0001_0000;
+    /// `PCRE2_UCP`: `\d`, `\w` and POSIX classes use Unicode properties.
     pub const UCP: u32 = 0x0002_0000;
+    /// `PCRE2_UNGREEDY`: quantifiers are lazy by default (`U`).
     pub const UNGREEDY: u32 = 0x0004_0000;
+    /// `PCRE2_UTF`: the pattern and subject are UTF-8 (`u`).
     pub const UTF: u32 = 0x0008_0000;
+    /// `PCRE2_NEVER_BACKSLASH_C`: `\C` is an error.
     pub const NEVER_BACKSLASH_C: u32 = 0x0010_0000;
+    /// `PCRE2_ALT_VERBNAMES`: escapes are processed in verb names.
     pub const ALT_VERBNAMES: u32 = 0x0040_0000;
+    /// `PCRE2_EXTENDED_MORE`: as `EXTENDED`, also ignoring spaces and tabs in classes (`xx`).
     pub const EXTENDED_MORE: u32 = 0x0100_0000;
+    /// `PCRE2_ANCHORED`: the match must start at the offset (`A`).
     pub const ANCHORED: u32 = 0x8000_0000;
 
+    /// `PCRE2_EXTRA_CASELESS_RESTRICT`: no caseless match between ASCII and non-ASCII.
     pub const X_CASELESS_RESTRICT: u32 = 0x0000_0080;
+    /// `PCRE2_EXTRA_ASCII_BSD`: `\d` stays ASCII with `UCP`.
     pub const X_ASCII_BSD: u32 = 0x0000_0100;
+    /// `PCRE2_EXTRA_ASCII_BSS`: `\s` stays ASCII with `UCP`.
     pub const X_ASCII_BSS: u32 = 0x0000_0200;
+    /// `PCRE2_EXTRA_ASCII_BSW`: `\w` stays ASCII with `UCP`.
     pub const X_ASCII_BSW: u32 = 0x0000_0400;
+    /// `PCRE2_EXTRA_ASCII_POSIX`: POSIX classes stay ASCII with `UCP`.
     pub const X_ASCII_POSIX: u32 = 0x0000_0800;
+    /// `PCRE2_EXTRA_ASCII_DIGIT`: `[:digit:]` and `[:xdigit:]` stay ASCII with `UCP`.
     pub const X_ASCII_DIGIT: u32 = 0x0000_1000;
 }
 
@@ -165,37 +286,59 @@ const PARSE_TRACKED_OPTIONS: u32 =
 const PARSE_TRACKED_EXTRA_OPTIONS: u32 =
     X_CASELESS_RESTRICT | X_ASCII_BSD | X_ASCII_BSS | X_ASCII_BSW | X_ASCII_DIGIT | X_ASCII_POSIX;
 
+/// Property type: any character (`\p{Any}`).
 pub const PT_ANY: u32 = 0;
+/// Property type: `L&`, an upper, lower or title case letter.
 pub const PT_LAMP: u32 = 1;
+/// Property type: a general category (`\p{L}`).
 pub const PT_GC: u32 = 2;
+/// Property type: a particular category (`\p{Lu}`).
 pub const PT_PC: u32 = 3;
+/// Property type: a script (`\p{sc:Greek}`).
 pub const PT_SC: u32 = 4;
+/// Property type: a script extension (`\p{Greek}`).
 pub const PT_SCX: u32 = 5;
+/// Property type: `Xan`, a letter or digit.
 pub const PT_ALNUM: u32 = 6;
+/// Property type: `Xsp`, Perl space.
 pub const PT_SPACE: u32 = 7;
+/// Property type: `Xps`, POSIX space.
 pub const PT_PXSPACE: u32 = 8;
+/// Property type: `Xwd`, a word character.
 pub const PT_WORD: u32 = 9;
+/// Property type: a list of case-equivalent characters.
 pub const PT_CLIST: u32 = 10;
+/// Property type: `Xuc`, a character that can be a universal character name.
 pub const PT_UCNC: u32 = 11;
+/// Property type: a bidirectional class (`\p{bc:L}`).
 pub const PT_BIDICL: u32 = 12;
+/// Property type: a binary property (`\p{Alphabetic}`).
 pub const PT_BOOL: u32 = 13;
+/// Property type: `[:graph:]` with `UCP`.
 pub const PT_PXGRAPH: u32 = 14;
+/// Property type: `[:print:]` with `UCP`.
 pub const PT_PXPRINT: u32 = 15;
+/// Property type: `[:punct:]` with `UCP`.
 pub const PT_PXPUNCT: u32 = 16;
+/// Property type: `[:xdigit:]` with `UCP`.
 pub const PT_PXXDIGIT: u32 = 17;
 const PT_NOTSCRIPT: u32 = 255;
 
+/// The index of `digit` in the POSIX class names.
 pub const PC_DIGIT: u32 = 7;
+/// The index of `xdigit` in the POSIX class names.
 pub const PC_XDIGIT: u32 = 13;
 
 const MAX_GROUP_NUMBER: u32 = 65535;
 const MAX_REPEAT_COUNT: u32 = 65535;
+/// A quantifier maximum that means no limit.
 pub const REPEAT_UNLIMITED: u32 = MAX_REPEAT_COUNT + 1;
 const MAX_NAME_SIZE: usize = 128;
 const MAX_NAME_COUNT: usize = 10000;
 const MAX_MARK: usize = 255;
 const PARENS_NEST_LIMIT: u32 = 250;
 const NEST_SAVE_LIMIT: usize = 6000 / 16;
+/// An offset that is not set.
 pub const UNSET: usize = usize::MAX;
 
 /// Newline conventions (`PCRE2_NEWLINE_*`).
@@ -224,10 +367,14 @@ pub struct CompileError {
     pub offset: usize,
 }
 
+/// A named capturing group, as the parser records it.
 #[derive(Debug, Clone)]
 pub struct NamedGroup {
+    /// Where the name is in the pattern.
     pub name: Range<usize>,
+    /// The group number.
     pub number: u32,
+    /// Whether another group has the same name.
     pub isdup: bool,
 }
 

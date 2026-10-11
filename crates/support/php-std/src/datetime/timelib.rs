@@ -10,16 +10,25 @@ use super::tz::TzInfo;
 /// `TIMELIB_UNSET`: a field the parser did not set.
 pub const UNSET: i64 = -9999999;
 
+/// `TIMELIB_ZONETYPE_NONE`: no zone.
 pub const ZONETYPE_NONE: u32 = 0;
+/// `TIMELIB_ZONETYPE_OFFSET`: a UTC offset (`+05:30`).
 pub const ZONETYPE_OFFSET: u32 = 1;
+/// `TIMELIB_ZONETYPE_ABBR`: an abbreviation (`EST`).
 pub const ZONETYPE_ABBR: u32 = 2;
+/// `TIMELIB_ZONETYPE_ID`: an identifier (`Europe/Paris`).
 pub const ZONETYPE_ID: u32 = 3;
 
+/// `TIMELIB_SPECIAL_WEEKDAY`: `+N weekdays`.
 pub const SPECIAL_WEEKDAY: u32 = 1;
+/// `TIMELIB_SPECIAL_DAY_OF_WEEK_IN_MONTH`: `first monday of`.
 pub const SPECIAL_DAY_OF_WEEK_IN_MONTH: u32 = 2;
+/// `TIMELIB_SPECIAL_LAST_DAY_OF_WEEK_IN_MONTH`: `last monday of`.
 pub const SPECIAL_LAST_DAY_OF_WEEK_IN_MONTH: u32 = 3;
 
+/// `TIMELIB_SPECIAL_FIRST_DAY_OF_MONTH`: `first day of`.
 pub const FIRST_DAY_OF_MONTH: i32 = 1;
+/// `TIMELIB_SPECIAL_LAST_DAY_OF_MONTH`: `last day of`.
 pub const LAST_DAY_OF_MONTH: i32 = 2;
 
 const SECS_PER_DAY: i64 = 86400;

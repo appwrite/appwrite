@@ -3,49 +3,82 @@
 
 use super::ucd::{self, Record};
 
-/// General categories (`ucp_C` ...).
+// General categories (`ucp_C` ...).
+/// General category C, other (`ucp_C`).
 pub const GC_C: u32 = 0;
+/// General category L, letter (`ucp_L`).
 pub const GC_L: u32 = 1;
+/// General category M, mark (`ucp_M`).
 #[allow(dead_code)] // The full set of general categories.
 pub const GC_M: u32 = 2;
+/// General category N, number (`ucp_N`).
 pub const GC_N: u32 = 3;
+/// General category P, punctuation (`ucp_P`).
 pub const GC_P: u32 = 4;
+/// General category S, symbol (`ucp_S`).
 pub const GC_S: u32 = 5;
+/// General category Z, separator (`ucp_Z`).
 pub const GC_Z: u32 = 6;
 
-/// Particular categories (`ucp_Cc` ...).
+// Particular categories (`ucp_Cc` ...).
+/// Particular category Cc, control (`ucp_Cc`).
 pub const CC: u32 = 0;
+/// Particular category Cf, format (`ucp_Cf`).
 pub const CF: u32 = 1;
+/// Particular category Cn, unassigned (`ucp_Cn`).
 pub const CN: u32 = 2;
+/// Particular category Ll, lowercase letter (`ucp_Ll`).
 pub const LL: u32 = 5;
+/// Particular category Lt, titlecase letter (`ucp_Lt`).
 pub const LT: u32 = 8;
+/// Particular category Lu, uppercase letter (`ucp_Lu`).
 pub const LU: u32 = 9;
+/// Particular category Mn, nonspacing mark (`ucp_Mn`).
 pub const MN: u32 = 12;
+/// Particular category Nd, decimal digit (`ucp_Nd`).
 pub const ND: u32 = 13;
+/// Particular category Pc, connector punctuation (`ucp_Pc`).
 pub const PC: u32 = 16;
+/// Particular category Zl, line separator (`ucp_Zl`).
 pub const ZL: u32 = 27;
+/// Particular category Zp, paragraph separator (`ucp_Zp`).
 pub const ZP: u32 = 28;
 
 /// `PRIV(ucp_gentype)`: particular category to general category.
 const GENTYPE: [u8; 30] = [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6];
 
-/// Grapheme break properties used by `\X`.
+// Grapheme break properties used by `\X`.
+/// Grapheme break property CR.
 #[allow(dead_code)] // The full set of grapheme break properties.
 pub const GB_CR: u32 = 0;
+/// Grapheme break property LF.
 pub const GB_LF: u32 = 1;
+/// Grapheme break property Control.
 #[allow(dead_code)]
 pub const GB_CONTROL: u32 = 2;
+/// Grapheme break property Extend.
 pub const GB_EXTEND: u32 = 3;
+/// Grapheme break property Prepend.
 pub const GB_PREPEND: u32 = 4;
+/// Grapheme break property SpacingMark.
 pub const GB_SPACING_MARK: u32 = 5;
+/// Grapheme break property L (Hangul leading jamo).
 pub const GB_L: u32 = 6;
+/// Grapheme break property V (Hangul vowel jamo).
 pub const GB_V: u32 = 7;
+/// Grapheme break property T (Hangul trailing jamo).
 pub const GB_T: u32 = 8;
+/// Grapheme break property LV (Hangul syllable).
 pub const GB_LV: u32 = 9;
+/// Grapheme break property LVT (Hangul syllable).
 pub const GB_LVT: u32 = 10;
+/// Grapheme break property Regional_Indicator.
 pub const GB_REGIONAL_INDICATOR: u32 = 11;
+/// Grapheme break property Other.
 pub const GB_OTHER: u32 = 12;
+/// Grapheme break property ZWJ.
 pub const GB_ZWJ: u32 = 13;
+/// Grapheme break property Extended_Pictographic.
 pub const GB_EXTENDED_PICTOGRAPHIC: u32 = 14;
 
 const ESZ: u32 = (1 << GB_EXTEND) | (1 << GB_SPACING_MARK) | (1 << GB_ZWJ);
@@ -97,10 +130,12 @@ static UNASSIGNED: Record = Record {
     bprops: 0,
 };
 
+/// The particular category of a code point (`UCD_CHARTYPE`).
 pub fn chartype(c: u32) -> u32 {
     u32::from(record(c).chartype)
 }
 
+/// The general category of a particular category (`PRIV(ucp_gentype)`).
 pub fn gentype_of(chartype: u32) -> u32 {
     u32::from(GENTYPE[chartype as usize])
 }
@@ -122,6 +157,7 @@ pub fn caseless_set(offset: u32) -> &'static [u32] {
     &set[..end]
 }
 
+/// The script of a code point (`UCD_SCRIPT`).
 pub fn script(c: u32) -> u32 {
     u32::from(record(c).script)
 }
@@ -136,6 +172,7 @@ pub fn has_script_extension(c: u32, script: u32) -> bool {
     map_bit(&ucd::SCRIPT_SETS[base..], script)
 }
 
+/// The bidirectional class of a code point (`UCD_BIDICLASS`).
 pub fn bidi_class(c: u32) -> u32 {
     u32::from(record(c).scriptx_bidiclass >> 11)
 }
@@ -146,6 +183,7 @@ pub fn has_bool_property(c: u32, prop: u32) -> bool {
     map_bit(&ucd::BOOLPROP_SETS[base..], prop)
 }
 
+/// The grapheme break property of a code point (`UCD_GRAPHBREAK`).
 pub fn grapheme_break(c: u32) -> u32 {
     u32::from(record(c).gbprop)
 }
@@ -164,11 +202,16 @@ pub fn is_vspace(c: u32) -> bool {
     ucd::VSPACE.contains(&c)
 }
 
-/// C-locale `ctypes` bits.
+// C-locale `ctypes` bits.
+/// C-locale `ctypes` bit: white space.
 pub const CTYPE_SPACE: u8 = 0x01;
+/// C-locale `ctypes` bit: a letter.
 pub const CTYPE_LETTER: u8 = 0x02;
+/// C-locale `ctypes` bit: a lowercase letter.
 pub const CTYPE_LCLETTER: u8 = 0x04;
+/// C-locale `ctypes` bit: a digit.
 pub const CTYPE_DIGIT: u8 = 0x08;
+/// C-locale `ctypes` bit: a word character (letter, digit or `_`).
 pub const CTYPE_WORD: u8 = 0x10;
 
 /// `cb->ctypes[c]` of the default (C locale) tables.
@@ -183,16 +226,26 @@ pub fn ctypes(c: u32) -> u8 {
     }
 }
 
-/// `cbits` offsets of the default tables.
+// `cbits` offsets of the default tables.
+/// The offset of the `space` map in [`CBITS`].
 pub const CBIT_SPACE: usize = 0;
+/// The offset of the `xdigit` map in [`CBITS`].
 pub const CBIT_XDIGIT: usize = 32;
+/// The offset of the `digit` map in [`CBITS`].
 pub const CBIT_DIGIT: usize = 64;
+/// The offset of the `upper` map in [`CBITS`].
 pub const CBIT_UPPER: usize = 96;
+/// The offset of the `lower` map in [`CBITS`].
 pub const CBIT_LOWER: usize = 128;
+/// The offset of the `word` map in [`CBITS`].
 pub const CBIT_WORD: usize = 160;
+/// The offset of the `graph` map in [`CBITS`].
 pub const CBIT_GRAPH: usize = 192;
+/// The offset of the `print` map in [`CBITS`].
 pub const CBIT_PRINT: usize = 224;
+/// The offset of the `punct` map in [`CBITS`].
 pub const CBIT_PUNCT: usize = 256;
+/// The offset of the `cntrl` map in [`CBITS`].
 pub const CBIT_CNTRL: usize = 288;
 
 /// The default `cbits` table (C locale), 10 maps of 32 bytes.

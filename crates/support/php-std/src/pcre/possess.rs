@@ -18,23 +18,41 @@ use super::unicode::{self, CBIT_DIGIT, CBIT_SPACE, CBIT_WORD, CBITS, CTYPE_DIGIT
 /// Rows and columns of `autoposstab`, in PCRE2's opcode order:
 /// `\D \d \S \s \W \w . .+ \C \P \p \R \H \h \V \v \X \Z \z $ $M`.
 mod t {
+    /// The `\D` row and column.
     pub const NOT_DIGIT: usize = 0;
+    /// The `\d` row and column.
     pub const DIGIT: usize = 1;
+    /// The `\S` row and column.
     pub const NOT_WHITESPACE: usize = 2;
+    /// The `\s` row and column.
     pub const WHITESPACE: usize = 3;
+    /// The `\W` row and column.
     pub const NOT_WORDCHAR: usize = 4;
+    /// The `\w` row and column.
     pub const WORDCHAR: usize = 5;
+    /// The `.` row and column.
     pub const ANY: usize = 6;
+    /// The `.` with `DOTALL` row and column.
     pub const ALLANY: usize = 7;
+    /// The `\R` row and column.
     pub const ANYNL: usize = 11;
+    /// The `\H` row and column.
     pub const NOT_HSPACE: usize = 12;
+    /// The `\h` row and column.
     pub const HSPACE: usize = 13;
+    /// The `\V` row and column.
     pub const NOT_VSPACE: usize = 14;
+    /// The `\v` row and column.
     pub const VSPACE: usize = 15;
+    /// The `\X` row and column.
     pub const EXTUNI: usize = 16;
+    /// The `\Z` column.
     pub const EODN: usize = 17;
+    /// The `\z` column.
     pub const EOD: usize = 18;
+    /// The `$` column.
     pub const DOLL: usize = 19;
+    /// The `$` with `MULTILINE` column.
     pub const DOLLM: usize = 20;
     /// Rows exist up to `\X`.
     pub const LAST_LEFT: usize = 16;

@@ -101,6 +101,7 @@ impl Error {
 }
 
 impl fmt::Display for Error {
+    /// Writes the message.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.message())
     }
@@ -1297,16 +1298,27 @@ fn ctype(s: &[u8], f: impl Fn(u8) -> bool) -> bool {
 /// A `ctype_*` function, for calls with a value that may not be a string.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Ctype {
+    /// `ctype_alnum()`: letters and digits.
     Alnum,
+    /// `ctype_alpha()`: letters.
     Alpha,
+    /// `ctype_cntrl()`: control characters.
     Cntrl,
+    /// `ctype_digit()`: decimal digits.
     Digit,
+    /// `ctype_graph()`: printable characters except space.
     Graph,
+    /// `ctype_lower()`: lowercase letters.
     Lower,
+    /// `ctype_print()`: printable characters, space included.
     Print,
+    /// `ctype_punct()`: printable characters that are not letters, digits or space.
     Punct,
+    /// `ctype_space()`: white space.
     Space,
+    /// `ctype_upper()`: uppercase letters.
     Upper,
+    /// `ctype_xdigit()`: hexadecimal digits.
     Xdigit,
 }
 

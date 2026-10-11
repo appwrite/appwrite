@@ -53,10 +53,12 @@ pub trait Extension: Clone + PartialEq + fmt::Debug + Send + Sync + 'static {
 pub enum Never {}
 
 impl Extension for Never {
+    /// Unreachable: [`Never`] has no values.
     fn class(&self) -> &str {
         match *self {}
     }
 
+    /// Unreachable: [`Never`] has no values.
     fn to_array(&self) -> Array<Self> {
         match *self {}
     }
@@ -66,17 +68,21 @@ impl Extension for Never {
 /// `JsonException`, or `Error` (an object that cannot become a string).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EngineError {
+    /// The PHP exception class.
     pub class: &'static str,
+    /// The exception message.
     pub message: String,
 }
 
 impl EngineError {
+    /// An error of PHP class `class` with `message`.
     pub fn new(class: &'static str, message: impl Into<String>) -> Self {
         EngineError { class, message: message.into() }
     }
 }
 
 impl fmt::Display for EngineError {
+    /// Writes the message.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.message)
     }
