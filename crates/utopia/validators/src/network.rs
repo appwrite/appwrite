@@ -11,18 +11,25 @@ use php_std::url::rfc3986::Uri;
 use crate::input::{filter, filter_str, loose_str_eq};
 use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate};
 
-/// A [`Domain`] restriction (`Domain::createRestriction()`): domains ending
-/// with `hostname` must have exactly `levels` labels (when set) and must not
-/// start with any of `prefix_deny_list`.
+/// A [`Domain`] restriction: domains ending with `hostname` must have exactly
+/// `levels` labels (when set) and must not start with any of
+/// `prefix_deny_list`.
+///
+/// PHP: `Domain::createRestriction()`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Restriction {
+    /// The suffix of the domains the restriction applies to.
     pub hostname: String,
+    /// The exact number of dot-separated labels a matching domain must have, when set.
     pub levels: Option<i64>,
+    /// Prefixes a matching domain must not start with.
     pub prefix_deny_list: Vec<String>,
 }
 
 impl Restriction {
-    /// `Domain::createRestriction($hostname, $levels, $prefixDenyList)`.
+    /// A restriction on the domains ending with `hostname`.
+    ///
+    /// PHP: `Domain::createRestriction($hostname, $levels, $prefixDenyList)`.
     pub fn new(hostname: impl Into<String>, levels: Option<i64>, prefix_deny_list: Vec<String>) -> Self {
         Self { hostname: hostname.into(), levels, prefix_deny_list }
     }
@@ -45,29 +52,39 @@ impl Restriction {
     }
 }
 
-/// `Utopia\Validator\Domain`: a domain name (`FILTER_VALIDATE_DOMAIN`, with
-/// `FILTER_FLAG_HOSTNAME` when `hostnames`), not ending with `.` or `-`, and
-/// allowed by every [`Restriction`].
+/// A domain name, not ending with `.` or `-`, and allowed by every
+/// [`Restriction`].
+///
+/// PHP: `Utopia\Validator\Domain`, checking with `FILTER_VALIDATE_DOMAIN` and,
+/// when `hostnames` is set, `FILTER_FLAG_HOSTNAME`.
 #[derive(Debug, Clone)]
 pub struct Domain {
+    /// Restrictions every domain must pass.
     pub restrictions: Vec<Restriction>,
+    /// Whether the domain must also be a valid host name: letters, digits and hyphens in each label.
     pub hostnames: bool,
+    /// Whether the empty string is valid.
     pub allow_empty: bool,
 }
 
 impl Default for Domain {
+    /// No restrictions, host names required, the empty string refused.
     fn default() -> Self {
         Self { restrictions: Vec::new(), hostnames: true, allow_empty: false }
     }
 }
 
 impl Validator for Domain {
+    /// Returns "Value must be a valid domain".
     fn description(&self) -> String {
         "Value must be a valid domain".to_owned()
     }
 
     is_valid_via_validate!();
 
+    /// Valid for a non-empty string that is a domain name, does not end with `.`
+    /// or `-`, and passes every restriction. A restriction whose label count
+    /// cannot be computed fails with [`Error::Type`].
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         if self.allow_empty && value.as_str() == Some(b"") {
             return Ok(Verdict::VALID);
@@ -88,22 +105,30 @@ impl Validator for Domain {
         Ok(Verdict::VALID)
     }
 
+    /// Expects a string ([`Type::String`]).
     fn kind(&self) -> Type {
         Type::String
     }
 }
 
-/// The IP versions [`Ip`] accepts (`IP::ALL`, `IP::V4`, `IP::V6`).
+/// The IP versions an [`Ip`] validator accepts.
+///
+/// PHP: the `IP::ALL`, `IP::V4` and `IP::V6` constants.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum IpVersion {
+    /// IPv4 and IPv6.
     #[default]
     All,
+    /// IPv4 only.
     V4,
+    /// IPv6 only.
     V6,
 }
 
 impl IpVersion {
-    /// The PHP constant's value.
+    /// The version's name: `all`, `ipv4` or `ipv6`.
+    ///
+    /// PHP: the value of the matching `IP` constant.
     pub const fn as_str(self) -> &'static str {
         match self {
             IpVersion::All => "all",
@@ -112,7 +137,10 @@ impl IpVersion {
         }
     }
 
-    /// The version `new IP($type)` takes: PHP throws for any other type.
+    /// The version a name from [`IpVersion::as_str`] names; [`Error::Exception`]
+    /// for any other name.
+    ///
+    /// PHP: the type `new IP($type)` takes; PHP throws for any other type.
     pub fn from_php(value: &str) -> Result<Self, Error> {
         match value {
             "all" => Ok(IpVersion::All),
@@ -123,25 +151,31 @@ impl IpVersion {
     }
 }
 
-/// `Utopia\Validator\IP`: an IP address (`FILTER_VALIDATE_IP`).
+/// An IP address of the accepted versions.
+///
+/// PHP: `Utopia\Validator\IP`, checking with `FILTER_VALIDATE_IP`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Ip {
+    /// The versions accepted.
     pub version: IpVersion,
 }
 
 impl Ip {
+    /// A validator accepting addresses of `version`.
     pub const fn new(version: IpVersion) -> Self {
         Self { version }
     }
 }
 
 impl Validator for Ip {
+    /// Returns "Value must be a valid IP address".
     fn description(&self) -> String {
         "Value must be a valid IP address".to_owned()
     }
 
     is_valid_via_validate!();
 
+    /// Valid for an IP address of the accepted versions.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         let flags = match self.version {
             IpVersion::All => 0,
@@ -151,25 +185,35 @@ impl Validator for Ip {
         Ok(Verdict::of(filter(value, FILTER_VALIDATE_IP, flags).is_some()))
     }
 
+    /// Expects a string ([`Type::String`]).
     fn kind(&self) -> Type {
         Type::String
     }
 }
 
-/// `Utopia\Validator\URL`: a URL (`FILTER_VALIDATE_URL`), optionally limited
-/// to `allowed_schemes`, without a fragment, or to https (and http on a
-/// loopback host); `allow_private_use_schemes` also accepts authority-less
-/// private-use scheme URIs (`com.example.app:/oauth`, RFC 8252 §7.1).
+/// A URL, optionally limited to some schemes, to URLs without a fragment, or
+/// to https (and http on a loopback host).
+///
+/// With `allow_private_use_schemes`, URIs of private-use schemes without an
+/// authority (`com.example.app:/oauth`, RFC 8252 §7.1) are valid too.
+///
+/// PHP: `Utopia\Validator\URL`, checking with `FILTER_VALIDATE_URL`.
 #[derive(Debug, Clone)]
 pub struct Url {
+    /// The schemes allowed; empty for any scheme.
     pub allowed_schemes: Vec<String>,
+    /// Whether the empty string is valid.
     pub allow_empty: bool,
+    /// Whether a fragment (`#section`) is allowed.
     pub allow_fragments: bool,
+    /// Whether authority-less URIs of private-use schemes, such as `com.example.app:/oauth`, are valid.
     pub allow_private_use_schemes: bool,
+    /// Whether the URL must use https, or http on `localhost`, `127.0.0.1` or `[::1]`.
     pub https_or_loopback: bool,
 }
 
 impl Default for Url {
+    /// Any scheme, fragments allowed, the empty string refused, and no transport limit.
     fn default() -> Self {
         Self {
             allowed_schemes: Vec::new(),
@@ -225,6 +269,7 @@ impl Url {
 }
 
 impl Validator for Url {
+    /// `Value must be a valid URL`, followed by the scheme, fragment and transport limits that apply.
     fn description(&self) -> String {
         let transport = if self.https_or_loopback { " restricted to https or http on a loopback host" } else { "" };
         if !self.allowed_schemes.is_empty() {
@@ -243,6 +288,7 @@ impl Validator for Url {
 
     is_valid_via_validate!();
 
+    /// Valid for a URL that passes every limit set.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         if self.allow_empty && value.as_str() == Some(b"") {
             return Ok(Verdict::VALID);
@@ -279,6 +325,7 @@ impl Validator for Url {
         Ok(Verdict::VALID)
     }
 
+    /// Expects a string ([`Type::String`]).
     fn kind(&self) -> Type {
         Type::String
     }

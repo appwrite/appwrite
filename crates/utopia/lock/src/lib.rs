@@ -1,4 +1,14 @@
-//! Locks with the semantics of `utopia-php/lock`.
+//! Locks that keep concurrent tasks, processes or servers out of the same
+//! section: an in-process [`Mutex`] and [`Semaphore`], a [`File`] lock shared
+//! between processes on one machine, and a [`Distributed`] lock held in
+//! Redis.
+//!
+//! Every lock implements [`Lock`]: acquire it with a [`Wait`], release it,
+//! or run a section under it with [`Lock::with_lock`]. [`Mutex`] and
+//! [`Semaphore`] are async: a held lock is waited on for as long as the
+//! [`Wait`] allows.
+//!
+//! PHP: ports `utopia-php/lock`.
 //!
 //! | PHP | Rust |
 //! |---|---|
@@ -12,8 +22,9 @@
 //! | `Utopia\Lock\Exception`, `Exception\Contention` | [`Error::Lock`], [`Error::Contention`] |
 //!
 //! PHP's `Mutex` and `Semaphore` fall back to plain counters outside a Swoole
-//! coroutine; in Rust they are always the coroutine (async) version: a held
-//! lock is waited on for as long as the [`Wait`] allows.
+//! coroutine; in Rust they are always the coroutine (async) version.
+
+#![warn(missing_docs)]
 
 mod distributed;
 mod error;
@@ -41,12 +52,19 @@ pub enum Wait {
     /// Retry until this much time has passed.
     For(Duration),
     /// Wait until acquired. [`Distributed`] and [`File`] treat this as
-    /// [`Wait::None`], as PHP does for a negative timeout.
+    /// [`Wait::None`].
+    ///
+    /// PHP: the same as a negative timeout, which PHP's `Distributed` and
+    /// `File` also try only once.
     Forever,
 }
 
 impl Wait {
-    /// PHP's convention: `0.0` tries once, a negative value waits forever.
+    /// A wait from a timeout in seconds: `0.0` (or NaN) tries once, a
+    /// negative value waits forever, and anything else waits that long.
+    ///
+    /// PHP: the convention of the `float $timeout` argument of
+    /// `acquire()`.
     pub fn from_secs_f64(timeout: f64) -> Self {
         if timeout < 0.0 {
             Wait::Forever
@@ -57,7 +75,10 @@ impl Wait {
         }
     }
 
-    /// The timeout as PHP would have passed it, in seconds.
+    /// The wait as a timeout in seconds: `0.0` for [`Wait::None`] and `-1.0`
+    /// for [`Wait::Forever`]; the inverse of [`Wait::from_secs_f64`].
+    ///
+    /// PHP: the timeout as PHP would have passed it.
     pub fn as_secs_f64(self) -> f64 {
         match self {
             Wait::None => 0.0,

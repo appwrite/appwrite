@@ -1,8 +1,19 @@
-//! Validators with the semantics of `utopia-php/validators`.
+//! Validate request parameters, and describe the rule each one follows.
 //!
-//! Every validator reproduces the acceptance rules *and* the human-readable
-//! descriptions of its PHP class, because descriptions are part of the API
-//! contract (they end up in `Invalid `x` param: <description>` errors).
+//! A [`Validator`] answers two questions: whether a value is valid, and what
+//! rule it follows. The rule is a human-readable description that becomes
+//! the error message a client sees (``Invalid `x` param: <description>``), so
+//! it is part of the API. The crate validates scalars ([`Boolean`],
+//! [`Integer`], [`Float`], [`Numeric`], [`Range`]), strings ([`Text`],
+//! [`Identifier`], [`Contains`], [`Globstar`], [`HexColor`], [`Phone`]),
+//! lists and maps ([`ArrayList`], [`Assoc`], [`WhiteList`], [`Nullable`]),
+//! network values ([`Domain`], [`Hostname`], [`Host`], [`Ip`], [`Url`]) and
+//! JSON ([`Json`] and the [`json`] module), and combines validators
+//! ([`AllOf`], [`AnyOf`], [`NoneOf`], [`Multiple`]). [`Wildcard`] accepts
+//! everything.
+//!
+//! PHP: ports `utopia-php/validators`. Every validator reproduces the
+//! acceptance rules *and* the human-readable descriptions of its PHP class.
 //!
 //! | PHP | Rust |
 //! |---|---|
@@ -20,34 +31,49 @@
 //!
 //! # Values
 //!
-//! Validators read PHP values through [`Input`], which borrows either model
-//! `php-std` defines: the request model (`serde_json::Value`, as
-//! `Utopia\Http\Request` decodes bodies and query strings) or the exact model
-//! ([`php_std::Value`], which also holds binary strings, non-finite
-//! floats and `stdClass` objects with properties). Both are validated the
-//! same way, without converting one into the other.
+//! Validators read values through [`Input`], which borrows either of two
+//! models: a request value ([`Value`], from `serde_json`, the form a decoded
+//! request body or query string takes) or an exact value
+//! ([`php_std::Value`], which also holds binary strings, non-finite floats
+//! and objects with properties). Both are validated the same way, without
+//! converting one into the other.
+//!
+//! PHP: request values are decoded as `Utopia\Http\Request` decodes bodies
+//! and query strings; objects are `stdClass` instances.
 //!
 //! # State
 //!
-//! PHP's `AllOf`, `AnyOf`, `NoneOf` and `JSON\FCM` remember their last
+//! Validators hold no state, so one validator can serve concurrent requests.
+//! [`Validator::validate`] returns a [`Verdict`]: whether the value is
+//! valid, and the description to report for it; for a composite, the
+//! description of the rule that decided ([`Verdict::rule`]).
+//! [`Validator::check`] returns that description as the error of a failed
+//! validation.
+//!
+//! PHP: PHP's `AllOf`, `AnyOf`, `NoneOf` and `JSON\FCM` remember their last
 //! deciding validation (the rule that decided, the field that was wrong),
-//! and `getDescription()` reads it. Rust validators are shared by concurrent
-//! requests, so they hold no state: [`Validator::validate`] returns a
-//! [`Verdict`] carrying the decision as data ([`Verdict::decided`],
-//! [`Verdict::rule`]) and the description PHP's `getDescription()` reports
-//! after that validation. [`Validator::check`] reports it for one
-//! validation; a caller replaying a PHP object's sequence of calls keeps the
-//! latest decision (`crates/tools/compat/src/libs/validators.rs` does).
+//! and `getDescription()` reads it. A [`Verdict`] carries that decision as
+//! data ([`Verdict::decided`]); a caller replaying a PHP object's sequence
+//! of calls keeps the latest decision
+//! (`crates/tools/compat/src/libs/validators.rs` does).
 //!
 //! # Errors
 //!
-//! Where PHP throws inside `isValid()` (a `WhiteList` casting a `stdClass`
-//! to a string), [`Validator::validate`] returns the [`Error`];
-//! [`Validator::is_valid`] and [`Validator::check`] treat it as invalid.
-//! [`Validator::try_description`] is `getDescription()` with the errors PHP
-//! throws there (a composite without rules).
+//! Some values cannot be validated at all, such as an object compared as a
+//! string by a [`WhiteList`]: [`Validator::validate`] returns the
+//! [`Error`], and [`Validator::is_valid`] and [`Validator::check`] treat the
+//! value as invalid. [`Validator::try_description`] returns the error where
+//! a validator cannot be described, such as a composite without rules.
+//!
+//! PHP: these are the cases where PHP throws inside `isValid()` or
+//! `getDescription()`.
 
-/// PHP value semantics, re-exported from `php-std` for existing callers.
+#![warn(missing_docs)]
+
+/// The value semantics validators follow (truthiness, numeric strings,
+/// number comparisons), re-exported from `php-std` for existing callers.
+///
+/// PHP: the semantics of PHP values.
 pub use php_std::value as php;
 
 /// The getting started guide (`guide.md`), compiled and run with the doctests.
@@ -82,21 +108,34 @@ pub use text::{Identifier, Text};
 
 pub use serde_json::Value;
 
-/// `Validator::TYPE_*`: the type of value a validator expects.
+/// The type of value a validator expects.
+///
+/// PHP: the `Validator::TYPE_*` constants.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Type {
+    /// A boolean.
     Boolean,
+    /// An integer.
     Integer,
-    /// PHP's `TYPE_FLOAT`, whose value is `"double"` (what `gettype()` says).
+    /// A float.
+    ///
+    /// PHP: `TYPE_FLOAT`, whose value is `"double"` (what `gettype()` says).
     Float,
+    /// A string.
     String,
+    /// An array: a list or a map.
     Array,
+    /// An object: named properties.
     Object,
+    /// Any type.
     Mixed,
 }
 
 impl Type {
-    /// The PHP constant's value.
+    /// The type's name: `boolean`, `integer`, `double`, `string`, `array`,
+    /// `object` or `mixed`.
+    ///
+    /// PHP: the value of the matching `TYPE_*` constant.
     pub const fn as_str(self) -> &'static str {
         match self {
             Type::Boolean => "boolean",
@@ -109,7 +148,9 @@ impl Type {
         }
     }
 
-    /// The type a PHP `TYPE_*` value names.
+    /// The type a name from [`Type::as_str`] names, or `None`.
+    ///
+    /// PHP: reads the value of a `TYPE_*` constant.
     pub fn from_php(value: &str) -> Option<Self> {
         Some(match value {
             "boolean" => Type::Boolean,
@@ -126,7 +167,10 @@ impl Type {
 
 /// The outcome of one validation.
 ///
-/// PHP's `AllOf`, `AnyOf`, `NoneOf` and `JSON\FCM` remember what decided
+/// Besides validity, a verdict carries the description to report for the
+/// value and, for a composite, which rule decided.
+///
+/// PHP: PHP's `AllOf`, `AnyOf`, `NoneOf` and `JSON\FCM` remember what decided
 /// their last `isValid()` (the failing rule, the missing field), and
 /// `getDescription()` reports it until another validation decides. A verdict
 /// carries that decision as data: whether this validation decided, which rule
@@ -136,21 +180,29 @@ impl Type {
 pub struct Verdict {
     /// Whether the value is valid.
     pub valid: bool,
-    /// What `getDescription()` returns after this validation when it is not
-    /// [`Validator::description`]: the decided description, or, for a
-    /// validation that did not decide, the description of a validator that
-    /// had not decided before (an `AllOf` describes its first rule as that
-    /// rule's validation left it).
+    /// The description to report after this validation, or `None` for
+    /// [`Validator::description`].
+    ///
+    /// For a validation that did not decide, it is what a validator that had not
+    /// decided before reports: an [`AllOf`] describes its first rule as that
+    /// rule's validation left it.
+    ///
+    /// PHP: what `getDescription()` returns after this validation.
     pub description: Option<Cow<'static, str>>,
-    /// Whether this validation decided the description PHP keeps. One that
-    /// did not leaves an earlier decision in place.
+    /// Whether this validation decided the description to report. One that did
+    /// not leaves an earlier decision in place.
     pub decided: bool,
-    /// The rule of an `AllOf`, `AnyOf` or `NoneOf` that decided (PHP's `failedRule`).
+    /// The index of the rule of an [`AllOf`], [`AnyOf`] or [`NoneOf`] that
+    /// decided.
+    ///
+    /// PHP: `failedRule`.
     pub rule: Option<usize>,
 }
 
 impl Verdict {
+    /// A valid verdict that decides nothing.
     pub const VALID: Verdict = Verdict::of(true);
+    /// An invalid verdict that decides nothing.
     pub const INVALID: Verdict = Verdict::of(false);
 
     /// A verdict that decides nothing: the description stays as it was.
@@ -163,8 +215,10 @@ impl Verdict {
         Verdict { valid, description, decided: true, rule: None }
     }
 
-    /// The description `getDescription()` reports after this validation, for
-    /// a validator that had not decided before.
+    /// The description to report after this validation, for a validator that had
+    /// not decided before.
+    ///
+    /// PHP: what `getDescription()` reports.
     pub fn describe(&self, validator: &(impl Validator + ?Sized)) -> String {
         match &self.description {
             Some(d) => d.clone().into_owned(),
@@ -172,7 +226,10 @@ impl Verdict {
         }
     }
 
-    /// [`Verdict::describe`] with the error PHP's `getDescription()` throws.
+    /// [`Verdict::describe`], or the error where the validator cannot be
+    /// described.
+    ///
+    /// PHP: the error PHP's `getDescription()` throws.
     pub fn try_describe(&self, validator: &(impl Validator + ?Sized)) -> Result<String, Error> {
         match &self.description {
             Some(d) => Ok(d.clone().into_owned()),
@@ -181,27 +238,40 @@ impl Verdict {
     }
 }
 
-/// A parameter validator (`Utopia\Validator\Validator`).
+/// A parameter validator: decides whether a value is valid, and describes the
+/// rule it follows.
 ///
-/// Implement [`Validator::is_valid`] for a validator of request values
-/// (`serde_json::Value`); the provided [`Validator::validate`] then accepts
-/// exact PHP values too, through their request-model form. The validators of
-/// this crate implement [`Validator::validate`] for both models.
+/// Implement [`Validator::description`] and [`Validator::is_valid`] for a
+/// validator of request values ([`Value`]); the provided
+/// [`Validator::validate`] then accepts exact values too, through their
+/// request-model form. The validators of this crate implement
+/// [`Validator::validate`] for both models.
+///
+/// PHP: `Utopia\Validator\Validator`.
 pub trait Validator: Send + Sync {
-    /// `getDescription()` of a validator that has not validated anything:
-    /// the human-readable rule, used verbatim in error messages.
+    /// The human-readable rule, used verbatim in error messages.
+    ///
+    /// A composite can report another description after a validation; see
+    /// [`Verdict`].
+    ///
+    /// PHP: `getDescription()` of a validator that has not validated anything.
     fn description(&self) -> String;
 
-    /// `isValid($value)` for a request value. `false` where PHP throws
-    /// (see [`Validator::validate`] for the error).
+    /// Whether a request value is valid; `false` where the value cannot be
+    /// validated (see [`Validator::validate`] for the error).
+    ///
+    /// PHP: `isValid($value)`.
     fn is_valid(&self, value: &Value) -> bool;
 
-    /// `isValid($value)`, with what `getDescription()` reports afterwards,
-    /// or the error PHP throws.
+    /// Validates a request or exact value: the [`Verdict`], with the description
+    /// to report afterwards, or the error that prevents validation.
     ///
-    /// The provided implementation calls [`Validator::is_valid`]; exact
-    /// values the request model cannot hold (binary strings, non-finite
-    /// floats) are invalid there.
+    /// The provided implementation calls [`Validator::is_valid`]; exact values the
+    /// request model cannot hold (binary strings, non-finite floats) are invalid
+    /// there.
+    ///
+    /// PHP: `isValid($value)`, with what `getDescription()` reports afterwards, or
+    /// the error PHP throws.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         Ok(Verdict::of(match value {
             Input::Json(v) => self.is_valid(v),
@@ -209,8 +279,8 @@ pub trait Validator: Send + Sync {
         }))
     }
 
-    /// Validates a request value; on failure returns the description PHP
-    /// reports (that of the inner rule that failed, for composites).
+    /// Validates a request value; on failure returns the description to report
+    /// (that of the inner rule that failed, for composites).
     fn check(&self, value: &Value) -> Result<(), String> {
         match self.validate(Input::Json(value)) {
             Ok(v) if v.valid => Ok(()),
@@ -219,12 +289,16 @@ pub trait Validator: Send + Sync {
         }
     }
 
-    /// `isArray()`: whether the validator expects an array value.
+    /// Whether the validator expects an array value; `false` by default.
+    ///
+    /// PHP: `isArray()`.
     fn is_array(&self) -> bool {
         false
     }
 
-    /// `getType()`.
+    /// The type of value the validator expects; [`Type::Mixed`] by default.
+    ///
+    /// PHP: `getType()`.
     fn kind(&self) -> Type {
         Type::Mixed
     }
@@ -234,9 +308,11 @@ pub trait Validator: Send + Sync {
         self.is_valid(&Value::Null)
     }
 
-    /// `getDescription()` with the error PHP throws where it cannot describe
-    /// (an `AllOf` without rules, a strict `WhiteList` holding a `stdClass`).
+    /// The description, or the error where the validator cannot be described (a
+    /// composite without rules, a strict [`WhiteList`] holding an object).
     /// [`Validator::description`] describes those as best it can.
+    ///
+    /// PHP: `getDescription()`, with the error PHP throws.
     fn try_description(&self) -> Result<String, Error> {
         Ok(self.description())
     }
@@ -285,7 +361,10 @@ macro_rules! forward_validator {
 
 forward_validator!(&V, Box<V>, Arc<V>);
 
-/// PHP `number_format($n)`: thousands separated by commas, no decimals.
+/// Formats an integer with commas between thousands and no decimals: `3600`
+/// is `3,600`.
+///
+/// PHP: `number_format($n)`.
 pub fn number_format(n: i128) -> String {
     let negative = n < 0;
     let digits = n.unsigned_abs().to_string();

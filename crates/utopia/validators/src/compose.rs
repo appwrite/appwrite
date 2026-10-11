@@ -33,25 +33,29 @@ fn try_first(rules: &Rules<'_>) -> Result<String, Error> {
 }
 
 macro_rules! composite {
-    ($name:ident, $php:literal) => {
-        #[doc = concat!("`Utopia\\Validator\\", $php, "`.")]
+    ($name:ident, $doc:literal, $php:literal) => {
+        #[doc = $doc]
+        #[doc = ""]
+        #[doc = concat!("PHP: `Utopia\\Validator\\", $php, "`.")]
         pub struct $name<'a> {
             rules: Rules<'a>,
             kind: Type,
         }
 
         impl<'a> $name<'a> {
-            /// The rules, of type [`Type::Mixed`].
+            /// A composite of `rules`, expecting [`Type::Mixed`].
             pub fn new(rules: Rules<'a>) -> Self {
                 Self { rules, kind: Type::Mixed }
             }
 
-            /// The rules, of the given type.
+            /// A composite of `rules`, expecting values of type `kind`.
             pub fn with_type(rules: Rules<'a>, kind: Type) -> Self {
                 Self { rules, kind }
             }
 
-            /// The rules (`AnyOf::getValidators()`).
+            /// The rules, in order.
+            ///
+            /// PHP: `getValidators()`.
             pub fn validators(&self) -> &[Box<dyn Validator + 'a>] {
                 &self.rules
             }
@@ -59,21 +63,25 @@ macro_rules! composite {
     };
 }
 
-composite!(AllOf, "AllOf: every rule must pass; the first failing rule describes the failure");
-composite!(AnyOf, "AnyOf: one rule must pass; the last rule tried describes the result");
-composite!(NoneOf, "NoneOf: no rule may pass; the first passing rule describes the failure");
+composite!(AllOf, "Passes when every rule passes; the first failing rule describes the failure.", "AllOf");
+composite!(AnyOf, "Passes when one rule passes; the last rule tried describes the result.", "AnyOf");
+composite!(NoneOf, "Passes when no rule passes; the first passing rule describes the failure.", "NoneOf");
 
 impl Validator for AllOf<'_> {
+    /// The description of the first rule; empty without rules.
     fn description(&self) -> String {
         first(&self.rules)
     }
 
+    /// The description of the first rule, or [`Error::Engine`] without rules.
     fn try_description(&self) -> Result<String, Error> {
         try_first(&self.rules)
     }
 
     is_valid_via_validate!();
 
+    /// Validates against each rule in turn and stops at the first that fails,
+    /// which decides the description. When every rule passes, nothing is decided.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         let mut first = None;
         for (i, rule) in self.rules.iter().enumerate() {
@@ -88,26 +96,33 @@ impl Validator for AllOf<'_> {
         Ok(undecided(true, first))
     }
 
+    /// Always `true`: the validator expects an array.
     fn is_array(&self) -> bool {
         true
     }
 
+    /// The type given to `with_type`; [`Type::Mixed`] otherwise.
     fn kind(&self) -> Type {
         self.kind
     }
 }
 
 impl Validator for AnyOf<'_> {
+    /// The description of the first rule; empty without rules.
     fn description(&self) -> String {
         first(&self.rules)
     }
 
+    /// The description of the first rule, or [`Error::Engine`] without rules.
     fn try_description(&self) -> Result<String, Error> {
         try_first(&self.rules)
     }
 
     is_valid_via_validate!();
 
+    /// Validates against each rule in turn and stops at the first that passes.
+    /// Every rule tried decides the description, so the last one tried describes
+    /// the result; without rules the value is invalid.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         // Every rule tried decides; the last one tried stays.
         let mut last = Verdict::INVALID;
@@ -122,26 +137,33 @@ impl Validator for AnyOf<'_> {
         Ok(last)
     }
 
+    /// Always `true`: the validator expects an array.
     fn is_array(&self) -> bool {
         true
     }
 
+    /// The type given to `with_type`; [`Type::Mixed`] otherwise.
     fn kind(&self) -> Type {
         self.kind
     }
 }
 
 impl Validator for NoneOf<'_> {
+    /// The description of the first rule; empty without rules.
     fn description(&self) -> String {
         first(&self.rules)
     }
 
+    /// The description of the first rule, or [`Error::Engine`] without rules.
     fn try_description(&self) -> Result<String, Error> {
         try_first(&self.rules)
     }
 
     is_valid_via_validate!();
 
+    /// Validates against each rule in turn and stops at the first that passes,
+    /// which makes the value invalid and decides the description. When no rule
+    /// passes, the value is valid and nothing is decided.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         let mut first = None;
         for (i, rule) in self.rules.iter().enumerate() {
@@ -156,31 +178,40 @@ impl Validator for NoneOf<'_> {
         Ok(undecided(true, first))
     }
 
+    /// Always `true`: the validator expects an array.
     fn is_array(&self) -> bool {
         true
     }
 
+    /// The type given to `with_type`; [`Type::Mixed`] otherwise.
     fn kind(&self) -> Type {
         self.kind
     }
 }
 
-/// `Utopia\Validator\Multiple`: every rule must pass; the description lists them all.
+/// Passes when every rule passes; the description lists every rule's,
+/// numbered.
+///
+/// PHP: `Utopia\Validator\Multiple`.
 pub struct Multiple<'a> {
     rules: Rules<'a>,
     kind: Type,
 }
 
 impl<'a> Multiple<'a> {
+    /// A composite of `rules`, expecting [`Type::Mixed`].
     pub fn new(rules: Rules<'a>) -> Self {
         Self { rules, kind: Type::Mixed }
     }
 
+    /// A composite of `rules`, expecting values of type `kind`.
     pub fn with_type(rules: Rules<'a>, kind: Type) -> Self {
         Self { rules, kind }
     }
 
-    /// `addRule()`.
+    /// Adds a rule after the others.
+    ///
+    /// PHP: `addRule()`.
     pub fn add_rule(&mut self, rule: Box<dyn Validator + 'a>) -> &mut Self {
         self.rules.push(rule);
         self
@@ -196,10 +227,12 @@ impl<'a> Multiple<'a> {
 }
 
 impl Validator for Multiple<'_> {
+    /// Every rule's description, numbered, one per line.
     fn description(&self) -> String {
         self.describe(self.rules.iter().map(|r| Cow::Owned(r.description())))
     }
 
+    /// Every rule's description, numbered, or the first error a rule returns describing itself.
     fn try_description(&self) -> Result<String, Error> {
         let descriptions = self.rules.iter().map(|r| r.try_description()).collect::<Result<Vec<_>, _>>()?;
         Ok(self.describe(descriptions.into_iter().map(Cow::Owned)))
@@ -207,6 +240,8 @@ impl Validator for Multiple<'_> {
 
     is_valid_via_validate!();
 
+    /// Validates against each rule in turn and stops at the first that fails. The
+    /// description lists every rule's, each as its own validation left it.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         // Each rule keeps its own decision; the description lists them all.
         let mut described: Vec<Option<Cow<'static, str>>> = Vec::new();
@@ -234,10 +269,12 @@ impl Validator for Multiple<'_> {
         Ok(Verdict { valid, description: Some(Cow::Owned(self.describe(descriptions))), decided, rule: None })
     }
 
+    /// Always `true`: the validator expects an array.
     fn is_array(&self) -> bool {
         true
     }
 
+    /// The type given to `with_type`; [`Type::Mixed`] otherwise.
     fn kind(&self) -> Type {
         self.kind
     }

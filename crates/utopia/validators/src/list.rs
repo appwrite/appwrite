@@ -1,3 +1,5 @@
+//! Lists, maps, allowed values and optional values.
+
 use std::borrow::Cow;
 
 use php_std::string::strtolower;
@@ -6,11 +8,15 @@ use php_std::{Str, Value};
 use crate::input::{View, loose_str_eq};
 use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate};
 
-/// `Utopia\Validator\WhiteList`: the value is one of `list`.
+/// A value that is one of a list of allowed values.
 ///
 /// Loose (the default): the list and the value are compared as lower-case
-/// strings, with `==`. Strict: the value must be identical (`===`) to an
-/// entry.
+/// strings, numeric strings by value, so `"Admin"` matches `admin` and `1`
+/// matches `"1"`. Strict: the value must be identical to an entry, type
+/// included. An array is never allowed.
+///
+/// PHP: `Utopia\Validator\WhiteList`; loose compares with `==`, strict with
+/// `===`.
 #[derive(Debug, Clone)]
 pub struct WhiteList {
     list: Vec<Value>,
@@ -19,19 +25,24 @@ pub struct WhiteList {
 }
 
 impl WhiteList {
-    /// Loose (case-insensitive) white list of strings.
+    /// A loose (case-insensitive) list of allowed strings.
     pub fn new(list: &[&str]) -> Self {
         let list = list.iter().map(|s| Value::Str(Str::from(strtolower(s.as_bytes()).into_owned()))).collect();
         Self { list, strict: false, kind: Type::String }
     }
 
-    /// Strict white list of strings.
+    /// A strict list of allowed strings.
     pub fn strict(list: &[&str]) -> Self {
         Self { list: list.iter().map(|s| Value::Str(Str::from(*s))).collect(), strict: true, kind: Type::String }
     }
 
-    /// `new WhiteList($list, $strict, $type)`. A loose list is converted to
-    /// lower-case strings, which fails for a `stdClass` entry.
+    /// A list of any allowed values, strict or loose, expecting values of type
+    /// `kind`.
+    ///
+    /// A loose list is converted to lower-case strings, which fails with
+    /// [`Error::Engine`] for an object entry.
+    ///
+    /// PHP: `new WhiteList($list, $strict, $type)`.
     pub fn with(list: Vec<Value>, strict: bool, kind: Type) -> Result<Self, Error> {
         let list = if strict {
             list
@@ -43,7 +54,9 @@ impl WhiteList {
         Ok(Self { list, strict, kind })
     }
 
-    /// `getList()`.
+    /// The allowed values; lower-case strings for a loose list.
+    ///
+    /// PHP: `getList()`.
     pub fn list(&self) -> &[Value] {
         &self.list
     }
@@ -65,6 +78,7 @@ fn identical(a: Input<'_>, b: Input<'_>) -> bool {
 }
 
 impl Validator for WhiteList {
+    /// Lists the allowed values: `Value must be one of (a, b, c)`.
     fn description(&self) -> String {
         let items: Vec<String> = self
             .list
@@ -74,7 +88,7 @@ impl Validator for WhiteList {
         format!("Value must be one of ({})", items.join(", "))
     }
 
-    /// A strict list holding a `stdClass` cannot be described.
+    /// The description, or [`Error::Engine`] for a strict list holding an object, which cannot be described.
     fn try_description(&self) -> Result<String, Error> {
         for v in &self.list {
             Input::Value(v).to_bytes()?;
@@ -84,6 +98,8 @@ impl Validator for WhiteList {
 
     is_valid_via_validate!();
 
+    /// Valid for a value in the list; an array is never valid. A loose comparison
+    /// fails with [`Error::Engine`] for an object value.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         if value.is_array() {
             return Ok(Verdict::INVALID);
@@ -96,25 +112,33 @@ impl Validator for WhiteList {
         Ok(Verdict::of(self.list.iter().any(|item| matches!(item, Value::Str(s) if loose_str_eq(&value, s)))))
     }
 
+    /// The type given to [`WhiteList::with`]; [`Type::String`] otherwise.
     fn kind(&self) -> Type {
         self.kind
     }
 }
 
-/// `Utopia\Validator\ArrayList`: an array of at most `length` elements
-/// (0 = any number), each valid for `inner`.
+/// An array of at most `length` elements (0 for any number), each valid for
+/// `inner`.
+///
+/// PHP: `Utopia\Validator\ArrayList`.
 #[derive(Debug, Clone)]
 pub struct ArrayList<V> {
+    /// The validator every element must pass.
     pub inner: V,
+    /// The most elements allowed; 0 for any number.
     pub length: usize,
 }
 
 impl<V: Validator> ArrayList<V> {
+    /// A list of at most `length` elements (0 for any number), each valid for `inner`.
     pub fn new(inner: V, length: usize) -> Self {
         Self { inner, length }
     }
 
-    /// `getValidator()`.
+    /// The validator every element must pass.
+    ///
+    /// PHP: `getValidator()`.
     pub fn validator(&self) -> &V {
         &self.inner
     }
@@ -146,16 +170,21 @@ impl<V: Validator> ArrayList<V> {
 }
 
 impl<V: Validator> Validator for ArrayList<V> {
+    /// `Value must a valid array`, followed by the length limit and the element validator's description.
     fn description(&self) -> String {
         self.describe(&self.inner.description())
     }
 
+    /// The description, or the error the element validator returns describing itself.
     fn try_description(&self) -> Result<String, Error> {
         Ok(self.describe(&self.inner.try_description()?))
     }
 
     is_valid_via_validate!();
 
+    /// Valid for an array (a list or a map) within the length limit whose
+    /// elements all pass. It stops at the first invalid element, and the
+    /// description wraps the element validator's.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         let View::Array(entries) = value.view() else {
             return Ok(Verdict::INVALID);
@@ -180,35 +209,44 @@ impl<V: Validator> Validator for ArrayList<V> {
         Ok(self.verdict(valid, decided.or(last)))
     }
 
+    /// Always `true`: the validator expects an array.
     fn is_array(&self) -> bool {
         true
     }
 
+    /// The element validator's type.
     fn kind(&self) -> Type {
         self.inner.kind()
     }
 }
 
-/// `Utopia\Validator\Assoc`: an array that is not a non-empty list, whose
-/// `json_encode()` fits `length` bytes.
+/// A map: an array that is not a non-empty list, of at most `length` bytes
+/// when encoded as JSON.
+///
+/// PHP: `Utopia\Validator\Assoc`.
 #[derive(Debug, Clone, Copy)]
 pub struct Assoc {
+    /// The most bytes the value may take encoded as JSON.
     pub length: usize,
 }
 
 impl Default for Assoc {
+    /// A limit of 65535 bytes.
     fn default() -> Self {
         Self { length: 65535 }
     }
 }
 
 impl Validator for Assoc {
+    /// Returns "Value must be a valid object.".
     fn description(&self) -> String {
         "Value must be a valid object.".to_owned()
     }
 
     is_valid_via_validate!();
 
+    /// Valid for an array that is empty or not a list, within the size limit. A
+    /// value that cannot be encoded counts as 0 bytes.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         if !value.is_array() {
             return Ok(Verdict::INVALID);
@@ -223,33 +261,44 @@ impl Validator for Assoc {
         Ok(Verdict::of(empty || !value.is_list()))
     }
 
+    /// Expects an object ([`Type::Object`]).
     fn kind(&self) -> Type {
         Type::Object
     }
 }
 
-/// `Utopia\Validator\Nullable`: `null`, or a value valid for the inner validator.
+/// Null, or a value the inner validator accepts.
+///
+/// PHP: `Utopia\Validator\Nullable`.
 #[derive(Debug, Clone)]
-pub struct Nullable<V>(pub V);
+pub struct Nullable<V>(
+    /// The inner validator.
+    pub V,
+);
 
 impl<V: Validator> Nullable<V> {
-    /// `getValidator()`.
+    /// The inner validator.
+    ///
+    /// PHP: `getValidator()`.
     pub fn validator(&self) -> &V {
         &self.0
     }
 }
 
 impl<V: Validator> Validator for Nullable<V> {
+    /// The inner validator's description, followed by ` or null`.
     fn description(&self) -> String {
         format!("{} or null", self.0.description())
     }
 
+    /// The description, or the error the inner validator returns describing itself.
     fn try_description(&self) -> Result<String, Error> {
         Ok(format!("{} or null", self.0.try_description()?))
     }
 
     is_valid_via_validate!();
 
+    /// Valid for null; anything else is decided by the inner validator, whose description gets ` or null` appended.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         if value.is_null() {
             return Ok(Verdict::VALID);
@@ -258,6 +307,7 @@ impl<V: Validator> Validator for Nullable<V> {
         Ok(Verdict { description: v.description.map(|d| Cow::Owned(format!("{d} or null"))), ..v })
     }
 
+    /// The inner validator's type.
     fn kind(&self) -> Type {
         self.0.kind()
     }

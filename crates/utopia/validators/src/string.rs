@@ -8,8 +8,10 @@ use php_std::string::str_contains;
 use crate::text::preg_matches;
 use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate};
 
-/// `Utopia\Validator\Contains`: a string containing at least one of the
-/// patterns (case-insensitively, with `mb_strtolower`, unless `strict`).
+/// A string containing at least one of the patterns, case-insensitively unless
+/// strict.
+///
+/// PHP: `Utopia\Validator\Contains`; case is folded with `mb_strtolower`.
 #[derive(Debug, Clone)]
 pub struct Contains {
     patterns: Vec<String>,
@@ -19,7 +21,12 @@ pub struct Contains {
 }
 
 impl Contains {
-    /// `new Contains($patterns, $strict)`; PHP rejects an empty list.
+    /// A validator for strings containing one of `patterns`, compared
+    /// case-sensitively when `strict`.
+    ///
+    /// Fails with [`Error::InvalidArgument`] for an empty list.
+    ///
+    /// PHP: `new Contains($patterns, $strict)`.
     pub fn new(patterns: Vec<String>, strict: bool) -> Result<Self, Error> {
         if patterns.is_empty() {
             return Err(Error::InvalidArgument("Patterns array cannot be empty".into()));
@@ -29,12 +36,14 @@ impl Contains {
         Ok(Self { patterns, needles, strict })
     }
 
+    /// The patterns, as given.
     pub fn patterns(&self) -> &[String] {
         &self.patterns
     }
 }
 
 impl Validator for Contains {
+    /// Lists the patterns and the case rule: `Value must contain one of (a, b) (case-insensitive)`.
     fn description(&self) -> String {
         let case = if self.strict { "case-sensitive" } else { "case-insensitive" };
         format!("Value must contain one of ({}) ({case})", self.patterns.join(", "))
@@ -42,6 +51,7 @@ impl Validator for Contains {
 
     is_valid_via_validate!();
 
+    /// Valid for a string containing at least one pattern.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         let Some(s) = value.as_str() else {
             return Ok(Verdict::INVALID);
@@ -56,22 +66,28 @@ impl Validator for Contains {
         Ok(Verdict::of(self.needles.iter().any(|n| str_contains(haystack, n))))
     }
 
+    /// Expects a string ([`Type::String`]).
     fn kind(&self) -> Type {
         Type::String
     }
 }
 
-/// `Utopia\Validator\Globstar`: a string matching gitignore-style glob
-/// patterns (`*`, `**`, `?`, `[...]`, `\` escapes, `!` exclusions).
+/// A string matching gitignore-style glob patterns (`*`, `**`, `?`, `[...]`,
+/// `\` escapes, `!` exclusions).
 ///
 /// Inclusions are OR-ed and exclusions AND-ed; a literal inclusion beats a
-/// wildcard exclusion; otherwise the last matching pattern wins.
+/// wildcard exclusion; otherwise the last matching pattern wins. Without
+/// patterns every string is valid.
+///
+/// PHP: `Utopia\Validator\Globstar`.
 #[derive(Debug, Clone, Default)]
 pub struct Globstar {
+    /// The glob patterns; a leading `!` makes one an exclusion.
     pub patterns: Vec<String>,
 }
 
 impl Globstar {
+    /// A validator for the glob `patterns`.
     pub fn new(patterns: Vec<String>) -> Self {
         Self { patterns }
     }
@@ -164,12 +180,15 @@ fn exclusion(pattern: &[u8]) -> Option<&[u8]> {
 }
 
 impl Validator for Globstar {
+    /// Returns "Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion.".
     fn description(&self) -> String {
         "Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion.".to_owned()
     }
 
     is_valid_via_validate!();
 
+    /// Valid for a string the patterns allow: any string without patterns, and any
+    /// string no pattern excludes when all are exclusions.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         let Some(subject) = value.as_str() else {
             return Ok(Verdict::INVALID);
@@ -197,42 +216,54 @@ impl Validator for Globstar {
         Ok(Verdict::of(state))
     }
 
+    /// Expects a string ([`Type::String`]).
     fn kind(&self) -> Type {
         Type::String
     }
 }
 
-/// `Utopia\Validator\HexColor`: `fff` or `ffffff`.
+/// A hexadecimal color code of 3 or 6 digits, without `#`: `fff` or `ffffff`.
+///
+/// PHP: `Utopia\Validator\HexColor`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct HexColor;
 
 impl Validator for HexColor {
+    /// Returns "Value must be a valid Hex color code".
     fn description(&self) -> String {
         "Value must be a valid Hex color code".to_owned()
     }
 
     is_valid_via_validate!();
 
+    /// Valid for a string of exactly 3 or 6 hexadecimal digits, in either case.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         Ok(Verdict::of(value.as_str().is_some_and(|s| preg_matches(b"/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/", s))))
     }
 
+    /// Expects a string ([`Type::String`]).
     fn kind(&self) -> Type {
         Type::String
     }
 }
 
-/// `Utopia\Validator\Phone`: an E.164 phone number (`+` and 7 to 15
-/// digits), optionally repaired by [`Phone::normalize`] first.
+/// An E.164 phone number (`+` and 7 to 15 digits, the first not 0),
+/// optionally repaired by [`Phone::normalize`] first.
+///
+/// PHP: `Utopia\Validator\Phone`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Phone {
+    /// Whether the empty string is valid.
     pub allow_empty: bool,
+    /// Whether to repair the number with [`Phone::normalize`] before checking it.
     pub normalize: bool,
 }
 
 impl Phone {
-    /// `Phone::normalize()`: recovers a number from URL transport damage
-    /// (`%2B` left encoded, `+` decoded to a space, `+` omitted).
+    /// Recovers a phone number from URL transport damage: `%2B` left encoded, `+`
+    /// decoded to a space, or `+` omitted.
+    ///
+    /// PHP: `Phone::normalize()`.
     pub fn normalize(value: &[u8]) -> Vec<u8> {
         let value = rawurldecode(value);
         if preg_matches(br"/^ [1-9]\d{6,14}$/", &value) {
@@ -250,12 +281,14 @@ impl Phone {
 }
 
 impl Validator for Phone {
+    /// Returns "Phone number must start with a '+' and contain between 7 and 15 digits.".
     fn description(&self) -> String {
         "Phone number must start with a '+' and contain between 7 and 15 digits.".to_owned()
     }
 
     is_valid_via_validate!();
 
+    /// Valid for a string that is an E.164 number, after repair when `normalize` is set.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         let Some(s) = value.as_str() else {
             return Ok(Verdict::INVALID);
@@ -271,28 +304,35 @@ impl Validator for Phone {
         }))
     }
 
+    /// Expects a string ([`Type::String`]).
     fn kind(&self) -> Type {
         Type::String
     }
 }
 
-/// `Utopia\Validator\Wildcard`: every value is valid.
+/// Accepts every value.
+///
+/// PHP: `Utopia\Validator\Wildcard`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Wildcard;
 
 impl Validator for Wildcard {
+    /// Returns "Every input is valid".
     fn description(&self) -> String {
         "Every input is valid".to_owned()
     }
 
+    /// Always `true`.
     fn is_valid(&self, _value: &serde_json::Value) -> bool {
         true
     }
 
+    /// Always valid.
     fn validate(&self, _value: Input<'_>) -> Result<Verdict, Error> {
         Ok(Verdict::VALID)
     }
 
+    /// Expects a string ([`Type::String`]).
     fn kind(&self) -> Type {
         Type::String
     }

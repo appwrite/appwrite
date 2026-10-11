@@ -1,4 +1,7 @@
-//! JSON validators: `Utopia\Validator\JSON` and `Utopia\Validator\JSON\*`.
+//! JSON validators: any JSON value, JSON arrays, JSON objects, and Firebase
+//! Cloud Messaging credentials.
+//!
+//! PHP: `Utopia\Validator\JSON` and `Utopia\Validator\JSON\*`.
 
 use std::borrow::Cow;
 
@@ -16,17 +19,22 @@ fn decode(json: &[u8]) -> Option<Value> {
     php_json::decode(json, None, DEFAULT_DEPTH, Flags::NONE).ok()
 }
 
-/// `Utopia\Validator\JSON`: an array, or a string `json_decode()` accepts.
+/// An array, or a string that is valid JSON.
+///
+/// PHP: `Utopia\Validator\JSON`; a string is valid when `json_decode()`
+/// accepts it.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Json;
 
 impl Validator for Json {
+    /// Returns "Value must be a valid JSON string".
     fn description(&self) -> String {
         "Value must be a valid JSON string".to_owned()
     }
 
     is_valid_via_validate!();
 
+    /// Valid for an array (a list or a map), or a string that decodes as JSON.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         Ok(Verdict::of(match value.view() {
             View::Array(_) => true,
@@ -35,6 +43,7 @@ impl Validator for Json {
         }))
     }
 
+    /// Expects an object ([`Type::Object`]).
     fn kind(&self) -> Type {
         Type::Object
     }
@@ -49,20 +58,27 @@ fn length_suffix(length: usize) -> String {
     if length > 0 { format!(" no longer than {length} characters when encoded") } else { String::new() }
 }
 
-/// `Utopia\Validator\JSON\ArrayValidator`: a JSON array, decoded (a list, or
-/// an empty array) or encoded, of at most `length` encoded bytes (0 = any).
+/// A JSON array: a list, or a string that decodes to one, of at most `length`
+/// bytes when encoded (0 for any length).
+///
+/// An empty array counts as a list.
+///
+/// PHP: `Utopia\Validator\JSON\ArrayValidator`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Array {
+    /// The most bytes the value may take encoded as JSON; 0 for any length.
     pub length: usize,
 }
 
 impl Validator for Array {
+    /// `Value must be a valid JSON array`, followed by the length limit when there is one.
     fn description(&self) -> String {
         format!("Value must be a valid JSON array{}", length_suffix(self.length))
     }
 
     is_valid_via_validate!();
 
+    /// Valid for a list, or a string that decodes to a JSON array, within the length limit.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         Ok(Verdict::of(match value.view() {
             View::Str(s) => fits(self.length, Some(s.len())) && matches!(decode(s), Some(Value::Array(_))),
@@ -73,30 +89,38 @@ impl Validator for Array {
         }))
     }
 
+    /// Always `true`: the validator expects an array.
     fn is_array(&self) -> bool {
         true
     }
 
+    /// Expects an array ([`Type::Array`]).
     fn kind(&self) -> Type {
         Type::Array
     }
 }
 
-/// `Utopia\Validator\JSON\ObjectValidator`: a JSON object, decoded (a
-/// `stdClass`, a non-list array or an empty array) or encoded, of at most
-/// `length` encoded bytes (0 = any).
+/// A JSON object: an object, a map, or a string that decodes to an object, of
+/// at most `length` bytes when encoded (0 for any length).
+///
+/// An empty array counts as a map.
+///
+/// PHP: `Utopia\Validator\JSON\ObjectValidator`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Object {
+    /// The most bytes the value may take encoded as JSON; 0 for any length.
     pub length: usize,
 }
 
 impl Validator for Object {
+    /// `Value must be a valid JSON object`, followed by the length limit when there is one.
     fn description(&self) -> String {
         format!("Value must be a valid JSON object{}", length_suffix(self.length))
     }
 
     is_valid_via_validate!();
 
+    /// Valid for an object, a map, or a string that decodes to a JSON object, within the length limit.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         Ok(Verdict::of(match value.view() {
             View::Str(s) => fits(self.length, Some(s.len())) && matches!(decode(s), Some(Value::Object(_))),
@@ -108,6 +132,7 @@ impl Validator for Object {
         }))
     }
 
+    /// Expects an object ([`Type::Object`]).
     fn kind(&self) -> Type {
         Type::Object
     }
@@ -167,9 +192,16 @@ const URL_FIELDS: [(&str, &str); 4] = [
 
 const DESCRIPTION: &str = "Value must be valid Google service account JSON for FCM";
 
-/// `Utopia\Validator\JSON\FCM`: Google service account credentials for the
-/// FCM HTTP v1 API, decoded or encoded. A failed validation describes the
-/// field that is wrong.
+/// Google service account credentials for the Firebase Cloud Messaging (FCM)
+/// HTTP v1 API: a map, an object, or a string that decodes to one.
+///
+/// The credentials need non-empty `type` (`service_account`), `project_id`,
+/// `private_key` (PEM-encoded), `client_email` (an email address) and
+/// `token_uri` fields. The other standard fields must be non-empty strings
+/// when present, and the URL fields HTTPS URLs. A failed validation describes
+/// the field that is wrong.
+///
+/// PHP: `Utopia\Validator\JSON\FCM`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Fcm;
 
@@ -231,12 +263,15 @@ fn is_empty(value: Input<'_>) -> bool {
 }
 
 impl Validator for Fcm {
+    /// Returns "Value must be valid Google service account JSON for FCM".
     fn description(&self) -> String {
         DESCRIPTION.to_owned()
     }
 
     is_valid_via_validate!();
 
+    /// Valid for complete credentials. Every validation decides the description:
+    /// the message about the wrong field, or the general description.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         let decoded;
         let value = match value.as_str() {
@@ -257,6 +292,7 @@ impl Validator for Fcm {
         })
     }
 
+    /// Expects an object ([`Type::Object`]).
     fn kind(&self) -> Type {
         Type::Object
     }

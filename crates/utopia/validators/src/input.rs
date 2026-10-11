@@ -1,4 +1,5 @@
-//! [`Input`]: a PHP value borrowed from a request value or an exact PHP value.
+//! The values validators read: a request value or an exact value, borrowed,
+//! and a one-level view of either.
 
 use std::borrow::Cow;
 
@@ -11,40 +12,56 @@ use php_std::value::{self, Number};
 
 use crate::Error;
 
-/// A PHP value to validate: a request value (`serde_json::Value`, decoded
-/// like `Utopia\Http\Request` decodes it) or an exact PHP value ([`Value`]).
+/// A value to validate, borrowed: a request value or an exact value.
+///
+/// PHP: a request value is decoded like `Utopia\Http\Request` decodes it; an
+/// exact value is any PHP value ([`Value`]).
 #[derive(Debug, Clone, Copy)]
 pub enum Input<'a> {
-    /// A request value: non-empty objects are associative arrays, numeric
-    /// string keys are integer keys, integers beyond `i64` are floats.
+    /// A request value, read as a decoded request: a non-empty object is a map
+    /// (an array with string keys), numeric string keys are integer keys, and
+    /// integers beyond `i64` are floats.
     Json(&'a serde_json::Value),
-    /// An exact PHP value: binary strings, non-finite floats, `stdClass`.
+    /// An exact value, which can also hold binary strings, non-finite floats and
+    /// objects with properties.
+    ///
+    /// PHP: any PHP value, `stdClass` objects included.
     Value(&'a Value),
 }
 
 impl<'a> From<&'a serde_json::Value> for Input<'a> {
+    /// Borrows a request value.
     fn from(value: &'a serde_json::Value) -> Self {
         Input::Json(value)
     }
 }
 
 impl<'a> From<&'a Value> for Input<'a> {
+    /// Borrows an exact value.
     fn from(value: &'a Value) -> Self {
         Input::Value(value)
     }
 }
 
-/// One level of an [`Input`], as `gettype()` sees it.
+/// One level of an [`Input`]: its type, with its scalar value or its entries.
+///
+/// PHP: the types `gettype()` reports.
 pub enum View<'a> {
+    /// No value (`null`).
     Null,
+    /// A boolean.
     Bool(bool),
+    /// An integer.
     Int(i64),
+    /// A float.
     Float(f64),
     /// A string: bytes, not necessarily UTF-8.
     Str(&'a [u8]),
-    /// An array, with its entries in order.
+    /// An array (a list or a map), with its entries in order.
     Array(Entries<'a>),
-    /// A `stdClass` instance, with its properties in order.
+    /// An object, with its properties in order. An empty request object is one.
+    ///
+    /// PHP: a `stdClass` instance.
     Object(Entries<'a>),
 }
 
@@ -54,13 +71,14 @@ pub enum Entries<'a> {
     List(std::iter::Enumerate<std::slice::Iter<'a, serde_json::Value>>),
     /// A request object's members (numeric keys read as integers).
     Map(serde_json::map::Iter<'a>),
-    /// A PHP value's entries.
+    /// An exact value's entries.
     Value(Iter<'a, php_std::Never>),
 }
 
 impl<'a> Iterator for Entries<'a> {
     type Item = (KeyRef<'a>, Input<'a>);
 
+    /// The next key and value.
     fn next(&mut self) -> Option<Self::Item> {
         match self {
             Entries::List(it) => it.next().map(|(i, v)| (KeyRef::Int(i as i64), Input::Json(v))),
@@ -69,6 +87,7 @@ impl<'a> Iterator for Entries<'a> {
         }
     }
 
+    /// The exact number of entries left.
     fn size_hint(&self) -> (usize, Option<usize>) {
         match self {
             Entries::List(it) => it.size_hint(),
@@ -81,7 +100,7 @@ impl<'a> Iterator for Entries<'a> {
 impl ExactSizeIterator for Entries<'_> {}
 
 impl<'a> Input<'a> {
-    /// One level of the value, as `gettype()` sees it.
+    /// One level of the value: its type, with its scalar value or its entries.
     pub fn view(self) -> View<'a> {
         use serde_json::Value as Json;
         match self {
@@ -110,7 +129,9 @@ impl<'a> Input<'a> {
         }
     }
 
-    /// The value as PHP's conversion functions see it.
+    /// The value as an [`Arg`], the form `php-std`'s conversions take.
+    ///
+    /// PHP: the value as PHP's conversion functions see it.
     pub fn arg(self) -> Arg<'a> {
         match self.view() {
             View::Null => Arg::Null,
@@ -123,12 +144,14 @@ impl<'a> Input<'a> {
         }
     }
 
-    /// `is_null()`.
+    /// Whether the value is null.
+    ///
+    /// PHP: `is_null()`.
     pub fn is_null(self) -> bool {
         matches!(self.view(), View::Null)
     }
 
-    /// The string, when `is_string()`.
+    /// The bytes of a string value; `None` for any other type.
     pub fn as_str(self) -> Option<&'a [u8]> {
         match self.view() {
             View::Str(s) => Some(s),
@@ -136,17 +159,24 @@ impl<'a> Input<'a> {
         }
     }
 
-    /// `is_array()`.
+    /// Whether the value is an array (a list or a map, not an object).
+    ///
+    /// PHP: `is_array()`.
     pub fn is_array(self) -> bool {
         matches!(self.view(), View::Array(_))
     }
 
-    /// `$value instanceof \stdClass`.
+    /// Whether the value is an object.
+    ///
+    /// PHP: `$value instanceof \stdClass`.
     pub fn is_object(self) -> bool {
         matches!(self.view(), View::Object(_))
     }
 
-    /// `array_is_list()` of an array (`false` for anything else).
+    /// Whether the value is a list: an array whose keys are 0, 1, 2, ... in order;
+    /// `false` for anything else.
+    ///
+    /// PHP: `array_is_list()`.
     pub fn is_list(self) -> bool {
         match self {
             Input::Json(serde_json::Value::Array(_)) => true,
@@ -159,7 +189,10 @@ impl<'a> Input<'a> {
         }
     }
 
-    /// `is_numeric($value) ? $value + 0 : null`.
+    /// The number a value holds or spells: an integer, a float, or the number in a
+    /// numeric string; `None` otherwise.
+    ///
+    /// PHP: `is_numeric($value) ? $value + 0 : null`.
     pub fn number(self) -> Option<Number> {
         match self.view() {
             View::Int(i) => Some(Number::Int(i)),
@@ -170,12 +203,18 @@ impl<'a> Input<'a> {
         }
     }
 
-    /// `(bool) $value`.
+    /// Whether the value counts as true: anything but `null`, `false`, `0`,
+    /// `0.0`, `""`, `"0"` and an empty array.
+    ///
+    /// PHP: `(bool) $value`.
     pub fn truthy(self) -> bool {
         self.arg().to_bool()
     }
 
-    /// `(string) $value`: arrays are `"Array"`, a `stdClass` throws `Error`.
+    /// The value converted to a string: arrays are `"Array"`, and an object fails
+    /// with [`Error::Engine`].
+    ///
+    /// PHP: `(string) $value`.
     pub fn to_bytes(self) -> Result<Cow<'a, [u8]>, Error> {
         match self.arg() {
             Arg::Str(s) => Ok(Cow::Borrowed(s)),
@@ -183,7 +222,9 @@ impl<'a> Input<'a> {
         }
     }
 
-    /// `json_encode($value)`, `None` where PHP returns `false`.
+    /// The value encoded as JSON, or `None` when it cannot be encoded.
+    ///
+    /// PHP: `json_encode($value)`, with `None` where PHP returns `false`.
     pub fn json_encode(self) -> Option<String> {
         match self {
             Input::Json(v) => {
@@ -194,8 +235,10 @@ impl<'a> Input<'a> {
         }
     }
 
-    /// `$value[$key]` of an array or the property `$key` of a `stdClass`
-    /// (`get_object_vars()`): `None` when missing or for any other value.
+    /// The entry `key` of an array, or the property `key` of an object; `None`
+    /// when it is missing or for any other value.
+    ///
+    /// PHP: `$value[$key]`, or the property as `get_object_vars()` reads it.
     pub fn get(self, key: &str) -> Option<Input<'a>> {
         let wanted = KeyRef::normalize(key.as_bytes());
         match self.view() {
@@ -206,7 +249,7 @@ impl<'a> Input<'a> {
         }
     }
 
-    /// The value as `filter_var()` takes it.
+    /// The value as a [`filter::Value`], the form `php-std`'s filters take.
     pub fn filter_value(self) -> filter::Value {
         match self.view() {
             View::Null => filter::Value::Null,

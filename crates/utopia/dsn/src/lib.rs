@@ -1,5 +1,13 @@
-//! Data source names (`scheme://user:password@host:port/path?query`) with the
-//! semantics of `utopia-php/dsn`.
+//! Parse data source names (`scheme://user:password@host:port/path?query`):
+//! the connection strings that configure databases, caches, queues and other
+//! services.
+//!
+//! [`Dsn::parse`] splits a DSN into its scheme, credentials, host, port, path
+//! and query, and [`Dsn::param`] reads one query parameter. Error messages
+//! never quote the DSN, and the `Debug` output of a [`Dsn`] hides the
+//! password, so credentials do not leak into logs.
+//!
+//! PHP: ports `utopia-php/dsn`.
 //!
 //! | PHP | Rust |
 //! |---|---|
@@ -11,11 +19,9 @@
 //! | `getParam($key, $default)` | [`Dsn::param`] (`Ok(None)` where PHP returns `$default`), [`Dsn::param_or`] |
 //! | `\InvalidArgumentException`, `\TypeError` | [`Error::InvalidArgument`], [`Error::Type`] |
 //!
-//! The DSN is split by PHP's `parse_url` and the query by PHP's `parse_str`
-//! ([`php_std`]), so every input reads exactly as it does in PHP. Error
-//! messages never quote the DSN, and [`Dsn`]'s `Debug` hides the password:
-//! credentials do not leak into logs (PHP marks the argument
-//! `#[\SensitiveParameter]`).
+//! PHP: the DSN is split by PHP's `parse_url` and the query by PHP's
+//! `parse_str` ([`php_std`]), so every input reads exactly as it does in PHP.
+//! PHP marks the argument `#[\SensitiveParameter]`.
 //!
 //! Read a database connection string:
 //!
@@ -42,6 +48,8 @@
 //! echo $dsn->getParam('charset'), "\n";  // utf8mb4
 //! ```
 
+#![warn(missing_docs)]
+
 use std::fmt;
 
 /// The getting started guide (`guide.md`), compiled and run with the doctests.
@@ -56,8 +64,9 @@ use php_std::{Array, Value};
 /// Why a DSN was refused or a parameter could not be read.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
-    /// `\InvalidArgumentException`: the DSN is malformed or lacks a scheme
-    /// or host.
+    /// The DSN is malformed or lacks a scheme or host.
+    ///
+    /// PHP: `\InvalidArgumentException`.
     ///
     /// ```
     /// use utopia_dsn::{Dsn, Error};
@@ -78,14 +87,20 @@ pub enum Error {
     /// ```
     #[error("{0}")]
     InvalidArgument(&'static str),
-    /// `\TypeError`: [`Dsn::param`] on a key the query holds as an array
-    /// (`a[b]=c`), which PHP cannot return as a string.
+    /// [`Dsn::param`] was called on a key the query holds as a list or map
+    /// (`a[b]=c`), which has no single value to return.
+    ///
+    /// PHP: `\TypeError`, as PHP cannot return an array as a string.
     #[error("{0}")]
     Type(&'static str),
 }
 
 impl Error {
-    /// The PHP exception class this error corresponds to.
+    /// The name of the exception class this error matches, such as
+    /// `InvalidArgumentException`.
+    ///
+    /// PHP: the class of the exception `utopia-php/dsn` throws for the same
+    /// input.
     ///
     /// ```
     /// use utopia_dsn::Dsn;
@@ -145,11 +160,14 @@ pub struct Dsn {
 }
 
 impl Dsn {
-    /// `new DSN($dsn)`.
+    /// Parses a DSN.
     ///
-    /// Fails like PHP: [`Error::InvalidArgument`] when `parse_url` rejects
-    /// the input, or the scheme or host is missing or empty (or `"0"`, which
-    /// PHP's `empty()` also treats as missing).
+    /// Fails with [`Error::InvalidArgument`] when the input is malformed, or
+    /// the scheme or host is missing or empty. A scheme or host of `"0"`
+    /// counts as missing.
+    ///
+    /// PHP: `new DSN($dsn)`. It fails where PHP's `parse_url` rejects the
+    /// input, and `"0"` is missing because PHP's `empty()` says so.
     ///
     /// ```
     /// use utopia_dsn::Dsn;
@@ -192,7 +210,9 @@ impl Dsn {
         })
     }
 
-    /// `getScheme()`: the part before `://`.
+    /// The scheme: the part before `://`.
+    ///
+    /// PHP: `getScheme()`.
     ///
     /// ```
     /// use utopia_dsn::Dsn;
@@ -212,7 +232,9 @@ impl Dsn {
         &self.scheme
     }
 
-    /// `getUser()`: the URL-decoded user, which can be any bytes (`%FF`).
+    /// The URL-decoded user, which can be any bytes (`%FF`).
+    ///
+    /// PHP: `getUser()`.
     ///
     /// ```
     /// use utopia_dsn::Dsn;
@@ -232,7 +254,9 @@ impl Dsn {
         self.user.as_deref()
     }
 
-    /// `getPassword()`: the URL-decoded password, which can be any bytes (`%FF`).
+    /// The URL-decoded password, which can be any bytes (`%FF`).
+    ///
+    /// PHP: `getPassword()`.
     ///
     /// ```
     /// use utopia_dsn::Dsn;
@@ -252,7 +276,9 @@ impl Dsn {
         self.password.as_deref()
     }
 
-    /// `getHost()`.
+    /// The host name or address.
+    ///
+    /// PHP: `getHost()`.
     ///
     /// ```
     /// use utopia_dsn::Dsn;
@@ -272,7 +298,10 @@ impl Dsn {
         &self.host
     }
 
-    /// `getPort()`: PHP returns the port as a string (or `null`); Rust as a number.
+    /// The port, or `None` when the DSN has none.
+    ///
+    /// PHP: `getPort()` returns the port as a string (or `null`); Rust as a
+    /// number.
     ///
     /// ```
     /// use utopia_dsn::Dsn;
@@ -292,7 +321,9 @@ impl Dsn {
         self.port
     }
 
-    /// `getPath()`: the path without its leading slashes; empty when there is none.
+    /// The path without its leading slashes; empty when there is none.
+    ///
+    /// PHP: `getPath()`.
     ///
     /// ```
     /// use utopia_dsn::Dsn;
@@ -311,7 +342,9 @@ impl Dsn {
         &self.path
     }
 
-    /// `getQuery()`: the raw query string.
+    /// The raw query string, or `None` when the DSN has none.
+    ///
+    /// PHP: `getQuery()`.
     ///
     /// ```
     /// use utopia_dsn::Dsn;
@@ -330,10 +363,16 @@ impl Dsn {
         self.query.as_deref()
     }
 
-    /// `getParam($key)`: the URL-decoded query parameter, or `Ok(None)`
-    /// where PHP returns the default (no such key, or a query that is empty
-    /// or `"0"`). Keys follow `parse_str`: `a.b` is read as `a_b`, `a[b]=c`
-    /// makes `a` an array, which fails with [`Error::Type`] as in PHP.
+    /// The URL-decoded value of a query parameter, or `Ok(None)` when it is
+    /// absent.
+    ///
+    /// A query that is empty or `"0"` has no parameters. Dots and spaces in
+    /// keys read as underscores (`a.b` is `a_b`), and a key written with
+    /// brackets (`a[b]=c`) holds a list or map, so reading it fails with
+    /// [`Error::Type`].
+    ///
+    /// PHP: `getParam($key)`, where `Ok(None)` stands for PHP returning the
+    /// default. Keys follow PHP's `parse_str`.
     ///
     /// ```
     /// use utopia_dsn::Dsn;
@@ -366,7 +405,9 @@ impl Dsn {
         }
     }
 
-    /// `getParam($key, $default)`: the parameter, or `default` when it is absent.
+    /// The parameter, or `default` when it is absent.
+    ///
+    /// PHP: `getParam($key, $default)`.
     ///
     /// ```
     /// use utopia_dsn::Dsn;
@@ -393,6 +434,8 @@ fn blank(s: &[u8]) -> bool {
 }
 
 impl fmt::Debug for Dsn {
+    /// Formats every component except the password, which shows as
+    /// `<hidden>`.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Dsn")
             .field("scheme", &self.scheme)
