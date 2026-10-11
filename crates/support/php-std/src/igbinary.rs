@@ -33,7 +33,7 @@ use std::fmt;
 
 use bytes::Bytes;
 
-use crate::types::{Array, ArrayKey, Extension, KeyRef, Str, Value};
+use crate::types::{Array, ArrayKey, Builder, Extension, KeyRef, Str, Value};
 
 const NULL: u8 = 0x00;
 const REF8: u8 = 0x01;
@@ -282,10 +282,9 @@ enum Slot {
 struct Unserializer<'a> {
     input: &'a Bytes,
     pos: usize,
-    strings: Vec<Str>,
+    /// The string table: where each string is in `input`.
+    strings: Vec<std::ops::Range<usize>>,
     references: Vec<Slot>,
-    /// The pairs of the arrays being read, innermost last.
-    entries: Vec<(ArrayKey, Value)>,
     depth: usize,
 }
 
@@ -301,7 +300,6 @@ impl<'a> Unserializer<'a> {
             // Room for what typical data holds, without growing.
             strings: Vec::with_capacity((input.len() / 16).min(64)),
             references: Vec::with_capacity((input.len() / 64).min(16)),
-            entries: Vec::with_capacity((input.len() / 8).min(64)),
             depth: 0,
         }
     }
@@ -365,17 +363,17 @@ impl<'a> Unserializer<'a> {
             return invalid("igbinary_unserialize_chararray: end-of-data");
         }
         let end = self.pos + len as usize;
-        let s = Str::share(self.input, self.pos..end);
+        let range = self.pos..end;
         self.pos = end;
-        self.strings.push(s.clone());
-        Ok(s)
+        self.strings.push(range.clone());
+        Ok(Str::share(self.input, range))
     }
 
     /// `igbinary_unserialize_string`: a string from the table.
     fn string_id(&mut self, n: usize) -> Result<Str, Error> {
         let id = self.uint(n, "igbinary_unserialize_string")? as usize;
         match self.strings.get(id) {
-            Some(s) => Ok(s.clone()),
+            Some(range) => Ok(Str::share(self.input, range.clone())),
             None => invalid("igbinary_unserialize_string: string index is out-of-bounds"),
         }
     }
@@ -498,7 +496,8 @@ impl<'a> Unserializer<'a> {
         if self.depth > MAX_DEPTH {
             return Err(Error::Unsupported("nesting deeper than igbinary::MAX_DEPTH"));
         }
-        let start = self.entries.len();
+        // Each pair takes at least two bytes: no more room than that.
+        let mut array = Builder::new(n.min(self.remaining() / 2));
         for _ in 0..n {
             let kt = self.byte("igbinary_unserialize_array")?;
             let key = match kt {
@@ -518,11 +517,10 @@ impl<'a> Unserializer<'a> {
                 },
             };
             let v = self.value(false)?;
-            self.entries.push((key, v));
+            array.set(key, v);
         }
         self.depth -= 1;
-        // Each pair assigned in order (a repeated key keeps its place).
-        Ok(self.entries.drain(start..).collect())
+        Ok(array.finish())
     }
 }
 

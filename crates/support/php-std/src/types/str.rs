@@ -57,10 +57,28 @@ impl Str {
         if b.len() <= INLINE { Self::inline(b) } else { Str(Repr::Shared(Bytes::copy_from_slice(b))) }
     }
 
+    #[inline]
     fn inline(b: &[u8]) -> Self {
+        let n = b.len();
+        debug_assert!(n <= INLINE);
         let mut buf = [0u8; INLINE];
-        buf[..b.len()].copy_from_slice(b);
-        Str(Repr::Inline { len: b.len() as u8, buf })
+        // Two overlapping fixed-size copies instead of a `memcpy` call: short
+        // strings are what decoders make most.
+        if n >= 16 {
+            buf[..16].copy_from_slice(&b[..16]);
+            buf[n - 8..n].copy_from_slice(&b[n - 8..]);
+        } else if n >= 8 {
+            buf[..8].copy_from_slice(&b[..8]);
+            buf[n - 8..n].copy_from_slice(&b[n - 8..]);
+        } else if n >= 4 {
+            buf[..4].copy_from_slice(&b[..4]);
+            buf[n - 4..n].copy_from_slice(&b[n - 4..]);
+        } else {
+            for (d, s) in buf.iter_mut().zip(b) {
+                *d = *s;
+            }
+        }
+        Str(Repr::Inline { len: n as u8, buf })
     }
 
     /// The bytes of the string.

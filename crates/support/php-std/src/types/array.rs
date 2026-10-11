@@ -750,6 +750,59 @@ impl<X: Extension> FromIterator<(ArrayKey, Value<X>)> for Array<X> {
     }
 }
 
+/// An array assigned entry by entry, as [`FromIterator`] builds it, for
+/// the decoders: they read the entry count first, so the table is sized
+/// once, and each entry goes straight into it.
+pub(crate) struct Builder<X: Extension = Never> {
+    /// An empty list (no allocation) until the first entry decides.
+    repr: Repr<X>,
+    /// Room to make when the first entry decides the representation.
+    capacity: usize,
+}
+
+impl<X: Extension> Builder<X> {
+    /// An empty array with room for `capacity` entries.
+    pub(crate) fn new(capacity: usize) -> Self {
+        Builder { repr: Repr::Packed(Vec::new()), capacity }
+    }
+
+    /// `$a[$k] = $v` (the key as given).
+    #[inline]
+    pub(crate) fn set(&mut self, k: ArrayKey, v: Value<X>) {
+        match (&mut self.repr, k) {
+            // A string key on a hash only goes into its table.
+            (Repr::Hash { map, packed, .. }, k @ ArrayKey::Str(_)) => {
+                *packed = None;
+                map.insert(k, v);
+            }
+            // The next element of a list.
+            (Repr::Packed(list), ArrayKey::Int(i)) if i as u64 == list.len() as u64 => {
+                if list.capacity() == 0 {
+                    list.reserve_exact(self.capacity.max(1));
+                }
+                list.push(v);
+            }
+            // A string key first: a hash.
+            (Repr::Packed(list), k @ ArrayKey::Str(_)) if list.is_empty() => {
+                let mut map = Table::with_capacity(self.capacity);
+                map.insert(k, v);
+                self.repr = Repr::Hash { map, next: None, packed: None };
+            }
+            (repr, k) => {
+                repr.set(k, v);
+            }
+        }
+    }
+
+    /// The array.
+    pub(crate) fn finish(self) -> Array<X> {
+        match self.repr {
+            Repr::Packed(list) if list.capacity() == 0 => Array::new(),
+            repr => Array { repr: Some(Arc::new(repr)) },
+        }
+    }
+}
+
 /// A list.
 impl<X: Extension> FromIterator<Value<X>> for Array<X> {
     /// A list of the values.
