@@ -168,11 +168,6 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
         <Link to="/$lib" params={{ lib: slug }} activeOptions={{ exact: true, includeHash: false }} className={row}>
           Overview
         </Link>
-        {nav.library.counts.guide ? (
-          <Link to="/$lib" params={{ lib: slug }} hash="getting-started" activeOptions={{ exact: true, includeHash: true }} className={row}>
-            Getting started
-          </Link>
-        ) : null}
         <Fold.Provider value={fold}>{body}</Fold.Provider>
       </div>
     </nav>
